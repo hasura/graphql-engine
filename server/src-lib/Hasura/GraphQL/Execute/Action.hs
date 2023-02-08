@@ -229,7 +229,7 @@ makeActionResponseNoRelations annFields outputType outputF shouldCheckOutputFiel
             let fieldText = getFieldNameTxt fieldName
              in (fieldText,) <$> case annField of
                   IR.ACFExpression t -> Just $ AO.String t
-                  IR.ACFScalar fname -> AO.toOrdered <$> KM.lookup (K.fromText $ G.unName fname) obj
+                  IR.ACFScalar fname -> Just $ maybe AO.Null AO.toOrdered (KM.lookup (K.fromText $ G.unName fname) obj)
                   IR.ACFNestedObject _ nestedFields -> do
                     let mkValue :: J.Value -> Maybe AO.Value
                         mkValue = \case

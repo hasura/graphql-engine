@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.RQL.Types.Common
   ( RelName (..),
@@ -62,11 +61,10 @@ import Autodocodec
     stringConstCodec,
   )
 import Autodocodec qualified as AC
-import Control.Lens (makeLenses)
+import Control.Lens (Lens)
+import Control.Lens qualified as Lens
 import Data.Aeson
 import Data.Aeson qualified as J
-import Data.Aeson.Casing
-import Data.Aeson.TH
 import Data.Aeson.Types (Parser, prependFailure, typeMismatch)
 import Data.Bifunctor (bimap)
 import Data.Environment qualified as Env
@@ -287,7 +285,7 @@ data InpValInfo = InpValInfo
   deriving (Show, Eq, TH.Lift, Generic)
 
 newtype SystemDefined = SystemDefined {unSystemDefined :: Bool}
-  deriving (Show, Eq, FromJSON, ToJSON, PG.ToPrepArg, NFData)
+  deriving (Show, Eq, FromJSON, ToJSON, PG.ToPrepArg, NFData, Generic)
 
 isSystemDefined :: SystemDefined -> Bool
 isSystemDefined = unSystemDefined
@@ -389,7 +387,16 @@ instance HasCodec PGConnectionParams where
         <*> requiredField' "database"
           AC..= _pgcpDatabase
 
-$(deriveToJSON hasuraJSON {omitNothingFields = True} ''PGConnectionParams)
+-- TODO: Use HasCodec to define Aeson instances?
+instance ToJSON PGConnectionParams where
+  toJSON PGConnectionParams {..} =
+    J.object $
+      [ "host" .= _pgcpHost,
+        "username" .= _pgcpUsername,
+        "port" .= _pgcpPort,
+        "database" .= _pgcpDatabase
+      ]
+        ++ ["password" .= _pgcpPassword | isJust _pgcpPassword]
 
 instance FromJSON PGConnectionParams where
   parseJSON = withObject "PGConnectionParams" $ \o ->
@@ -540,7 +547,18 @@ data MetricsConfig = MetricsConfig
   }
   deriving (Show, Eq, Generic)
 
-$(deriveJSON (aesonPrefix snakeCase) ''MetricsConfig)
+instance FromJSON MetricsConfig where
+  parseJSON = J.withObject "MetricsConfig" $ \o -> do
+    _mcAnalyzeQueryVariables <- o .: "analyze_query_variables"
+    _mcAnalyzeResponseBody <- o .: "analyze_response_body"
+    pure MetricsConfig {..}
+
+instance ToJSON MetricsConfig where
+  toJSON MetricsConfig {..} =
+    J.object
+      [ "analyze_query_variables" .= _mcAnalyzeQueryVariables,
+        "analyze_response_body" .= _mcAnalyzeResponseBody
+      ]
 
 emptyMetricsConfig :: MetricsConfig
 emptyMetricsConfig = MetricsConfig False False
@@ -678,6 +696,19 @@ data RemoteRelationshipG definition = RemoteRelationship
   }
   deriving (Show, Eq, Generic)
 
+instance ToJSON definition => ToJSON (RemoteRelationshipG definition) where
+  toJSON RemoteRelationship {..} =
+    J.object
+      [ "name" .= _rrName,
+        "definition" .= _rrDefinition
+      ]
+
+rrName :: Lens (RemoteRelationshipG def) (RemoteRelationshipG def) RelName RelName
+rrName = Lens.lens _rrName (\rrg a -> rrg {_rrName = a})
+
+rrDefinition :: Lens (RemoteRelationshipG def) (RemoteRelationshipG def') def def'
+rrDefinition = Lens.lens _rrDefinition (\rrg a -> rrg {_rrDefinition = a})
+
 remoteRelationshipCodec ::
   forall definition.
   (Typeable definition) =>
@@ -688,6 +719,3 @@ remoteRelationshipCodec definitionCodec =
     RemoteRelationship
       <$> requiredField' "name" AC..= _rrName
       <*> requiredFieldWith' "definition" definitionCodec AC..= _rrDefinition
-
-$(makeLenses ''RemoteRelationshipG)
-$(deriveToJSON hasuraJSON {J.omitNothingFields = False} ''RemoteRelationshipG)

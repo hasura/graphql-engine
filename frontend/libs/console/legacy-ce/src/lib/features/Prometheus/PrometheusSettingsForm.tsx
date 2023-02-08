@@ -7,6 +7,7 @@ import { CodeEditorField, InputField, SimpleForm } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
 import { Badge } from '@/new-components/Badge';
 import { Card } from '@/new-components/Card';
+import { KnowMoreLink } from '@/new-components/KnowMoreLink';
 import {
   FaCheckCircle,
   FaExclamationTriangle,
@@ -39,13 +40,8 @@ type PrometheusFormProps = {
 
 const PrometheusFormIntro = () => (
   <p className="text-muted">
-    Expose your Prometheus performance metrics from your Hasura GraphQL Engine.{' '}
-    <a
-      href="https://hasura.io/docs/latest/enterprise/metrics/"
-      className="text-secondary text-sm italic hover:underline hover:cursor-pointer"
-    >
-      (Read More)
-    </a>
+    Expose your Prometheus performance metrics from your Hasura GraphQL Engine.
+    <KnowMoreLink href="https://hasura.io/docs/latest/enterprise/metrics/" />
   </p>
 );
 

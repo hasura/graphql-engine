@@ -1,7 +1,7 @@
 import React from 'react';
 import { IconTooltip } from '@/new-components/Tooltip';
 import * as tooltip from './Tooltips';
-import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
+import { KnowMoreLink } from '@/new-components/KnowMoreLink';
 import { capitalize } from '../../../../Common/utils/jsUtils';
 import { EVENT_TRIGGER_OPERATIONS } from '../../constants';
 import { EventTriggerOperation } from '../../types';

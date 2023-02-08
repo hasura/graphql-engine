@@ -75,7 +75,7 @@ data SourceMetadataObjId b
   | SMOFunction (FunctionName b)
   | SMOFunctionPermission (FunctionName b) RoleName
   | SMOTableObj (TableName b) TableMetadataObjId
-  | SMONativeQuery (NativeQueryName b)
+  | SMONativeQuery NativeQueryName
   deriving (Generic)
 
 deriving instance (Backend b) => Show (SourceMetadataObjId b)

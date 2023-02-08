@@ -52,8 +52,21 @@ X-Hasura-Role: admin
           "connection_lifetime": 600
         },
         "use_prepared_statements": true,
-        "isolation_level": "read-committed",
-      }
+        "isolation_level": "read-committed"
+      },
+      "connection_template": {
+        "template": "{{ if $.request.session?[\"x-hasura-role\"] == \"admin\" }} {{$.primary}} {{else}} {{$.connection_set.db_1}} {{ end }}"
+      },
+      "connection_set": [
+        {
+          "name": "db_1",
+          "connection_info": {
+            "database_url": {
+              "from_env": "<DB_URL_ENV_VAR>"
+            }
+          }
+        }
+      ]
     },
     "replace_configuration": false,
     "customization": {

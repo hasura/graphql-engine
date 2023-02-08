@@ -3,6 +3,7 @@ import { Database, Feature } from '..';
 export const defaultDatabaseProps: Database = {
   config: {
     getDefaultQueryRoot: async () => Feature.NotImplemented,
+    getSupportedQueryTypes: async () => Feature.NotImplemented,
   },
   introspection: {
     getDriverInfo: async () => Feature.NotImplemented,

@@ -59,7 +59,7 @@ defaultBuildNativeQueryRootFields ::
     (Maybe (P.FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 defaultBuildNativeQueryRootFields NativeQueryInfoImpl {..} = runMaybeT $ do
   tableInfo <- askTableInfo @b nqiiReturns
-  fieldName <- hoistMaybe (G.mkName $ getNativeQueryNameImpl nqiiRootFieldName)
+  let fieldName = getNativeQueryName nqiiRootFieldName
   nativeQueryArgsParser <- nativeQueryArgumentsSchema @b @r @m @n fieldName nqiiArguments
   sourceInfo :: SourceInfo b <- asks getter
   let sourceName = _siName sourceInfo

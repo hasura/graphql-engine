@@ -1,6 +1,10 @@
+import { DataSource, Feature } from '@/features/DataSource';
 import { DataTarget } from '@/features/Datasources';
+import { Table } from '@/features/hasura-metadata-types';
+import { useHttpClient } from '@/features/Network';
 
 import type { QualifiedTable } from '@/metadata/types';
+import { useQuery } from 'react-query';
 import { MetadataSelector } from './metadataSelectors';
 import { useMetadata } from './useMetadata';
 
@@ -16,6 +20,26 @@ export const useRemoteDatabaseRelationships = (target: DataTarget) => {
   return useMetadata(
     MetadataSelector.getRemoteDatabaseRelationships({ target })
   );
+};
+
+export const useSupportedQueryTypes = ({
+  dataSourceName,
+  table,
+}: {
+  table: Table;
+  dataSourceName: string;
+}) => {
+  const httpClient = useHttpClient();
+
+  return useQuery({
+    queryKey: ['supported-query-types'],
+    queryFn: async () => {
+      return DataSource(httpClient).getSupportedQueryTypes({
+        dataSourceName,
+        table,
+      });
+    },
+  });
 };
 
 export const useRemoteSchemaRelationships = (

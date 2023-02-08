@@ -25,9 +25,7 @@
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
 import '@testing-library/cypress/add-commands';
+import 'cypress-plugin-snapshots/commands';
 
 import './clearConsoleTextarea';
 import './notifications';
-
-/// eslint-disable-next-line import/no-extraneous-dependencies
-require('@cypress/snapshot').register();

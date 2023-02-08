@@ -9,18 +9,19 @@ describe('convertSuggestedRelationShipToLocalRelationship', () => {
       type: 'object',
       from: {
         table: ['Album'],
-        columns: ['ArtistId'],
+        columns: ['ArtistId', 'ArtistNameId'],
       },
       to: {
         table: ['Artist'],
-        columns: ['ArtistId'],
+        columns: ['Id', 'NameId'],
       },
     };
 
     const expected = {
       definition: {
         mapping: {
-          ArtistId: 'ArtistId',
+          ArtistId: 'Id',
+          ArtistNameId: 'NameId',
         },
         toTable: ['Artist'],
       },

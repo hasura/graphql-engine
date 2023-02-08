@@ -51,25 +51,30 @@ export const SuggestedRelationships = ({
 
   const supportsForeignKeys = getSupportsForeignKeys(source);
 
-  const { suggestedRelationships, isLoadingSuggestedRelationships } =
-    useSuggestedRelationships({
-      dataSourceName,
-      table,
-      existingRelationships: localRelationships,
-      isEnabled: supportsForeignKeys,
-    });
+  const {
+    suggestedRelationships,
+    isLoadingSuggestedRelationships,
+    refetchSuggestedRelationships,
+  } = useSuggestedRelationships({
+    dataSourceName,
+    table,
+    existingRelationships: localRelationships,
+    isEnabled: supportsForeignKeys,
+  });
 
   const { fireNotification } = useFireNotification();
 
   const { createRelationship, isLoading: isCreatingRelationship } =
     useManageLocalRelationship({
       dataSourceName,
+      table,
       onSuccess: () => {
         fireNotification({
           title: 'Success',
           message: 'Relationship tracked',
           type: 'success',
         });
+        refetchSuggestedRelationships();
       },
       onError: () => {
         fireNotification({

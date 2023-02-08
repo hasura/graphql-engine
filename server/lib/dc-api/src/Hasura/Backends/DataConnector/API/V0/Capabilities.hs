@@ -482,7 +482,7 @@ instance HasCodec CapabilitiesResponse where
         <$> requiredField "capabilities" "The capabilities of the agent" .= _crCapabilities
         <*> requiredField "config_schemas" "The agent's configuration schemas" .= _crConfigSchemaResponse
         <*> optionalField "display_name" "The agent's preferred display name" .= _crDisplayName
-        <*> optionalField "release_name" "The agent's release name. For example: 'beta'" .= _crDisplayName
+        <*> optionalField "release_name" "The agent's release name. For example: 'beta'" .= _crReleaseName
 
 instance ToSchema CapabilitiesResponse where
   declareNamedSchema _ = do

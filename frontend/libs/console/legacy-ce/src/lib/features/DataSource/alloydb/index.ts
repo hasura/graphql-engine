@@ -39,5 +39,8 @@ export const alloy: Database = {
       const { name, schema } = table as AlloyDbTable;
       return schema === 'public' ? name : `${schema}_${name}`;
     },
+    getSupportedQueryTypes: async () => {
+      return ['select', 'insert', 'update', 'delete'];
+    },
   },
 };

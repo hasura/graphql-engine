@@ -22,4 +22,8 @@ export const mysql: Database = {
   query: {
     getTableRows: async () => Feature.NotImplemented,
   },
+  config: {
+    getDefaultQueryRoot: async () => Feature.NotImplemented,
+    getSupportedQueryTypes: async () => Feature.NotImplemented,
+  },
 };

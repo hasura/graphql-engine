@@ -126,7 +126,7 @@ data ServerCtx = ServerCtx
     scEnabledAPIs :: !(S.HashSet API),
     scInstanceId :: !InstanceId,
     scSubscriptionState :: !ES.SubscriptionsState,
-    scEnableAllowlist :: !Bool,
+    scEnableAllowList :: !AllowListStatus,
     scResponseInternalErrorsConfig :: !ResponseInternalErrorsConfig,
     scEnvironment :: !Env.Environment,
     scRemoteSchemaPermsCtx :: !Options.RemoteSchemaPermissions,
@@ -400,8 +400,9 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
       let httpLogMetadata = buildHttpLogMetadata @m3 emptyHttpLogGraphQLInfo extraUserInfo
           jsonResponse = J.encode $ qErrEncoder includeInternal qErr
           contentLength = ("Content-Length", B8.toStrict $ BB.toLazyByteString $ BB.int64Dec $ BL.length jsonResponse)
+          allHeaders = [contentLength, jsonHeader]
       lift $ logHttpError (_lsLogger scLoggers) scLoggingSettings userInfo reqId waiReq req qErr headers httpLogMetadata
-      setHeader contentLength
+      mapM_ setHeader allHeaders
       Spock.setStatus $ qeStatus qErr
       Spock.lazyBytes jsonResponse
 
@@ -622,7 +623,7 @@ mkExecutionContext = do
   scRef <- asks (scCacheRef . hcServerCtx)
   (sc, scVer) <- liftIO $ readSchemaCacheRef scRef
   sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
-  enableAL <- asks (scEnableAllowlist . hcServerCtx)
+  enableAL <- asks (scEnableAllowList . hcServerCtx)
   logger <- asks (_lsLogger . scLoggers . hcServerCtx)
   readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
   prometheusMetrics <- asks (scPrometheusMetrics . hcServerCtx)
@@ -728,7 +729,7 @@ consoleAssetsHandler logger loggingSettings dir path = do
     headers = ("Content-Type", mimeType) : encHeader
 
 class (Monad m) => ConsoleRenderer m where
-  renderConsole :: Text -> AuthMode -> Bool -> Maybe Text -> Maybe Text -> m (Either String Text)
+  renderConsole :: Text -> AuthMode -> TelemetryStatus -> Maybe Text -> Maybe Text -> m (Either String Text)
 
 instance ConsoleRenderer m => ConsoleRenderer (Tracing.TraceT m) where
   renderConsole a b c d e = lift $ renderConsole a b c d e
@@ -761,7 +762,7 @@ configApiGetHandler serverCtx@ServerCtx {..} consoleAssetsDir =
                 scFunctionPermsCtx
                 scRemoteSchemaPermsCtx
                 scAuthMode
-                scEnableAllowlist
+                scEnableAllowList
                 (ES._ssLiveQueryOptions $ scSubscriptionState)
                 (ES._ssStreamQueryOptions $ scSubscriptionState)
                 consoleAssetsDir
@@ -806,14 +807,14 @@ mkWaiApp ::
   -- | Set of environment variables for reference in UIs
   Env.Environment ->
   CorsConfig ->
-  -- | is console enabled - TODO: better type
-  Bool ->
+  -- | Is console enabled
+  ConsoleStatus ->
   -- | filepath to the console static assets directory - TODO: better type
   Maybe Text ->
   -- | DSN for console sentry integration
   Maybe Text ->
   -- | is telemetry enabled
-  Bool ->
+  TelemetryStatus ->
   SchemaCacheRef ->
   WS.ConnectionOptions ->
   KeepAliveDelay ->
@@ -850,7 +851,7 @@ mkWaiApp
         corsPolicy
         scSQLGenCtx
         scEnableReadOnlyMode
-        scEnableAllowlist
+        scEnableAllowList
         keepAliveDelay
         scServerMetrics
         scPrometheusMetrics
@@ -893,13 +894,13 @@ httpApp ::
   (ServerCtx -> Spock.SpockT m ()) ->
   CorsConfig ->
   ServerCtx ->
-  Bool ->
+  ConsoleStatus ->
   Maybe Text ->
   Maybe Text ->
-  Bool ->
+  TelemetryStatus ->
   EKG.Store EKG.EmptyMetrics ->
   Spock.SpockT m ()
-httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentryDsn enableTelemetry ekgStore = do
+httpApp setupHook corsCfg serverCtx consoleStatus consoleAssetsDir consoleSentryDsn enableTelemetry ekgStore = do
   -- Additional spock action to run
   setupHook serverCtx
 
@@ -909,7 +910,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentry
       corsMiddleware (mkDefaultCorsPolicy corsCfg)
 
   -- API Console and Root Dir
-  when (enableConsole && enableMetadata) serveApiConsole
+  when (isConsoleEnabled consoleStatus && enableMetadata) serveApiConsole
 
   -- Local console assets for server and CLI consoles
   serveApiConsoleAssets

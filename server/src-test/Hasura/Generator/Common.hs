@@ -1,5 +1,7 @@
 module Hasura.Generator.Common
   ( genHashMap,
+    genInt,
+    genText,
     genNonEmptyText,
     genArbitraryUnicodeText,
     genArbitraryAlphaNumText,
@@ -8,9 +10,12 @@ module Hasura.Generator.Common
     genGName,
     genDescription,
     defaultRange,
+    jsonRoundTrip,
   )
 where
 
+import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson qualified as Aeson
 import Data.HashMap.Strict qualified as HM
 import Data.Text.NonEmpty (NonEmptyText, mkNonEmptyText)
 import Hasura.Prelude
@@ -19,6 +24,8 @@ import Hedgehog
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range qualified as Range
 import Language.GraphQL.Draft.Syntax qualified as G
+import Test.Hspec
+import Test.Hspec.Hedgehog
 
 genHashMap ::
   MonadGen m =>
@@ -28,6 +35,12 @@ genHashMap ::
   Range Int ->
   m (HashMap a b)
 genHashMap genA genB range = fmap HM.fromList . Gen.list range $ (,) <$> genA <*> genB
+
+genInt :: Gen Int
+genInt = fromIntegral <$> Gen.int32 (Range.linear 1 99999)
+
+genText :: Gen Text
+genText = Gen.text (Range.linear 0 11) Gen.unicode
 
 genNonEmptyText :: MonadGen m => Range Int -> m NonEmptyText
 genNonEmptyText range = mkNonEmptyText `Gen.mapMaybeT` genArbitraryUnicodeText range
@@ -54,3 +67,10 @@ genDescription range = G.Description <$> genArbitraryUnicodeText range
 -- blowing up.
 defaultRange :: Integral a => Range a
 defaultRange = Range.linear 0 8
+
+-- | Given 'Gen' @a@, assert that @a@'s Aeson instances are isomorphic.
+jsonRoundTrip :: forall a. (FromJSON a, ToJSON a, Eq a, Show a) => Gen a -> String -> Spec
+jsonRoundTrip gen ty = do
+  it ty $ hedgehog $ do
+    term <- forAll gen
+    tripping term Aeson.toJSON Aeson.fromJSON

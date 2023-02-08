@@ -183,7 +183,6 @@ instance
   NativeQueryMetadata ('Postgres pgKind)
   where
   type NativeQueryInfo ('Postgres pgKind) = NativeQueryInfoImpl ('Postgres pgKind)
-  type NativeQueryName ('Postgres pgKind) = NativeQueryNameImpl
   type TrackNativeQuery ('Postgres pgKind) = TrackNativeQueryImpl ('Postgres pgKind)
   trackNativeQuerySource = tnqSource
   nativeQueryInfoName = nqiiRootFieldName

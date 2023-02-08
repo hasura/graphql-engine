@@ -2199,9 +2199,9 @@ Datasets are represented by abstract names referencing database-schema templates
 
 The `/datasets/:name` resource has the following methods:
 
-* `GET /datasets/:template_name` -> `{"exists": true|false}`
-* `POST /datasets/:clone_name {"from": template_name}` -> `{"config": {...}}`
-* `DELETE /datasets/:clone_name` -> `{"message": "success"}`
+* `GET /datasets/templates/:template_name` -> `{"exists": true|false}`
+* `POST /datasets/clones/:clone_name {"from": template_name}` -> `{"config": {...}}`
+* `DELETE /datasets/clones/:clone_name` -> `{"message": "success"}`
 
 The `POST` method is the most significant way to interact with the API. It allows for cloning a dataset template to a new name. The new name can be used to delete the dataset, and the config returned from the POST API call can be used as the config header for non-dataset interactions such as queries.
 

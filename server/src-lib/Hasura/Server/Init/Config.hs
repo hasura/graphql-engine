@@ -36,6 +36,17 @@ module Hasura.Server.Init.Config
 
     -- * ServeOptionsRaw
     ServeOptionsRaw (..),
+    ConsoleStatus (..),
+    isConsoleEnabled,
+    isWebSocketCompressionEnabled,
+    AllowListStatus (..),
+    isAllowListEnabled,
+    DevModeStatus (..),
+    isDevModeEnabled,
+    TelemetryStatus (..),
+    isTelemetryEnabled,
+    WsReadCookieStatus (..),
+    isWsReadCookieEnabled,
     Port,
     _getPort,
     mkPort,
@@ -99,6 +110,7 @@ data Option def = Option
     _envVar :: String,
     _helpMessage :: String
   }
+  deriving (Functor)
 
 -- | Helper function for pretty printing @Option a@.
 optionPP :: Option a -> (String, String)
@@ -269,11 +281,11 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoJwtSecret :: Maybe Auth.JWTConfig,
     rsoUnAuthRole :: Maybe Session.RoleName,
     rsoCorsConfig :: Maybe Cors.CorsConfig,
-    rsoEnableConsole :: Bool,
+    rsoConsoleStatus :: ConsoleStatus,
     rsoConsoleAssetsDir :: Maybe Text,
     rsoConsoleSentryDsn :: Maybe Text,
-    rsoEnableTelemetry :: Maybe Bool,
-    rsoWsReadCookie :: Bool,
+    rsoEnableTelemetry :: Maybe TelemetryStatus,
+    rsoWsReadCookie :: WsReadCookieStatus,
     rsoStringifyNum :: Schema.Options.StringifyNumbers,
     rsoDangerousBooleanCollapse :: Maybe Schema.Options.DangerouslyCollapseBooleans,
     rsoEnabledAPIs :: Maybe (HashSet API),
@@ -282,16 +294,16 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     -- We have different config options for livequery and streaming subscriptions
     rsoStreamingMxRefetchInt :: Maybe Subscription.Options.RefetchInterval,
     rsoStreamingMxBatchSize :: Maybe Subscription.Options.BatchSize,
-    rsoEnableAllowlist :: Bool,
+    rsoEnableAllowList :: AllowListStatus,
     rsoEnabledLogTypes :: Maybe (HashSet (Logging.EngineLogType impl)),
     rsoLogLevel :: Maybe Logging.LogLevel,
-    rsoDevMode :: Bool,
+    rsoDevMode :: DevModeStatus,
     rsoAdminInternalErrors :: Maybe Bool,
     rsoEventsHttpPoolSize :: Maybe (Refined Positive Int),
     rsoEventsFetchInterval :: Maybe (Refined NonNegative Milliseconds),
     rsoAsyncActionsFetchInterval :: Maybe OptionalInterval,
     rsoEnableRemoteSchemaPermissions :: Schema.Options.RemoteSchemaPermissions,
-    rsoWebSocketCompression :: Bool,
+    rsoWebSocketCompression :: WebSockets.CompressionOptions,
     rsoWebSocketKeepAlive :: Maybe KeepAliveDelay,
     rsoInferFunctionPermissions :: Maybe Schema.Options.InferFunctionPermissions,
     rsoEnableMaintenanceMode :: Server.Types.MaintenanceMode (),
@@ -307,6 +319,112 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoExtensionsSchema :: Maybe MonadTx.ExtensionsSchema,
     rsoMetadataDefaults :: Maybe MetadataDefaults
   }
+
+-- | Whether or not to serve Console assets.
+data ConsoleStatus = ConsoleEnabled | ConsoleDisabled
+  deriving stock (Show, Eq, Ord, Generic)
+
+instance NFData ConsoleStatus
+
+instance Hashable ConsoleStatus
+
+isConsoleEnabled :: ConsoleStatus -> Bool
+isConsoleEnabled = \case
+  ConsoleEnabled -> True
+  ConsoleDisabled -> False
+
+instance FromJSON ConsoleStatus where
+  parseJSON = fmap (bool ConsoleDisabled ConsoleEnabled) . Aeson.parseJSON
+
+instance ToJSON ConsoleStatus where
+  toJSON = Aeson.toJSON . isConsoleEnabled
+
+isWebSocketCompressionEnabled :: WebSockets.CompressionOptions -> Bool
+isWebSocketCompressionEnabled = \case
+  WebSockets.PermessageDeflateCompression _ -> True
+  WebSockets.NoCompression -> False
+
+-- | A representation of whether or not to enable the GraphQL Query AllowList.
+--
+-- See: https://hasura.io/docs/latest/security/allow-list/#enable-allow-list
+data AllowListStatus = AllowListEnabled | AllowListDisabled
+  deriving stock (Show, Eq, Ord, Generic)
+
+instance NFData AllowListStatus
+
+instance Hashable AllowListStatus
+
+isAllowListEnabled :: AllowListStatus -> Bool
+isAllowListEnabled = \case
+  AllowListEnabled -> True
+  AllowListDisabled -> False
+
+instance FromJSON AllowListStatus where
+  parseJSON = fmap (bool AllowListDisabled AllowListEnabled) . Aeson.parseJSON
+
+instance ToJSON AllowListStatus where
+  toJSON = Aeson.toJSON . isAllowListEnabled
+
+-- | A representation of whether or not to enable Hasura Dev Mode.
+--
+-- See: https://hasura.io/docs/latest/deployment/graphql-engine-flags/config-examples/#dev-mode
+data DevModeStatus = DevModeEnabled | DevModeDisabled
+  deriving stock (Show, Eq, Ord, Generic)
+
+instance NFData DevModeStatus
+
+instance Hashable DevModeStatus
+
+isDevModeEnabled :: DevModeStatus -> Bool
+isDevModeEnabled = \case
+  DevModeEnabled -> True
+  DevModeDisabled -> False
+
+instance FromJSON DevModeStatus where
+  parseJSON = fmap (bool DevModeDisabled DevModeEnabled) . Aeson.parseJSON
+
+instance ToJSON DevModeStatus where
+  toJSON = Aeson.toJSON . isDevModeEnabled
+
+-- | A representation of whether or not to enable telemetry that is isomorphic to 'Bool'.
+data TelemetryStatus = TelemetryEnabled | TelemetryDisabled
+  deriving stock (Show, Eq, Ord, Generic)
+
+instance NFData TelemetryStatus
+
+instance Hashable TelemetryStatus
+
+isTelemetryEnabled :: TelemetryStatus -> Bool
+isTelemetryEnabled = \case
+  TelemetryEnabled -> True
+  TelemetryDisabled -> False
+
+instance FromJSON TelemetryStatus where
+  parseJSON = fmap (bool TelemetryDisabled TelemetryEnabled) . Aeson.parseJSON
+
+instance ToJSON TelemetryStatus where
+  toJSON = Aeson.toJSON . isTelemetryEnabled
+
+-- | A representation of whether or not to read the websocket cookie
+-- on initial handshake that is isomorphic to 'Bool'. See
+-- 'wsReadCookieOption' for more details.
+data WsReadCookieStatus = WsReadCookieEnabled | WsReadCookieDisabled
+  deriving stock (Show, Eq, Generic)
+
+instance NFData WsReadCookieStatus
+
+instance Hashable WsReadCookieStatus
+
+isWsReadCookieEnabled :: WsReadCookieStatus -> Bool
+isWsReadCookieEnabled = \case
+  WsReadCookieEnabled -> True
+  WsReadCookieDisabled -> False
+
+instance FromJSON WsReadCookieStatus where
+  parseJSON = fmap (bool WsReadCookieDisabled WsReadCookieEnabled) . Aeson.parseJSON
+
+instance ToJSON WsReadCookieStatus where
+  toJSON = Aeson.toJSON . isWsReadCookieEnabled
 
 -- | An 'Int' representing a Port number in the range 0 to 65536.
 newtype Port = Port {_getPort :: Int}
@@ -442,16 +560,16 @@ data ServeOptions impl = ServeOptions
     soJwtSecret :: [Auth.JWTConfig],
     soUnAuthRole :: Maybe Session.RoleName,
     soCorsConfig :: Cors.CorsConfig,
-    soEnableConsole :: Bool,
+    soConsoleStatus :: ConsoleStatus,
     soConsoleAssetsDir :: Maybe Text,
     soConsoleSentryDsn :: Maybe Text,
-    soEnableTelemetry :: Bool,
+    soEnableTelemetry :: TelemetryStatus,
     soStringifyNum :: Schema.Options.StringifyNumbers,
     soDangerousBooleanCollapse :: Schema.Options.DangerouslyCollapseBooleans,
     soEnabledAPIs :: HashSet API,
     soLiveQueryOpts :: Subscription.Options.LiveQueriesOptions,
     soStreamingQueryOpts :: Subscription.Options.StreamQueriesOptions,
-    soEnableAllowlist :: Bool,
+    soEnableAllowList :: AllowListStatus,
     soEnabledLogTypes :: HashSet (Logging.EngineLogType impl),
     soLogLevel :: Logging.LogLevel,
     soResponseInternalErrorsConfig :: ResponseInternalErrorsConfig,
@@ -467,7 +585,7 @@ data ServeOptions impl = ServeOptions
     -- | See note '$experimentalFeatures'
     soExperimentalFeatures :: HashSet Server.Types.ExperimentalFeature,
     soEventsFetchBatchSize :: Refined NonNegative Int,
-    soDevMode :: Bool,
+    soDevMode :: DevModeStatus,
     soGracefulShutdownTimeout :: Refined NonNegative Seconds,
     soWebSocketConnectionInitTimeout :: WSConnectionInitTimeout,
     soEventingMode :: Server.Types.EventingMode,

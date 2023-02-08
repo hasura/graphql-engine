@@ -39,5 +39,8 @@ export const postgres: Database = {
       const { name, schema } = table as PostgresTable;
       return schema === 'public' ? name : `${schema}_${name}`;
     },
+    getSupportedQueryTypes: async () => {
+      return ['select', 'insert', 'update', 'delete'];
+    },
   },
 };

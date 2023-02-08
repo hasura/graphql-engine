@@ -6,6 +6,7 @@
 -- are free to provide their own as needed.
 module Hasura.NativeQuery.Types
   ( NativeQueryMetadata (..),
+    NativeQueryName (..),
     NativeQueryError (..),
     BackendTrackNativeQuery (..),
   )
@@ -20,6 +21,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.SourceConfiguration
 import Hasura.SQL.Backend
+import Language.GraphQL.Draft.Syntax qualified as G
 
 type APIType a = (ToJSON a, FromJSON a)
 
@@ -28,14 +30,10 @@ type APIType a = (ToJSON a, FromJSON a)
 --
 -- Uninstantiable defaults are given for types and methods.
 class
-  ( APIType (NativeQueryName b),
-    APIType (TrackNativeQuery b),
+  ( APIType (TrackNativeQuery b),
     APIType (NativeQueryInfo b),
-    Ord (NativeQueryName b),
     HasCodec (NativeQueryInfo b),
-    Representable (NativeQueryInfo b),
-    Representable (NativeQueryName b),
-    ToTxt (NativeQueryName b)
+    Representable (NativeQueryInfo b)
   ) =>
   NativeQueryMetadata (b :: BackendType)
   where
@@ -43,11 +41,6 @@ class
   type NativeQueryInfo b :: Type
 
   type NativeQueryInfo b = Void
-
-  -- | The types of names of native queries.
-  type NativeQueryName b :: Type
-
-  type NativeQueryName b = Void
 
   -- | The API payload of the 'track_native_query' api endpoint.
   type TrackNativeQuery b :: Type
@@ -60,8 +53,8 @@ class
   trackNativeQuerySource = absurd
 
   -- | Projection function giving the name of a native query.
-  nativeQueryInfoName :: NativeQueryInfo b -> NativeQueryName b
-  default nativeQueryInfoName :: (NativeQueryInfo b ~ Void) => NativeQueryInfo b -> NativeQueryName b
+  nativeQueryInfoName :: NativeQueryInfo b -> NativeQueryName
+  default nativeQueryInfoName :: (NativeQueryInfo b ~ Void) => NativeQueryInfo b -> NativeQueryName
   nativeQueryInfoName = absurd
 
   -- | Projection function, producing a 'NativeQueryInfo b' from a 'TrackNativeQuery b'.
@@ -89,3 +82,17 @@ deriving newtype instance NativeQueryMetadata b => FromJSON (BackendTrackNativeQ
 data NativeQueryError
   = NativeQueryParseError Text
   | NativeQueryValidationError QErr
+
+---
+
+-- The name of a native query. This appears as a root field name in the graphql schema.
+newtype NativeQueryName = NativeQueryName {getNativeQueryName :: G.Name}
+  deriving newtype (Eq, Ord, Show, Hashable, NFData, ToJSON, FromJSON, ToTxt)
+  deriving stock (Generic)
+
+instance HasCodec NativeQueryName where
+  codec = dimapCodec NativeQueryName getNativeQueryName codec
+
+instance FromJSONKey NativeQueryName
+
+instance ToJSONKey NativeQueryName

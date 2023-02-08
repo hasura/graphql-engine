@@ -1,7 +1,9 @@
 module Autodocodec.Extended
   ( caseInsensitiveHashMapCodec,
     caseInsensitiveTextCodec,
+    graphQLEnumValueCodec,
     graphQLExecutableDocumentCodec,
+    graphQLFieldDescriptionCodec,
     graphQLFieldNameCodec,
     graphQLValueCodec,
     graphQLSchemaDocumentCodec,
@@ -49,6 +51,9 @@ caseInsensitiveHashMapCodec elemCodec =
 caseInsensitiveTextCodec :: forall a. (CI.FoldCase a, HasCodec a) => JSONCodec (CI.CI a)
 caseInsensitiveTextCodec = dimapCodec CI.mk CI.original codec
 
+graphQLEnumValueCodec :: JSONCodec G.EnumValue
+graphQLEnumValueCodec = dimapCodec G.EnumValue G.unEnumValue graphQLFieldNameCodec
+
 graphQLExecutableDocumentCodec :: JSONCodec (G.ExecutableDocument G.Name)
 graphQLExecutableDocumentCodec = bimapCodec dec enc codec
   where
@@ -63,6 +68,9 @@ graphQLFieldNameCodec = named "GraphQLName" $ bimapCodec dec enc codec
       maybeToEither ("invalid GraphQL field name '" <> T.unpack text <> "'") $
         G.mkName text
     enc = G.unName
+
+graphQLFieldDescriptionCodec :: JSONCodec G.Description
+graphQLFieldDescriptionCodec = dimapCodec G.Description G.unDescription codec
 
 graphQLValueCodec :: forall var. Typeable var => JSONCodec var -> JSONCodec (G.Value var)
 graphQLValueCodec varCodec =

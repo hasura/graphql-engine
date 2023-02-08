@@ -78,6 +78,10 @@ module Hasura.Eventing.ScheduledTrigger
     CronEventSeed (..),
     LockedEventsCtx (..),
 
+    -- * Cron trigger stats logger
+    createFetchedCronTriggerStatsLogger,
+    closeFetchedCronTriggersStatsLogger,
+
     -- * Scheduled events stats logger
     createFetchedScheduledEventsStatsLogger,
     closeFetchedScheduledEventsStatsLogger,
@@ -166,9 +170,10 @@ runCronEventsGenerator ::
     MonadMetadataStorage m
   ) =>
   L.Logger L.Hasura ->
+  FetchedCronTriggerStatsLogger ->
   IO SchemaCache ->
   m void
-runCronEventsGenerator logger getSC = do
+runCronEventsGenerator logger cronTriggerStatsLogger getSC = do
   forever $ do
     sc <- liftIO getSC
     -- get cron triggers from cache
@@ -181,6 +186,8 @@ runCronEventsGenerator logger getSC = do
       -- When shutdown is initiated, we stop generating new cron events
       eitherRes <- runExceptT $ do
         deprivedCronTriggerStats <- liftEitherM $ getDeprivedCronTriggerStats $ Map.keys cronTriggersCache
+        -- Log fetched deprived cron trigger stats
+        logFetchedCronTriggersStats cronTriggerStatsLogger deprivedCronTriggerStats
         -- join stats with cron triggers and produce @[(CronTriggerInfo, CronTriggerStats)]@
         cronTriggersForHydrationWithStats <-
           catMaybes
@@ -1109,3 +1116,23 @@ logFetchedScheduledEventsStats ::
   m ()
 logFetchedScheduledEventsStats logger cron oneOff =
   logStats logger (FetchedScheduledEventsStats cron oneOff 1)
+
+-- | Logger to accumulate stats of fetched cron triggers, for generating cron events, over a period of time and
+-- log once using @'L.Logger L.Hasura'.
+-- See @'createStatsLogger' for more details.
+createFetchedCronTriggerStatsLogger :: (MonadIO m) => L.Logger L.Hasura -> m FetchedCronTriggerStatsLogger
+createFetchedCronTriggerStatsLogger = createStatsLogger
+
+-- | Close the fetched cron trigger stats logger.
+closeFetchedCronTriggersStatsLogger ::
+  (MonadIO m) => L.Logger L.Hasura -> FetchedCronTriggerStatsLogger -> m ()
+closeFetchedCronTriggersStatsLogger = closeStatsLogger L.cronEventGeneratorProcessType
+
+-- | Log statistics of fetched cron triggers. See @'logStats' for more details.
+logFetchedCronTriggersStats ::
+  (MonadIO m) =>
+  FetchedCronTriggerStatsLogger ->
+  [CronTriggerStats] ->
+  m ()
+logFetchedCronTriggersStats logger cronTriggerStats =
+  logStats logger (FetchedCronTriggerStats cronTriggerStats 1)

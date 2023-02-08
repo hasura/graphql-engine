@@ -2,6 +2,8 @@ import * as React from 'react';
 
 interface KnowMoreLinkProps {
   href: string;
+  text?: string;
+  className?: string;
 }
 
 /**
@@ -9,16 +11,16 @@ interface KnowMoreLinkProps {
  * @see https://github.com/hasura/graphql-engine-mono/pull/7023
  */
 export const KnowMoreLink: React.VFC<KnowMoreLinkProps> = props => {
-  const { href } = props;
+  const { href, className = '', text = '(Know More)' } = props;
 
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="ml-xs italic text-sm text-secondary"
+      className={`ml-xs italic text-sm text-secondary ${className}`}
     >
-      (Know More)
+      {text}
     </a>
   );
 };

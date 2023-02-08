@@ -9,10 +9,12 @@ import { AccessType, QueryType } from '../../../types';
 import { api } from '../../api';
 import { isPermission, keyToPermission } from '../../../utils';
 import { PermissionsSchema } from '../../../schema';
+import { Table } from '@/features/hasura-metadata-types';
 
 export interface UseSubmitFormArgs {
   dataSourceName: string;
-  table: unknown;
+  table: Table;
+  tables: Table[];
   roleName: string;
   queryType: QueryType;
   accessType: AccessType;
@@ -21,7 +23,7 @@ export interface UseSubmitFormArgs {
 interface ExistingPermissions {
   role: string;
   queryType: QueryType;
-  table: unknown;
+  table: Table;
 }
 
 interface GetAllPermissionsArgs {
@@ -62,7 +64,8 @@ const getAllPermissions = async ({
 };
 
 export const useSubmitForm = (args: UseSubmitFormArgs) => {
-  const { dataSourceName, table, roleName, queryType, accessType } = args;
+  const { dataSourceName, table, roleName, queryType, accessType, tables } =
+    args;
 
   const queryClient = useQueryClient();
   const httpClient = useHttpClient();
@@ -92,6 +95,7 @@ export const useSubmitForm = (args: UseSubmitFormArgs) => {
       dataSourceName,
       driver: metadataSource.kind,
       table,
+      tables,
       roleName,
       queryType,
       accessType,

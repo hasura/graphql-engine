@@ -42,3 +42,29 @@ const basicArgs: ComponentPropsWithoutRef<typeof KnowMoreLink> = {
 Basic.args = basicArgs;
 
 // #endregion
+
+// -------------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------
+// CUSTOM TEXT
+// #region
+// -------------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------
+
+// --------------------------------------------------
+// STORY DEFINITION
+// --------------------------------------------------
+
+export const CustomText: ComponentStory<typeof KnowMoreLink> = args => (
+  <KnowMoreLink {...args} />
+);
+CustomText.storyName = '🎭 Custom text';
+
+const customTextArgs: ComponentPropsWithoutRef<typeof KnowMoreLink> = {
+  href: 'https://hasura.io/docs',
+  text: '(Read the docs)',
+};
+CustomText.args = customTextArgs;
+
+// #endregion

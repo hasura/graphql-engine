@@ -1,6 +1,6 @@
 ---
 description: Managing connection pools in Hasura Cloud
-title: "Cloud: Elastic connection pools"
+title: 'Cloud: Elastic connection pools'
 keywords:
   - hasura
   - docs
@@ -14,13 +14,15 @@ sidebar_position: 2
 sidebar_class_name: cloud-icon
 ---
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import Thumbnail from "@site/src/components/Thumbnail";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # Elastic Connection Pools
 
-<div className="badge badge--primary heading-badge">Available on: Professional, Enterprise (Cloud)</div>
+<div className="badge badge--primary heading-badge">
+  Available on: Cloud Standard, Cloud Professional, Cloud Enterprise
+</div>
 
 ## Introduction
 
@@ -79,7 +81,7 @@ directory as per this example:
       isolation_level: read-committed
       pool_settings:
         total_max_connections: 60
-  tables: "!include default/tables/tables.yaml"
+  tables: '!include default/tables/tables.yaml'
 ```
 
 Apply the Metadata using the CLI by running:

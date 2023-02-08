@@ -1,5 +1,6 @@
 import { defineConfig } from 'cypress';
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+import { initPlugin as initSnapshotPlugin } from 'cypress-plugin-snapshots/plugin';
 
 import * as customTasks from './src/support/tasks';
 
@@ -32,7 +33,7 @@ export default myDefineConfig({
     ...nxConfig,
 
     video: false,
-    baseUrl: 'http://localhost:4200',
+
     specPattern: [
       'src/e2e/**/*test.{js,jsx,ts,tsx}',
       'src/support/**/*unit.test.{js,ts}',
@@ -42,6 +43,8 @@ export default myDefineConfig({
       on('task', {
         ...customTasks,
       });
+
+      initSnapshotPlugin(on, config);
 
       return config;
     },

@@ -3,6 +3,7 @@ import { connect, ConnectedProps } from 'react-redux';
 import { Link } from 'react-router';
 import { FaEdit, FaTimes } from 'react-icons/fa';
 import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { KnowMoreLink } from '@/new-components/KnowMoreLink';
 
 import { Button } from '@/new-components/Button';
 import { ReduxState } from '../../../../types';
@@ -54,15 +55,8 @@ const ListComponent: React.FC<Props> = ({
             REST endpoints allow for the creation of a REST interface to your
             saved GraphQL queries and mutations. Endpoints are generated from
             /api/rest/* and inherit the authorization and permission structure
-            from your associated GraphQL nodes. (
-            <a
-              href="https://hasura.io/docs/latest/graphql/core/api-reference/restified.html"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Know More
-            </a>
-            )
+            from your associated GraphQL nodes.
+            <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/api-reference/restified.html" />
           </div>
         </div>
 
@@ -84,80 +78,78 @@ const ListComponent: React.FC<Props> = ({
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {restEndpoints.map(endpoint => (
-                <>
-                  <tr key={`rest_list_endpoint_${endpoint.name}`}>
-                    {/* Details */}
-                    <td className="px-sm py-xs max-w-xs align-top">
-                      <div className="flex items-center">
-                        <Link
-                          to={{
-                            pathname: `/api/rest/details/${endpoint.name}`,
-                            state: {
-                              ...endpoint,
-                              currentQuery: findQuery(endpoint.name),
-                            },
-                          }}
-                        >
-                          <h4>{endpoint.name}</h4>
-                        </Link>
-                      </div>
-                      {endpoint.comment && <p>{endpoint.comment}</p>}
-                    </td>
+                <tr key={`rest_list_endpoint_${endpoint.name}`}>
+                  {/* Details */}
+                  <td className="px-sm py-xs max-w-xs align-top">
+                    <div className="flex items-center">
+                      <Link
+                        to={{
+                          pathname: `/api/rest/details/${endpoint.name}`,
+                          state: {
+                            ...endpoint,
+                            currentQuery: findQuery(endpoint.name),
+                          },
+                        }}
+                      >
+                        <h4>{endpoint.name}</h4>
+                      </Link>
+                    </div>
+                    {endpoint.comment && <p>{endpoint.comment}</p>}
+                  </td>
 
-                    {/* Endpoint */}
-                    <td className="px-sm py-xs align-top">
-                      <div className="flex flex-col w-3/4">
-                        <URLPreview urlInput={endpoint.url} />
-                        <CollapsibleToggle
-                          title="GraphQL Request"
-                          useDefaultTitleStyle
-                        >
-                          <AceEditor
-                            name="query-viewer"
-                            value={findQuery(endpoint.name)}
-                            placeholder="query SampleQuery {}"
-                            height="300px"
-                            mode="graphqlschema"
-                            readOnly
-                            setOptions={{ useWorker: false }}
-                          />
-                        </CollapsibleToggle>
-                      </div>
-                    </td>
+                  {/* Endpoint */}
+                  <td className="px-sm py-xs align-top">
+                    <div className="flex flex-col w-3/4">
+                      <URLPreview urlInput={endpoint.url} />
+                      <CollapsibleToggle
+                        title="GraphQL Request"
+                        useDefaultTitleStyle
+                      >
+                        <AceEditor
+                          name="query-viewer"
+                          value={findQuery(endpoint.name)}
+                          placeholder="query SampleQuery {}"
+                          height="300px"
+                          mode="graphqlschema"
+                          readOnly
+                          setOptions={{ useWorker: false }}
+                        />
+                      </CollapsibleToggle>
+                    </div>
+                  </td>
 
-                    <td className="px-sm py-xs align-top">
-                      {badgeSort(endpoint.methods).map(method => (
-                        <span className="mr-sm" key={`badge-list-${method}`}>
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
-                            {method}
-                          </span>
+                  <td className="px-sm py-xs align-top">
+                    {badgeSort(endpoint.methods).map(method => (
+                      <span className="mr-sm" key={`badge-list-${method}`}>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                          {method}
                         </span>
-                      ))}
-                    </td>
+                      </span>
+                    ))}
+                  </td>
 
-                    {/* Modify Column */}
-                    <td className="px-sm py-xs align-top float-right">
-                      <Button
-                        size="sm"
-                        onClick={onClickDelete(
-                          endpoint.name,
-                          findQuery(endpoint.name)
-                        )}
-                        icon={<FaTimes />}
-                        className="mr-1"
-                      >
-                        Delete
-                      </Button>
-                      <Button
-                        size="sm"
-                        icon={<FaEdit />}
-                        onClick={onClickEdit(endpoint.name)}
-                      >
-                        Edit
-                      </Button>
-                    </td>
-                  </tr>
-                </>
+                  {/* Modify Column */}
+                  <td className="px-sm py-xs align-top float-right">
+                    <Button
+                      size="sm"
+                      onClick={onClickDelete(
+                        endpoint.name,
+                        findQuery(endpoint.name)
+                      )}
+                      icon={<FaTimes />}
+                      className="mr-1"
+                    >
+                      Delete
+                    </Button>
+                    <Button
+                      size="sm"
+                      icon={<FaEdit />}
+                      onClick={onClickEdit(endpoint.name)}
+                    >
+                      Edit
+                    </Button>
+                  </td>
+                </tr>
               ))}
             </tbody>
           </table>
@@ -176,7 +168,7 @@ const listComponentConnector = connect(
   mapDispatchToPropsEmpty
 );
 type InjectedProps = ConnectedProps<typeof listComponentConnector>;
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 const ConnectedComponent = listComponentConnector(ListComponent);
 
 export default ConnectedComponent;

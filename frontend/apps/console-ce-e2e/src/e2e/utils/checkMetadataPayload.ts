@@ -26,5 +26,5 @@ export function checkMetadataPayload(
   }
   cy.wrap({
     bodyToSnapshot,
-  }).snapshot({ name: options.name });
+  }).toMatchSnapshot({ name: options.name });
 }

@@ -46,7 +46,7 @@ const OneOffScheduledEventForm = (props: Props) => {
             tooltip="A statement to help describe the scheduled event in brief"
           />
         </div>
-        <div className="mb-md">
+        <div className="mb-md chromatic-ignore">
           <ScheduledTime />
         </div>
         <div className="mb-md">

@@ -277,9 +277,7 @@ describe('Actions with Transform', () => {
     readMetadata().then((md: { body: Metadata['metadata'] }) => {
       cy.wrap(
         (md.body.actions || []).find(action => action.name === 'login')
-      ).snapshot({
-        name: 'Action metadata',
-      });
+      ).toMatchSnapshot({ name: 'Action metadata' });
     });
 
     // // --------------------

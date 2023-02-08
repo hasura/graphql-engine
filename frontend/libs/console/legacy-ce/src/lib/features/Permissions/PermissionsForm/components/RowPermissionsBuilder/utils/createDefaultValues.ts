@@ -31,14 +31,21 @@ export const createOperatorsObject = ({
           name: key,
           typeName: key,
           type: 'boolOperator',
-          [key]: value.map((each: Record<string, any>) =>
-            createOperatorsObject({
-              tableName,
-              schema,
-              existingPermission: each,
-              tableConfig,
-            })
-          ),
+          [key]: Array.isArray(value)
+            ? value.map((each: Record<string, any>) =>
+                createOperatorsObject({
+                  tableName,
+                  schema,
+                  existingPermission: each,
+                  tableConfig,
+                })
+              )
+            : createOperatorsObject({
+                tableName,
+                schema,
+                existingPermission: value,
+                tableConfig,
+              }),
         };
       }
 

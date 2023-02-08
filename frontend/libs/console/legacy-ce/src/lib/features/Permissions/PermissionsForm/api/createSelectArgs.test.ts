@@ -7,6 +7,7 @@ const selectArgs: CreateInsertArgs = {
   table: 'users',
   queryType: 'insert',
   role: 'user',
+  tables: [],
   formData: {
     queryType: 'select',
     filterType: 'none',
@@ -62,6 +63,7 @@ test('create select args object from form data', () => {
           allow_aggregations: false,
           columns: ['email', 'type'],
           filter: {},
+          presets: [],
         },
         role: 'user',
         source: 'default',

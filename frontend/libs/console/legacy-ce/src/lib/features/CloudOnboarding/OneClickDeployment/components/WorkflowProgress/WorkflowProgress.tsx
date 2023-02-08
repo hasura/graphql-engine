@@ -24,11 +24,12 @@ import {
   isHasuraPath,
   shouldTriggerFirstDeployment,
 } from '../../util';
+import { fillSampleQueryInGraphiQL } from '../../../utils';
 import { CliScreen } from '../CliScreen/CliScreen';
 import { RedirectCountDown } from '../RedirectCountdown/RedirectCountDown';
 import { Disclaimer } from '../Disclaimer/Disclaimer';
 import { EnvVarsForm } from '../EnvVarsForm/EnvVarsForm';
-import { useTriggerDeployment } from '../../hooks';
+import { useTriggerDeployment, useSampleQuery } from '../../hooks';
 import { getTenantEnvVarsQueryKey } from '../../constants';
 
 type WorkflowProgressProps = {
@@ -37,6 +38,7 @@ type WorkflowProgressProps = {
   projectId: string;
   gitRepoName: string;
   onCompleteSuccess?: VoidFunction;
+  sampleQueriesFileUrl: string;
   onCompleteError?: VoidFunction;
   fallbackApps: FallbackApp[];
 };
@@ -49,6 +51,7 @@ export function WorkflowProgress(props: WorkflowProgressProps) {
     onCompleteSuccess,
     onCompleteError,
     fallbackApps,
+    sampleQueriesFileUrl,
   } = props;
   const dispatch = useAppDispatch();
 
@@ -89,6 +92,9 @@ export function WorkflowProgress(props: WorkflowProgressProps) {
     }
   }, [progressState]);
 
+  // get the sample query associated with this deployment to prefill in graphiql
+  const query = useSampleQuery(sampleQueriesFileUrl);
+
   // set appropriate stepper index on checkpoints
   React.useEffect(() => {
     // Move the stepper to `Get started` if the deployment is complete
@@ -103,8 +109,8 @@ export function WorkflowProgress(props: WorkflowProgressProps) {
       // this timeout makes sure that there's a delay in setting query after introspection has been fired
       // this timeout does not intend to wait for introspection to finish
       setTimeout(() => {
-        // change the query to empty string, to remove the default comment(for empty new projects) in graphiQL
-        forceChangeGraphiqlQuery('', dispatch);
+        // update the default sample query in GraphiQL tab to the query provided by user, or replace it by empty string.
+        fillSampleQueryInGraphiQL(query, dispatch);
       }, 500);
       setStepperIndex(3);
       return;
@@ -120,7 +126,7 @@ export function WorkflowProgress(props: WorkflowProgressProps) {
     }
 
     setStepperIndex(1);
-  }, [progressState]);
+  }, [progressState, query]);
 
   // subscribe to the one click deployment workflow state in the database
   React.useEffect(() => {

@@ -30,7 +30,8 @@ import {
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { isCloudConsole } from '@/utils';
 import globals from '@/Globals';
-import KnowMoreLink from '@/components/Common/KnowMoreLink/KnowMoreLink';
+import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+
 import styles from './styles.module.scss';
 import { Dispatch, ReduxState } from '../../../../types';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
@@ -260,7 +261,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
   );
 };
 
-interface ManageDatabaseProps extends InjectedProps {}
+type ManageDatabaseProps = InjectedProps;
 
 let autoRedirectedToConnectPage = false;
 

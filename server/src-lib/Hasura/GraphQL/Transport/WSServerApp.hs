@@ -31,7 +31,8 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.Auth (AuthMode, UserAuthentication)
 import Hasura.Server.Cors
 import Hasura.Server.Init.Config
-  ( KeepAliveDelay,
+  ( AllowListStatus,
+    KeepAliveDelay,
     WSConnectionInitTimeout,
   )
 import Hasura.Server.Limits
@@ -112,7 +113,7 @@ createWSServerEnv ::
   CorsPolicy ->
   SQLGenCtx ->
   ReadOnlyMode ->
-  Bool ->
+  AllowListStatus ->
   KeepAliveDelay ->
   ServerMetrics ->
   PrometheusMetrics ->

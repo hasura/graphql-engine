@@ -1,8 +1,12 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Backends.DataConnector.API.V0.Mutations
   ( MutationRequest (..),
+    mrTableRelationships,
+    mrInsertSchema,
+    mrOperations,
     TableInsertSchema (..),
     InsertFieldSchema (..),
     ColumnInsertSchema (..),
@@ -11,6 +15,10 @@ module Hasura.Backends.DataConnector.API.V0.Mutations
     ArrayRelationInsertSchema (..),
     MutationOperation (..),
     InsertMutationOperation (..),
+    imoTable,
+    imoRows,
+    imoPostInsertCheck,
+    imoReturningFields,
     RowObject (..),
     InsertFieldValue,
     mkColumnInsertFieldValue,
@@ -27,7 +35,10 @@ module Hasura.Backends.DataConnector.API.V0.Mutations
     RowColumnOperatorValue (..),
     DeleteMutationOperation (..),
     MutationResponse (..),
+    mrOperationResults,
     MutationOperationResults (..),
+    morAffectedRows,
+    morReturning,
   )
 where
 
@@ -35,6 +46,7 @@ import Autodocodec.Extended
 import Autodocodec.OpenAPI ()
 import Control.Lens (Lens', lens, prism')
 import Control.Lens.Combinators (Prism')
+import Control.Lens.TH (makeLenses)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
 import Data.HashMap.Strict (HashMap)
@@ -491,3 +503,8 @@ instance HasCodec MutationOperationResults where
           .= _morAffectedRows
         <*> optionalFieldOrNull "returning" "The rows affected by the mutation operation"
           .= _morReturning
+
+$(makeLenses ''MutationRequest)
+$(makeLenses ''InsertMutationOperation)
+$(makeLenses ''MutationResponse)
+$(makeLenses ''MutationOperationResults)

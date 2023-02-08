@@ -124,20 +124,20 @@ runTrackNativeQuery (BackendTrackNativeQuery trackNativeQueryRequest) = do
 -- | API payload for the 'untrack_native_query' endpoint.
 data UntrackNativeQuery (b :: BackendType) = UntrackNativeQuery
   { utnqSource :: SourceName,
-    utnqRootFieldName :: NativeQueryName b
+    utnqRootFieldName :: NativeQueryName
   }
 
-deriving instance Backend b => Show (UntrackNativeQuery b)
+deriving instance Show (UntrackNativeQuery b)
 
-deriving instance Backend b => Eq (UntrackNativeQuery b)
+deriving instance Eq (UntrackNativeQuery b)
 
-instance Backend b => FromJSON (UntrackNativeQuery b) where
+instance FromJSON (UntrackNativeQuery b) where
   parseJSON = withObject "UntrackNativeQuery" $ \o -> do
     utnqSource <- o .: "source"
     utnqRootFieldName <- o .: "root_field_name"
     pure UntrackNativeQuery {..}
 
-instance Backend b => ToJSON (UntrackNativeQuery b) where
+instance ToJSON (UntrackNativeQuery b) where
   toJSON UntrackNativeQuery {..} =
     object
       [ "source" .= utnqSource,
@@ -172,7 +172,7 @@ runUntrackNativeQuery q = do
     source = utnqSource q
     fieldName = utnqRootFieldName q
 
-dropNativeQueryInMetadata :: forall b. BackendMetadata b => SourceName -> NativeQueryName b -> MetadataModifier
+dropNativeQueryInMetadata :: forall b. BackendMetadata b => SourceName -> NativeQueryName -> MetadataModifier
 dropNativeQueryInMetadata source rootFieldName =
   MetadataModifier $
     metaSources . ix source . toSourceMetadata @b . smNativeQueries %~ filter ((/= rootFieldName) . nativeQueryInfoName @b)

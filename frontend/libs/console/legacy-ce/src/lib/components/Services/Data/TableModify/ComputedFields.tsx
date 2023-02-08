@@ -1,8 +1,8 @@
 import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
+import { KnowMoreLink } from '@/new-components/KnowMoreLink';
 
 import Tooltip from '../../../Common/Tooltip/Tooltip';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import ComputedFieldsEditor from './ComputedFieldsEditor';
 import { ReduxState } from '../../../../types';
 import { Table } from '../../../../dataSources/types';
