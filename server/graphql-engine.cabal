@@ -271,6 +271,7 @@ common lib-depends
                      , autodocodec-openapi3
                      , barbies
                      , base
+                     , ghc-debug-stub
                      , bytestring
                      , containers
                      , data-default
@@ -1007,6 +1008,7 @@ executable graphql-engine
   main-is:           Main.hs
   build-depends:     base
                    , graphql-engine
+                   , ghc-debug-stub
                    , bytestring
                    , ekg-core
                    , ekg-prometheus

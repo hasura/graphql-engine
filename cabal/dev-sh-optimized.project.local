@@ -1,0 +1,12 @@
+-- This configuration is used by `dev.sh graphql-engine --optimized` and is
+-- also a good choice for running a local optimized build
+
+-- This requires cabal-install >=3.8
+import: cabal/dev-sh.project.local
+
+---- (reminder: top-level means apply these to all local packages)
+flags: +optimize-hasura
+-- be faster:
+documentation: false
+-- coverage inhibits performance:
+coverage: false
