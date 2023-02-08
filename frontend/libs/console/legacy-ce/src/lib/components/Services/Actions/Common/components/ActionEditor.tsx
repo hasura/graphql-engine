@@ -232,7 +232,9 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
                   passHtmlAttributesToChildren
                 >
                   <div
-                    onClick={() => setIsTypesGeneratorOpen(true)}
+                    onClick={() =>
+                      setTimeout(() => setIsTypesGeneratorOpen(true), 0)
+                    }
                     className="py-xs font-semibold px-2.5 py-xs w-full"
                   >
                     <FaFileCode className="mr-xs" />
@@ -248,7 +250,9 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
                   passHtmlAttributesToChildren
                 >
                   <div
-                    onClick={() => setIsImportTypesOpen(true)}
+                    onClick={() =>
+                      setTimeout(() => setIsImportTypesOpen(true), 0)
+                    }
                     className="py-xs font-semibold px-2.5 w-96"
                   >
                     <FaTable className="mr-xs" />
