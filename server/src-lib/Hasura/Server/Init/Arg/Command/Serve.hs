@@ -87,6 +87,7 @@ import Hasura.Server.Logging qualified as Server.Logging
 import Hasura.Server.Types qualified as Types
 import Hasura.Session qualified as Session
 import Network.Wai.Handler.Warp qualified as Warp
+import Network.WebSockets qualified as WebSockets
 import Options.Applicative qualified as Opt
 import Refined (NonNegative, Positive, Refined, refineTH)
 import Witch qualified
@@ -880,17 +881,18 @@ enableRemoteSchemaPermsOption =
       Config._helpMessage = "Enables remote schema permissions (default: false)"
     }
 
-parseWebSocketCompression :: Opt.Parser Bool
+parseWebSocketCompression :: Opt.Parser WebSockets.CompressionOptions
 parseWebSocketCompression =
-  Opt.switch
-    ( Opt.long "websocket-compression"
-        <> Opt.help (Config._helpMessage webSocketCompressionOption)
-    )
+  bool WebSockets.NoCompression (WebSockets.PermessageDeflateCompression WebSockets.defaultPermessageDeflate)
+    <$> Opt.switch
+      ( Opt.long "websocket-compression"
+          <> Opt.help (Config._helpMessage webSocketCompressionOption)
+      )
 
-webSocketCompressionOption :: Config.Option Bool
+webSocketCompressionOption :: Config.Option WebSockets.CompressionOptions
 webSocketCompressionOption =
   Config.Option
-    { Config._default = False,
+    { Config._default = WebSockets.NoCompression,
       Config._envVar = "HASURA_GRAPHQL_CONNECTION_COMPRESSION",
       Config._helpMessage = "Enable WebSocket permessage-deflate compression (default: false)"
     }

@@ -38,6 +38,7 @@ module Hasura.Server.Init.Config
     ServeOptionsRaw (..),
     ConsoleStatus (..),
     isConsoleEnabled,
+    isWebSocketCompressionEnabled,
     AllowListStatus (..),
     isAllowListEnabled,
     DevModeStatus (..),
@@ -302,7 +303,7 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoEventsFetchInterval :: Maybe (Refined NonNegative Milliseconds),
     rsoAsyncActionsFetchInterval :: Maybe OptionalInterval,
     rsoEnableRemoteSchemaPermissions :: Schema.Options.RemoteSchemaPermissions,
-    rsoWebSocketCompression :: Bool,
+    rsoWebSocketCompression :: WebSockets.CompressionOptions,
     rsoWebSocketKeepAlive :: Maybe KeepAliveDelay,
     rsoInferFunctionPermissions :: Maybe Schema.Options.InferFunctionPermissions,
     rsoEnableMaintenanceMode :: Server.Types.MaintenanceMode (),
@@ -337,6 +338,11 @@ instance FromJSON ConsoleStatus where
 
 instance ToJSON ConsoleStatus where
   toJSON = Aeson.toJSON . isConsoleEnabled
+
+isWebSocketCompressionEnabled :: WebSockets.CompressionOptions -> Bool
+isWebSocketCompressionEnabled = \case
+  WebSockets.PermessageDeflateCompression _ -> True
+  WebSockets.NoCompression -> False
 
 -- | A representation of whether or not to enable the GraphQL Query AllowList.
 --

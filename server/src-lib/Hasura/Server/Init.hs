@@ -187,7 +187,9 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
     case rsoEnableRemoteSchemaPermissions of
       Options.DisableRemoteSchemaPermissions -> withOptionDefault Nothing enableRemoteSchemaPermsOption
       enableRemoteSchemaPermissions -> pure enableRemoteSchemaPermissions
-  soConnectionOptions <- mkConnectionOptions sor
+  webSocketCompressionFromEnv <-
+    withOptionSwitch' rsoWebSocketCompression (isWebSocketCompressionEnabled, bool WebSockets.NoCompression (WebSockets.PermessageDeflateCompression WebSockets.defaultPermessageDeflate)) webSocketCompressionOption
+  let soConnectionOptions = WebSockets.defaultConnectionOptions {WebSockets.connectionCompressionOptions = webSocketCompressionFromEnv}
   soWebSocketKeepAlive <- withOptionDefault rsoWebSocketKeepAlive webSocketKeepAliveOption
   soInferFunctionPermissions <- withOptionDefault rsoInferFunctionPermissions inferFunctionPermsOption
   soEnableMaintenanceMode <- case rsoEnableMaintenanceMode of
@@ -281,16 +283,3 @@ mkResponseInternalErrorsConfig ServeOptionsRaw {..} devMode = do
       | isDevModeEnabled devMode -> pure InternalErrorsAllRequests
       | adminInternalErrors -> pure InternalErrorsAdminOnly
       | otherwise -> pure InternalErrorsDisabled
-
--- | Fetch websocket connection options from the environment and merge
--- with the values consumed in the arg parser.
-mkConnectionOptions :: Monad m => ServeOptionsRaw imp -> WithEnvT m WebSockets.ConnectionOptions
-mkConnectionOptions ServeOptionsRaw {..} = do
-  webSocketCompressionFromEnv <- withOptionSwitch rsoWebSocketCompression webSocketCompressionOption
-  pure $
-    WebSockets.defaultConnectionOptions
-      { WebSockets.connectionCompressionOptions =
-          if webSocketCompressionFromEnv
-            then WebSockets.PermessageDeflateCompression WebSockets.defaultPermessageDeflate
-            else WebSockets.NoCompression
-      }

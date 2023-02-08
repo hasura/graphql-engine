@@ -27,6 +27,7 @@ import Hasura.Server.Init qualified as UUT
 import Hasura.Server.Logging qualified as Logging
 import Hasura.Server.Types qualified as Types
 import Hasura.Session qualified as Session
+import Network.WebSockets qualified as WS
 import Options.Applicative qualified as Opt
 import Refined (NonNegative, Positive, refineTH)
 import Test.Hspec qualified as Hspec
@@ -1604,7 +1605,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoWebSocketCompression result `Hspec.shouldSatisfy` \case
-        Opt.Success webSocketCompression -> webSocketCompression == True
+        Opt.Success webSocketCompression -> webSocketCompression == WS.PermessageDeflateCompression WS.defaultPermessageDeflate
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 

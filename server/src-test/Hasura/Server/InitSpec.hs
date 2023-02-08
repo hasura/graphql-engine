@@ -79,7 +79,7 @@ emptyServeOptionsRaw =
       rsoEventsFetchInterval = Nothing,
       rsoAsyncActionsFetchInterval = Nothing,
       rsoEnableRemoteSchemaPermissions = Options.DisableRemoteSchemaPermissions,
-      rsoWebSocketCompression = False,
+      rsoWebSocketCompression = WS.NoCompression,
       rsoWebSocketKeepAlive = Nothing,
       rsoInferFunctionPermissions = Nothing,
       rsoEnableMaintenanceMode = Types.MaintenanceModeDisabled,
@@ -1088,7 +1088,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoWebSocketCompression = True}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoWebSocketCompression = (WS.PermessageDeflateCompression WS.defaultPermessageDeflate)}
             -- When
             env = [(UUT._envVar UUT.webSocketCompressionOption, "false")]
             -- Then
