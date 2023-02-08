@@ -700,17 +700,18 @@ streamingMxBatchSizeOption =
           <> "size. Default 100. "
     }
 
-parseEnableAllowlist :: Opt.Parser Bool
+parseEnableAllowlist :: Opt.Parser Config.AllowListStatus
 parseEnableAllowlist =
-  Opt.switch
-    ( Opt.long "enable-allowlist"
-        <> Opt.help (Config._helpMessage enableAllowlistOption)
-    )
+  bool Config.AllowListDisabled Config.AllowListEnabled
+    <$> Opt.switch
+      ( Opt.long "enable-allowlist"
+          <> Opt.help (Config._helpMessage enableAllowlistOption)
+      )
 
-enableAllowlistOption :: Config.Option Bool
+enableAllowlistOption :: Config.Option Config.AllowListStatus
 enableAllowlistOption =
   Config.Option
-    { Config._default = False,
+    { Config._default = Config.AllowListDisabled,
       Config._envVar = "HASURA_GRAPHQL_ENABLE_ALLOWLIST",
       Config._helpMessage = "Only accept allowed GraphQL queries"
     }

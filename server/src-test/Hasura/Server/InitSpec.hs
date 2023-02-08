@@ -70,7 +70,7 @@ emptyServeOptionsRaw =
       rsoMxBatchSize = Nothing,
       rsoStreamingMxRefetchInt = Nothing,
       rsoStreamingMxBatchSize = Nothing,
-      rsoEnableAllowlist = False,
+      rsoEnableAllowList = UUT.AllowListDisabled,
       rsoEnabledLogTypes = Nothing,
       rsoLogLevel = Nothing,
       rsoDevMode = UUT.DevModeDisabled,
@@ -769,7 +769,7 @@ mkServeOptionsSpec =
                 }
             )
 
-    Hspec.describe "soEnableAllowlist" $ do
+    Hspec.describe "soEnableAllowList" $ do
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
@@ -778,17 +778,17 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soEnableAllowlist result `Hspec.shouldBe` Right True
+        fmap UUT.soEnableAllowList result `Hspec.shouldBe` Right UUT.AllowListEnabled
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableAllowlist = True}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableAllowList = UUT.AllowListEnabled}
             -- When
             env = [(UUT._envVar UUT.enableAllowlistOption, "false")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soEnableAllowlist result `Hspec.shouldBe` Right True
+        fmap UUT.soEnableAllowList result `Hspec.shouldBe` Right UUT.AllowListEnabled
 
     Hspec.describe "soEnabledLogTypes" $ do
       Hspec.it "Default == Startup, HttpLog, WebhookLog, WebsocketLog" $ do

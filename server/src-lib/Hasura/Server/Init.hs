@@ -175,7 +175,7 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
     _lqoRefetchInterval <- withOptionDefault rsoStreamingMxRefetchInt streamingMxRefetchDelayOption
     _lqoBatchSize <- withOptionDefault rsoStreamingMxBatchSize streamingMxBatchSizeOption
     pure $ Subscription.Options.SubscriptionsOptions {..}
-  soEnableAllowlist <- withOptionSwitch rsoEnableAllowlist enableAllowlistOption
+  soEnableAllowList <- withOptionSwitch' rsoEnableAllowList (isAllowListEnabled, bool AllowListDisabled AllowListEnabled) enableAllowlistOption
   soEnabledLogTypes <- withOptionDefault rsoEnabledLogTypes (enabledLogsOption @impl)
   soLogLevel <- withOptionDefault rsoLogLevel logLevelOption
   soDevMode <- withOptionSwitch' rsoDevMode (isDevModeEnabled, bool DevModeDisabled DevModeEnabled) graphqlDevModeOption

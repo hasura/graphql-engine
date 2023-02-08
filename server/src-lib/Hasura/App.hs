@@ -447,7 +447,7 @@ initialiseServerCtx env GlobalCtx {..} serveOptions@ServeOptions {..} liveQueryH
         scEnabledAPIs = soEnabledAPIs,
         scInstanceId = instanceId,
         scSubscriptionState = subscriptionsState,
-        scEnableAllowlist = soEnableAllowlist,
+        scEnableAllowList = soEnableAllowList,
         scEnvironment = env,
         scResponseInternalErrorsConfig = soResponseInternalErrorsConfig,
         scRemoteSchemaPermsCtx = soEnableRemoteSchemaPermissions,

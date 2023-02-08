@@ -38,6 +38,8 @@ module Hasura.Server.Init.Config
     ServeOptionsRaw (..),
     ConsoleStatus (..),
     isConsoleEnabled,
+    AllowListStatus (..),
+    isAllowListEnabled,
     DevModeStatus (..),
     isDevModeEnabled,
     TelemetryStatus (..),
@@ -291,7 +293,7 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     -- We have different config options for livequery and streaming subscriptions
     rsoStreamingMxRefetchInt :: Maybe Subscription.Options.RefetchInterval,
     rsoStreamingMxBatchSize :: Maybe Subscription.Options.BatchSize,
-    rsoEnableAllowlist :: Bool,
+    rsoEnableAllowList :: AllowListStatus,
     rsoEnabledLogTypes :: Maybe (HashSet (Logging.EngineLogType impl)),
     rsoLogLevel :: Maybe Logging.LogLevel,
     rsoDevMode :: DevModeStatus,
@@ -335,6 +337,27 @@ instance FromJSON ConsoleStatus where
 
 instance ToJSON ConsoleStatus where
   toJSON = Aeson.toJSON . isConsoleEnabled
+
+-- | A representation of whether or not to enable the GraphQL Query AllowList.
+--
+-- See: https://hasura.io/docs/latest/security/allow-list/#enable-allow-list
+data AllowListStatus = AllowListEnabled | AllowListDisabled
+  deriving stock (Show, Eq, Ord, Generic)
+
+instance NFData AllowListStatus
+
+instance Hashable AllowListStatus
+
+isAllowListEnabled :: AllowListStatus -> Bool
+isAllowListEnabled = \case
+  AllowListEnabled -> True
+  AllowListDisabled -> False
+
+instance FromJSON AllowListStatus where
+  parseJSON = fmap (bool AllowListDisabled AllowListEnabled) . Aeson.parseJSON
+
+instance ToJSON AllowListStatus where
+  toJSON = Aeson.toJSON . isAllowListEnabled
 
 -- | A representation of whether or not to enable Hasura Dev Mode.
 --
@@ -540,7 +563,7 @@ data ServeOptions impl = ServeOptions
     soEnabledAPIs :: HashSet API,
     soLiveQueryOpts :: Subscription.Options.LiveQueriesOptions,
     soStreamingQueryOpts :: Subscription.Options.StreamQueriesOptions,
-    soEnableAllowlist :: Bool,
+    soEnableAllowList :: AllowListStatus,
     soEnabledLogTypes :: HashSet (Logging.EngineLogType impl),
     soLogLevel :: Logging.LogLevel,
     soResponseInternalErrorsConfig :: ResponseInternalErrorsConfig,

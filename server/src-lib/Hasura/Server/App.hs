@@ -126,7 +126,7 @@ data ServerCtx = ServerCtx
     scEnabledAPIs :: !(S.HashSet API),
     scInstanceId :: !InstanceId,
     scSubscriptionState :: !ES.SubscriptionsState,
-    scEnableAllowlist :: !Bool,
+    scEnableAllowList :: !AllowListStatus,
     scResponseInternalErrorsConfig :: !ResponseInternalErrorsConfig,
     scEnvironment :: !Env.Environment,
     scRemoteSchemaPermsCtx :: !Options.RemoteSchemaPermissions,
@@ -623,7 +623,7 @@ mkExecutionContext = do
   scRef <- asks (scCacheRef . hcServerCtx)
   (sc, scVer) <- liftIO $ readSchemaCacheRef scRef
   sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
-  enableAL <- asks (scEnableAllowlist . hcServerCtx)
+  enableAL <- asks (scEnableAllowList . hcServerCtx)
   logger <- asks (_lsLogger . scLoggers . hcServerCtx)
   readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
   prometheusMetrics <- asks (scPrometheusMetrics . hcServerCtx)
@@ -762,7 +762,7 @@ configApiGetHandler serverCtx@ServerCtx {..} consoleAssetsDir =
                 scFunctionPermsCtx
                 scRemoteSchemaPermsCtx
                 scAuthMode
-                scEnableAllowlist
+                scEnableAllowList
                 (ES._ssLiveQueryOptions $ scSubscriptionState)
                 (ES._ssStreamQueryOptions $ scSubscriptionState)
                 consoleAssetsDir
@@ -851,7 +851,7 @@ mkWaiApp
         corsPolicy
         scSQLGenCtx
         scEnableReadOnlyMode
-        scEnableAllowlist
+        scEnableAllowList
         keepAliveDelay
         scServerMetrics
         scPrometheusMetrics

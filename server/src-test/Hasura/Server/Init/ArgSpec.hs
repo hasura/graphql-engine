@@ -1225,8 +1225,8 @@ serveParserSpec =
           -- Then
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
-      fmap UUT.rsoEnableAllowlist result `Hspec.shouldSatisfy` \case
-        Opt.Success enableAllowList -> enableAllowList == True
+      fmap UUT.rsoEnableAllowList result `Hspec.shouldSatisfy` \case
+        Opt.Success enableAllowList -> UUT.isAllowListEnabled enableAllowList
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 

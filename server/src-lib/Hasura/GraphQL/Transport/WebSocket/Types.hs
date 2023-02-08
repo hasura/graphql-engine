@@ -23,7 +23,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.Cors
-import Hasura.Server.Init.Config (KeepAliveDelay (..))
+import Hasura.Server.Init.Config (AllowListStatus, KeepAliveDelay (..))
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (ReadOnlyMode (..))
@@ -82,7 +82,7 @@ data WSServerEnv = WSServerEnv
     _wseSQLCtx :: !SQLGenCtx,
     _wseReadOnlyMode :: ReadOnlyMode,
     _wseServer :: !WSServer,
-    _wseEnableAllowlist :: !Bool,
+    _wseEnableAllowlist :: !AllowListStatus,
     _wseKeepAliveDelay :: !KeepAliveDelay,
     _wseServerMetrics :: !ServerMetrics,
     _wsePrometheusMetrics :: !PrometheusMetrics,
