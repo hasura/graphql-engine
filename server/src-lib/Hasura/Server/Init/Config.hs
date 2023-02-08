@@ -38,6 +38,8 @@ module Hasura.Server.Init.Config
     ServeOptionsRaw (..),
     ConsoleStatus (..),
     isConsoleEnabled,
+    WsReadCookieStatus (..),
+    isWsReadCookieEnabled,
     Port,
     _getPort,
     mkPort,
@@ -276,7 +278,7 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoConsoleAssetsDir :: Maybe Text,
     rsoConsoleSentryDsn :: Maybe Text,
     rsoEnableTelemetry :: Maybe Bool,
-    rsoWsReadCookie :: Bool,
+    rsoWsReadCookie :: WsReadCookieStatus,
     rsoStringifyNum :: Schema.Options.StringifyNumbers,
     rsoDangerousBooleanCollapse :: Maybe Schema.Options.DangerouslyCollapseBooleans,
     rsoEnabledAPIs :: Maybe (HashSet API),
@@ -329,6 +331,27 @@ instance FromJSON ConsoleStatus where
 
 instance ToJSON ConsoleStatus where
   toJSON = Aeson.toJSON . isConsoleEnabled
+
+-- | A representation of whether or not to read the websocket cookie
+-- on initial handshake that is isomorphic to 'Bool'. See
+-- 'wsReadCookieOption' for more details.
+data WsReadCookieStatus = WsReadCookieEnabled | WsReadCookieDisabled
+  deriving stock (Show, Eq, Generic)
+
+instance NFData WsReadCookieStatus
+
+instance Hashable WsReadCookieStatus
+
+isWsReadCookieEnabled :: WsReadCookieStatus -> Bool
+isWsReadCookieEnabled = \case
+  WsReadCookieEnabled -> True
+  WsReadCookieDisabled -> False
+
+instance FromJSON WsReadCookieStatus where
+  parseJSON = fmap (bool WsReadCookieDisabled WsReadCookieEnabled) . Aeson.parseJSON
+
+instance ToJSON WsReadCookieStatus where
+  toJSON = Aeson.toJSON . isWsReadCookieEnabled
 
 -- | An 'Int' representing a Port number in the range 0 to 65536.
 newtype Port = Port {_getPort :: Int}

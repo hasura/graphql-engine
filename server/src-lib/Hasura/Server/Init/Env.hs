@@ -216,6 +216,9 @@ instance FromEnv Bool where
           ++ show falseVals
           ++ ". All values are case insensitive"
 
+instance FromEnv Config.WsReadCookieStatus where
+  fromEnv = fmap (bool Config.WsReadCookieDisabled Config.WsReadCookieEnabled) . fromEnv
+
 instance FromEnv Aeson.Value where
   fromEnv = Aeson.eitherDecode . BLU.fromString
 

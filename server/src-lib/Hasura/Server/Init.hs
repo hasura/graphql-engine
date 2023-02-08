@@ -256,20 +256,19 @@ mkCorsConfig ServeOptionsRaw {..} mCfg = do
     if corsDisabled
       then pure (Cors.CCDisabled $ _default disableCorsOption)
       else withOptionDefault mCfg corsDomainOption
-
   readCookVal <-
     case rsoWsReadCookie of
-      False -> withOptionDefault Nothing wsReadCookieOption
+      WsReadCookieDisabled -> withOptionDefault Nothing wsReadCookieOption
       p -> pure p
   wsReadCookie <- case (Cors.isCorsDisabled corsCfg, readCookVal) of
     (True, _) -> pure readCookVal
-    (False, True) ->
+    (False, WsReadCookieEnabled) ->
       throwError $
         _envVar wsReadCookieOption
           <> " can only be used when CORS is disabled"
-    (False, False) -> return False
+    (False, WsReadCookieDisabled) -> pure WsReadCookieDisabled
   pure $ case corsCfg of
-    Cors.CCDisabled _ -> Cors.CCDisabled wsReadCookie
+    Cors.CCDisabled _ -> Cors.CCDisabled $ isWsReadCookieEnabled wsReadCookie
     _ -> corsCfg
 
 -- | Fetch admin internal errors setting from the environment and

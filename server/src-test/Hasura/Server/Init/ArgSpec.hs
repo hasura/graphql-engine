@@ -940,7 +940,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoWsReadCookie result `Hspec.shouldSatisfy` \case
-        Opt.Success wsReadCookie -> wsReadCookie == True
+        Opt.Success wsReadCookie -> wsReadCookie == UUT.WsReadCookieEnabled
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 

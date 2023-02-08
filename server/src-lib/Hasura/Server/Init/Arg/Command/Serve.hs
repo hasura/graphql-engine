@@ -547,17 +547,18 @@ enableTelemetryOption =
       _helpMessage = "Enable anonymous telemetry on the server and console. For more information, see: https://hasura.io/docs/latest/guides/telemetry (default: true)"
     }
 
-parseWsReadCookie :: Opt.Parser Bool
+parseWsReadCookie :: Opt.Parser Config.WsReadCookieStatus
 parseWsReadCookie =
-  Opt.switch
-    ( Opt.long "ws-read-cookie"
-        <> Opt.help (Config._helpMessage wsReadCookieOption)
-    )
+  bool Config.WsReadCookieDisabled Config.WsReadCookieEnabled
+    <$> Opt.switch
+      ( Opt.long "ws-read-cookie"
+          <> Opt.help (Config._helpMessage wsReadCookieOption)
+      )
 
-wsReadCookieOption :: Config.Option Bool
+wsReadCookieOption :: Config.Option Config.WsReadCookieStatus
 wsReadCookieOption =
   Config.Option
-    { Config._default = False,
+    { Config._default = Config.WsReadCookieDisabled,
       Config._envVar = "HASURA_GRAPHQL_WS_READ_COOKIE",
       Config._helpMessage =
         "Read cookie on WebSocket initial handshake, even when CORS is disabled."
