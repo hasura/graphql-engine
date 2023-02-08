@@ -611,13 +611,15 @@ def webhook_server(
     if tls_ca_configuration:
         if scheme is not None and scheme != 'https':
             pytest.skip(f'Cannot run the remote schema server with TLS; HGE is configured to talk to it over "{scheme}".')
-        if request.node.get_closest_marker('no_tls_webhook_server') is not None:
-            pytest.skip('Only running this test with TLS disabled; skipping the version with TLS enabled.')
 
         server = http.server.HTTPServer(server_address, webhook.Handler)
-        insecure = request.node.get_closest_marker('tls_insecure_certificate') is not None
-        tls_trust = fixtures.tls.TLSTrust.INSECURE if insecure else fixtures.tls.TLSTrust.SECURE
-        tls_ca_configuration.configure(server, tls_trust)
+        use_tls = request.node.get_closest_marker('no_tls_webhook_server') is None
+        if use_tls:
+            insecure = request.node.get_closest_marker('tls_insecure_certificate') is not None
+            tls_trust = fixtures.tls.TLSTrust.INSECURE if insecure else fixtures.tls.TLSTrust.SECURE
+            tls_ca_configuration.configure(server, tls_trust)
+        else:
+            tls_trust = None
     else:
         if scheme is not None and scheme != 'http':
             pytest.skip(f'Cannot run the remote schema server without TLS; HGE is configured to talk to it over "{scheme}".')
