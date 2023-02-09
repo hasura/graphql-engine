@@ -1,3 +1,4 @@
+import { Badge } from '@/new-components/Badge';
 import React from 'react';
 import { FaDatabase } from 'react-icons/fa';
 import { GDCTable } from '..';
@@ -28,9 +29,9 @@ export const getTablesListAsTree = async ({
     title: (
       <div className="inline-block">
         <span className="font-bold text-lg">{source.name}</span>
-        <span className="items-center ml-sm px-sm py-0.5 rounded-full text-sm tracking-wide font-semibold bg-indigo-100 text-indigo-800">
+        <Badge color="indigo" className="ml-sm">
           Beta
-        </span>
+        </Badge>
       </div>
     ),
     key: JSON.stringify({ database: source.name }),

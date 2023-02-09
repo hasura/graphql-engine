@@ -11,6 +11,9 @@ module.exports = {
       mono: ['"Overpass Mono"', 'ui-monospace', 'monospace'],
     },
     extend: {
+      boxShadow: {
+        eq: 'rgb(0 0 0) 0px 0px 2px',
+      },
       colors: {
         current: 'currentColor',
         yellow: colors.amber,
