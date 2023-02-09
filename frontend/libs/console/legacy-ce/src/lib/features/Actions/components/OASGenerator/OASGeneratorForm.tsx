@@ -268,7 +268,6 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
               noErrorPlaceholder
               name="oas"
               placeholder="1. Paste OpenAPI spec in raw text (JSON / YAML) here"
-              tooltip="Enter a sample request in JSON or YAML format to generate the input type"
               editorOptions={editorOptions}
               editorProps={{
                 className: 'rounded`-r-none',

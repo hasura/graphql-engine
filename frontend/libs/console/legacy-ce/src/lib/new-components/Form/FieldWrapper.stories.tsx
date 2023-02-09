@@ -125,6 +125,26 @@ VariantWithDescriptionAndTooltipAndKnwMoreLink.parameters = {
   },
 };
 
+export const VariantWithDescriptionAndTooltipAndKnowMoreLink: ComponentStory<
+  typeof FieldWrapper
+> = () => (
+  <FieldWrapper
+    label="The field wrapper label"
+    description="The field wrapper description"
+    tooltip="The field wrapper tooltip"
+    knowMoreLink="https://hasura.io/docs"
+  >
+    <ChildrenExample />
+  </FieldWrapper>
+);
+VariantWithDescriptionAndTooltipAndKnowMoreLink.storyName =
+  '🎭 Variant - With description, tooltip, and know more link';
+VariantWithDescriptionAndTooltipAndKnowMoreLink.parameters = {
+  docs: {
+    source: { state: 'open' },
+  },
+};
+
 export const StateLoading: ComponentStory<typeof FieldWrapper> = () => (
   <FieldWrapper
     label="The field wrapper label"
