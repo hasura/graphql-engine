@@ -7,7 +7,7 @@ import { CodeEditorField, InputField, SimpleForm } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
 import { Badge } from '@/new-components/Badge';
 import { Card } from '@/new-components/Card';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 import {
   FaCheckCircle,
   FaExclamationTriangle,
@@ -41,7 +41,7 @@ type PrometheusFormProps = {
 const PrometheusFormIntro = () => (
   <p className="text-muted">
     Expose your Prometheus performance metrics from your Hasura GraphQL Engine.
-    <KnowMoreLink href="https://hasura.io/docs/latest/enterprise/metrics/" />
+    <LearnMoreLink href="https://hasura.io/docs/latest/enterprise/metrics/" />
   </p>
 );
 

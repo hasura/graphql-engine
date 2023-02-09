@@ -1,5 +1,5 @@
 import React from 'react';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 import { GrHeroku } from 'react-icons/gr';
 
 export function HerokuBanner() {
@@ -8,7 +8,7 @@ export function HerokuBanner() {
       <GrHeroku size={15} className="mr-xs" color="#430098" />
       <div className="text-sm text-gray-700">
         Heroku free database integration support has been deprecated.{' '}
-        <KnowMoreLink href="https://hasura.io/docs/latest/databases/connect-db/cloud-databases/heroku/" />
+        <LearnMoreLink href="https://hasura.io/docs/latest/databases/connect-db/cloud-databases/heroku/" />
       </div>
     </div>
   );

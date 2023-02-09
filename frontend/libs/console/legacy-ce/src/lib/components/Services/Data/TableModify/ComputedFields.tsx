@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import ComputedFieldsEditor from './ComputedFieldsEditor';
@@ -27,7 +27,7 @@ const ComputedFields = (props: ComputedFieldsProps) => {
           Computed Fields
           <Tooltip message="Add a function as a virtual field in the GraphQL API" />
         </h4>
-        <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/computed-fields.html" />
+        <LearnMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/computed-fields.html" />
       </div>
       <ComputedFieldsEditor
         table={tableSchema}

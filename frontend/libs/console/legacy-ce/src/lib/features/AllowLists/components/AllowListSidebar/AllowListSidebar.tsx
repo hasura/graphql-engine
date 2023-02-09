@@ -2,7 +2,7 @@ import debounce from 'lodash.debounce';
 import React from 'react';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { useServerConfig } from '@/hooks';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 import { AllowListSidebarHeader } from './AllowListSidebarHeader';
 import { QueryCollectionList } from './QueryCollectionList';
 import { AllowListSidebarSearchForm } from './AllowListSidebarSearchForm';
@@ -55,7 +55,7 @@ export const AllowListSidebar: React.FC<AllowListSidebarProps> = props => {
               true
             </span>{' '}
             so that your API will only allow accepted pre-selected operations.
-            <KnowMoreLink href="https://hasura.io/docs/latest/security/allow-list/#enable-allow-list" />
+            <LearnMoreLink href="https://hasura.io/docs/latest/security/allow-list/#enable-allow-list" />
           </p>
         </IndicatorCard>
       )}

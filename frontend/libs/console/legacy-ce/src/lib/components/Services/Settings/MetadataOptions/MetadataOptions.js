@@ -4,7 +4,7 @@ import ExportMetadata from './ExportMetadata';
 import ImportMetadata from './ImportMetadata';
 import ReloadMetadata from './ReloadMetadata';
 import ResetMetadata from './ResetMetadata';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 
 const MetadataOptions = props => {
   const getMetadataImportExportSection = () => {
@@ -66,7 +66,7 @@ const MetadataOptions = props => {
             Hasura metadata stores information about your tables, relationships,
             permissions, etc. that is used to generate the GraphQL schema and
             API.
-            <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/how-it-works/metadata-schema.html" />
+            <LearnMoreLink href="https://hasura.io/docs/latest/graphql/core/how-it-works/metadata-schema.html" />
           </div>
 
           {getMetadataImportExportSection()}

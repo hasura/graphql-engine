@@ -1,6 +1,6 @@
 import React from 'react';
 import Toggle from 'react-toggle';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 
 const enumCompatibilityDocsUrl =
@@ -46,7 +46,7 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
             }
           />
         </h4>
-        <KnowMoreLink
+        <LearnMoreLink
           href={enumCompatibilityDocsUrl}
           text={'(See table requirements)'}
         />

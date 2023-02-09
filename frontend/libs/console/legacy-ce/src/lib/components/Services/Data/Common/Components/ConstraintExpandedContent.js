@@ -1,7 +1,7 @@
 import React from 'react';
 import AceEditor from 'react-ace';
 
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 
 import { checkConstraintExpression } from '../TooltipMessages';
@@ -33,7 +33,7 @@ export const ConstraintExpandedContent = ({
             Check Expression:
             <ToolTip message={checkConstraintExpression} />
           </h4>
-          <KnowMoreLink href="https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS" />
+          <LearnMoreLink href="https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS" />
         </div>
         <AceEditor
           mode="sql"

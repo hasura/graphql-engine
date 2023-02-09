@@ -30,7 +30,7 @@ import {
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { isCloudConsole } from '@/utils';
 import globals from '@/Globals';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 
 import styles from './styles.module.scss';
 import { Dispatch, ReduxState } from '../../../../types';
@@ -546,7 +546,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
                     either deploy your Hasura project in the same region as your
                     database or select a database instance that&apos;s closer to
                     where you&apos;ve deployed Hasura.
-                    <KnowMoreLink href={KNOW_MORE_PROJECT_REGION_UPDATE} />
+                    <LearnMoreLink href={KNOW_MORE_PROJECT_REGION_UPDATE} />
                   </span>
                   <div className="flex items-center flex-row ml-xs">
                     <Button

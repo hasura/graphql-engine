@@ -2,7 +2,7 @@ import React, { ChangeEvent, Dispatch } from 'react';
 import { FaCheckCircle, FaInfoCircle } from 'react-icons/fa';
 import { IconTooltip } from '@/new-components/Tooltip';
 import globals from '@/Globals';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 
 import { ConnectDBActions, ConnectDBState, connectionTypes } from './state';
 import { LabeledInput } from '../../../Common/LabeledInput';
@@ -170,7 +170,7 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
       >
         {title ?? defaultTitle}
         <IconTooltip message="Environment variable recommended" />
-        <KnowMoreLink
+        <LearnMoreLink
           href="https://hasura.io/docs/latest/graphql/cloud/projects/create.html#existing-database"
           className="font-normal"
         />

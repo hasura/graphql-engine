@@ -1,7 +1,7 @@
 import React from 'react';
 import { IconTooltip } from '@/new-components/Tooltip';
 import * as tooltip from './Tooltips';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 import { capitalize } from '../../../../Common/utils/jsUtils';
 import { EVENT_TRIGGER_OPERATIONS } from '../../constants';
 import { EventTriggerOperation } from '../../types';
@@ -38,7 +38,7 @@ export const Operations: React.FC<OperationProps> = ({
         <span className="flex items-center">
           Via console
           <IconTooltip message={tooltip.manualOperationsDescription} />
-          <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/event-triggers/invoke-trigger-console.html" />
+          <LearnMoreLink href="https://hasura.io/docs/latest/graphql/core/event-triggers/invoke-trigger-console.html" />
         </span>
       ) : (
         capitalize(o)

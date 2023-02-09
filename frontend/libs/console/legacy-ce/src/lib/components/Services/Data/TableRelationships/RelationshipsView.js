@@ -7,7 +7,7 @@ import {
   availableFeatureFlagIds,
 } from '@/features/FeatureFlags';
 import { DatabaseRelationshipsTab } from '@/features/DatabaseRelationships';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 import TableHeader from '../TableCommon/TableHeader';
 import { getObjArrRelList } from './utils';
 import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
@@ -207,7 +207,7 @@ const RelationshipsView = ({
                   Table Relationships
                   <ToolTip message={'Relationships to tables / views'} />
                   &nbsp;
-                  <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
+                  <LearnMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
                 </h4>
                 {addedRelationshipsView}
                 <div className={styles.activeEdit}>

@@ -19,7 +19,7 @@ import {
 } from './ManageDBUtils';
 
 import styles from './DataSources.module.scss';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 
 const checkIfFieldsAreEmpty = (
   currentReadReplicaConnectionType: string,
@@ -237,7 +237,7 @@ const ReadReplicaForm: React.FC<ReadReplicaProps> = ({
                 Hasura can load balance queries and subscriptions across read
                 replicas while sending all mutations and metadata API calls to
                 the master.
-                <KnowMoreLink href="https://hasura.io/docs/latest/graphql/cloud/read-replicas.html" />
+                <LearnMoreLink href="https://hasura.io/docs/latest/graphql/cloud/read-replicas.html" />
               </p>
               {readReplicaState.map((stateVar, index) => (
                 <ReadReplicaListItem

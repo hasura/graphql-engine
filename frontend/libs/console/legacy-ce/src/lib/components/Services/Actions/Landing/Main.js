@@ -24,7 +24,7 @@ class Landing extends React.Component {
             imgUrl={`${globals.assetsPath}/common/img/actions.png`}
             imgAlt="Actions"
             description="Actions are custom queries or mutations that are resolved via HTTP handlers. Actions can be used to carry out complex data validations, data enrichment from external sources or execute just about any custom business logic."
-            knowMoreHref="https://hasura.io/docs/latest/graphql/core/actions/index.html"
+            learnMoreHref="https://hasura.io/docs/latest/graphql/core/actions/index.html"
           />
           <hr className="mt-lg mb-lg" />
         </div>

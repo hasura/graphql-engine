@@ -1,5 +1,5 @@
 import React from 'react';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 import { sidebarNumberStyles } from '../utils';
 
 interface NumberedSidebarProps {
@@ -21,7 +21,7 @@ const NumberedSidebar: React.FC<NumberedSidebarProps> = ({
       {number ? <div className={sidebarNumberStyles}>{number}</div> : null}
       <label className="flex items-center block text-gray-600 font-medium">
         {title}
-        {url ? <KnowMoreLink href={url} /> : null}
+        {url ? <LearnMoreLink href={url} /> : null}
       </label>
       <div className="flex items-center mb-sm">
         <div>

@@ -32,7 +32,7 @@ import PermissionsEditor from './PermissionsEditor';
 import styles from '../Modify/ModifyCustomFunction.module.scss';
 import { PGFunction } from '../../../../../dataSources/services/postgresql/types';
 import { getFunctionSelector } from '../../../../../metadata/selector';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 
 const PermissionServerFlagNote = ({ isEditable = false }) =>
   !isEditable ? (
@@ -43,7 +43,7 @@ const PermissionServerFlagNote = ({ isEditable = false }) =>
         for the role. To expose query functions to roles explicitly, set{' '}
         <code>HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS=false</code> on the
         server.
-        <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#api-custom-functions" />
+        <LearnMoreLink href="https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#api-custom-functions" />
       </p>
     </>
   ) : (

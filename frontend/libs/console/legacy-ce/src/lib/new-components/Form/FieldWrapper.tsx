@@ -7,7 +7,7 @@ import { FaExclamationCircle } from 'react-icons/fa';
 import type { DiscriminatedTypes } from '@/types';
 
 import { IconTooltip } from '@/new-components/Tooltip';
-import { KnowMoreLink } from '../KnowMoreLink';
+import { LearnMoreLink } from '../LearnMoreLink';
 
 export type FieldWrapperPassThroughProps = {
   /**
@@ -56,7 +56,7 @@ export type FieldWrapperPassThroughProps = {
     /**
      * The link containing more information about the field. Can be set only if label is set.
      */
-    knowMoreLink?: string;
+    learnMoreLink?: string;
   },
   'label'
 >;
@@ -106,7 +106,7 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
     id,
     labelIcon,
     label,
-    knowMoreLink,
+    learnMoreLink,
     className,
     size = 'full',
     error,
@@ -159,7 +159,9 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
             {loading ? <Skeleton className="absolute inset-0" /> : null}
           </span>
           {!loading && tooltip ? <IconTooltip message={tooltip} /> : null}
-          {!loading && !!knowMoreLink && <KnowMoreLink href={knowMoreLink} />}
+          {!loading && !!learnMoreLink && (
+            <LearnMoreLink href={learnMoreLink} />
+          )}
         </span>
         <FieldDescription />
       </label>

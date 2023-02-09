@@ -1,17 +1,17 @@
 import * as React from 'react';
 
-interface KnowMoreLinkProps {
+interface LearnMoreLinkProps {
   href: string;
   text?: string;
   className?: string;
 }
 
 /**
- * The updated KnowMoreLink component.
+ * The updated LearnMoreLink component.
  * @see https://github.com/hasura/graphql-engine-mono/pull/7023
  */
-export const KnowMoreLink: React.VFC<KnowMoreLinkProps> = props => {
-  const { href, className = '', text = '(Know More)' } = props;
+export const LearnMoreLink: React.VFC<LearnMoreLinkProps> = props => {
+  const { href, className = '', text = '(Learn More)' } = props;
 
   return (
     <a

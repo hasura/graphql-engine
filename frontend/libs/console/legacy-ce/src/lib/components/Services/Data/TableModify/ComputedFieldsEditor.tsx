@@ -1,7 +1,7 @@
 import React from 'react';
 import AceEditor from 'react-ace';
 import { OptionTypeBase } from 'react-select';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
@@ -421,7 +421,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
                 </h4>
                 <Tooltip message="The function argument into which Hasura session variables will be passed" />
               </div>
-              <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/computed-fields.html#accessing-hasura-session-variables-in-computed-fields" />
+              <LearnMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/computed-fields.html#accessing-hasura-session-variables-in-computed-fields" />
             </div>
             <input
               type="text"

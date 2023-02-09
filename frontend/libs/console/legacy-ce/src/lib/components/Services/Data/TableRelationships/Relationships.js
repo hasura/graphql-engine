@@ -9,7 +9,7 @@ import {
 } from '@/features/FeatureFlags';
 import { DatabaseRelationshipsTab } from '@/features/DatabaseRelationships';
 import { Button } from '@/new-components/Button';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 import TableHeader from '../TableCommon/TableHeader';
 import {
   addNewRelClicked,
@@ -536,7 +536,7 @@ const Relationships = ({
                 <h4 className={styles.subheading_text}>
                   Table Relationships
                   <ToolTip message={'Relationships to tables / views'} />
-                  <KnowMoreLink
+                  <LearnMoreLink
                     href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html"
                     className="font-normal"
                   />

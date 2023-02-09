@@ -5,7 +5,7 @@ import AceEditor from 'react-ace';
 import 'brace/mode/sql';
 
 import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 import { Button } from '@/new-components/Button';
 import Modal from '../../../Common/Modal/Modal';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
@@ -384,7 +384,7 @@ const RawSQL = ({
           }
         />
 
-        <KnowMoreLink
+        <LearnMoreLink
           text={'(See supported functions requirements)'}
           href={
             'https://hasura.io/docs/latest/graphql/core/schema/custom-functions.html#supported-sql-functions'

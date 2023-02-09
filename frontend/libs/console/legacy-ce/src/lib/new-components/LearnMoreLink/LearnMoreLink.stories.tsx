@@ -3,11 +3,11 @@ import type { ComponentMeta, ComponentStory } from '@storybook/react';
 
 import * as React from 'react';
 
-import { KnowMoreLink } from './KnowMoreLink';
+import { LearnMoreLink } from './LearnMoreLink';
 
 export default {
-  title: 'components/KnowMoreLink ⚛️',
-  component: KnowMoreLink,
+  title: 'components/LearnMoreLink ⚛️',
+  component: LearnMoreLink,
   parameters: {
     docs: {
       description: {
@@ -16,7 +16,7 @@ export default {
       source: { type: 'code' },
     },
   },
-} as ComponentMeta<typeof KnowMoreLink>;
+} as ComponentMeta<typeof LearnMoreLink>;
 
 // -------------------------------------------------------------------------------------------------
 // -------------------------------------------------------------------------------------------------
@@ -31,12 +31,12 @@ export default {
 // STORY DEFINITION
 // --------------------------------------------------
 
-export const Basic: ComponentStory<typeof KnowMoreLink> = args => (
-  <KnowMoreLink {...args} />
+export const Basic: ComponentStory<typeof LearnMoreLink> = args => (
+  <LearnMoreLink {...args} />
 );
 Basic.storyName = '🧰 Basic';
 
-const basicArgs: ComponentPropsWithoutRef<typeof KnowMoreLink> = {
+const basicArgs: ComponentPropsWithoutRef<typeof LearnMoreLink> = {
   href: 'https://hasura.io/docs',
 };
 Basic.args = basicArgs;
@@ -56,12 +56,12 @@ Basic.args = basicArgs;
 // STORY DEFINITION
 // --------------------------------------------------
 
-export const CustomText: ComponentStory<typeof KnowMoreLink> = args => (
-  <KnowMoreLink {...args} />
+export const CustomText: ComponentStory<typeof LearnMoreLink> = args => (
+  <LearnMoreLink {...args} />
 );
 CustomText.storyName = '🎭 Custom text';
 
-const customTextArgs: ComponentPropsWithoutRef<typeof KnowMoreLink> = {
+const customTextArgs: ComponentPropsWithoutRef<typeof LearnMoreLink> = {
   href: 'https://hasura.io/docs',
   text: '(Read the docs)',
 };

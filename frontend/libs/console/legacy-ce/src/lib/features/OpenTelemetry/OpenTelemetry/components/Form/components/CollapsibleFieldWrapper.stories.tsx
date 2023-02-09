@@ -29,7 +29,7 @@ const storyArgs: ComponentPropsWithoutRef<typeof CollapsibleFieldWrapper> = {
   inputFieldName: 'Input Field Name',
   label: 'Input Field Label',
   tooltip: 'Input Field Tooltip',
-  knowMoreLink: 'https://hasura.io/docs',
+  learnMoreLink: 'https://hasura.io/docs',
   children: <i>Children go here</i>,
 };
 Default.args = storyArgs;

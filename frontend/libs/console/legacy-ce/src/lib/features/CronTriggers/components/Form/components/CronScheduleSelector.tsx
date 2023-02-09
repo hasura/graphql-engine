@@ -3,7 +3,7 @@ import { IconTooltip } from '@/new-components/Tooltip';
 import { InputField } from '@/new-components/Form';
 import FrequentlyUsedCrons from '@/components/Services/Events/Common/Components/FrequentlyUsedCrons';
 import { useFormContext } from 'react-hook-form';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 
 const defaultCronExpr = '* * * * *';
 
@@ -18,7 +18,7 @@ export const CronScheduleSelector = () => {
       <div className="block flex items-center text-gray-600 font-semibold">
         <label htmlFor="schedule">Cron Schedule</label>
         <IconTooltip message="Schedule for your cron (events are created based on the UTC timezone)" />
-        <KnowMoreLink
+        <LearnMoreLink
           href="https://crontab.guru/#*_*_*_*_*"
           text="(Build a cron expression)"
           className="font-normal"

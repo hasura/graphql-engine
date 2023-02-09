@@ -9,7 +9,7 @@ import { CustomFieldNames } from '@/features/Data';
 import { Button } from '@/new-components/Button';
 import { TableTrackingCustomizationModalKey } from '@/store/modal/modal.constants';
 import { BsBoxArrowUpRight } from 'react-icons/bs';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 import { FaCog, FaDatabase, FaFolder, FaPlusCircle } from 'react-icons/fa';
 import {
   currentDriver,
@@ -577,7 +577,7 @@ class Schema extends Component {
         'Untracked foreign-key relationships',
         'Relationships inferred via foreign-keys that are not exposed over the GraphQL API',
         <>
-          <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
+          <LearnMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
           <span className={styles.add_mar_left}>{getTrackAllBtn()}</span>
         </>
       );
@@ -598,7 +598,7 @@ class Schema extends Component {
       const heading = getSectionHeading(
         'Untracked custom functions',
         'Custom functions that are not exposed over the GraphQL API',
-        <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/custom-functions.html" />
+        <LearnMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/custom-functions.html" />
       );
 
       return (

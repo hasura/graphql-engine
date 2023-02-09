@@ -18,7 +18,7 @@ import TryItOut from '../../../Common/Landing/TryItOut';
 import { EVENTS_SERVICE_HEADING, EVENT_TRIGGER } from '../../constants';
 import _push from '../../../Data/push';
 
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 
 const EventTrigger: React.FC<Props> = props => {
   const { dispatch } = props;
@@ -36,7 +36,7 @@ insert_user(objects: [{name: "testuser"}] ){
           imgUrl={`${globals.assetsPath}/common/img/event-trigger.png`}
           imgAlt={`${EVENT_TRIGGER}s`}
           description={`An ${EVENT_TRIGGER} atomically captures events (insert, update, delete) on a specified table and then reliably calls a HTTP webhook to run some custom business logic.`}
-          knowMoreHref="https://hasura.io/docs/latest/graphql/core/event-triggers/index.html"
+          learnMoreHref="https://hasura.io/docs/latest/graphql/core/event-triggers/index.html"
         />
         <hr className="clear-both my-lg" />
       </div>

@@ -3,7 +3,7 @@ import { connect, ConnectedProps } from 'react-redux';
 import { Link } from 'react-router';
 import { FaEdit, FaTimes } from 'react-icons/fa';
 import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 
 import { Button } from '@/new-components/Button';
 import { ReduxState } from '../../../../types';
@@ -56,7 +56,7 @@ const ListComponent: React.FC<Props> = ({
             saved GraphQL queries and mutations. Endpoints are generated from
             /api/rest/* and inherit the authorization and permission structure
             from your associated GraphQL nodes.
-            <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/api-reference/restified.html" />
+            <LearnMoreLink href="https://hasura.io/docs/latest/graphql/core/api-reference/restified.html" />
           </div>
         </div>
 
