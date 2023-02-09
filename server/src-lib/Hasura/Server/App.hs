@@ -102,6 +102,7 @@ import Hasura.Server.Utils
 import Hasura.Server.Version
 import Hasura.Session
 import Hasura.ShutdownLatch
+import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
@@ -670,7 +671,8 @@ gqlExplainHandler ::
     MonadError QErr m,
     MonadReader HandlerCtx m,
     MonadMetadataStorage m,
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    MonadTrace m
   ) =>
   GE.GQLExplain ->
   m (HttpResponse EncJSON)

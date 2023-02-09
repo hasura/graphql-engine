@@ -29,14 +29,13 @@ import Hasura.RQL.Types.Common
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Session
-import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
 
 instance BackendExecute 'MySQL where
   type PreparedQuery 'MySQL = Text
   type MultiplexedQuery 'MySQL = Void
-  type ExecutionMonad 'MySQL = Tracing.TraceT (ExceptT QErr IO)
+  type ExecutionMonad 'MySQL = IdentityT
 
   mkDBQueryPlan = mysqlDBQueryPlan
   mkDBMutationPlan = error "mkDBMutationPlan: MySQL backend does not support this operation yet."
@@ -66,7 +65,7 @@ mysqlDBQueryPlan userInfo _env sourceName sourceConfig qrf _ _ = do
         sourceName
         sourceConfig
         (Just (T.pack (drawForest (fmap (fmap show) actionsForest))))
-        ( do
+        ( OnBaseMonad do
             result <-
               DataLoader.runExecute
                 sourceConfig
@@ -97,17 +96,16 @@ mysqlDBQueryExplain fieldName userInfo sourceName sourceConfig qrf _ _ = do
   select :: MySQL.Select <- planQuery (_uiSession userInfo) qrf
   let sqlQuery = selectSQLTextForQuery select
       sqlQueryText = (T.decodeUtf8 . unQuery . toQueryPretty) (ToQuery.fromSelect select)
-      explainResult =
+      explainResult = OnBaseMonad $
         withMySQLPool
           (MySQL.scConnectionPool sourceConfig)
-          ( \conn -> do
-              query conn ("EXPLAIN FORMAT=JSON " <> (unQuery sqlQuery))
-              result <- storeResult conn
-              fields <- fetchFields result
-              rows <- fetchAllRows result
-              let texts = concat $ parseTextRows fields rows
-              pure $ encJFromJValue $ ExplainPlan fieldName (Just sqlQueryText) (Just texts)
-          )
+          \conn -> do
+            query conn ("EXPLAIN FORMAT=JSON " <> (unQuery sqlQuery))
+            result <- storeResult conn
+            fields <- fetchFields result
+            rows <- fetchAllRows result
+            let texts = concat $ parseTextRows fields rows
+            pure $ encJFromJValue $ ExplainPlan fieldName (Just sqlQueryText) (Just texts)
   pure $
     AB.mkAnyBackend $
       DBStepInfo @'MySQL sourceName sourceConfig Nothing explainResult ()

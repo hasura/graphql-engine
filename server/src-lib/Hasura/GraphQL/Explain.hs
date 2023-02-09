@@ -33,6 +33,7 @@ import Hasura.RQL.IR
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
+import Hasura.Tracing (MonadTrace)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
 
@@ -52,7 +53,9 @@ $( J.deriveJSON
 -- here. We should evaluate if we need it here.
 explainQueryField ::
   ( MonadError QErr m,
-    MonadIO m
+    MonadIO m,
+    MonadBaseControl IO m,
+    MonadTrace m
   ) =>
   UserInfo ->
   [HTTP.Header] ->
@@ -82,7 +85,8 @@ explainGQLQuery ::
     MonadIO m,
     MonadBaseControl IO m,
     MonadMetadataStorage m,
-    MonadQueryTags m
+    MonadQueryTags m,
+    MonadTrace m
   ) =>
   SchemaCache ->
   [HTTP.Header] ->

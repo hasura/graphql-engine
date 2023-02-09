@@ -5,6 +5,7 @@ module Hasura.GraphQL.Execute.Backend
     ExecutionStep (..),
     ExplainPlan (..),
     MonadQueryTags (..),
+    OnBaseMonad (..),
     convertRemoteSourceRelationship,
   )
 where
@@ -43,7 +44,7 @@ import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Session
-import Hasura.Tracing (TraceT)
+import Hasura.Tracing (MonadTrace, TraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
 
@@ -53,7 +54,6 @@ import Network.HTTP.Types qualified as HTTP
 class
   ( Backend b,
     ToTxt (MultiplexedQuery b),
-    Monad (ExecutionMonad b),
     Show (ResolvedConnectionTemplate b),
     Eq (ResolvedConnectionTemplate b),
     Hashable (ResolvedConnectionTemplate b)
@@ -63,7 +63,7 @@ class
   -- generated query information
   type PreparedQuery b :: Type
   type MultiplexedQuery b :: Type
-  type ExecutionMonad b :: Type -> Type
+  type ExecutionMonad b :: (Type -> Type) -> (Type -> Type)
 
   -- execution plan generation
   mkDBQueryPlan ::
@@ -135,7 +135,7 @@ class
     QueryDB b Void (UnpreparedValue b) ->
     [HTTP.Header] ->
     Maybe G.Name ->
-    m (AB.AnyBackend DBStepInfo)
+    m (AB.AnyBackend (DBStepInfo))
   mkSubscriptionExplain ::
     ( MonadError QErr m,
       MonadIO m,
@@ -237,8 +237,34 @@ data DBStepInfo b = DBStepInfo
   { dbsiSourceName :: SourceName,
     dbsiSourceConfig :: SourceConfig b,
     dbsiPreparedQuery :: Maybe (PreparedQuery b),
-    dbsiAction :: ExecutionMonad b EncJSON,
+    dbsiAction :: OnBaseMonad (ExecutionMonad b) EncJSON,
     dbsiResolvedConnectionTemplate :: ResolvedConnectionTemplate b
+  }
+
+-- | Provides an abstraction over the base monad in which a computation runs.
+--
+-- Given a transformer @t@ and a type @a@, @OnBaseMonad t a@ represents a
+-- computation of type @t m a@, for any base monad @m@. This allows 'DBStepInfo'
+-- to store a backend-specific computation, using a backend-specific monad
+-- transformer, on top of the base app monad, without 'DBStepInfo' needing to
+-- know about the base monad @m@.
+--
+-- However, this kind of type erasure forces us to bundle all of the constraints
+-- on the base monad @m@ here. The constraints here are the union of the
+-- constraints required across all backends. If it were possible to express
+-- constraint functions of the form @(Type -> Type) -> Constraint@ at the type
+-- level, we could make the list of constraints a type family in
+-- 'BackendExecute', allowing each backend to specify its own specific
+-- constraints; and we could then provide the list of constraints as an
+-- additional argument to @OnBaseMonad@, pushing the requirement to implement
+-- the union of all constraints to the base execution functions.
+--
+-- All backends require @MonadError QErr@ to report errors, and 'MonadIO' to be
+-- able to communicate over the network. Most of them require 'MonadTrace' to
+-- be able to create new spans as part of the execution, and several use
+-- @MonadBaseControl IO@ to use 'try' in their error handling.
+newtype OnBaseMonad t a = OnBaseMonad
+  { runOnBaseMonad :: forall m. (MonadIO m, MonadBaseControl IO m, MonadTrace m, MonadError QErr m) => t m a
   }
 
 -- | The result of an explain query: for a given root field (denoted by its name): the generated SQL

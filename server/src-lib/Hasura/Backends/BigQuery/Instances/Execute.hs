@@ -35,14 +35,13 @@ import Hasura.RQL.Types.Function
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Session
-import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
 
 instance BackendExecute 'BigQuery where
   type PreparedQuery 'BigQuery = Text
   type MultiplexedQuery 'BigQuery = Void
-  type ExecutionMonad 'BigQuery = Tracing.TraceT (ExceptT QErr IO)
+  type ExecutionMonad 'BigQuery = IdentityT
 
   mkDBQueryPlan = bqDBQueryPlan
   mkDBMutationPlan = bqDBMutationPlan
@@ -78,7 +77,7 @@ bqDBQueryPlan ::
 bqDBQueryPlan userInfo _env sourceName sourceConfig qrf _ _ = do
   -- TODO (naveen): Append query tags to the query
   select <- planNoPlan (BigQuery.bigQuerySourceConfigToFromIrConfig sourceConfig) userInfo qrf
-  let action = do
+  let action = OnBaseMonad do
         result <-
           DataLoader.runExecute
             sourceConfig
@@ -160,12 +159,13 @@ bqDBQueryExplain fieldName userInfo sourceName sourceConfig qrf _ _ = do
         sourceName
         sourceConfig
         Nothing
-        ( pure $
-            encJFromJValue $
-              ExplainPlan
-                fieldName
-                (Just $ textSQL)
-                (Just $ T.lines $ textSQL)
+        ( OnBaseMonad $
+            pure $
+              encJFromJValue $
+                ExplainPlan
+                  fieldName
+                  (Just $ textSQL)
+                  (Just $ T.lines $ textSQL)
         )
         ()
 

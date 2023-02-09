@@ -23,6 +23,7 @@ import Hasura.Backends.MSSQL.ToQuery as TQ
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
@@ -38,11 +39,11 @@ executeDelete ::
   Options.StringifyNumbers ->
   SourceConfig 'MSSQL ->
   AnnDelG 'MSSQL Void (UnpreparedValue 'MSSQL) ->
-  m (ExceptT QErr IO EncJSON)
+  m (OnBaseMonad (ExceptT QErr) EncJSON)
 executeDelete userInfo stringifyNum sourceConfig deleteOperation = do
   queryTags <- ask
   preparedDelete <- traverse (prepareValueQuery $ _uiSession userInfo) deleteOperation
-  pure $ mssqlRunReadWrite (_mscExecCtx sourceConfig) (buildDeleteTx preparedDelete stringifyNum queryTags)
+  pure $ OnBaseMonad $ mssqlRunReadWrite (_mscExecCtx sourceConfig) (buildDeleteTx preparedDelete stringifyNum queryTags)
 
 -- | Converts a Delete IR AST to a transaction of three delete sql statements.
 --
@@ -61,10 +62,11 @@ executeDelete userInfo stringifyNum sourceConfig deleteOperation = do
 -- 3. @SELECT@ - constructs the @returning@ query from the temporary table, including
 --   relationships with other tables.
 buildDeleteTx ::
+  (MonadIO m) =>
   AnnDel 'MSSQL ->
   Options.StringifyNumbers ->
   QueryTagsComment ->
-  Tx.TxET QErr IO EncJSON
+  Tx.TxET QErr m EncJSON
 buildDeleteTx deleteOperation stringifyNum queryTags = do
   let withAlias = "with_alias"
       createInsertedTempTableQuery =

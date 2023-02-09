@@ -8,6 +8,7 @@
 module Hasura.Backends.MSSQL.Instances.Transport () where
 
 import Control.Exception.Safe (throwIO)
+import Control.Monad.Trans.Control
 import Data.Aeson qualified as J
 import Data.ByteString qualified as B
 import Data.String (fromString)
@@ -54,6 +55,7 @@ instance J.FromJSON CohortResult where
 
 runQuery ::
   ( MonadIO m,
+    MonadBaseControl IO m,
     MonadQueryLog m,
     MonadTrace m,
     MonadError QErr m
@@ -64,7 +66,7 @@ runQuery ::
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig 'MSSQL ->
-  ExceptT QErr IO EncJSON ->
+  OnBaseMonad (ExceptT QErr) EncJSON ->
   Maybe (PreparedQuery 'MSSQL) ->
   ResolvedConnectionTemplate 'MSSQL ->
   -- | Also return the time spent in the PG query; for telemetry.
@@ -77,7 +79,9 @@ runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql _ = do
 
 runQueryExplain ::
   ( MonadIO m,
-    MonadError QErr m
+    MonadBaseControl IO m,
+    MonadError QErr m,
+    MonadTrace m
   ) =>
   DBStepInfo 'MSSQL ->
   m EncJSON
@@ -85,6 +89,7 @@ runQueryExplain (DBStepInfo _ _ _ action _) = run action
 
 runMutation ::
   ( MonadIO m,
+    MonadBaseControl IO m,
     MonadQueryLog m,
     MonadTrace m,
     MonadError QErr m
@@ -95,7 +100,7 @@ runMutation ::
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig 'MSSQL ->
-  ExceptT QErr IO EncJSON ->
+  OnBaseMonad (ExceptT QErr) EncJSON ->
   Maybe (PreparedQuery 'MSSQL) ->
   ResolvedConnectionTemplate 'MSSQL ->
   -- | Also return 'Mutation' when the operation was a mutation, and the time
@@ -108,7 +113,7 @@ runMutation reqId query fieldName _userInfo logger _sourceConfig tx _genSql _ = 
       run tx
 
 runSubscription ::
-  MonadIO m =>
+  (MonadIO m, MonadBaseControl IO m) =>
   SourceConfig 'MSSQL ->
   MultiplexedQuery 'MSSQL ->
   [(CohortId, CohortVariables)] ->
@@ -126,7 +131,7 @@ runSubscription sourceConfig (MultiplexedQuery' reselect queryTags) variables _ 
   withElapsedTime $ runExceptT $ executeMultiplexedQuery mssqlExecCtx queryWithQueryTags
 
 executeMultiplexedQuery ::
-  MonadIO m =>
+  (MonadIO m, MonadBaseControl IO m) =>
   MSSQLExecCtx ->
   ODBC.Query ->
   ExceptT QErr m [(CohortId, B.ByteString)]
@@ -137,14 +142,12 @@ executeMultiplexedQuery mssqlExecCtx query = do
   -- Because the 'query' will have a @FOR JSON@ clause at the toplevel it will
   -- be split across multiple rows, hence use of 'forJsonQueryE' which takes
   -- care of concatenating the results.
-  textResult <- run $ mssqlRunReadOnly mssqlExecCtx $ forJsonQueryE defaultMSSQLTxErrorHandler query
+  textResult <- liftEitherM $ runExceptT $ mssqlRunReadOnly mssqlExecCtx $ forJsonQueryE defaultMSSQLTxErrorHandler query
   parsedResult <- parseResult textResult
   pure $ convertFromJSON parsedResult
 
-run :: (MonadIO m, MonadError QErr m) => ExceptT QErr IO a -> m a
-run action = do
-  result <- liftIO $ runExceptT action
-  result `onLeft` throwError
+run :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m, MonadTrace m) => OnBaseMonad (ExceptT QErr) a -> m a
+run = liftEitherM . runExceptT . runOnBaseMonad
 
 mkQueryLog ::
   GQLReqUnparsed ->

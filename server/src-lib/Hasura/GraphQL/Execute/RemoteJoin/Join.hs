@@ -5,6 +5,7 @@ module Hasura.GraphQL.Execute.RemoteJoin.Join
 where
 
 import Control.Lens (view, _3)
+import Control.Monad.Trans.Control
 import Data.Aeson.Ordered qualified as JO
 import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
@@ -54,6 +55,7 @@ processRemoteJoins ::
   forall m.
   ( MonadError QErr m,
     MonadIO m,
+    MonadBaseControl IO m,
     EB.MonadQueryTags m,
     MonadQueryLog m,
     Tracing.MonadTrace m

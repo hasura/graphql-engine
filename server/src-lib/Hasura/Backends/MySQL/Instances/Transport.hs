@@ -2,6 +2,7 @@
 
 module Hasura.Backends.MySQL.Instances.Transport (runQuery) where
 
+import Control.Monad.Trans.Control
 import Data.Aeson qualified as J
 import Data.Text.Extended
 import Hasura.Backends.MySQL.Instances.Execute ()
@@ -19,7 +20,6 @@ import Hasura.SQL.Backend
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import Hasura.Tracing
-import Hasura.Tracing qualified as Tracing
 
 instance BackendTransport 'MySQL where
   runDBQuery = runQuery
@@ -30,6 +30,7 @@ instance BackendTransport 'MySQL where
 
 runQuery ::
   ( MonadIO m,
+    MonadBaseControl IO m,
     MonadQueryLog m,
     MonadTrace m,
     MonadError QErr m
@@ -40,7 +41,7 @@ runQuery ::
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig 'MySQL ->
-  Tracing.TraceT (ExceptT QErr IO) EncJSON ->
+  OnBaseMonad IdentityT EncJSON ->
   Maybe (PreparedQuery 'MySQL) ->
   ResolvedConnectionTemplate 'MySQL ->
   -- | Also return the time spent in the PG query; for telemetry.
@@ -49,20 +50,20 @@ runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql _ = do
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId
   withElapsedTime $
     trace ("MySQL Query for root field " <>> fieldName) $
-      Tracing.interpTraceT run tx
-
-run :: (MonadIO m, MonadError QErr m) => ExceptT QErr IO a -> m a
-run action = do
-  result <- liftIO $ runExceptT action
-  result `onLeft` throwError
+      run tx
 
 runQueryExplain ::
   ( MonadIO m,
-    MonadError QErr m
+    MonadBaseControl IO m,
+    MonadError QErr m,
+    MonadTrace m
   ) =>
   DBStepInfo 'MySQL ->
   m EncJSON
-runQueryExplain (DBStepInfo _ _ _ action _) = run $ ignoreTraceT action
+runQueryExplain (DBStepInfo _ _ _ action _) = run action
+
+run :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m, MonadTrace m) => OnBaseMonad IdentityT a -> m a
+run = runIdentityT . runOnBaseMonad
 
 mkQueryLog ::
   GQLReqUnparsed ->

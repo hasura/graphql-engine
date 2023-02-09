@@ -2,6 +2,7 @@
 
 module Hasura.Backends.BigQuery.Instances.Transport () where
 
+import Control.Monad.Trans.Control
 import Data.Aeson qualified as J
 import Hasura.Backends.BigQuery.Instances.Execute ()
 import Hasura.Base.Error
@@ -23,7 +24,6 @@ import Hasura.SQL.Backend
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import Hasura.Tracing
-import Hasura.Tracing qualified as Tracing
 
 instance BackendTransport 'BigQuery where
   runDBQuery = runQuery
@@ -34,6 +34,7 @@ instance BackendTransport 'BigQuery where
 
 runQuery ::
   ( MonadIO m,
+    MonadBaseControl IO m,
     MonadQueryLog m,
     MonadTrace m,
     MonadError QErr m
@@ -44,7 +45,7 @@ runQuery ::
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig 'BigQuery ->
-  Tracing.TraceT (ExceptT QErr IO) EncJSON ->
+  OnBaseMonad IdentityT EncJSON ->
   Maybe Text ->
   ResolvedConnectionTemplate 'BigQuery ->
   -- | Also return the time spent in the PG query; for telemetry.
@@ -53,15 +54,17 @@ runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql _ = do
   -- log the generated SQL and the graphql query
   -- FIXME: fix logging by making logQueryLog expect something backend agnostic!
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId
-  withElapsedTime $ Tracing.interpTraceT run tx
+  withElapsedTime $ run tx
 
 runQueryExplain ::
   ( MonadIO m,
-    MonadError QErr m
+    MonadBaseControl IO m,
+    MonadError QErr m,
+    MonadTrace m
   ) =>
   DBStepInfo 'BigQuery ->
   m EncJSON
-runQueryExplain (DBStepInfo _ _ _ action _) = run $ ignoreTraceT action
+runQueryExplain (DBStepInfo _ _ _ action _) = run action
 
 runMutation ::
   ( MonadError QErr m
@@ -72,7 +75,7 @@ runMutation ::
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig 'BigQuery ->
-  Tracing.TraceT (ExceptT QErr IO) EncJSON ->
+  OnBaseMonad IdentityT EncJSON ->
   Maybe Text ->
   ResolvedConnectionTemplate 'BigQuery ->
   -- | Also return 'Mutation' when the operation was a mutation, and the time
@@ -82,10 +85,15 @@ runMutation _reqId _query _fieldName _userInfo _logger _sourceConfig _tx _genSql
   -- do
   throw500 "BigQuery does not support mutations!"
 
-run :: (MonadIO m, MonadError QErr m) => ExceptT QErr IO a -> m a
-run action = do
-  result <- liftIO $ runExceptT action
-  result `onLeft` throwError
+run ::
+  ( MonadIO m,
+    MonadBaseControl IO m,
+    MonadError QErr m,
+    MonadTrace m
+  ) =>
+  OnBaseMonad IdentityT a ->
+  m a
+run = runIdentityT . runOnBaseMonad
 
 mkQueryLog ::
   GQLReqUnparsed ->

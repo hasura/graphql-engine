@@ -5,6 +5,7 @@ module Hasura.Backends.DataConnector.Adapter.Transport () where
 --------------------------------------------------------------------------------
 
 import Control.Exception.Safe (throwIO)
+import Control.Monad.Trans.Control
 import Data.Aeson qualified as J
 import Data.Text.Extended ((<>>))
 import Hasura.Backends.DataConnector.Adapter.Execute (DataConnectorPreparedQuery (..), encodePreparedQueryToJsonText)
@@ -12,7 +13,7 @@ import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig (..))
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), AgentClientT, runAgentClientT)
 import Hasura.Base.Error (QErr)
 import Hasura.EncJSON (EncJSON)
-import Hasura.GraphQL.Execute.Backend (DBStepInfo (..))
+import Hasura.GraphQL.Execute.Backend (DBStepInfo (..), OnBaseMonad (..))
 import Hasura.GraphQL.Logging qualified as HGL
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Transport.Backend (BackendTransport (..))
@@ -38,6 +39,7 @@ instance BackendTransport 'DataConnector where
 
 runDBQuery' ::
   ( MonadIO m,
+    MonadBaseControl IO m,
     MonadError QErr m,
     Tracing.MonadTrace m,
     HGL.MonadQueryLog m
@@ -48,7 +50,7 @@ runDBQuery' ::
   UserInfo ->
   Logger Hasura ->
   SourceConfig ->
-  AgentClientT (Tracing.TraceT (ExceptT QErr IO)) a ->
+  OnBaseMonad AgentClientT a ->
   Maybe DataConnectorPreparedQuery ->
   ResolvedConnectionTemplate 'DataConnector ->
   m (DiffTime, a)
@@ -56,8 +58,8 @@ runDBQuery' requestId query fieldName _userInfo logger SourceConfig {..} action 
   void $ HGL.logQueryLog logger $ mkQueryLog query fieldName queryRequest requestId
   withElapsedTime
     . Tracing.trace ("Data Connector backend query for root field " <>> fieldName)
-    . Tracing.interpTraceT (liftEitherM . liftIO . runExceptT)
     . flip runAgentClientT (AgentClientContext logger _scEndpoint _scManager _scTimeoutMicroseconds)
+    . runOnBaseMonad
     $ action
 
 mkQueryLog ::
@@ -75,19 +77,20 @@ mkQueryLog gqlQuery fieldName maybeQuery requestId =
     (HGL.QueryLogKindDatabase Nothing)
 
 runDBQueryExplain' ::
-  (MonadIO m, MonadError QErr m) =>
+  ( MonadIO m,
+    MonadBaseControl IO m,
+    MonadError QErr m,
+    Tracing.MonadTrace m
+  ) =>
   DBStepInfo 'DataConnector ->
   m EncJSON
 runDBQueryExplain' (DBStepInfo _ SourceConfig {..} _ action _) =
-  liftEitherM
-    . liftIO
-    . runExceptT
-    . Tracing.ignoreTraceT
-    . flip runAgentClientT (AgentClientContext nullLogger _scEndpoint _scManager _scTimeoutMicroseconds)
-    $ action
+  flip runAgentClientT (AgentClientContext nullLogger _scEndpoint _scManager _scTimeoutMicroseconds) $
+    runOnBaseMonad action
 
 runDBMutation' ::
   ( MonadIO m,
+    MonadBaseControl IO m,
     MonadError QErr m,
     Tracing.MonadTrace m,
     HGL.MonadQueryLog m
@@ -98,7 +101,7 @@ runDBMutation' ::
   UserInfo ->
   Logger Hasura ->
   SourceConfig ->
-  AgentClientT (Tracing.TraceT (ExceptT QErr IO)) a ->
+  OnBaseMonad AgentClientT a ->
   Maybe DataConnectorPreparedQuery ->
   ResolvedConnectionTemplate 'DataConnector ->
   m (DiffTime, a)
@@ -106,6 +109,6 @@ runDBMutation' requestId query fieldName _userInfo logger SourceConfig {..} acti
   void $ HGL.logQueryLog logger $ mkQueryLog query fieldName queryRequest requestId
   withElapsedTime
     . Tracing.trace ("Data Connector backend mutation for root field " <>> fieldName)
-    . Tracing.interpTraceT (liftEitherM . liftIO . runExceptT)
     . flip runAgentClientT (AgentClientContext logger _scEndpoint _scManager _scTimeoutMicroseconds)
+    . runOnBaseMonad
     $ action

@@ -57,7 +57,7 @@ import Network.HTTP.Types qualified as HTTP
 instance BackendExecute 'MSSQL where
   type PreparedQuery 'MSSQL = Text
   type MultiplexedQuery 'MSSQL = MultiplexedQuery'
-  type ExecutionMonad 'MSSQL = ExceptT QErr IO
+  type ExecutionMonad 'MSSQL = ExceptT QErr
 
   mkDBQueryPlan = msDBQueryPlan
   mkDBMutationPlan = msDBMutationPlan
@@ -105,8 +105,7 @@ msDBQueryPlan userInfo _env sourceName sourceConfig qrf _ _ = do
 
   pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) (runSelectQuery printer) ()
   where
-    runSelectQuery :: Printer -> ExceptT QErr IO EncJSON
-    runSelectQuery queryPrinter = do
+    runSelectQuery queryPrinter = OnBaseMonad do
       let queryTx = encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat queryPrinter)
       mssqlRunReadOnly (_mscExecCtx sourceConfig) queryTx
 
@@ -137,7 +136,7 @@ msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf _ _ = do
   statement <- planQuery sessionVariables qrf
   let query = toQueryPretty (fromSelect statement)
       queryString = ODBC.renderQuery query
-      odbcQuery =
+      odbcQuery = OnBaseMonad $
         mssqlRunReadOnly
           (_mscExecCtx sourceConfig)
           do
@@ -457,7 +456,6 @@ msDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
 
   pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) odbcQuery ()
   where
-    runSelectQuery :: Printer -> ExceptT QErr IO EncJSON
-    runSelectQuery queryPrinter = do
+    runSelectQuery queryPrinter = OnBaseMonad do
       let queryTx = encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat queryPrinter)
       mssqlRunReadOnly (_mscExecCtx sourceConfig) queryTx

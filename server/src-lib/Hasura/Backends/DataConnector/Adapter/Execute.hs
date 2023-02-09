@@ -23,7 +23,7 @@ import Hasura.Backends.DataConnector.Plan.MutationPlan qualified as DC
 import Hasura.Backends.DataConnector.Plan.QueryPlan qualified as DC
 import Hasura.Base.Error (Code (..), QErr, throw400, throw400WithDetail, throw500)
 import Hasura.EncJSON (EncJSON, encJFromBuilder, encJFromJValue)
-import Hasura.GraphQL.Execute.Backend (BackendExecute (..), DBStepInfo (..), ExplainPlan (..))
+import Hasura.GraphQL.Execute.Backend (BackendExecute (..), DBStepInfo (..), ExplainPlan (..), OnBaseMonad (..))
 import Hasura.GraphQL.Namespace qualified as GQL
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as RQL
@@ -31,7 +31,6 @@ import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Hasura.SQL.Backend (BackendType (DataConnector))
 import Hasura.Session
 import Hasura.Tracing (MonadTrace)
-import Hasura.Tracing qualified as Tracing
 import Servant.Client.Core.HasClient ((//))
 import Servant.Client.Generic (genericClient)
 
@@ -53,7 +52,7 @@ encodeToJsonText =
 instance BackendExecute 'DataConnector where
   type PreparedQuery 'DataConnector = DataConnectorPreparedQuery
   type MultiplexedQuery 'DataConnector = Void
-  type ExecutionMonad 'DataConnector = AgentClientT (Tracing.TraceT (ExceptT QErr IO))
+  type ExecutionMonad 'DataConnector = AgentClientT
 
   mkDBQueryPlan UserInfo {..} env sourceName sourceConfig ir _headers _gName = do
     queryPlan@DC.Plan {..} <- DC.mkQueryPlan _uiSession sourceConfig ir
@@ -63,7 +62,7 @@ instance BackendExecute 'DataConnector where
         { dbsiSourceName = sourceName,
           dbsiSourceConfig = transformedSourceConfig,
           dbsiPreparedQuery = Just $ QueryRequest _pRequest,
-          dbsiAction = buildQueryAction sourceName transformedSourceConfig queryPlan,
+          dbsiAction = OnBaseMonad $ buildQueryAction sourceName transformedSourceConfig queryPlan,
           dbsiResolvedConnectionTemplate = ()
         }
 
@@ -76,7 +75,7 @@ instance BackendExecute 'DataConnector where
           { dbsiSourceName = sourceName,
             dbsiSourceConfig = transformedSourceConfig,
             dbsiPreparedQuery = Just $ QueryRequest _pRequest,
-            dbsiAction = buildExplainAction fieldName sourceName transformedSourceConfig queryPlan,
+            dbsiAction = OnBaseMonad $ buildExplainAction fieldName sourceName transformedSourceConfig queryPlan,
             dbsiResolvedConnectionTemplate = ()
           }
   mkDBMutationPlan UserInfo {..} env _stringifyNum sourceName sourceConfig mutationDB _headers _gName = do
@@ -87,7 +86,7 @@ instance BackendExecute 'DataConnector where
         { dbsiSourceName = sourceName,
           dbsiSourceConfig = transformedSourceConfig,
           dbsiPreparedQuery = Just $ MutationRequest _pRequest,
-          dbsiAction = buildMutationAction sourceName transformedSourceConfig mutationPlan,
+          dbsiAction = OnBaseMonad $ buildMutationAction sourceName transformedSourceConfig mutationPlan,
           dbsiResolvedConnectionTemplate = ()
         }
   mkLiveQuerySubscriptionPlan _ _ _ _ _ _ _ =

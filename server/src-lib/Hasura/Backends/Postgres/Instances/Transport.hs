@@ -10,6 +10,7 @@ module Hasura.Backends.Postgres.Instances.Transport
   )
 where
 
+import Control.Monad.Trans.Control
 import Data.Aeson qualified as J
 import Data.ByteString qualified as B
 import Data.HashMap.Strict.InsOrd qualified as OMap
@@ -43,7 +44,6 @@ import Hasura.SQL.Backend
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import Hasura.Tracing
-import Hasura.Tracing qualified as Tracing
 
 instance
   ( Backend ('Postgres pgKind),
@@ -59,6 +59,7 @@ instance
 
 runPGQuery ::
   ( MonadIO m,
+    MonadBaseControl IO m,
     MonadError QErr m,
     MonadQueryLog m,
     MonadTrace m
@@ -69,7 +70,7 @@ runPGQuery ::
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig ('Postgres pgKind) ->
-  Tracing.TraceT (PG.TxET QErr IO) EncJSON ->
+  OnBaseMonad (PG.TxET QErr) EncJSON ->
   Maybe EQ.PreparedSql ->
   ResolvedConnectionTemplate ('Postgres pgKind) ->
   -- | Also return the time spent in the PG query; for telemetry.
@@ -79,10 +80,12 @@ runPGQuery reqId query fieldName _userInfo logger sourceConfig tx genSql resolve
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId (resolvedConnectionTemplate <$ resolvedConnectionTemplate)
   withElapsedTime $
     trace ("Postgres Query for root field " <>> fieldName) $
-      Tracing.interpTraceT (runQueryTx (_pscExecCtx sourceConfig) (GraphQLQuery resolvedConnectionTemplate)) tx
+      runQueryTx (_pscExecCtx sourceConfig) (GraphQLQuery resolvedConnectionTemplate) $
+        runOnBaseMonad tx
 
 runPGMutation ::
   ( MonadIO m,
+    MonadBaseControl IO m,
     MonadError QErr m,
     MonadQueryLog m,
     MonadTrace m
@@ -93,28 +96,20 @@ runPGMutation ::
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig ('Postgres pgKind) ->
-  Tracing.TraceT (PG.TxET QErr IO) EncJSON ->
+  OnBaseMonad (PG.TxET QErr) EncJSON ->
   Maybe EQ.PreparedSql ->
   ResolvedConnectionTemplate ('Postgres pgKind) ->
   m (DiffTime, EncJSON)
 runPGMutation reqId query fieldName userInfo logger sourceConfig tx _genSql resolvedConnectionTemplate = do
   -- log the graphql query
   logQueryLog logger $ mkQueryLog query fieldName Nothing reqId (resolvedConnectionTemplate <$ resolvedConnectionTemplate)
-  ctx <- Tracing.currentContext
   withElapsedTime $
     trace ("Postgres Mutation for root field " <>> fieldName) $
-      Tracing.interpTraceT
-        ( liftEitherM
-            . liftIO
-            . runExceptT
-            . _pecRunTx (_pscExecCtx sourceConfig) (PGExecCtxInfo (Tx PG.ReadWrite Nothing) (GraphQLQuery resolvedConnectionTemplate))
-            . withTraceContext ctx
-            . withUserInfo userInfo
-        )
-        tx
+      runTxWithCtxAndUserInfo userInfo (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) (GraphQLQuery resolvedConnectionTemplate) $
+        runOnBaseMonad tx
 
 runPGSubscription ::
-  MonadIO m =>
+  (MonadIO m, MonadBaseControl IO m) =>
   SourceConfig ('Postgres pgKind) ->
   MultiplexedQuery ('Postgres pgKind) ->
   [(CohortId, CohortVariables)] ->
@@ -127,7 +122,7 @@ runPGSubscription sourceConfig query variables resolvedConnectionTemplate =
         PGL.executeMultiplexedQuery query variables
 
 runPGStreamingSubscription ::
-  MonadIO m =>
+  (MonadIO m, MonadBaseControl IO m) =>
   SourceConfig ('Postgres pgKind) ->
   MultiplexedQuery ('Postgres pgKind) ->
   [(CohortId, CohortVariables)] ->
@@ -142,16 +137,15 @@ runPGStreamingSubscription sourceConfig query variables resolvedConnectionTempla
 runPGQueryExplain ::
   forall pgKind m.
   ( MonadIO m,
-    MonadError QErr m
+    MonadBaseControl IO m,
+    MonadError QErr m,
+    MonadTrace m
   ) =>
   DBStepInfo ('Postgres pgKind) ->
   m EncJSON
 runPGQueryExplain (DBStepInfo _ sourceConfig _ action resolvedConnectionTemplate) =
-  -- All Postgres transport functions use the same monad stack: the ExecutionMonad defined in the
-  -- matching instance of BackendExecute. However, Explain doesn't need tracing! Rather than
-  -- introducing a separate "ExplainMonad", we simply use @runTraceTWithReporter@ to remove the
-  -- TraceT.
-  runQueryTx (_pscExecCtx sourceConfig) (GraphQLQuery resolvedConnectionTemplate) $ ignoreTraceT action
+  runQueryTx (_pscExecCtx sourceConfig) (GraphQLQuery resolvedConnectionTemplate) $
+    runOnBaseMonad action
 
 mkQueryLog ::
   GQLReqUnparsed ->
@@ -177,6 +171,7 @@ mkQueryLog gqlQuery fieldName preparedSql requestId resolvedConnectionTemplate =
 
 runPGMutationTransaction ::
   ( MonadIO m,
+    MonadBaseControl IO m,
     MonadError QErr m,
     MonadQueryLog m,
     MonadTrace m
@@ -191,15 +186,9 @@ runPGMutationTransaction ::
   m (DiffTime, RootFieldMap EncJSON)
 runPGMutationTransaction reqId query userInfo logger sourceConfig resolvedConnectionTemplate mutations = do
   logQueryLog logger $ mkQueryLog query (mkUnNamespacedRootFieldAlias Name._transaction) Nothing reqId (resolvedConnectionTemplate <$ resolvedConnectionTemplate)
-  ctx <- Tracing.currentContext
-  withElapsedTime
-    $ Tracing.interpTraceT
-      ( liftEitherM
-          . liftIO
-          . runExceptT
-          . _pecRunTx (_pscExecCtx sourceConfig) (PGExecCtxInfo (Tx PG.ReadWrite Nothing) (GraphQLQuery resolvedConnectionTemplate))
-          . withTraceContext ctx
-          . withUserInfo userInfo
-      )
-    $ flip OMap.traverseWithKey mutations \fieldName dbsi ->
-      trace ("Postgres Mutation for root field " <>> fieldName) $ dbsiAction dbsi
+  withElapsedTime $
+    runTxWithCtxAndUserInfo userInfo (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) (GraphQLQuery resolvedConnectionTemplate) $
+      flip OMap.traverseWithKey mutations \fieldName dbsi ->
+        trace ("Postgres Mutation for root field " <>> fieldName) $
+          runOnBaseMonad $
+            dbsiAction dbsi

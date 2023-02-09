@@ -48,6 +48,7 @@ import Hasura.GraphQL.Execute.Backend
   ( BackendExecute (..),
     DBStepInfo (..),
     ExplainPlan (..),
+    OnBaseMonad (..),
     convertRemoteSourceRelationship,
   )
 import Hasura.GraphQL.Execute.Subscription.Plan
@@ -109,7 +110,7 @@ instance
   where
   type PreparedQuery ('Postgres pgKind) = PreparedSql
   type MultiplexedQuery ('Postgres pgKind) = PGL.MultiplexedQuery
-  type ExecutionMonad ('Postgres pgKind) = Tracing.TraceT (PG.TxET QErr IO)
+  type ExecutionMonad ('Postgres pgKind) = PG.TxET QErr
 
   mkDBQueryPlan = pgDBQueryPlan
   mkDBMutationPlan = pgDBMutationPlan
@@ -171,10 +172,9 @@ pgDBQueryExplain fieldName userInfo sourceName sourceConfig rootSelection reqHea
       -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
       -- query, maybe resulting in privilege escalation:
       withExplain = "EXPLAIN " <> textSQL
-  let action =
-        liftTx $
-          PG.withQE dmlTxErrorHandler (PG.fromText withExplain) () True <&> \planList ->
-            encJFromJValue $ ExplainPlan fieldName (Just textSQL) (Just $ map runIdentity planList)
+  let action = OnBaseMonad do
+        PG.withQE dmlTxErrorHandler (PG.fromText withExplain) () True <&> \planList ->
+          encJFromJValue $ ExplainPlan fieldName (Just textSQL) (Just $ map runIdentity planList)
   resolvedConnectionTemplate <-
     applyConnectionTemplateResolverNonAdmin (_pscConnectionTemplateResolver sourceConfig) userInfo reqHeaders $
       Just $
@@ -219,11 +219,14 @@ convertDelete ::
   UserInfo ->
   IR.AnnDelG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   Options.StringifyNumbers ->
-  m (Tracing.TraceT (PG.TxET QErr IO) EncJSON)
+  m (OnBaseMonad (PG.TxET QErr) EncJSON)
 convertDelete userInfo deleteOperation stringifyNum = do
   queryTags <- ask
   preparedDelete <- traverse (prepareWithoutPlan userInfo) deleteOperation
-  pure $ flip runReaderT queryTags $ PGE.execDeleteQuery stringifyNum (_adNamingConvention deleteOperation) userInfo (preparedDelete, Seq.empty)
+  pure $
+    OnBaseMonad $
+      flip runReaderT queryTags $
+        PGE.execDeleteQuery stringifyNum (_adNamingConvention deleteOperation) userInfo (preparedDelete, Seq.empty)
 
 convertUpdate ::
   forall pgKind m.
@@ -235,16 +238,17 @@ convertUpdate ::
   UserInfo ->
   IR.AnnotatedUpdateG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   Options.StringifyNumbers ->
-  m (Tracing.TraceT (PG.TxET QErr IO) EncJSON)
+  m (OnBaseMonad (PG.TxET QErr) EncJSON)
 convertUpdate userInfo updateOperation stringifyNum = do
   queryTags <- ask
   preparedUpdate <- traverse (prepareWithoutPlan userInfo) updateOperation
   if Postgres.updateVariantIsEmpty $ IR._auUpdateVariant updateOperation
-    then pure $ pure $ IR.buildEmptyMutResp $ IR._auOutput preparedUpdate
+    then pure $ OnBaseMonad $ pure $ IR.buildEmptyMutResp $ IR._auOutput preparedUpdate
     else
       pure $
-        flip runReaderT queryTags $
-          PGE.execUpdateQuery stringifyNum (_auNamingConvention updateOperation) userInfo (preparedUpdate, Seq.empty)
+        OnBaseMonad $
+          flip runReaderT queryTags $
+            PGE.execUpdateQuery stringifyNum (_auNamingConvention updateOperation) userInfo (preparedUpdate, Seq.empty)
 
 convertInsert ::
   forall pgKind m.
@@ -256,11 +260,14 @@ convertInsert ::
   UserInfo ->
   IR.AnnotatedInsert ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   Options.StringifyNumbers ->
-  m (Tracing.TraceT (PG.TxET QErr IO) EncJSON)
+  m (OnBaseMonad (PG.TxET QErr) EncJSON)
 convertInsert userInfo insertOperation stringifyNum = do
   queryTags <- ask
   preparedInsert <- traverse (prepareWithoutPlan userInfo) insertOperation
-  pure $ flip runReaderT queryTags $ convertToSQLTransaction preparedInsert userInfo Seq.empty stringifyNum (_aiNamingConvention insertOperation)
+  pure $
+    OnBaseMonad $
+      flip runReaderT queryTags $
+        convertToSQLTransaction preparedInsert userInfo Seq.empty stringifyNum (_aiNamingConvention insertOperation)
 
 -- | A pared-down version of 'Query.convertQuerySelSet', for use in execution of
 -- special case of SQL function mutations (see 'MDBFunction').
@@ -275,7 +282,7 @@ convertFunction ::
   JsonAggSelect ->
   -- | VOLATILE function as 'SelectExp'
   IR.AnnSimpleSelectG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
-  m (Tracing.TraceT (PG.TxET QErr IO) EncJSON)
+  m (OnBaseMonad (PG.TxET QErr) EncJSON)
 convertFunction userInfo jsonAggSelect unpreparedQuery = do
   queryTags <- ask
   -- Transform the RQL AST into a prepared SQL query
@@ -477,27 +484,16 @@ testMultiplexedQueryTx (PGL.MultiplexedQuery query) cohortId cohortVariables = d
 mkCurPlanTx ::
   UserInfo ->
   PreparedSql ->
-  (Tracing.TraceT (PG.TxET QErr IO) EncJSON, Maybe PreparedSql)
+  (OnBaseMonad (PG.TxET QErr) EncJSON, Maybe PreparedSql)
 mkCurPlanTx userInfo ps@(PreparedSql q prepMap) =
   -- generate the SQL and prepared vars or the bytestring
   let args = withUserVars (_uiSession userInfo) prepMap
       -- WARNING: this quietly assumes the intmap keys are contiguous
       prepArgs = fst <$> IntMap.elems args
-   in (,Just ps) $
+   in (,Just ps) $ OnBaseMonad do
         Tracing.trace "Postgres" $
-          liftTx $
-            asSingleRowJsonResp q prepArgs
-
--- | This function is generally used on the result of 'selectQuerySQL',
--- 'selectAggregateQuerySQL' or 'connectionSelectSQL' to run said query and get
--- back the resulting JSON.
-asSingleRowJsonResp ::
-  PG.Query ->
-  [PG.PrepArg] ->
-  PG.TxE QErr EncJSON
-asSingleRowJsonResp query args =
-  runIdentity . PG.getRow
-    <$> PG.rawQE dmlTxErrorHandler query args True
+          runIdentity . PG.getRow
+            <$> PG.rawQE dmlTxErrorHandler q prepArgs True
 
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan ::
