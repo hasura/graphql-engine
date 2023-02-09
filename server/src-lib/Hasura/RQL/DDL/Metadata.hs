@@ -40,7 +40,6 @@ import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (dquoteList, (<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.Eventing.EventTrigger (logQErr)
 import Hasura.Logging qualified as HL
 import Hasura.Metadata.Class
 import Hasura.NativeQuery.API
@@ -76,7 +75,7 @@ import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
-import Hasura.RQL.Types.Source (SourceInfo (..), unsafeSourceInfo)
+import Hasura.RQL.Types.Source (unsafeSourceInfo)
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend (BackendType (..))
@@ -314,7 +313,10 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
   -- See Note [Cleanup for dropped triggers]
   dropSourceSQLTriggers logger oldSchemaCache (_metaSources oldMetadata) (_metaSources metadata)
 
-  generateSQLTriggerCleanupSchedules logger (_metaSources oldMetadata) (_metaSources metadata)
+  newSchemaCache <- askSchemaCache
+
+  updateTriggerCleanupSchedules logger (_metaSources oldMetadata) (_metaSources metadata) newSchemaCache
+    >>= (`onLeft` throwError)
 
   let droppedSources = OMap.difference oldSources newSources
 
@@ -322,7 +324,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
   for_ (OMap.toList droppedSources) $ \(oldSource, oldSourceBackendMetadata) ->
     postDropSourceHookHelper oldSchemaCache oldSource (unBackendSourceMetadata oldSourceBackendMetadata)
 
-  encJFromJValue . formatInconsistentObjs . scInconsistentObjs <$> askSchemaCache
+  pure . encJFromJValue . formatInconsistentObjs . scInconsistentObjs $ newSchemaCache
   where
     {- Note [Cron triggers behaviour with replace metadata]
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -491,57 +493,6 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
               <> " to delete the sql triggers from the database manually."
               <> " For more details, please refer https://hasura.io/docs/latest/graphql/core/event-triggers/index.html "
           )
-
-    -- \| `generateSQLTriggerCleanupSchedules` is primarily used to update the
-    --    cleanup schedules associated with an event trigger in case the cleanup
-    --    config has changed while replacing the metadata.
-    --
-    --    In case,
-    --    i. a source has been dropped -
-    --           We don't need to clear the cleanup schedules
-    --           because the event log cleanup table is dropped as part
-    --           of the post drop source hook.
-    --    ii. a table or an event trigger has been dropped/updated -
-    --           Older cleanup events will be deleted first and in case of
-    --           an update, new cleanup events will be generated and inserted
-    --           into the table.
-    --    iii. a new event trigger with cleanup config has been added -
-    --             Generate the cleanup events and insert it.
-    generateSQLTriggerCleanupSchedules ::
-      HL.Logger HL.Hasura ->
-      InsOrdHashMap SourceName BackendSourceMetadata ->
-      InsOrdHashMap SourceName BackendSourceMetadata ->
-      m ()
-    generateSQLTriggerCleanupSchedules (HL.Logger logger) oldSources newSources = do
-      -- If there are any event trigger cleanup configs with different cron schedule,
-      -- then delete the older schedules generate cleanup logs for new event trigger
-      -- cleanup config.
-      for_ (OMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
-        for_ (OMap.lookup source oldSources) $ \oldBackendSourceMetadata ->
-          AB.dispatchAnyBackend @BackendEventTrigger (unBackendSourceMetadata newBackendSourceMetadata) \(newSourceMetadata :: SourceMetadata b) -> do
-            dispatch oldBackendSourceMetadata \oldSourceMetadata -> do
-              sourceInfoMaybe <- askSourceInfoMaybe @b source
-              case sourceInfoMaybe of
-                Nothing ->
-                  logger $
-                    MetadataLog
-                      HL.LevelWarn
-                      ( "Could not cleanup the scheduled autocleanup instances present in the source '"
-                          <> source
-                            <<> "' as it is inconsistent"
-                      )
-                      J.Null
-                Just sourceInfo@(SourceInfo _ _ _ _ sourceConfig _ _) -> do
-                  let getEventMapWithCC sourceMeta = Map.fromList $ concatMap (getAllETWithCleanupConfigInTableMetadata . snd) $ OMap.toList $ _smTables sourceMeta
-                      oldEventTriggersWithCC = getEventMapWithCC oldSourceMetadata
-                      newEventTriggersWithCC = getEventMapWithCC newSourceMetadata
-                      -- event triggers with cleanup config that existed in old metadata but are missing in new metadata
-                      differenceMap = Map.difference oldEventTriggersWithCC newEventTriggersWithCC
-                  for_ (Map.toList differenceMap) $ \(triggerName, cleanupConfig) -> do
-                    deleteAllScheduledCleanups @b sourceConfig triggerName
-                    pure cleanupConfig
-                  for_ (Map.toList newEventTriggersWithCC) $ \(triggerName, cleanupConfig) -> do
-                    (`onLeft` logQErr) =<< generateCleanupSchedules (AB.mkAnyBackend sourceInfo) triggerName cleanupConfig
 
     dispatch (BackendSourceMetadata bs) = AB.dispatchAnyBackend @BackendEventTrigger bs
 

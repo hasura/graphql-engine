@@ -4,16 +4,13 @@
 -- | This module houses the types and functions associated with the default
 -- implementation of the metadata of native queries.
 module Hasura.NativeQuery.Metadata
-  ( NativeQueryArgumentName (..),
-    NativeQueryNameImpl (..),
+  ( NativeQueryName (..),
     NativeQueryInfoImpl (..),
+    NativeQueryArgumentName (..),
     TrackNativeQueryImpl (..),
-    RawQuery (..),
     InterpolatedItem (..),
     InterpolatedQuery (..),
     parseInterpolatedQuery,
-    ppInterpolatedQuery,
-    showInterpolatedQuery,
     defaultNativeQueryTrackToInfo,
     module Hasura.NativeQuery.Types,
   )
@@ -24,27 +21,12 @@ import Autodocodec qualified as AC
 import Data.Aeson
 import Data.Bifunctor (first)
 import Data.Text qualified as T
-import Data.Text.Extended (ToTxt)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.NativeQuery.Types
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
-
--- The name of a native query. This appears as a root field name in the graphql schema.
-newtype NativeQueryNameImpl = NativeQueryNameImpl {getNativeQueryNameImpl :: Text}
-  deriving newtype (Eq, Ord, Show, Hashable, NFData, ToJSON, FromJSON, ToTxt)
-  deriving stock (Generic)
-
-instance HasCodec NativeQueryNameImpl where
-  codec = dimapCodec NativeQueryNameImpl getNativeQueryNameImpl codec
-
-instance FromJSONKey NativeQueryNameImpl
-
-instance ToJSONKey NativeQueryNameImpl
-
----------------------------------------
 
 newtype RawQuery = RawQuery {getRawQuery :: Text}
   deriving newtype (Eq, Ord, Show, FromJSON, ToJSON)
@@ -68,12 +50,6 @@ ppInterpolatedItem :: InterpolatedItem NativeQueryArgumentName -> Text
 ppInterpolatedItem (IIText t) = t
 ppInterpolatedItem (IIVariable v) = "{{" <> getNativeQueryArgumentName v <> "}}"
 
--- | Converting an interpolated query back to text.
---   Uses @Show@ to print the variables.
-showInterpolatedItem :: Show variable => InterpolatedItem variable -> Text
-showInterpolatedItem (IIText t) = t
-showInterpolatedItem (IIVariable v) = "{{" <> tshow v <> "}}"
-
 deriving instance (Hashable variable) => Hashable (InterpolatedItem variable)
 
 deriving instance (NFData variable) => NFData (InterpolatedItem variable)
@@ -95,9 +71,6 @@ deriving newtype instance (NFData variable) => NFData (InterpolatedQuery variabl
 ppInterpolatedQuery :: InterpolatedQuery NativeQueryArgumentName -> Text
 ppInterpolatedQuery (InterpolatedQuery parts) = foldMap ppInterpolatedItem parts
 
-showInterpolatedQuery :: Show variable => InterpolatedQuery variable -> Text
-showInterpolatedQuery (InterpolatedQuery parts) = foldMap showInterpolatedItem parts
-
 -- | We store the interpolated query as the user text and parse it back
 --   when converting back to Haskell code.
 instance HasCodec (InterpolatedQuery NativeQueryArgumentName) where
@@ -111,9 +84,30 @@ instance HasCodec (InterpolatedQuery NativeQueryArgumentName) where
 
 ---------------------------------------
 
+newtype NativeQueryArgumentName = NativeQueryArgumentName
+  { getNativeQueryArgumentName :: Text
+  }
+  deriving newtype (Eq, Ord, Show, Hashable)
+  deriving stock (Generic)
+
+instance HasCodec NativeQueryArgumentName where
+  codec = dimapCodec NativeQueryArgumentName getNativeQueryArgumentName codec
+
+deriving newtype instance ToJSON NativeQueryArgumentName
+
+deriving newtype instance FromJSON NativeQueryArgumentName
+
+deriving newtype instance ToJSONKey NativeQueryArgumentName
+
+deriving newtype instance FromJSONKey NativeQueryArgumentName
+
+instance NFData (NativeQueryArgumentName)
+
+---------------------------------------
+
 -- | Default implementation of the Native Query metadata info object.
 data NativeQueryInfoImpl (b :: BackendType) = NativeQueryInfoImpl
-  { nqiiRootFieldName :: NativeQueryNameImpl,
+  { nqiiRootFieldName :: NativeQueryName,
     nqiiCode :: InterpolatedQuery NativeQueryArgumentName,
     nqiiReturns :: TableName b,
     nqiiArguments :: HashMap NativeQueryArgumentName (ScalarType b),
@@ -162,24 +156,10 @@ deriving via
   instance
     (Backend b, HasCodec (ScalarType b)) => (ToJSON (NativeQueryInfoImpl b))
 
-newtype NativeQueryArgumentName = NativeQueryArgumentName {getNativeQueryArgumentName :: Text}
-  deriving newtype (Eq, Ord, Show, Hashable)
-  deriving stock (Generic)
-
-deriving newtype instance ToJSON NativeQueryArgumentName
-
-deriving newtype instance FromJSON NativeQueryArgumentName
-
-deriving newtype instance ToJSONKey NativeQueryArgumentName
-
-deriving newtype instance FromJSONKey NativeQueryArgumentName
-
-instance NFData (NativeQueryArgumentName)
-
 -- | Default implementation of the 'track_native_query' request payload.
 data TrackNativeQueryImpl (b :: BackendType) = TrackNativeQueryImpl
   { tnqSource :: SourceName,
-    tnqRootFieldName :: NativeQueryNameImpl,
+    tnqRootFieldName :: NativeQueryName,
     tnqCode :: Text,
     tnqArguments :: HashMap NativeQueryArgumentName (ScalarType b),
     tnqDescription :: Maybe Text,
@@ -187,15 +167,27 @@ data TrackNativeQueryImpl (b :: BackendType) = TrackNativeQueryImpl
   }
 
 -- | Default implementation of the method 'nativeQueryTrackToInfo'.
-defaultNativeQueryTrackToInfo :: TrackNativeQueryImpl b -> Either NativeQueryParseError (NativeQueryInfoImpl b)
-defaultNativeQueryTrackToInfo TrackNativeQueryImpl {..} = do
-  nqiiCode <- mapLeft NativeQueryParseError (parseInterpolatedQuery tnqCode)
-  pure $ NativeQueryInfoImpl {..}
-  where
-    nqiiRootFieldName = tnqRootFieldName
-    nqiiReturns = tnqReturns
-    nqiiArguments = tnqArguments
-    nqiiDescription = tnqDescription
+defaultNativeQueryTrackToInfo ::
+  forall b m.
+  ( MonadIO m,
+    MonadError NativeQueryError m,
+    NativeQueryMetadata b,
+    NativeQueryInfo b ~ NativeQueryInfoImpl b
+  ) =>
+  SourceConnConfiguration b ->
+  TrackNativeQueryImpl b ->
+  m (NativeQueryInfoImpl b)
+defaultNativeQueryTrackToInfo sourceConnConfig TrackNativeQueryImpl {..} = do
+  nqiiCode <- liftEither $ mapLeft NativeQueryParseError (parseInterpolatedQuery tnqCode)
+  let nqiiRootFieldName = tnqRootFieldName
+      nqiiReturns = tnqReturns
+      nqiiArguments = tnqArguments
+      nqiiDescription = tnqDescription
+      nqInfoImpl = NativeQueryInfoImpl {..}
+
+  validateNativeQueryAgainstSource @b sourceConnConfig nqInfoImpl
+
+  pure nqInfoImpl
 
 instance (Backend b, HasCodec (ScalarType b)) => HasCodec (TrackNativeQueryImpl b) where
   codec =

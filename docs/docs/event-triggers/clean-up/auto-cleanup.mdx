@@ -1,7 +1,7 @@
 ---
 sidebar_label: Auto cleanup
 description: Cleanup Event Trigger logs for Hasura Cloud/Enterprise Edition
-title: "Auto cleanup of Event Trigger logs"
+title: 'Auto cleanup of Event Trigger logs'
 keywords:
   - hasura
   - docs
@@ -14,13 +14,13 @@ sidebar_position: 2
 sidebar_class_name: cloud-and-enterprise-icon
 ---
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import Thumbnail from "@site/src/components/Thumbnail";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # Auto Cleanup of Event Trigger Logs
 
-<div className="badge badge--primary heading-badge">Available on: Enterprise</div>
+<div className="badge badge--primary heading-badge">Available on: Cloud Enterprise, Self-hosted Enterprise</div>
 
 :::note Supported from
 
@@ -71,7 +71,7 @@ event_triggers:
     definition:
       enable_manual: true
       insert:
-        columns: "*"
+        columns: '*'
     retry_conf:
       interval_sec: 10
       num_retries: 0
@@ -82,7 +82,7 @@ event_triggers:
       clean_invocation_logs: true
       clear_older_than: 168
       paused: false
-      schedule: "0 0 * * *"
+      schedule: '0 0 * * *'
       timeout: 60
 ```
 

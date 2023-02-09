@@ -29,8 +29,6 @@ import Language.GraphQL.Draft.Syntax qualified as G
 instance Backend 'MSSQL where
   type BackendConfig 'MSSQL = ()
   type BackendInfo 'MSSQL = ()
-  type SourceConfig 'MSSQL = MSSQL.MSSQLSourceConfig
-  type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration
   type TableName 'MSSQL = MSSQL.TableName
   type RawFunctionInfo 'MSSQL = Void
 
@@ -124,5 +122,9 @@ instance Backend 'MSSQL where
     MSSQL.mssqlResizePools (MSSQL._mscExecCtx sourceConfig)
 
   defaultTriggerOnReplication = Just ((), TOREnableTrigger)
+
+instance HasSourceConfiguration 'MSSQL where
+  type SourceConfig 'MSSQL = MSSQL.MSSQLSourceConfig
+  type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration
 
 instance NativeQueryMetadata 'MSSQL

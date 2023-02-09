@@ -80,6 +80,9 @@ class TestActionsSync:
 
     def test_null_response(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/null_response.yaml')
+    
+    def test_omitted_field_response_for_nullable_field(self, hge_ctx):
+        check_query_secret(hge_ctx, self.dir() + '/omitted_field_response_for_nullable_field.yaml')
 
     def test_expecting_object_response_got_null(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/expecting_object_response_got_null.yaml')

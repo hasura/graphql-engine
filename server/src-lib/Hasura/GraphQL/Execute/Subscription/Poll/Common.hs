@@ -412,14 +412,17 @@ pollDetailMinimal PollDetails {..} =
     [ "poller_id" J..= _pdPollerId,
       "kind" J..= _pdKind,
       "snapshot_time" J..= _pdSnapshotTime,
-      "batches" J..= map batchExecutionDetailMinimal _pdBatches,
+      "batches" J..= batches, -- TODO: deprecate this field
+      "execution_batches" J..= batches,
       "subscriber_count" J..= sum (map (length . _bedCohorts) _pdBatches),
       "total_time" J..= _pdTotalTime,
       "source" J..= _pdSource,
       "generated_sql" J..= _pdGeneratedSql,
       "role" J..= _pdRole,
-      "subcription_options" J..= _pdLiveQueryOptions
+      "subscription_options" J..= _pdLiveQueryOptions
     ]
+  where
+    batches = map batchExecutionDetailMinimal _pdBatches
 
 instance L.ToEngineLog PollDetails L.Hasura where
   toEngineLog pl = (L.LevelInfo, L.ELTLivequeryPollerLog, pollDetailMinimal pl)

@@ -2,7 +2,7 @@
 sidebar_label: Prometheus
 sidebar_position: 4
 description: Prometheus Integration on Hasura Cloud
-title: "Cloud: Prometheus Integration"
+title: 'Cloud: Prometheus Integration'
 keywords:
   - hasura
   - docs
@@ -14,12 +14,14 @@ keywords:
   - grafana
 ---
 
-import Thumbnail from "@site/src/components/Thumbnail";
-import HeadingIcon from "@site/src/components/HeadingIcon";
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
 
 # Prometheus Integration
 
-<div className="badge badge--primary heading-badge">Available on: Professional, Enterprise</div>
+<div className="badge badge--primary heading-badge">
+  Available on: Cloud Standard, Cloud Professional, Cloud Enterprise
+</div>
 
 ## Introduction
 
@@ -92,15 +94,15 @@ the exposed Integration.
 global:
   scrape_interval: 60s
 scrape_configs:
-  - job_name: "hasura_prometheus_exporter"
+  - job_name: 'hasura_prometheus_exporter'
     scrape_interval: 60s ## Recommended scrape interval is 60s
-    metrics_path: "/metrics" ## Replace with metrics Path of the connection URL
-    scheme: "https" ## Replace with the scheme of the connection URL
+    metrics_path: '/metrics' ## Replace with metrics Path of the connection URL
+    scheme: 'https' ## Replace with the scheme of the connection URL
     basic_auth:
-      username: "d01c60e1-1b11-564d-bb09-0a39e3e41b05" ## Replace with project ID
-      password: "IrhO3GlR8oXTfsdfdsNs8Nj" ## Replace with Access Token
+      username: 'd01c60e1-1b11-564d-bb09-0a39e3e41b05' ## Replace with project ID
+      password: 'IrhO3GlR8oXTfsdfdsNs8Nj' ## Replace with Access Token
     static_configs:
-      - targets: ["prometheus-exporter.pro.hasura.io"] ## Replace with the host name of the connection URL
+      - targets: ['prometheus-exporter.pro.hasura.io'] ## Replace with the host name of the connection URL
 ```
 
 ## Checking the status of the integration

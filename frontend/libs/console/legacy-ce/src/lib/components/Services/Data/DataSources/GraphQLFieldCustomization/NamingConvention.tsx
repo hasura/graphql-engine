@@ -4,6 +4,7 @@ import { IconTooltip } from '@/new-components/Tooltip';
 import { useServerConfig } from '@/hooks';
 import { getSupportedDrivers } from '@/dataSources';
 import { CardRadioGroup } from '@/new-components/CardRadioGroup';
+import { KnowMoreLink } from '@/new-components/KnowMoreLink';
 import { GraphQLFieldCustomizationProps } from './types';
 
 const namingConventionRadioGroupItems: {
@@ -131,13 +132,10 @@ export const NamingConvention: React.FC<GraphQLFieldCustomizationProps> = ({
           <p className="flex items-center text-gray-600 font-semibold">
             Naming Convention
             <IconTooltip message="Choose a default naming convention for your auto-generated GraphQL schema objects (fields, types, arguments, etc.)" />
-            <a
+            <KnowMoreLink
               href="https://hasura.io/docs/latest/graphql/core/databases/postgres/schema/naming-convention/#set-naming-convention-for-a-particular-source"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span className="italic font-thin text-sm	pl-1">(Know More)</span>
-            </a>
+              className="font-normal"
+            />
           </p>
           {namingconventionFields()}
         </div>

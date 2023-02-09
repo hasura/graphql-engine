@@ -56,6 +56,12 @@ export function startSentryTracing(globalVars: Globals, envVars: EnvVars) {
         // sensitive data
         dom: false,
       }),
+
+      // ATTENTION: functions like programmaticallyTraceError could internally log errors to the
+      // browser's console, causing an infinite loop!
+      // new CaptureConsoleIntegration({
+      //   levels: ['error'],
+      // }),
     ],
 
     // Allow grouping logs by environment

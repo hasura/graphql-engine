@@ -1,0 +1,13 @@
+-- THIS IS JUST A PLACEHOLDER FOR NOW. WE CAN ENABLE THIS AND INTEGRATE IT 
+-- INTO DEV.SH AFTER MOVING TO GHC 9.4
+import: cabal/dev-sh-optimized.project.local
+
+profiling: True
+flags: +profiling
+
+package *
+    profiling-detail: none
+    ghc-options: -fprof-late
+    -- For each module, STG will be dumped to:
+    --     dist-newstyle/**/*.dump-stg-final
+    ghc-options: -ddump-stg-final -ddump-to-file

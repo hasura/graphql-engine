@@ -164,13 +164,10 @@ export function useCreateHasuraCloudDatasource(
           setState(prevState => {
             if (prevState.status === 'adding-env-var') {
               // this is an unexpected error; so we need alerts about this
-              programmaticallyTraceError(
-                new Error('Failed creating env vars in Hasura'),
-                {
-                  sourceError: error,
-                  errorMessage: error.message ?? '',
-                }
-              );
+              programmaticallyTraceError({
+                error: 'Failed creating env vars in Hasura',
+                cause: error,
+              });
               return {
                 status: 'adding-env-var-failed',
                 payload: { dbUrl },
@@ -178,13 +175,10 @@ export function useCreateHasuraCloudDatasource(
               // if adding data-source fails unexpectedly, set the error state
             } else if (prevState.status === 'adding-data-source') {
               // this is an unexpected error; so we need alerts about this
-              programmaticallyTraceError(
-                new Error('Failed adding created data source in Hasura'),
-                {
-                  sourceError: error,
-                  errorMessage: error.message ?? '',
-                }
-              );
+              programmaticallyTraceError({
+                error: 'Failed adding created data source in Hasura',
+                cause: error,
+              });
 
               return {
                 status: 'adding-data-source-failed',

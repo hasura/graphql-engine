@@ -1,18 +1,18 @@
 import { z } from 'zod';
 import produce from 'immer';
 
+import type {
+  SetOpenTelemetryQuery,
+  hasuraEnvVarsNotAllowedSchema,
+} from '@hasura/console-legacy-ce';
+import { unexistingEnvVarSchema } from '@hasura/console-legacy-ce';
+
 import { blockServerRequests } from './utils/requests/blockServerRequests';
 
 import {
   stubInitialServerRequests,
   waitForInitialServerRequests,
 } from './fixtures/initialRequests/stubInitialServerRequests';
-
-import type {
-  unexistingEnvVarSchema,
-  SetOpenTelemetryQuery,
-  hasuraEnvVarsNotAllowedSchema,
-} from '../../../../src/features/hasura-metadata-types';
 
 import { export_metadata } from './fixtures/initialRequests/export_metadata';
 

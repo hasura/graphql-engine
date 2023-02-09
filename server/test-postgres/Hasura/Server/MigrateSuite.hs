@@ -68,6 +68,7 @@ instance (MonadBase IO m) => CacheRM (CacheRefT m) where
 instance (MonadEventLogCleanup m) => MonadEventLogCleanup (CacheRefT m) where
   runLogCleaner conf = lift $ runLogCleaner conf
   generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
+  updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
 
 instance
   ( MonadIO m,

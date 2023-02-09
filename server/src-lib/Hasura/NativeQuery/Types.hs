@@ -6,20 +6,22 @@
 -- are free to provide their own as needed.
 module Hasura.NativeQuery.Types
   ( NativeQueryMetadata (..),
-    NativeQueryParseError (..),
+    NativeQueryName (..),
+    NativeQueryError (..),
     BackendTrackNativeQuery (..),
   )
 where
 
-import Autodocodec (HasCodec)
+import Autodocodec
 import Data.Aeson
 import Data.Kind
 import Data.Text.Extended (ToTxt)
+import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.SourceConfiguration
 import Hasura.SQL.Backend
-
-type Representable a = (Show a, Eq a, Hashable a, NFData a)
+import Language.GraphQL.Draft.Syntax qualified as G
 
 type APIType a = (ToJSON a, FromJSON a)
 
@@ -28,14 +30,10 @@ type APIType a = (ToJSON a, FromJSON a)
 --
 -- Uninstantiable defaults are given for types and methods.
 class
-  ( APIType (NativeQueryName b),
-    APIType (TrackNativeQuery b),
+  ( APIType (TrackNativeQuery b),
     APIType (NativeQueryInfo b),
-    Ord (NativeQueryName b),
     HasCodec (NativeQueryInfo b),
-    Representable (NativeQueryInfo b),
-    Representable (NativeQueryName b),
-    ToTxt (NativeQueryName b)
+    Representable (NativeQueryInfo b)
   ) =>
   NativeQueryMetadata (b :: BackendType)
   where
@@ -43,11 +41,6 @@ class
   type NativeQueryInfo b :: Type
 
   type NativeQueryInfo b = Void
-
-  -- | The types of names of native queries.
-  type NativeQueryName b :: Type
-
-  type NativeQueryName b = Void
 
   -- | The API payload of the 'track_native_query' api endpoint.
   type TrackNativeQuery b :: Type
@@ -60,14 +53,19 @@ class
   trackNativeQuerySource = absurd
 
   -- | Projection function giving the name of a native query.
-  nativeQueryInfoName :: NativeQueryInfo b -> NativeQueryName b
-  default nativeQueryInfoName :: (NativeQueryInfo b ~ Void) => NativeQueryInfo b -> NativeQueryName b
+  nativeQueryInfoName :: NativeQueryInfo b -> NativeQueryName
+  default nativeQueryInfoName :: (NativeQueryInfo b ~ Void) => NativeQueryInfo b -> NativeQueryName
   nativeQueryInfoName = absurd
 
   -- | Projection function, producing a 'NativeQueryInfo b' from a 'TrackNativeQuery b'.
-  nativeQueryTrackToInfo :: TrackNativeQuery b -> Either NativeQueryParseError (NativeQueryInfo b)
-  default nativeQueryTrackToInfo :: (TrackNativeQuery b ~ Void) => TrackNativeQuery b -> Either NativeQueryParseError (NativeQueryInfo b)
-  nativeQueryTrackToInfo = absurd
+  nativeQueryTrackToInfo :: SourceConnConfiguration b -> TrackNativeQuery b -> ExceptT NativeQueryError IO (NativeQueryInfo b)
+  default nativeQueryTrackToInfo :: (TrackNativeQuery b ~ Void) => SourceConnConfiguration b -> TrackNativeQuery b -> ExceptT NativeQueryError IO (NativeQueryInfo b)
+  nativeQueryTrackToInfo _ = absurd
+
+  -- | Validate the native query against the database.
+  validateNativeQueryAgainstSource :: (MonadIO m, MonadError NativeQueryError m) => SourceConnConfiguration b -> NativeQueryInfo b -> m ()
+  default validateNativeQueryAgainstSource :: (NativeQueryInfo b ~ Void) => SourceConnConfiguration b -> NativeQueryInfo b -> m ()
+  validateNativeQueryAgainstSource _ = absurd
 
 -- | Our API endpoint solution wraps all request payload types in 'AnyBackend'
 -- for its multi-backend support, but type families must be fully applied to
@@ -81,4 +79,20 @@ deriving newtype instance NativeQueryMetadata b => FromJSON (BackendTrackNativeQ
 
 -- Things that might go wrong when converting a Native Query metadata request
 -- into a valid metadata item (such as failure to interpolate the query)
-newtype NativeQueryParseError = NativeQueryParseError Text
+data NativeQueryError
+  = NativeQueryParseError Text
+  | NativeQueryValidationError QErr
+
+---
+
+-- The name of a native query. This appears as a root field name in the graphql schema.
+newtype NativeQueryName = NativeQueryName {getNativeQueryName :: G.Name}
+  deriving newtype (Eq, Ord, Show, Hashable, NFData, ToJSON, FromJSON, ToTxt)
+  deriving stock (Generic)
+
+instance HasCodec NativeQueryName where
+  codec = dimapCodec NativeQueryName getNativeQueryName codec
+
+instance FromJSONKey NativeQueryName
+
+instance ToJSONKey NativeQueryName

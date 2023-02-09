@@ -137,7 +137,7 @@ spawnServer logger pgUrl (HgeBinPath hgeBinPath) (HgeConfig {hgeConfigEnvironmen
   hgeStdErrRelayThread logger hgeStdErr
   liftIO do
     let server = HgeServerInstance "127.0.0.1" port
-    result <- Http.healthCheck' (T.unpack $ getHgeServerInstanceUrl server)
+    result <- Http.healthCheck' (T.unpack $ getHgeServerInstanceUrl server <> "/healthz")
     case result of
       Http.Healthy -> pure server
       Http.Unhealthy failures -> do

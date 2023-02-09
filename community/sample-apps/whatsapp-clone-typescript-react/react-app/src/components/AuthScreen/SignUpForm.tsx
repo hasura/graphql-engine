@@ -123,7 +123,7 @@ export default ({ history }: SignUpFormProps) => {
         </Button>
         <div className="AuthScreen-error">{error}</div>
         <span className="AuthScreen-alternative">
-          Already have an accout? <a onClick={handleSignIn}>Sign in!</a>
+          Already have an account? <a onClick={handleSignIn}>Sign in!</a>
         </span>
       </form>
     </div>

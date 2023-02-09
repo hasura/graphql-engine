@@ -58,6 +58,17 @@
   }
 }
 
+.server-reference-tables {
+  h3 {
+    margin-top: 4rem;
+  }
+  table {
+    td:nth-child(2) {
+      width: 84%;
+    }
+  }
+}
+
 /* Dark Mode Styles */
 
 html[data-theme='dark'] {

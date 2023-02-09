@@ -47,6 +47,7 @@ import {
 } from './api';
 import { getAllSourceKinds } from './common/getAllSourceKinds';
 import { getTableName } from './common/getTableName';
+import { QueryType } from '../Permissions/types';
 
 export enum Feature {
   NotImplemented = 'Not Implemented',
@@ -110,6 +111,9 @@ export type Database = {
     getDefaultQueryRoot: (
       table: Table
     ) => Promise<string | Feature.NotImplemented>;
+    getSupportedQueryTypes: (
+      table: Table
+    ) => Promise<QueryType[] | Feature.NotImplemented>;
   };
 };
 
@@ -431,11 +435,18 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   }) => {
     const database = await getDatabaseMethods({ dataSourceName, httpClient });
 
-    const result = await database.config.getDefaultQueryRoot(table);
+    return database.config.getDefaultQueryRoot(table);
+  },
+  getSupportedQueryTypes: async ({
+    dataSourceName,
+    table,
+  }: {
+    dataSourceName: string;
+    table: Table;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
 
-    if (result === Feature.NotImplemented) return Feature.NotImplemented;
-
-    return result;
+    return database.config.getSupportedQueryTypes(table);
   },
 });
 

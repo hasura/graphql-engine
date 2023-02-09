@@ -129,7 +129,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
 
   describe "Single Column Function" $ do
     it "can get the max total from all rows" $ do
-      let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Total"))]
+      let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Total") invoiceTotalScalarType)]
       let queryRequest = invoicesQueryRequest aggregates
       response <- queryGuarded queryRequest
 
@@ -143,7 +143,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
       let limit = 20
       let where' = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "BillingCountry" billingCountryScalarType) (ScalarValue (String "USA") billingCountryScalarType)
       let orderBy = OrderBy mempty $ _tdOrderByColumn [] "BillingPostalCode" Descending :| [_tdOrderByColumn [] "InvoiceId" Ascending]
-      let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Total"))]
+      let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Total") invoiceTotalScalarType)]
       let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qLimit ?~ limit >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
       response <- queryGuarded queryRequest
 
@@ -163,8 +163,8 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
     it "can get the min and max of a non-numeric comparable type such as a string" $ do
       let aggregates =
             Data.mkFieldsMap
-              [ ("min", singleColumnAggregateMin (_tdColumnName "Name")),
-                ("max", singleColumnAggregateMax (_tdColumnName "Name"))
+              [ ("min", singleColumnAggregateMin (_tdColumnName "Name") artistNameScalarType),
+                ("max", singleColumnAggregateMax (_tdColumnName "Name") artistNameScalarType)
               ]
       let queryRequest = artistsQueryRequest aggregates
       response <- queryGuarded queryRequest
@@ -181,7 +181,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
 
     it "aggregates over empty row lists results in nulls" $ do
       let where' = ApplyBinaryComparisonOperator LessThan (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (ScalarValue (Number 0) artistIdScalarType)
-      let aggregates = Data.mkFieldsMap [("min", singleColumnAggregateMin (_tdColumnName "Name"))]
+      let aggregates = Data.mkFieldsMap [("min", singleColumnAggregateMin (_tdColumnName "Name") artistNameScalarType)]
       let queryRequest = artistsQueryRequest aggregates & qrQuery . qWhere ?~ where'
       response <- queryGuarded queryRequest
 
@@ -196,7 +196,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
             Data.mkFieldsMap
               [ ("count", StarCount),
                 ("distinctBillingStates", ColumnCount $ ColumnCountAggregate (_tdColumnName "BillingState") True),
-                ("maxTotal", singleColumnAggregateMax (_tdColumnName "Total"))
+                ("maxTotal", singleColumnAggregateMax (_tdColumnName "Total") invoiceTotalScalarType)
               ]
       let queryRequest = invoicesQueryRequest aggregates
       response <- queryGuarded queryRequest
@@ -218,8 +218,8 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
     it "can reuse the same aggregate twice" $ do
       let aggregates =
             Data.mkFieldsMap
-              [ ("minInvoiceId", singleColumnAggregateMin (_tdColumnName "InvoiceId")),
-                ("minTotal", singleColumnAggregateMin (_tdColumnName "Total"))
+              [ ("minInvoiceId", singleColumnAggregateMin (_tdColumnName "InvoiceId") invoiceIdScalarType),
+                ("minTotal", singleColumnAggregateMin (_tdColumnName "Total") invoiceTotalScalarType)
               ]
       let queryRequest = invoicesQueryRequest aggregates
       response <- queryGuarded queryRequest
@@ -245,7 +245,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
               ]
       let where' = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "BillingCountry" billingCountryScalarType) (ScalarValue (String "Canada") billingCountryScalarType)
       let orderBy = OrderBy mempty $ _tdOrderByColumn [] "BillingAddress" Ascending :| [_tdOrderByColumn [] "InvoiceId" Ascending]
-      let aggregates = Data.mkFieldsMap [("min", singleColumnAggregateMin (_tdColumnName "Total"))]
+      let aggregates = Data.mkFieldsMap [("min", singleColumnAggregateMin (_tdColumnName "Total") invoiceTotalScalarType)]
       let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qFields ?~ fields >>> qLimit ?~ limit >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
       response <- queryGuarded queryRequest
 
@@ -389,7 +389,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
       let offset = 2
       let limit = 5
       let orderBy = OrderBy mempty $ _tdOrderByColumn [] "Title" Descending :| []
-      let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Title"))]
+      let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Title") albumTitleScalarType)]
       let queryRequest =
             albumsQueryRequest
               & qrQuery
@@ -423,7 +423,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
                   [ _tdOrderByColumn [_tdArtistRelationshipName] "Name" Ascending,
                     _tdOrderByColumn [] "AlbumId" Ascending
                   ]
-        let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Title"))]
+        let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Title") albumTitleScalarType)]
         let queryRequest =
               albumsQueryRequest
                 & qrTableRelationships .~ [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
@@ -460,7 +460,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
                   [ OrderByElement [_tdTracksRelationshipName] OrderByStarCountAggregate Descending,
                     _tdOrderByColumn [] "Title" Descending
                   ]
-        let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Title"))]
+        let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Title") albumTitleScalarType)]
         let queryRequest =
               albumsQueryRequest
                 & qrTableRelationships .~ [Data.onlyKeepRelationships [_tdTracksRelationshipName] _tdAlbumsTableRelationships]
@@ -536,7 +536,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
     -- @
     deeplyNestedArtistsQuery :: QueryRequest
     deeplyNestedArtistsQuery =
-      let invoiceLinesAggregates = Data.mkFieldsMap [("aggregate_sum_Quantity", singleColumnAggregateSum (_tdColumnName "Quantity"))]
+      let invoiceLinesAggregates = Data.mkFieldsMap [("aggregate_sum_Quantity", singleColumnAggregateSum (_tdColumnName "Quantity") invoiceLineQuantityScalarType)]
           invoiceLinesSubquery = Data.emptyQuery & qAggregates ?~ invoiceLinesAggregates
           mediaTypeFields = Data.mkFieldsMap [("Name", _tdColumnField _tdMediaTypesTableName "Name")]
           mediaTypeSubquery = Data.emptyQuery & qFields ?~ mediaTypeFields
@@ -599,18 +599,21 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
     aggregate aggFn values =
       maybe Null aggFn $ NonEmpty.nonEmpty values
 
-    singleColumnAggregateMax :: ColumnName -> Aggregate
-    singleColumnAggregateMax = SingleColumn . SingleColumnAggregate (SingleColumnAggregateFunction [G.name|max|])
+    singleColumnAggregateMax :: ColumnName -> ScalarType -> Aggregate
+    singleColumnAggregateMax columnName resultType = SingleColumn $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|max|]) columnName resultType
 
-    singleColumnAggregateMin :: ColumnName -> Aggregate
-    singleColumnAggregateMin = SingleColumn . SingleColumnAggregate (SingleColumnAggregateFunction [G.name|min|])
+    singleColumnAggregateMin :: ColumnName -> ScalarType -> Aggregate
+    singleColumnAggregateMin columnName resultType = SingleColumn $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|min|]) columnName resultType
 
-    singleColumnAggregateSum :: ColumnName -> Aggregate
-    singleColumnAggregateSum = SingleColumn . SingleColumnAggregate (SingleColumnAggregateFunction [G.name|sum|])
+    singleColumnAggregateSum :: ColumnName -> ScalarType -> Aggregate
+    singleColumnAggregateSum columnName resultType = SingleColumn $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|sum|]) columnName resultType
 
     billingCityScalarType = _tdFindColumnScalarType _tdInvoicesTableName "BillingCity"
     billingCountryScalarType = _tdFindColumnScalarType _tdInvoicesTableName "BillingCountry"
     invoiceIdScalarType = _tdFindColumnScalarType _tdInvoicesTableName "InvoiceId"
+    invoiceTotalScalarType = _tdFindColumnScalarType _tdInvoicesTableName "Total"
+    invoiceLineQuantityScalarType = _tdFindColumnScalarType _tdInvoiceLinesTableName "Quantity"
     artistIdScalarType = _tdFindColumnScalarType _tdArtistsTableName "ArtistId"
     artistNameScalarType = _tdFindColumnScalarType _tdArtistsTableName "Name"
+    albumTitleScalarType = _tdFindColumnScalarType _tdAlbumsTableName "Title"
     millisecondsScalarType = _tdFindColumnScalarType _tdTracksTableName "Milliseconds"

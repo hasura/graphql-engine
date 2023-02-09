@@ -438,6 +438,15 @@ args:
 
 - type: create_action
   args:
+    name: omitted_response_field
+    definition:
+      kind: synchronous
+      arguments:
+      output_type: Address
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/omitted-response-field"
+
+- type: create_action
+  args:
     name: scalar_response
     definition:
       kind: synchronous

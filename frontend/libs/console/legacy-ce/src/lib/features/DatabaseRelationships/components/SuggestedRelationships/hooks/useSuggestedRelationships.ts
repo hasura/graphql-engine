@@ -21,6 +21,7 @@ import { useQuery } from 'react-query';
 
 type FetchSuggestedRelationshipsArgs = NetworkArgs & {
   dataSourceName: string;
+  table: Table;
   driverPrefix?: string;
 };
 
@@ -29,6 +30,7 @@ const emptyResponse: SuggestedRelationshipsResponse = { relationships: [] };
 const fetchSuggestedRelationships = async ({
   httpClient,
   dataSourceName,
+  table,
   driverPrefix,
 }: FetchSuggestedRelationshipsArgs) => {
   if (!driverPrefix) {
@@ -42,6 +44,7 @@ const fetchSuggestedRelationships = async ({
         version: 1,
         args: {
           omit_tracked: true,
+          tables: [table],
           source: dataSourceName,
         },
       }
@@ -97,10 +100,13 @@ const formatRelationToTableName = ({
   return inflection.singularize(getTableDisplayName(table));
 };
 
+const makeStringGraphQLCompliant = (text: string) => text.replace(/\./g, '_');
+
 export const addConstraintName = (
   relationships: SuggestedRelationship[]
 ): SuggestedRelationshipWithName[] =>
   relationships.map(relationship => {
+    const fromTable = getTableDisplayName(relationship.from.table);
     const fromColumns = relationship.from.columns.join('_');
     const toTableName = formatRelationToTableName({
       table: relationship.to.table,
@@ -108,7 +114,10 @@ export const addConstraintName = (
     });
     const toColumns = relationship.to.columns.join('_');
     const toTableWithColumns = `${toTableName}_${toColumns}`;
-    const constraintName = `${fromColumns}_${toTableWithColumns}`;
+    const constraintName = makeStringGraphQLCompliant(
+      `${fromTable}_${fromColumns}_${toTableWithColumns}`
+    );
+
     return {
       ...relationship,
       constraintName,
@@ -185,7 +194,7 @@ export const useSuggestedRelationships = ({
   const httpClient = useHttpClient();
   const { data, refetch, isLoading } = useQuery<SuggestedRelationshipsResponse>(
     {
-      queryKey: ['suggested_relationships', dataSourceName],
+      queryKey: ['suggested_relationships', dataSourceName, table],
       queryFn: async () => {
         if (!isEnabled) {
           return Promise.resolve(emptyResponse);
@@ -194,6 +203,7 @@ export const useSuggestedRelationships = ({
         const result = await fetchSuggestedRelationships({
           httpClient,
           dataSourceName,
+          table,
           driverPrefix: dataSourcePrefix,
         });
         return result;
@@ -229,5 +239,6 @@ export const useSuggestedRelationships = ({
   return {
     suggestedRelationships: relationshipsWithConstraintName,
     isLoadingSuggestedRelationships: isLoading,
+    refetchSuggestedRelationships: refetch,
   };
 };

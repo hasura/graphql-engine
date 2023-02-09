@@ -72,5 +72,8 @@ export const cockroach: Database = {
       const { name, schema } = table as CockroachDBTable;
       return schema === 'public' ? name : `${schema}_${name}`;
     },
+    getSupportedQueryTypes: async () => {
+      return ['select', 'insert', 'update', 'delete'];
+    },
   },
 };

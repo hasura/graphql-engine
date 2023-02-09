@@ -25,6 +25,7 @@ import Test.Specs.ErrorSpec qualified
 import Test.Specs.ExplainSpec qualified
 import Test.Specs.HealthSpec qualified
 import Test.Specs.MetricsSpec qualified
+import Test.Specs.MutationSpec qualified
 import Test.Specs.QuerySpec qualified
 import Test.Specs.SchemaSpec qualified
 import Test.TestHelpers (AgentTestSpec)
@@ -45,6 +46,7 @@ tests testData capabilitiesResponse@API.CapabilitiesResponse {..} = do
     Test.Specs.ErrorSpec.spec testData
     for_ (API._cMetrics _crCapabilities) \m -> Test.Specs.MetricsSpec.spec m
     for_ (API._cExplain _crCapabilities) \_ -> Test.Specs.ExplainSpec.spec testData _crCapabilities
+  for_ (API._cMutations _crCapabilities) \_ -> Test.Specs.MutationSpec.spec testData _crCapabilities
 
 getChinookSchema :: API.Capabilities -> AgentConfig -> AgentIOClient -> IO API.SchemaResponse
 getChinookSchema API.Capabilities {..} manuallyProvidedConfig (AgentIOClient agentClient) = do

@@ -63,5 +63,8 @@ export const mssql: Database = {
       const { name, schema } = table as MssqlTable;
       return schema === 'dbo' ? name : `${schema}_${name}`;
     },
+    getSupportedQueryTypes: async () => {
+      return ['select', 'insert', 'update', 'delete'];
+    },
   },
 };

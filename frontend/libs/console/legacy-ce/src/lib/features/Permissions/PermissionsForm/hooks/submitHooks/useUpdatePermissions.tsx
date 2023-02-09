@@ -2,10 +2,12 @@ import { useSubmitForm } from './useSubmitForm';
 import { useDeletePermission } from './useDeletePermission';
 
 import { AccessType, QueryType } from '../../../types';
+import { Table } from '@/features/hasura-metadata-types';
 
 export interface UseUpdatePermissionsArgs {
   dataSourceName: string;
-  table: unknown;
+  table: Table;
+  tables: Table[];
   roleName: string;
   queryType: QueryType;
   accessType: AccessType;
@@ -14,6 +16,7 @@ export interface UseUpdatePermissionsArgs {
 export const useUpdatePermissions = ({
   dataSourceName,
   table,
+  tables,
   roleName,
   queryType,
   accessType,
@@ -21,6 +24,7 @@ export const useUpdatePermissions = ({
   const updatePermissions = useSubmitForm({
     dataSourceName,
     table,
+    tables,
     roleName,
     queryType,
     accessType,

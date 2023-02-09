@@ -115,6 +115,7 @@ library
     Test.DataConnector.MockAgent.ErrorSpec
     Test.DataConnector.MockAgent.InsertMutationsSpec
     Test.DataConnector.MockAgent.MetadataApiSpec
+    Test.DataConnector.MockAgent.OrderBySpec
     Test.DataConnector.MockAgent.QueryRelationshipsSpec
     Test.DataConnector.MockAgent.TransformedConfigurationSpec
     Test.DataConnector.MockAgent.UpdateMutationsSpec
@@ -147,6 +148,7 @@ library
     Test.EventTriggers.PG.EventTriggersUniqueNameSpec
     Test.EventTriggers.PG.EventTriggersUntrackTableCleanupSpec
     Test.Harness.Quoter.YamlSpec
+    Test.HealthCheckSpec
     Test.HelloWorldSpec
     Test.Mutations.Delete.AllSpec
     Test.Mutations.Delete.FieldSpec

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Dialog } from '@/new-components/Dialog';
+import { Analytics } from '@/features/Analytics';
 import { MdRefresh } from 'react-icons/md';
 import { EnvVarsFormState } from '../../../types';
 
@@ -10,21 +11,26 @@ export function CustomFooter(props: Props) {
 
   const buttonText = {
     default: 'Set Environment Variables',
-    loading: 'Setting...',
+    loading: 'Setting Environment Variables...',
     error: 'Retry Setting Environment Variables',
     hidden: '',
   };
 
   return (
-    <Dialog.Footer
-      callToAction={buttonText[state]}
-      callToActionIcon={
-        state === 'error' ? <MdRefresh className="text-black" /> : undefined
-      }
-      disabled={state === 'loading'}
-      isLoading={state === 'loading'}
-      callToActionLoadingText={buttonText.loading}
-      onClose={() => {}}
-    />
+    <Analytics
+      name="one-click-deployment-env-var-form-submit"
+      passHtmlAttributesToChildren
+    >
+      <Dialog.Footer
+        callToAction={buttonText[state]}
+        callToActionIcon={
+          state === 'error' ? <MdRefresh className="text-black" /> : undefined
+        }
+        disabled={state === 'loading'}
+        isLoading={state === 'loading'}
+        callToActionLoadingText={buttonText.loading}
+        onClose={() => {}}
+      />
+    </Analytics>
   );
 }

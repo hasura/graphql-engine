@@ -1,5 +1,6 @@
 import React from 'react';
-import KnowMore from '../../../../Common/KnowMoreLink/KnowMore';
+
+import { KnowMoreLink } from '@/new-components/KnowMoreLink';
 import { focusYellowRing } from '../../constants';
 import { ActionExecution } from '../stateDefaults';
 
@@ -38,8 +39,8 @@ const ExecutionEditor: React.FC<ExecutionEditorProps> = ({
     <>
       <h2 className="text-lg font-semibold mb-xs flex items-center">
         {editorLabel}
-        <span className="text-red-700 ml-xs mr-sm">*</span>
-        <KnowMore url={docsRef} />
+        <span className="text-red-700 ml-xs">*</span>
+        <KnowMoreLink href={docsRef} className="font-normal" />
       </h2>
 
       {executionOptions.map((option, i) => (

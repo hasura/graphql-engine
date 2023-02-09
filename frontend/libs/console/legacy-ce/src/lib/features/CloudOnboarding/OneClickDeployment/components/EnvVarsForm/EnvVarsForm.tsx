@@ -93,9 +93,12 @@ export function EnvVarsForm(props: EnvVarsFormProps) {
         onSubmit={onSubmit}
         options={{ defaultValues }}
       >
-        <div className="max-h-[calc(100vh-20rem)] overflow-y-auto font-sans px-8 pt-10">
-          <div className="text-4xl text-slate-900 font-semibold mb-6">
+        <div className="max-h-[calc(100vh-20rem)] overflow-y-auto font-sans px-8 pt-10 mb-sm">
+          <div className="text-4xl text-slate-900 font-semibold mb-xs">
             Environment Variables
+          </div>
+          <div className="text-gray-600 font-normal text-m mb-md">
+            The following variables are required to set up your project.
           </div>
 
           <EnvVarsFormFields envVars={envVars} />

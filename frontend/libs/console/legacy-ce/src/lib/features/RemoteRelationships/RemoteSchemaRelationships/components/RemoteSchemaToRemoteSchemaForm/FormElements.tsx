@@ -46,7 +46,7 @@ const useLoadData = (sourceRemoteSchema: string) => {
   }, [fetchSchema, sourceRemoteSchema]);
 
   const remoteSchemaList = React.useMemo(() => {
-    return data?.filter(schemaName => schemaName !== sourceRemoteSchema);
+    return data;
   }, [data, sourceRemoteSchema]);
 
   const remoteSchemaTypes = (rsData && getTypesFromIntrospection(rsData)) ?? [];

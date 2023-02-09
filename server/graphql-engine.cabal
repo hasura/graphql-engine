@@ -271,6 +271,7 @@ common lib-depends
                      , autodocodec-openapi3
                      , barbies
                      , base
+                     , ghc-debug-stub
                      , bytestring
                      , containers
                      , data-default
@@ -602,6 +603,7 @@ library
                      , Hasura.Backends.Postgres.Instances.API
                      , Hasura.Backends.Postgres.Instances.Execute
                      , Hasura.Backends.Postgres.Instances.Metadata
+                     , Hasura.Backends.Postgres.Instances.NativeQueries
                      , Hasura.Backends.Postgres.Instances.PingSource
                      , Hasura.Backends.Postgres.Instances.Schema
                      , Hasura.Backends.Postgres.Instances.SchemaCache
@@ -807,6 +809,7 @@ library
                      , Hasura.RQL.Types.SchemaCache.Instances
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.Source
+                     , Hasura.RQL.Types.SourceConfiguration
                      , Hasura.RQL.Types.SourceCustomization
                      , Hasura.RQL.Types.Subscription
                      , Hasura.RQL.Types.Table
@@ -1005,6 +1008,7 @@ executable graphql-engine
   main-is:           Main.hs
   build-depends:     base
                    , graphql-engine
+                   , ghc-debug-stub
                    , bytestring
                    , ekg-core
                    , ekg-prometheus
@@ -1168,7 +1172,7 @@ test-suite graphql-engine-tests
     Hasura.GraphQL.Schema.BoolExp.AggregationPredicatesSpec
     Hasura.GraphQL.Schema.Build.UpdateSpec
     Hasura.GraphQL.Schema.Introspection
-    Hasura.GraphQL.Schema.RemoteTest
+    Hasura.GraphQL.Schema.RemoteSpec
     Hasura.Metadata.DTO.MetadataDTOSpec
     Hasura.QuickCheck.Instances
     Hasura.RQL.DDL.Webhook.TransformSpec

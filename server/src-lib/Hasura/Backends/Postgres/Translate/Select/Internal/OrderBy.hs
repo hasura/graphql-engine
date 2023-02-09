@@ -242,7 +242,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
       where
         mkAggOrderByValExp valExp = \case
           AAOCount -> [S.SELit "count", valExp]
-          AAOOp opText colInfo ->
+          AAOOp opText _resultType colInfo ->
             [ S.SELit opText,
               S.applyJsonBuildObj [S.SELit $ getPGColTxt $ ciColumn colInfo, valExp]
             ]

@@ -9,6 +9,7 @@ import { CustomFieldNames } from '@/features/Data';
 import { Button } from '@/new-components/Button';
 import { TableTrackingCustomizationModalKey } from '@/store/modal/modal.constants';
 import { BsBoxArrowUpRight } from 'react-icons/bs';
+import { KnowMoreLink } from '@/new-components/KnowMoreLink';
 import { FaCog, FaDatabase, FaFolder, FaPlusCircle } from 'react-icons/fa';
 import {
   currentDriver,
@@ -23,7 +24,7 @@ import { modalKeySelector } from '../../../../store/modal/modal.selectors';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import styles from '../../../Common/Common.module.scss';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
@@ -250,7 +251,7 @@ class Schema extends Component {
           <span className={styles.add_mar_left_small}>
             <ToolTip message={tooltip} />
           </span>
-          <span className={styles.add_mar_left}>{actionElement}</span>
+          {actionElement}
         </div>
       );
     };
@@ -456,7 +457,7 @@ class Schema extends Component {
       const heading = getSectionHeading(
         'Untracked tables or views',
         'Tables or views that are not exposed over the GraphQL API',
-        getTrackAllBtn()
+        <span className={styles.add_mar_left}>{getTrackAllBtn()}</span>
       );
 
       return (

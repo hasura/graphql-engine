@@ -33,6 +33,7 @@ WithSurvey.parameters = {
     onboardingDataEmptyActivity,
     fetchUnansweredSurveysHandler,
   ],
+  chromatic: { disableSnapshot: true },
 };
 
 export const WithoutSurvey: Story = () => {

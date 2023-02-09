@@ -81,7 +81,7 @@ mkAggregateOrderByAlias :: AnnotatedAggregateOrderBy ('Postgres pgKind) -> S.Col
 mkAggregateOrderByAlias =
   (S.toColumnAlias . Identifier) . \case
     AAOCount -> "count"
-    AAOOp opText col -> opText <> "." <> getPGColTxt (ciColumn col)
+    AAOOp opText _resultType col -> opText <> "." <> getPGColTxt (ciColumn col)
 
 mkOrderByFieldName :: ToTxt a => a -> FieldName
 mkOrderByFieldName name =

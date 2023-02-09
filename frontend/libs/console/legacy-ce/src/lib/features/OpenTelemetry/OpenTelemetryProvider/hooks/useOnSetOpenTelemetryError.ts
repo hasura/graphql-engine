@@ -80,12 +80,9 @@ export function useOnSetOpenTelemetryError(
       }
     );
 
-    programmaticallyTraceError(
-      new Error(
-        'OpenTelemetry set_opentelemetry_config error not parsed',
-        // @ts-expect-error This error will automatically disappear with Nx that targets new browsers by default
-        { cause: err }
-      )
-    );
+    programmaticallyTraceError({
+      error: 'OpenTelemetry set_opentelemetry_config error not parsed',
+      cause: err instanceof Error ? err : undefined,
+    });
   };
 }

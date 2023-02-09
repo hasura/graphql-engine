@@ -25,6 +25,7 @@ module Hasura.Logging
     eventTriggerProcessLogType,
     scheduledTriggerLogType,
     scheduledTriggerProcessLogType,
+    cronEventGeneratorProcessType,
     sourceCatalogMigrationLogType,
     EnabledLogTypes (..),
     defaultEnabledEngineLogTypes,
@@ -123,6 +124,7 @@ data InternalLogTypes
   | ILTEventTriggerProcess
   | ILTScheduledTrigger
   | ILTScheduledTriggerProcess
+  | ILTCronEventGeneratorProcess
   | -- | internal logs for the websocket server
     ILTWsServer
   | ILTPgClient
@@ -142,6 +144,7 @@ instance Witch.From InternalLogTypes Text where
     ILTEventTriggerProcess -> "event-trigger-process"
     ILTScheduledTrigger -> "scheduled-trigger"
     ILTScheduledTriggerProcess -> "scheduled-trigger-process"
+    ILTCronEventGeneratorProcess -> "cron-event-generator-process"
     ILTWsServer -> "ws-server"
     ILTPgClient -> "pg-client"
     ILTMetadata -> "metadata"
@@ -323,6 +326,9 @@ scheduledTriggerLogType = ELTInternal ILTScheduledTrigger
 
 scheduledTriggerProcessLogType :: EngineLogType Hasura
 scheduledTriggerProcessLogType = ELTInternal ILTScheduledTriggerProcess
+
+cronEventGeneratorProcessType :: EngineLogType Hasura
+cronEventGeneratorProcessType = ELTInternal ILTCronEventGeneratorProcess
 
 sourceCatalogMigrationLogType :: EngineLogType Hasura
 sourceCatalogMigrationLogType = ELTInternal ILTSourceCatalogMigration

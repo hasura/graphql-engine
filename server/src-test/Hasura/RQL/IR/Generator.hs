@@ -497,6 +497,7 @@ genAnnotatedAggregateOrderBy
       [ pure AAOCount,
         AAOOp
           <$> genArbitraryUnicodeText defaultRange
+          <*> genColumnType genTableName genScalarType
           <*> genColumnInfo
             genColumn
             genTableName

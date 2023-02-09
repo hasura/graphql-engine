@@ -6,7 +6,11 @@ import { stepperNavSteps } from './constants';
 import { DialogContainer } from '../OnboardingWizard';
 import { useTriggerDeployment } from './hooks';
 import { GitRepoDetails, FallbackApp } from './types';
-import { getGitRepoFromUrl, getGitRepoFullLinkFromDetails } from './util';
+import {
+  getGitRepoFromUrl,
+  getGitRepoFullLinkFromDetails,
+  getSampleQueriesUrl,
+} from './util';
 
 /**
  * Parent container for the one click deployment wizard. Takes care of assembling and rendering all steps.
@@ -80,6 +84,7 @@ export function Root(props: {
             deploymentId={deploymentId}
             projectId={projectId}
             gitRepoName={gitRepoName}
+            sampleQueriesFileUrl={getSampleQueriesUrl(gitRepoDetails)}
             onCompleteSuccess={transitionToQueryPopupSuccessState}
             onCompleteError={transitionToQueryPopupWithErrorState}
             fallbackApps={fallbackApps}

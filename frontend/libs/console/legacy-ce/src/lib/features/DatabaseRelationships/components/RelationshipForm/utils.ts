@@ -64,6 +64,7 @@ export const useHandleSubmit = ({
   const { createRelationship: createLocalRelationship, isLoading } =
     useManageLocalRelationship({
       dataSourceName,
+      table,
       onSuccess,
       onError,
     });

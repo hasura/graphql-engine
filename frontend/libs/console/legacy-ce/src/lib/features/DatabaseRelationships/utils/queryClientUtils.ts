@@ -31,6 +31,9 @@ export const generateQueryKeys = {
       'database_relationships',
     ] as const,
 
+  suggestedRelationships: (params: BaseParams) =>
+    ['suggested_relationships', params.dataSourceName, params.table] as const,
+
   relationship: (params: BaseParams & { relationshipName: string }) =>
     [
       'export_metadata',

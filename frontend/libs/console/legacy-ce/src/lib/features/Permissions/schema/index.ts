@@ -11,26 +11,46 @@ const presets = z.optional(
   )
 );
 
+export type Presets = z.infer<typeof presets>;
+
 export type PermissionsSchema = z.infer<typeof schema>;
+
+const queryType = z.union([
+  z.literal(''),
+  z.literal('insert'),
+  z.literal('select'),
+  z.literal('update'),
+  z.literal('delete'),
+]);
+
+export type Permission = z.infer<typeof permission>;
+
+const permission = z.object({
+  tableName: z.string(),
+  queryType,
+  roleName: z.string(),
+});
 
 export const schema = z.discriminatedUnion('queryType', [
   z.object({
     queryType: z.literal('insert'),
     checkType: z.string(),
+    filterType: z.string(),
     check: z.any(),
     columns,
     presets,
     backendOnly: z.boolean().optional(),
-    clonePermissions: z.array(z.any()).optional(),
+    clonePermissions: z.array(permission).optional(),
   }),
   z.object({
     queryType: z.literal('select'),
     filterType: z.string(),
     filter: z.any(),
     columns,
+    presets,
     rowCount: z.string().optional(),
     aggregationEnabled: z.boolean().optional(),
-    clonePermissions: z.array(z.any()).optional(),
+    clonePermissions: z.array(permission).optional(),
     query_root_fields: z.array(z.string()).nullable().optional(),
     subscription_root_fields: z.array(z.string()).nullable().optional(),
   }),
@@ -43,14 +63,14 @@ export const schema = z.discriminatedUnion('queryType', [
     check: z.any(),
     presets,
     backendOnly: z.boolean().optional(),
-    clonePermissions: z.array(z.any()).optional(),
+    clonePermissions: z.array(permission).optional(),
   }),
   z.object({
     queryType: z.literal('delete'),
     filterType: z.string(),
     filter: z.any(),
     backendOnly: z.boolean().optional(),
-    clonePermissions: z.array(z.any()).optional(),
+    clonePermissions: z.array(permission).optional(),
   }),
 ]);
 

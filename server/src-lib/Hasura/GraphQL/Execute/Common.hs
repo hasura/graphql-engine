@@ -10,6 +10,7 @@ import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Prelude
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.SchemaCache
+import Hasura.Server.Init (AllowListStatus)
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -32,7 +33,7 @@ class Monad m => MonadGQLExecutionCheck m where
     UserInfo ->
     ([HTTP.Header], Wai.IpAddress) ->
     -- | allow list enabled?
-    Bool ->
+    AllowListStatus ->
     -- | needs allow list
     SchemaCache ->
     -- | the unparsed GraphQL query string (and related values)

@@ -1,5 +1,5 @@
-import { getElementFromAlias } from '../../../helpers/eventHelpers';
-import { replaceMetadata, resetMetadata } from '../../../helpers/metadata';
+import type { Metadata } from '@hasura/console-legacy-ce';
+import { replaceMetadata, resetMetadata } from '../helpers/metadata';
 import { postgres } from '../../data/manage-database/postgres.spec';
 
 describe('check if remote schema relationships are displayed properly', () => {
@@ -7,8 +7,7 @@ describe('check if remote schema relationships are displayed properly', () => {
     // create a table called destination_table
     postgres.helpers.createTable('destination_table');
 
-    // load stuff into the metadata
-    replaceMetadata({
+    const metadata: Metadata['metadata'] = {
       version: 3,
       sources: [
         {
@@ -57,6 +56,18 @@ describe('check if remote schema relationships are displayed properly', () => {
           comment: '',
           remote_relationships: [
             {
+              // @ts-expect-error Originally...
+              // 1. The whole metadata object used in this test was not typed.
+              // 2. As a result, it went outdated compared to the Metadata type used in the app.
+              // 3. By adding the type to the object, we realized the `relationships` property does not exist in the type.
+              // 4. If you try to align the object to the type, the application does not work anymore.
+              // It means that the Metadata type used here (the most modern one, theoretically) is not correct.
+              //
+              // Possible solutions:
+              // 1. Add a @ts-expect error
+              // 2. Fix the problem, that means reverse-engineering the server response and checking the docs, identifying the discrepancies among the Console-defined Metadata types (we have more than one...), fixing the app, etc.
+              // 3. Fix the problem, nut only once we can leverage the server-exported Metadata type (produced by the OpenAPI specs).
+              // Since 3 will happen in a near future, 1 is the best temporary choice for now.
               relationships: [
                 {
                   definition: {
@@ -91,22 +102,22 @@ describe('check if remote schema relationships are displayed properly', () => {
           ],
         },
       ],
-    });
+    };
+    // load stuff into the metadata
+    replaceMetadata(metadata);
   });
 
   it('verify if the rows exist on the remote schema table', () => {
     cy.visit('/remote-schemas/manage/source_rs/relationships');
-    cy.get(getElementFromAlias('remote-schema-relationships-table')).should(
-      'exist'
-    );
-    cy.get(getElementFromAlias('remote-schema-relationships-table'))
+    cy.get('[data-test=remote-schema-relationships-table]').should('exist');
+    cy.get('[data-test=remote-schema-relationships-table]')
       .find('tr')
       .should('have.length', 3);
-    cy.get(getElementFromAlias('remote-schema-relationships-table')).contains(
+    cy.get('[data-test=remote-schema-relationships-table]').contains(
       'td',
       'an_example_rs_to_db_relationship'
     );
-    cy.get(getElementFromAlias('remote-schema-relationships-table')).contains(
+    cy.get('[data-test=remote-schema-relationships-table]').contains(
       'td',
       'an_example_rs_to_rs_relationship'
     );

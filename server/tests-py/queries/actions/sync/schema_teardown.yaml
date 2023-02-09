@@ -58,6 +58,10 @@ args:
     clear_data: true
 - type: drop_action
   args:
+    name: omitted_response_field
+    clear_data: true
+- type: drop_action
+  args:
     name: scalar_response
     clear_data: true
 - type: drop_action
