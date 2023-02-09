@@ -62,7 +62,9 @@ post url headers value = do
         Http.setRequestHeaders headers $
           Http.setRequestMethod Http.methodPost $
             Http.setRequestBodyJSON value (fromString url)
-  Http.httpLbs request
+  response <- Http.httpLbs request
+  unless ("Content-Type" `elem` (fst <$> Http.getResponseHeaders response)) $ error "Missing Content-Type header in response"
+  pure response
 
 -- | Post the JSON to the given URL and expected HTTP response code.
 -- Produces a very descriptive exception or failure.
