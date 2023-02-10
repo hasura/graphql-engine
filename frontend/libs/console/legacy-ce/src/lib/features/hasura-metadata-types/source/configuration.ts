@@ -15,6 +15,7 @@ export interface PostgresConfiguration {
         };
     pool_settings?: {
       max_connections?: number;
+      total_max_connections?: number;
       idle_timeout?: number;
       retries?: number;
       pool_timeout?: number;
