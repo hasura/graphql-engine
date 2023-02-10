@@ -258,6 +258,20 @@ tests opts = do
                   name: article
                   schema: hasura
               type: array
+            - from:
+                columns:
+                  - id
+                table:
+                  name: publication
+                  schema: hasura
+              to:
+                columns:
+                  - publication_id
+                constraint_name: article_publication_id_fkey
+                table:
+                  name: article
+                  schema: hasura
+              type: object
         |]
 
     it "Recommendations should only include listed tables if included" $ \testEnv -> do
