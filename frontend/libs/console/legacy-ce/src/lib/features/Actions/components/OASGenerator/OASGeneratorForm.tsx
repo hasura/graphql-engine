@@ -66,7 +66,6 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
   } = useFormContext();
   const oas = watch('oas');
 
-  console.log({ oas });
   const operation = watch('operation');
   const search = watch('search');
   const url = watch('url');
@@ -234,7 +233,6 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
                 <div
                   className="py-1"
                   onClick={() => {
-                    console.log({ method, selectedMethods });
                     if (selectedMethods.includes(method)) {
                       setSelectedMethods(
                         selectedMethods.filter(m => m !== method)

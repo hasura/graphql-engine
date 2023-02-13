@@ -12,7 +12,6 @@ const renderInputField = (
   render(
     <SimpleForm
       onSubmit={args => {
-        console.log('AAAA', args);
         onSubmit(args);
       }}
       schema={schema}

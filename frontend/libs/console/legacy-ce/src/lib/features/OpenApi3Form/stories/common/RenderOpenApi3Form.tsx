@@ -61,7 +61,6 @@ export const RenderOpenApi3Form = ({
             <ReactJson src={submittedValues} name={false} />
           )}
         </div>
-        {console.log(formState.errors)}
       </>
     </Form>
   );
