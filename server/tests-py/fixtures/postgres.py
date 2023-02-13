@@ -89,6 +89,20 @@ def create_schema(
         request.addfinalizer(lambda: drop_schema_in_background(owner_engine, schema_name))
 
     with switch_schema(owner_engine, schema_name).connect() as connection:
+        # We need to install extensions for PostgreSQL <= v12. From v13 onwards,
+        # extensions can be installed by non-superusers, and the following can
+        # be removed.
+
+        # Required as otherwise, some tests will try to use HGE to install them,
+        # but HGE does not have superuser privileges. Ideally, the tests would
+        # use a different mechanism to install the extensions, but that's a lot
+        # more work.
+        connection.execute('CREATE EXTENSION IF NOT EXISTS citext')
+        connection.execute('CREATE EXTENSION IF NOT EXISTS ltree')
+        # Required as otherwise, HGE will try to install it itself, but does not
+        # have superuser privileges.
+        connection.execute('CREATE EXTENSION IF NOT EXISTS pgcrypto')
+
         connection.execute(f'GRANT ALL PRIVILEGES ON DATABASE {schema_name} TO {runner_engine.url.username}')
         connection.execute(f'GRANT ALL PRIVILEGES ON SCHEMA public TO {runner_engine.url.username}')
         connection.execute('CREATE SCHEMA hge_tests')
