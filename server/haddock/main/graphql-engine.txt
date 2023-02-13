@@ -19655,17 +19655,11 @@ instance GHC.Generics.Generic (Hasura.GraphQL.RemoteServer.FromIntrospection a)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Hasura.GraphQL.RemoteServer.FromIntrospection a)
 instance GHC.Show.Show a => GHC.Show.Show (Hasura.GraphQL.RemoteServer.FromIntrospection a)
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.GraphQL.RemoteServer.FromIntrospection Language.GraphQL.Draft.Syntax.Description)
-instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.GraphQL.RemoteServer.FromIntrospection Language.GraphQL.Draft.Syntax.ScalarTypeDefinition)
-instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.GraphQL.RemoteServer.FromIntrospection (Language.GraphQL.Draft.Syntax.ObjectTypeDefinition Language.GraphQL.Draft.Syntax.InputValueDefinition))
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.GraphQL.RemoteServer.FromIntrospection a) => Data.Aeson.Types.FromJSON.FromJSON (Hasura.GraphQL.RemoteServer.FromIntrospection (Language.GraphQL.Draft.Syntax.FieldDefinition a))
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.GraphQL.RemoteServer.FromIntrospection Language.GraphQL.Draft.Syntax.GType)
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.GraphQL.RemoteServer.FromIntrospection Language.GraphQL.Draft.Syntax.InputValueDefinition)
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.GraphQL.RemoteServer.FromIntrospection (Language.GraphQL.Draft.Syntax.Value Data.Void.Void))
-instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.GraphQL.RemoteServer.FromIntrospection (Language.GraphQL.Draft.Syntax.InterfaceTypeDefinition [Language.GraphQL.Draft.Syntax.Name.Name] Language.GraphQL.Draft.Syntax.InputValueDefinition))
-instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.GraphQL.RemoteServer.FromIntrospection Language.GraphQL.Draft.Syntax.UnionTypeDefinition)
-instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.GraphQL.RemoteServer.FromIntrospection Language.GraphQL.Draft.Syntax.EnumTypeDefinition)
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.GraphQL.RemoteServer.FromIntrospection Language.GraphQL.Draft.Syntax.EnumValueDefinition)
-instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.GraphQL.RemoteServer.FromIntrospection (Language.GraphQL.Draft.Syntax.InputObjectTypeDefinition Language.GraphQL.Draft.Syntax.InputValueDefinition))
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.GraphQL.RemoteServer.FromIntrospection (Language.GraphQL.Draft.Syntax.TypeDefinition [Language.GraphQL.Draft.Syntax.Name.Name] Language.GraphQL.Draft.Syntax.InputValueDefinition))
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.GraphQL.RemoteServer.FromIntrospection Hasura.RemoteSchema.SchemaCache.Types.IntrospectionResult)
 
@@ -23034,22 +23028,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aD5Jx. Lens' (CreateEventTriggerQuery b_aD5Jx) TriggerOnReplication
-cteqCleanupConfig :: forall b_aD5Jx. Lens' (CreateEventTriggerQuery b_aD5Jx) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aD5Jx. Lens' (CreateEventTriggerQuery b_aD5Jx) (Maybe Text)
-cetqWebhook :: forall b_aD5Jx. Lens' (CreateEventTriggerQuery b_aD5Jx) (Maybe InputWebhook)
-cetqUpdate :: forall b_aD5Jx. Lens' (CreateEventTriggerQuery b_aD5Jx) (Maybe (SubscribeOpSpec b_aD5Jx))
-cetqTable :: forall b_aD5Jx. Lens' (CreateEventTriggerQuery b_aD5Jx) (TableName b_aD5Jx)
-cetqSource :: forall b_aD5Jx. Lens' (CreateEventTriggerQuery b_aD5Jx) SourceName
-cetqRetryConf :: forall b_aD5Jx. Lens' (CreateEventTriggerQuery b_aD5Jx) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aD5Jx. Lens' (CreateEventTriggerQuery b_aD5Jx) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aD5Jx. Lens' (CreateEventTriggerQuery b_aD5Jx) (Maybe RequestTransform)
-cetqReplace :: forall b_aD5Jx. Lens' (CreateEventTriggerQuery b_aD5Jx) Bool
-cetqName :: forall b_aD5Jx. Lens' (CreateEventTriggerQuery b_aD5Jx) TriggerName
-cetqInsert :: forall b_aD5Jx. Lens' (CreateEventTriggerQuery b_aD5Jx) (Maybe (SubscribeOpSpec b_aD5Jx))
-cetqHeaders :: forall b_aD5Jx. Lens' (CreateEventTriggerQuery b_aD5Jx) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aD5Jx. Lens' (CreateEventTriggerQuery b_aD5Jx) (Maybe Bool)
-cetqDelete :: forall b_aD5Jx. Lens' (CreateEventTriggerQuery b_aD5Jx) (Maybe (SubscribeOpSpec b_aD5Jx))
+cteqTriggerOnReplication :: forall b_aD3L3. Lens' (CreateEventTriggerQuery b_aD3L3) TriggerOnReplication
+cteqCleanupConfig :: forall b_aD3L3. Lens' (CreateEventTriggerQuery b_aD3L3) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aD3L3. Lens' (CreateEventTriggerQuery b_aD3L3) (Maybe Text)
+cetqWebhook :: forall b_aD3L3. Lens' (CreateEventTriggerQuery b_aD3L3) (Maybe InputWebhook)
+cetqUpdate :: forall b_aD3L3. Lens' (CreateEventTriggerQuery b_aD3L3) (Maybe (SubscribeOpSpec b_aD3L3))
+cetqTable :: forall b_aD3L3. Lens' (CreateEventTriggerQuery b_aD3L3) (TableName b_aD3L3)
+cetqSource :: forall b_aD3L3. Lens' (CreateEventTriggerQuery b_aD3L3) SourceName
+cetqRetryConf :: forall b_aD3L3. Lens' (CreateEventTriggerQuery b_aD3L3) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aD3L3. Lens' (CreateEventTriggerQuery b_aD3L3) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aD3L3. Lens' (CreateEventTriggerQuery b_aD3L3) (Maybe RequestTransform)
+cetqReplace :: forall b_aD3L3. Lens' (CreateEventTriggerQuery b_aD3L3) Bool
+cetqName :: forall b_aD3L3. Lens' (CreateEventTriggerQuery b_aD3L3) TriggerName
+cetqInsert :: forall b_aD3L3. Lens' (CreateEventTriggerQuery b_aD3L3) (Maybe (SubscribeOpSpec b_aD3L3))
+cetqHeaders :: forall b_aD3L3. Lens' (CreateEventTriggerQuery b_aD3L3) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aD3L3. Lens' (CreateEventTriggerQuery b_aD3L3) (Maybe Bool)
+cetqDelete :: forall b_aD3L3. Lens' (CreateEventTriggerQuery b_aD3L3) (Maybe (SubscribeOpSpec b_aD3L3))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
