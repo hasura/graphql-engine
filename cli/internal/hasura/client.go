@@ -43,6 +43,7 @@ const (
 	SourceKindMSSQL     SourceKind = "mssql"
 	SourceKindCitus     SourceKind = "citus"
 	SourceKindCockroach SourceKind = "cockroach"
+	SourceKindBigQuery  SourceKind = "bigquery"
 )
 
 type V2Query interface {
@@ -50,6 +51,7 @@ type V2Query interface {
 	MSSQLSourceOps
 	CitusSourceOps
 	CockroachSourceOps
+	BigQuerySourceOps
 	Send(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error)
 	Bulk([]RequestBody) (io.Reader, error)
 }

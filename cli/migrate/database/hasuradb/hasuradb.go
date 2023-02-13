@@ -39,6 +39,7 @@ var (
 		"select", "insert", "update", "delete", "count", "run_sql", "bulk",
 		"mssql_select", "mssql_insert", "mssql_update", "mssql_delete", "mssql_count", "mssql_run_sql",
 		"citus_select", "citus_insert", "citus_update", "citus_delete", "citus_count", "citus_run_sql",
+		"bigquery_select", "bigquery_insert", "bigquery_update", "bigquery_delete", "bigquery_count", "bigquery_run_sql",
 		"cockroach_run_sql",
 	}
 	queryTypesMap = func() map[string]bool {
@@ -78,6 +79,7 @@ type HasuraDB struct {
 	pgSourceOps          hasura.PGSourceOps
 	mssqlSourceOps       hasura.MSSQLSourceOps
 	citusSourceOps       hasura.CitusSourceOps
+	bigquerySourceOps    hasura.BigQuerySourceOps
 	cockroachSourceOps   hasura.CockroachSourceOps
 	genericQueryRequest  hasura.GenericSend
 	hasuraClient         *hasura.Client
@@ -104,6 +106,7 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 		pgSourceOps:         hasuraOpts.PGSourceOps,
 		mssqlSourceOps:      hasuraOpts.MSSQLSourceOps,
 		citusSourceOps:      hasuraOpts.CitusSourceOps,
+		bigquerySourceOps:   hasuraOpts.BigQuerySourceOps,
 		genericQueryRequest: hasuraOpts.GenericQueryRequest,
 		pgDumpClient:        hasuraOpts.PGDumpClient,
 
@@ -267,6 +270,11 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 			_, err := h.cockroachSourceOps.CockroachRunSQL(hasura.CockroachRunSQLInput(sqlInput))
 			if err != nil {
 				return errors.E(op, err)
+			}
+		case hasura.SourceKindBigQuery:
+			_, err := h.bigquerySourceOps.BigQueryRunSQL(hasura.BigQueryRunSQLInput(sqlInput))
+			if err != nil {
+				return err
 			}
 
 		default:

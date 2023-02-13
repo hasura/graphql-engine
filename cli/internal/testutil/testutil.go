@@ -575,6 +575,19 @@ func StartHasuraWithCockroachSource(t TestingT, image string) (hasuraPort, sourc
 	return hasuraPort, sourceName, teardown
 }
 
+func StartHasuraWithBigQuerySource(t TestingT, image string) (hasuraPort, sourceName, projectId, dataset string, teardown func()) {
+	hasuraPort, hasuraTeardown := StartHasuraWithMetadataDatabase(t, image)
+	sourceName = randomdata.SillyName()
+	serviceAccount := os.Getenv("HASURA_BIGQUERY_SERVICE_KEY")
+	globalSelectLimit := 10
+	projectId = os.Getenv("HASURA_BIGQUERY_PROJECT_ID")
+	dataset = os.Getenv("HASURA_BIGQUERY_DATASET")
+	hasuraEndpoint := fmt.Sprintf("%s:%s", BaseURL, hasuraPort)
+	AddBigQuerySourceToHasura(t, globalSelectLimit, sourceName, serviceAccount, projectId, dataset, hasuraEndpoint)
+
+	return hasuraPort, sourceName, projectId, dataset, hasuraTeardown
+}
+
 func StartCockroachContainer(t TestingT) (connectionString string, teardown func()) {
 	user := "root"
 	database := "defaultdb"
@@ -627,14 +640,9 @@ func StartCockroachContainer(t TestingT) (connectionString string, teardown func
 }
 
 func AddCockroachSourceToHasura(t TestingT, hasuraEndpoint, connectionString, sourceName string) {
-	addSourceToHasura(t, hasuraEndpoint, connectionString, sourceName, "cockroach_add_source")
-}
-
-func addSourceToHasura(t TestingT, hasuraEndpoint, connectionString, sourceName, requestType string) {
-	url := fmt.Sprintf("%s/v1/metadata", hasuraEndpoint)
-	body := fmt.Sprintf(`
+	request := fmt.Sprintf(`
 {
-  "type": "%s",
+  "type": "cockroach_add_source",
   "args": {
 	"name": "%s",
 	"configuration": {
@@ -644,9 +652,39 @@ func addSourceToHasura(t TestingT, hasuraEndpoint, connectionString, sourceName,
 	}
   }
 }
-`, requestType, sourceName, connectionString)
+`   ,sourceName, connectionString)
+	addSourceToHasura(t, hasuraEndpoint, sourceName, request)
+}
 
-	fmt.Println(connectionString)
+func AddBigQuerySourceToHasura(t TestingT, globalSelectLimit int, sourceName, serviceAccount, projectId, dataset, hasuraEndpoint string) {
+	request := fmt.Sprintf(`
+    {
+  	  "type": "bigquery_add_source",
+	  "args": {
+	    "name": "%s",
+		"configuration": {
+		  "service_account": %s,
+		  "global_select_limit": %d,
+		  "project_id": "%s",
+		  "datasets": [
+			"%s"
+		  ]
+		},
+		"replace_configuration": false,
+		"customization": {
+	  
+		}
+      }
+	}
+`, sourceName, serviceAccount, globalSelectLimit,  projectId, dataset)
+
+	addSourceToHasura(t, hasuraEndpoint, sourceName, request)
+}
+
+func addSourceToHasura(t TestingT, hasuraEndpoint, sourceName, requestBody string) {
+	url := fmt.Sprintf("%s/v1/metadata", hasuraEndpoint)
+	body := requestBody
+
 	fmt.Println(hasuraEndpoint)
 
 	req, err := http.NewRequest("POST", url, strings.NewReader(body))
