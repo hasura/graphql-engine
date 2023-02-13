@@ -101,9 +101,8 @@ export const useSubmitForm = (args: UseSubmitFormArgs) => {
       accessType,
       resourceVersion: resource_version,
       formData,
-      existingPermissions,
+      existingPermissions: existingPermissions ?? [],
     });
-
     await mutate.mutateAsync(
       {
         query: body,
@@ -114,6 +113,9 @@ export const useSubmitForm = (args: UseSubmitFormArgs) => {
             type: 'success',
             title: 'Success!',
             message: 'Permissions saved successfully!',
+          });
+          exportMetadata({
+            httpClient,
           });
         },
         onError: err => {

@@ -14,8 +14,8 @@ type SelectPermissionMetadata = {
   filter: Record<string, any>;
   allow_aggregations?: boolean;
   limit?: number;
-  query_root_fields?: any[];
-  subscription_root_fields?: any[];
+  query_root_fields?: string[];
+  subscription_root_fields?: string[];
 };
 
 const createSelectObject = (input: PermissionsSchema) => {
@@ -26,11 +26,14 @@ const createSelectObject = (input: PermissionsSchema) => {
 
     // in row permissions builder an extra input is rendered automatically
     // this will always be empty and needs to be removed
+
     const filter = Object.entries(input.filter).reduce<Record<string, any>>(
       (acc, [operator, value]) => {
         if (operator === '_and' || operator === '_or') {
-          const newValue = (value as any[])?.slice(0, -1);
-          acc[operator] = newValue;
+          const filteredEmptyObjects = (value as any[]).filter(
+            p => Object.keys(p).length !== 0
+          );
+          acc[operator] = filteredEmptyObjects;
           return acc;
         }
 
@@ -95,10 +98,10 @@ export interface CreateInsertArgs {
   driver: string;
 }
 
-interface ExistingPermission {
+export interface ExistingPermission {
   table: unknown;
   role: string;
-  queryType: any;
+  queryType: string;
 }
 /**
  * creates the insert arguments to update permissions

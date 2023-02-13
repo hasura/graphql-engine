@@ -1,5 +1,6 @@
 import { MetadataTable, Source } from '@/features/hasura-metadata-types';
 import { AllowedQueryOperation } from '../query';
+import { TableEntry } from '../../../metadata/types';
 
 export const getTypeName = ({
   defaultQueryRoot,
@@ -8,7 +9,7 @@ export const getTypeName = ({
   sourceCustomization,
 }: {
   defaultQueryRoot: string | never[];
-  configuration?: MetadataTable['configuration'];
+  configuration?: TableEntry['configuration'] | MetadataTable['configuration'];
   operation: AllowedQueryOperation;
   sourceCustomization?: Source['customization'];
   defaultSchema?: string;

@@ -9,6 +9,7 @@ import { createDefaultValues } from './utils';
 import {
   complicatedExample,
   exampleWithBoolOperator,
+  exampleWithNotOperator,
   exampleWithRelationship,
   handlers,
   schema,
@@ -93,6 +94,38 @@ WithDefaultsBool.decorators = [
               tableName: 'user',
               schema,
               existingPermission: exampleWithBoolOperator,
+              tableConfig: {},
+            }),
+          }}
+          onSubmit={console.log}
+        >
+          <Component />
+        </SimpleForm>
+      </div>
+    );
+  },
+];
+
+export const WithDefaultsNot: ComponentStory<
+  typeof RowPermissionBuilder
+> = args => <RowPermissionBuilder {...args} />;
+
+WithDefaultsNot.args = {
+  tableName: 'user',
+  nesting: ['filter'],
+};
+
+WithDefaultsNot.decorators = [
+  Component => {
+    return (
+      <div style={{ width: 800 }}>
+        <SimpleForm
+          schema={z.any()}
+          options={{
+            defaultValues: createDefaultValues({
+              tableName: 'user',
+              schema,
+              existingPermission: exampleWithNotOperator,
               tableConfig: {},
             }),
           }}

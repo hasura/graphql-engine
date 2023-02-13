@@ -2,7 +2,7 @@ import { allowedMetadataTypes } from '@/features/MetadataAPI';
 
 import { AccessType, QueryType } from '../../types';
 import { PermissionsSchema } from '../../schema';
-import { createInsertArgs } from './utils';
+import { createInsertArgs, ExistingPermission } from './utils';
 import { Table } from '@/features/hasura-metadata-types';
 
 interface CreateBodyArgs {
@@ -104,7 +104,7 @@ interface CreateInsertBodyArgs extends CreateBodyArgs {
   queryType: QueryType;
   formData: PermissionsSchema;
   accessType: AccessType;
-  existingPermissions: any;
+  existingPermissions: ExistingPermission[];
   driver: string;
   tables: Table[];
 }

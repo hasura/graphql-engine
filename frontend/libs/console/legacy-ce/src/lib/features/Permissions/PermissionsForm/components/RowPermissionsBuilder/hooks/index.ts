@@ -73,6 +73,7 @@ export const useData = ({ tableName, schema, table, dataSourceName }: Args) => {
     return {
       data: {
         boolOperators: [],
+        existOperators: [],
         columns: [],
         relationships: [],
       },

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useConsoleForm } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
@@ -8,7 +8,6 @@ import {
   useRoles,
   useSupportedQueryTypes,
 } from '@/features/MetadataAPI';
-import { getTableDisplayName } from '@/features/DatabaseRelationships';
 
 import { PermissionsSchema, schema } from './../schema';
 import { AccessType, QueryType } from '../types';
@@ -24,6 +23,8 @@ import {
 
 import { useFormData, useUpdatePermissions } from './hooks';
 import ColumnRootFieldPermissions from './components/RootFieldPermissions/RootFieldPermissions';
+import { useListAllTableColumns } from '@/features/Data';
+import { useMetadataSource } from '@/features/MetadataAPI';
 
 export interface ComponentProps {
   dataSourceName: string;
@@ -79,9 +80,8 @@ const Component = (props: ComponentProps) => {
   const rowPermissions = queryType === 'update' ? ['pre', 'post'] : [queryType];
 
   const { formData, defaultValues } = data || {};
-
   const {
-    methods: { getValues },
+    methods: { getValues, reset },
     Form,
   } = useConsoleForm({
     schema,
@@ -89,6 +89,13 @@ const Component = (props: ComponentProps) => {
       defaultValues,
     },
   });
+
+  // Reset form when default values change
+  // E.g. when switching tables
+  useEffect(() => {
+    const newValues = getValues();
+    reset({ ...newValues, ...defaultValues });
+  }, [roleName, defaultValues]);
 
   // allRowChecks relates to other queries and is for duplicating from others
   const allRowChecks = defaultValues?.allRowChecks;
@@ -134,6 +141,9 @@ const Component = (props: ComponentProps) => {
                 }
                 allRowChecks={allRowChecks || []}
                 dataSourceName={dataSourceName}
+                supportedOperators={
+                  data?.defaultValues?.supportedOperators ?? []
+                }
               />
             </React.Fragment>
           ))}
@@ -220,11 +230,18 @@ export interface PermissionsFormProps {
 export const PermissionsForm = (props: PermissionsFormProps) => {
   const { dataSourceName, table, queryType, roleName } = props;
 
+  const { columns: tableColumns, isLoading: isLoadingTables } =
+    useListAllTableColumns(dataSourceName, table);
+
+  const { data: metadataSource } = useMetadataSource(dataSourceName);
+
   const { data, isError, isLoading } = useFormData({
     dataSourceName,
     table,
     queryType,
     roleName,
+    tableColumns,
+    metadataSource,
   });
 
   if (isError) {
@@ -233,7 +250,15 @@ export const PermissionsForm = (props: PermissionsFormProps) => {
     );
   }
 
-  if (isLoading || !data) {
+  if (
+    isLoading ||
+    !data ||
+    isLoadingTables ||
+    !tableColumns ||
+    tableColumns?.length === 0 ||
+    !metadataSource ||
+    !data.defaultValues
+  ) {
     return <IndicatorCard status="info">Loading...</IndicatorCard>;
   }
 

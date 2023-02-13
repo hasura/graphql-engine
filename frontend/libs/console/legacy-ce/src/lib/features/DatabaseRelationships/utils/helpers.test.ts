@@ -26,8 +26,13 @@ describe('getTableDisplayName', () => {
   });
 
   describe('when table is object and includes "name"', () => {
-    it('returns .name', () => {
+    it('returns .name if object has a schema key (Postgres)', () => {
       expect(getTableDisplayName({ name: 'aName' })).toBe('aName');
+    });
+    it('returns name and other keys concatenated (non Postgres DBs)', () => {
+      expect(getTableDisplayName({ name: 'aName', dataset: 'aDataset' })).toBe(
+        'aDataset.aName'
+      );
     });
   });
 

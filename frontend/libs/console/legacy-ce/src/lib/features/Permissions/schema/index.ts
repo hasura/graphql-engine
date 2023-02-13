@@ -40,6 +40,7 @@ export const schema = z.discriminatedUnion('queryType', [
     columns,
     presets,
     backendOnly: z.boolean().optional(),
+    supportedOperators: z.array(z.any()),
     clonePermissions: z.array(permission).optional(),
   }),
   z.object({
@@ -53,6 +54,7 @@ export const schema = z.discriminatedUnion('queryType', [
     clonePermissions: z.array(permission).optional(),
     query_root_fields: z.array(z.string()).nullable().optional(),
     subscription_root_fields: z.array(z.string()).nullable().optional(),
+    supportedOperators: z.array(z.any()),
   }),
   z.object({
     queryType: z.literal('update'),
@@ -63,6 +65,7 @@ export const schema = z.discriminatedUnion('queryType', [
     check: z.any(),
     presets,
     backendOnly: z.boolean().optional(),
+    supportedOperators: z.array(z.any()),
     clonePermissions: z.array(permission).optional(),
   }),
   z.object({
@@ -70,6 +73,7 @@ export const schema = z.discriminatedUnion('queryType', [
     filterType: z.string(),
     filter: z.any(),
     backendOnly: z.boolean().optional(),
+    supportedOperators: z.array(z.any()),
     clonePermissions: z.array(permission).optional(),
   }),
 ]);

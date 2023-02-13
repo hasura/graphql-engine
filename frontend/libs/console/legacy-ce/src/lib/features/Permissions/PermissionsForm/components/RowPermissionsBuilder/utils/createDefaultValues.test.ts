@@ -1,37 +1,55 @@
-import {
-  schema,
-  simpleExample,
-  exampleWithBoolOperator,
-  exampleWithRelationship,
-  complicatedExample,
-} from '../mocks';
+import { tableColumns, sourceMetadata } from '../mocks';
 import { createDefaultValues } from './createDefaultValues';
+
+const tableName = 'bigquery_sample_sample_table';
 
 type Expected = {
   operators: Record<string, any> | undefined;
   filter: Record<string, any> | undefined;
 };
 
-test('renders basic permission', () => {
+test('renders root value permission', () => {
   const result = createDefaultValues({
-    tableName: 'Album',
-    schema,
-    existingPermission: simpleExample,
-    tableConfig: {},
+    tableName,
+    tableColumns,
+    sourceMetadata,
+    existingPermission: { Series_reference: { _eq: 'X-Hasura-User-Id' } },
   });
 
   const expected: Expected = {
-    filter: {
-      Title: {
-        _eq: 'hello',
-      },
-    },
     operators: {
       filter: {
-        columnOperator: '_eq',
-        name: 'Title',
+        name: 'Series_reference',
+        typeName: 'Series_reference',
         type: 'column',
-        typeName: 'Title',
+        columnOperator: '_eq',
+      },
+    },
+    filter: { Series_reference: { _eq: 'X-Hasura-User-Id' } },
+  };
+
+  expect(result).toEqual(expected);
+});
+
+test('renders _exist permission', () => {
+  const result = createDefaultValues({
+    tableName,
+    tableColumns,
+    sourceMetadata,
+    existingPermission: {
+      _exists: {
+        _table: { dataset: 'bigquery_sample', name: 'sample_table' },
+        _where: { Data_value: { _eq: 'X-Hasura-User-Id' } },
+      },
+    },
+  });
+
+  const expected: Expected = {
+    operators: { filter: '_exists' },
+    filter: {
+      _exists: {
+        _table: { dataset: 'bigquery_sample', name: 'sample_table' },
+        _where: { Data_value: { _eq: 'X-Hasura-User-Id' } },
       },
     },
   };
@@ -39,164 +57,69 @@ test('renders basic permission', () => {
   expect(result).toEqual(expected);
 });
 
-test('renders bool operator permission', () => {
+test('renders _and operator permission', () => {
   const result = createDefaultValues({
-    tableName: 'Album',
-    schema,
-    existingPermission: exampleWithBoolOperator,
-    tableConfig: {},
+    tableName,
+    tableColumns,
+    sourceMetadata,
+    existingPermission: {
+      _and: [
+        { Data_value: { _eq: 'X-Hasura-User-Id' } },
+        { Group: { _eq: 'X-Hasura-User-Id' } },
+      ],
+    },
   });
 
   const expected = {
-    filter: {
-      _and: [
-        {
-          age: {
-            _eq: 8,
-          },
-        },
-        {
-          email: {
-            _eq: 'adsff',
-          },
-        },
-      ],
-    },
     operators: {
       filter: {
-        _and: ['age', 'email'],
         name: '_and',
-        type: 'boolOperator',
         typeName: '_and',
-      },
-    },
-  };
-
-  expect(result).toEqual(expected);
-});
-
-test('renders permission with relationship', () => {
-  const result = createDefaultValues({
-    tableName: 'Album',
-    schema,
-    existingPermission: exampleWithRelationship,
-    tableConfig: {},
-  });
-
-  const expected: Expected = {
-    filter: {
-      things: {
-        name: {
-          _eq: 'asdas',
-        },
-      },
-    },
-    operators: {
-      filter: 'things',
-    },
-  };
-
-  expect(result).toEqual(expected);
-});
-
-test('renders complex permission', () => {
-  const result = createDefaultValues({
-    tableName: 'user',
-    schema,
-    existingPermission: complicatedExample,
-    tableConfig: {},
-  });
-
-  const expected: Expected = {
-    filter: {
-      _and: [
-        {
-          things: {
-            _and: [
-              {
-                user: {
-                  age: {
-                    _eq: 22,
-                  },
-                },
-              },
-              {
-                _or: [
-                  {
-                    fk_user_id: {
-                      _eq: 'X-Hasura-User-Id',
-                    },
-                  },
-                  {
-                    user: {
-                      age: {
-                        _gte: 44,
-                      },
-                    },
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      ],
-    },
-    operators: {
-      filter: {
+        type: 'boolOperator',
         _and: [
           {
-            name: 'things',
-            things: {
-              _and: [
-                {
-                  name: 'user',
-                  type: 'relationship',
-                  typeName: 'user',
-                  user: {
-                    columnOperator: '_eq',
-                    name: 'age',
-                    type: 'column',
-                    typeName: 'age',
-                  },
-                },
-                {
-                  _or: [
-                    {
-                      columnOperator: '_eq',
-                      name: 'fk_user_id',
-                      type: 'column',
-                      typeName: 'fk_user_id',
-                    },
-                    {
-                      name: 'user',
-                      type: 'relationship',
-                      typeName: 'user',
-                      user: {
-                        columnOperator: '_gte',
-                        name: 'age',
-                        type: 'column',
-                        typeName: 'age',
-                      },
-                    },
-                  ],
-                  name: '_or',
-                  type: 'boolOperator',
-                  typeName: '_or',
-                },
-              ],
-              name: '_and',
-              type: 'boolOperator',
-              typeName: '_and',
-            },
-            type: 'relationship',
-            typeName: 'thing',
+            name: 'Data_value',
+            typeName: 'Data_value',
+            type: 'column',
+            columnOperator: '_eq',
           },
+          'Group',
         ],
-        name: '_and',
-        type: 'boolOperator',
-        typeName: '_and',
       },
     },
+    filter: {
+      _and: [
+        { Data_value: { _eq: 'X-Hasura-User-Id' } },
+        { Group: { _eq: 'X-Hasura-User-Id' } },
+      ],
+    },
+  };
+  expect(result).toEqual(expected);
+});
+
+test('renders _not operator with number value permission', () => {
+  const result = createDefaultValues({
+    tableName,
+    tableColumns,
+    sourceMetadata,
+    existingPermission: { _not: { Data_value: { _eq: 1337 } } },
+  });
+
+  const expected = {
+    operators: {
+      filter: {
+        name: '_not',
+        typeName: '_not',
+        type: 'boolOperator',
+        _not: {
+          name: 'Data_value',
+          typeName: 'Data_value',
+          type: 'column',
+          columnOperator: '_eq',
+        },
+      },
+    },
+    filter: { _not: { Data_value: { _eq: 1337 } } },
   };
 
   expect(result).toEqual(expected);

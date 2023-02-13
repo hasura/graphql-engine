@@ -4,7 +4,7 @@ import { useFormContext } from 'react-hook-form';
 import { Table } from '@/features/hasura-metadata-types';
 import { useHttpClient } from '@/features/Network';
 import { useQuery } from 'react-query';
-import { DataSource, exportMetadata } from '@/features/DataSource';
+import { DataSource, exportMetadata, Operator } from '@/features/DataSource';
 import { areTablesEqual } from '@/features/RelationshipsTable';
 import { getTypeName } from '@/features/GraphQLUtils';
 import { InputField } from '@/new-components/Form';
@@ -40,6 +40,7 @@ export interface RowPermissionsProps {
   subQueryType?: string;
   allRowChecks: Array<{ queryType: QueryType; value: string }>;
   dataSourceName: string;
+  supportedOperators: Operator[];
 }
 
 enum SelectedSection {
@@ -132,6 +133,7 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
   subQueryType,
   allRowChecks,
   dataSourceName,
+  supportedOperators,
 }) => {
   const { data: tableName, isLoading } = useTypeName({ table, dataSourceName });
   const { register, watch, setValue } = useFormContext();
@@ -245,7 +247,6 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
           <div className="pt-4">
             {!isLoading && tableName ? (
               <RowPermissionBuilder
-                tableName={tableName}
                 nesting={['filter']}
                 table={table}
                 dataSourceName={dataSourceName}

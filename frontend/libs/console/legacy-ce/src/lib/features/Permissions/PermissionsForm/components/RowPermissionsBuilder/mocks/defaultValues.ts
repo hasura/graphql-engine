@@ -1,62 +1,80 @@
-export const simpleExample = {
-  Title: {
-    _eq: 'hello',
+import { TableColumn } from '@/features/DataSource';
+import { MetadataDataSource } from '@/metadata/types';
+export const tableColumns = [
+  {
+    name: 'Series_reference',
+    dataType: 'STRING',
+    consoleDataType: 'string',
+    nullable: false,
   },
-};
-
-export const exampleWithBoolOperator = {
-  _and: [
-    {
-      age: {
-        _eq: 8,
-      },
-    },
-    {
-      email: {
-        _eq: 'adsff',
-      },
-    },
-  ],
-};
-
-export const exampleWithRelationship = {
-  things: {
-    name: {
-      _eq: 'asdas',
-    },
+  {
+    name: 'Period',
+    dataType: 'FLOAT64',
+    consoleDataType: 'number',
+    nullable: false,
   },
-};
+  {
+    name: 'Data_value',
+    dataType: 'FLOAT64',
+    consoleDataType: 'number',
+    nullable: false,
+  },
+] as TableColumn[];
 
-export const complicatedExample = {
-  _and: [
+export const sourceMetadata = {
+  name: 'bigquery_test1',
+  kind: 'bigquery',
+  tables: [
     {
-      things: {
-        _and: [
-          {
-            user: {
-              age: {
-                _eq: 22,
+      table: { dataset: 'bigquery_sample', name: 'sample_table' },
+      object_relationships: [
+        {
+          name: 'bq_test_relation',
+          using: {
+            manual_configuration: {
+              column_mapping: { Period: 'STATUS' },
+              remote_table: {
+                dataset: 'bigquery_sample',
+                name: 'sample_table',
               },
             },
           },
-          {
-            _or: [
-              {
-                fk_user_id: {
-                  _eq: 'X-Hasura-User-Id',
-                },
+        },
+        {
+          name: 'test_2',
+          using: {
+            manual_configuration: {
+              column_mapping: { Period: 'Series_title_2' },
+              insertion_order: null,
+              remote_table: {
+                dataset: 'bigquery_sample',
+                name: 'sample_table',
               },
-              {
-                user: {
-                  age: {
-                    _gte: 44,
-                  },
-                },
-              },
-            ],
+            },
           },
-        ],
-      },
+        },
+      ],
+      select_permissions: [
+        {
+          role: 'user',
+          permission: {
+            columns: ['Series_reference', 'Period', 'Data_value'],
+            filter: {
+              _and: [{ Series_reference: { _eq: 'X-Hasura-User-Id' } }],
+            },
+          },
+        },
+      ],
     },
   ],
-};
+  configuration: {
+    datasets: ['bigquery_sample'],
+    global_select_limit: 1,
+    project_id: 'sensei',
+    service_account: {
+      client_email: '@mail.com',
+      private_key: '',
+      project_id: 'sensei',
+    },
+  },
+} as MetadataDataSource;
