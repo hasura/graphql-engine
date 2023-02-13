@@ -2,6 +2,7 @@ module Test.Expectations
   ( jsonShouldBe,
     rowsShouldBe,
     mutationResponseShouldBe,
+    yamlShow,
   )
 where
 
@@ -28,6 +29,9 @@ newtype YamlShow = YamlShow {unYamlShow :: Value}
 
 instance Show YamlShow where
   show = T.unpack . TE.decodeUtf8With TE.lenientDecode . Yaml.encode . unYamlShow
+
+yamlShow :: ToJSON value => value -> String
+yamlShow = show . YamlShow . toJSON
 
 -- | Compares two JSON values for equality, but prints their diff upon failure
 -- as formatted YAML, which is a much nicer way to visualise the difference in

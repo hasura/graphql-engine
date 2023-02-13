@@ -21,7 +21,7 @@ module Test.AgentAPI
     explain,
     getMetrics,
     mutationGuarded,
-    guardMutationResponse,
+    mutationExpectError,
     getSourceNameAndConfig,
     mergeAgentConfig,
   )
@@ -42,6 +42,7 @@ import Servant.Client.Generic (AsClientT, genericClient)
 import Test.AgentClient (AgentClientT)
 import Test.AgentDatasets (DatasetCloneInfo (..), DatasetContext (..), HasDatasetContext, getDatasetContext)
 import Test.AgentTestContext (AgentTestContext (..), HasAgentTestContext, getAgentTestContext)
+import Test.Expectations (yamlShow)
 import Test.Sandwich (HasBaseContext, expectationFailure)
 import Prelude
 
@@ -56,7 +57,7 @@ guardCapabilitiesResponse = API.capabilitiesCase defaultAction successAction err
   where
     defaultAction = expectationFailure "Expected CapabilitiesResponse"
     successAction c = pure c
-    errorAction e = expectationFailure $ "Expected CapabilitiesResponse, got " <> show e
+    errorAction e = expectationFailure $ unlines ["Expected CapabilitiesResponse, got ErrorResponse", "----", yamlShow e]
 
 getHealth :: (HasBaseContext context, MonadReader context m, MonadThrow m, MonadIO m) => AgentClientT m NoContent
 getHealth = (client // API._health) Nothing Nothing
@@ -76,7 +77,7 @@ guardSchemaResponse = API.schemaCase defaultAction successAction errorAction
   where
     defaultAction = expectationFailure "Expected SchemaResponse"
     successAction c = pure c
-    errorAction e = expectationFailure $ "Expected SchemaResponse, got " <> show e
+    errorAction e = expectationFailure $ unlines ["Expected SchemaResponse, got ErrorResponse", "----", yamlShow e]
 
 queryGuarded :: (HasBaseContext context, HasAgentTestContext context, HasDatasetContext context, MonadReader context m, MonadThrow m, MonadIO m) => API.QueryRequest -> AgentClientT m API.QueryResponse
 queryGuarded queryRequest = do
@@ -88,7 +89,7 @@ guardQueryResponse = API.queryCase defaultAction successAction errorAction
   where
     defaultAction = expectationFailure "Expected QueryResponse"
     successAction q = pure q
-    errorAction e = expectationFailure $ "Expected QueryResponse, got " <> show e
+    errorAction e = expectationFailure $ unlines ["Expected QueryResponse, got ErrorResponse", "----", yamlShow e]
 
 queryExpectError :: (HasBaseContext context, HasAgentTestContext context, HasDatasetContext context, MonadReader context m, MonadThrow m, MonadIO m) => API.QueryRequest -> AgentClientT m API.ErrorResponse
 queryExpectError queryRequest = do
@@ -99,7 +100,7 @@ guardQueryErrorResponse :: MonadThrow m => Union API.QueryResponses -> m API.Err
 guardQueryErrorResponse = API.queryCase defaultAction successAction errorAction
   where
     defaultAction = expectationFailure "Expected ErrorResponse"
-    successAction q = expectationFailure $ "Expected ErrorResponse, got " <> show q
+    successAction q = expectationFailure $ unlines ["Expected ErrorResponse, got QueryResponse", "----", yamlShow q]
     errorAction e = pure e
 
 explain :: (HasBaseContext context, HasAgentTestContext context, HasDatasetContext context, MonadReader context m, MonadThrow m, MonadIO m) => API.QueryRequest -> AgentClientT m API.ExplainResponse
@@ -120,7 +121,19 @@ guardMutationResponse = API.mutationCase defaultAction successAction errorAction
   where
     defaultAction = expectationFailure "Expected MutationResponse"
     successAction q = pure q
-    errorAction e = expectationFailure $ "Expected MutationResponse, got " <> show e
+    errorAction e = expectationFailure $ unlines ["Expected MutationResponse, got ErrorResponse", "----", yamlShow e]
+
+mutationExpectError :: (HasBaseContext context, HasAgentTestContext context, HasDatasetContext context, MonadReader context m, MonadThrow m, MonadIO m) => API.MutationRequest -> AgentClientT m API.ErrorResponse
+mutationExpectError mutationRequest = do
+  (sourceName, config) <- getSourceNameAndConfig
+  guardMutationErrorResponse =<< (client // API._mutation) sourceName config mutationRequest
+
+guardMutationErrorResponse :: MonadThrow m => Union API.MutationResponses -> m API.ErrorResponse
+guardMutationErrorResponse = API.mutationCase defaultAction successAction errorAction
+  where
+    defaultAction = expectationFailure "Expected ErrorResponse"
+    successAction q = expectationFailure $ unlines ["Expected ErrorResponse, got MutationResponse", "----", yamlShow q]
+    errorAction e = pure e
 
 -------------------------------------------------------------------------------
 
