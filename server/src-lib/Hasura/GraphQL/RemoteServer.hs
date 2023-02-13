@@ -283,43 +283,18 @@ newtype FromIntrospection a = FromIntrospection {fromIntrospection :: a}
 instance J.FromJSON (FromIntrospection G.Description) where
   parseJSON = fmap (FromIntrospection . G.Description) . J.parseJSON
 
-instance J.FromJSON (FromIntrospection G.ScalarTypeDefinition) where
-  parseJSON = J.withObject "ScalarTypeDefinition" $ \o -> do
-    kind <- o .: "kind"
-    name <- o .: "name"
-    desc <- o .:? "description"
-    when (kind /= "SCALAR") $ kindErr kind "scalar"
-    let desc' = fmap fromIntrospection desc
-        r = G.ScalarTypeDefinition desc' name []
-    return $ FromIntrospection r
-
-instance J.FromJSON (FromIntrospection (G.ObjectTypeDefinition G.InputValueDefinition)) where
-  parseJSON = J.withObject "ObjectTypeDefinition" $ \o -> do
-    kind <- o .: "kind"
-    name <- o .: "name"
-    desc <- o .:? "description"
-    fields <- o .:? "fields"
-    interfaces :: Maybe [FromIntrospection (G.InterfaceTypeDefinition [G.Name] G.InputValueDefinition)] <- o .:? "interfaces"
-    when (kind /= "OBJECT") $ kindErr kind "object"
-    let implIfaces = map G._itdName $ maybe [] (fmap fromIntrospection) interfaces
-        flds = maybe [] (fmap fromIntrospection) fields
-        desc' = fmap fromIntrospection desc
-        r = G.ObjectTypeDefinition desc' name implIfaces [] flds
-    return $ FromIntrospection r
-
 instance (J.FromJSON (FromIntrospection a)) => J.FromJSON (FromIntrospection (G.FieldDefinition a)) where
   parseJSON = J.withObject "FieldDefinition" $ \o -> do
     name <- o .: "name"
-    desc <- o .:? "description"
-    args <- o .: "args"
-    _type <- o .: "type"
-    let desc' = fmap fromIntrospection desc
-        r =
+    desc <- fmap fromIntrospection <$> o .:? "description"
+    args <- fmap fromIntrospection <$> o .: "args"
+    type' <- fromIntrospection <$> o .: "type"
+    let r =
           G.FieldDefinition
-            desc'
+            desc
             name
-            (fmap fromIntrospection args)
-            (fromIntrospection _type)
+            args
+            type'
             []
     return $ FromIntrospection r
 
@@ -345,101 +320,67 @@ instance J.FromJSON (FromIntrospection G.GType) where
 instance J.FromJSON (FromIntrospection G.InputValueDefinition) where
   parseJSON = J.withObject "InputValueDefinition" $ \o -> do
     name <- o .: "name"
-    desc <- o .:? "description"
-    _type <- o .: "type"
-    defVal <- o .:? "defaultValue"
-    let desc' = fmap fromIntrospection desc
-    let defVal' = fmap fromIntrospection defVal
-        r = G.InputValueDefinition desc' name (fromIntrospection _type) defVal' []
-    return $ FromIntrospection r
+    desc <- fmap fromIntrospection <$> o .:? "description"
+    type' <- fromIntrospection <$> o .: "type"
+    defVal <- fmap fromIntrospection <$> o .:? "defaultValue"
+    return $ FromIntrospection $ G.InputValueDefinition desc name type' defVal []
 
 instance J.FromJSON (FromIntrospection (G.Value Void)) where
   parseJSON = J.withText "Value Void" $ \t ->
     let parseValueConst = G.runParser G.value
      in FromIntrospection <$> onLeft (parseValueConst t) (fail . T.unpack)
 
-instance J.FromJSON (FromIntrospection (G.InterfaceTypeDefinition [G.Name] G.InputValueDefinition)) where
-  parseJSON = J.withObject "InterfaceTypeDefinition" $ \o -> do
-    kind <- o .: "kind"
-    name <- o .: "name"
-    desc <- o .:? "description"
-    fields <- o .:? "fields"
-    possibleTypes :: Maybe [FromIntrospection (G.ObjectTypeDefinition G.InputValueDefinition)] <- o .:? "possibleTypes"
-    let flds = maybe [] (fmap fromIntrospection) fields
-        desc' = fmap fromIntrospection desc
-        possTps = map G._otdName $ maybe [] (fmap fromIntrospection) possibleTypes
-    when (kind /= "INTERFACE") $ kindErr kind "interface"
-    -- TODO (non PDV) track which interfaces implement which other interfaces, after a
-    -- GraphQL spec > Jun 2018 is released.
-    let r = G.InterfaceTypeDefinition desc' name [] flds possTps
-    return $ FromIntrospection r
-
-instance J.FromJSON (FromIntrospection G.UnionTypeDefinition) where
-  parseJSON = J.withObject "UnionTypeDefinition" $ \o -> do
-    kind <- o .: "kind"
-    name <- o .: "name"
-    desc <- o .:? "description"
-    possibleTypes :: [FromIntrospection (G.ObjectTypeDefinition G.InputValueDefinition)] <- o .: "possibleTypes"
-    let possibleTypes' = map G._otdName $ fmap fromIntrospection possibleTypes
-        desc' = fmap fromIntrospection desc
-    when (kind /= "UNION") $ kindErr kind "union"
-    let r = G.UnionTypeDefinition desc' name [] possibleTypes'
-    return $ FromIntrospection r
-
-instance J.FromJSON (FromIntrospection G.EnumTypeDefinition) where
-  parseJSON = J.withObject "EnumTypeDefinition" $ \o -> do
-    kind <- o .: "kind"
-    name <- o .: "name"
-    desc <- o .:? "description"
-    vals <- o .: "enumValues"
-    when (kind /= "ENUM") $ kindErr kind "enum"
-    let desc' = fmap fromIntrospection desc
-    let r = G.EnumTypeDefinition desc' name [] (fmap fromIntrospection vals)
-    return $ FromIntrospection r
-
 instance J.FromJSON (FromIntrospection G.EnumValueDefinition) where
   parseJSON = J.withObject "EnumValueDefinition" $ \o -> do
     name <- o .: "name"
-    desc <- o .:? "description"
-    let desc' = fmap fromIntrospection desc
-    let r = G.EnumValueDefinition desc' name []
-    return $ FromIntrospection r
-
-instance J.FromJSON (FromIntrospection (G.InputObjectTypeDefinition G.InputValueDefinition)) where
-  parseJSON = J.withObject "InputObjectTypeDefinition" $ \o -> do
-    kind <- o .: "kind"
-    name <- o .: "name"
-    desc <- o .:? "description"
-    mInputFields <- o .:? "inputFields"
-    let inputFields = maybe [] (fmap fromIntrospection) mInputFields
-    let desc' = fmap fromIntrospection desc
-    when (kind /= "INPUT_OBJECT") $ kindErr kind "input_object"
-    let r = G.InputObjectTypeDefinition desc' name [] inputFields
-    return $ FromIntrospection r
+    desc <- fmap fromIntrospection <$> o .:? "description"
+    return $ FromIntrospection $ G.EnumValueDefinition desc name []
 
 instance J.FromJSON (FromIntrospection (G.TypeDefinition [G.Name] G.InputValueDefinition)) where
   parseJSON = J.withObject "TypeDefinition" $ \o -> do
     kind :: Text <- o .: "kind"
+    name <- o .: "name"
+    desc <- fmap fromIntrospection <$> o .:? "description"
     r <- case kind of
       "SCALAR" ->
-        G.TypeDefinitionScalar . fromIntrospection <$> J.parseJSON (J.Object o)
-      "OBJECT" ->
-        G.TypeDefinitionObject . fromIntrospection <$> J.parseJSON (J.Object o)
-      "INTERFACE" ->
-        G.TypeDefinitionInterface . fromIntrospection <$> J.parseJSON (J.Object o)
-      "UNION" ->
-        G.TypeDefinitionUnion . fromIntrospection <$> J.parseJSON (J.Object o)
-      "ENUM" ->
-        G.TypeDefinitionEnum . fromIntrospection <$> J.parseJSON (J.Object o)
-      "INPUT_OBJECT" ->
-        G.TypeDefinitionInputObject . fromIntrospection <$> J.parseJSON (J.Object o)
+        pure $ G.TypeDefinitionScalar $ G.ScalarTypeDefinition desc name []
+      "OBJECT" -> do
+        fields <- o .:? "fields"
+        interfaces :: Maybe [FromIntrospection (G.TypeDefinition [G.Name] G.InputValueDefinition)] <- o .:? "interfaces"
+        implIfaces <- for (foldMap (fmap fromIntrospection) interfaces) \case
+          G.TypeDefinitionInterface (G.InterfaceTypeDefinition {..}) -> pure _itdName
+          _ -> pErr $ "Error: object type " <> G.unName name <> " can only implement interfaces"
+        let flds = foldMap (fmap fromIntrospection) fields
+        pure $ G.TypeDefinitionObject $ G.ObjectTypeDefinition desc name implIfaces [] flds
+      "INTERFACE" -> do
+        fields <- o .:? "fields"
+        possibleTypes :: Maybe [FromIntrospection (G.TypeDefinition [G.Name] G.InputValueDefinition)] <- o .:? "possibleTypes"
+        let flds = maybe [] (fmap fromIntrospection) fields
+        -- TODO (non PDV) track which interfaces implement which other interfaces, after a
+        -- GraphQL spec > Jun 2018 is released.
+        possTps <- for (foldMap (fmap fromIntrospection) possibleTypes) \case
+          G.TypeDefinitionObject (G.ObjectTypeDefinition {..}) -> pure _otdName
+          _ -> pErr $ "Error: interface type " <> G.unName name <> " can only be implemented by objects"
+        pure $ G.TypeDefinitionInterface $ G.InterfaceTypeDefinition desc name [] flds possTps
+      "UNION" -> do
+        possibleTypes :: [FromIntrospection (G.TypeDefinition [G.Name] G.InputValueDefinition)] <- o .: "possibleTypes"
+        possibleTypes' <- for (fromIntrospection <$> possibleTypes) \case
+          G.TypeDefinitionObject (G.ObjectTypeDefinition {..}) -> pure _otdName
+          _ -> pErr $ "Error: union type " <> G.unName name <> " can only be implemented by objects"
+        pure $ G.TypeDefinitionUnion $ G.UnionTypeDefinition desc name [] possibleTypes'
+      "ENUM" -> do
+        vals <- fmap fromIntrospection <$> o .: "enumValues"
+        pure $ G.TypeDefinitionEnum $ G.EnumTypeDefinition desc name [] vals
+      "INPUT_OBJECT" -> do
+        inputFields <- foldMap (fmap fromIntrospection) <$> o .:? "inputFields"
+        pure $ G.TypeDefinitionInputObject $ G.InputObjectTypeDefinition desc name [] inputFields
       _ -> pErr $ "unknown kind: " <> kind
     return $ FromIntrospection r
 
 instance J.FromJSON (FromIntrospection IntrospectionResult) where
   parseJSON = J.withObject "SchemaDocument" $ \o -> do
-    _data <- o .: "data"
-    schema <- _data .: "__schema"
+    data' <- o .: "data"
+    schema <- data' .: "__schema"
     -- the list of types
     types <- schema .: "types"
     -- query root
@@ -447,18 +388,10 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
     queryRoot <- queryType .: "name"
     -- mutation root
     mMutationType <- schema .:? "mutationType"
-    mutationRoot <- case mMutationType of
-      Nothing -> return Nothing
-      Just mutType -> do
-        mutRoot <- mutType .: "name"
-        return $ Just mutRoot
+    mutationRoot <- for mMutationType (.: "name")
     -- subscription root
     mSubsType <- schema .:? "subscriptionType"
-    subsRoot <- case mSubsType of
-      Nothing -> return Nothing
-      Just subsType -> do
-        subRoot <- subsType .: "name"
-        return $ Just subRoot
+    subsRoot <- for mSubsType (.: "name")
     let types' =
           (fmap . fmap . fmap)
             -- presets are only defined for non-admin roles,
@@ -546,9 +479,6 @@ getCustomizer IntrospectionResult {..} (Just RemoteSchemaCustomization {..}) = R
 
 pErr :: (MonadFail m) => Text -> m a
 pErr = fail . T.unpack
-
-kindErr :: (MonadFail m) => Text -> Text -> m a
-kindErr gKind eKind = pErr $ "Invalid `kind: " <> gKind <> "` in " <> eKind
 
 throwRemoteSchema :: QErrM m => Text -> m a
 throwRemoteSchema = throw400 RemoteSchemaError
