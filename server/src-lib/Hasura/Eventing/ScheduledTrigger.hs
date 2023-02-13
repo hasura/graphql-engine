@@ -133,6 +133,7 @@ import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
 import Data.SerializableBlob qualified as SB
 import Data.Set qualified as Set
+import Data.Text.Extended ((<<>))
 import Data.Time.Clock
 import Data.URL.Template (printURLTemplate)
 import Database.PG.Query qualified as PG
@@ -251,7 +252,8 @@ processCronEvents logger httpMgr prometheusMetrics cronEvents getSC lockedCronEv
     case Map.lookup name cronTriggersInfo of
       Nothing ->
         logInternalError $
-          err500 Unexpected "could not find cron trigger in cache"
+          err500 Unexpected $
+            "could not find cron trigger " <> name <<> " in the schema cache"
       Just CronTriggerInfo {..} -> do
         let payload =
               ScheduledEventWebhookPayload
