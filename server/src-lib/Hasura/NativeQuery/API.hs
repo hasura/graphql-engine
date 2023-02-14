@@ -36,6 +36,7 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Server.Init.FeatureFlag as FF
 import Hasura.Server.Types (HasServerConfigCtx (..), ServerConfigCtx (..))
+import Language.GraphQL.Draft.Syntax (unName)
 
 -- | API payload for the 'get_native_query' endpoint.
 data GetNativeQuery (b :: BackendType) = GetNativeQuery
@@ -160,6 +161,16 @@ runUntrackNativeQuery ::
   m EncJSON
 runUntrackNativeQuery q = do
   throwIfFeatureDisabled
+
+  -- Check source exists
+  sourceMetadata <-
+    maybe (throw400 NotFound $ "Source " <> sourceNameToText source <> " not found.") pure
+      . preview (metaSources . ix source . toSourceMetadata @b)
+      =<< getMetadata
+
+  -- Check native query exists
+  unless (any ((== fieldName) . nativeQueryInfoName @b) $ _smNativeQueries sourceMetadata) do
+    throw400 NotFound $ "Native query '" <> unName (getNativeQueryName fieldName) <> "' not found in source '" <> sourceNameToText source <> "'."
 
   let metadataObj =
         MOSourceObjId source $
