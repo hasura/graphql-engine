@@ -12,7 +12,8 @@
     "server-build:ce": "nx run console-ce:build-server-assets",
     "start:ee": "nx run console-ee:serve",
     "build:ee": "nx run console-ee:build",
-    "server-build:ee": "nx run console-ee:build-server-assets"
+    "server-build:ee": "nx run console-ee:build-server-assets",
+    "generate-control-plane-gql-types": "graphql-codegen --config control-plane-graphql-codegen.yml"
   },
   "private": true,
   "overrides": {
