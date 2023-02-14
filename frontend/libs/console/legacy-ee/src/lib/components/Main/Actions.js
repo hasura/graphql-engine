@@ -33,6 +33,7 @@ import { constructRedirectUrl } from '../../utils/utils';
 import { retrieveByRefreshToken } from '../OAuthCallback/Actions';
 import { decodeToken } from '../../utils/computeAccess';
 import extendedGlobals from '../../Globals';
+import { isCloudConsole } from '@/utils';
 
 const UPDATE_HASURA_DOT_COM_ACCESS = 'Main/UPDATE_HASURA_DOT_COM_ACCESS';
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
@@ -58,6 +59,12 @@ const UPDATE_PROJECT_NAME = 'Main/UPDATE_PROJECT_NAME';
 const FETCHING_LUX_PROJECT_INFO = 'Main/FETCHING_LUX_PROJECT_INFO';
 const FETCHED_LUX_PROJECT_INFO = 'Main/FETCHED_LUX_PROJECT_INFO';
 const ERROR_FETCHING_LUX_PROJECT_INFO = 'Main/ERROR_FETCHING_LUX_PROJECT_INFO';
+const FETCHING_LUX_PROJECT_ENTITLEMENTS =
+  'Main/FETCHING_LUX_PROJECT_ENTITLEMENTS';
+const FETCHED_LUX_PROJECT_ENTITLEMENTS =
+  'Main/FETCHED_LUX_PROJECT_ENTITLEMENTS';
+const ERROR_FETCHING_LUX_PROJECT_ENTITLEMENTS =
+  'Main/ERROR_FETCHING_LUX_PROJECT_ENTITLEMENTS';
 
 export const SET_METADATA = 'Main/SET_METADATA';
 export const SET_METADATA_LOADING = 'Main/SET_METADATA_LOADING';
@@ -518,6 +525,7 @@ const idTokenReceived =
           metricsFQDN: decodedToken.payload.metrics_fqdn,
           plan_name: project?.plan_name,
           is_enterprise_user: project?.enterprise_users?.is_active,
+          entitlements: project?.entitlements,
         },
       });
       /* Flush to the local storage */
@@ -694,6 +702,7 @@ export const loadLuxProjectInfo = () => (dispatch, getState) => {
         metricsFQDN: project.tenant?.region_info?.metrics_fqdn || '',
         plan_name: project?.plan_name,
         is_enterprise_user: project?.enterprise_users?.is_active,
+        entitlements: project?.entitlements,
       };
 
       dispatch({
@@ -705,6 +714,77 @@ export const loadLuxProjectInfo = () => (dispatch, getState) => {
       console.error(e);
       dispatch({
         type: ERROR_FETCHING_LUX_PROJECT_INFO,
+        error: e,
+      });
+    });
+};
+
+export const loadLuxProjectEntitlements = () => (dispatch, getState) => {
+  if (!isCloudConsole(globals)) {
+    return Promise.resolve();
+  }
+
+  const url = Endpoints.luxDataGraphql;
+  const reqOptions = {
+    method: 'POST',
+    credentials: 'include',
+    body: JSON.stringify({
+      query: `
+        query getLuxProjectEntitlements($id: uuid!) {
+          projects_by_pk(id: $id) {
+            entitlements {
+              id
+              entitlement {
+                type
+                config_is_enabled
+              }
+            }
+          }
+        }
+      `,
+      variables: {
+        id: globals.hasuraCloudProjectId,
+      },
+    }),
+  };
+
+  if (globals.consoleMode === 'cli') {
+    reqOptions.headers = {
+      ...getState().tables.dataHeaders,
+    };
+  }
+
+  dispatch({
+    type: FETCHING_LUX_PROJECT_ENTITLEMENTS,
+    data: true,
+  });
+
+  dispatch(requestAction(url, reqOptions))
+    .then(resp => {
+      dispatch({
+        type: FETCHING_LUX_PROJECT_ENTITLEMENTS,
+        data: false,
+      });
+      if (!resp.data || !resp.data.projects_by_pk) {
+        console.error(
+          'getLuxProjectEntitlements error',
+          resp.errors[0]?.message
+        );
+      }
+
+      const projectEntitlements = {
+        entitlements: resp?.data?.projects_by_pk?.entitlements,
+      };
+
+      dispatch({
+        type: FETCHED_LUX_PROJECT_ENTITLEMENTS,
+        data: projectEntitlements,
+      });
+    })
+    .catch(e => {
+      console.error(e);
+      dispatch({
+        type: ERROR_FETCHING_LUX_PROJECT_ENTITLEMENTS,
         error: e,
       });
     });
@@ -796,6 +876,31 @@ const proMainReducer = (state = { ...mainState, ...defaultState }, action) => {
         project: action.data,
       };
     case ERROR_FETCHING_LUX_PROJECT_INFO:
+      return {
+        ...state,
+        project: {
+          ...state.project,
+          loading: false,
+        },
+      };
+    case FETCHING_LUX_PROJECT_ENTITLEMENTS:
+      return {
+        ...state,
+        project: {
+          ...state.project,
+          loading: action.data,
+        },
+      };
+    case FETCHED_LUX_PROJECT_ENTITLEMENTS:
+      return {
+        ...state,
+        project: {
+          ...state.project,
+          loading: false,
+          entitlements: action.data.entitlements,
+        },
+      };
+    case ERROR_FETCHING_LUX_PROJECT_ENTITLEMENTS:
       return {
         ...state,
         project: {
