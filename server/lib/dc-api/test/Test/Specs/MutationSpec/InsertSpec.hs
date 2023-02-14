@@ -273,6 +273,7 @@ spec TestData {..} Capabilities {..} = describe "Insert Mutations" $ do
     for_ _cRelationships $ \_relationshipCapabilities -> do
       usesDataset chinookTemplate $ it "can return rows from an object relationship" $ do
         let rows = take 1 newAcdcAlbums ++ take 1 newApocalypticaAlbums
+
         let returning =
               Data.mkFieldsMap
                 [ ("AlbumId", _tdColumnField _tdAlbumsTableName "AlbumId"),
@@ -290,10 +291,12 @@ spec TestData {..} Capabilities {..} = describe "Insert Mutations" $ do
                     )
                   )
                 ]
+
         let insertOperation =
               albumsInsertOperation
                 & imoRows .~ rows
                 & imoReturningFields .~ returning
+
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
@@ -306,11 +309,13 @@ spec TestData {..} Capabilities {..} = describe "Insert Mutations" $ do
               let artist = (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>= \artistId -> _tdArtistsRowsById ^? ix artistId
                   artistPropVal = maybeToList artist
                in Data.insertField "Artist" (mkSubqueryResponse artistPropVal) album
+
         let removeArtistId = Data.deleteField "ArtistId"
 
         let expectedRows =
-              take 1 (expectedInsertedAcdcAlbums albumsStartingId)
-                ++ take 1 (expectedInsertedApocalypticaAlbums (albumsStartingId + 1))
+              ( take 1 (expectedInsertedAcdcAlbums albumsStartingId)
+                  ++ take 1 (expectedInsertedApocalypticaAlbums (albumsStartingId + 1))
+              )
                 & fmap (joinInArtist >>> removeArtistId)
 
         let expectedResult = MutationOperationResults 2 (Just expectedRows)

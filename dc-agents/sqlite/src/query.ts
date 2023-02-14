@@ -1,6 +1,6 @@
 import { Config }  from "./config";
 import { connect, SqlLogger } from "./db";
-import { coerceUndefinedToNull, coerceUndefinedOrNullToEmptyRecord, isEmptyObject, tableNameEquals, unreachable, stringArrayEquals } from "./util";
+import { coerceUndefinedToNull, coerceUndefinedOrNullToEmptyRecord, isEmptyObject, tableNameEquals, unreachable, stringArrayEquals, ErrorWithStatusCode } from "./util";
 import {
     Expression,
     BinaryComparisonOperator,
@@ -46,7 +46,7 @@ function escapeString(x: any): string {
  * @param identifier: Unescaped name. E.g. 'Alb"um'
  * @returns Escaped name. E.g. '"Alb\"um"'
  */
-function escapeIdentifier(identifier: string): string {
+export function escapeIdentifier(identifier: string): string {
   // TODO: Review this function since the current implementation is off the cuff.
   const result = identifier.replace(/\\/g,"\\\\").replace(/"/g,'\\"');
   return `"${result}"`;
@@ -66,15 +66,33 @@ function validateTableName(tableName: TableName): TableName {
 }
 
 /**
+ * @param ts 
+ * @returns last section of a qualified table array. E.g. [a,b] -> [b]
+ */
+export function getTableNameSansSchema(ts: Array<string>): Array<string> {
+  return [ts[ts.length-1]];
+}
+
+/**
  *
  * @param tableName: Unescaped table name. E.g. 'Alb"um'
  * @returns Escaped table name. E.g. '"Alb\"um"'
  */
-function escapeTableName(tableName: TableName): string {
+export function escapeTableName(tableName: TableName): string {
   return validateTableName(tableName).map(escapeIdentifier).join(".");
 }
 
-function json_object(relationships: TableRelationships[], fields: Fields, table: TableName, tableAlias: string): string {
+/**
+ * @param tableName 
+ * @returns escaped tableName string with schema qualification removed
+ * 
+ * This is useful in where clauses in returning statements where a qualified table name is invalid SQLite SQL.
+ */
+export function escapeTableNameSansSchema(tableName: TableName): string {
+  return escapeTableName(getTableNameSansSchema(tableName));
+}
+
+export function json_object(relationships: TableRelationships[], fields: Fields, table: TableName, tableAlias: string): string {
   const result = Object.entries(fields).map(([fieldName, field]) => {
     switch(field.type) {
       case "column":
@@ -97,7 +115,7 @@ function json_object(relationships: TableRelationships[], fields: Fields, table:
   return tag('json_object', `JSON_OBJECT(${result})`);
 }
 
-function where_clause(relationships: TableRelationships[], expression: Expression, queryTableName: TableName, queryTableAlias: string): string {
+export function where_clause(relationships: TableRelationships[], expression: Expression, queryTableName: TableName, queryTableAlias: string): string {
   const generateWhere = (expression: Expression, currentTableName: TableName, currentTableAlias: string): string => {
     switch(expression.type) {
       case "not":
@@ -193,18 +211,21 @@ function calculateExistsJoinInfo(allTableRelationships: TableRelationships[], ex
 }
 
 function generateRelationshipJoinComparisonFragments(relationship: Relationship, sourceTableAlias: string, targetTableAlias: string): string[] {
+  const sourceTablePrefix = `${sourceTableAlias}.`;
   return Object
     .entries(relationship.column_mapping)
     .map(([sourceColumnName, targetColumnName]) =>
-      `${sourceTableAlias}.${escapeIdentifier(sourceColumnName)} = ${targetTableAlias}.${escapeIdentifier(targetColumnName)}`);
+      `${sourceTablePrefix}${escapeIdentifier(sourceColumnName)} = ${targetTableAlias}.${escapeIdentifier(targetColumnName)}`);
 }
 
 function generateComparisonColumnFragment(comparisonColumn: ComparisonColumn, queryTableAlias: string, currentTableAlias: string): string {
   const path = comparisonColumn.path ?? [];
+  const queryTablePrefix = queryTableAlias ? `${queryTableAlias}.` : '';
+  const currentTablePrefix = currentTableAlias ? `${currentTableAlias}.` : '';
   if (path.length === 0) {
-    return `${currentTableAlias}.${escapeIdentifier(comparisonColumn.name)}`
+    return `${currentTablePrefix}${escapeIdentifier(comparisonColumn.name)}`
   } else if (path.length === 1 && path[0] === "$") {
-    return `${queryTableAlias}.${escapeIdentifier(comparisonColumn.name)}`
+    return `${queryTablePrefix}${escapeIdentifier(comparisonColumn.name)}`
   } else {
     throw new Error(`Unsupported path on ComparisonColumn: ${[...path, comparisonColumn.name].join(".")}`);
   }
@@ -625,8 +646,6 @@ function offset(o: number | null): string {
   }
 }
 
-/** Top-Level Query Function.
- */
 function query(request: QueryRequest): string {
   const result = table_query(
     request.table_relationships,
@@ -708,24 +727,21 @@ function tag(t: string, s: string): string {
  * ```
  *
  */
-export async function queryData(config: Config, sqlLogger: SqlLogger, queryRequest: QueryRequest): Promise<QueryResponse | ErrorResponse> {
+export async function queryData(config: Config, sqlLogger: SqlLogger, queryRequest: QueryRequest): Promise<QueryResponse> {
   const db = connect(config, sqlLogger); // TODO: Should this be cached?
   const q = query(queryRequest);
 
   if(q.length > QUERY_LENGTH_LIMIT) {
-    const result: ErrorResponse =
-      {
-        message: `Generated SQL Query was too long (${q.length} > ${QUERY_LENGTH_LIMIT})`,
-        details: {
-          "query.length": q.length,
-          "limit": QUERY_LENGTH_LIMIT
-        }
-      };
-    return result;
-  } else {
-    const [result, metadata] = await db.query(q);
-    return output(result);
+    const error = new ErrorWithStatusCode(
+      `Generated SQL Query was too long (${q.length} > ${QUERY_LENGTH_LIMIT})`,
+      500,
+      { "query.length": q.length, "limit": QUERY_LENGTH_LIMIT }
+    );
+    throw error;
   }
+
+  const [result, metadata] = await db.query(q);
+  return output(result);
 }
 
 /**

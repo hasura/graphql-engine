@@ -86,6 +86,13 @@ backendTypeConfig =
               subquery:
                 supports_relations: true
             explain: {}
+            mutations:
+              atomicity_support_level: heterogeneous_operations
+              delete: {}
+              insert:
+                supports_nested_inserts: true
+              returning: {}
+              update: {}
             metrics: {}
             raw: {}
         |],

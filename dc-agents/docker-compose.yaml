@@ -30,6 +30,7 @@ services:
       METRICS: y
       PRETTY_PRINT_LOGS: y
       LOG_LEVEL: debug
+      MUTATIONS: y
       DATASETS: y
       DATASET_DELETE: y
     healthcheck:
