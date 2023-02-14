@@ -46,12 +46,39 @@ const mockMetadata: Metadata = {
           },
         },
       },
+      {
+        name: 'mssql1',
+        kind: 'mssql',
+        tables: [],
+        configuration: {
+          connection_info: {
+            connection_string: {
+              from_env: 'HASURA_ENV_VAR',
+            },
+            pool_settings: {
+              max_connections: 50,
+              idle_timeout: 180,
+            },
+          },
+        },
+        customization: {
+          root_fields: {
+            namespace: 'some_field_name',
+            prefix: 'some_field_name_prefix',
+            suffix: 'some_field_name_suffix',
+          },
+          type_names: {
+            prefix: 'some_type_name_prefix',
+            suffix: 'some_type_name_suffix',
+          },
+        },
+      },
     ],
   },
 };
 
 export const handlers = () => [
-  rest.post(`/v1/metadata`, (req, res, ctx) => {
+  rest.post('http://localhost:8080/v1/metadata', (req, res, ctx) => {
     const requestBody = req.body as Record<string, any>;
 
     if (requestBody.type === 'export_metadata')
@@ -59,7 +86,7 @@ export const handlers = () => [
 
     return res(ctx.json({}));
   }),
-  rest.get(`/v1alpha1/config`, (req, res, ctx) => {
+  rest.get(`http://localhost:8080/v1alpha1/config`, (req, res, ctx) => {
     return res(
       ctx.json({
         version: 'dev-fb2bab3-test-app',
