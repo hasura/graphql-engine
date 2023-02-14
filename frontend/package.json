@@ -15,7 +15,8 @@
     "build:ee": "nx run console-ee:build",
     "server-build:ee": "nx run console-ee:build-server-assets",
     "format:write": "nx format:write --base=main",
-    "format:write:all": "nx format:write --all"
+    "format:write:all": "nx format:write --all",
+    "generate-control-plane-gql-types": "graphql-codegen --config control-plane-graphql-codegen.yml"
   },
   "private": true,
   "overrides": {
