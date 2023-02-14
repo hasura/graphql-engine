@@ -89,6 +89,7 @@ func StartHasuraWithPG(t TestingT, image string, pgConnectionUrl string, dockerO
 	}
 	var err error
 	pool, err := dockertest.NewPool("")
+	pool.MaxWait = 5 * time.Minute
 	if err != nil {
 		t.Fatalf("Could not connect to docker: %s", err)
 	}
@@ -143,6 +144,7 @@ func StartHasuraWithMetadataDatabase(t TestingT, image string) (port string, tea
 	}
 	var err error
 	pool, err := dockertest.NewPool("")
+	pool.MaxWait = 5 * time.Minute
 	if err != nil {
 		t.Fatalf("Could not connect to docker: %s", err)
 	}
@@ -240,7 +242,7 @@ func StartHasuraWithMSSQLSource(t *testing.T, version string) (string, string, f
 // startsMSSQLContainer and creates a database and returns the port number
 func StartMSSQLContainer(t TestingT) (string, func()) {
 	pool, err := dockertest.NewPool("")
-	pool.MaxWait = time.Minute
+	pool.MaxWait = 5 * time.Minute
 	if err != nil {
 		t.Fatalf("Could not connect to docker: %s", err)
 	}
@@ -289,6 +291,7 @@ func StartPGContainer(t TestingT) (connectionString string, teardown func()) {
 	database := "test"
 	var err error
 	pool, err := dockertest.NewPool("")
+	pool.MaxWait = 5 * time.Minute
 	if err != nil {
 		t.Fatalf("Could not connect to docker: %s", err)
 	}
@@ -482,6 +485,7 @@ func StartCitusContainer(t TestingT) (string, func()) {
 	password := "test"
 	var err error
 	pool, err := dockertest.NewPool("")
+	pool.MaxWait = 5 * time.Minute
 	if err != nil {
 		t.Fatalf("Could not connect to docker: %s", err)
 	}
@@ -592,6 +596,7 @@ func StartCockroachContainer(t TestingT) (connectionString string, teardown func
 	user := "root"
 	database := "defaultdb"
 	pool, err := dockertest.NewPool("")
+	pool.MaxWait = 5 * time.Minute
 	if err != nil {
 		t.Fatalf("Could not connect to Docker: %s", err)
 	}
@@ -652,7 +657,7 @@ func AddCockroachSourceToHasura(t TestingT, hasuraEndpoint, connectionString, so
 	}
   }
 }
-`   ,sourceName, connectionString)
+`, sourceName, connectionString)
 	addSourceToHasura(t, hasuraEndpoint, sourceName, request)
 }
 
@@ -676,7 +681,7 @@ func AddBigQuerySourceToHasura(t TestingT, globalSelectLimit int, sourceName, se
 		}
       }
 	}
-`, sourceName, serviceAccount, globalSelectLimit,  projectId, dataset)
+`, sourceName, serviceAccount, globalSelectLimit, projectId, dataset)
 
 	addSourceToHasura(t, hasuraEndpoint, sourceName, request)
 }
