@@ -42,6 +42,7 @@ import {
   featureCompatibilityInit,
   clearCollaboratorSignInState,
   loadLuxProjectInfo,
+  loadLuxProjectEntitlements,
 } from './Actions';
 import './NotificationOverrides.css';
 import { clearPersistedGraphiQLHeaders } from '../../utils/localstorage';
@@ -68,6 +69,8 @@ import logo from './images/white-logo.svg';
 import logoutIcon from './images/log-out.svg';
 import projectImg from './images/project.svg';
 import EELogo from './images/hasura-ee-mono-light.svg';
+import { Plan, Project_Entitlement_Types_Enum } from '@/features/ControlPlane';
+import { isCloudConsole } from '@/utils';
 
 class Main extends React.Component {
   constructor(props) {
@@ -90,6 +93,8 @@ class Main extends React.Component {
 
     appcuesIdentify();
     dispatch(loadLuxProjectInfo());
+
+    dispatch(loadLuxProjectEntitlements());
 
     if (
       this.hasMetadataEnabledConfig &&
@@ -284,6 +289,46 @@ class Main extends React.Component {
     );
   }
 
+  /**
+   * if a project is on the new cloud_free_v2 plan
+   * metrics are probably not enabled
+   * check if entitlement is enabled for such plans
+   */
+  hasMetricsEntitlement() {
+    // if not a cloud console, don't check
+    if (!isCloudConsole(globals)) {
+      return true;
+    }
+
+    // get the plan name and entitlements array from the project
+    const {
+      project: { plan_name = '', entitlements = [] },
+    } = this.props;
+
+    // entitlements are added only for projects on the
+    //  new cloud_free_v2 and cloud_shared plans
+    // so if the plan is not one of these, return true
+    if (
+      plan_name === Plan.CloudFree ||
+      plan_name === Plan.CloudPayg ||
+      plan_name === 'pro' ||
+      plan_name === 'cloud_dedicated_vpc'
+    ) {
+      return true;
+    }
+
+    // if the plan is one of the new plans, check if the
+    // metrics entitlement is enabled
+    const { entitlement: { config_is_enabled } = {} } =
+      entitlements.find(
+        ({ entitlement: { type } }) =>
+          type === Project_Entitlement_Types_Enum.ConsoleMetricsTab
+      ) || {};
+
+    // if the entitlement is enabled, return true
+    return !!config_is_enabled;
+  }
+
   render() {
     const {
       children,
@@ -391,7 +436,8 @@ class Main extends React.Component {
       if (
         'hasMetricAccess' in accessState &&
         accessState.hasMetricAccess &&
-        isMonitoringTabSupportedEnvironment(globals)
+        isMonitoringTabSupportedEnvironment(globals) &&
+        this.hasMetricsEntitlement()
       ) {
         return (
           <HeaderNavItem
