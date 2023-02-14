@@ -20,6 +20,7 @@ import Autodocodec
 import Autodocodec qualified as AC
 import Data.Aeson
 import Data.Bifunctor (first)
+import Data.Environment qualified as Env
 import Data.Text qualified as T
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.NativeQuery.Types
@@ -174,10 +175,11 @@ defaultNativeQueryTrackToInfo ::
     NativeQueryMetadata b,
     NativeQueryInfo b ~ NativeQueryInfoImpl b
   ) =>
+  Env.Environment ->
   SourceConnConfiguration b ->
   TrackNativeQueryImpl b ->
   m (NativeQueryInfoImpl b)
-defaultNativeQueryTrackToInfo sourceConnConfig TrackNativeQueryImpl {..} = do
+defaultNativeQueryTrackToInfo env sourceConnConfig TrackNativeQueryImpl {..} = do
   nqiiCode <- liftEither $ mapLeft NativeQueryParseError (parseInterpolatedQuery tnqCode)
   let nqiiRootFieldName = tnqRootFieldName
       nqiiReturns = tnqReturns
@@ -185,7 +187,7 @@ defaultNativeQueryTrackToInfo sourceConnConfig TrackNativeQueryImpl {..} = do
       nqiiDescription = tnqDescription
       nqInfoImpl = NativeQueryInfoImpl {..}
 
-  validateNativeQueryAgainstSource @b sourceConnConfig nqInfoImpl
+  validateNativeQueryAgainstSource @b env sourceConnConfig nqInfoImpl
 
   pure nqInfoImpl
 

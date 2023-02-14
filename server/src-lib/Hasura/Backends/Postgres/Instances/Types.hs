@@ -12,6 +12,7 @@ where
 import Autodocodec (HasCodec (codec))
 import Data.Aeson (FromJSON)
 import Data.Aeson qualified as J
+import Data.Environment qualified as Env
 import Data.Kind (Type)
 import Data.Typeable
 import Hasura.Backends.Postgres.Connection qualified as Postgres
@@ -59,11 +60,11 @@ class
   where
   type PgExtraTableMetadata pgKind :: Type
 
-  versionCheckImpl :: SourceConnConfiguration ('Postgres pgKind) -> IO (Either QErr ())
-  versionCheckImpl = const (pure $ Right ())
+  versionCheckImpl :: Env.Environment -> SourceConnConfiguration ('Postgres pgKind) -> IO (Either QErr ())
+  versionCheckImpl = const $ const (pure $ Right ())
 
-  runPingSourceImpl :: (String -> IO ()) -> SourceName -> SourceConnConfiguration ('Postgres pgKind) -> IO ()
-  runPingSourceImpl _ _ _ = pure ()
+  runPingSourceImpl :: Env.Environment -> (String -> IO ()) -> SourceName -> SourceConnConfiguration ('Postgres pgKind) -> IO ()
+  runPingSourceImpl _ _ _ _ = pure ()
 
 instance PostgresBackend 'Vanilla where
   type PgExtraTableMetadata 'Vanilla = ()

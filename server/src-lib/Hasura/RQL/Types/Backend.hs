@@ -16,6 +16,7 @@ where
 import Autodocodec (HasCodec)
 import Control.Lens.TH (makePrisms)
 import Data.Aeson.Extended
+import Data.Environment qualified as Env
 import Data.Kind (Type)
 import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Extended
@@ -238,14 +239,14 @@ class
   healthCheckImplementation = Nothing
 
   -- | An Implementation for version checking when adding a source.
-  versionCheckImplementation :: SourceConnConfiguration b -> IO (Either QErr ())
-  versionCheckImplementation = const (pure $ Right ())
+  versionCheckImplementation :: Env.Environment -> SourceConnConfiguration b -> IO (Either QErr ())
+  versionCheckImplementation = const (const (pure $ Right ()))
 
   -- | A backend type can opt into providing an implementation for
   -- fingerprinted pings to the source,
   -- useful for attribution that the user is using Hasura
-  runPingSource :: (String -> IO ()) -> SourceName -> SourceConnConfiguration b -> IO ()
-  runPingSource _ _ _ = pure ()
+  runPingSource :: Env.Environment -> (String -> IO ()) -> SourceName -> SourceConnConfiguration b -> IO ()
+  runPingSource _ _ _ _ = pure ()
 
   -- Backend-specific IR types
 
