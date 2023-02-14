@@ -8,23 +8,53 @@ keywords:
 slug: index
 ---
 
-# MySQL [Preview]
+# MySQL
+
+<div className="badge-container">
+  <div className="badge badge--primary heading-badge">Available on: Enterprise (Self-hosted)</div>
+  <div className="badge badge-gray heading-badge">Alpha</div>
+</div>
 
 ## Introduction
 
-:::info Deprecation Notice
+Hasura enables you to connect to MySQL databases to automatically build a rich GraphQL API based on your database
+schema.
 
-Our current MySQL implementation is deprecated in favor of a new implementation built using our Data Connectors, to be
-released shortly. Check out this [blog post](https://hasura.io/blog/hasura-graphql-data-connectors/) for more
-information about Hasura GraphQL Engine Data Connectors.
+At present, our MySQL integration is available for testing in Hasura Cloud and Docker environments, where you can run
+Hasura GraphQL Engine and connect the MySQL GraphQL Data Connector to it. For more information on GraphQL Data
+Connectors check out [our blog post on the topic](https://hasura.io/blog/hasura-graphql-data-connectors/).
 
-If you're currently running Hasura in production with MySQL, please [reach out to us](https://hasura.io/help/)!
+To get started with MySQL, check out our [Getting Started with Docker](/databases/mysql/docker.mdx) guide.
+
+:::tip Supported versions:
+
+1.  Hasura GraphQL Engine `v2.19.0` onwards
+2.  MySQL version 8.0 and higher 
 
 :::
 
+:::tip Supported features
+
+Hasura currently supports queries, table relationships and permissions on MySQL.
+
+:::
+
+:::warning Deprecation Notice
+
+The previous [MySQL preview implementation](/databases/mysql/deprecated/index.mdx) has been deprecated in favor of this
+new implementation built using our [GraphQL Data Connectors](https://hasura.io/blog/hasura-graphql-data-connectors/).
+
+:::
+
+## Coming soon for MySQL
+
+- [Remote relationships](/remote-schemas/remote-relationships/index.mdx)
+- [Mutations](/mutations/index.mdx)
+- [Subscriptions](/subscriptions/index.mdx)
+- [Event triggers](/event-triggers/index.mdx)
+
 ## Resources
 
-- [Check out our get started guide for MySQL](/databases/mysql/getting-started.mdx).
-
+- Check out the [Getting Started with Docker](/databases/mysql/docker.mdx) guide.
 - If you're interested in learning more about MySQL, check out
   [this tutorial](https://hasura.io/learn/database/mysql/introduction/) from our Learn site.
