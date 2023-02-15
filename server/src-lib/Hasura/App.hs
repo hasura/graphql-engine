@@ -814,6 +814,7 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore ch
             unLogger logger . mkGenericLog @String LevelInfo "sources-ping"
       liftIO
         ( runPingSources
+            env
             pingLog
             (scSourcePingConfig <$> getSchemaCache cacheRef)
         )

@@ -9,6 +9,7 @@ where
 
 import Data.Aeson (object, (.=))
 import Data.Aeson.Types (Pair)
+import Data.Environment qualified as Env
 import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection qualified as PG
 import Hasura.Backends.Postgres.Connection.Connect (withPostgresDB)
@@ -30,10 +31,10 @@ data CockroachDbVersion = CockroachDbVersion
   deriving (Eq, Show)
 
 -- | Check cockroachdb version compatability.
-runCockroachVersionCheck :: PG.PostgresConnConfiguration -> IO (Either QErr ())
-runCockroachVersionCheck connConf = do
+runCockroachVersionCheck :: Env.Environment -> PG.PostgresConnConfiguration -> IO (Either QErr ())
+runCockroachVersionCheck env connConf = do
   result <-
-    withPostgresDB connConf $
+    withPostgresDB env connConf $
       PG.rawQE PG.dmlTxErrorHandler (PG.fromText "select version();") [] False
   pure case result of
     -- running the query failed

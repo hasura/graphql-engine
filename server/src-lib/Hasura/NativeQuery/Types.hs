@@ -14,6 +14,7 @@ where
 
 import Autodocodec
 import Data.Aeson
+import Data.Environment qualified as Env
 import Data.Kind
 import Data.Text.Extended (ToTxt)
 import Hasura.Base.Error
@@ -58,14 +59,14 @@ class
   nativeQueryInfoName = absurd
 
   -- | Projection function, producing a 'NativeQueryInfo b' from a 'TrackNativeQuery b'.
-  nativeQueryTrackToInfo :: SourceConnConfiguration b -> TrackNativeQuery b -> ExceptT NativeQueryError IO (NativeQueryInfo b)
-  default nativeQueryTrackToInfo :: (TrackNativeQuery b ~ Void) => SourceConnConfiguration b -> TrackNativeQuery b -> ExceptT NativeQueryError IO (NativeQueryInfo b)
-  nativeQueryTrackToInfo _ = absurd
+  nativeQueryTrackToInfo :: Env.Environment -> SourceConnConfiguration b -> TrackNativeQuery b -> ExceptT NativeQueryError IO (NativeQueryInfo b)
+  default nativeQueryTrackToInfo :: (TrackNativeQuery b ~ Void) => Env.Environment -> SourceConnConfiguration b -> TrackNativeQuery b -> ExceptT NativeQueryError IO (NativeQueryInfo b)
+  nativeQueryTrackToInfo _ _ = absurd
 
   -- | Validate the native query against the database.
-  validateNativeQueryAgainstSource :: (MonadIO m, MonadError NativeQueryError m) => SourceConnConfiguration b -> NativeQueryInfo b -> m ()
-  default validateNativeQueryAgainstSource :: (NativeQueryInfo b ~ Void) => SourceConnConfiguration b -> NativeQueryInfo b -> m ()
-  validateNativeQueryAgainstSource _ = absurd
+  validateNativeQueryAgainstSource :: (MonadIO m, MonadError NativeQueryError m) => Env.Environment -> SourceConnConfiguration b -> NativeQueryInfo b -> m ()
+  default validateNativeQueryAgainstSource :: (NativeQueryInfo b ~ Void) => Env.Environment -> SourceConnConfiguration b -> NativeQueryInfo b -> m ()
+  validateNativeQueryAgainstSource _ _ = absurd
 
 -- | Our API endpoint solution wraps all request payload types in 'AnyBackend'
 -- for its multi-backend support, but type families must be fully applied to

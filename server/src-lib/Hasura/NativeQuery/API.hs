@@ -21,6 +21,7 @@ where
 
 import Control.Lens (preview, (^?))
 import Data.Aeson
+import Data.Environment qualified as Env
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.NativeQuery.Types
@@ -89,9 +90,10 @@ runTrackNativeQuery ::
     HasServerConfigCtx m,
     MonadIO m
   ) =>
+  Env.Environment ->
   BackendTrackNativeQuery b ->
   m EncJSON
-runTrackNativeQuery (BackendTrackNativeQuery trackNativeQueryRequest) = do
+runTrackNativeQuery env (BackendTrackNativeQuery trackNativeQueryRequest) = do
   throwIfFeatureDisabled
 
   sourceConnConfig <-
@@ -100,7 +102,7 @@ runTrackNativeQuery (BackendTrackNativeQuery trackNativeQueryRequest) = do
       =<< getMetadata
 
   (metadata :: NativeQueryInfo b) <- do
-    r <- liftIO $ runExceptT $ nativeQueryTrackToInfo @b sourceConnConfig trackNativeQueryRequest
+    r <- liftIO $ runExceptT $ nativeQueryTrackToInfo @b env sourceConnConfig trackNativeQueryRequest
     case r of
       Right nq -> pure nq
       Left (NativeQueryParseError e) -> throw400 ParseFailed e
