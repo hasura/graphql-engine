@@ -897,8 +897,8 @@ const proMainReducer = (state = { ...mainState, ...defaultState }, action) => {
         project: {
           ...state.project,
           loading: false,
-          entitlements: action.data.entitlements,
         },
+        projectEntitlements: action?.data?.entitlements,
       };
     case ERROR_FETCHING_LUX_PROJECT_ENTITLEMENTS:
       return {

@@ -302,7 +302,8 @@ class Main extends React.Component {
 
     // get the plan name and entitlements array from the project
     const {
-      project: { plan_name = '', entitlements = [] },
+      project: { plan_name = '' },
+      projectEntitlements = [],
     } = this.props;
 
     // entitlements are added only for projects on the
@@ -320,7 +321,7 @@ class Main extends React.Component {
     // if the plan is one of the new plans, check if the
     // metrics entitlement is enabled
     const { entitlement: { config_is_enabled } = {} } =
-      entitlements.find(
+      projectEntitlements.find(
         ({ entitlement: { type } }) =>
           type === Project_Entitlement_Types_Enum.ConsoleMetricsTab
       ) || {};
@@ -682,6 +683,7 @@ const mapStateToProps = (state, ownProps) => {
     projectName: project.name,
     projectId: project.id,
     requestHeaders: state.tables.dataHeaders,
+    projectEntitlements: state.main.projectEntitlements,
   };
 };
 
