@@ -392,7 +392,7 @@ deleteFromTable scenario tableInfo fieldName description = runMaybeT $ do
   lift do
     let whereName = Name._where
         whereDesc = "filter the rows which have to be deleted"
-    whereArg <- P.field whereName (Just whereDesc) <$> boolExp tableInfo
+    whereArg <- P.field whereName (Just whereDesc) <$> tableBoolExp tableInfo
     selection <- mutationSelectionSet tableInfo
     let columns = tableColumns tableInfo
     pure $

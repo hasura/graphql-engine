@@ -6,26 +6,23 @@ import Data.Has (Has (getter))
 import Data.HashMap.Strict qualified as HM
 import Data.Monoid (Ap (Ap, getAp))
 import Hasura.GraphQL.Schema.Backend
-  ( BackendSchema (columnParser),
-    BackendTableSelectSchema (tableArguments),
+  ( BackendCustomTypeSelectSchema (..),
+    BackendSchema (columnParser),
     MonadBuildSchema,
   )
 import Hasura.GraphQL.Schema.Common
-  ( SchemaContext (scRole),
-    SchemaT,
-    askTableInfo,
+  ( SchemaT,
     retrieve,
   )
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
-  ( tablePermissionsInfo,
-    tableSelectionList,
+  ( customTypeSelectionList,
   )
-import Hasura.GraphQL.Schema.Table (tableSelectPermissions)
 import Hasura.NativeQuery.IR (NativeQuery (..))
 import Hasura.NativeQuery.Metadata
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp (gBoolExpTrue)
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Select (QueryDB (QDBMultipleRows))
 import Hasura.RQL.IR.Select qualified as IR
@@ -41,7 +38,6 @@ import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
   ( ResolvedSourceCustomization (_rscNamingConvention),
   )
-import Hasura.RQL.Types.Table (tableInfoName)
 import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
@@ -49,7 +45,7 @@ import Language.GraphQL.Draft.Syntax.QQ qualified as G
 defaultBuildNativeQueryRootFields ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
-    BackendTableSelectSchema b
+    BackendCustomTypeSelectSchema b
   ) =>
   NativeQueryInfo b ->
   SchemaT
@@ -57,20 +53,19 @@ defaultBuildNativeQueryRootFields ::
     m
     (Maybe (P.FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
-  tableInfo <- askTableInfo @b nqiReturns
   let fieldName = getNativeQueryName nqiRootFieldName
   nativeQueryArgsParser <- nativeQueryArgumentsSchema @b @r @m @n fieldName nqiArguments
+
   sourceInfo :: SourceInfo b <- asks getter
+
   let sourceName = _siName sourceInfo
-      tableName = tableInfoName tableInfo
       tCase = _rscNamingConvention $ _siCustomization sourceInfo
       description = G.Description <$> nqiDescription
-  stringifyNumbers <- retrieve Options.soStringifyNumbers
-  roleName <- retrieve scRole
 
-  selectionSetParser <- MaybeT $ tableSelectionList @b @r @m @n tableInfo
-  tableArgsParser <- lift $ tableArguments @b @r @m @n tableInfo
-  selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
+  stringifyNumbers <- retrieve Options.soStringifyNumbers
+
+  selectionSetParser <- MaybeT $ customTypeSelectionList @b @r @m @n (getNativeQueryName nqiRootFieldName) nqiReturns
+  customTypesArgsParser <- lift $ customTypeArguments @b @r @m @n (getNativeQueryName nqiRootFieldName) nqiReturns
 
   let interpolatedQuery nqArgs =
         InterpolatedQuery $
@@ -86,8 +81,15 @@ defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
             (getInterpolatedQuery nqiCode)
 
   pure $
-    P.setFieldParserOrigin (MO.MOSourceObjId sourceName (mkAnyBackend $ MO.SMOTable @b tableName)) $
-      P.subselection fieldName description ((,) <$> tableArgsParser <*> nativeQueryArgsParser) selectionSetParser
+    P.setFieldParserOrigin (MO.MOSourceObjId sourceName (mkAnyBackend $ MO.SMONativeQuery @b nqiRootFieldName)) $
+      P.subselection
+        fieldName
+        description
+        ( (,)
+            <$> customTypesArgsParser
+            <*> nativeQueryArgsParser
+        )
+        selectionSetParser
         <&> \((args, nqArgs), fields) ->
           QDBMultipleRows $
             IR.AnnSelectG
@@ -99,7 +101,7 @@ defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
                         nqArgs,
                         nqInterpolatedQuery = interpolatedQuery nqArgs
                       },
-                IR._asnPerm = tablePermissionsInfo selectPermissions,
+                IR._asnPerm = IR.TablePerm gBoolExpTrue Nothing,
                 IR._asnArgs = args,
                 IR._asnStrfyNum = stringifyNumbers,
                 IR._asnNamingConvention = Just tCase

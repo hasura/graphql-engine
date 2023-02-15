@@ -513,6 +513,7 @@ library
                      , GHC.AssertNF.CPP
                      , GHC.Stats.Extended
                      , GHC.Generics.Extended
+
                      , Hasura.App
                      , Hasura.Metadata.Class
 
@@ -717,6 +718,9 @@ library
                      , Hasura.Server.Utils
                      , Hasura.Server.Version
                      , Hasura.ShutdownLatch
+
+                     , Hasura.CustomReturnType
+                     , Hasura.CustomReturnType.Common
 
                      , Hasura.EncJSON
                      , Hasura.GraphQL.Execute.Query

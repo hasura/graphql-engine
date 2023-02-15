@@ -8,7 +8,6 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
@@ -39,17 +38,15 @@ spec =
 
 -- ** Setup and teardown
 
--- we add and track a table here as it's the only way we can currently define a
--- return type
 schema :: [Schema.Table]
 schema =
-  [ (table "already_tracked_return_type")
-      { tableColumns =
+  [ (Schema.table "already_tracked_return_type")
+      { Schema.tableColumns =
           [ Schema.column "divided" Schema.TInt
           ]
       },
-    (table "stuff")
-      { tableColumns =
+    (Schema.table "stuff")
+      { Schema.tableColumns =
           [ Schema.column "thing" Schema.TInt,
             Schema.column "date" Schema.TUTCTime
           ]
@@ -66,7 +63,6 @@ tests opts = do
 
   it "Fails to track a Native Query without admin access" $
     \testEnv -> do
-      let schemaName = Schema.getSchemaName testEnv
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadataWithStatusAndHeaders
@@ -85,8 +81,8 @@ tests opts = do
                   denominator: int
                   target_date: date
                 returns:
-                  name: already_tracked_return_type
-                  schema: *schemaName
+                  columns:
+                    divided: integer
             |]
         )
         [yaml|
@@ -140,8 +136,6 @@ tests opts = do
 
   describe "Implementation" $ do
     it "Adds a simple native access function with no arguments and returns a 200" $ \testEnv -> do
-      let schemaName = Schema.getSchemaName testEnv
-
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
@@ -156,8 +150,8 @@ tests opts = do
                 arguments:
                   unused: int
                 returns:
-                  name: already_tracked_return_type
-                  schema: *schemaName
+                  columns:
+                    divided: integer
             |]
         )
         [yaml|
@@ -165,8 +159,6 @@ tests opts = do
         |]
 
     it "Adding a native access function with broken SQL returns a 400" $ \testEnv -> do
-      let schemaName = Schema.getSchemaName testEnv
-
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadataWithStatus
@@ -183,8 +175,8 @@ tests opts = do
                   denominator: int
                   target_date: date
                 returns:
-                  name: already_tracked_return_type
-                  schema: *schemaName
+                  columns:
+                    divided: integer
             |]
         )
         [yaml|
@@ -194,8 +186,6 @@ tests opts = do
         |]
 
     it "Checks for the native access function" $ \testEnv -> do
-      let schemaName = Schema.getSchemaName testEnv
-
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
@@ -211,8 +201,8 @@ tests opts = do
                   denominator: int
                   target_date: date
                 returns:
-                  name: already_tracked_return_type
-                  schema: *schemaName
+                  columns:
+                    divided: integer
             |]
         )
         [yaml|
@@ -236,13 +226,11 @@ tests opts = do
               denominator: int
               target_date: date
             returns:
-              name: already_tracked_return_type
-              schema: hasura
+              columns:
+                divided: integer
         |]
 
     it "Drops a native access function and returns a 200" $ \testEnv -> do
-      let schemaName = Schema.getSchemaName testEnv
-
       _ <-
         GraphqlEngine.postMetadata
           testEnv
@@ -257,8 +245,8 @@ tests opts = do
                 denominator: int
                 target_date: date
               returns:
-                name: already_tracked_return_type
-                schema: *schemaName
+                columns:
+                  divided: integer
           |]
 
       shouldReturnYaml
@@ -277,8 +265,6 @@ tests opts = do
         |]
 
     it "Checks the native access function can be deleted" $ \testEnv -> do
-      let schemaName = Schema.getSchemaName testEnv
-
       _ <-
         GraphqlEngine.postMetadata
           testEnv
@@ -293,8 +279,8 @@ tests opts = do
                 denominator: int
                 target_date: date
               returns:
-                name: already_tracked_return_type
-                schema: *schemaName
+                columns:
+                  divided: integer
           |]
 
       _ <-
@@ -345,7 +331,6 @@ tests opts = do
   describe "Validation fails on track a native query when query" do
     it "has a syntax error" $
       \testEnv -> do
-        let schemaName = Schema.getSchemaName testEnv
         let spicyQuery :: Text
             spicyQuery = "query bad"
         shouldReturnYaml
@@ -364,8 +349,8 @@ tests opts = do
                     denominator: int
                     target_date: date
                   returns:
-                    name: already_tracked_return_type
-                    schema: *schemaName
+                    columns:
+                      divided: integer
               |]
           )
           [yaml|
@@ -386,7 +371,6 @@ tests opts = do
 
     it "refers to non existing table" $
       \testEnv -> do
-        let schemaName = Schema.getSchemaName testEnv
         let spicyQuery :: Text
             spicyQuery = "SELECT thing / {{denominator}} AS divided FROM does_not_exist WHERE date = {{target_date}}"
         shouldReturnYaml
@@ -405,8 +389,8 @@ tests opts = do
                     denominator: int
                     target_date: date
                   returns:
-                    name: already_tracked_return_type
-                    schema: *schemaName
+                    columns:
+                      divided: integer
               |]
           )
           [yaml|

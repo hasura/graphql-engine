@@ -2,7 +2,8 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
 module Hasura.GraphQL.Schema.OrderBy
-  ( orderByExp,
+  ( tableOrderByExp,
+    customTypeOrderByExp,
   )
 where
 
@@ -10,6 +11,9 @@ import Data.Has
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
+import Hasura.Base.Error
+import Hasura.CustomReturnType (CustomReturnType)
+import Hasura.CustomReturnType.Common (toFieldInfo)
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
@@ -38,6 +42,7 @@ import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Language.GraphQL.Draft.Syntax qualified as G
+import Type.Reflection
 
 {-# INLINE orderByOperator #-}
 orderByOperator ::
@@ -60,23 +65,48 @@ orderByOperator tCase sourceInfo = case tCase of
 -- >   coln: order_by
 -- >   obj-rel: <remote-table>_order_by
 -- > }
-orderByExp ::
+customTypeOrderByExp ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
-  TableInfo b ->
+  ( MonadBuildSchema b r m n
+  ) =>
+  G.Name ->
+  CustomReturnType b ->
   SchemaT r m (Parser 'Input n [IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)])
-orderByExp tableInfo = do
+customTypeOrderByExp name customReturnType =
+  case toFieldInfo customReturnType of
+    Nothing -> throw500 $ "Error creating fields for custom type " <> tshow name
+    Just tableFields -> do
+      let description =
+            G.Description $
+              "Ordering options when selecting data from " <> name <<> "."
+          memoizeKey = name
+      orderByExpInternal (C.fromCustomName name) description tableFields memoizeKey
+
+-- | Corresponds to an object type for an order by.
+--
+-- > input table_order_by {
+-- >   col1: order_by
+-- >   col2: order_by
+-- >   .     .
+-- >   .     .
+-- >   coln: order_by
+-- >   obj-rel: <remote-table>_order_by
+-- > }
+orderByExpInternal ::
+  forall b r m n name.
+  (Ord name, Typeable name, MonadBuildSchema b r m n) =>
+  C.GQLNameIdentifier ->
+  G.Description ->
+  [FieldInfo b] ->
+  name ->
+  SchemaT r m (Parser 'Input n [IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)])
+orderByExpInternal gqlName description tableFields memoizeKey = do
   sourceInfo <- asks getter
-  P.memoizeOn 'orderByExp (_siName sourceInfo, tableInfoName tableInfo) do
+  P.memoizeOn 'orderByExpInternal (_siName sourceInfo, memoizeKey) do
     let customization = _siCustomization sourceInfo
         tCase = _rscNamingConvention customization
         mkTypename = runMkTypename $ _rscTypeNames customization
-    tableGQLName <- getTableIdentifierName tableInfo
-    let name = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableOrderByTypeName tableGQLName
-        description =
-          G.Description $
-            "Ordering options when selecting data from " <> tableInfoName tableInfo <<> "."
-    tableFields <- tableSelectFields tableInfo
+    let name = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableOrderByTypeName gqlName
     fieldParsers <- sequenceA . catMaybes <$> traverse (mkField sourceInfo tCase) tableFields
     pure $ concat . catMaybes <$> P.object name (Just description) fieldParsers
   where
@@ -103,7 +133,7 @@ orderByExp tableInfo = do
           let newPerms = fmap partialSQLExpToUnpreparedValue <$> spiFilter perms
           case riType relationshipInfo of
             ObjRel -> do
-              otherTableParser <- lift $ orderByExp remoteTableInfo
+              otherTableParser <- lift $ tableOrderByExp remoteTableInfo
               pure $ do
                 otherTableOrderBy <- join <$> P.fieldOptional fieldName Nothing (P.nullable otherTableParser)
                 pure $ fmap (map $ fmap $ IR.AOCObjectRelation relationshipInfo newPerms) otherTableOrderBy
@@ -150,6 +180,30 @@ orderByExp tableInfo = do
                     aggregationOrderBy
             ReturnsOthers -> empty
         FIRemoteRelationship _ -> empty
+
+-- | Corresponds to an object type for an order by.
+--
+-- > input table_order_by {
+-- >   col1: order_by
+-- >   col2: order_by
+-- >   .     .
+-- >   .     .
+-- >   coln: order_by
+-- >   obj-rel: <remote-table>_order_by
+-- > }
+tableOrderByExp ::
+  forall b r m n.
+  MonadBuildSchema b r m n =>
+  TableInfo b ->
+  SchemaT r m (Parser 'Input n [IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)])
+tableOrderByExp tableInfo = do
+  tableGQLName <- getTableIdentifierName tableInfo
+  tableFields <- tableSelectFields tableInfo
+  let description =
+        G.Description $
+          "Ordering options when selecting data from " <> tableInfoName tableInfo <<> "."
+      memoizeKey = tableInfoName tableInfo
+  orderByExpInternal tableGQLName description tableFields memoizeKey
 
 -- FIXME!
 -- those parsers are directly using Postgres' SQL representation of

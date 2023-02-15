@@ -109,7 +109,7 @@ defaultAggregationPredicatesParser aggFns ti = runMaybeT do
                 aggPredDistinct <- fuse $ return $ fieldOptionalDefault Name._distinct Nothing False P.boolean
                 let aggPredFunctionName = fnName
                 aggPredPredicate <- fuse $ P.field Name._predicate Nothing <$> lift (comparisonExps @b (ColumnScalar fnReturnType))
-                aggPredFilter <- fuse $ P.fieldOptional Name._filter Nothing <$> lift (boolExp relTable)
+                aggPredFilter <- fuse $ P.fieldOptional Name._filter Nothing <$> lift (tableBoolExp relTable)
                 pure $ AggregationPredicate {..}
           )
   where

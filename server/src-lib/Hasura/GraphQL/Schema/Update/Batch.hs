@@ -11,7 +11,7 @@ import Data.Has (Has (getter))
 import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Extended (toTxt, (<>>))
 import Hasura.GraphQL.Schema.Backend (BackendTableSelectSchema (..), BackendUpdateOperatorsSchema (..), MonadBuildSchema)
-import Hasura.GraphQL.Schema.BoolExp (AggregationPredicatesSchema, boolExp)
+import Hasura.GraphQL.Schema.BoolExp (AggregationPredicatesSchema, tableBoolExp)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation (mutationSelectionSet, primaryKeysArguments)
 import Hasura.GraphQL.Schema.NamingCase
@@ -97,7 +97,7 @@ updateTable mkSingleBatchUpdateVariant scenario tableInfo tableGqlName = runMayb
   let parseOutput = lift $ fmap MOutMultirowFields <$> mutationSelectionSet tableInfo
 
   buildAnnotatedUpdateGField scenario tableInfo updateTableFieldName updateTableFieldDescription parseOutput $ \updatePerms -> lift $ do
-    whereArg <- P.field Name._where (Just whereDesc) <$> boolExp tableInfo
+    whereArg <- P.field Name._where (Just whereDesc) <$> tableBoolExp tableInfo
     updateOperators <- parseUpdateOperators tableInfo updatePerms
     pure $ mkSingleBatchUpdateVariant <$> (UpdateBatch <$> updateOperators <*> whereArg)
   where
@@ -138,7 +138,7 @@ updateTableMany mkSingleBatchUpdateVariant scenario tableInfo tableGqlName = run
       . P.list
       . P.object updatesObjectName Nothing
       <$> do
-        whereExp <- P.field Name._where (Just whereDesc) <$> boolExp tableInfo
+        whereExp <- P.field Name._where (Just whereDesc) <$> tableBoolExp tableInfo
         pure $ UpdateBatch <$> updateOperators <*> whereExp
   where
     tableName = tableInfoName tableInfo

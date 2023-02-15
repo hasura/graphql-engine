@@ -91,7 +91,7 @@ conflictObjectParser tableInfo maybeUpdatePerms constraints = do
       mkTypename = runMkTypename $ _rscTypeNames customization
   updateColumnsEnum <- updateColumnsPlaceholderParser tableInfo
   constraintParser <- conflictConstraint constraints tableInfo
-  whereExpParser <- boolExp tableInfo
+  whereExpParser <- tableBoolExp tableInfo
   tableGQLName <- getTableIdentifierName tableInfo
   let objectName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkOnConflictTypeName tableGQLName
       objectDesc = G.Description $ "on_conflict condition type for table " <>> tableName

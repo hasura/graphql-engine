@@ -26,12 +26,13 @@ import Control.Lens (preview, (^?))
 import Data.Aeson
 import Data.Environment qualified as Env
 import Hasura.Base.Error
+import Hasura.CustomReturnType (CustomReturnType)
 import Hasura.EncJSON
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.NativeQuery.Metadata (NativeQueryArgumentName, NativeQueryInfo (..), parseInterpolatedQuery)
 import Hasura.NativeQuery.Types
 import Hasura.Prelude
-import Hasura.RQL.Types.Backend (Backend, ScalarType, SourceConnConfiguration, TableName)
+import Hasura.RQL.Types.Backend (Backend, ScalarType, SourceConnConfiguration)
 import Hasura.RQL.Types.Common (SourceName, sourceNameToText, successMsg)
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
@@ -50,7 +51,7 @@ data TrackNativeQuery (b :: BackendType) = TrackNativeQuery
     tnqCode :: Text,
     tnqArguments :: HashMap NativeQueryArgumentName (ScalarType b),
     tnqDescription :: Maybe Text,
-    tnqReturns :: TableName b
+    tnqReturns :: CustomReturnType b
   }
 
 instance (Backend b) => HasCodec (TrackNativeQuery b) where

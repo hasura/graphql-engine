@@ -26,6 +26,7 @@ module Hasura.GraphQL.Schema.Backend
   ( -- * Main Types
     BackendSchema (..),
     BackendTableSelectSchema (..),
+    BackendCustomTypeSelectSchema (..),
     BackendUpdateOperatorsSchema (..),
     MonadBuildSchema,
 
@@ -39,6 +40,7 @@ where
 
 import Data.Kind (Type)
 import Data.Text.Casing (GQLNameIdentifier)
+import Hasura.CustomReturnType (CustomReturnType)
 import Hasura.GraphQL.ApolloFederation (ApolloFederationParserFunction)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
@@ -299,6 +301,19 @@ class Backend b => BackendTableSelectSchema (b :: BackendType) where
     SchemaT r m (Maybe (FieldParser n (AggSelectExp b)))
 
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
+
+class Backend b => BackendCustomTypeSelectSchema (b :: BackendType) where
+  customTypeArguments ::
+    MonadBuildSourceSchema b r m n =>
+    G.Name ->
+    CustomReturnType b ->
+    SchemaT r m (InputFieldsParser n (IR.SelectArgsG b (UnpreparedValue b)))
+
+  customTypeSelectionSet ::
+    MonadBuildSourceSchema b r m n =>
+    G.Name ->
+    CustomReturnType b ->
+    SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 
 class Backend b => BackendUpdateOperatorsSchema (b :: BackendType) where
   -- | Intermediate Representation of the set of update operators that act

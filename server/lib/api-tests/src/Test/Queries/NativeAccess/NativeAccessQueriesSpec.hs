@@ -46,13 +46,7 @@ spec =
 -- return type
 schema :: [Schema.Table]
 schema =
-  [ (table "hello_world_table")
-      { tableColumns =
-          [ Schema.column "one" Schema.TStr,
-            Schema.column "two" Schema.TStr
-          ]
-      },
-    (table "article")
+  [ (table "article")
       { tableColumns =
           [ Schema.column "id" Schema.TInt,
             Schema.column "title" Schema.TStr,
@@ -66,14 +60,6 @@ schema =
               Schema.VUTCTime (UTCTime (fromOrdinalDate 2000 1) 0)
             ]
           ]
-      },
-    (table "article_excerpt")
-      { tableColumns =
-          [ Schema.column "id" Schema.TInt,
-            Schema.column "title" Schema.TStr,
-            Schema.column "excerpt" Schema.TStr,
-            Schema.column "date" Schema.TUTCTime
-          ]
       }
   ]
 
@@ -86,10 +72,9 @@ tests opts = do
       shouldBe = shouldReturnYaml opts
 
   describe "Testing Native Access" $ do
-    it "Runs a simple query that takes no parameters" $ \testEnvironment -> do
+    it "Runs the absolute simplest query that takes no parameters" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
-          schemaName = Schema.getSchemaName testEnvironment
 
       shouldReturnYaml
         opts
@@ -103,8 +88,161 @@ tests opts = do
                 root_field_name: hello_world_function
                 code: *query
                 returns:
-                  name: hello_world_table
-                  schema: *schemaName
+                  columns:
+                    one: text
+                    two: text
+            |]
+        )
+        [yaml|
+          message: success
+        |]
+
+      let expected =
+            [yaml|
+                data:
+                  hello_world_function:
+                    - one: "hello"
+                      two: "world"
+                    - one: "welcome"
+                      two: "friend"
+              |]
+
+          actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphql
+              testEnvironment
+              [graphql|
+              query {
+                hello_world_function {
+                  one
+                  two
+                }
+              }
+           |]
+
+      actual `shouldBe` expected
+
+    it "Runs simple query with a basic where clause" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          source = BackendType.backendSourceName backendTypeMetadata
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnvironment
+            [yaml|
+              type: pg_track_native_query
+              args:
+                type: query
+                source: *source
+                root_field_name: hello_world_function
+                code: *query
+                returns:
+                  columns:
+                    one: text
+                    two: text
+            |]
+        )
+        [yaml|
+          message: success
+        |]
+
+      let expected =
+            [yaml|
+                data:
+                  hello_world_function:
+                    - one: "hello"
+                      two: "world"
+              |]
+
+          actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphql
+              testEnvironment
+              [graphql|
+              query {
+                hello_world_function (where: { two: { _eq: "world" } }){
+                  one
+                  two
+                }
+              }
+           |]
+
+      actual `shouldBe` expected
+
+    it "Runs a simple query using distinct_on and order_by" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          source = BackendType.backendSourceName backendTypeMetadata
+
+          queryWithDuplicates :: Text
+          queryWithDuplicates = "SELECT * FROM (VALUES ('hello', 'world'), ('hello', 'friend')) as t(\"one\", \"two\")"
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnvironment
+            [yaml|
+              type: pg_track_native_query
+              args:
+                type: query 
+                source: *source
+                root_field_name: hello_world_function
+                code: *queryWithDuplicates
+                returns:
+                  columns:
+                    one: text
+                    two: text
+            |]
+        )
+        [yaml|
+          message: success
+        |]
+
+      let expected =
+            [yaml|
+                data:
+                  hello_world_function:
+                    - one: "hello"
+                      two: "world"
+              |]
+
+          actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphql
+              testEnvironment
+              [graphql|
+              query {
+                hello_world_function ( 
+                  distinct_on: [one]
+                  order_by: [{one:asc}]
+                ){
+                  one
+                  two
+                }
+              }
+           |]
+
+      actual `shouldBe` expected
+
+    it "Runs a simple query that takes no parameters" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          source = BackendType.backendSourceName backendTypeMetadata
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnvironment
+            [yaml|
+              type: pg_track_native_query
+              args:
+                type: query
+                source: *source
+                root_field_name: hello_world_function
+                code: *query
+                returns:
+                  columns:
+                    one: text
+                    two: text
             |]
         )
         [yaml|
@@ -134,10 +272,9 @@ tests opts = do
 
       actual `shouldBe` expected
 
-    it "Runs a simple query that takes one dummy parameter" $ \testEnvironment -> do
+    it "Runs a simple query that takes one dummy parameter and order_by" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
-          schemaName = Schema.getSchemaName testEnvironment
 
       shouldReturnYaml
         opts
@@ -153,8 +290,9 @@ tests opts = do
                   dummy: varchar
                 code: *query
                 returns:
-                  name: hello_world_table
-                  schema: *schemaName
+                  columns:
+                    one: text
+                    two: text
             |]
         )
         [yaml|
@@ -189,7 +327,6 @@ tests opts = do
 
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
-          schemaName = Schema.getSchemaName testEnvironment
 
       shouldReturnYaml
         opts
@@ -203,8 +340,9 @@ tests opts = do
                 root_field_name: hello_comment_function
                 code: *spicyQuery
                 returns:
-                  name: hello_world_table
-                  schema: *schemaName
+                  columns:
+                    one: text
+                    two: text
             |]
         )
         [yaml|
@@ -239,7 +377,6 @@ tests opts = do
     it "Runs a simple query that takes one parameter and uses it multiple times" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
-          schemaName = Schema.getSchemaName testEnvironment
 
       let spicyQuery :: Text
           spicyQuery =
@@ -265,8 +402,11 @@ tests opts = do
                 arguments:
                   length: int
                 returns:
-                  name: article_excerpt
-                  schema: *schemaName
+                  columns:
+                    id: integer
+                    title: text
+                    excerpt: text
+                    date: date
             |]
         )
         [yaml|
@@ -303,7 +443,6 @@ tests opts = do
     it "Uses two queries with the same argument names and ensure they don't mess with one another" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
-          schemaName = Schema.getSchemaName testEnvironment
 
       let spicyQuery :: Text
           spicyQuery =
@@ -329,8 +468,11 @@ tests opts = do
                 arguments:
                   length: int
                 returns:
-                  name: article_excerpt
-                  schema: *schemaName
+                  columns:
+                    id: integer
+                    title: text
+                    excerpt: text
+                    date: date
             |]
         )
         [yaml|
@@ -351,8 +493,11 @@ tests opts = do
                 arguments:
                   length: int
                 returns:
-                  name: article_excerpt
-                  schema: *schemaName
+                  columns:
+                    id: integer
+                    title: text
+                    excerpt: text
+                    date: date
             |]
         )
         [yaml|
@@ -388,7 +533,6 @@ tests opts = do
     it "Uses a one parameter query and uses it multiple times" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
-          schemaName = Schema.getSchemaName testEnvironment
 
       let spicyQuery :: Text
           spicyQuery =
@@ -414,8 +558,11 @@ tests opts = do
                 arguments:
                   length: int
                 returns:
-                  name: article_excerpt
-                  schema: *schemaName
+                  columns:
+                    id: integer
+                    title: text
+                    excerpt: text
+                    date: date
             |]
         )
         [yaml|
@@ -451,7 +598,6 @@ tests opts = do
     it "Uses a one parameter query, passing it a GraphQL variable" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
-          schemaName = Schema.getSchemaName testEnvironment
 
       let spicyQuery :: Text
           spicyQuery =
@@ -477,8 +623,11 @@ tests opts = do
                 arguments:
                   length: int
                 returns:
-                  name: article_excerpt
-                  schema: *schemaName
+                  columns:
+                    id: integer
+                    title: text
+                    excerpt: text
+                    date: date
             |]
         )
         [yaml|

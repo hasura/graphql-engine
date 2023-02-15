@@ -19,6 +19,7 @@ import Autodocodec qualified as AC
 import Data.Aeson
 import Data.Bifunctor (first)
 import Data.Text qualified as T
+import Hasura.CustomReturnType (CustomReturnType)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.NativeQuery.Types
 import Hasura.Prelude hiding (first)
@@ -106,7 +107,7 @@ instance NFData (NativeQueryArgumentName)
 data NativeQueryInfo (b :: BackendType) = NativeQueryInfo
   { nqiRootFieldName :: NativeQueryName,
     nqiCode :: InterpolatedQuery NativeQueryArgumentName,
-    nqiReturns :: TableName b,
+    nqiReturns :: CustomReturnType b,
     nqiArguments :: HashMap NativeQueryArgumentName (ScalarType b),
     nqiDescription :: Maybe Text
   }

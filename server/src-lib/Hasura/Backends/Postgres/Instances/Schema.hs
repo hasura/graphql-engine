@@ -283,6 +283,15 @@ instance
   tableSelectionSet = defaultTableSelectionSet
 
 instance
+  ( PostgresSchema pgKind,
+    Backend ('Postgres pgKind)
+  ) =>
+  BS.BackendCustomTypeSelectSchema ('Postgres pgKind)
+  where
+  customTypeArguments = defaultCustomTypeArgs
+  customTypeSelectionSet = defaultCustomTypeSelectionSet
+
+instance
   ( Backend ('Postgres pgKind),
     PostgresSchema pgKind
   ) =>

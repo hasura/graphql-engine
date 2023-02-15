@@ -13,6 +13,8 @@ module Hasura.GraphQL.Schema.Select
     defaultSelectTableAggregate,
     defaultTableArgs,
     defaultTableSelectionSet,
+    defaultCustomTypeArgs,
+    defaultCustomTypeSelectionSet,
     tableAggregationFields,
     tableConnectionArgs,
     tableConnectionSelectionSet,
@@ -23,6 +25,7 @@ module Hasura.GraphQL.Schema.Select
     tableOffsetArg,
     tablePermissionsInfo,
     tableSelectionList,
+    customTypeSelectionList,
   )
 where
 
@@ -41,6 +44,7 @@ import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
+import Hasura.CustomReturnType (CustomReturnType (..))
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
@@ -463,6 +467,65 @@ tableSelectionList ::
 tableSelectionList tableInfo =
   fmap nonNullableObjectList <$> tableSelectionSet tableInfo
 
+defaultCustomTypeSelectionSet ::
+  forall b r m n.
+  ( MonadBuildSchema b r m n
+  ) =>
+  G.Name ->
+  CustomReturnType b ->
+  SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
+defaultCustomTypeSelectionSet name customReturnType = runMaybeT $ do
+  let parseField (column, scalarType) = do
+        let -- At least in its first draft, we assume that all fields in a
+            -- custom return type are non-nullable. See NDAT-516 for progress.
+            nullability = False
+
+            -- Currently, row-level permissions are unsupported for custom
+            -- return types. In fact, permissions are unsupported: the feature
+            -- is assumed to be admin-only. If you've been asked to implement
+            -- permissions, this is the place.
+            caseBoolExpUnpreparedValue = Nothing
+
+            columnType = ColumnScalar scalarType
+            pathArg = scalarSelectionArgumentsParser columnType
+
+            -- Currently, we don't support descriptions for individual columns
+            -- of a custom return type. In future, we might want to add this as
+            -- an optional field in 'CustomReturnTypeRow'.
+            description = Nothing
+
+        columnName <- hoistMaybe (G.mkName (toTxt column))
+
+        field <- lift $ columnParser columnType (G.Nullability nullability)
+        pure $!
+          P.selection columnName description pathArg field
+            <&> IR.mkAnnColumnField column columnType caseBoolExpUnpreparedValue
+
+  let fieldName = name
+
+  parsers <- traverse parseField (Map.toList (crtColumns customReturnType))
+
+  let -- Currently, there's no useful description for a custom return
+      -- type. In future, custom return types will be declared with an
+      -- optional `description` key, which will be passed through to
+      -- here. See NDAT-518 for progress.
+      description = Nothing
+
+      -- We entirely ignore Relay for now.
+      implementsInterfaces = mempty
+
+  pure $
+    P.selectionSetObject fieldName description parsers implementsInterfaces
+      <&> parsedSelectionsToFields IR.AFExpression
+
+customTypeSelectionList ::
+  (MonadBuildSchema b r m n, BackendCustomTypeSelectSchema b) =>
+  G.Name ->
+  CustomReturnType b ->
+  SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
+customTypeSelectionList name nativeQuery =
+  fmap nonNullableObjectList <$> customTypeSelectionSet name nativeQuery
+
 -- | Converts an output type parser from object_type to [object_type!]!
 nonNullableObjectList :: Parser 'Output m a -> Parser 'Output m a
 nonNullableObjectList =
@@ -604,41 +667,96 @@ defaultTableArgs tableInfo = do
   whereParser <- tableWhereArg tableInfo
   orderByParser <- tableOrderByArg tableInfo
   distinctParser <- tableDistinctArg tableInfo
-  let result = do
-        whereArg <- whereParser
-        orderByArg <- orderByParser
-        limitArg <- tableLimitArg
-        offsetArg <- tableOffsetArg
-        distinctArg <- distinctParser
-        pure $
-          IR.SelectArgs
-            { IR._saWhere = whereArg,
-              IR._saOrderBy = orderByArg,
-              IR._saLimit = limitArg,
-              IR._saOffset = offsetArg,
-              IR._saDistinct = distinctArg
-            }
+  defaultArgsParser whereParser orderByParser distinctParser
+
+-- | Argument to filter rows returned from table selection
+-- > where: table_bool_exp
+customTypeWhereArg ::
+  forall b r m n.
+  ( MonadBuildSchema b r m n,
+    AggregationPredicatesSchema b
+  ) =>
+  G.Name ->
+  CustomReturnType b ->
+  SchemaT r m (InputFieldsParser n (Maybe (IR.AnnBoolExp b (IR.UnpreparedValue b))))
+customTypeWhereArg name customReturnType = do
+  boolExpParser <- customTypeBoolExp name customReturnType
   pure $
-    result `P.bindFields` \args -> do
-      sequence_ do
-        orderBy <- IR._saOrderBy args
-        distinct <- IR._saDistinct args
-        Just $ validateArgs orderBy distinct
-      pure args
+    fmap join $
+      P.fieldOptional whereName whereDesc $
+        P.nullable boolExpParser
   where
-    validateArgs orderByCols distinctCols = do
-      let colsLen = length distinctCols
-          initOrderBys = take colsLen $ NE.toList orderByCols
-          initOrdByCols = flip mapMaybe initOrderBys $ \ob ->
-            case IR.obiColumn ob of
-              IR.AOCColumn columnInfo -> Just $ ciColumn columnInfo
-              _ -> Nothing
-          isValid =
-            (colsLen == length initOrdByCols)
-              && all (`elem` initOrdByCols) (toList distinctCols)
-      unless isValid $
-        parseError
-          "\"distinct_on\" columns must match initial \"order_by\" columns"
+    whereName = Name._where
+    whereDesc = Just $ G.Description "filter the rows returned"
+
+-- | Argument to sort rows returned from table selection
+-- > order_by: [table_order_by!]
+customTypeOrderByArg ::
+  forall b r m n.
+  ( MonadBuildSchema b r m n
+  ) =>
+  G.Name ->
+  CustomReturnType b ->
+  SchemaT r m (InputFieldsParser n (Maybe (NonEmpty (IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)))))
+customTypeOrderByArg name customReturnType = do
+  tCase <- retrieve $ _rscNamingConvention . _siCustomization @b
+  orderByParser <- customTypeOrderByExp name customReturnType
+  let orderByName = applyFieldNameCaseCust tCase Name._order_by
+      orderByDesc = Just $ G.Description "sort the rows by one or more columns"
+  pure $ do
+    maybeOrderByExps <-
+      fmap join $
+        P.fieldOptional orderByName orderByDesc $
+          P.nullable $
+            P.list orderByParser
+    pure $ maybeOrderByExps >>= NE.nonEmpty . concat
+
+-- | Argument to distinct select on columns returned from table selection
+-- > distinct_on: [table_select_column!]
+customTypeDistinctArg ::
+  forall b r m n.
+  ( MonadBuildSchema b r m n
+  ) =>
+  G.Name ->
+  CustomReturnType b ->
+  SchemaT r m (InputFieldsParser n (Maybe (NonEmpty (Column b))))
+customTypeDistinctArg name customReturnType = do
+  tCase <- retrieve $ _rscNamingConvention . _siCustomization @b
+
+  let maybeColumnDefinitions =
+        traverse definitionFromTypeRow (Map.toList (crtColumns customReturnType))
+          >>= NE.nonEmpty
+
+  case (,) <$> G.mkName "_enum_name" <*> maybeColumnDefinitions of
+    Nothing -> throw500 $ "Error creating an enum name for custom type " <> tshow customReturnType
+    Just (enum', columnDefinitions) -> do
+      let enumName = name <> enum'
+          description = Nothing
+          columnsEnum = Just $ P.enum @n enumName description columnDefinitions
+          distinctOnName = applyFieldNameCaseCust tCase Name._distinct_on
+          distinctOnDesc = Just $ G.Description "distinct select on columns"
+
+      pure do
+        maybeDistinctOnColumns <-
+          join . join
+            <$> for
+              columnsEnum
+              (P.fieldOptional distinctOnName distinctOnDesc . P.nullable . P.list)
+        pure $ maybeDistinctOnColumns >>= NE.nonEmpty
+  where
+    definitionFromTypeRow :: (Column b, ScalarType b) -> Maybe (P.Definition P.EnumValueInfo, Column b)
+    definitionFromTypeRow (name', _) = do
+      columnName <- G.mkName (toTxt name')
+
+      let definition =
+            P.Definition
+              { dName = columnName,
+                dDescription = Nothing,
+                dOrigin = Nothing,
+                dDirectives = mempty,
+                dInfo = P.EnumValueInfo
+              }
+      pure (definition, name')
 
 -- | Argument to filter rows returned from table selection
 -- > where: table_bool_exp
@@ -650,7 +768,7 @@ tableWhereArg ::
   TableInfo b ->
   SchemaT r m (InputFieldsParser n (Maybe (IR.AnnBoolExp b (IR.UnpreparedValue b))))
 tableWhereArg tableInfo = do
-  boolExpParser <- boolExp tableInfo
+  boolExpParser <- tableBoolExp tableInfo
   pure $
     fmap join $
       P.fieldOptional whereName whereDesc $
@@ -668,7 +786,7 @@ tableOrderByArg ::
   SchemaT r m (InputFieldsParser n (Maybe (NonEmpty (IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)))))
 tableOrderByArg tableInfo = do
   tCase <- retrieve $ _rscNamingConvention . _siCustomization @b
-  orderByParser <- orderByExp tableInfo
+  orderByParser <- tableOrderByExp tableInfo
   let orderByName = applyFieldNameCaseCust tCase Name._order_by
       orderByDesc = Just $ G.Description "sort the rows by one or more columns"
   pure $ do
@@ -1023,6 +1141,67 @@ tableAggregationFields tableInfo = do
               <&> parsedSelectionsToFields IR.CFExp
        in P.subselection_ fieldName Nothing subselectionParser
             <&> IR.AFOp . IR.AggregateOp opText
+
+-- | shared implementation between tables and custom types
+defaultArgsParser ::
+  forall b r m n.
+  ( MonadBuildSchema b r m n
+  ) =>
+  InputFieldsParser n (Maybe (AnnBoolExp b (IR.UnpreparedValue b))) ->
+  InputFieldsParser n (Maybe (NonEmpty (IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)))) ->
+  InputFieldsParser n (Maybe (NonEmpty (Column b))) ->
+  SchemaT r m (InputFieldsParser n (SelectArgs b))
+defaultArgsParser whereParser orderByParser distinctParser = do
+  let result = do
+        whereArg <- whereParser
+        orderByArg <- orderByParser
+        limitArg <- tableLimitArg
+        offsetArg <- tableOffsetArg
+        distinctArg <- distinctParser
+        pure $
+          IR.SelectArgs
+            { IR._saWhere = whereArg,
+              IR._saOrderBy = orderByArg,
+              IR._saLimit = limitArg,
+              IR._saOffset = offsetArg,
+              IR._saDistinct = distinctArg
+            }
+  pure $
+    result `P.bindFields` \args -> do
+      sequence_ do
+        orderBy <- IR._saOrderBy args
+        distinct <- IR._saDistinct args
+        Just $ validateArgs orderBy distinct
+      pure args
+  where
+    validateArgs orderByCols distinctCols = do
+      let colsLen = length distinctCols
+          initOrderBys = take colsLen $ NE.toList orderByCols
+          initOrdByCols = flip mapMaybe initOrderBys $ \ob ->
+            case IR.obiColumn ob of
+              IR.AOCColumn columnInfo -> Just $ ciColumn columnInfo
+              _ -> Nothing
+          isValid =
+            (colsLen == length initOrdByCols)
+              && all (`elem` initOrdByCols) (toList distinctCols)
+      unless isValid $
+        parseError
+          "\"distinct_on\" columns must match initial \"order_by\" columns"
+
+defaultCustomTypeArgs ::
+  forall b r m n.
+  ( MonadBuildSchema b r m n,
+    AggregationPredicatesSchema b
+  ) =>
+  G.Name ->
+  CustomReturnType b ->
+  SchemaT r m (InputFieldsParser n (SelectArgs b))
+defaultCustomTypeArgs name customReturnType = do
+  whereParser <- customTypeWhereArg name customReturnType
+  orderByParser <- customTypeOrderByArg name customReturnType
+  distinctParser <- customTypeDistinctArg name customReturnType
+
+  defaultArgsParser whereParser orderByParser distinctParser
 
 -- | An individual field of a table
 --
