@@ -1,0 +1,11 @@
+diff --git a/metadata-api-types/typescript/src/models/GraphQLValue_Name.ts b/metadata-api-types/typescript/src/models/GraphQLValue_Name.ts
+index 4f3767539f..93d116500c 100644
+--- a/metadata-api-types/typescript/src/models/GraphQLValue_Name.ts
++++ b/metadata-api-types/typescript/src/models/GraphQLValue_Name.ts
+@@ -4,5 +4,5 @@
+ 
+ import type { GraphQLName } from './GraphQLName';
+ 
+-export type GraphQLValue_Name = (string | null | number | boolean | GraphQLName | Array<GraphQLValue_Name> | Record<string, GraphQLValue_Name>);
++export type GraphQLValue_Name = (string | null | number | boolean | GraphQLName | Array<GraphQLValue_Name> | {[property: string]: GraphQLValue_Name});
+ 

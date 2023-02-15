@@ -1,0 +1,4 @@
+# Everything in src/ is generated
+src/
+
+node_modules/

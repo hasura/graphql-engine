@@ -1,0 +1,39 @@
+{
+  "name": "@hasura/metadata-api",
+  "version": "0.1.0-prerelease.2",
+  "description": "Hasura GraphQL Engine Metadata API types",
+  "author": "Hasura (https://github.com/hasura/graphql-engine)",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hasura/graphql-engine.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hasura/graphql-engine/issues"
+  },
+  "homepage": "https://github.com/hasura/graphql-engine/tree/master/metadata-api-types/typescript#readme",
+  "keywords": [
+    "hasura",
+    "metadata",
+    "configuration"
+  ],
+  "exports": { 
+    ".": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.js",
+  "files": [
+    "./dist",
+    "./README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@tsconfig/recommended": "^1.0.1",
+    "openapi-typescript-codegen": "^0.23.0",
+    "typescript": "^4.9.4"
+  }
+}
