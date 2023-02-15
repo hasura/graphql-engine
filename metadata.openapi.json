@@ -294,6 +294,22 @@
                 ],
                 "type": "object"
             },
+            "BigqueryCustomReturnType": {
+                "description": "A return type for a native query.",
+                "properties": {
+                    "columns": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/ScalarType"
+                        },
+                        "description": "Return types for the native query",
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "columns"
+                ],
+                "type": "object"
+            },
             "BigqueryDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -406,6 +422,40 @@
                 "required": [
                     "role",
                     "permission"
+                ],
+                "type": "object"
+            },
+            "BigqueryNativeQueryInfo": {
+                "description": "A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.",
+                "properties": {
+                    "arguments": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/ScalarType"
+                        },
+                        "default": {},
+                        "description": "Free variables in the expression and their types",
+                        "type": "object"
+                    },
+                    "code": {
+                        "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
+                        "type": "string"
+                    },
+                    "description": {
+                        "description": "A description of the query which appears in the graphql schema",
+                        "type": "string"
+                    },
+                    "returns": {
+                        "$ref": "#/components/schemas/BigqueryCustomReturnType"
+                    },
+                    "root_field_name": {
+                        "description": "Root field name for the native query",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "root_field_name",
+                    "code",
+                    "returns"
                 ],
                 "type": "object"
             },
@@ -597,7 +647,7 @@
                     "native_queries": {
                         "default": [],
                         "items": {
-                            "additionalProperties": true
+                            "$ref": "#/components/schemas/BigqueryNativeQueryInfo"
                         },
                         "nullable": true,
                         "type": "array"
@@ -928,6 +978,23 @@
                 ],
                 "type": "object"
             },
+            "CitusCustomReturnType": {
+                "description": "A return type for a native query.",
+                "properties": {
+                    "columns": {
+                        "additionalProperties": {
+                            "description": "Postgres Scalar Types",
+                            "type": "string"
+                        },
+                        "description": "Return types for the native query",
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "columns"
+                ],
+                "type": "object"
+            },
             "CitusDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -1167,16 +1234,7 @@
                         "type": "string"
                     },
                     "returns": {
-                        "additionalProperties": true,
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/PostgresQualified_TableName"
-                            },
-                            {
-                                "type": "string"
-                            }
-                        ],
-                        "description": "Return type (table) of the expression"
+                        "$ref": "#/components/schemas/CitusCustomReturnType"
                     },
                     "root_field_name": {
                         "description": "Root field name for the native query",
@@ -1743,6 +1801,23 @@
                 ],
                 "type": "object"
             },
+            "CockroachCustomReturnType": {
+                "description": "A return type for a native query.",
+                "properties": {
+                    "columns": {
+                        "additionalProperties": {
+                            "description": "Postgres Scalar Types",
+                            "type": "string"
+                        },
+                        "description": "Return types for the native query",
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "columns"
+                ],
+                "type": "object"
+            },
             "CockroachDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -1982,16 +2057,7 @@
                         "type": "string"
                     },
                     "returns": {
-                        "additionalProperties": true,
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/PostgresQualified_TableName"
-                            },
-                            {
-                                "type": "string"
-                            }
-                        ],
-                        "description": "Return type (table) of the expression"
+                        "$ref": "#/components/schemas/CockroachCustomReturnType"
                     },
                     "root_field_name": {
                         "description": "Root field name for the native query",
@@ -2567,6 +2633,39 @@
                 },
                 "type": "object"
             },
+            "CustomTypes": {
+                "properties": {
+                    "enums": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/EnumTypeDefinition"
+                        },
+                        "type": "array"
+                    },
+                    "input_objects": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/InputObjectTypeDefinition"
+                        },
+                        "type": "array"
+                    },
+                    "objects": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/ObjectTypeDefinition"
+                        },
+                        "type": "array"
+                    },
+                    "scalars": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/ScalarTypeDefinition"
+                        },
+                        "type": "array"
+                    }
+                },
+                "type": "object"
+            },
             "DataConnectorConnConfiguration": {
                 "additionalProperties": true,
                 "description": "value with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
@@ -2631,6 +2730,22 @@
                 "required": [
                     "name",
                     "definition"
+                ],
+                "type": "object"
+            },
+            "DataconnectorCustomReturnType": {
+                "description": "A return type for a native query.",
+                "properties": {
+                    "columns": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/ScalarType"
+                        },
+                        "description": "Return types for the native query",
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "columns"
                 ],
                 "type": "object"
             },
@@ -2750,6 +2865,40 @@
                 "required": [
                     "role",
                     "permission"
+                ],
+                "type": "object"
+            },
+            "DataconnectorNativeQueryInfo": {
+                "description": "A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.",
+                "properties": {
+                    "arguments": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/ScalarType"
+                        },
+                        "default": {},
+                        "description": "Free variables in the expression and their types",
+                        "type": "object"
+                    },
+                    "code": {
+                        "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
+                        "type": "string"
+                    },
+                    "description": {
+                        "description": "A description of the query which appears in the graphql schema",
+                        "type": "string"
+                    },
+                    "returns": {
+                        "$ref": "#/components/schemas/DataconnectorCustomReturnType"
+                    },
+                    "root_field_name": {
+                        "description": "Root field name for the native query",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "root_field_name",
+                    "code",
+                    "returns"
                 ],
                 "type": "object"
             },
@@ -2947,7 +3096,7 @@
                     "native_queries": {
                         "default": [],
                         "items": {
-                            "additionalProperties": true
+                            "$ref": "#/components/schemas/DataconnectorNativeQueryInfo"
                         },
                         "nullable": true,
                         "type": "array"
@@ -3143,6 +3292,44 @@
                 ],
                 "type": "object"
             },
+            "EnumTypeDefinition": {
+                "properties": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "$ref": "#/components/schemas/GraphQLName"
+                    },
+                    "values": {
+                        "items": {
+                            "$ref": "#/components/schemas/EnumValueDefinition"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "values"
+                ],
+                "type": "object"
+            },
+            "EnumValueDefinition": {
+                "properties": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "is_deprecated": {
+                        "type": "boolean"
+                    },
+                    "value": {
+                        "$ref": "#/components/schemas/GraphQLName"
+                    }
+                },
+                "required": [
+                    "value"
+                ],
+                "type": "object"
+            },
             "ExtensionsSchema": {
                 "type": "string"
             },
@@ -3298,6 +3485,45 @@
                         "type": "string"
                     }
                 },
+                "type": "object"
+            },
+            "InputObjectFieldDefinition": {
+                "properties": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name",
+                    "type"
+                ],
+                "type": "object"
+            },
+            "InputObjectTypeDefinition": {
+                "properties": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "fields": {
+                        "items": {
+                            "$ref": "#/components/schemas/InputObjectFieldDefinition"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
+                ],
                 "type": "object"
             },
             "ListedQuery": {
@@ -3543,8 +3769,7 @@
                         "type": "array"
                     },
                     "custom_types": {
-                        "additionalProperties": true,
-                        "description": "custom type definitions\n\n\nobject with unspecified properties - this is a placeholder that will eventually be replaced with a more detailed description"
+                        "$ref": "#/components/schemas/CustomTypes"
                     },
                     "graphql_schema_introspection": {
                         "additionalProperties": true,
@@ -3682,6 +3907,22 @@
                 "required": [
                     "name",
                     "definition"
+                ],
+                "type": "object"
+            },
+            "MssqlCustomReturnType": {
+                "description": "A return type for a native query.",
+                "properties": {
+                    "columns": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/ScalarType"
+                        },
+                        "description": "Return types for the native query",
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "columns"
                 ],
                 "type": "object"
             },
@@ -3892,6 +4133,40 @@
                 "required": [
                     "role",
                     "permission"
+                ],
+                "type": "object"
+            },
+            "MssqlNativeQueryInfo": {
+                "description": "A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.",
+                "properties": {
+                    "arguments": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/ScalarType"
+                        },
+                        "default": {},
+                        "description": "Free variables in the expression and their types",
+                        "type": "object"
+                    },
+                    "code": {
+                        "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
+                        "type": "string"
+                    },
+                    "description": {
+                        "description": "A description of the query which appears in the graphql schema",
+                        "type": "string"
+                    },
+                    "returns": {
+                        "$ref": "#/components/schemas/MssqlCustomReturnType"
+                    },
+                    "root_field_name": {
+                        "description": "Root field name for the native query",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "root_field_name",
+                    "code",
+                    "returns"
                 ],
                 "type": "object"
             },
@@ -4110,7 +4385,7 @@
                     "native_queries": {
                         "default": [],
                         "items": {
-                            "additionalProperties": true
+                            "$ref": "#/components/schemas/MssqlNativeQueryInfo"
                         },
                         "nullable": true,
                         "type": "array"
@@ -4514,6 +4789,53 @@
                 ],
                 "type": "object"
             },
+            "MysqlCustomReturnType": {
+                "description": "A return type for a native query.",
+                "properties": {
+                    "columns": {
+                        "additionalProperties": {
+                            "description": "A MySQL scalar type.",
+                            "enum": [
+                                "DATE",
+                                "DECIMAL",
+                                "DECIMAL",
+                                "TINYINT",
+                                "SMALLINT",
+                                "INT",
+                                "FLOAT",
+                                "DOUBLE",
+                                "NULL",
+                                "TIMESTAMP",
+                                "BIGINT",
+                                "MEDIUMINT",
+                                "DATE",
+                                "TIME",
+                                "DATETIME",
+                                "YEAR",
+                                "VARCHAR",
+                                "BIT",
+                                "ENUM",
+                                "SET",
+                                "TINYBLOB",
+                                "MEDIUMBLOB",
+                                "LONGBLOB",
+                                "BLOB",
+                                "VARCHAR",
+                                "TEXT",
+                                "GEOMETRY",
+                                "JSON"
+                            ],
+                            "type": "string"
+                        },
+                        "description": "Return types for the native query",
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "columns"
+                ],
+                "type": "object"
+            },
             "MysqlDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -4627,6 +4949,71 @@
                 "required": [
                     "role",
                     "permission"
+                ],
+                "type": "object"
+            },
+            "MysqlNativeQueryInfo": {
+                "description": "A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.",
+                "properties": {
+                    "arguments": {
+                        "additionalProperties": {
+                            "description": "A MySQL scalar type.",
+                            "enum": [
+                                "DATE",
+                                "DECIMAL",
+                                "DECIMAL",
+                                "TINYINT",
+                                "SMALLINT",
+                                "INT",
+                                "FLOAT",
+                                "DOUBLE",
+                                "NULL",
+                                "TIMESTAMP",
+                                "BIGINT",
+                                "MEDIUMINT",
+                                "DATE",
+                                "TIME",
+                                "DATETIME",
+                                "YEAR",
+                                "VARCHAR",
+                                "BIT",
+                                "ENUM",
+                                "SET",
+                                "TINYBLOB",
+                                "MEDIUMBLOB",
+                                "LONGBLOB",
+                                "BLOB",
+                                "VARCHAR",
+                                "TEXT",
+                                "GEOMETRY",
+                                "JSON"
+                            ],
+                            "type": "string"
+                        },
+                        "default": {},
+                        "description": "Free variables in the expression and their types",
+                        "type": "object"
+                    },
+                    "code": {
+                        "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
+                        "type": "string"
+                    },
+                    "description": {
+                        "description": "A description of the query which appears in the graphql schema",
+                        "type": "string"
+                    },
+                    "returns": {
+                        "$ref": "#/components/schemas/MysqlCustomReturnType"
+                    },
+                    "root_field_name": {
+                        "description": "Root field name for the native query",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "root_field_name",
+                    "code",
+                    "returns"
                 ],
                 "type": "object"
             },
@@ -4842,7 +5229,7 @@
                     "native_queries": {
                         "default": [],
                         "items": {
-                            "additionalProperties": true
+                            "$ref": "#/components/schemas/MysqlNativeQueryInfo"
                         },
                         "nullable": true,
                         "type": "array"
@@ -5050,6 +5437,55 @@
                 ],
                 "type": "string"
             },
+            "ObjectFieldDefinition_GraphQLType": {
+                "properties": {
+                    "arguments": {
+                        "additionalProperties": true
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "$ref": "#/components/schemas/GraphQLName"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name",
+                    "type"
+                ],
+                "type": "object"
+            },
+            "ObjectTypeDefinition": {
+                "properties": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "fields": {
+                        "items": {
+                            "$ref": "#/components/schemas/ObjectFieldDefinition_GraphQLType"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/TypeRelationshipDefinition"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
+                ],
+                "type": "object"
+            },
             "PGClientCerts": {
                 "description": "https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgcertsettings",
                 "nullable": true,
@@ -5205,6 +5641,23 @@
                 },
                 "required": [
                     "connection_info"
+                ],
+                "type": "object"
+            },
+            "PostgresCustomReturnType": {
+                "description": "A return type for a native query.",
+                "properties": {
+                    "columns": {
+                        "additionalProperties": {
+                            "description": "Postgres Scalar Types",
+                            "type": "string"
+                        },
+                        "description": "Return types for the native query",
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "columns"
                 ],
                 "type": "object"
             },
@@ -5447,16 +5900,7 @@
                         "type": "string"
                     },
                     "returns": {
-                        "additionalProperties": true,
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/PostgresQualified_TableName"
-                            },
-                            {
-                                "type": "string"
-                            }
-                        ],
-                        "description": "Return type (table) of the expression"
+                        "$ref": "#/components/schemas/PostgresCustomReturnType"
                     },
                     "root_field_name": {
                         "description": "Root field name for the native query",
@@ -6075,7 +6519,7 @@
                         "$ref": "#/components/schemas/QueryTagsFormat"
                     },
                     "omit_request_id": {
-                        "default": false,
+                        "default": true,
                         "type": "boolean"
                     }
                 },
@@ -7163,6 +7607,24 @@
                 ],
                 "type": "string"
             },
+            "ScalarType": {
+                "additionalProperties": true,
+                "description": "value with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+            },
+            "ScalarTypeDefinition": {
+                "properties": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name"
+                ],
+                "type": "object"
+            },
             "SourceCustomization": {
                 "properties": {
                     "naming_convention": {
@@ -7431,6 +7893,48 @@
                     "serializable"
                 ],
                 "type": "string"
+            },
+            "TypeRelationshipDefinition": {
+                "properties": {
+                    "field_mapping": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "remote_table": {
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PostgresQualified_TableName"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "source": {
+                        "default": "default",
+                        "type": "string"
+                    },
+                    "type": {
+                        "enum": [
+                            "object",
+                            "array"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name",
+                    "type",
+                    "remote_table",
+                    "field_mapping"
+                ],
+                "type": "object"
             },
             "UrlConfFromParams": {
                 "properties": {

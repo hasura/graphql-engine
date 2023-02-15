@@ -25,8 +25,7 @@ import Hasura.RQL.Types.QueryCollection qualified as QC
 import Hasura.RemoteSchema.Metadata.Core (RemoteSchemaMetadataG (_rsmName))
 
 -- | Revision 3 of the Metadata export format. Note that values of the types,
--- 'PlaceholderArray' and 'PlaceholderObject' are placeholders that will
--- eventually be expanded to represent more detail.
+-- 'PlaceholderArray' and 'PlaceholderObject' will eventually be expanded to represent more detail.
 data MetadataV3 = MetadataV3
   { metaV3Sources :: Sources,
     metaV3RemoteSchemas :: RemoteSchemas,
