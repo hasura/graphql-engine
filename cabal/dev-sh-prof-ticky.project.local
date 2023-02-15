@@ -1,0 +1,11 @@
+-- Enable ticky profiling, powers `dev.sh graphql-engine --prof-ticky`
+-- https://ghc.gitlab.haskell.org/ghc/doc/users_guide/profiling.html#using-ticky-ticky-profiling-for-implementors
+--
+--  run with e.g. `+RTS -r outfilepath`
+
+import: cabal/dev-sh-optimized.project.local
+
+program-options
+    ghc-options: -ticky
+    -- TODO doesn't seem to work with -ticky??:
+    ghc-options: -ddump-stg-final -ddump-to-file

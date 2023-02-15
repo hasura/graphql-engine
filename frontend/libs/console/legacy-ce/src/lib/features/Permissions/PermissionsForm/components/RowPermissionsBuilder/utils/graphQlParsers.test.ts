@@ -1,6 +1,5 @@
 import {
   getAllColumnsAndOperators,
-  findColumnOperator,
   getColumnOperators,
 } from './graphqlParsers';
 import { schema } from '../mocks';
@@ -90,24 +89,6 @@ test('correctly fetches operators for a given column', () => {
       },
     },
   ];
-
-  expect(result).toEqual(expected);
-});
-
-test('correctly fetches information about a column operator', () => {
-  const columnOperators = getColumnOperators({
-    tableName: 'user',
-    schema,
-    columnName: 'age',
-    tableConfig: {},
-  });
-  const result = findColumnOperator({ columnKey: '_eq', columnOperators });
-  const expected: ReturnType<typeof findColumnOperator> = {
-    name: '_eq',
-    type: {
-      type: 'float8',
-    },
-  };
 
   expect(result).toEqual(expected);
 });

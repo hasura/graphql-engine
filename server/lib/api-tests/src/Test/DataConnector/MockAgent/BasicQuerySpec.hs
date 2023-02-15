@@ -158,68 +158,6 @@ tests _opts = describe "Basic Tests" $ do
               }
         )
 
-  mockAgentGraphqlTest "works with order_by id" $ \performGraphqlRequest -> do
-    let headers = []
-    let graphqlRequest =
-          [graphql|
-            query getAlbum {
-              albums(limit: 3, order_by: {id: asc}) {
-                id
-                title
-              }
-            }
-          |]
-    let queryResponse =
-          rowsResponse
-            [ [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 1),
-                (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
-              ],
-              [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 2),
-                (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "Balls to the Wall")
-              ],
-              [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 3),
-                (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
-              ]
-            ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
-
-    MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
-
-    _mrrResponse
-      `shouldBeYaml` [yaml|
-        data:
-          albums:
-            - id: 1
-              title: For Those About To Rock We Salute You
-            - id: 2
-              title: Balls to the Wall
-            - id: 3
-              title: Restless and Wild
-      |]
-
-    _mrrRecordedRequest
-      `shouldBe` Just
-        ( Query $
-            API.QueryRequest
-              { _qrTable = API.TableName ("Album" :| []),
-                _qrTableRelationships = [],
-                _qrQuery =
-                  API.Query
-                    { _qFields =
-                        Just $
-                          HashMap.fromList
-                            [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
-                              (API.FieldName "title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
-                            ],
-                      _qAggregates = Nothing,
-                      _qLimit = Just 3,
-                      _qOffset = Nothing,
-                      _qWhere = Nothing,
-                      _qOrderBy = Just (API.OrderBy mempty (API.OrderByElement [] (API.OrderByColumn (API.ColumnName "AlbumId")) API.Ascending :| []))
-                    }
-              }
-        )
-
   mockAgentGraphqlTest "works with an exists-based permissions filter" $ \performGraphqlRequest -> do
     let headers =
           [ ("X-Hasura-Role", testRoleName),

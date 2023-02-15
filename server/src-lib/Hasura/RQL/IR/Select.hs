@@ -593,7 +593,9 @@ instance
 
 data AnnotatedAggregateOrderBy (b :: BackendType)
   = AAOCount
-  | AAOOp Text (ColumnInfo b)
+  | -- | Order by an aggregate function applied to a column
+    -- Fields are: Aggregate function name, aggregate function return type, column being aggregated
+    AAOOp Text (ColumnType b) (ColumnInfo b)
   deriving stock (Generic)
 
 deriving stock instance (Backend b) => Eq (AnnotatedAggregateOrderBy b)

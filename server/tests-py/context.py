@@ -380,6 +380,12 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         elif req_path == "/null-response":
             resp, status = self.null_response()
             self._send_response(status, resp)
+        
+        elif req_path == "/omitted-response-field":
+            self._send_response(
+                HTTPStatus.OK,
+                self.get_omitted_response_field()
+            )
 
         elif req_path == "/scalar-response":
             self._send_response(HTTPStatus.OK, "some-string")
@@ -610,6 +616,11 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         return {
             'id': 1,
             'child': None
+        }
+    
+    def get_omitted_response_field(self):
+        return {
+            'country': 'India'
         }
 
     def get_typed_nested_null_wrong_field(self):

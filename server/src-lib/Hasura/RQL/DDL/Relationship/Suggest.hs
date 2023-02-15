@@ -29,6 +29,7 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.NonEmpty qualified as MapNE
 import Data.HashSet qualified as H
 import Data.OpenApi (ToSchema (..))
+import Data.Tuple (swap)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
@@ -136,31 +137,36 @@ suggestRelsFK ::
   (TableName b -> Bool) ->
   ForeignKey b ->
   [Relationship b]
-suggestRelsFK omitTracked tables name uniqueConstraints tracked predicate foreignKey =
-  case (omitTracked, H.member (relatedTable, columnRelationships) tracked, Map.lookup relatedTable tables) of
-    (True, True, _) -> []
-    (_, _, Nothing) -> []
-    (_, _, Just _)
-      | not (predicate name || predicate relatedTable) -> []
-      | otherwise ->
-          [ Relationship
-              { rType = ObjRel,
-                rFrom = Mapping {mTable = name, mColumns = localColumns, mConstraintName = Just constraintName},
-                rTo = Mapping {mTable = relatedTable, mColumns = relatedColumns, mConstraintName = Nothing}
-              },
-            Relationship
-              { rType = if H.fromList localColumns `H.member` uniqueConstraintColumns then ObjRel else ArrRel,
-                rTo = Mapping {mTable = name, mColumns = localColumns, mConstraintName = Just constraintName},
-                rFrom = Mapping {mTable = relatedTable, mColumns = relatedColumns, mConstraintName = Nothing}
-              }
-          ]
+suggestRelsFK omitTracked tables name uniqueConstraints tracked predicate foreignKey
+  | not (predicate name || predicate relatedTableName) = [] -- Neither table appears in tables list
+  | isNothing relatedTable = [] -- There is no information for the related table
+  | omitTracked = catMaybes [discard toTracked toRelationship, discard fromTracked fromRelationship] -- Discard tracked relationships if that's requested
+  | otherwise = [toRelationship, fromRelationship] -- Otherwise, return the reciprocal relationships
   where
+    toTracked = H.member (relatedTableName, columnRelationships) tracked
+    fromTracked = H.member (name, invert columnRelationships) trackedBack
+    toRelationship =
+      Relationship
+        { rType = ObjRel,
+          rFrom = Mapping {mTable = name, mColumns = localColumns, mConstraintName = Just constraintName},
+          rTo = Mapping {mTable = relatedTableName, mColumns = relatedColumns, mConstraintName = Nothing}
+        }
+    fromRelationship =
+      Relationship
+        { rType = if H.fromList localColumns `H.member` uniqueConstraintColumns then ObjRel else ArrRel,
+          rTo = Mapping {mTable = name, mColumns = localColumns, mConstraintName = Just constraintName},
+          rFrom = Mapping {mTable = relatedTableName, mColumns = relatedColumns, mConstraintName = Nothing}
+        }
     columnRelationships = MapNE.toHashMap (_fkColumnMapping foreignKey)
     localColumns = Map.keys columnRelationships
     relatedColumns = Map.elems columnRelationships
     uniqueConstraintColumns = H.map _ucColumns uniqueConstraints
-    relatedTable = _fkForeignTable foreignKey
+    relatedTableName = _fkForeignTable foreignKey
+    relatedTable = Map.lookup relatedTableName tables
     constraintName = Aeson.toJSON (_cName (_fkConstraint foreignKey))
+    discard b x = bool Nothing (Just x) (not b)
+    invert = Map.fromList . map swap . Map.toList
+    trackedBack = H.fromList $ mapMaybe (relationships (riRTable &&& riMapping)) $ maybe [] (Map.elems . _tciFieldInfoMap) relatedTable
 
 suggestRelsTable ::
   forall b.
@@ -176,7 +182,9 @@ suggestRelsTable omitTracked tables predicate (name, table) =
     foreignKeys = _tciForeignKeys table
     constraints = _tciUniqueConstraints table
     tracked = H.fromList $ mapMaybe (relationships (riRTable &&& riMapping)) $ Map.elems $ _tciFieldInfoMap table
-    relationships f = fmap f . preview _FIRelationship
+
+relationships :: (RelInfo b1 -> b2) -> FieldInfo b1 -> Maybe b2
+relationships f = fmap f . preview _FIRelationship
 
 -- NOTE: This could be grouped by table instead of a list, console stakeholders are happy with this being a list.
 suggestRelsResponse ::

@@ -13,6 +13,7 @@
 module Hasura.Backends.Postgres.Connection.MonadTx
   ( MonadTx (..),
     runTxWithCtx,
+    runTxWithCtxAndUserInfo,
     runQueryTx,
     withUserInfo,
     withTraceContext,
@@ -82,8 +83,23 @@ runTxWithCtx ::
   PG.TxET QErr m a ->
   m a
 runTxWithCtx pgExecCtx pgExecTxType pgExecFrom tx = do
-  traceCtx <- Tracing.currentContext
   userInfo <- askUserInfo
+  runTxWithCtxAndUserInfo userInfo pgExecCtx pgExecTxType pgExecFrom tx
+
+runTxWithCtxAndUserInfo ::
+  ( MonadIO m,
+    MonadBaseControl IO m,
+    MonadError QErr m,
+    Tracing.MonadTrace m
+  ) =>
+  UserInfo ->
+  PGExecCtx ->
+  PGExecTxType ->
+  PGExecFrom ->
+  PG.TxET QErr m a ->
+  m a
+runTxWithCtxAndUserInfo userInfo pgExecCtx pgExecTxType pgExecFrom tx = do
+  traceCtx <- Tracing.currentContext
   liftEitherM $
     runExceptT $
       (_pecRunTx pgExecCtx) (PGExecCtxInfo pgExecTxType pgExecFrom) $
@@ -94,15 +110,18 @@ runTxWithCtx pgExecCtx pgExecTxType pgExecFrom tx = do
 -- and COMMIT. This should only be used for running a single statement query!
 runQueryTx ::
   ( MonadIO m,
+    MonadBaseControl IO m,
     MonadError QErr m
   ) =>
   PGExecCtx ->
   PGExecFrom ->
-  PG.TxET QErr IO a ->
+  PG.TxET QErr m a ->
   m a
 runQueryTx pgExecCtx pgExecFrom tx = do
   let pgExecCtxInfo = PGExecCtxInfo NoTxRead pgExecFrom
-  liftEither =<< liftIO (runExceptT $ (_pecRunTx pgExecCtx) pgExecCtxInfo tx)
+  liftEitherM $
+    runExceptT $
+      (_pecRunTx pgExecCtx) pgExecCtxInfo tx
 
 setHeadersTx :: (MonadIO m) => SessionVariables -> PG.TxET QErr m ()
 setHeadersTx session = do

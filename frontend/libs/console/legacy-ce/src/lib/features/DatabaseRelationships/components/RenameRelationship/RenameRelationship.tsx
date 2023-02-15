@@ -17,6 +17,7 @@ export const RenameRelationship = (props: RenameRelationshipProps) => {
   const { relationship, onCancel, onSuccess, onError } = props;
   const { renameRelationship } = useManageLocalRelationship({
     dataSourceName: relationship.fromSource,
+    table: relationship.fromTable,
     onSuccess,
     onError,
   });

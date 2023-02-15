@@ -47,7 +47,7 @@ const SelectOne = ({
     data-test={label}
   >
     <option value="">Select Type ...</option>
-    {options.map((op, i) => (
+    {[...options].sort().map((op, i) => (
       <option value={op} key={i}>
         {op}
       </option>

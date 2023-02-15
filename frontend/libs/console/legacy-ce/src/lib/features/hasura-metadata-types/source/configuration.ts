@@ -15,6 +15,7 @@ export interface PostgresConfiguration {
         };
     pool_settings?: {
       max_connections?: number;
+      total_max_connections?: number;
       idle_timeout?: number;
       retries?: number;
       pool_timeout?: number;
@@ -47,7 +48,7 @@ export interface MssqlConfiguration {
   connection_info: {
     connection_string: string | FromEnv;
     pool_settings?: {
-      max_connections?: number;
+      total_max_connections?: number;
       idle_timeout?: number;
     };
   };

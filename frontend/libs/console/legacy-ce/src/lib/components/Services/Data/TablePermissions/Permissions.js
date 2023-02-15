@@ -8,6 +8,7 @@ import 'brace/mode/json';
 import 'brace/theme/github';
 import { LS_KEYS, setLSItem, getLSItem } from '@/utils/localStorage';
 import { Button } from '@/new-components/Button';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 import { getPrimaryKeysFromTable } from './utils';
 import { RESET } from '../TableModify/ModifyActions';
 import {
@@ -78,7 +79,7 @@ import {
   dataSource,
   isFeatureSupported,
 } from '../../../../dataSources';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+
 import {
   getFilterQueries,
   replaceLegacyOperators,
@@ -593,7 +594,12 @@ class Permissions extends Component {
         sectionClasses += ' ' + styles.disabled;
       }
 
-      const getSectionHeader = (title, toolTip, sectionStatus, knowMoreRef) => {
+      const getSectionHeader = (
+        title,
+        toolTip,
+        sectionStatus,
+        learnMoreRef
+      ) => {
         let sectionStatusHtml;
         if (sectionStatus) {
           sectionStatusHtml = (
@@ -603,20 +609,16 @@ class Permissions extends Component {
           );
         }
 
-        let knowMoreHtml;
-        if (knowMoreRef) {
-          knowMoreHtml = (
-            <span
-              className={`${styles.add_mar_left_small} ${styles.sectionStatus}`}
-            >
-              <KnowMoreLink href={knowMoreRef} />
-            </span>
+        let learnMoreHtml;
+        if (learnMoreRef) {
+          learnMoreHtml = (
+            <LearnMoreLink href={learnMoreRef} className="font-normal" />
           );
         }
 
         return (
           <div className="flex">
-            {addTooltip(title, toolTip)} {knowMoreHtml} {sectionStatusHtml}
+            {addTooltip(title, toolTip)} {learnMoreHtml} {sectionStatusHtml}
           </div>
         );
       };

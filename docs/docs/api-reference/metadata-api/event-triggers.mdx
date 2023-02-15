@@ -347,7 +347,9 @@ X-Hasura-Role: admin
 
 ## cleanup_event_trigger_logs {#metadata-cleanup-event-trigger-logs}
 
-<div className="badge badge--primary heading-badge">Available on: Cloud, Enterprise</div>
+<div className="badge badge--primary heading-badge">
+  Available on: Cloud Free, Cloud Standard, Cloud Professional, Cloud Enterprise, Self-hosted Enterprise
+</div>
 
 `cleanup_event_trigger_logs` is used to manually delete the event logs for a given Event Trigger.
 
@@ -381,7 +383,7 @@ X-Hasura-Role: admin
 
 ## resume_event_trigger_cleanups {#metadata-resume-event-trigger-cleanups}
 
-<div className="badge badge--primary heading-badge">Available on: Enterprise</div>
+<div className="badge badge--primary heading-badge">Available on: Cloud Enterprise, Self-hosted Enterprise</div>
 
 `resume_event_trigger_cleanups` is used to resume the paused log cleaner for Event Triggers.
 
@@ -411,7 +413,7 @@ X-Hasura-Role: admin
 
 ## pause_event_trigger_cleanups {#metadata-pause-event-trigger-cleanups}
 
-<div className="badge badge--primary heading-badge">Available on: Enterprise</div>
+<div className="badge badge--primary heading-badge">Available on: Cloud Enterprise, Self-hosted Enterprise</div>
 
 - `pause_event_trigger_cleanups` is used to pause the log cleaner for event triggers which already have a cleaner
   installed.

@@ -66,7 +66,6 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
   } = useFormContext();
   const oas = watch('oas');
 
-  console.log({ oas });
   const operation = watch('operation');
   const search = watch('search');
   const url = watch('url');
@@ -234,7 +233,6 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
                 <div
                   className="py-1"
                   onClick={() => {
-                    console.log({ method, selectedMethods });
                     if (selectedMethods.includes(method)) {
                       setSelectedMethods(
                         selectedMethods.filter(m => m !== method)
@@ -268,7 +266,6 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
               noErrorPlaceholder
               name="oas"
               placeholder="1. Paste OpenAPI spec in raw text (JSON / YAML) here"
-              tooltip="Enter a sample request in JSON or YAML format to generate the input type"
               editorOptions={editorOptions}
               editorProps={{
                 className: 'rounded`-r-none',

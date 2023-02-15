@@ -317,8 +317,8 @@ tests _opts = describe "Aggregate Query Tests" $ do
                           HashMap.fromList
                             [ (API.FieldName "counts_count", API.StarCount),
                               (API.FieldName "counts_uniqueBillingCountries", API.ColumnCount (API.ColumnCountAggregate (API.ColumnName "BillingCountry") True)),
-                              (API.FieldName "ids_minimum_Id", API.SingleColumn (singleColumnAggregateMin (API.ColumnName "InvoiceId"))),
-                              (API.FieldName "ids_max_InvoiceId", API.SingleColumn (singleColumnAggregateMax (API.ColumnName "InvoiceId")))
+                              (API.FieldName "ids_minimum_Id", API.SingleColumn (singleColumnAggregateMin (API.ColumnName "InvoiceId") (API.ScalarType "number"))),
+                              (API.FieldName "ids_max_InvoiceId", API.SingleColumn (singleColumnAggregateMax (API.ColumnName "InvoiceId") (API.ScalarType "number")))
                             ],
                       _qLimit = Just 2,
                       _qOffset = Nothing,
@@ -337,8 +337,8 @@ aggregatesResponse aggregates = API.QueryResponse Nothing (Just $ HashMap.fromLi
 aggregatesAndRowsResponse :: [(API.FieldName, Aeson.Value)] -> [[(API.FieldName, API.FieldValue)]] -> API.QueryResponse
 aggregatesAndRowsResponse aggregates rows = API.QueryResponse (Just $ HashMap.fromList <$> rows) (Just $ HashMap.fromList aggregates)
 
-singleColumnAggregateMax :: API.ColumnName -> API.SingleColumnAggregate
+singleColumnAggregateMax :: API.ColumnName -> API.ScalarType -> API.SingleColumnAggregate
 singleColumnAggregateMax = API.SingleColumnAggregate $ API.SingleColumnAggregateFunction [G.name|max|]
 
-singleColumnAggregateMin :: API.ColumnName -> API.SingleColumnAggregate
+singleColumnAggregateMin :: API.ColumnName -> API.ScalarType -> API.SingleColumnAggregate
 singleColumnAggregateMin = API.SingleColumnAggregate $ API.SingleColumnAggregateFunction [G.name|min|]

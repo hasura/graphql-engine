@@ -16,7 +16,7 @@ import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.Server.Auth
 import Hasura.Server.Auth.JWT
-import Hasura.Server.Init.Config (API (METRICS))
+import Hasura.Server.Init.Config (API (METRICS), AllowListStatus)
 import Hasura.Server.Types (ExperimentalFeature)
 import Hasura.Server.Version (Version, currentVersion)
 
@@ -37,7 +37,7 @@ data ServerConfig = ServerConfig
     scfgIsAuthHookSet :: !Bool,
     scfgIsJwtSet :: !Bool,
     scfgJwt :: ![JWTInfo],
-    scfgIsAllowListEnabled :: !Bool,
+    scfgIsAllowListEnabled :: !AllowListStatus,
     scfgLiveQueries :: !ES.LiveQueriesOptions,
     scfgStreamingQueries :: !ES.SubscriptionsOptions,
     scfgConsoleAssetsDir :: !(Maybe Text),
@@ -53,7 +53,7 @@ runGetConfig ::
   Options.InferFunctionPermissions ->
   Options.RemoteSchemaPermissions ->
   AuthMode ->
-  Bool ->
+  AllowListStatus ->
   ES.LiveQueriesOptions ->
   ES.SubscriptionsOptions ->
   Maybe Text ->
@@ -65,7 +65,7 @@ runGetConfig
   functionPermsCtx
   remoteSchemaPermsCtx
   am
-  isAllowListEnabled
+  allowListStatus
   liveQueryOpts
   streamQueryOpts
   consoleAssetsDir
@@ -80,7 +80,7 @@ runGetConfig
       (isAuthHookSet am)
       (isJWTSet am)
       (getJWTInfo am)
-      isAllowListEnabled
+      allowListStatus
       liveQueryOpts
       streamQueryOpts
       consoleAssetsDir

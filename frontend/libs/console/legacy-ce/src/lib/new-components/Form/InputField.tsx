@@ -127,7 +127,6 @@ export const InputField = <T extends z.infer<Schema>>({
 
   const onInputChange = React.useCallback(
     async event => {
-      console.log('event', event);
       if (event.target.files?.[0]) {
         onChange(event);
       }

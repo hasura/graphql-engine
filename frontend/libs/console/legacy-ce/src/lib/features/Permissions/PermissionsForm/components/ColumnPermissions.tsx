@@ -19,7 +19,7 @@ import {
   QueryRootPermissionType,
 } from './RootFieldPermissions/types';
 
-const getAccessText = (queryType: any) => {
+const getAccessText = (queryType: string) => {
   if (queryType === 'insert') {
     return 'to set input for';
   }
@@ -94,6 +94,8 @@ export const ColumnPermissionsSection: React.FC<
   const [showConfirmation, setShowConfirmationModal] = useState<string | null>(
     null
   );
+  const all = watch();
+
   const [selectedColumns, queryRootFields, subscriptionRootFields] = watch([
     'columns',
     'query_root_fields',

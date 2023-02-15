@@ -2,11 +2,12 @@ import { allowedMetadataTypes } from '@/features/MetadataAPI';
 
 import { AccessType, QueryType } from '../../types';
 import { PermissionsSchema } from '../../schema';
-import { createInsertArgs } from './utils';
+import { createInsertArgs, ExistingPermission } from './utils';
+import { Table } from '@/features/hasura-metadata-types';
 
 interface CreateBodyArgs {
   dataSourceName: string;
-  table: unknown;
+  table: Table;
   roleName: string;
   resourceVersion: number;
 }
@@ -103,8 +104,9 @@ interface CreateInsertBodyArgs extends CreateBodyArgs {
   queryType: QueryType;
   formData: PermissionsSchema;
   accessType: AccessType;
-  existingPermissions: any;
+  existingPermissions: ExistingPermission[];
   driver: string;
+  tables: Table[];
 }
 
 export interface InsertBodyResult {
@@ -123,6 +125,7 @@ const createInsertBody = ({
   resourceVersion,
   existingPermissions,
   driver,
+  tables,
 }: CreateInsertBodyArgs): InsertBodyResult => {
   const args = createInsertArgs({
     driver,
@@ -133,6 +136,7 @@ const createInsertBody = ({
     formData,
     accessType,
     existingPermissions,
+    tables,
   });
 
   const formBody = {

@@ -19,7 +19,8 @@ module Hasura.Backends.DataConnector.API
     queryCase,
     mutationCase,
     openApiSchema,
-    Routes (..),
+    RoutesG (..),
+    Routes,
     DatasetRoutes (..),
     apiClient,
   )
@@ -79,10 +80,10 @@ schemaCase defaultAction schemaAction errorAction union = do
 
 type SchemaResponses = '[V0.SchemaResponse, V0.ErrorResponse, V0.ErrorResponse400]
 
-type SchemaApi =
+type SchemaApi config =
   "schema"
     :> SourceNameHeader Required
-    :> ConfigHeader Required
+    :> ConfigHeader config Required
     :> UVerb 'GET '[JSON] SchemaResponses
 
 -- | This function defines a central place to ensure that all cases are covered for query and error responses.
@@ -115,37 +116,37 @@ mutationCase defaultAction mutationAction errorAction union = do
 
 type MutationResponses = '[V0.MutationResponse, V0.ErrorResponse, V0.ErrorResponse400]
 
-type QueryApi =
+type QueryApi config =
   "query"
     :> SourceNameHeader Required
-    :> ConfigHeader Required
+    :> ConfigHeader config Required
     :> ReqBody '[JSON] V0.QueryRequest
     :> UVerb 'POST '[JSON] QueryResponses
 
-type ExplainApi =
+type ExplainApi config =
   "explain"
     :> SourceNameHeader Required
-    :> ConfigHeader Required
+    :> ConfigHeader config Required
     :> ReqBody '[JSON] V0.QueryRequest
     :> Post '[JSON] V0.ExplainResponse
 
-type MutationApi =
+type MutationApi config =
   "mutation"
     :> SourceNameHeader Required
-    :> ConfigHeader Required
+    :> ConfigHeader config Required
     :> ReqBody '[JSON] V0.MutationRequest
     :> UVerb 'POST '[JSON] MutationResponses
 
-type HealthApi =
+type HealthApi config =
   "health"
     :> SourceNameHeader Optional
-    :> ConfigHeader Optional
+    :> ConfigHeader config Optional
     :> GetNoContent
 
-type RawApi =
+type RawApi config =
   "raw"
     :> SourceNameHeader Required
-    :> ConfigHeader Required
+    :> ConfigHeader config Required
     :> ReqBody '[JSON] V0.RawRequest
     :> Post '[JSON] V0.RawResponse
 
@@ -188,29 +189,29 @@ instance MimeUnrender Prometheus Text where
 
 type MetricsApi = "metrics" :> Get '[Prometheus] Text
 
-type ConfigHeader optionality = Header' '[optionality, Strict] "X-Hasura-DataConnector-Config" V0.Config
+type ConfigHeader config optionality = Header' '[optionality, Strict] "X-Hasura-DataConnector-Config" config
 
 type SourceNameHeader optionality = Header' '[optionality, Strict] "X-Hasura-DataConnector-SourceName" SourceName
 
 type SourceName = Text
 
-data Routes mode = Routes
+data RoutesG config mode = Routes
   { -- | 'GET /capabilities'
     _capabilities :: mode :- CapabilitiesApi,
     -- | 'GET /schema'
-    _schema :: mode :- SchemaApi,
+    _schema :: mode :- SchemaApi config,
     -- | 'POST /query'
-    _query :: mode :- QueryApi,
+    _query :: mode :- QueryApi config,
     -- | 'POST /explain'
-    _explain :: mode :- ExplainApi,
+    _explain :: mode :- ExplainApi config,
     -- | 'POST /mutation'
-    _mutation :: mode :- MutationApi,
+    _mutation :: mode :- MutationApi config,
     -- | 'GET /health'
-    _health :: mode :- HealthApi,
+    _health :: mode :- HealthApi config,
     -- | 'GET /metrics'
     _metrics :: mode :- MetricsApi,
     -- | 'GET /raw'
-    _raw :: mode :- RawApi,
+    _raw :: mode :- RawApi config,
     -- | '/datasets'
     _datasets :: mode :- NamedRoutes DatasetRoutes
   }
@@ -226,9 +227,22 @@ data DatasetRoutes mode = DatasetRoutes
   }
   deriving stock (Generic)
 
+type Routes = RoutesG V0.Config
+
 -- | servant-openapi3 does not (yet) support NamedRoutes so we need to compose the
 -- API the old-fashioned way using :<|> for use by @toOpenApi@
-type Api = CapabilitiesApi :<|> SchemaApi :<|> QueryApi :<|> ExplainApi :<|> MutationApi :<|> HealthApi :<|> MetricsApi :<|> RawApi :<|> DatasetApi
+type ApiG config =
+  CapabilitiesApi
+    :<|> SchemaApi config
+    :<|> QueryApi config
+    :<|> ExplainApi config
+    :<|> MutationApi config
+    :<|> HealthApi config
+    :<|> MetricsApi
+    :<|> RawApi config
+    :<|> DatasetApi
+
+type Api = ApiG V0.Config
 
 -- | Provide an OpenApi 3.0 schema for the API
 openApiSchema :: OpenApi

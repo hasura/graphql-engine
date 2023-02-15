@@ -3,14 +3,14 @@ import Skeleton from 'react-loading-skeleton';
 
 import { IconTooltip } from '@/new-components/Tooltip';
 import { Collapsible } from '@/new-components/Collapsible';
-import { KnowMoreLink } from '@/new-components/KnowMoreLink';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 
 interface CollapsibleFieldWrapperProps {
   inputFieldName: string;
   label: string;
   tooltip: string;
   loading?: boolean;
-  knowMoreLink?: string;
+  learnMoreLink?: string;
 }
 
 /**
@@ -27,7 +27,7 @@ interface CollapsibleFieldWrapperProps {
 export const CollapsibleFieldWrapper: React.FC<
   CollapsibleFieldWrapperProps
 > = props => {
-  const { inputFieldName, label, tooltip, children, loading, knowMoreLink } =
+  const { inputFieldName, label, tooltip, children, loading, learnMoreLink } =
     props;
 
   if (loading) return <Skeleton className="h-8" />;
@@ -45,7 +45,7 @@ export const CollapsibleFieldWrapper: React.FC<
 
             {/* TODO: solve the "button inside a button" a11y problem */}
             <IconTooltip message={tooltip} />
-            {!!knowMoreLink && <KnowMoreLink href={knowMoreLink} />}
+            {!!learnMoreLink && <LearnMoreLink href={learnMoreLink} />}
           </span>
         </label>
       }

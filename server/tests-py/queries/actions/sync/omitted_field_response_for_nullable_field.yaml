@@ -1,0 +1,16 @@
+description: Omitted field response should be shown as null
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      omitted_response_field {
+        city
+        country
+      }
+    }
+response:
+  data:
+    omitted_response_field:
+      city: null
+      country: India

@@ -22,6 +22,7 @@ export const ConfirmDeleteRelationshipPopup = (
     isLoading: isDeleteLocalRelationshipLoading,
   } = useManageLocalRelationship({
     dataSourceName: relationship.fromSource,
+    table: relationship.fromTable,
     onSuccess,
     onError,
   });

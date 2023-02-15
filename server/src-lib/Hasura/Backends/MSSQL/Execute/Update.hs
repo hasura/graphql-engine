@@ -24,6 +24,7 @@ import Hasura.Backends.MSSQL.ToQuery as TQ
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
@@ -41,14 +42,14 @@ executeUpdate ::
   Options.StringifyNumbers ->
   SourceConfig 'MSSQL ->
   AnnotatedUpdateG 'MSSQL Void (UnpreparedValue 'MSSQL) ->
-  m (ExceptT QErr IO EncJSON)
+  m (OnBaseMonad (ExceptT QErr) EncJSON)
 executeUpdate userInfo stringifyNum sourceConfig updateOperation = do
   queryTags <- ask
   let mssqlExecCtx = (_mscExecCtx sourceConfig)
   preparedUpdate <- traverse (prepareValueQuery $ _uiSession userInfo) updateOperation
   if IR.updateBatchIsEmpty $ _auUpdateVariant updateOperation
-    then pure $ pure $ IR.buildEmptyMutResp $ _auOutput preparedUpdate
-    else pure $ (mssqlRunReadWrite mssqlExecCtx) (buildUpdateTx preparedUpdate stringifyNum queryTags)
+    then pure $ OnBaseMonad $ pure $ IR.buildEmptyMutResp $ _auOutput preparedUpdate
+    else pure $ OnBaseMonad $ (mssqlRunReadWrite mssqlExecCtx) (buildUpdateTx preparedUpdate stringifyNum queryTags)
 
 -- | Converts an Update IR AST to a transaction of three update sql statements.
 --
@@ -67,10 +68,11 @@ executeUpdate userInfo stringifyNum sourceConfig updateOperation = do
 -- 3. @SELECT@ - constructs the @returning@ query from the temporary table, including
 --   relationships with other tables.
 buildUpdateTx ::
+  (MonadIO m) =>
   AnnotatedUpdate 'MSSQL ->
   Options.StringifyNumbers ->
   QueryTagsComment ->
-  Tx.TxET QErr IO EncJSON
+  Tx.TxET QErr m EncJSON
 buildUpdateTx updateOperation stringifyNum queryTags = do
   let withAlias = "with_alias"
       createInsertedTempTableQuery =

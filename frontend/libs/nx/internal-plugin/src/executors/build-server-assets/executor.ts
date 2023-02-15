@@ -112,6 +112,10 @@ export default async function runMyExecutor(
   const loaderFile = generateAssetLoaderFile(extractedAssets);
   tree.write(`${serverAssetBase}/versioned/assetLoader.js`, loaderFile);
   tree.write(
+    `${serverAssetBase}/versioned/main.js`,
+    generatePolyfillLoaderFile(loaderFile)
+  );
+  tree.write(
     `${serverAssetBase}/loaderPolyfill.js`,
     generatePolyfillLoaderFile(loaderFile)
   );
@@ -122,7 +126,7 @@ export default async function runMyExecutor(
     {
       commands: [
         `gzip -f ${serverAssetBase}/versioned/assetLoader.js`,
-        `gzip -f ${serverAssetBase}/loaderPolyfill.js`,
+        `gzip -f ${serverAssetBase}/versioned/main.js`,
       ],
       parallel: false,
       __unparsed__: [],

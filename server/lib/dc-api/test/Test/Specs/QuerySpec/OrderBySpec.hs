@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Test.Specs.QuerySpec.OrderBySpec (spec) where
 
 import Control.Arrow ((>>>))
@@ -12,6 +14,7 @@ import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (fromMaybe, isJust)
 import Data.Ord (Down (..))
 import Hasura.Backends.DataConnector.API
+import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.AgentAPI (queryGuarded)
 import Test.Data (TestData (..))
 import Test.Data qualified as Data
@@ -357,6 +360,49 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
 
       Data.responseRows receivedAlbums `rowsShouldBe` expectedArtists
       _qrAggregates receivedAlbums `jsonShouldBe` Nothing
+
+    it "can order results by an aggregate function applied to a column of a related table" $ do
+      -- Order artists by their highest album id descending, but only artists that have any albums
+      let orderByRelations =
+            HashMap.fromList
+              [ ( _tdAlbumsRelationshipName,
+                  OrderByRelation
+                    Nothing
+                    mempty
+                )
+              ]
+      let orderBy =
+            OrderBy orderByRelations $
+              NonEmpty.fromList
+                [ OrderByElement [_tdAlbumsRelationshipName] (orderBySingleColumnAggregateMax (_tdColumnName "AlbumId") albumIdNameScalarType) Descending
+                ]
+      let whereExp =
+            Exists
+              (RelatedTable _tdAlbumsRelationshipName)
+              (Not $ ApplyUnaryComparisonOperator IsNull (_tdCurrentComparisonColumn "AlbumId" albumIdNameScalarType))
+      let query =
+            artistsQueryRequest
+              & qrQuery . qOrderBy ?~ orderBy
+              & qrQuery . qWhere ?~ whereExp
+              & qrTableRelationships
+                .~ [ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships
+                   ]
+      receivedArtists <- queryGuarded query
+
+      let findRelatedAlbums (artist :: HashMap FieldName FieldValue) = fromMaybe [] do
+            artistId <- artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
+            pure $ filter (\album -> album ^? Data.field "ArtistId" . Data._ColumnFieldNumber == Just artistId) _tdAlbumsRows
+
+      let expectedArtists =
+            _tdArtistsRows
+              & fmap (\artist -> (artist, findRelatedAlbums artist))
+              & filter (\(_artist, albums) -> any (\album -> album ^? Data.field "AlbumId" . Data._ColumnFieldNull /= Just ()) albums)
+              & fmap (\(artist, albums) -> (artist, maximum $ (albums & fmap (\album -> album ^? Data.field "AlbumId" . Data._ColumnFieldNumber))))
+              & sortOn (\row -> (Down (row ^. _2)))
+              & fmap (^. _1)
+
+      Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
+      _qrAggregates receivedArtists `jsonShouldBe` Nothing
   where
     albumsQuery :: Query
     albumsQuery =
@@ -388,7 +434,11 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
           query = Data.emptyQuery & qFields ?~ fields
        in QueryRequest _tdInvoicesTableName [] query
 
+    orderBySingleColumnAggregateMax :: ColumnName -> ScalarType -> OrderByTarget
+    orderBySingleColumnAggregateMax columnName resultType = OrderBySingleColumnAggregate $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|max|]) columnName resultType
+
     albumTitleScalarType = _tdFindColumnScalarType _tdAlbumsTableName "Title"
+    albumIdNameScalarType = _tdFindColumnScalarType _tdAlbumsTableName "AlbumId"
     artistNameScalarType = _tdFindColumnScalarType _tdArtistsTableName "Name"
 
 data NullableOrdered a

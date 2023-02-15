@@ -183,9 +183,10 @@ translateOrderByElement sessionVariables sourceTableName orderDirection targetRe
     orderByTarget <- case aggregateOrderByElement of
       AAOCount ->
         pure API.OrderByStarCountAggregate
-      AAOOp aggFunctionTxt ColumnInfo {..} -> do
+      AAOOp aggFunctionTxt resultType ColumnInfo {..} -> do
         aggFunction <- lift $ translateSingleColumnAggregateFunction aggFunctionTxt
-        pure . API.OrderBySingleColumnAggregate $ API.SingleColumnAggregate aggFunction $ Witch.from ciColumn
+        let resultScalarType = Witch.from $ columnTypeToScalarType resultType
+        pure . API.OrderBySingleColumnAggregate $ API.SingleColumnAggregate aggFunction (Witch.from ciColumn) resultScalarType
 
     let translatedOrderByElement =
           API.OrderByElement
@@ -382,8 +383,9 @@ translateAggregateField fieldPrefix fieldName = \case
 
     fmap (HashMap.fromList . catMaybes) . forM _aoFields $ \(columnFieldName, columnField) ->
       case columnField of
-        CFCol column _columnType ->
-          pure . Just $ (applyPrefix fieldPrefix' columnFieldName, API.SingleColumn . API.SingleColumnAggregate aggFunction $ Witch.from column)
+        CFCol column resultType ->
+          let resultScalarType = Witch.from $ columnTypeToScalarType resultType
+           in pure . Just $ (applyPrefix fieldPrefix' columnFieldName, API.SingleColumn $ API.SingleColumnAggregate aggFunction (Witch.from column) resultScalarType)
         CFExp _txt ->
           -- We ignore literal text fields (we don't send them to the data connector agent)
           -- and add them back to the response JSON when we reshape what the agent returns

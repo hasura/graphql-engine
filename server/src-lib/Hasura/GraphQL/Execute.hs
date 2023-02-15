@@ -56,6 +56,7 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Subscription
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
+import Hasura.Server.Init qualified as Init
 import Hasura.Server.Prometheus (PrometheusMetrics)
 import Hasura.Server.Types (ReadOnlyMode (..), RequestId (..))
 import Hasura.Session
@@ -71,7 +72,7 @@ data ExecutionCtx = ExecutionCtx
     _ecxSchemaCache :: SchemaCache,
     _ecxSchemaCacheVer :: SchemaCacheVer,
     _ecxHttpManager :: HTTP.Manager,
-    _ecxEnableAllowList :: Bool,
+    _ecxEnableAllowList :: Init.AllowListStatus,
     _ecxReadOnlyMode :: ReadOnlyMode,
     _ecxPrometheusMetrics :: PrometheusMetrics
   }
@@ -285,16 +286,16 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders oper
 
 checkQueryInAllowlist ::
   (MonadError QErr m) =>
-  Bool ->
+  Init.AllowListStatus ->
   AllowlistMode ->
   UserInfo ->
   GQLReqParsed ->
   SchemaCache ->
   m ()
-checkQueryInAllowlist allowlistEnabled allowlistMode userInfo req schemaCache =
+checkQueryInAllowlist allowListStatus allowlistMode userInfo req schemaCache =
   -- only for non-admin roles
   -- check if query is in allowlist
-  when (allowlistEnabled && role /= adminRoleName) do
+  when (Init.isAllowListEnabled allowListStatus && role /= adminRoleName) do
     let query = G.ExecutableDocument . unGQLExecDoc $ _grQuery req
         allowlist = scAllowlist schemaCache
         allowed = allowlistAllowsQuery allowlist allowlistMode role query

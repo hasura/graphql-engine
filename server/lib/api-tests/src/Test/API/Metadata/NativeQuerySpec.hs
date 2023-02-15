@@ -321,6 +321,27 @@ tests opts = do
           []
         |]
 
+  describe "Validation fails on untrack a native query" do
+    it "when native query does not exist" $
+      \testEnv -> do
+        shouldReturnYaml
+          opts
+          ( GraphqlEngine.postMetadataWithStatus
+              400
+              testEnv
+              [yaml|
+              type: pg_untrack_native_query
+              args:
+                root_field_name: some_native_query
+                source: postgres
+            |]
+          )
+          [yaml|
+          code: not-found
+          error: "Native query 'some_native_query' not found in source 'postgres'."
+          path: "$.args"
+        |]
+
   describe "Validation fails on track a native query when query" do
     it "has a syntax error" $
       \testEnv -> do

@@ -9,6 +9,7 @@ import { CustomFieldNames } from '@/features/Data';
 import { Button } from '@/new-components/Button';
 import { TableTrackingCustomizationModalKey } from '@/store/modal/modal.constants';
 import { BsBoxArrowUpRight } from 'react-icons/bs';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 import { FaCog, FaDatabase, FaFolder, FaPlusCircle } from 'react-icons/fa';
 import {
   currentDriver,
@@ -23,7 +24,7 @@ import { modalKeySelector } from '../../../../store/modal/modal.selectors';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import styles from '../../../Common/Common.module.scss';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
@@ -250,7 +251,7 @@ class Schema extends Component {
           <span className={styles.add_mar_left_small}>
             <ToolTip message={tooltip} />
           </span>
-          <span className={styles.add_mar_left}>{actionElement}</span>
+          {actionElement}
         </div>
       );
     };
@@ -456,7 +457,7 @@ class Schema extends Component {
       const heading = getSectionHeading(
         'Untracked tables or views',
         'Tables or views that are not exposed over the GraphQL API',
-        getTrackAllBtn()
+        <span className={styles.add_mar_left}>{getTrackAllBtn()}</span>
       );
 
       return (
@@ -576,7 +577,7 @@ class Schema extends Component {
         'Untracked foreign-key relationships',
         'Relationships inferred via foreign-keys that are not exposed over the GraphQL API',
         <>
-          <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
+          <LearnMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
           <span className={styles.add_mar_left}>{getTrackAllBtn()}</span>
         </>
       );
@@ -597,7 +598,7 @@ class Schema extends Component {
       const heading = getSectionHeading(
         'Untracked custom functions',
         'Custom functions that are not exposed over the GraphQL API',
-        <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/custom-functions.html" />
+        <LearnMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/custom-functions.html" />
       );
 
       return (

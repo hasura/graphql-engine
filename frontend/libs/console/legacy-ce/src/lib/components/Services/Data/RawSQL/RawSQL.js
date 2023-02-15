@@ -5,10 +5,11 @@ import AceEditor from 'react-ace';
 import 'brace/mode/sql';
 
 import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 import { Button } from '@/new-components/Button';
 import Modal from '../../../Common/Modal/Modal';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+
 import Alert from '../../../Common/Alert';
 import StatementTimeout from './StatementTimeout';
 import { parseCreateSQL, removeCommentsSQL } from './utils';
@@ -382,9 +383,9 @@ const RawSQL = ({
             'top level fields. Functions only intended to be used as computed fields should not be tracked.'
           }
         />
-        &nbsp;
-        <KnowMoreLink
-          text={'See supported functions requirements'}
+
+        <LearnMoreLink
+          text={'(See supported functions requirements)'}
           href={
             'https://hasura.io/docs/latest/graphql/core/schema/custom-functions.html#supported-sql-functions'
           }

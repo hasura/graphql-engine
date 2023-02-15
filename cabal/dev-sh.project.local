@@ -19,9 +19,6 @@ package *
     -j2
     +RTS -A64m -n2m -RTS
 
--- Modify this to '+optimize-hasura' to enable optimizations. Be sure also to comment
--- 'coverage: true' below for full prod performance.
---
 -- NOTE: new-build may report a misleading 'Build profile: -O1'
 -- See:https://github.com/haskell/cabal/issues/6221
 flags: -optimize-hasura

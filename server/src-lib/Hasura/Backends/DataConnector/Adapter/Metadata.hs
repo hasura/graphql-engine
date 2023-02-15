@@ -125,7 +125,7 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
       capabilitiesU <-
         ignoreTraceT
           . flip runAgentClientT (AgentClientContext logger _dcoUri manager Nothing)
-          $ genericClient // API._capabilities
+          $ genericClient @API.Routes // API._capabilities
 
       let defaultAction = throw400 DataConnectorError "Unexpected data connector capabilities response - Unexpected Type"
           capabilitiesAction API.CapabilitiesResponse {..} = pure $ DC.DataConnectorInfo options _crCapabilities _crConfigSchemaResponse _crDisplayName _crReleaseName

@@ -27,6 +27,7 @@ import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..), IfMatched)
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
@@ -44,13 +45,12 @@ executeInsert ::
   Options.StringifyNumbers ->
   SourceConfig 'MSSQL ->
   AnnotatedInsert 'MSSQL Void (UnpreparedValue 'MSSQL) ->
-  m (ExceptT QErr IO EncJSON)
+  m (OnBaseMonad (ExceptT QErr) EncJSON)
 executeInsert userInfo stringifyNum sourceConfig annInsert = do
   queryTags <- ask
   -- Convert the leaf values from @'UnpreparedValue' to sql @'Expression'
   insert <- traverse (prepareValueQuery sessionVariables) annInsert
-  let insertTx = buildInsertTx tableName withAlias stringifyNum insert queryTags
-  pure $ mssqlRunReadWrite (_mscExecCtx sourceConfig) insertTx
+  pure $ OnBaseMonad $ mssqlRunReadWrite (_mscExecCtx sourceConfig) $ buildInsertTx tableName withAlias stringifyNum insert queryTags
   where
     sessionVariables = _uiSession userInfo
     tableName = _aiTableName $ _aiData annInsert
@@ -143,12 +143,13 @@ executeInsert userInfo stringifyNum sourceConfig annInsert = do
 --
 --    When executed, the above statement returns a single row with mutation response as a string value and check constraint result as an integer value.
 buildInsertTx ::
+  (MonadIO m) =>
   TSQL.TableName ->
   Text ->
   Options.StringifyNumbers ->
   AnnotatedInsert 'MSSQL Void Expression ->
   QueryTagsComment ->
-  Tx.TxET QErr IO EncJSON
+  Tx.TxET QErr m EncJSON
 buildInsertTx tableName withAlias stringifyNum insert queryTags = do
   let tableColumns = _aiTableColumns $ _aiData insert
       ifMatchedField = _biIfMatched . _aiBackendInsert . _aiData $ insert
@@ -198,11 +199,12 @@ buildInsertTx tableName withAlias stringifyNum insert queryTags = do
 --
 --   Should be used as part of a bigger transaction in 'buildInsertTx'.
 buildUpsertTx ::
+  MonadIO m =>
   TSQL.TableName ->
   AnnotatedInsert 'MSSQL Void Expression ->
   IfMatched Expression ->
   QueryTagsComment ->
-  Tx.TxET QErr IO ()
+  Tx.TxET QErr m ()
 buildUpsertTx tableName insert ifMatched queryTags = do
   let presets = _aiPresetValues $ _aiData insert
       insertColumnNames =
@@ -234,11 +236,12 @@ buildUpsertTx tableName insert ifMatched queryTags = do
 
 -- | Builds a response to the user using the values in the temporary table named #inserted.
 buildInsertResponseTx ::
+  MonadIO m =>
   Options.StringifyNumbers ->
   Text ->
   AnnotatedInsert 'MSSQL Void Expression ->
   QueryTagsComment ->
-  Tx.TxET QErr IO (Text, Int)
+  Tx.TxET QErr m (Text, Int)
 buildInsertResponseTx stringifyNum withAlias insert queryTags = do
   -- Generate a SQL SELECT statement which outputs the mutation response using the #inserted
   mutationOutputSelect <- runFromIr $ mkMutationOutputSelect stringifyNum withAlias $ _aiOutput insert

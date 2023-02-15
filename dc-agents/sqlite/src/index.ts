@@ -11,6 +11,8 @@ import prometheus from 'prom-client';
 import { runRawOperation } from './raw';
 import { DATASETS, DATASET_DELETE, LOG_LEVEL, METRICS, MUTATIONS, PERMISSIVE_CORS, PRETTY_PRINT_LOGS } from './environment';
 import { cloneDataset, deleteDataset, getDataset } from './datasets';
+import { runMutation } from './mutation';
+import { ErrorWithStatusCode } from './util';
 
 const port = Number(process.env.PORT) || 8100;
 
@@ -34,17 +36,25 @@ server.setErrorHandler(function (error, _request, reply) {
   // Log error
   this.log.error(error)
 
-  const errorResponse: ErrorResponse = {
-    type: "uncaught-error",
-    message: "SQLite Agent: Uncaught Exception",
-    details: {
-      name: error.name,
-      message: error.message
-    }
-  };
+  if (error instanceof ErrorWithStatusCode) {
+    const errorResponse: ErrorResponse = {
+      type: error.type,
+      message: error.message,
+      details: error.details
+    };
+    reply.status(error.code).send(errorResponse);
 
-  // Send error response
-  reply.status(500).send(errorResponse);
+  } else {
+    const errorResponse: ErrorResponse = {
+      type: "uncaught-error",
+      message: "SQLite Agent: Uncaught Exception",
+      details: {
+        name: error.name,
+        message: error.message
+      }
+    };
+    reply.status(500).send(errorResponse);
+  }
 })
 
 if(METRICS) {
@@ -103,12 +113,7 @@ const sqlLogger = (sql: string): void => {
   server.log.debug({sql}, "Executed SQL");
 };
 
-// NOTE:
-//
-// While an ErrorResponse is available it is not currently used as there are no errors anticipated.
-// It is included here for illustrative purposes.
-//
-server.get<{ Reply: CapabilitiesResponse | ErrorResponse }>("/capabilities", async (request, _response) => {
+server.get<{ Reply: CapabilitiesResponse }>("/capabilities", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "capabilities.request");
   return capabilitiesResponse;
 });
@@ -119,16 +124,19 @@ server.get<{ Reply: SchemaResponse }>("/schema", async (request, _response) => {
   return getSchema(config, sqlLogger);
 });
 
-server.post<{ Body: QueryRequest, Reply: QueryResponse | ErrorResponse }>("/query", async (request, response) => {
+/**
+ * @throws ErrorWithStatusCode
+ */
+server.post<{ Body: QueryRequest, Reply: QueryResponse }>("/query", async (request, response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "query.request");
   const end = queryHistogram.startTimer()
   const config = getConfig(request);
-  const result : QueryResponse | ErrorResponse = await queryData(config, sqlLogger, request.body);
-  end();
-  if("message" in result) {
-    response.statusCode = 500;
+  try {
+    const result : QueryResponse = await queryData(config, sqlLogger, request.body);
+    return result;
+  } finally {
+    end();
   }
-  return result;
 });
 
 // TODO: Use derived types for body and reply
@@ -147,7 +155,9 @@ server.post<{ Body: QueryRequest, Reply: ExplainResponse}>("/explain", async (re
 if(MUTATIONS) {
   server.post<{ Body: MutationRequest, Reply: MutationResponse}>("/mutation", async (request, _response) => {
     server.log.info({ headers: request.headers, query: request.body, }, "mutation.request");
-    throw Error("Mutations not yet implemented");
+    // TODO: Mutation Histogram?
+    const config = getConfig(request);
+    return runMutation(config, sqlLogger, request.body);
   });
 }
 
@@ -177,9 +187,6 @@ if(DATASETS) {
   server.get<{ Params: { template_name: DatasetTemplateName, }, Reply: DatasetGetTemplateResponse }>("/datasets/templates/:template_name", async (request, _response) => {
     server.log.info({ headers: request.headers, query: request.body, }, "datasets.templates.get");
     const result = await getDataset(request.params.template_name);
-    if(! result.exists) {
-      _response.statusCode = 404;
-    }
     return result;
   });
 
@@ -219,9 +226,9 @@ server.get("/", async (request, response) => {
           <li><a href="/raw">POST /raw - Raw Query Handler</a>
           <li><a href="/health">GET /health - Healthcheck</a>
           <li><a href="/metrics">GET /metrics - Prometheus formatted metrics</a>
-          <li><a href="/datasets/NAME">GET /datasets/{NAME} - Information on Dataset</a>
-          <li><a href="/datasets/NAME">POST /datasets/{NAME} - Create a Dataset</a>
-          <li><a href="/datasets/NAME">DELETE /datasets/{NAME} - Delete a Dataset</a>
+          <li><a href="/datasets/templates/NAME">GET /datasets/templates/{NAME} - Information on Dataset</a>
+          <li><a href="/datasets/clones/NAME">POST /datasets/clones/{NAME} - Create a Dataset</a>
+          <li><a href="/datasets/clones/NAME">DELETE /datasets/clones/{NAME} - Delete a Dataset</a>
         </ul>
       </body>
     </html>

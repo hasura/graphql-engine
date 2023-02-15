@@ -51,12 +51,12 @@ services:
       - CIRCLE_NODE_INDEX=1
       - CIRCLE_NODE_TOTAL=1
       - OUTPUT_FOLDER=/output
-      - HASURA_GRAPHQL_DATABASE_URL=postgresql://postgres:hasura@tests-py-postgres-1/postgres
-      - HASURA_GRAPHQL_DATABASE_URL_2=postgresql://postgres:hasura@tests-py-postgres-2/postgres
+      - HASURA_GRAPHQL_DATABASE_URL=postgresql://postgres:hasura@hge-python-tests-postgres-1/postgres
+      - HASURA_GRAPHQL_DATABASE_URL_2=postgresql://postgres:hasura@hge-python-tests-postgres-2/postgres
       - HASURA_GRAPHQL_CITUS_SOURCE_URL=postgresql://postgres:hasura@citus/postgres
       - HASURA_GRAPHQL_MSSQL_SOURCE_URL=DRIVER={ODBC Driver 18 for SQL Server};SERVER=sqlserver,1433;Uid=sa;Pwd=Password!;Encrypt=optional
-      - HASURA_GRAPHQL_PG_SOURCE_URL_1=postgresql://postgres:hasura@tests-py-postgres-1/postgres
-      - HASURA_GRAPHQL_PG_SOURCE_URL_2=postgresql://postgres:hasura@tests-py-postgres-2/postgres
+      - HASURA_GRAPHQL_PG_SOURCE_URL_1=postgresql://postgres:hasura@hge-python-tests-postgres-1/postgres
+      - HASURA_GRAPHQL_PG_SOURCE_URL_2=postgresql://postgres:hasura@hge-python-tests-postgres-2/postgres
       - HASURA_BIGQUERY_PROJECT_ID
       - HASURA_BIGQUERY_SERVICE_KEY
       - SERVER_TEST_TO_RUN

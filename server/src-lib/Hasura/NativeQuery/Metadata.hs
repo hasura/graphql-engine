@@ -4,7 +4,7 @@
 -- | This module houses the types and functions associated with the default
 -- implementation of the metadata of native queries.
 module Hasura.NativeQuery.Metadata
-  ( NativeQueryNameImpl (..),
+  ( NativeQueryName (..),
     NativeQueryInfoImpl (..),
     NativeQueryArgumentName (..),
     TrackNativeQueryImpl (..),
@@ -20,28 +20,14 @@ import Autodocodec
 import Autodocodec qualified as AC
 import Data.Aeson
 import Data.Bifunctor (first)
+import Data.Environment qualified as Env
 import Data.Text qualified as T
-import Data.Text.Extended (ToTxt)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.NativeQuery.Types
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
-
--- The name of a native query. This appears as a root field name in the graphql schema.
-newtype NativeQueryNameImpl = NativeQueryNameImpl {getNativeQueryNameImpl :: Text}
-  deriving newtype (Eq, Ord, Show, Hashable, NFData, ToJSON, FromJSON, ToTxt)
-  deriving stock (Generic)
-
-instance HasCodec NativeQueryNameImpl where
-  codec = dimapCodec NativeQueryNameImpl getNativeQueryNameImpl codec
-
-instance FromJSONKey NativeQueryNameImpl
-
-instance ToJSONKey NativeQueryNameImpl
-
----------------------------------------
 
 newtype RawQuery = RawQuery {getRawQuery :: Text}
   deriving newtype (Eq, Ord, Show, FromJSON, ToJSON)
@@ -122,7 +108,7 @@ instance NFData (NativeQueryArgumentName)
 
 -- | Default implementation of the Native Query metadata info object.
 data NativeQueryInfoImpl (b :: BackendType) = NativeQueryInfoImpl
-  { nqiiRootFieldName :: NativeQueryNameImpl,
+  { nqiiRootFieldName :: NativeQueryName,
     nqiiCode :: InterpolatedQuery NativeQueryArgumentName,
     nqiiReturns :: TableName b,
     nqiiArguments :: HashMap NativeQueryArgumentName (ScalarType b),
@@ -174,7 +160,7 @@ deriving via
 -- | Default implementation of the 'track_native_query' request payload.
 data TrackNativeQueryImpl (b :: BackendType) = TrackNativeQueryImpl
   { tnqSource :: SourceName,
-    tnqRootFieldName :: NativeQueryNameImpl,
+    tnqRootFieldName :: NativeQueryName,
     tnqCode :: Text,
     tnqArguments :: HashMap NativeQueryArgumentName (ScalarType b),
     tnqDescription :: Maybe Text,
@@ -189,10 +175,11 @@ defaultNativeQueryTrackToInfo ::
     NativeQueryMetadata b,
     NativeQueryInfo b ~ NativeQueryInfoImpl b
   ) =>
+  Env.Environment ->
   SourceConnConfiguration b ->
   TrackNativeQueryImpl b ->
   m (NativeQueryInfoImpl b)
-defaultNativeQueryTrackToInfo sourceConnConfig TrackNativeQueryImpl {..} = do
+defaultNativeQueryTrackToInfo env sourceConnConfig TrackNativeQueryImpl {..} = do
   nqiiCode <- liftEither $ mapLeft NativeQueryParseError (parseInterpolatedQuery tnqCode)
   let nqiiRootFieldName = tnqRootFieldName
       nqiiReturns = tnqReturns
@@ -200,7 +187,7 @@ defaultNativeQueryTrackToInfo sourceConnConfig TrackNativeQueryImpl {..} = do
       nqiiDescription = tnqDescription
       nqInfoImpl = NativeQueryInfoImpl {..}
 
-  validateNativeQueryAgainstSource @b sourceConnConfig nqInfoImpl
+  validateNativeQueryAgainstSource @b env sourceConnConfig nqInfoImpl
 
   pure nqInfoImpl
 

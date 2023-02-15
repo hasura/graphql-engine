@@ -8,6 +8,7 @@ import type {
   MetadataTable,
   Permission,
   SelectPermissionDefinition,
+  Source,
   UpdatePermissionDefinition,
 } from '@/features/hasura-metadata-types';
 
@@ -19,6 +20,10 @@ import {
 import { createDefaultValues } from '../../../../components/RowPermissionsBuilder';
 
 import type { QueryType } from '../../../../../types';
+import {
+  MetadataDataSource,
+  TableEntry,
+} from '../../../../../../../metadata/types';
 
 export const getCheckType = (
   check?: Record<string, unknown> | null
@@ -111,7 +116,7 @@ export interface UseDefaultValuesArgs {
 export const getRowPermissionsForAllOtherQueriesMatchingSelectedRole = (
   selectedQuery: QueryType,
   selectedRole: string,
-  table?: MetadataTable
+  table?: TableEntry
 ) => {
   const res = Object.entries(table || {}).reduce<
     Array<{ queryType: QueryType; value: any }>
@@ -163,20 +168,20 @@ export const createPermission = {
   select: (
     permission: SelectPermissionDefinition,
     tableColumns: TableColumn[],
-    schema: GraphQLSchema,
     tableName: string,
-    tableConfig: MetadataTable['configuration']
+    metadataSource: MetadataDataSource | undefined
   ) => {
-    const { filter, operators } = createDefaultValues({
+    const { filter, operators: ops } = createDefaultValues({
       tableName,
       existingPermission: permission.filter,
-      schema,
-      tableConfig,
+      tableColumns,
+      sourceMetadata: metadataSource,
     });
 
     const filterType = getCheckType(permission?.filter);
 
     const columns = getColumns(permission?.columns || [], tableColumns);
+
     const rowCount = getRowCount({
       currentQueryPermissions: permission,
     });
@@ -190,7 +195,7 @@ export const createPermission = {
       columns,
       rowCount,
       aggregationEnabled,
-      operators,
+      operators: ops,
       query_root_fields: permission.query_root_fields || null,
       subscription_root_fields: permission.subscription_root_fields || null,
     };
@@ -252,7 +257,7 @@ export const createPermission = {
 };
 
 interface GetCurrentPermissionArgs {
-  table?: MetadataTable;
+  table?: TableEntry;
   roleName: string;
   queryType: QueryType;
 }
@@ -284,11 +289,11 @@ export const getCurrentPermission = ({
 
 interface ObjArgs {
   queryType: QueryType;
-  selectedTable: MetadataTable;
+  selectedTable: TableEntry;
   tableColumns: TableColumn[];
   roleName: string;
-  schema: any;
   tableName: string;
+  metadataSource: MetadataDataSource | undefined;
 }
 
 export const createPermissionsObject = ({
@@ -296,8 +301,8 @@ export const createPermissionsObject = ({
   selectedTable,
   tableColumns,
   roleName,
-  schema,
   tableName,
+  metadataSource,
 }: ObjArgs) => {
   const selectedPermission = getCurrentPermission({
     table: selectedTable,
@@ -315,9 +320,9 @@ export const createPermissionsObject = ({
       return createPermission.select(
         selectedPermission.permission as SelectPermissionDefinition,
         tableColumns,
-        schema,
         tableName,
-        selectedTable.configuration
+        // selectedTable.configuration,
+        metadataSource
       );
     case 'update':
       return createPermission.update(

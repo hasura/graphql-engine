@@ -65,7 +65,7 @@ optimistic_updates = true # default: true
 # status check is incomplete when a PR is being merged, Kodiak will skip the PR.
 # Use this option for status checks that run indefinitely, like deploy jobs or
 # the WIP GitHub App.
-dont_wait_on_status_checks = [] # default: [], options: list of check names (e.g. ["ci/circleci: lint_api"])
+dont_wait_on_status_checks = ["checking required reviews","Required reviews"] # default: [], options: list of check names (e.g. ["ci/circleci: lint_api"])
 
 # If a PR is passing all checks and is able to be merged, merge it without
 # placing it in the merge queue. This option adds some unfairness where PRs

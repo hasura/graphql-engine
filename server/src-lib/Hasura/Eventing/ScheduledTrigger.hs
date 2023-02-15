@@ -78,6 +78,10 @@ module Hasura.Eventing.ScheduledTrigger
     CronEventSeed (..),
     LockedEventsCtx (..),
 
+    -- * Cron trigger stats logger
+    createFetchedCronTriggerStatsLogger,
+    closeFetchedCronTriggersStatsLogger,
+
     -- * Scheduled events stats logger
     createFetchedScheduledEventsStatsLogger,
     closeFetchedScheduledEventsStatsLogger,
@@ -129,6 +133,7 @@ import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
 import Data.SerializableBlob qualified as SB
 import Data.Set qualified as Set
+import Data.Text.Extended ((<<>))
 import Data.Time.Clock
 import Data.URL.Template (printURLTemplate)
 import Database.PG.Query qualified as PG
@@ -166,9 +171,10 @@ runCronEventsGenerator ::
     MonadMetadataStorage m
   ) =>
   L.Logger L.Hasura ->
+  FetchedCronTriggerStatsLogger ->
   IO SchemaCache ->
   m void
-runCronEventsGenerator logger getSC = do
+runCronEventsGenerator logger cronTriggerStatsLogger getSC = do
   forever $ do
     sc <- liftIO getSC
     -- get cron triggers from cache
@@ -181,6 +187,8 @@ runCronEventsGenerator logger getSC = do
       -- When shutdown is initiated, we stop generating new cron events
       eitherRes <- runExceptT $ do
         deprivedCronTriggerStats <- liftEitherM $ getDeprivedCronTriggerStats $ Map.keys cronTriggersCache
+        -- Log fetched deprived cron trigger stats
+        logFetchedCronTriggersStats cronTriggerStatsLogger deprivedCronTriggerStats
         -- join stats with cron triggers and produce @[(CronTriggerInfo, CronTriggerStats)]@
         cronTriggersForHydrationWithStats <-
           catMaybes
@@ -244,7 +252,8 @@ processCronEvents logger httpMgr prometheusMetrics cronEvents getSC lockedCronEv
     case Map.lookup name cronTriggersInfo of
       Nothing ->
         logInternalError $
-          err500 Unexpected "could not find cron trigger in cache"
+          err500 Unexpected $
+            "could not find cron trigger " <> name <<> " in the schema cache"
       Just CronTriggerInfo {..} -> do
         let payload =
               ScheduledEventWebhookPayload
@@ -1109,3 +1118,23 @@ logFetchedScheduledEventsStats ::
   m ()
 logFetchedScheduledEventsStats logger cron oneOff =
   logStats logger (FetchedScheduledEventsStats cron oneOff 1)
+
+-- | Logger to accumulate stats of fetched cron triggers, for generating cron events, over a period of time and
+-- log once using @'L.Logger L.Hasura'.
+-- See @'createStatsLogger' for more details.
+createFetchedCronTriggerStatsLogger :: (MonadIO m) => L.Logger L.Hasura -> m FetchedCronTriggerStatsLogger
+createFetchedCronTriggerStatsLogger = createStatsLogger
+
+-- | Close the fetched cron trigger stats logger.
+closeFetchedCronTriggersStatsLogger ::
+  (MonadIO m) => L.Logger L.Hasura -> FetchedCronTriggerStatsLogger -> m ()
+closeFetchedCronTriggersStatsLogger = closeStatsLogger L.cronEventGeneratorProcessType
+
+-- | Log statistics of fetched cron triggers. See @'logStats' for more details.
+logFetchedCronTriggersStats ::
+  (MonadIO m) =>
+  FetchedCronTriggerStatsLogger ->
+  [CronTriggerStats] ->
+  m ()
+logFetchedCronTriggersStats logger cronTriggerStats =
+  logStats logger (FetchedCronTriggerStats cronTriggerStats 1)

@@ -169,7 +169,7 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
                 nullable: false
                 type: number
                 insertable: *supportsInserts
-                updatable: *supportsUpdates
+                updatable: false
               - name: *artistId
                 nullable: false
                 type: number

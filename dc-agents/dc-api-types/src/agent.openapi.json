@@ -1416,6 +1416,9 @@
           "function": {
             "$ref": "#/components/schemas/SingleColumnAggregateFunction"
           },
+          "result_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          },
           "type": {
             "enum": [
               "single_column"
@@ -1426,6 +1429,7 @@
         "required": [
           "function",
           "column",
+          "result_type",
           "type"
         ],
         "type": "object"
@@ -1886,6 +1890,9 @@
           "function": {
             "$ref": "#/components/schemas/SingleColumnAggregateFunction"
           },
+          "result_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          },
           "type": {
             "enum": [
               "single_column_aggregate"
@@ -1896,6 +1903,7 @@
         "required": [
           "function",
           "column",
+          "result_type",
           "type"
         ],
         "type": "object"

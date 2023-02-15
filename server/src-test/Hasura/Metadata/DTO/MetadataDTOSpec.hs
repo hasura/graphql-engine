@@ -21,6 +21,7 @@ import Hasura.Metadata.DTO.MetadataV2 (MetadataV2 (..))
 import Hasura.Metadata.DTO.MetadataV3 (MetadataV3 (..))
 import Hasura.Metadata.DTO.Placeholder (PlaceholderArray (PlaceholderArray))
 import Hasura.Prelude
+import Hasura.RQL.Types.CustomTypes (emptyCustomTypes)
 import Hasura.RQL.Types.Metadata (Metadata, MetadataDefaults, metadataToDTO, overrideMetadataDefaults)
 import Test.Hspec
 import Test.Hspec.Expectations.Json (shouldBeJson)
@@ -104,7 +105,7 @@ emptyMetadataV3 =
       metaV3QueryCollections = mempty,
       metaV3Allowlist = Nothing,
       metaV3Actions = Nothing,
-      metaV3CustomTypes = Nothing,
+      metaV3CustomTypes = emptyCustomTypes,
       metaV3CronTriggers = Nothing,
       metaV3RestEndpoints = Nothing,
       metaV3ApiLimits = Nothing,

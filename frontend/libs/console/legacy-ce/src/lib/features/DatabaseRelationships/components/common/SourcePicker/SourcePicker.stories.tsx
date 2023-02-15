@@ -42,7 +42,6 @@ export const Basic: ComponentStory<typeof SourcePicker> = () => (
 );
 
 const defaultValue = mapItemsToSourceOptions([items[0]])[0];
-console.log('!', defaultValue);
 export const Preselected: ComponentStory<typeof SourcePicker> = () => {
   return (
     <SimpleForm

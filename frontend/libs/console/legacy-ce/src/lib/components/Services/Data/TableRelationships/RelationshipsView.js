@@ -7,6 +7,7 @@ import {
   availableFeatureFlagIds,
 } from '@/features/FeatureFlags';
 import { DatabaseRelationshipsTab } from '@/features/DatabaseRelationships';
+import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 import TableHeader from '../TableCommon/TableHeader';
 import { getObjArrRelList } from './utils';
 import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
@@ -15,7 +16,6 @@ import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import {
   currentDriver,
   findAllFromRel,
@@ -207,7 +207,7 @@ const RelationshipsView = ({
                   Table Relationships
                   <ToolTip message={'Relationships to tables / views'} />
                   &nbsp;
-                  <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
+                  <LearnMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
                 </h4>
                 {addedRelationshipsView}
                 <div className={styles.activeEdit}>

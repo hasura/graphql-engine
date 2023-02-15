@@ -650,7 +650,7 @@ unfurlAnnotatedOrderByElement =
               (const (fromAlias selectFrom))
               ( case annAggregateOrderBy of
                   Ir.AAOCount -> pure (CountAggregate StarCountable)
-                  Ir.AAOOp text columnInfo -> do
+                  Ir.AAOOp text _resultType columnInfo -> do
                     fieldName <- fromColumnInfo columnInfo
                     pure (OpAggregate text (ColumnExpression fieldName))
               )

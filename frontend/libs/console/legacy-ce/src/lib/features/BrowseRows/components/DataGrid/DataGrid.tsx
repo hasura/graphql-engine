@@ -157,14 +157,6 @@ export const DataGrid = (props: DataGridProps) => {
         message: 'Successfully deleted row',
         type: 'success',
       });
-      console.log({
-        queryKeyBla: getBrowseRowsQueryKey({
-          dataSourceName,
-          table,
-          columns: undefined,
-          options,
-        }),
-      });
       queryClient.invalidateQueries(
         getBrowseRowsQueryKey({
           dataSourceName,

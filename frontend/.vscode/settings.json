@@ -2,8 +2,12 @@
   "eslint.validate": ["json"],
   "cSpell.words": ["clsx", "hasura", "citus"],
   "tailwindCSS.experimental.classRegex": [
+    // detects in simple variables like const twFoo = `pt-2`;
     "tw\\w+ ?= ?`([^`]*)`",
-    "tw\\w+: ?`([^`]*)`"
+    // detects tw strings in clsx function calls like: clsx('pt-2', 'relative');
+    ["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^`]*)(?:'|\"|`)"],
+    // detects strings in objects and nested objects. Just prefix variable name with tw like so: const twStyleObject = {};
+    ["tw\\w+ = {\\s+([^;]+)\\s+};", "(?:'|\"|`)([^`]*)(?:'|\"|`)"]
   ],
   "tailwindCSS.rootFontSize": 14
 }

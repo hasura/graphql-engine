@@ -1,5 +1,4 @@
-import { getElementFromAlias } from '../../../helpers/eventHelpers';
-import { replaceMetadata, resetMetadata } from '../../../helpers/metadata';
+import { replaceMetadata, resetMetadata } from '../helpers/metadata';
 import { postgres } from '../../data/manage-database/postgres.spec';
 
 describe('check if remote schema to db relationships are created properly', () => {
@@ -54,25 +53,23 @@ describe('check if remote schema to db relationships are created properly', () =
 
   it('verify creating a new rs-to-db relationship', () => {
     cy.visit('/remote-schemas/manage/source_rs/relationships');
-    cy.get(getElementFromAlias('add-a-new-rs-relationship')).click();
-    cy.get(getElementFromAlias('radio-select-remoteDB')).click();
-    cy.get(getElementFromAlias('rs-to-db-rel-name')).type('RelationshipName');
-    cy.get(getElementFromAlias('select-rel-type')).select('array');
-    cy.get(getElementFromAlias('select-source-type')).select('Pokemon');
-    cy.get(getElementFromAlias('select-ref-db')).select('default');
-    cy.get(getElementFromAlias('select-ref-schema')).select('public');
-    cy.get(getElementFromAlias('select-ref-table')).select('destination_table');
-    cy.get(getElementFromAlias('select-source-field')).select('id');
-    cy.get(getElementFromAlias('select-ref-col')).select('name');
-    cy.get(getElementFromAlias('add-rs-relationship')).click();
+    cy.get('[data-test=add-a-new-rs-relationship').click();
+    cy.get('[data-test=radio-select-remoteDB').click();
+    cy.get('[data-test=rs-to-db-rel-name').type('RelationshipName');
+    cy.get('[data-test=select-rel-type').select('array');
+    cy.get('[data-test=select-source-type').select('Pokemon');
+    cy.get('[data-test=select-ref-db').select('default', { force: true });
+    cy.get('[data-test=select-ref-schema').select('public');
+    cy.get('[data-test=select-ref-table').select('destination_table');
+    cy.get('[data-test=select-source-field').select('id');
+    cy.get('[data-test=select-ref-col').select('name');
+    cy.get('[data-test=add-rs-relationship').click();
 
-    cy.get(getElementFromAlias('remote-schema-relationships-table')).should(
-      'exist'
-    );
-    cy.get(getElementFromAlias('remote-schema-relationships-table'))
+    cy.get('[data-test=remote-schema-relationships-table').should('exist');
+    cy.get('[data-test=remote-schema-relationships-table')
       .find('tr')
       .should('have.length', 2);
-    cy.get(getElementFromAlias('remote-schema-relationships-table')).contains(
+    cy.get('[data-test=remote-schema-relationships-table').contains(
       'td',
       'RelationshipName'
     );

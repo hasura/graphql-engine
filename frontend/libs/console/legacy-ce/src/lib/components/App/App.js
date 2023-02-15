@@ -6,7 +6,10 @@ import { hot } from 'react-hot-loader';
 import { ThemeProvider } from 'styled-components';
 import 'react-loading-skeleton/dist/skeleton.css';
 import ErrorBoundary from '../Error/ErrorBoundary';
-import { telemetryNotificationShown } from '../../telemetry/Actions';
+import {
+  telemetryNotificationShown,
+  setTelemetryNotificationShownInDB,
+} from '../../telemetry/Actions';
 import { showTelemetryNotification } from '../../telemetry/Notifications';
 import globals from '../../Globals';
 import styles from './App.module.scss';
@@ -57,6 +60,7 @@ const App = ({
       telemetryShown.current = true;
       dispatch(showTelemetryNotification());
       dispatch(telemetryNotificationShown());
+      dispatch(setTelemetryNotificationShownInDB());
     }
   }, [dispatch, telemetry, isContextCloud]);
 

@@ -5,6 +5,7 @@ export {
   useMetadataTables,
   useRemoteDatabaseRelationships,
   useRemoteSchemaRelationships,
+  useSupportedQueryTypes,
 } from './hooks/useMetadataTables';
 export { useMetadataVersion } from './hooks/useMetadataVersion';
 export { useMetadataTableComputedFields } from './hooks/useMetadataTableComputedFields';

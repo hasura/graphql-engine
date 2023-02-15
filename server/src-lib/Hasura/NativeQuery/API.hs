@@ -21,6 +21,7 @@ where
 
 import Control.Lens (preview, (^?))
 import Data.Aeson
+import Data.Environment qualified as Env
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.NativeQuery.Types
@@ -35,6 +36,7 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Server.Init.FeatureFlag as FF
 import Hasura.Server.Types (HasServerConfigCtx (..), ServerConfigCtx (..))
+import Language.GraphQL.Draft.Syntax (unName)
 
 -- | API payload for the 'get_native_query' endpoint.
 data GetNativeQuery (b :: BackendType) = GetNativeQuery
@@ -89,9 +91,10 @@ runTrackNativeQuery ::
     HasServerConfigCtx m,
     MonadIO m
   ) =>
+  Env.Environment ->
   BackendTrackNativeQuery b ->
   m EncJSON
-runTrackNativeQuery (BackendTrackNativeQuery trackNativeQueryRequest) = do
+runTrackNativeQuery env (BackendTrackNativeQuery trackNativeQueryRequest) = do
   throwIfFeatureDisabled
 
   sourceConnConfig <-
@@ -100,7 +103,7 @@ runTrackNativeQuery (BackendTrackNativeQuery trackNativeQueryRequest) = do
       =<< getMetadata
 
   (metadata :: NativeQueryInfo b) <- do
-    r <- liftIO $ runExceptT $ nativeQueryTrackToInfo @b sourceConnConfig trackNativeQueryRequest
+    r <- liftIO $ runExceptT $ nativeQueryTrackToInfo @b env sourceConnConfig trackNativeQueryRequest
     case r of
       Right nq -> pure nq
       Left (NativeQueryParseError e) -> throw400 ParseFailed e
@@ -124,20 +127,20 @@ runTrackNativeQuery (BackendTrackNativeQuery trackNativeQueryRequest) = do
 -- | API payload for the 'untrack_native_query' endpoint.
 data UntrackNativeQuery (b :: BackendType) = UntrackNativeQuery
   { utnqSource :: SourceName,
-    utnqRootFieldName :: NativeQueryName b
+    utnqRootFieldName :: NativeQueryName
   }
 
-deriving instance Backend b => Show (UntrackNativeQuery b)
+deriving instance Show (UntrackNativeQuery b)
 
-deriving instance Backend b => Eq (UntrackNativeQuery b)
+deriving instance Eq (UntrackNativeQuery b)
 
-instance Backend b => FromJSON (UntrackNativeQuery b) where
+instance FromJSON (UntrackNativeQuery b) where
   parseJSON = withObject "UntrackNativeQuery" $ \o -> do
     utnqSource <- o .: "source"
     utnqRootFieldName <- o .: "root_field_name"
     pure UntrackNativeQuery {..}
 
-instance Backend b => ToJSON (UntrackNativeQuery b) where
+instance ToJSON (UntrackNativeQuery b) where
   toJSON UntrackNativeQuery {..} =
     object
       [ "source" .= utnqSource,
@@ -159,6 +162,16 @@ runUntrackNativeQuery ::
 runUntrackNativeQuery q = do
   throwIfFeatureDisabled
 
+  -- Check source exists
+  sourceMetadata <-
+    maybe (throw400 NotFound $ "Source " <> sourceNameToText source <> " not found.") pure
+      . preview (metaSources . ix source . toSourceMetadata @b)
+      =<< getMetadata
+
+  -- Check native query exists
+  unless (any ((== fieldName) . nativeQueryInfoName @b) $ _smNativeQueries sourceMetadata) do
+    throw400 NotFound $ "Native query '" <> unName (getNativeQueryName fieldName) <> "' not found in source '" <> sourceNameToText source <> "'."
+
   let metadataObj =
         MOSourceObjId source $
           AB.mkAnyBackend $
@@ -172,7 +185,7 @@ runUntrackNativeQuery q = do
     source = utnqSource q
     fieldName = utnqRootFieldName q
 
-dropNativeQueryInMetadata :: forall b. BackendMetadata b => SourceName -> NativeQueryName b -> MetadataModifier
+dropNativeQueryInMetadata :: forall b. BackendMetadata b => SourceName -> NativeQueryName -> MetadataModifier
 dropNativeQueryInMetadata source rootFieldName =
   MetadataModifier $
     metaSources . ix source . toSourceMetadata @b . smNativeQueries %~ filter ((/= rootFieldName) . nativeQueryInfoName @b)

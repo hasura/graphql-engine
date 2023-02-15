@@ -1,7 +1,10 @@
 import { TableColumn } from '@/features/DataSource';
-
-import { Metadata, MetadataTable } from '@/features/hasura-metadata-types';
+import { Metadata } from '@/features/hasura-metadata-types';
 import { isPermission } from '../../../../../utils';
+import {
+  MetadataDataSource,
+  TableEntry,
+} from '../../../../../../../metadata/types';
 
 type Operation = 'insert' | 'select' | 'update' | 'delete';
 
@@ -23,15 +26,11 @@ export const getAllowedFilterKeys = (
 type GetMetadataTableArgs = {
   dataSourceName: string;
   table: unknown;
-  metadata: Metadata;
+  trackedTables: TableEntry[] | undefined;
 };
 
 const getMetadataTable = (args: GetMetadataTableArgs) => {
-  const { dataSourceName, table, metadata } = args;
-
-  const trackedTables = metadata.metadata?.sources?.find(
-    source => source.name === dataSourceName
-  )?.tables;
+  const { table, trackedTables } = args;
 
   const selectedTable = trackedTables?.find(
     trackedTable => JSON.stringify(trackedTable.table) === JSON.stringify(table)
@@ -46,7 +45,7 @@ const getMetadataTable = (args: GetMetadataTableArgs) => {
   };
 };
 
-const getRoles = (metadataTables?: MetadataTable[]) => {
+const getRoles = (metadataTables?: TableEntry[]) => {
   // go through all tracked tables
   const res = metadataTables?.reduce<Set<string>>((acc, each) => {
     // go through all permissions
@@ -66,20 +65,22 @@ const getRoles = (metadataTables?: MetadataTable[]) => {
   return Array.from(res || []);
 };
 
-interface Args {
+export interface CreateFormDataArgs {
   dataSourceName: string;
   table: unknown;
   metadata: Metadata;
   tableColumns: TableColumn[];
+  metadataSource: MetadataDataSource | undefined;
+  trackedTables: TableEntry[] | undefined;
 }
 
-export const createFormData = (props: Args) => {
-  const { dataSourceName, table, metadata, tableColumns } = props;
+export const createFormData = (props: CreateFormDataArgs) => {
+  const { dataSourceName, table, tableColumns, trackedTables } = props;
   // find the specific metadata table
   const metadataTable = getMetadataTable({
     dataSourceName,
     table,
-    metadata,
+    trackedTables: trackedTables,
   });
 
   const roles = getRoles(metadataTable.tables);

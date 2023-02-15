@@ -12,7 +12,7 @@ export const DEFAULT_STALE_TIME = 5 * 60000; // 5 minutes as default stale time
   Default stale time is 5 minutes, but can be adjusted using the staleTime arg
 */
 
-const METADATA_QUERY_KEY = 'export_metadata';
+export const METADATA_QUERY_KEY = 'export_metadata';
 
 export const useInvalidateMetadata = () => {
   const queryClient = useQueryClient();

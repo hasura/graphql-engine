@@ -242,7 +242,7 @@ const buildQueryForPathedOrderByElement = (orderByElement: OrderByElement, order
       case "single_column_aggregate":
         return {
           aggregates: {
-            [orderByElement.target.column]: { type: "single_column", column: orderByElement.target.column, function: orderByElement.target.function }
+            [orderByElement.target.column]: { type: "single_column", column: orderByElement.target.column, function: orderByElement.target.function, result_type: orderByElement.target.result_type }
           }
         };
       case "star_count_aggregate":

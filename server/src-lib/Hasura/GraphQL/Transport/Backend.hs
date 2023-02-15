@@ -3,6 +3,7 @@ module Hasura.GraphQL.Transport.Backend
   )
 where
 
+import Control.Monad.Trans.Control
 import Data.ByteString qualified as B
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -25,6 +26,7 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
   runDBQuery ::
     forall m.
     ( MonadIO m,
+      MonadBaseControl IO m,
       MonadError QErr m,
       MonadQueryLog m,
       MonadTrace m
@@ -35,13 +37,14 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
     UserInfo ->
     L.Logger L.Hasura ->
     SourceConfig b ->
-    ExecutionMonad b EncJSON ->
+    OnBaseMonad (ExecutionMonad b) EncJSON ->
     Maybe (PreparedQuery b) ->
     ResolvedConnectionTemplate b ->
     m (DiffTime, EncJSON)
   runDBMutation ::
     forall m.
     ( MonadIO m,
+      MonadBaseControl IO m,
       MonadError QErr m,
       MonadQueryLog m,
       MonadTrace m
@@ -52,13 +55,13 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
     UserInfo ->
     L.Logger L.Hasura ->
     SourceConfig b ->
-    ExecutionMonad b EncJSON ->
+    OnBaseMonad (ExecutionMonad b) EncJSON ->
     Maybe (PreparedQuery b) ->
     ResolvedConnectionTemplate b ->
     m (DiffTime, EncJSON)
   runDBSubscription ::
     forall m.
-    MonadIO m =>
+    (MonadIO m, MonadBaseControl IO m) =>
     SourceConfig b ->
     MultiplexedQuery b ->
     -- | WARNING: Postgres-specific, ignored by other backends
@@ -67,7 +70,7 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
     m (DiffTime, Either QErr [(CohortId, B.ByteString)])
   runDBStreamingSubscription ::
     forall m.
-    MonadIO m =>
+    (MonadIO m, MonadBaseControl IO m) =>
     SourceConfig b ->
     MultiplexedQuery b ->
     -- | WARNING: Postgres-specific, ignored by other backends
@@ -77,7 +80,9 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
   runDBQueryExplain ::
     forall m.
     ( MonadIO m,
-      MonadError QErr m
+      MonadError QErr m,
+      MonadBaseControl IO m,
+      MonadTrace m
     ) =>
     DBStepInfo b ->
     m EncJSON

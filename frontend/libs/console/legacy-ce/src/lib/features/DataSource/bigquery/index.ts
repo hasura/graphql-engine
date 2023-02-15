@@ -39,5 +39,8 @@ export const bigquery: Database = {
       const { name, dataset } = table as BigQueryTable;
       return `${dataset}_${name}`;
     },
+    getSupportedQueryTypes: async () => {
+      return ['select'];
+    },
   },
 };

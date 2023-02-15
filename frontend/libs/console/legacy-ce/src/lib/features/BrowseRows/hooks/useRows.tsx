@@ -75,7 +75,6 @@ export const useRows = ({
     columns,
     options,
   });
-  console.log({ queryKey });
 
   return useQuery({
     queryKey,

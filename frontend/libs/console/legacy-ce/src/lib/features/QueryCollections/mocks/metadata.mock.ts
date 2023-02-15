@@ -142,7 +142,6 @@ export const metadataHandlers: Partial<
         },
       };
     }
-    console.log({ query_name, queries: existingCollection.definition.queries });
     const existingQuery = existingCollection.definition.queries.find(
       q => q.name === query_name
     );

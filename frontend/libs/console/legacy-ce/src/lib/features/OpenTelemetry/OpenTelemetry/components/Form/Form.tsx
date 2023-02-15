@@ -63,7 +63,7 @@ export function Form(props: FormProps) {
         label="Endpoint"
         placeholder="Your OpenTelemetry endpoint"
         tooltip="OpenTelemetry compliant receiver endpoint URL."
-        knowMoreLink="https://hasura.io/docs/latest/enterprise/opentelemetry/#endpoint"
+        learnMoreLink="https://hasura.io/docs/latest/enterprise/opentelemetry/#endpoint"
         clearButton
         loading={skeletonMode}
       />
@@ -71,7 +71,7 @@ export function Form(props: FormProps) {
         name="connectionType"
         label="Connection Type"
         tooltip="The protocol to be used for the communication with the receiver. At the moment, only HTTP is supported."
-        knowMoreLink="https://hasura.io/docs/latest/enterprise/opentelemetry/#connection-type"
+        learnMoreLink="https://hasura.io/docs/latest/enterprise/opentelemetry/#connection-type"
         options={[{ value: 'http/protobuf', label: 'HTTP' }]}
         loading={skeletonMode}
         // At the beginning, only one Connection Type is available, hence it does not make sense
@@ -84,7 +84,7 @@ export function Form(props: FormProps) {
         name="dataType"
         label="Data Type"
         tooltip="The type of observability data points to be exported. At the moment, only Traces is supported."
-        knowMoreLink="https://hasura.io/docs/latest/enterprise/opentelemetry/#data-type"
+        learnMoreLink="https://hasura.io/docs/latest/enterprise/opentelemetry/#data-type"
         options={[{ value: 'traces', label: 'Traces' }]}
         loading={skeletonMode}
         // At the beginning, only one Data Type ia available, hence it does not make sense
@@ -98,7 +98,7 @@ export function Form(props: FormProps) {
         label="Batch Size"
         placeholder="A number between 1 and 512"
         tooltip="The maximum number of data points in an export request. The value should be between 1-512. Default value is 512."
-        knowMoreLink="https://hasura.io/docs/latest/enterprise/opentelemetry/#batch-size"
+        learnMoreLink="https://hasura.io/docs/latest/enterprise/opentelemetry/#batch-size"
         clearButton
         loading={skeletonMode}
       />
@@ -106,7 +106,7 @@ export function Form(props: FormProps) {
         inputFieldName="headers"
         label="Headers"
         tooltip="Additional custom headers added to export request."
-        knowMoreLink="https://hasura.io/docs/latest/enterprise/opentelemetry/#headers"
+        learnMoreLink="https://hasura.io/docs/latest/enterprise/opentelemetry/#headers"
         loading={skeletonMode}
       >
         {/* No need to redact the input fields since Heap avoid recording the input field values by default */}
@@ -116,7 +116,7 @@ export function Form(props: FormProps) {
         inputFieldName="attributes"
         label="Attributes"
         tooltip="Additional custom tags added to export request."
-        knowMoreLink="https://hasura.io/docs/latest/enterprise/opentelemetry/#attributes"
+        learnMoreLink="https://hasura.io/docs/latest/enterprise/opentelemetry/#attributes"
         loading={skeletonMode}
       >
         {/* No need to redact the input fields since Heap avoid recording the input field values by default */}

@@ -25,7 +25,7 @@ export const BackendOnlySection: React.FC<BackEndOnlySectionProps> = ({
               "trusted backends"`}
         data-test="toogle-backend-only"
         status={enabled ? 'Enabled' : 'Not enabled'}
-        // knowMoreRef="https://hasura.io/docs/latest/graphql/core/auth/authorization/permission-rules.html#backend-only"
+        // learnMoreRef="https://hasura.io/docs/latest/graphql/core/auth/authorization/permission-rules.html#backend-only"
       />
       <Collapse.Content>
         <label className="flex items-center gap-4">
