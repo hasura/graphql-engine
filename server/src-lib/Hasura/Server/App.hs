@@ -497,7 +497,6 @@ v1MetadataHandler query = Tracing.trace "Metadata" $ do
   (liftEitherM . authorizeV1MetadataApi query) =<< ask
   userInfo <- asks hcUser
   scRef <- asks (scCacheRef . hcServerCtx)
-  schemaCache <- liftIO $ fst <$> readSchemaCacheRef scRef
   httpMgr <- asks (scManager . hcServerCtx)
   _sccSQLGenCtx <- asks (scSQLGenCtx . hcServerCtx)
   env <- asks (scEnvironment . hcServerCtx)
@@ -525,7 +524,7 @@ v1MetadataHandler query = Tracing.trace "Metadata" $ do
         userInfo
         httpMgr
         serverConfigCtx
-        schemaCache
+        scRef
         query
   pure $ HttpResponse r []
 
