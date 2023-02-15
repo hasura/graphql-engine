@@ -104,9 +104,10 @@ export type TableFkRelationships = {
 
 export type GetTablesListAsTreeProps = {
   dataSourceName: string;
+  releaseName?: ReleaseType;
 } & NetworkArgs;
 
-type ReleaseType = 'GA' | 'Beta' | 'disabled';
+export type ReleaseType = 'GA' | 'Beta' | 'Alpha' | 'disabled';
 
 export type DriverInfoResponse = {
   name: SupportedDrivers;

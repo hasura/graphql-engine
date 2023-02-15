@@ -8,9 +8,9 @@ import {
 import { APIError } from '@/hooks/error';
 import { useFireNotification } from '@/new-components/Notifications';
 import { getDriverPrefix } from '@/features/DataSource';
-import { useAppDispatch } from '@/store';
 import { exportMetadata } from '@/metadata/actions';
 import { useAvailableDrivers } from './useAvailableDrivers';
+import { useDispatch } from 'react-redux';
 
 type UseRedirectArgs = {
   redirectWithLatencyCheck: boolean;
@@ -18,7 +18,7 @@ type UseRedirectArgs = {
 
 // TODO this is temporary while we are still using the redux based manage page
 const useRedirect = ({ redirectWithLatencyCheck = false }: UseRedirectArgs) => {
-  const dispatch = useAppDispatch();
+  const dispatch = useDispatch();
   const redirect = async () => {
     await dispatch(exportMetadata());
     dispatch(

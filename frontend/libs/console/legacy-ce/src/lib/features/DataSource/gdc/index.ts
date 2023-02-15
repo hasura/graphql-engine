@@ -24,12 +24,7 @@ export const gdc: Database = {
     getDriverInfo: async () => Feature.NotImplemented,
     getDatabaseConfiguration,
     getTrackableTables,
-    getDatabaseHierarchy: async () => {
-      /**
-       * Once we have the API for fetching the hierarchy info via HGE, we can add that logic here
-       */
-      return Feature.NotImplemented;
-    },
+    getDatabaseHierarchy: async () => Feature.NotImplemented,
     getTableColumns,
     getFKRelationships,
     getTablesListAsTree,

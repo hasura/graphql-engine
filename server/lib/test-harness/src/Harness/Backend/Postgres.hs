@@ -84,6 +84,7 @@ backendTypeMetadata =
       backendCapabilities = Nothing,
       backendTypeString = "pg",
       backendDisplayNameString = "pg",
+      backendReleaseNameString = Nothing,
       backendServerUrl = Nothing,
       backendSchemaKeyword = "schema"
     }

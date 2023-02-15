@@ -1,4 +1,3 @@
-import { useAppSelector } from '@/store';
 import { useCallback } from 'react';
 import { Table } from '@/features/hasura-metadata-types';
 import {
@@ -9,6 +8,7 @@ import { useTableColumns } from '@/features/BrowseRows';
 import { useGraphQLMutation, useDefaultQueryRoot } from '@/features/Data';
 import { MetadataSelectors, useMetadata } from '@/features/hasura-metadata-api';
 import { TableRow } from '../../DataSource';
+import { useSelector } from 'react-redux';
 
 export function useDeleteRow({
   dataSourceName,
@@ -30,7 +30,11 @@ export function useDeleteRow({
     .filter(column => column.isPrimaryKey)
     .map(column => column.name);
 
-  const headers = useAppSelector(state => state.tables.dataHeaders);
+  // Needed to avoid circular dependency
+  const headers = useSelector<any>(state => state.tables.dataHeaders) as Record<
+    string,
+    string
+  >;
   const { data: tableData } = useMetadata(
     MetadataSelectors.findTable(dataSourceName, table)
   );

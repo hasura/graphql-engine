@@ -221,6 +221,7 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
                 <&> Lens.set (key "capabilities" . _Object . Lens.at "datasets") Nothing
                 <&> Lens.set (key "options" . key "uri") J.Null
                 <&> Lens.set (_Object . Lens.at "display_name") Nothing
+                <&> Lens.set (_Object . Lens.at "release_name") Nothing
             )
             [yaml|
             capabilities: *backendCapabilities
@@ -258,9 +259,26 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
 
   describe "list_source_kinds" $ do
     it "success" $ \(testEnvironment, _) -> do
-      case (backendTypeString &&& backendDisplayNameString) <$> getBackendTypeConfig testEnvironment of
+      case (backendTypeString &&& backendDisplayNameString &&& backendReleaseNameString) <$> getBackendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
-        Just (backendString, backendDisplayName) -> do
+        Just (backendString, (backendDisplayName, backendReleaseName)) -> do
+          let dataConnectorSource =
+                if isJust backendReleaseName
+                  then
+                    [yaml|
+                    builtin: false
+                    kind: *backendString
+                    display_name: *backendDisplayName
+                    release_name: *backendReleaseName
+                    available: true
+                  |]
+                  else
+                    [yaml|
+                    builtin: false
+                    kind: *backendString
+                    display_name: *backendDisplayName
+                    available: true
+                  |]
           shouldReturnYaml
             opts
             ( GraphqlEngine.postMetadata
@@ -296,10 +314,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
                 kind: mysql
                 display_name: mysql
                 available: true
-              - builtin: false
-                kind: *backendString
-                display_name: *backendDisplayName
-                available: true
+              - *dataConnectorSource
               - builtin: false
                 display_name: "FOOBARDB (foobar)"
                 kind: foobar

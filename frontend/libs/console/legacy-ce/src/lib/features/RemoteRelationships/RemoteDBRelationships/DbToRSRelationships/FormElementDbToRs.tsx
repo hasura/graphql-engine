@@ -7,7 +7,7 @@ import {
 } from '@/new-components/LinkBlock';
 import { useListRemoteSchemas } from '@/features/MetadataAPI';
 import { useTableColumns } from '@/features/SqlQueries';
-import { DatabaseSelector } from '@/features/Data';
+import { DatabaseSelector } from '@/features/Data/components/index';
 import { DataTarget } from '@/features/Datasources';
 
 import { RemoteSchemaWidget } from '../../RemoteSchemaRelationships/components/RemoteSchemaWidget';

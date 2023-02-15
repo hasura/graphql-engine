@@ -74,6 +74,7 @@ backendTypeConfig =
         |],
       backendTypeString = "reference",
       backendDisplayNameString = "reference",
+      backendReleaseNameString = Nothing,
       backendServerUrl = Just "http://localhost:65005",
       backendSchemaKeyword = "schema"
     }

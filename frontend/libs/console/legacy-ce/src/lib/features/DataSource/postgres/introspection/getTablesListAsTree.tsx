@@ -24,14 +24,7 @@ export const getTablesListAsTree = async ({
   const tables = source.tables.map(table => table.table as PostgresTable);
 
   return {
-    title: (
-      <div className="inline-block">
-        {source.name}
-        {/* <span className="items-center ml-sm px-sm py-0.5 rounded-full text-sm tracking-wide font-semibold bg-indigo-100 text-indigo-800">
-          Experimental
-        </span> */}
-      </div>
-    ),
+    title: <div className="inline-block">{source.name}</div>,
     key: JSON.stringify({ database: source.name }),
     icon: <FaDatabase />,
     children: convertToTreeData(

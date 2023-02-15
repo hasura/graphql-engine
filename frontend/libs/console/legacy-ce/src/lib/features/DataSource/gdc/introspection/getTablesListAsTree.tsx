@@ -1,16 +1,16 @@
+import { Badge } from '@/new-components/Badge';
 import React from 'react';
 import { FaDatabase } from 'react-icons/fa';
 import { GDCTable } from '..';
 import { exportMetadata } from '../../api';
-import { NetworkArgs } from '../../types';
+import { GetTablesListAsTreeProps } from '../../types';
 import { convertToTreeData } from './utils';
 
 export const getTablesListAsTree = async ({
   dataSourceName,
   httpClient,
-}: {
-  dataSourceName: string;
-} & NetworkArgs) => {
+  releaseName,
+}: GetTablesListAsTreeProps) => {
   const { metadata } = await exportMetadata({ httpClient });
 
   if (!metadata) throw Error('Unable to fetch metadata');
@@ -28,9 +28,11 @@ export const getTablesListAsTree = async ({
     title: (
       <div className="inline-block">
         <span className="font-bold text-lg">{source.name}</span>
-        <span className="items-center ml-sm px-sm py-0.5 rounded-full text-sm tracking-wide font-semibold bg-indigo-100 text-indigo-800">
-          Beta
-        </span>
+        {releaseName !== 'GA' && !!releaseName && (
+          <Badge color="indigo" className="ml-sm">
+            {releaseName}
+          </Badge>
+        )}
       </div>
     ),
     key: JSON.stringify({ database: source.name }),

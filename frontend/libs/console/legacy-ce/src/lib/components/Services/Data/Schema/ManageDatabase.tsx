@@ -290,10 +290,6 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   const { show: shouldShowVPCBanner, dismiss: dismissVPCBanner } =
     useVPCBannerVisibility();
 
-  const { enabled: isDCAgentsManageUIEnabled } = useIsFeatureFlagEnabled(
-    availableFeatureFlagIds.gdcId
-  );
-
   const crumbs = [
     {
       title: 'Data',
@@ -487,18 +483,16 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
                           />
                         );
                       }
-                      if (isDCAgentsManageUIEnabled)
-                        return (
-                          <GDCDatabaseListItem
-                            dataSource={{
-                              name: source.name,
-                              kind: source.kind,
-                            }}
-                            inconsistentObjects={inconsistentObjects}
-                            dispatch={dispatch}
-                          />
-                        );
-                      return null;
+                      return (
+                        <GDCDatabaseListItem
+                          dataSource={{
+                            name: source.name,
+                            kind: source.kind,
+                          }}
+                          inconsistentObjects={inconsistentObjects}
+                          dispatch={dispatch}
+                        />
+                      );
                     })
                   ) : (
                     <td colSpan={3} className="text-center px-sm py-xs">
@@ -511,11 +505,9 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
             </div>
           </div>
 
-          {isDCAgentsManageUIEnabled ? (
-            <div className="mt-lg">
-              <ManageAgents />
-            </div>
-          ) : null}
+          <div className="mt-lg">
+            <ManageAgents />
+          </div>
           {showCheckLatencyButton ? (
             <Button
               size="md"

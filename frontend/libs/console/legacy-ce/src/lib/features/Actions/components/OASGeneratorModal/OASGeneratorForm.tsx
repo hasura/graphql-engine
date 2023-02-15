@@ -14,7 +14,7 @@ import YAML from 'js-yaml';
 
 import { Badge, BadgeColor } from '@/new-components/Badge';
 import { trackCustomEvent } from '@/features/Analytics';
-import { useIsUnmounted } from '@/components/Services/Data';
+import { useIsUnmounted } from '@/components/Services/Data/Common/tsUtils';
 import { generateAction, getOperations } from './utils';
 import { GeneratedAction, Operation } from './types';
 

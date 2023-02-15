@@ -1,4 +1,4 @@
-import { useAppDispatch, useAppSelector } from '@/store';
+import type { AppDispatch } from '@/store';
 import React from 'react';
 import { getCurrTimeForFileName } from '@/components/Common/utils/jsUtils';
 import {
@@ -20,6 +20,7 @@ import { useLegacyTableColumns } from '../hooks/useLegacyTableColumns';
 import { useTableName } from '../hooks/useTableName';
 import { useDatabaseOperators } from '../hooks/useDatabaseOperators';
 import { useTableSchema } from '../hooks/useTableSchema';
+import { useDispatch, useSelector } from 'react-redux';
 
 type LegacyRunQueryContainerProps = {
   onRunQuery: (userQuery: UserQuery) => void | null;
@@ -65,8 +66,11 @@ export const LegacyRunQueryContainer = ({
   table,
   initialFiltersAndSort,
 }: LegacyRunQueryContainerProps) => {
-  const dispatch = useAppDispatch();
-  const curFilter = useAppSelector(state => state.tables.view.curFilter);
+  const dispatch = useDispatch<AppDispatch>();
+  // Needed to avoid circular dependency
+  const curFilter = useSelector<any>(
+    state => state.tables.view.curFilter
+  ) as any;
   const limit = curFilter.limit;
 
   const tableColumns = useLegacyTableColumns({ dataSourceName, table });

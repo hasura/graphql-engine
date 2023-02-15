@@ -48,6 +48,7 @@ import {
 import { getAllSourceKinds } from './common/getAllSourceKinds';
 import { getTableName } from './common/getTableName';
 import { QueryType } from '../Permissions/types';
+import { ReleaseType } from './types';
 
 export enum Feature {
   NotImplemented = 'Not Implemented',
@@ -182,7 +183,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
         return {
           name: driver.kind,
           displayName: driver.display_name,
-          release: 'Beta',
+          release: driver.release_name ?? 'GA',
           native: driver.builtin,
         };
       });
@@ -355,8 +356,10 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   },
   getTablesWithHierarchy: async ({
     dataSourceName,
+    releaseName,
   }: {
     dataSourceName: string;
+    releaseName?: ReleaseType;
   }) => {
     const database = await getDatabaseMethods({ dataSourceName, httpClient });
 
@@ -369,6 +372,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     const treeData = await introspection.getTablesListAsTree({
       dataSourceName,
       httpClient,
+      releaseName,
     });
 
     if (treeData === Feature.NotImplemented) return null;

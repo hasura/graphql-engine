@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-no-useless-fragment */
 import React, { FormEvent } from 'react';
 import { LabeledInput } from '@/components/Common/LabeledInput';
 import { Connect, useAvailableDrivers } from '@/features/ConnectDB';
@@ -62,10 +63,6 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
 
   const { isLoading, data: drivers } = useAvailableDrivers();
 
-  const { enabled: isGDCFeatureFlagEnabled } = useIsFeatureFlagEnabled(
-    availableFeatureFlagIds.gdcId
-  );
-
   const handleDBChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value as Driver;
     const isSupported = isDBSupported(value, connectionTypeState);
@@ -78,7 +75,7 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
      * Early return for gdc drivers when feature flag is enabled
      */
     const driver = drivers?.find(d => d.name === value);
-    if (isGDCFeatureFlagEnabled && !driver?.native) return;
+    // if (!driver?.native) return;
 
     if (!isSupported && changeConnectionType) {
       changeConnectionType(driverToLabel[value].defaultConnection);
@@ -95,8 +92,7 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
 
   return (
     <>
-      {isGDCFeatureFlagEnabled &&
-      !nativeDrivers.includes(connectionDBState.dbType) ? (
+      {!nativeDrivers.includes(connectionDBState.dbType) ? (
         <Analytics name="EditDataSource" {...REDACT_EVERYTHING}>
           <div className="max-w-xl">
             <Connect.CreateConnection
@@ -150,21 +146,12 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
                     disabled={isEditState}
                     data-test="database-type"
                   >
-                    {(drivers ?? [])
-                      /**
-                       * Why this filter? if GDC feature flag is not enabled, then I want to see only native sources
-                       */
-                      .filter(
-                        driver => driver.native || isGDCFeatureFlagEnabled
-                      )
-                      .map(driver => (
-                        <option key={driver.name} value={driver.name}>
-                          {driver.displayName}{' '}
-                          {driver.release === 'GA'
-                            ? null
-                            : `(${driver.release})`}
-                        </option>
-                      ))}
+                    {(drivers ?? []).map(driver => (
+                      <option key={driver.name} value={driver.name}>
+                        {driver.displayName}{' '}
+                        {driver.release === 'GA' ? null : `(${driver.release})`}
+                      </option>
+                    ))}
                   </select>
                 </>
               )}

@@ -89,13 +89,9 @@ const RawSQL = ({
   isTableTrackChecked,
   migrationMode,
   allSchemas,
-  // sources,
   currentDataSource,
   metadataSources,
 }) => {
-  const { enabled: areGDCFeaturesEnabled } = useIsFeatureFlagEnabled(
-    availableFeatureFlagIds.gdcId
-  );
   const { fireNotification } = useFireNotification();
   const { fetchRunSQLResult, data, isLoading } = useRunSQL({
     onError: err => {
@@ -498,15 +494,10 @@ const RawSQL = ({
               <b>Database</b>
             </label>{' '}
             <DropDownSelector
-              options={metadataSources
-                .filter(source => {
-                  if (areGDCFeaturesEnabled) return source;
-                  return nativeDrivers.includes(source.kind);
-                })
-                .map(source => ({
-                  name: source.name,
-                  driver: source.kind,
-                }))}
+              options={metadataSources.map(source => ({
+                name: source.name,
+                driver: source.kind,
+              }))}
               defaultValue={currentDataSource}
               onChange={dropDownSelectorValueChange}
             />

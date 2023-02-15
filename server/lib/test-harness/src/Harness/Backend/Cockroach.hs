@@ -66,6 +66,7 @@ backendTypeMetadata =
       backendCapabilities = Nothing,
       backendTypeString = "cockroach",
       backendDisplayNameString = "cockroach",
+      backendReleaseNameString = Nothing,
       backendServerUrl = Nothing,
       backendSchemaKeyword = "schema"
     }

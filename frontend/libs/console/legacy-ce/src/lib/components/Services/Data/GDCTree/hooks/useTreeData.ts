@@ -1,5 +1,6 @@
+import { useAvailableDrivers } from '@/features/ConnectDB/hooks/useAvailableDrivers';
 import { DEFAULT_STALE_TIME } from '@/features/DatabaseRelationships';
-import { DataSource, nativeDrivers } from '@/features/DataSource';
+import { DataSource, nativeDrivers, ReleaseType } from '@/features/DataSource';
 import {
   availableFeatureFlagIds,
   useIsFeatureFlagEnabled,
@@ -17,6 +18,7 @@ export const useTreeData = () => {
   const { data: metadata, isFetching } = useMetadata();
   const { enabled: isBigQueryEnabled, isLoading: isFeatureFlagsLoading } =
     useIsFeatureFlagEnabled(availableFeatureFlagIds.enabledNewUIForBigQuery);
+  const { data: availableDrivers } = useAvailableDrivers();
 
   return useQuery({
     queryKey: ['treeview'],
@@ -33,9 +35,15 @@ export const useTreeData = () => {
             (isBigQueryEnabled && source.kind === 'bigquery')
         )
         .map(async source => {
+          const releaseName = availableDrivers?.find(
+            driver => driver.name === source.kind
+          )?.release;
           const tablesAsTree = await DataSource(
             httpClient
-          ).getTablesWithHierarchy({ dataSourceName: source.name });
+          ).getTablesWithHierarchy({
+            dataSourceName: source.name,
+            releaseName: releaseName as ReleaseType,
+          });
           return tablesAsTree;
         });
 
@@ -45,7 +53,7 @@ export const useTreeData = () => {
 
       return filteredResult;
     },
-    enabled: !isFetching && !isFeatureFlagsLoading,
+    enabled: !isFetching && !isFeatureFlagsLoading && !!availableDrivers,
     refetchOnWindowFocus: false,
     staleTime: DEFAULT_STALE_TIME,
   });

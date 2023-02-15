@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { DataSource, Feature, Operator } from '@/features/DataSource';
 import { useHttpClient } from '@/features/Network';
-import { useIsUnmounted } from '@/components/Services/Data';
+import { useIsUnmounted } from '@/components/Services/Data/Common/tsUtils';
 
 export const useDatabaseOperators = ({
   dataSourceName,
