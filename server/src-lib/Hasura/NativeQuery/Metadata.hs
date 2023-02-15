@@ -5,13 +5,11 @@
 -- implementation of the metadata of native queries.
 module Hasura.NativeQuery.Metadata
   ( NativeQueryName (..),
-    NativeQueryInfoImpl (..),
+    NativeQueryInfo (..),
     NativeQueryArgumentName (..),
-    TrackNativeQueryImpl (..),
     InterpolatedItem (..),
     InterpolatedQuery (..),
     parseInterpolatedQuery,
-    defaultNativeQueryTrackToInfo,
     module Hasura.NativeQuery.Types,
   )
 where
@@ -20,13 +18,11 @@ import Autodocodec
 import Autodocodec qualified as AC
 import Data.Aeson
 import Data.Bifunctor (first)
-import Data.Environment qualified as Env
 import Data.Text qualified as T
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.NativeQuery.Types
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
 
 newtype RawQuery = RawQuery {getRawQuery :: Text}
@@ -107,39 +103,39 @@ instance NFData (NativeQueryArgumentName)
 ---------------------------------------
 
 -- | Default implementation of the Native Query metadata info object.
-data NativeQueryInfoImpl (b :: BackendType) = NativeQueryInfoImpl
-  { nqiiRootFieldName :: NativeQueryName,
-    nqiiCode :: InterpolatedQuery NativeQueryArgumentName,
-    nqiiReturns :: TableName b,
-    nqiiArguments :: HashMap NativeQueryArgumentName (ScalarType b),
-    nqiiDescription :: Maybe Text
+data NativeQueryInfo (b :: BackendType) = NativeQueryInfo
+  { nqiRootFieldName :: NativeQueryName,
+    nqiCode :: InterpolatedQuery NativeQueryArgumentName,
+    nqiReturns :: TableName b,
+    nqiArguments :: HashMap NativeQueryArgumentName (ScalarType b),
+    nqiDescription :: Maybe Text
   }
   deriving (Generic)
 
-deriving instance Backend b => Eq (NativeQueryInfoImpl b)
+deriving instance Backend b => Eq (NativeQueryInfo b)
 
-deriving instance Backend b => Show (NativeQueryInfoImpl b)
+deriving instance Backend b => Show (NativeQueryInfo b)
 
-instance Backend b => Hashable (NativeQueryInfoImpl b)
+instance Backend b => Hashable (NativeQueryInfo b)
 
-instance Backend b => NFData (NativeQueryInfoImpl b)
+instance Backend b => NFData (NativeQueryInfo b)
 
-instance (Backend b, HasCodec (ScalarType b)) => HasCodec (NativeQueryInfoImpl b) where
+instance (Backend b) => HasCodec (NativeQueryInfo b) where
   codec =
     CommentCodec
       ("A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.")
       $ AC.object (codecNamePrefix @b <> "NativeQueryInfo")
-      $ NativeQueryInfoImpl
+      $ NativeQueryInfo
         <$> requiredField "root_field_name" fieldNameDoc
-          AC..= nqiiRootFieldName
+          AC..= nqiRootFieldName
         <*> requiredField "code" sqlDoc
-          AC..= nqiiCode
+          AC..= nqiCode
         <*> requiredField "returns" returnsDoc
-          AC..= nqiiReturns
+          AC..= nqiReturns
         <*> optionalFieldWithDefault "arguments" mempty argumentDoc
-          AC..= nqiiArguments
+          AC..= nqiArguments
         <*> optionalField "description" descriptionDoc
-          AC..= nqiiDescription
+          AC..= nqiDescription
     where
       fieldNameDoc = "Root field name for the native query"
       sqlDoc = "Native code expression (SQL) to run"
@@ -148,84 +144,14 @@ instance (Backend b, HasCodec (ScalarType b)) => HasCodec (NativeQueryInfoImpl b
       descriptionDoc = "A description of the query which appears in the graphql schema"
 
 deriving via
-  (Autodocodec (NativeQueryInfoImpl b))
+  (Autodocodec (NativeQueryInfo b))
   instance
-    (Backend b, HasCodec (ScalarType b)) => (FromJSON (NativeQueryInfoImpl b))
+    (Backend b) => (FromJSON (NativeQueryInfo b))
 
 deriving via
-  (Autodocodec (NativeQueryInfoImpl b))
+  (Autodocodec (NativeQueryInfo b))
   instance
-    (Backend b, HasCodec (ScalarType b)) => (ToJSON (NativeQueryInfoImpl b))
-
--- | Default implementation of the 'track_native_query' request payload.
-data TrackNativeQueryImpl (b :: BackendType) = TrackNativeQueryImpl
-  { tnqSource :: SourceName,
-    tnqRootFieldName :: NativeQueryName,
-    tnqCode :: Text,
-    tnqArguments :: HashMap NativeQueryArgumentName (ScalarType b),
-    tnqDescription :: Maybe Text,
-    tnqReturns :: TableName b
-  }
-
--- | Default implementation of the method 'nativeQueryTrackToInfo'.
-defaultNativeQueryTrackToInfo ::
-  forall b m.
-  ( MonadIO m,
-    MonadError NativeQueryError m,
-    NativeQueryMetadata b,
-    NativeQueryInfo b ~ NativeQueryInfoImpl b
-  ) =>
-  Env.Environment ->
-  SourceConnConfiguration b ->
-  TrackNativeQueryImpl b ->
-  m (NativeQueryInfoImpl b)
-defaultNativeQueryTrackToInfo env sourceConnConfig TrackNativeQueryImpl {..} = do
-  nqiiCode <- liftEither $ mapLeft NativeQueryParseError (parseInterpolatedQuery tnqCode)
-  let nqiiRootFieldName = tnqRootFieldName
-      nqiiReturns = tnqReturns
-      nqiiArguments = tnqArguments
-      nqiiDescription = tnqDescription
-      nqInfoImpl = NativeQueryInfoImpl {..}
-
-  validateNativeQueryAgainstSource @b env sourceConnConfig nqInfoImpl
-
-  pure nqInfoImpl
-
-instance (Backend b, HasCodec (ScalarType b)) => HasCodec (TrackNativeQueryImpl b) where
-  codec =
-    CommentCodec
-      ("A request to track a native query")
-      $ AC.object (codecNamePrefix @b <> "TrackNativeQuery")
-      $ TrackNativeQueryImpl
-        <$> requiredField "source" sourceDoc
-          AC..= tnqSource
-        <*> requiredField "root_field_name" rootFieldDoc
-          AC..= tnqRootFieldName
-        <*> requiredField "code" codeDoc
-          AC..= tnqCode
-        <*> optionalFieldWithDefault "arguments" mempty argumentsDoc
-          AC..= tnqArguments
-        <*> optionalField "description" descriptionDoc
-          AC..= tnqDescription
-        <*> requiredField "returns" returnsDoc
-          AC..= tnqReturns
-    where
-      sourceDoc = "The source in whic this native query should be tracked"
-      rootFieldDoc = "Root field name for the native query"
-      codeDoc = "Native code expression (SQL) to run"
-      argumentsDoc = "Free variables in the expression and their types"
-      returnsDoc = "Return type (table) of the expression"
-      descriptionDoc = "A description of the query which appears in the graphql schema"
-
-deriving via
-  (Autodocodec (TrackNativeQueryImpl b))
-  instance
-    (Backend b, HasCodec (ScalarType b)) => FromJSON (TrackNativeQueryImpl b)
-
-deriving via
-  (Autodocodec (TrackNativeQueryImpl b))
-  instance
-    (Backend b, HasCodec (ScalarType b)) => ToJSON (TrackNativeQueryImpl b)
+    (Backend b) => (ToJSON (NativeQueryInfo b))
 
 -- | extract all of the `{{ variable }}` inside our query string
 parseInterpolatedQuery ::

@@ -21,7 +21,6 @@ import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Adapter.Types.Mutations qualified as DC
 import Hasura.Base.Error (Code (ValidationFailed), QErr, runAesonParser, throw400)
-import Hasura.NativeQuery.Types (NativeQueryMetadata)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, HasSourceConfiguration (..), SupportedNamingCase (..), XDisable, XEnable)
@@ -160,8 +159,6 @@ instance Backend 'DataConnector where
 instance HasSourceConfiguration 'DataConnector where
   type SourceConfig 'DataConnector = DC.SourceConfig
   type SourceConnConfiguration 'DataConnector = DC.ConnSourceConfig
-
-instance NativeQueryMetadata 'DataConnector
 
 data CustomBooleanOperator a = CustomBooleanOperator
   { _cboName :: Text,

@@ -70,6 +70,7 @@ module Hasura.Backends.BigQuery.Types
 where
 
 import Autodocodec (HasCodec (codec), dimapCodec, object, optionalField', requiredField', (.=))
+import Autodocodec qualified as AC
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
@@ -92,6 +93,7 @@ import Data.Vector.Instances ()
 import Hasura.Base.Error
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
+import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Function (FunctionArgName)
@@ -765,6 +767,9 @@ data ScalarType
   | BigDecimalScalarType
   | StructScalarType
   deriving (Show, Eq, Ord, Generic, Data, Lift)
+
+instance HasCodec ScalarType where
+  codec = AC.named "ScalarType" placeholderCodecViaJSON
 
 instance FromJSON ScalarType
 

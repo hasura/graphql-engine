@@ -83,7 +83,7 @@ import Data.Text qualified as T
 import Data.Text.Extended qualified as T
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
-import Hasura.NativeQuery.Types
+import Hasura.NativeQuery.Metadata (NativeQueryInfo)
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist

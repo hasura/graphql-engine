@@ -81,7 +81,7 @@ import Hasura.Backends.Postgres.Translate.Types
 import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Node (currentNodeIdVersion, nodeIdVersionInt)
 import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.NativeQuery.IR (NativeQueryImpl (..))
+import Hasura.NativeQuery.IR (NativeQuery (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy (OrderByItemG (OrderByItemG, obiColumn))

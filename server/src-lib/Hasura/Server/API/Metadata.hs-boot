@@ -89,7 +89,7 @@ data RQLMetadataV1
     RMTestConnectionTemplate !(AnyBackend TestConnectionTemplate)
   | -- Native access
     RMGetNativeQuery !(AnyBackend NativeQuery.GetNativeQuery)
-  | RMTrackNativeQuery !(AnyBackend NativeQuery.BackendTrackNativeQuery)
+  | RMTrackNativeQuery !(AnyBackend NativeQuery.TrackNativeQuery)
   | RMUntrackNativeQuery !(AnyBackend NativeQuery.UntrackNativeQuery)
   | -- Tables event triggers
     RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))

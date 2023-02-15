@@ -37,6 +37,7 @@ data Error
   = UnsupportedOpExpG (IR.OpExpG 'MySQL Expression)
   | IdentifierNotSupported
   | FunctionNotSupported
+  | NativeQueryNotSupported
   | NodesUnsupportedForNow
   | ConnectionsNotSupported
   deriving (Show, Eq)
@@ -506,6 +507,7 @@ fromSelectAggregate mparentRelationship annSelectG = do
       IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
       IR.FromIdentifier {} -> refute $ pure IdentifierNotSupported
       IR.FromFunction {} -> refute $ pure FunctionNotSupported
+      IR.FromNativeQuery {} -> refute $ pure NativeQueryNotSupported
   _mforeignKeyConditions <- fmap (Where . fromMaybe []) $
     for mparentRelationship $
       \(entityAlias, mapping) ->
@@ -696,6 +698,7 @@ fromSelectRows annSelectG = do
       IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
       IR.FromIdentifier {} -> refute $ pure IdentifierNotSupported
       IR.FromFunction {} -> refute $ pure FunctionNotSupported
+      IR.FromNativeQuery {} -> refute $ pure NativeQueryNotSupported
   Args
     { argsOrderBy,
       argsWhere,

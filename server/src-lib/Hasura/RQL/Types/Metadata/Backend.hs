@@ -11,6 +11,7 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
+import Hasura.NativeQuery.Metadata (NativeQueryInfo)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -185,3 +186,12 @@ class
     (MonadIO m, MonadBaseControl IO m) =>
     SourceConfig b ->
     ExceptT QErr m (RecreateEventTriggers, SourceCatalogMigrationState)
+
+  validateNativeQuery ::
+    (MonadIO m, MonadError QErr m) =>
+    Env.Environment ->
+    SourceConnConfiguration b ->
+    NativeQueryInfo b ->
+    m ()
+  validateNativeQuery _ _ _ =
+    throw500 "validateNativeQuery: not implemented for this backend."

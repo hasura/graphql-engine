@@ -15,7 +15,6 @@ import Hasura.Backends.MSSQL.Types.Insert qualified as MSSQL (BackendInsert)
 import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
 import Hasura.Backends.MSSQL.Types.Update qualified as MSSQL (UpdateOperator)
 import Hasura.Base.Error
-import Hasura.NativeQuery.Types
 import Hasura.Prelude
 import Hasura.RQL.IR.Update.Batch (UpdateBatch)
 import Hasura.RQL.Types.Backend
@@ -126,5 +125,3 @@ instance Backend 'MSSQL where
 instance HasSourceConfiguration 'MSSQL where
   type SourceConfig 'MSSQL = MSSQL.MSSQLSourceConfig
   type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration
-
-instance NativeQueryMetadata 'MSSQL

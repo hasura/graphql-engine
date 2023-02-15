@@ -1,5 +1,6 @@
 {-# OPTIONS -fno-warn-orphans #-}
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE OverloadedLists #-}
 
 module Hasura.Backends.MySQL.Types.Internal
   ( Aliased (..),
@@ -39,6 +40,7 @@ module Hasura.Backends.MySQL.Types.Internal
 where
 
 import Autodocodec (HasCodec (codec), dimapCodec)
+import Autodocodec qualified as AC
 import Data.Aeson qualified as J
 import Data.ByteString
 import Data.Data
@@ -282,6 +284,40 @@ data NullsOrder
   | NullsAnyOrder
 
 type ScalarType = MySQLTypes.Type
+
+instance AC.HasCodec ScalarType where
+  codec =
+    AC.CommentCodec "A MySQL scalar type." $
+      AC.stringConstCodec
+        [ (MySQLTypes.NewDate, "DATE"),
+          (MySQLTypes.NewDecimal, "DECIMAL"),
+          (MySQLTypes.Decimal, "DECIMAL"),
+          (MySQLTypes.Tiny, "TINYINT"),
+          (MySQLTypes.Short, "SMALLINT"),
+          (MySQLTypes.Long, "INT"),
+          (MySQLTypes.Float, "FLOAT"),
+          (MySQLTypes.Double, "DOUBLE"),
+          (MySQLTypes.Null, "NULL"),
+          (MySQLTypes.Timestamp, "TIMESTAMP"),
+          (MySQLTypes.LongLong, "BIGINT"),
+          (MySQLTypes.Int24, "MEDIUMINT"),
+          (MySQLTypes.Date, "DATE"),
+          (MySQLTypes.Time, "TIME"),
+          (MySQLTypes.DateTime, "DATETIME"),
+          (MySQLTypes.Year, "YEAR"),
+          (MySQLTypes.VarChar, "VARCHAR"),
+          (MySQLTypes.Bit, "BIT"),
+          (MySQLTypes.Enum, "ENUM"),
+          (MySQLTypes.Set, "SET"),
+          (MySQLTypes.TinyBlob, "TINYBLOB"),
+          (MySQLTypes.MediumBlob, "MEDIUMBLOB"),
+          (MySQLTypes.LongBlob, "LONGBLOB"),
+          (MySQLTypes.Blob, "BLOB"),
+          (MySQLTypes.VarString, "VARCHAR"),
+          (MySQLTypes.String, "TEXT"),
+          (MySQLTypes.Geometry, "GEOMETRY"),
+          (MySQLTypes.Json, "JSON")
+        ]
 
 data OrderBy = OrderBy
   { orderByFieldName :: FieldName,

@@ -43,7 +43,7 @@ import Hasura.GraphQL.ApolloFederation (ApolloFederationParserFunction)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser hiding (Type)
-import Hasura.NativeQuery.Types
+import Hasura.NativeQuery.Metadata (NativeQueryInfo)
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Insert qualified as IR

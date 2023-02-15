@@ -23,7 +23,7 @@ import Hasura.GraphQL.Schema.Select
     tableSelectionList,
   )
 import Hasura.GraphQL.Schema.Table (tableSelectPermissions)
-import Hasura.NativeQuery.IR (NativeQueryImpl (..))
+import Hasura.NativeQuery.IR (NativeQuery (..))
 import Hasura.NativeQuery.Metadata
 import Hasura.Prelude
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
@@ -31,7 +31,7 @@ import Hasura.RQL.IR.Select (QueryDB (QDBMultipleRows))
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value (UnpreparedValue (UVParameter), openValueOrigin)
 import Hasura.RQL.Types.Backend
-  ( Backend (NativeQuery, ScalarType),
+  ( Backend (ScalarType),
   )
 import Hasura.RQL.Types.Column qualified as Column
 import Hasura.RQL.Types.Metadata.Object qualified as MO
@@ -49,23 +49,22 @@ import Language.GraphQL.Draft.Syntax.QQ qualified as G
 defaultBuildNativeQueryRootFields ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
-    BackendTableSelectSchema b,
-    NativeQuery b ~ NativeQueryImpl b
+    BackendTableSelectSchema b
   ) =>
-  NativeQueryInfoImpl b ->
+  NativeQueryInfo b ->
   SchemaT
     r
     m
     (Maybe (P.FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
-defaultBuildNativeQueryRootFields NativeQueryInfoImpl {..} = runMaybeT $ do
-  tableInfo <- askTableInfo @b nqiiReturns
-  let fieldName = getNativeQueryName nqiiRootFieldName
-  nativeQueryArgsParser <- nativeQueryArgumentsSchema @b @r @m @n fieldName nqiiArguments
+defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
+  tableInfo <- askTableInfo @b nqiReturns
+  let fieldName = getNativeQueryName nqiRootFieldName
+  nativeQueryArgsParser <- nativeQueryArgumentsSchema @b @r @m @n fieldName nqiArguments
   sourceInfo :: SourceInfo b <- asks getter
   let sourceName = _siName sourceInfo
       tableName = tableInfoName tableInfo
       tCase = _rscNamingConvention $ _siCustomization sourceInfo
-      description = G.Description <$> nqiiDescription
+      description = G.Description <$> nqiDescription
   stringifyNumbers <- retrieve Options.soStringifyNumbers
   roleName <- retrieve scRole
 
@@ -84,7 +83,7 @@ defaultBuildNativeQueryRootFields NativeQueryInfoImpl {..} = runMaybeT $ do
                   -- not_ happen
                   error $ "No native query arg passed for " <> show var
             )
-            (getInterpolatedQuery nqiiCode)
+            (getInterpolatedQuery nqiCode)
 
   pure $
     P.setFieldParserOrigin (MO.MOSourceObjId sourceName (mkAnyBackend $ MO.SMOTable @b tableName)) $
@@ -95,8 +94,8 @@ defaultBuildNativeQueryRootFields NativeQueryInfoImpl {..} = runMaybeT $ do
               { IR._asnFields = fields,
                 IR._asnFrom =
                   IR.FromNativeQuery
-                    NativeQueryImpl
-                      { nqRootFieldName = nqiiRootFieldName,
+                    NativeQuery
+                      { nqRootFieldName = nqiRootFieldName,
                         nqArgs,
                         nqInterpolatedQuery = interpolatedQuery nqArgs
                       },

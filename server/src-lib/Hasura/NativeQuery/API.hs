@@ -10,6 +10,7 @@
 -- directly to this module without any overloading provided.
 module Hasura.NativeQuery.API
   ( GetNativeQuery (..),
+    TrackNativeQuery (..),
     UntrackNativeQuery (..),
     runGetNativeQuery,
     runTrackNativeQuery,
@@ -19,14 +20,18 @@ module Hasura.NativeQuery.API
   )
 where
 
+import Autodocodec (HasCodec)
+import Autodocodec qualified as AC
 import Control.Lens (preview, (^?))
 import Data.Aeson
 import Data.Environment qualified as Env
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.Metadata.DTO.Utils (codecNamePrefix)
+import Hasura.NativeQuery.Metadata (NativeQueryArgumentName, NativeQueryInfo (..), parseInterpolatedQuery)
 import Hasura.NativeQuery.Types
 import Hasura.Prelude
-import Hasura.RQL.Types.Backend (Backend)
+import Hasura.RQL.Types.Backend (Backend, ScalarType, SourceConnConfiguration, TableName)
 import Hasura.RQL.Types.Common (SourceName, sourceNameToText, successMsg)
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
@@ -37,6 +42,75 @@ import Hasura.SQL.Backend
 import Hasura.Server.Init.FeatureFlag as FF
 import Hasura.Server.Types (HasServerConfigCtx (..), ServerConfigCtx (..))
 import Language.GraphQL.Draft.Syntax (unName)
+
+-- | Default implementation of the 'track_native_query' request payload.
+data TrackNativeQuery (b :: BackendType) = TrackNativeQuery
+  { tnqSource :: SourceName,
+    tnqRootFieldName :: NativeQueryName,
+    tnqCode :: Text,
+    tnqArguments :: HashMap NativeQueryArgumentName (ScalarType b),
+    tnqDescription :: Maybe Text,
+    tnqReturns :: TableName b
+  }
+
+instance (Backend b) => HasCodec (TrackNativeQuery b) where
+  codec =
+    AC.CommentCodec
+      ("A request to track a native query")
+      $ AC.object (codecNamePrefix @b <> "TrackNativeQuery")
+      $ TrackNativeQuery
+        <$> AC.requiredField "source" sourceDoc
+          AC..= tnqSource
+        <*> AC.requiredField "root_field_name" rootFieldDoc
+          AC..= tnqRootFieldName
+        <*> AC.requiredField "code" codeDoc
+          AC..= tnqCode
+        <*> AC.optionalFieldWithDefault "arguments" mempty argumentsDoc
+          AC..= tnqArguments
+        <*> AC.optionalField "description" descriptionDoc
+          AC..= tnqDescription
+        <*> AC.requiredField "returns" returnsDoc
+          AC..= tnqReturns
+    where
+      sourceDoc = "The source in whic this native query should be tracked"
+      rootFieldDoc = "Root field name for the native query"
+      codeDoc = "Native code expression (SQL) to run"
+      argumentsDoc = "Free variables in the expression and their types"
+      returnsDoc = "Return type (table) of the expression"
+      descriptionDoc = "A description of the query which appears in the graphql schema"
+
+deriving via
+  (AC.Autodocodec (TrackNativeQuery b))
+  instance
+    (Backend b) => FromJSON (TrackNativeQuery b)
+
+deriving via
+  (AC.Autodocodec (TrackNativeQuery b))
+  instance
+    (Backend b) => ToJSON (TrackNativeQuery b)
+
+-- | Default implementation of the method 'nativeQueryTrackToInfo'.
+nativeQueryTrackToInfo ::
+  forall b m.
+  ( BackendMetadata b,
+    MonadIO m,
+    MonadError QErr m
+  ) =>
+  Env.Environment ->
+  SourceConnConfiguration b ->
+  TrackNativeQuery b ->
+  m (NativeQueryInfo b)
+nativeQueryTrackToInfo env sourceConnConfig TrackNativeQuery {..} = do
+  nqiCode <- parseInterpolatedQuery tnqCode `onLeft` \e -> throw400 ParseFailed e
+  let nqiRootFieldName = tnqRootFieldName
+      nqiReturns = tnqReturns
+      nqiArguments = tnqArguments
+      nqiDescription = tnqDescription
+      nqInfoImpl = NativeQueryInfo {..}
+
+  validateNativeQuery @b env sourceConnConfig nqInfoImpl
+
+  pure nqInfoImpl
 
 -- | API payload for the 'get_native_query' endpoint.
 data GetNativeQuery (b :: BackendType) = GetNativeQuery
@@ -92,9 +166,9 @@ runTrackNativeQuery ::
     MonadIO m
   ) =>
   Env.Environment ->
-  BackendTrackNativeQuery b ->
+  TrackNativeQuery b ->
   m EncJSON
-runTrackNativeQuery env (BackendTrackNativeQuery trackNativeQueryRequest) = do
+runTrackNativeQuery env trackNativeQueryRequest = do
   throwIfFeatureDisabled
 
   sourceConnConfig <-
@@ -103,13 +177,10 @@ runTrackNativeQuery env (BackendTrackNativeQuery trackNativeQueryRequest) = do
       =<< getMetadata
 
   (metadata :: NativeQueryInfo b) <- do
-    r <- liftIO $ runExceptT $ nativeQueryTrackToInfo @b env sourceConnConfig trackNativeQueryRequest
-    case r of
-      Right nq -> pure nq
-      Left (NativeQueryParseError e) -> throw400 ParseFailed e
-      Left (NativeQueryValidationError e) -> throwError e
+    liftIO (runExceptT (nativeQueryTrackToInfo @b env sourceConnConfig trackNativeQueryRequest))
+      `onLeftM` throwError
 
-  let fieldName = nativeQueryInfoName @b metadata
+  let fieldName = nqiRootFieldName metadata
       metadataObj =
         MOSourceObjId source $
           AB.mkAnyBackend $
@@ -118,11 +189,11 @@ runTrackNativeQuery env (BackendTrackNativeQuery trackNativeQueryRequest) = do
   buildSchemaCacheFor metadataObj $
     MetadataModifier $
       (metaSources . ix source . toSourceMetadata @b . smNativeQueries)
-        %~ \nqs -> metadata : (filter ((/= fieldName) . nativeQueryInfoName @b) nqs)
+        %~ \nqs -> metadata : (filter ((/= fieldName) . nqiRootFieldName) nqs)
 
   pure successMsg
   where
-    source = trackNativeQuerySource @b trackNativeQueryRequest
+    source = tnqSource trackNativeQueryRequest
 
 -- | API payload for the 'untrack_native_query' endpoint.
 data UntrackNativeQuery (b :: BackendType) = UntrackNativeQuery
@@ -169,7 +240,7 @@ runUntrackNativeQuery q = do
       =<< getMetadata
 
   -- Check native query exists
-  unless (any ((== fieldName) . nativeQueryInfoName @b) $ _smNativeQueries sourceMetadata) do
+  unless (any ((== fieldName) . nqiRootFieldName) $ _smNativeQueries sourceMetadata) do
     throw400 NotFound $ "Native query '" <> unName (getNativeQueryName fieldName) <> "' not found in source '" <> sourceNameToText source <> "'."
 
   let metadataObj =
@@ -188,7 +259,7 @@ runUntrackNativeQuery q = do
 dropNativeQueryInMetadata :: forall b. BackendMetadata b => SourceName -> NativeQueryName -> MetadataModifier
 dropNativeQueryInMetadata source rootFieldName =
   MetadataModifier $
-    metaSources . ix source . toSourceMetadata @b . smNativeQueries %~ filter ((/= rootFieldName) . nativeQueryInfoName @b)
+    metaSources . ix source . toSourceMetadata @b . smNativeQueries %~ filter ((/= rootFieldName) . nqiRootFieldName)
 
 -- | check feature flag is enabled before carrying out any actions
 throwIfFeatureDisabled :: (HasServerConfigCtx m, MonadIO m, MonadError QErr m) => m ()

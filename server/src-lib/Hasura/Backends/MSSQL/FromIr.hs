@@ -56,6 +56,7 @@ runFromIr = flip onLeft (throw500 . tshow) . V.runValidate . flip evalStateT mem
 data Error
   = UnsupportedOpExpG (IR.OpExpG 'MSSQL Expression)
   | FunctionNotSupported
+  | NativeQueryNotSupported
   deriving (Show, Eq)
 
 -- | Hints about the type of entity that 'generateAlias' is producing an alias
