@@ -130,17 +130,17 @@ export const createAllowListQuery = (
   };
 };
 
-export const addInsecureDomainQuery = (host: string) => {
+export const addInsecureDomainQuery = (host: string, port: string) => {
   return {
     type: 'add_host_to_tls_allowlist',
-    args: { host, permissions: ['self-signed'] },
+    args: { host, permissions: ['self-signed'], suffix: port },
   };
 };
 
-export const deleteDomain = (host: string) => {
+export const deleteDomain = (host: string, port?: string) => {
   return {
     type: 'drop_host_from_tls_allowlist',
-    args: { host },
+    args: { host, suffix: port },
   };
 };
 

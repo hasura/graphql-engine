@@ -14,10 +14,6 @@ import { getAdminSecret } from '../ApiExplorer/ApiRequest/utils';
 import { isProLiteConsole } from '../../../utils/proConsole';
 
 import styles from '../../Common/TableCommon/Table.module.scss';
-import {
-  checkFeatureSupport,
-  INSECURE_TLS_ALLOW_LIST,
-} from '../../../helpers/versionUtils';
 
 export interface Metadata {
   inconsistentObjects: Record<string, unknown>[];
@@ -114,13 +110,12 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
     title: 'Inherited Roles',
   });
 
-  if (checkFeatureSupport(INSECURE_TLS_ALLOW_LIST))
-    sectionsData.push({
-      key: 'insecure-domain',
-      link: '/settings/insecure-domain',
-      dataTestVal: 'insecure-domain-link',
-      title: 'Insecure TLS Allow List',
-    });
+  sectionsData.push({
+    key: 'insecure-domain',
+    link: '/settings/insecure-domain',
+    dataTestVal: 'insecure-domain-link',
+    title: 'Insecure TLS Allow List',
+  });
 
   const { data: configData, isLoading, isError } = useServerConfig();
   const PrometheusStateIcon = () => {

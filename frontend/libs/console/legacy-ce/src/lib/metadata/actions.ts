@@ -75,6 +75,7 @@ import {
 import _push from '../components/Services/Data/push';
 import { dataSourceIsEqual } from '../components/Services/Data/DataSources/utils';
 import { getSourceDriver } from '../components/Services/Data/utils';
+import ExportMetadata from '@/components/Services/Settings/MetadataOptions/ExportMetadata';
 
 export interface ExportMetadataSuccess {
   type: 'Metadata/EXPORT_METADATA_SUCCESS';
@@ -1198,6 +1199,7 @@ export const addAllowedQueries = (
 
 export const addInsecureDomain = (
   host: string,
+  port: string,
   callback: any
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
@@ -1206,17 +1208,19 @@ export const addInsecureDomain = (
 
       return;
     }
-    const upQuery = addInsecureDomainQuery(host);
+    const upQuery = addInsecureDomainQuery(host, port);
     const migrationName = `add_insecure_tls_domains`;
     const requestMsg = 'Adding domain to insecure TLS allow list...';
     const successMsg = `Domain added to insecure TLS allow list successfully`;
     const errorMsg = 'Adding domain to insecure TLS allow list failed';
 
     const onSuccess = () => {
+      dispatch(exportMetadata());
       callback();
     };
 
     const onError = () => {};
+
     makeMigrationCall(
       dispatch,
       getState,
@@ -1233,16 +1237,19 @@ export const addInsecureDomain = (
 };
 
 export const deleteInsecureDomain = (
-  host: string
+  host: string,
+  port?: string
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
-    const upQuery = deleteDomain(host);
+    const upQuery = deleteDomain(host, port);
     const migrationName = `delete_insecure_domain`;
     const requestMsg = 'Deleting Insecure domain...';
     const successMsg = 'Domain deleted!';
     const errorMsg = 'Deleting domain failed!';
 
-    const onSuccess = () => {};
+    const onSuccess = () => {
+      dispatch(exportMetadata());
+    };
 
     const onError = () => {};
 
