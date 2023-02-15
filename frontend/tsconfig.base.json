@@ -37,6 +37,9 @@
       "@hasura/internal-plugin": ["libs/nx/internal-plugin/src/index.ts"],
       "unplugin-dynamic-asset-loader": [
         "libs/nx/unplugin-dynamic-asset-loader/src/index.ts"
+      ],
+      "storybook-addon-console-env": [
+        "libs/nx/storybook-addon-console-env/src/index.ts"
       ]
     }
   },

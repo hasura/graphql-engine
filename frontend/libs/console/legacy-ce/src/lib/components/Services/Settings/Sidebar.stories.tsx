@@ -1,9 +1,11 @@
 import React from 'react';
 import { RouteComponentProps } from 'react-router';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
+import globals from '@/Globals';
 import { rest, DelayMode } from 'msw';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import Sidebar, { Metadata } from './Sidebar';
+import { HasuraMetadataV3 } from '@/metadata/types';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,7 +25,7 @@ const generateArgs: (metadataOk?: boolean) => {
     action: 'POP',
     hash: '',
     key: '5nvxpbdafa',
-    pathname: '/settings',
+    pathname: '/settings/metadata-actions',
     search: '',
     state: undefined,
     query: {},
@@ -43,10 +45,12 @@ const mockHandlers = ({
   delay = 1,
   status = 200,
   prometheusEnabled = false,
+  openTelemetryEnabled = false,
 }: {
   delay?: number | DelayMode;
   status?: number;
   prometheusEnabled?: boolean;
+  openTelemetryEnabled?: boolean;
 }) => {
   return [
     rest.get(`${baseUrl}/v1alpha1/config`, (req, res, ctx) => {
@@ -77,6 +81,53 @@ const mockHandlers = ({
         })
       );
     }),
+    rest.post(`${baseUrl}/v1/metadata`, (req, res, ctx) => {
+      let result: HasuraMetadataV3 = {
+        version: 3,
+        sources: [],
+        inherited_roles: [],
+      };
+      if (openTelemetryEnabled) {
+        result = {
+          ...result,
+          opentelemetry: {
+            status: 'enabled',
+            exporter_otlp: {
+              headers: [],
+              protocol: 'http/protobuf',
+              resource_attributes: [],
+              otlp_traces_endpoint: '',
+            },
+            data_types: [],
+            batch_span_processor: {
+              max_export_batch_size: 0,
+            },
+          },
+        };
+      } else {
+        result = {
+          ...result,
+          opentelemetry: {
+            status: 'disabled',
+            exporter_otlp: {
+              headers: [],
+              protocol: 'http/protobuf',
+              resource_attributes: [],
+              otlp_traces_endpoint: '',
+            },
+            data_types: [],
+            batch_span_processor: {
+              max_export_batch_size: 0,
+            },
+          },
+        };
+      }
+      return res(
+        ctx.status(status),
+        ctx.delay(delay),
+        ctx.json({ metadata: result })
+      );
+    }),
   ];
 };
 
@@ -88,16 +139,16 @@ export default {
   },
   decorators: [
     (Story: React.FC) => (
-      <QueryClientProvider client={queryClient}>
-        <Story />
-      </QueryClientProvider>
+      <div className="max-w-xs">
+        <QueryClientProvider client={queryClient}>
+          <Story />
+        </QueryClientProvider>
+      </div>
     ),
   ],
 } as ComponentMeta<typeof Sidebar>;
 
 export const MetadataOk: ComponentStory<typeof Sidebar> = args => {
-  // eslint-disable-next-line no-underscore-dangle
-  window.__env.consoleType = 'pro';
   return <Sidebar {...args} />;
 };
 MetadataOk.storyName = '💠 Demo Metadata Ok';
@@ -107,8 +158,6 @@ MetadataOk.parameters = {
 };
 
 export const MetadataKo: ComponentStory<typeof Sidebar> = args => {
-  // eslint-disable-next-line no-underscore-dangle
-  window.__env.consoleType = 'pro';
   return <Sidebar {...args} />;
 };
 MetadataKo.storyName = '💠 Demo Metadata Ko';
@@ -117,72 +166,82 @@ MetadataKo.parameters = {
   msw: mockHandlers({}),
 };
 
-export const CloudLoading: ComponentStory<typeof Sidebar> = args => {
-  // eslint-disable-next-line no-underscore-dangle
-  window.__env.consoleType = 'cloud';
+export const LogoutActive: ComponentStory<typeof Sidebar> = args => {
   return <Sidebar {...args} />;
 };
-CloudLoading.storyName = '💠 Demo Cloud Loading';
-CloudLoading.args = generateArgs();
-CloudLoading.parameters = {
+LogoutActive.storyName = '💠 Demo Pro Logout Active';
+LogoutActive.args = generateArgs();
+LogoutActive.parameters = {
+  msw: mockHandlers({}),
+  adminSecretSet: true,
+};
+
+export const ProLiteLoading: ComponentStory<typeof Sidebar> = args => {
+  return <Sidebar {...args} />;
+};
+ProLiteLoading.storyName = '💠 Demo Pro Lite Prometheus Loading';
+ProLiteLoading.args = generateArgs();
+ProLiteLoading.parameters = {
   msw: mockHandlers({ delay: 'infinite' }),
-};
-
-export const CloudMetadataOk: ComponentStory<typeof Sidebar> = args => {
-  // eslint-disable-next-line no-underscore-dangle
-  window.__env.consoleType = 'cloud';
-  return <Sidebar {...args} />;
-};
-CloudMetadataOk.storyName = '💠 Demo Cloud Metadata Ok';
-CloudMetadataOk.args = generateArgs();
-CloudMetadataOk.parameters = {
-  msw: mockHandlers({}),
-};
-
-export const CloudMetadataKo: ComponentStory<typeof Sidebar> = args => {
-  // eslint-disable-next-line no-underscore-dangle
-  window.__env.consoleType = 'cloud';
-  return <Sidebar {...args} />;
-};
-CloudMetadataKo.storyName = '💠 Demo Cloud Metadata Ko';
-CloudMetadataKo.args = generateArgs(false);
-CloudMetadataKo.parameters = {
-  msw: mockHandlers({}),
+  consoleType: 'pro-lite',
 };
 
 export const ProLitePrometheusEnabled: ComponentStory<
   typeof Sidebar
 > = args => {
-  // eslint-disable-next-line no-underscore-dangle
-  window.__env.consoleType = 'pro-lite';
   return <Sidebar {...args} />;
 };
 ProLitePrometheusEnabled.storyName = '💠 Demo Pro Lite Prometheus Enabled';
 ProLitePrometheusEnabled.args = generateArgs();
 ProLitePrometheusEnabled.parameters = {
   msw: mockHandlers({ prometheusEnabled: true }),
+  consoleType: 'pro-lite',
 };
 
 export const ProLitePrometheusDisabled: ComponentStory<
   typeof Sidebar
 > = args => {
-  // eslint-disable-next-line no-underscore-dangle
-  window.__env.consoleType = 'pro-lite';
   return <Sidebar {...args} />;
 };
 ProLitePrometheusDisabled.storyName = '💠 Demo Pro Lite Prometheus Disabled';
 ProLitePrometheusDisabled.args = generateArgs();
 ProLitePrometheusDisabled.parameters = {
   msw: mockHandlers({ prometheusEnabled: false }),
+  consoleType: 'pro-lite',
 };
 
-export const CloudError: ComponentStory<typeof Sidebar> = args => {
-  // eslint-disable-next-line no-underscore-dangle
-  window.__env.consoleType = 'cloud';
+export const ProLiteError: ComponentStory<typeof Sidebar> = args => {
   return <Sidebar {...args} />;
 };
-CloudError.storyName = '💠 Demo Cloud Error';
-CloudError.args = generateArgs();
-CloudError.parameters = {
+ProLiteError.storyName = '💠 Demo Pro Lite Prometheus Error';
+ProLiteError.args = generateArgs();
+ProLiteError.parameters = {
   msw: mockHandlers({ status: 500 }),
+  consoleType: 'pro-lite',
+};
+
+export const ProLiteOpenTelemetryEnabled: ComponentStory<
+  typeof Sidebar
+> = args => {
+  return <Sidebar {...args} />;
+};
+ProLiteOpenTelemetryEnabled.storyName =
+  '💠 Demo Pro Lite OpenTelemetry Enabled';
+ProLiteOpenTelemetryEnabled.args = generateArgs();
+ProLiteOpenTelemetryEnabled.parameters = {
+  msw: mockHandlers({ openTelemetryEnabled: true }),
+  consoleType: 'pro-lite',
+};
+
+export const ProLiteOpenTelemetryDisabled: ComponentStory<
+  typeof Sidebar
+> = args => {
+  return <Sidebar {...args} />;
+};
+ProLiteOpenTelemetryDisabled.storyName =
+  '💠 Demo Pro Lite OpenTelemetry Disabled';
+ProLiteOpenTelemetryDisabled.args = generateArgs();
+ProLiteOpenTelemetryDisabled.parameters = {
+  msw: mockHandlers({ openTelemetryEnabled: false }),
+  consoleType: 'pro-lite',
 };

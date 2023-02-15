@@ -356,6 +356,7 @@
     "remark-external-links": "8.0.0",
     "remark-slug": "6.1.0",
     "start-server-and-test": "^1.15.3",
+    "storybook-addon-console-env": "^1.0.0",
     "storybook-dark-mode": "^1.1.0",
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",

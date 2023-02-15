@@ -70,7 +70,7 @@ export const CheckboxesField: React.FC<CheckboxProps> = ({
               {options.map(
                 ({ label, value, disabled: optionDisabled = false }) => {
                   return (
-                    <div className="flex items-center">
+                    <div key={value} className="flex items-center">
                       <Checkbox
                         {...field}
                         name={name}
