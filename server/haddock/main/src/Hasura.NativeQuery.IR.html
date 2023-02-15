@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | This module contains the default types and functions that model Native</span><span>
 </span><span id="line-2"></span><span class="hs-comment">-- Queries.</span><span>
 </span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.NativeQuery.IR</span><span>
-</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.IR.html#NativeQueryImpl"><span class="hs-identifier">NativeQueryImpl</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.IR.html#NativeQuery"><span class="hs-identifier">NativeQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-5"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-6"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-7"></span><span>
@@ -11,57 +11,54 @@
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier">ColumnValue</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-12"></span><span>
 </span><span id="line-13"></span><span class="hs-comment">-- | The default implementation of an invocation of a native query.</span><span>
-</span><span id="line-14"></span><span class="hs-keyword">data</span><span> </span><span id="NativeQueryImpl"><span class="annot"><a href="Hasura.NativeQuery.IR.html#NativeQueryImpl"><span class="hs-identifier hs-var">NativeQueryImpl</span></a></span></span><span> </span><span id="local-6989586621690480284"><span class="annot"><a href="#local-6989586621690480284"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621690480283"><span class="annot"><a href="#local-6989586621690480283"><span class="hs-identifier hs-type">field</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NativeQueryImpl"><span class="annot"><a href="Hasura.NativeQuery.IR.html#NativeQueryImpl"><span class="hs-identifier hs-var">NativeQueryImpl</span></a></span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">data</span><span> </span><span id="NativeQuery"><span class="annot"><a href="Hasura.NativeQuery.IR.html#NativeQuery"><span class="hs-identifier hs-var">NativeQuery</span></a></span></span><span> </span><span id="local-6989586621690428439"><span class="annot"><a href="#local-6989586621690428439"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621690428438"><span class="annot"><a href="#local-6989586621690428438"><span class="hs-identifier hs-type">field</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NativeQuery"><span class="annot"><a href="Hasura.NativeQuery.IR.html#NativeQuery"><span class="hs-identifier hs-var">NativeQuery</span></a></span></span><span>
 </span><span id="line-15"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | The defined name of the native query.</span><span>
 </span><span id="line-16"></span><span>    </span><span id="nqRootFieldName"><span class="annot"><span class="annottext">forall (b :: BackendType) field.
-NativeQueryImpl b field -&gt; NativeQueryName
+NativeQuery b field -&gt; NativeQueryName
 </span><a href="Hasura.NativeQuery.IR.html#nqRootFieldName"><span class="hs-identifier hs-var hs-var">nqRootFieldName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-17"></span><span>    </span><span class="hs-comment">-- | The raw sql to use in the query</span><span>
 </span><span id="line-18"></span><span>    </span><span id="nqInterpolatedQuery"><span class="annot"><span class="annottext">forall (b :: BackendType) field.
-NativeQueryImpl b field -&gt; InterpolatedQuery field
-</span><a href="Hasura.NativeQuery.IR.html#nqInterpolatedQuery"><span class="hs-identifier hs-var hs-var">nqInterpolatedQuery</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#InterpolatedQuery"><span class="hs-identifier hs-type">InterpolatedQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690480283"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">,</span><span>
+NativeQuery b field -&gt; InterpolatedQuery field
+</span><a href="Hasura.NativeQuery.IR.html#nqInterpolatedQuery"><span class="hs-identifier hs-var hs-var">nqInterpolatedQuery</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#InterpolatedQuery"><span class="hs-identifier hs-type">InterpolatedQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690428438"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-19"></span><span>    </span><span class="hs-comment">-- | The arguments passed to the native query, if any.</span><span>
 </span><span id="line-20"></span><span>    </span><span id="nqArgs"><span class="annot"><span class="annottext">forall (b :: BackendType) field.
-NativeQueryImpl b field
+NativeQuery b field
 -&gt; HashMap NativeQueryArgumentName (ColumnValue b)
-</span><a href="Hasura.NativeQuery.IR.html#nqArgs"><span class="hs-identifier hs-var hs-var">nqArgs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier hs-type">NativeQueryArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">ColumnValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690480284"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.NativeQuery.IR.html#nqArgs"><span class="hs-identifier hs-var hs-var">nqArgs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier hs-type">NativeQueryArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">ColumnValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690428439"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-21"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690480160"><span id="local-6989586621690480164"><span class="annot"><span class="annottext">forall a b. a -&gt; NativeQueryImpl b b -&gt; NativeQueryImpl b a
-forall a b. (a -&gt; b) -&gt; NativeQueryImpl b a -&gt; NativeQueryImpl b b
+</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690428315"><span id="local-6989586621690428319"><span class="annot"><span class="annottext">forall a b. a -&gt; NativeQuery b b -&gt; NativeQuery b a
+forall a b. (a -&gt; b) -&gt; NativeQuery b a -&gt; NativeQuery b b
 forall (b :: BackendType) a b.
-a -&gt; NativeQueryImpl b b -&gt; NativeQueryImpl b a
+a -&gt; NativeQuery b b -&gt; NativeQuery b a
 forall (b :: BackendType) a b.
-(a -&gt; b) -&gt; NativeQueryImpl b a -&gt; NativeQueryImpl b b
+(a -&gt; b) -&gt; NativeQuery b a -&gt; NativeQuery b b
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: forall a b. a -&gt; NativeQueryImpl b b -&gt; NativeQueryImpl b a
+&lt;$ :: forall a b. a -&gt; NativeQuery b b -&gt; NativeQuery b a
 $c&lt;$ :: forall (b :: BackendType) a b.
-a -&gt; NativeQueryImpl b b -&gt; NativeQueryImpl b a
-fmap :: forall a b. (a -&gt; b) -&gt; NativeQueryImpl b a -&gt; NativeQueryImpl b b
+a -&gt; NativeQuery b b -&gt; NativeQuery b a
+fmap :: forall a b. (a -&gt; b) -&gt; NativeQuery b a -&gt; NativeQuery b b
 $cfmap :: forall (b :: BackendType) a b.
-(a -&gt; b) -&gt; NativeQueryImpl b a -&gt; NativeQueryImpl b b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690480117"><span id="local-6989586621690480119"><span id="local-6989586621690480121"><span id="local-6989586621690480123"><span id="local-6989586621690480125"><span id="local-6989586621690480127"><span id="local-6989586621690480130"><span id="local-6989586621690480132"><span id="local-6989586621690480134"><span id="local-6989586621690480136"><span id="local-6989586621690480138"><span id="local-6989586621690480140"><span id="local-6989586621690480142"><span id="local-6989586621690480145"><span id="local-6989586621690480147"><span id="local-6989586621690480153"><span id="local-6989586621690480155"><span class="annot"><span class="annottext">forall a. NativeQueryImpl b a -&gt; Bool
-forall m a. Monoid m =&gt; (a -&gt; m) -&gt; NativeQueryImpl b a -&gt; m
-forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
-forall (b :: BackendType) a.
-Eq a =&gt;
-a -&gt; NativeQueryImpl b a -&gt; Bool
-forall (b :: BackendType) a. Num a =&gt; NativeQueryImpl b a -&gt; a
-forall (b :: BackendType) a. Ord a =&gt; NativeQueryImpl b a -&gt; a
-forall (b :: BackendType) m. Monoid m =&gt; NativeQueryImpl b m -&gt; m
-forall (b :: BackendType) a. NativeQueryImpl b a -&gt; Bool
-forall (b :: BackendType) a. NativeQueryImpl b a -&gt; Int
-forall (b :: BackendType) a. NativeQueryImpl b a -&gt; [a]
-forall (b :: BackendType) a.
-(a -&gt; a -&gt; a) -&gt; NativeQueryImpl b a -&gt; a
+(a -&gt; b) -&gt; NativeQuery b a -&gt; NativeQuery b b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690428272"><span id="local-6989586621690428274"><span id="local-6989586621690428276"><span id="local-6989586621690428278"><span id="local-6989586621690428280"><span id="local-6989586621690428282"><span id="local-6989586621690428285"><span id="local-6989586621690428287"><span id="local-6989586621690428289"><span id="local-6989586621690428291"><span id="local-6989586621690428293"><span id="local-6989586621690428295"><span id="local-6989586621690428297"><span id="local-6989586621690428300"><span id="local-6989586621690428302"><span id="local-6989586621690428308"><span id="local-6989586621690428310"><span class="annot"><span class="annottext">forall a. NativeQuery b a -&gt; Bool
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; NativeQuery b a -&gt; m
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; NativeQuery b a -&gt; b
+forall (b :: BackendType) a. Eq a =&gt; a -&gt; NativeQuery b a -&gt; Bool
+forall (b :: BackendType) a. Num a =&gt; NativeQuery b a -&gt; a
+forall (b :: BackendType) a. Ord a =&gt; NativeQuery b a -&gt; a
+forall (b :: BackendType) m. Monoid m =&gt; NativeQuery b m -&gt; m
+forall (b :: BackendType) a. NativeQuery b a -&gt; Bool
+forall (b :: BackendType) a. NativeQuery b a -&gt; Int
+forall (b :: BackendType) a. NativeQuery b a -&gt; [a]
+forall (b :: BackendType) a. (a -&gt; a -&gt; a) -&gt; NativeQuery b a -&gt; a
 forall (b :: BackendType) m a.
 Monoid m =&gt;
-(a -&gt; m) -&gt; NativeQueryImpl b a -&gt; m
+(a -&gt; m) -&gt; NativeQuery b a -&gt; m
 forall (b :: BackendType) b a.
-(b -&gt; a -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
+(b -&gt; a -&gt; b) -&gt; b -&gt; NativeQuery b a -&gt; b
 forall (b :: BackendType) a b.
-(a -&gt; b -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
+(a -&gt; b -&gt; b) -&gt; b -&gt; NativeQuery b a -&gt; b
 forall (t :: * -&gt; *).
 (forall m. Monoid m =&gt; t m -&gt; m)
 -&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
@@ -81,66 +78,62 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: forall a. Num a =&gt; NativeQueryImpl b a -&gt; a
-$cproduct :: forall (b :: BackendType) a. Num a =&gt; NativeQueryImpl b a -&gt; a
-sum :: forall a. Num a =&gt; NativeQueryImpl b a -&gt; a
-$csum :: forall (b :: BackendType) a. Num a =&gt; NativeQueryImpl b a -&gt; a
-minimum :: forall a. Ord a =&gt; NativeQueryImpl b a -&gt; a
-$cminimum :: forall (b :: BackendType) a. Ord a =&gt; NativeQueryImpl b a -&gt; a
-maximum :: forall a. Ord a =&gt; NativeQueryImpl b a -&gt; a
-$cmaximum :: forall (b :: BackendType) a. Ord a =&gt; NativeQueryImpl b a -&gt; a
-elem :: forall a. Eq a =&gt; a -&gt; NativeQueryImpl b a -&gt; Bool
-$celem :: forall (b :: BackendType) a.
-Eq a =&gt;
-a -&gt; NativeQueryImpl b a -&gt; Bool
-length :: forall a. NativeQueryImpl b a -&gt; Int
-$clength :: forall (b :: BackendType) a. NativeQueryImpl b a -&gt; Int
-null :: forall a. NativeQueryImpl b a -&gt; Bool
-$cnull :: forall (b :: BackendType) a. NativeQueryImpl b a -&gt; Bool
-toList :: forall a. NativeQueryImpl b a -&gt; [a]
-$ctoList :: forall (b :: BackendType) a. NativeQueryImpl b a -&gt; [a]
-foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; NativeQueryImpl b a -&gt; a
-$cfoldl1 :: forall (b :: BackendType) a.
-(a -&gt; a -&gt; a) -&gt; NativeQueryImpl b a -&gt; a
-foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; NativeQueryImpl b a -&gt; a
-$cfoldr1 :: forall (b :: BackendType) a.
-(a -&gt; a -&gt; a) -&gt; NativeQueryImpl b a -&gt; a
-foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
+product :: forall a. Num a =&gt; NativeQuery b a -&gt; a
+$cproduct :: forall (b :: BackendType) a. Num a =&gt; NativeQuery b a -&gt; a
+sum :: forall a. Num a =&gt; NativeQuery b a -&gt; a
+$csum :: forall (b :: BackendType) a. Num a =&gt; NativeQuery b a -&gt; a
+minimum :: forall a. Ord a =&gt; NativeQuery b a -&gt; a
+$cminimum :: forall (b :: BackendType) a. Ord a =&gt; NativeQuery b a -&gt; a
+maximum :: forall a. Ord a =&gt; NativeQuery b a -&gt; a
+$cmaximum :: forall (b :: BackendType) a. Ord a =&gt; NativeQuery b a -&gt; a
+elem :: forall a. Eq a =&gt; a -&gt; NativeQuery b a -&gt; Bool
+$celem :: forall (b :: BackendType) a. Eq a =&gt; a -&gt; NativeQuery b a -&gt; Bool
+length :: forall a. NativeQuery b a -&gt; Int
+$clength :: forall (b :: BackendType) a. NativeQuery b a -&gt; Int
+null :: forall a. NativeQuery b a -&gt; Bool
+$cnull :: forall (b :: BackendType) a. NativeQuery b a -&gt; Bool
+toList :: forall a. NativeQuery b a -&gt; [a]
+$ctoList :: forall (b :: BackendType) a. NativeQuery b a -&gt; [a]
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; NativeQuery b a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) a. (a -&gt; a -&gt; a) -&gt; NativeQuery b a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; NativeQuery b a -&gt; a
+$cfoldr1 :: forall (b :: BackendType) a. (a -&gt; a -&gt; a) -&gt; NativeQuery b a -&gt; a
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; NativeQuery b a -&gt; b
 $cfoldl' :: forall (b :: BackendType) b a.
-(b -&gt; a -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
-foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
+(b -&gt; a -&gt; b) -&gt; b -&gt; NativeQuery b a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; NativeQuery b a -&gt; b
 $cfoldl :: forall (b :: BackendType) b a.
-(b -&gt; a -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
-foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
+(b -&gt; a -&gt; b) -&gt; b -&gt; NativeQuery b a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; NativeQuery b a -&gt; b
 $cfoldr' :: forall (b :: BackendType) a b.
-(a -&gt; b -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
-foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
+(a -&gt; b -&gt; b) -&gt; b -&gt; NativeQuery b a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; NativeQuery b a -&gt; b
 $cfoldr :: forall (b :: BackendType) a b.
-(a -&gt; b -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
-foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; NativeQueryImpl b a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; NativeQuery b a -&gt; b
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; NativeQuery b a -&gt; m
 $cfoldMap' :: forall (b :: BackendType) m a.
 Monoid m =&gt;
-(a -&gt; m) -&gt; NativeQueryImpl b a -&gt; m
-foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; NativeQueryImpl b a -&gt; m
+(a -&gt; m) -&gt; NativeQuery b a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; NativeQuery b a -&gt; m
 $cfoldMap :: forall (b :: BackendType) m a.
 Monoid m =&gt;
-(a -&gt; m) -&gt; NativeQueryImpl b a -&gt; m
-fold :: forall m. Monoid m =&gt; NativeQueryImpl b m -&gt; m
-$cfold :: forall (b :: BackendType) m. Monoid m =&gt; NativeQueryImpl b m -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690480098"><span id="local-6989586621690480100"><span id="local-6989586621690480102"><span id="local-6989586621690480110"><span class="annot"><span class="annottext">forall (b :: BackendType). Functor (NativeQueryImpl b)
-forall (b :: BackendType). Foldable (NativeQueryImpl b)
+(a -&gt; m) -&gt; NativeQuery b a -&gt; m
+fold :: forall m. Monoid m =&gt; NativeQuery b m -&gt; m
+$cfold :: forall (b :: BackendType) m. Monoid m =&gt; NativeQuery b m -&gt; m
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690428253"><span id="local-6989586621690428255"><span id="local-6989586621690428257"><span id="local-6989586621690428265"><span class="annot"><span class="annottext">forall (b :: BackendType). Functor (NativeQuery b)
+forall (b :: BackendType). Foldable (NativeQuery b)
 forall (b :: BackendType) (m :: * -&gt; *) a.
 Monad m =&gt;
-NativeQueryImpl b (m a) -&gt; m (NativeQueryImpl b a)
+NativeQuery b (m a) -&gt; m (NativeQuery b a)
 forall (b :: BackendType) (f :: * -&gt; *) a.
 Applicative f =&gt;
-NativeQueryImpl b (f a) -&gt; f (NativeQueryImpl b a)
+NativeQuery b (f a) -&gt; f (NativeQuery b a)
 forall (b :: BackendType) (m :: * -&gt; *) a b.
 Monad m =&gt;
-(a -&gt; m b) -&gt; NativeQueryImpl b a -&gt; m (NativeQueryImpl b b)
+(a -&gt; m b) -&gt; NativeQuery b a -&gt; m (NativeQuery b b)
 forall (b :: BackendType) (f :: * -&gt; *) a b.
 Applicative f =&gt;
-(a -&gt; f b) -&gt; NativeQueryImpl b a -&gt; f (NativeQueryImpl b b)
+(a -&gt; f b) -&gt; NativeQuery b a -&gt; f (NativeQuery b b)
 forall (t :: * -&gt; *).
 Functor t
 -&gt; Foldable t
@@ -155,34 +148,34 @@ Functor t
 -&gt; Traversable t
 forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
-(a -&gt; f b) -&gt; NativeQueryImpl b a -&gt; f (NativeQueryImpl b b)
+(a -&gt; f b) -&gt; NativeQuery b a -&gt; f (NativeQuery b b)
 sequence :: forall (m :: * -&gt; *) a.
 Monad m =&gt;
-NativeQueryImpl b (m a) -&gt; m (NativeQueryImpl b a)
+NativeQuery b (m a) -&gt; m (NativeQuery b a)
 $csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
 Monad m =&gt;
-NativeQueryImpl b (m a) -&gt; m (NativeQueryImpl b a)
+NativeQuery b (m a) -&gt; m (NativeQuery b a)
 mapM :: forall (m :: * -&gt; *) a b.
 Monad m =&gt;
-(a -&gt; m b) -&gt; NativeQueryImpl b a -&gt; m (NativeQueryImpl b b)
+(a -&gt; m b) -&gt; NativeQuery b a -&gt; m (NativeQuery b b)
 $cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
 Monad m =&gt;
-(a -&gt; m b) -&gt; NativeQueryImpl b a -&gt; m (NativeQueryImpl b b)
+(a -&gt; m b) -&gt; NativeQuery b a -&gt; m (NativeQuery b b)
 sequenceA :: forall (f :: * -&gt; *) a.
 Applicative f =&gt;
-NativeQueryImpl b (f a) -&gt; f (NativeQueryImpl b a)
+NativeQuery b (f a) -&gt; f (NativeQuery b a)
 $csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
 Applicative f =&gt;
-NativeQueryImpl b (f a) -&gt; f (NativeQueryImpl b a)
+NativeQuery b (f a) -&gt; f (NativeQuery b a)
 traverse :: forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
-(a -&gt; f b) -&gt; NativeQueryImpl b a -&gt; f (NativeQueryImpl b b)
+(a -&gt; f b) -&gt; NativeQuery b a -&gt; f (NativeQuery b b)
 $ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) a b.
 Applicative f =&gt;
-(a -&gt; f b) -&gt; NativeQueryImpl b a -&gt; f (NativeQueryImpl b b)
+(a -&gt; f b) -&gt; NativeQuery b a -&gt; f (NativeQuery b b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-23"></span><span>
-</span><span id="line-24"></span><span id="local-6989586621690480084"><span id="local-6989586621690480094"><span id="local-6989586621690480226"><span id="local-6989586621690480227"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690480227"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690480226"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.IR.html#NativeQueryImpl"><span class="hs-identifier hs-type">NativeQueryImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690480227"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690480226"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-24"></span><span id="local-6989586621690428239"><span id="local-6989586621690428249"><span id="local-6989586621690428381"><span id="local-6989586621690428382"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690428382"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690428381"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.IR.html#NativeQuery"><span class="hs-identifier hs-type">NativeQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690428382"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690428381"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-25"></span><span>
-</span><span id="line-26"></span><span id="local-6989586621690480065"><span id="local-6989586621690480067"><span id="local-6989586621690480079"><span id="local-6989586621690480218"><span id="local-6989586621690480219"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690480219"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690480218"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.IR.html#NativeQueryImpl"><span class="hs-identifier hs-type">NativeQueryImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690480219"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690480218"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-26"></span><span id="local-6989586621690428220"><span id="local-6989586621690428222"><span id="local-6989586621690428234"><span id="local-6989586621690428373"><span id="local-6989586621690428374"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690428374"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690428373"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.IR.html#NativeQuery"><span class="hs-identifier hs-type">NativeQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690428374"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690428373"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
 </span><span id="line-27"></span></pre></body></html>
