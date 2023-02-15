@@ -128,9 +128,9 @@ convertMutationSelectionSet
                 \(SourceConfigWith (sourceConfig :: SourceConfig b) queryTagsConfig (MDBR db)) -> do
                   let mReqId =
                         case _qtcOmitRequestId <$> queryTagsConfig of
-                          -- we omit the request id only if a user explicitly wishes for it to be omitted.
-                          Just True -> Nothing
-                          _ -> Just reqId
+                          -- we include the request id only if a user explicitly wishes for it to be included.
+                          Just False -> Just reqId
+                          _ -> Nothing
                       mutationQueryTagsAttributes = encodeQueryTags $ QTMutation $ MutationMetadata mReqId maybeOperationName rootFieldName parameterizedQueryHash
                       queryTagsComment = Tagged.untag $ createQueryTags @m mutationQueryTagsAttributes queryTagsConfig
                       (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsMutationDB db

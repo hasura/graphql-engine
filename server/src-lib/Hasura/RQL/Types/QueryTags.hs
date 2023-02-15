@@ -94,7 +94,7 @@ instance FromJSON QueryTagsConfig where
     QueryTagsConfig
       <$> o .:? "disabled" .!= False
       <*> o .:? "format" .!= Standard
-      <*> o .:? "omit_request_id" .!= False
+      <*> o .:? "omit_request_id" .!= True
 
 instance HasCodec QueryTagsConfig where
   codec =
@@ -102,9 +102,9 @@ instance HasCodec QueryTagsConfig where
       QueryTagsConfig
         <$> optionalFieldWithDefault' "disabled" False .== _qtcDisabled
         <*> optionalFieldWithDefault' "format" Standard .== _qtcFormat
-        <*> optionalFieldWithDefault' "omit_request_id" False .== _qtcOmitRequestId
+        <*> optionalFieldWithDefault' "omit_request_id" True .== _qtcOmitRequestId
     where
       (.==) = (AC..=)
 
 defaultQueryTagsConfig :: QueryTagsConfig
-defaultQueryTagsConfig = QueryTagsConfig False Standard False
+defaultQueryTagsConfig = QueryTagsConfig False Standard True
