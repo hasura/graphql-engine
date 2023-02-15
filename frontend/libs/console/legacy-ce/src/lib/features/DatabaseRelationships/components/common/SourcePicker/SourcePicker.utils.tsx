@@ -1,29 +1,14 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { FaPlug, FaTable } from 'react-icons/fa';
-import { isArray, isObject } from '@/components/Common/utils/jsUtils';
 import { Table } from '@/features/hasura-metadata-types';
 import { MultiSelectItem } from '@/new-components/Form';
-import { GDCTable } from '@/features/DataSource';
 import { getTableDisplayName } from '../../../utils/helpers';
 import { SourceSelectorItem } from './SourcePicker.types';
-
-export type SchemaTable = {
-  name: string;
-  schema: string;
-};
-
-export type DatasetTable = {
-  name: string;
-  dataset: string;
-};
-
-const isSchemaTable = (table: Table): table is SchemaTable =>
-  isObject(table) && 'schema' in table && 'name' in table;
-
-const isDatasetTable = (table: Table): table is DatasetTable =>
-  isObject(table) && 'dataset' in table && 'name' in table;
-
-const isGDCTable = (table: Table): table is GDCTable => isArray(table);
+import {
+  isSchemaTable,
+  isDatasetTable,
+  isGDCTable,
+} from '@/features/DataSource/utils';
 
 type SourcePickerLabelProps = {
   prefix: ReactNode;

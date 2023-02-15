@@ -17,6 +17,7 @@ import { postgres, PostgresTable } from './postgres';
 import { alloy, AlloyDbTable } from './alloydb';
 import type {
   DriverInfoResponse,
+  GetDefaultQueryRootProps,
   GetFKRelationshipProps,
   GetSupportedOperatorsProps,
   GetTableColumnsProps,
@@ -107,6 +108,9 @@ export type Database = {
     getTableRows: (
       props: GetTableRowsProps
     ) => Promise<TableRow[] | Feature.NotImplemented>;
+  };
+  modify?: {
+    defaultQueryRoot: (props: GetDefaultQueryRootProps) => Promise<string>;
   };
   config: {
     getDefaultQueryRoot: (

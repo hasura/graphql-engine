@@ -13,6 +13,7 @@ import {
 } from '@/features/hasura-metadata-types';
 
 import { NetworkArgs } from './api';
+import { SchemaTable } from './utils';
 
 export type { BigQueryTable } from './bigquery';
 export { NetworkArgs };
@@ -152,3 +153,15 @@ export type Operator = {
   defaultValue?: string;
 };
 export type GetSupportedOperatorsProps = NetworkArgs;
+
+export type InsertRowArgs = {
+  dataSourceName: string;
+  httpClient: NetworkArgs['httpClient'];
+  rowValues: Record<string, unknown>;
+  table: Table;
+};
+
+export type GetDefaultQueryRootProps = {
+  dataSourceName: string;
+  table: Table;
+};

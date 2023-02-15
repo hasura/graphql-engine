@@ -1,8 +1,6 @@
-import React from 'react';
+import { DatasetTable, SchemaTable } from '@/features/DataSource/utils';
 import {
-  DatasetTable,
   getTableLabel,
-  SchemaTable,
   SourcePickerLabel,
   TableAttributes,
   mapItemsToSourceOptions,

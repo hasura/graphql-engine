@@ -1,5 +1,5 @@
 import { Table } from '@/features/hasura-metadata-types';
-import { Database } from '..';
+import { Database, GetDefaultQueryRootProps } from '..';
 import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 import {
   getDatabaseConfiguration,
@@ -33,6 +33,13 @@ export const postgres: Database = {
   },
   query: {
     getTableRows,
+  },
+  modify: {
+    defaultQueryRoot: async ({ table }: GetDefaultQueryRootProps) => {
+      const { name, schema } = table as PostgresTable;
+
+      return schema === 'public' ? name : `${schema}_${name}`;
+    },
   },
   config: {
     getDefaultQueryRoot: async (table: Table) => {

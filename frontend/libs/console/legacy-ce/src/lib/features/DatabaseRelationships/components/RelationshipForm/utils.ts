@@ -1,6 +1,9 @@
-import { GDCTable } from '@/features/DataSource';
+import {
+  isSchemaTable,
+  isDatasetTable,
+  isGDCTable,
+} from '@/features/DataSource/utils';
 import { Table } from '@/features/hasura-metadata-types';
-import { isArray, isObject } from 'lodash';
 import { useCallback } from 'react';
 import { useManageLocalRelationship } from '../../hooks/useManageLocalRelationship';
 import { useManageRemoteDatabaseRelationship } from '../../hooks/useManageRemoteDatabaseRelationship';
@@ -11,20 +14,8 @@ import {
   RemoteDatabaseRelationship,
   RemoteSchemaRelationship,
 } from '../../types';
-import {
-  DatasetTable,
-  SchemaTable,
-} from '../common/SourcePicker/SourcePicker.utils';
 import { generateLhsFields } from './parts/MapRemoteSchemaFields/utils';
 import { Schema } from './schema';
-
-export const isSchemaTable = (table: Table): table is SchemaTable =>
-  isObject(table) && 'schema' in table && 'name' in table;
-
-export const isDatasetTable = (table: Table): table is DatasetTable =>
-  isObject(table) && 'dataset' in table && 'name' in table;
-
-export const isGDCTable = (table: Table): table is GDCTable => isArray(table);
 
 export const getTableLabel = ({
   dataSourceName,

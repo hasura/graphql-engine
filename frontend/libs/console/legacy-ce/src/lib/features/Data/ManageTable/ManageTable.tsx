@@ -12,6 +12,7 @@ import { useDatabaseHierarchy, useTableDefinition } from '../hooks';
 import { ModifyTable } from '../ModifyTable/ModifyTable';
 import { Breadcrumbs, TableName } from './parts';
 import _push from '../../../components/Services/Data/push';
+import { InsertRowFormContainer } from '@/features/InsertRow/InsertRowFormContainer';
 
 type AllowedTabs = 'modify' | 'browse' | 'relationship' | 'permissions';
 export interface ManageTableProps {
@@ -32,6 +33,14 @@ const availableTabs = (
       <BrowseRowsContainer dataSourceName={dataSourceName} table={table} />
     ),
   },
+  // NOTE: uncomment this part to enable the new Insert Row tab
+  /* {
+    value: 'insert-row',
+    label: 'Insert Row',
+    content: (
+      <InsertRowFormContainer dataSourceName={dataSourceName} table={table} />
+    ),
+  }, */
   {
     value: 'modify',
     label: 'Modify',

@@ -2,8 +2,8 @@ import { formatSdl } from 'format-graphql';
 import { generateGraphQLInsertMutation } from './generateGraphQLInsertMutation';
 
 describe('generateGraphQLInsertMutation for table with', () => {
-  it('no table customization + no source customization', async () => {
-    const result = await generateGraphQLInsertMutation({
+  it('no table customization + no source customization', () => {
+    const result = generateGraphQLInsertMutation({
       defaultQueryRoot: 'Album',
       objects: [
         { AlbumId: 1, ArtistId: 1, Title: 'foo' },
@@ -21,8 +21,8 @@ describe('generateGraphQLInsertMutation for table with', () => {
     expect(result.query).toMatch(formatSdl(expectedGqlQuery));
   });
 
-  it('with table customization (only custom name) + no source customization', async () => {
-    const result = await generateGraphQLInsertMutation({
+  it('with table customization (only custom name) + no source customization', () => {
+    const result = generateGraphQLInsertMutation({
       defaultQueryRoot: 'Album',
       objects: [
         { AlbumId: 1, ArtistId: 1, Title: 'foo' },
@@ -43,8 +43,8 @@ describe('generateGraphQLInsertMutation for table with', () => {
     expect(result.query).toMatch(formatSdl(expectedGqlQuery));
   });
 
-  it('with table customization (custom insert root) + no source customization', async () => {
-    const result = await generateGraphQLInsertMutation({
+  it('with table customization (custom insert root) + no source customization', () => {
+    const result = generateGraphQLInsertMutation({
       defaultQueryRoot: 'Album',
       objects: [
         { AlbumId: 1, ArtistId: 1, Title: 'foo' },
@@ -65,8 +65,8 @@ describe('generateGraphQLInsertMutation for table with', () => {
     expect(result.query).toMatch(formatSdl(expectedGqlQuery));
   });
 
-  it('with table customization (custom name + custom insert root) + no source customization', async () => {
-    const result = await generateGraphQLInsertMutation({
+  it('with table customization (custom name + custom insert root) + no source customization', () => {
+    const result = generateGraphQLInsertMutation({
       defaultQueryRoot: 'Album',
       objects: [
         { AlbumId: 1, ArtistId: 1, Title: 'foo' },
@@ -88,8 +88,8 @@ describe('generateGraphQLInsertMutation for table with', () => {
     expect(result.query).toMatch(formatSdl(expectedGqlQuery));
   });
 
-  it('with table customization (custom name + custom insert root) + source customization', async () => {
-    const result = await generateGraphQLInsertMutation({
+  it('with table customization (custom name + custom insert root) + source customization', () => {
+    const result = generateGraphQLInsertMutation({
       defaultQueryRoot: 'Album',
       objects: [
         { AlbumId: 1, ArtistId: 1, Title: 'foo' },
@@ -108,8 +108,8 @@ describe('generateGraphQLInsertMutation for table with', () => {
     });
     const expectedGqlQuery = `
     mutation insertAlbumRows {
-      MySourceNamespace {
-        CustomInsertRoot(objects: [{AlbumId: 1, ArtistId: 1, Title: "foo"},{AlbumId: 2, ArtistId: 2, Title: "bar"}]) {
+      MySourceNamespace(objects: [{AlbumId: 1, ArtistId: 1, Title: "foo"}, {AlbumId: 2, ArtistId: 2, Title: "bar"}]) {
+        CustomInsertRoot {
           affected_rows
         }
       }

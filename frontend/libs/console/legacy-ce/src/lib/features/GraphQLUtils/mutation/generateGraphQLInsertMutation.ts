@@ -2,14 +2,14 @@ import { MetadataTable, Source } from '@/features/hasura-metadata-types';
 import { formatSdl } from 'format-graphql';
 import { getMutationRoot } from './getMutationRoot';
 
-export const generateGraphQLInsertMutation = async ({
+export const generateGraphQLInsertMutation = ({
   defaultQueryRoot,
   tableCustomization,
   sourceCustomization,
   objects,
   mutationName,
 }: {
-  mutationName: string;
+  mutationName?: string;
   defaultQueryRoot: string;
   tableCustomization?: MetadataTable['configuration'];
   sourceCustomization?: Source['customization'];
@@ -44,24 +44,31 @@ export const generateGraphQLInsertMutation = async ({
   /**
    * If the source has a GQL namespace set for it, then we query for our `queryRoot` under that namespace
    */
-  if (sourceCustomization?.root_fields?.namespace)
-    return {
-      query: formatSdl(`mutation ${mutationName}  {
-    ${sourceCustomization.root_fields.namespace}  {
-      ${queryRoot} (objects: [ ${objectToInsert} ]){
-        affected_rows
+  if (sourceCustomization?.root_fields?.namespace) {
+    const mutationString = `mutation ${mutationName ?? 'MyMutation'}  {
+      ${
+        sourceCustomization.root_fields.namespace
+      } (objects: [ ${objectToInsert} ]) {
+        ${queryRoot} {
+          affected_rows
+        }
       }
-    }
-  }`),
+    }`;
+
+    return {
+      query: formatSdl(mutationString),
       resultPath: `${sourceCustomization.root_fields?.namespace}.${queryRoot}`,
     };
+  }
 
-  return {
-    query: formatSdl(`mutation ${mutationName} {
+  const query = `mutation ${mutationName ?? 'MyMutation'} {
     ${queryRoot} (objects: [ ${objectToInsert} ]) {
       affected_rows
     }
-  }`),
+  }`;
+
+  return {
+    query: formatSdl(query),
     resultPath: queryRoot,
   };
 };
