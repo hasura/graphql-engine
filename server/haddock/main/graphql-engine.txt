@@ -17824,9 +17824,8 @@ actionMetadataToOrdJSONList :: Actions -> Maybe Array
 module Hasura.Metadata.DTO.MetadataV3
 
 -- | Revision 3 of the Metadata export format. Note that values of the
---   types, <a>PlaceholderArray</a> and <a>PlaceholderObject</a> are
---   placeholders that will eventually be expanded to represent more
---   detail.
+--   types, <a>PlaceholderArray</a> and <a>PlaceholderObject</a> will
+--   eventually be expanded to represent more detail.
 data MetadataV3
 MetadataV3 :: Sources -> RemoteSchemas -> QueryCollections -> Maybe PlaceholderArray -> Maybe PlaceholderArray -> CustomTypes -> Maybe PlaceholderArray -> Maybe PlaceholderArray -> Maybe PlaceholderObject -> Maybe PlaceholderObject -> Maybe PlaceholderArray -> Maybe PlaceholderObject -> Maybe PlaceholderObject -> Maybe PlaceholderObject -> Maybe PlaceholderObject -> MetadataV3
 [metaV3Sources] :: MetadataV3 -> Sources
