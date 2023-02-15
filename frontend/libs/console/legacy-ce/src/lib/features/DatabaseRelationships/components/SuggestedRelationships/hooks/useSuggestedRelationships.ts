@@ -5,52 +5,18 @@ import {
   SuggestedRelationship,
 } from '@/features/DatabaseRelationships/types';
 import { getTableDisplayName } from '@/features/DatabaseRelationships/utils/helpers';
-import { getDriverPrefix, NetworkArgs } from '@/features/DataSource';
+import { getDriverPrefix, runMetadataQuery } from '@/features/DataSource';
 import {
   areTablesEqual,
   MetadataSelectors,
 } from '@/features/hasura-metadata-api';
-import {
-  DEFAULT_STALE_TIME,
-  useMetadata,
-} from '@/features/hasura-metadata-api/useMetadata';
+import { useMetadata } from '@/features/hasura-metadata-api/useMetadata';
 import { Table } from '@/features/hasura-metadata-types';
 import { useHttpClient } from '@/features/Network';
-import { useEffect } from 'react';
-import { useQuery } from 'react-query';
-
-type FetchSuggestedRelationshipsArgs = NetworkArgs & {
-  dataSourceName: string;
-  table: Table;
-  driverPrefix?: string;
-};
-
-const emptyResponse: SuggestedRelationshipsResponse = { relationships: [] };
-
-const fetchSuggestedRelationships = async ({
-  httpClient,
-  dataSourceName,
-  table,
-  driverPrefix,
-}: FetchSuggestedRelationshipsArgs) => {
-  if (!driverPrefix) {
-    return Promise.resolve(emptyResponse);
-  }
-  return (
-    await httpClient.post<any, { data: SuggestedRelationshipsResponse }>(
-      '/v1/metadata',
-      {
-        type: `${driverPrefix}_suggest_relationships`,
-        version: 1,
-        args: {
-          omit_tracked: true,
-          tables: [table],
-          source: dataSourceName,
-        },
-      }
-    )
-  ).data;
-};
+import { useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from 'react-query';
+import { generateQueryKeys } from '@/features/DatabaseRelationships/utils/queryClientUtils';
+import { useMetadataMigration } from '@/features/MetadataAPI';
 
 type UseSuggestedRelationshipsArgs = {
   dataSourceName: string;
@@ -59,7 +25,7 @@ type UseSuggestedRelationshipsArgs = {
   isEnabled: boolean;
 };
 
-type SuggestedRelationshipsResponse = {
+export type SuggestedRelationshipsResponse = {
   relationships: SuggestedRelationship[];
 };
 
@@ -187,35 +153,86 @@ export const useSuggestedRelationships = ({
     MetadataSelectors.findSource(dataSourceName)
   );
 
+  const metadataMutation = useMetadataMigration({});
+
+  const queryClient = useQueryClient();
+
   const dataSourcePrefix = metadataSource?.kind
     ? getDriverPrefix(metadataSource?.kind)
     : undefined;
 
   const httpClient = useHttpClient();
-  const { data, refetch, isLoading } = useQuery<SuggestedRelationshipsResponse>(
-    {
-      queryKey: ['suggested_relationships', dataSourceName, table],
-      queryFn: async () => {
-        if (!isEnabled) {
-          return Promise.resolve(emptyResponse);
-        }
 
-        const result = await fetchSuggestedRelationships({
-          httpClient,
-          dataSourceName,
+  const {
+    data,
+    refetch: refetchSuggestedRelationships,
+    isLoading: isLoadingSuggestedRelationships,
+  } = useQuery({
+    queryKey: ['suggested_relationships', dataSourceName, table],
+    queryFn: async () => {
+      const body = {
+        type: `${dataSourcePrefix}_suggest_relationships`,
+        args: {
+          omit_tracked: true,
+          tables: [table],
+          source: dataSourceName,
+        },
+      };
+      const result = await runMetadataQuery<SuggestedRelationshipsResponse>({
+        httpClient,
+        body,
+      });
+
+      return result;
+    },
+    enabled: isEnabled,
+  });
+
+  const [isAddingSuggestedRelationship, setAddingSuggestedRelationship] =
+    useState(false);
+
+  const onAddSuggestedRelationship = async ({
+    name,
+    columnNames,
+    relationshipType,
+    toTable,
+  }: {
+    name: string;
+    columnNames: string[];
+    relationshipType: 'object' | 'array';
+    toTable?: Table;
+  }) => {
+    setAddingSuggestedRelationship(true);
+
+    await metadataMutation.mutateAsync({
+      query: {
+        type: `${dataSourcePrefix}_create_${relationshipType}_relationship`,
+        args: {
           table,
-          driverPrefix: dataSourcePrefix,
-        });
-        return result;
+          name,
+          source: dataSourceName,
+          using: {
+            foreign_key_constraint_on:
+              relationshipType === 'object'
+                ? columnNames
+                : {
+                    table: toTable,
+                    columns: columnNames,
+                  },
+          },
+        },
       },
-      refetchOnWindowFocus: false,
-      staleTime: DEFAULT_STALE_TIME,
-    }
-  );
+    });
+    setAddingSuggestedRelationship(false);
+
+    queryClient.invalidateQueries({
+      queryKey: generateQueryKeys.metadata(),
+    });
+  };
 
   useEffect(() => {
     if (dataSourcePrefix) {
-      refetch();
+      refetchSuggestedRelationships();
     }
   }, [dataSourcePrefix]);
 
@@ -238,7 +255,9 @@ export const useSuggestedRelationships = ({
 
   return {
     suggestedRelationships: relationshipsWithConstraintName,
-    isLoadingSuggestedRelationships: isLoading,
-    refetchSuggestedRelationships: refetch,
+    isLoadingSuggestedRelationships,
+    refetchSuggestedRelationships,
+    onAddSuggestedRelationship,
+    isAddingSuggestedRelationship,
   };
 };

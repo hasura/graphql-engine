@@ -5,7 +5,7 @@ import { Table } from '@/features/hasura-metadata-types';
 import { useHttpClient } from '@/features/Network';
 import { useQuery } from 'react-query';
 import { DataSource, exportMetadata, Operator } from '@/features/DataSource';
-import { areTablesEqual } from '@/features/RelationshipsTable';
+import { areTablesEqual } from '@/features/hasura-metadata-api';
 import { getTypeName } from '@/features/GraphQLUtils';
 import { InputField } from '@/new-components/Form';
 import { IconTooltip } from '@/new-components/Tooltip';

@@ -102,6 +102,7 @@ export const metadataQueryTypes = [
   'drop_host_from_tls_allowlist',
   'dc_add_agent',
   'dc_delete_agent',
+  'suggest_relationships',
 ] as const;
 
 export type MetadataQueryType = (typeof metadataQueryTypes)[number];

@@ -9,6 +9,7 @@ import {
 } from '@/features/FeatureFlags';
 import { DatabaseRelationshipsTab } from '@/features/DatabaseRelationships';
 import { Button } from '@/new-components/Button';
+import { areTablesEqual } from '@/features/hasura-metadata-api';
 import { LearnMoreLink } from '@/new-components/LearnMoreLink';
 import TableHeader from '../TableCommon/TableHeader';
 import {
@@ -43,7 +44,6 @@ import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import FeatureDisabled from '../FeatureDisabled';
 import { RemoteDbRelationships } from './RemoteDbRelationships/RemoteDbRelationships';
-import { areTablesEqual } from '@/features/RelationshipsTable/utils';
 
 const addRelationshipCellView = (
   dispatch,

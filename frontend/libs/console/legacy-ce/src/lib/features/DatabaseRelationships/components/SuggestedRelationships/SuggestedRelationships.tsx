@@ -3,7 +3,7 @@ import { capitaliseFirstLetter } from '@/components/Common/ConfigureTransformati
 import { Table } from '@/features/hasura-metadata-types';
 import { Button } from '@/new-components/Button';
 import { CardedTable } from '@/new-components/CardedTable';
-import { useFireNotification } from '@/new-components/Notifications';
+import { hasuraToast } from '@/new-components/Toasts';
 import {
   FaArrowRight,
   FaColumns,
@@ -14,13 +14,11 @@ import {
 import { MetadataSelectors, useMetadata } from '@/features/hasura-metadata-api';
 import { getSupportsForeignKeys } from '@/features/hasura-metadata-api/utils';
 import { useListAllDatabaseRelationships } from '../../hooks/useListAllDatabaseRelationships';
-import { useManageLocalRelationship } from '../../hooks/useManageLocalRelationship';
 import { getTableDisplayName } from '../../utils/helpers';
 import {
   SuggestedRelationshipWithName,
   useSuggestedRelationships,
 } from './hooks/useSuggestedRelationships';
-import { convertSuggestedRelationShipToLocalRelationship } from './SuggestedRelationships.utils';
 import type { LocalRelationship } from '../../types';
 import Skeleton from 'react-loading-skeleton';
 
@@ -37,7 +35,6 @@ export const SuggestedRelationships = ({
     dataSourceName,
     table,
   });
-
   const localRelationships = existingRelationships.filter(rel => {
     if (rel.type === 'localRelationship') {
       return true;
@@ -55,6 +52,8 @@ export const SuggestedRelationships = ({
     suggestedRelationships,
     isLoadingSuggestedRelationships,
     refetchSuggestedRelationships,
+    onAddSuggestedRelationship,
+    isAddingSuggestedRelationship,
   } = useSuggestedRelationships({
     dataSourceName,
     table,
@@ -62,40 +61,35 @@ export const SuggestedRelationships = ({
     isEnabled: supportsForeignKeys,
   });
 
-  const { fireNotification } = useFireNotification();
-
-  const { createRelationship, isLoading: isCreatingRelationship } =
-    useManageLocalRelationship({
-      dataSourceName,
-      table,
-      onSuccess: () => {
-        fireNotification({
-          title: 'Success',
-          message: 'Relationship tracked',
-          type: 'success',
-        });
-        refetchSuggestedRelationships();
-      },
-      onError: () => {
-        fireNotification({
-          title: 'Error',
-          message: 'An error occurred',
-          type: 'error',
-        });
-      },
-    });
-
   const [updatedRelationship, setUpdatedRelationship] = useState<string | null>(
     null
   );
-  const onCreate = (relationship: SuggestedRelationshipWithName) => {
+  const onCreate = async (relationship: SuggestedRelationshipWithName) => {
     setUpdatedRelationship(relationship.constraintName);
-    createRelationship(
-      convertSuggestedRelationShipToLocalRelationship(
-        dataSourceName,
-        relationship
-      )
-    );
+    try {
+      const isObjectRelationship = !!relationship.from?.constraint_name;
+
+      await onAddSuggestedRelationship({
+        name: relationship.constraintName,
+        columnNames: isObjectRelationship
+          ? relationship.from.columns
+          : relationship.to.columns,
+        relationshipType: isObjectRelationship ? 'object' : 'array',
+        toTable: isObjectRelationship ? undefined : relationship.to.table,
+      });
+      hasuraToast({
+        title: 'Success',
+        message: 'Relationship tracked',
+        type: 'success',
+      });
+      refetchSuggestedRelationships();
+    } catch (err) {
+      hasuraToast({
+        title: 'Error',
+        message: 'An error occurred',
+        type: 'error',
+      });
+    }
   };
 
   if (isLoadingSuggestedRelationships)
@@ -125,7 +119,7 @@ export const SuggestedRelationships = ({
                     size="sm"
                     onClick={() => onCreate(relationship)}
                     isLoading={
-                      isCreatingRelationship &&
+                      isAddingSuggestedRelationship &&
                       updatedRelationship === relationship.constraintName
                     }
                   >

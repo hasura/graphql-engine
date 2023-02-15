@@ -1,6 +1,5 @@
 /* eslint-disable no-underscore-dangle */
 import { getScalarType, getTypeName } from '@/features/GraphQLUtils';
-import { areTablesEqual } from '@/features/RelationshipsTable';
 import { GraphQLType } from 'graphql';
 import { GDCTable } from '..';
 import {
@@ -11,6 +10,7 @@ import {
 import { GetTableColumnsProps, TableColumn } from '../../types';
 import { adaptAgentDataType } from './utils';
 import { GetTableInfoResponse } from './types';
+import { areTablesEqual } from '@/features/hasura-metadata-api';
 
 export const getTableColumns = async (props: GetTableColumnsProps) => {
   const { httpClient, dataSourceName, table } = props;
@@ -80,7 +80,7 @@ export const getTableColumns = async (props: GetTableColumnsProps) => {
         name: column.name,
         dataType: adaptAgentDataType(column.type),
         /**
-          Will be updated once GDC supports mutations 
+          Will be updated once GDC supports mutations
         */
         consoleDataType: 'string',
         nullable: column.nullable,
