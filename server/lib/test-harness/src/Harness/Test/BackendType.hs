@@ -33,6 +33,7 @@ data BackendTypeConfig = BackendTypeConfig
     -- backend in this test suite project.
     backendTypeString :: String,
     backendDisplayNameString :: String,
+    backendReleaseNameString :: Maybe String,
     -- | The default backend URL for the given backend in this test
     -- suite project.
     backendServerUrl :: Maybe String,

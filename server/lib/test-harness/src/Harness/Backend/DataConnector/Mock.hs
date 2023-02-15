@@ -53,6 +53,7 @@ backendTypeMetadata =
       backendCapabilities = Nothing,
       backendTypeString = "mock",
       backendDisplayNameString = "mock",
+      backendReleaseNameString = Nothing,
       backendServerUrl = Just "http://localhost:65006",
       backendSchemaKeyword = "schema"
     }

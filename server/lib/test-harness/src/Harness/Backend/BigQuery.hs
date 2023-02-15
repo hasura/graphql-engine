@@ -62,6 +62,7 @@ backendTypeMetadata =
       backendCapabilities = Nothing,
       backendTypeString = "bigquery",
       backendDisplayNameString = "bigquery",
+      backendReleaseNameString = Nothing,
       backendServerUrl = Nothing,
       backendSchemaKeyword = "dataset"
     }

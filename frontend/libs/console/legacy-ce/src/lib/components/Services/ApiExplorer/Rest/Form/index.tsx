@@ -3,7 +3,7 @@ import { RouteComponentProps } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
 import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { AllowedRESTMethods, RestEndpointEntry } from '@/metadata/types';
-import { useIsUnmounted } from '@/components/Services/Data';
+import { useIsUnmounted } from '@/components/Services/Data/Common/tsUtils';
 import { Dispatch, ReduxState } from '@/types';
 import { addRESTEndpoint, editRESTEndpoint } from '@/metadata/actions';
 import { allowedQueriesCollection } from '@/metadata/utils';

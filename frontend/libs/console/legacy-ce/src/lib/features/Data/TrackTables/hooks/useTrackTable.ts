@@ -3,8 +3,9 @@ import { useFireNotification } from '@/new-components/Notifications';
 import React, { useCallback } from 'react';
 import { useQueryClient } from 'react-query';
 import { useInvalidateMetadata } from '@/features/hasura-metadata-api';
-import { useIsUnmounted } from '@/components/Services/Data';
-import { useMetadataSource, tablesQueryKey } from '@/features/Data';
+import { useIsUnmounted } from '@/components/Services/Data/Common/tsUtils';
+import { useMetadataSource } from './useMetadataSource';
+import { tablesQueryKey } from './useTables';
 import type { TrackableTable } from '../types';
 import { buildTrackingQuery, TrackingQuery } from './buildTrackingQuery';
 

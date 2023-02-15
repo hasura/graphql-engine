@@ -1,4 +1,4 @@
-import { useIsUnmounted } from '@/components/Services/Data';
+import { useIsUnmounted } from '@/components/Services/Data/Common/tsUtils';
 import { DataSource, TableColumn } from '@/features/DataSource';
 import { useHttpClient } from '@/features/Network';
 import { useEffect, useState } from 'react';

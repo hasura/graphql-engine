@@ -67,6 +67,7 @@ backendTypeMetadata =
       backendCapabilities = Nothing,
       backendTypeString = "citus",
       backendDisplayNameString = "citus",
+      backendReleaseNameString = Nothing,
       backendServerUrl = Nothing,
       backendSchemaKeyword = "schema"
     }
