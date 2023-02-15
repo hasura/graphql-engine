@@ -26056,7 +26056,7 @@ RMBulk :: [RQLMetadataRequest] -> RQLMetadataV1
 --   
 --   <a>https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index/</a>
 data RQLMetadata
-runMetadataQuery :: (MonadIO m, MonadError QErr m, MonadBaseControl IO m, MonadTrace m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadEventLogCleanup m) => Environment -> Logger Hasura -> InstanceId -> UserInfo -> Manager -> ServerConfigCtx -> RebuildableSchemaCache -> RQLMetadata -> m (EncJSON, RebuildableSchemaCache)
+runMetadataQuery :: (MonadIO m, MonadError QErr m, MonadBaseControl IO m, MonadTrace m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadEventLogCleanup m) => Environment -> Logger Hasura -> InstanceId -> UserInfo -> Manager -> ServerConfigCtx -> SchemaCacheRef -> RQLMetadata -> m (EncJSON, RebuildableSchemaCache)
 instance GHC.Generics.Generic Hasura.Server.API.Metadata.RQLMetadataV2
 instance GHC.Generics.Generic Hasura.Server.API.Metadata.RQLMetadataV1
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Metadata.RQLMetadata
