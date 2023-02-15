@@ -15,6 +15,7 @@ const defaultState = {
     privileges: [],
     metricsFQDN: '',
   },
+  projectEntitlements: [],
 };
 
 export default defaultState;
