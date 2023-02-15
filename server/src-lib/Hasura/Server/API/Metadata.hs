@@ -77,6 +77,7 @@ import Hasura.SQL.Backend
 import Hasura.Server.API.Backend
 import Hasura.Server.API.Instances ()
 import Hasura.Server.Logging (SchemaSyncLog (..), SchemaSyncThreadType (TTMetadataApi))
+import Hasura.Server.SchemaCacheRef
 import Hasura.Server.Types
 import Hasura.Server.Utils (APIVersion (..))
 import Hasura.Session
@@ -389,10 +390,11 @@ runMetadataQuery ::
   UserInfo ->
   HTTP.Manager ->
   ServerConfigCtx ->
-  RebuildableSchemaCache ->
+  SchemaCacheRef ->
   RQLMetadata ->
   m (EncJSON, RebuildableSchemaCache)
-runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx schemaCache RQLMetadata {..} = do
+runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx schemaCacheRef RQLMetadata {..} = do
+  schemaCache <- liftIO $ fst <$> readSchemaCacheRef schemaCacheRef
   (metadata, currentResourceVersion) <- Tracing.trace "fetchMetadata" fetchMetadata
   let exportsMetadata = \case
         RMV1 (RMExportMetadata _) -> True
