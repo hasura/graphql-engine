@@ -32,7 +32,7 @@ const ClearButton: React.VFC<{ fieldName: string; className: string }> = ({
   return (
     <Button
       className={clsx(
-        'border-0 bg-transparent bg-none shadow-none active:opacity-75 pointer-events-auto',
+        'border-0 !bg-transparent bg-none shadow-none active:opacity-75 pointer-events-auto',
         className
       )}
       onClick={() => setValue(fieldName, '')}

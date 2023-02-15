@@ -18,7 +18,7 @@ import hasuraEELogo from './black-logo-ee.svg';
 
 const validationSchema = z.object({
   password: z.string().min(1, { message: 'Please add password' }),
-  savePassword: z.enum(['checked']).array(),
+  savePassword: z.enum(['checked']).array().optional(),
 });
 
 const Login: React.FC<ConnectInjectedProps> = ({ dispatch, children }) => {
@@ -107,7 +107,7 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch, children }) => {
                   options={[
                     {
                       value: 'checked',
-                      label: 'Remember in this browser',
+                      label: 'Remember on the browser',
                     },
                   ]}
                 />

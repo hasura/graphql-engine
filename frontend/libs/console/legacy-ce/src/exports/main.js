@@ -23,6 +23,7 @@ export { prefetchOnboardingData } from '../lib/features/CloudOnboarding/Onboardi
 export { default as PageNotFound } from '../lib/components/Error/PageNotFound';
 export * from '../lib/new-components/Button/';
 export * from '../lib/new-components/Tooltip/';
+export * from '../lib/new-components/Badge/';
 export { CONSOLE_ADMIN_SECRET } from '../lib/components/AppState';
 export { default as dataHeaders } from '../lib/components/Services/Data/Common/Headers';
 export { handleMigrationErrors } from '../lib/components/Services/Data/TableModify/ModifyActions';

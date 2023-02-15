@@ -1,4 +1,31 @@
 const colors = require('tailwindcss/colors');
+const plugin = require('tailwindcss/plugin');
+
+function dataStateVariant(state, { addVariant, e }) {
+  addVariant(`data-state-${state}`, ({ modifySelectors, separator }) => {
+    modifySelectors(({ className }) => {
+      return `.${e(
+        `data-state-${state}${separator}${className}`
+      )}[data-state='${state}']`;
+    });
+  });
+
+  addVariant(`group-data-state-${state}`, ({ modifySelectors, separator }) => {
+    modifySelectors(({ className }) => {
+      return `.group[data-state='${state}'] .${e(
+        `group-data-state-${state}${separator}${className}`
+      )}`;
+    });
+  });
+
+  addVariant(`peer-data-state-${state}`, ({ modifySelectors, separator }) => {
+    modifySelectors(({ className }) => {
+      return `.peer[data-state='${state}'] ~ .${e(
+        `peer-data-state-${state}${separator}${className}`
+      )}`;
+    });
+  });
+}
 
 module.exports = {
   safelist: {
@@ -155,6 +182,22 @@ module.exports = {
             transform: `translateY(-100%)`,
           },
         },
+        dropdownMenuContentOpen: {
+          from: {
+            opacity: '0',
+          },
+          to: {
+            opacity: '1',
+          },
+        },
+        dropdownMenuContentClose: {
+          from: {
+            opacity: '1',
+          },
+          to: {
+            opacity: '0',
+          },
+        },
       },
       animation: {
         collapsibleContentOpen: 'collapsibleContentOpen 300ms ease-out',
@@ -168,6 +211,8 @@ module.exports = {
           'slideLeftAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         notificationOpen: 'notificationOpen 300ms ease-in-out',
         notificationClose: 'notificationClose 300ms ease-in-out',
+        dropdownMenuContentOpen: 'dropdownMenuContentOpen 100ms ease-in',
+        dropdownMenuContentClose: 'dropdownMenuContentClose 100ms ease-out',
       },
     },
   },
@@ -175,5 +220,13 @@ module.exports = {
     require('@tailwindcss/typography'),
     require('@tailwindcss/forms'),
     require('tailwindcss-radix')(),
+    plugin(helpers => {
+      // variants that help styling Radix-UI components
+      dataStateVariant('open', helpers);
+      dataStateVariant('closed', helpers);
+      dataStateVariant('on', helpers);
+      dataStateVariant('checked', helpers);
+      dataStateVariant('unchecked', helpers);
+    }),
   ],
 };

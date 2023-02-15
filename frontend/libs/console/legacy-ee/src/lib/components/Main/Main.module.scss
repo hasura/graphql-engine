@@ -238,6 +238,7 @@
 }
 
 .clusterInfoWrapper {
+  align-items: stretch;
   width: auto;
   margin-left: auto;
   display: flex;
@@ -1000,6 +1001,7 @@
 .headerRightNavbarBtn {
   display: flex;
   align-items: center;
+  height: 100%;
   padding: 15px;
   position: relative;
   color: #fff;

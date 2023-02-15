@@ -14,7 +14,7 @@ export function LinkButton(props: LinkButtonProps) {
     <a href={url} target="_blank" rel="noopener noreferrer">
       <Button
         mode="default"
-        className="mr-sm bg-none bg-transparent border-red-500"
+        className="mr-sm bg-none !bg-transparent border-red-500"
         icon={icon}
         iconPosition={iconPosition}
       >

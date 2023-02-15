@@ -6,6 +6,7 @@ import { DocsContainer, DocsPage } from '@storybook/addon-docs';
 import { initialize, mswDecorator } from 'msw-storybook-addon';
 import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
 import theme from './theme';
+import 'react-loading-skeleton/dist/skeleton.css';
 import '../src/lib/theme/tailwind.css';
 import { store } from '../src/lib/store';
 import '../src/lib/components/Common/Common.module.scss';
