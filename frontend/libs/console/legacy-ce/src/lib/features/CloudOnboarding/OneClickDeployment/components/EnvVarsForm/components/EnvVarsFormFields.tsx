@@ -21,8 +21,6 @@ export function EnvVarsFormFields(props: EnvVarsFormFieldsProps) {
     staticEnvVars,
   } = React.useMemo(() => getEnvVarFormSegments(envVars), [envVars]);
 
-  const neonDashboardLink = `https://console.${globals.neonRootDomain}/app/projects`;
-
   return (
     <>
       {databaseEnvVars.length > 0 ? (
@@ -37,10 +35,12 @@ export function EnvVarsFormFields(props: EnvVarsFormFieldsProps) {
                 <>
                   <div className="flex w-[325px]" />
                   <a
-                    href={neonDashboardLink}
+                    href="https://neon.tech/"
+                    onClick={e => {
+                      e.stopPropagation();
+                    }}
                     rel="noreferrer noopener"
                     target="_blank"
-                    onClick={e => e.stopPropagation()}
                   >
                     <div className="flex text-gray-600">
                       Database creation powered by{' '}

@@ -23,7 +23,7 @@ export function NeonButton(props: Props) {
   const { dbEnvVar, neonButtonProps } = props;
   const { formState } = useFormContext();
 
-  let errorMessage: string | undefined;
+  let errorMessage: string | undefined | React.ReactNode;
 
   if (formState.errors?.[dbEnvVar.Name]) {
     errorMessage = formState.errors?.[dbEnvVar.Name].message;
@@ -64,7 +64,7 @@ export function NeonButton(props: Props) {
               {errorMessage}
             </>
           }
-          ariaLabel={errorMessage ?? ''}
+          ariaLabel={errorMessage ? 'Neon Database creation failed' : ''}
           role="alert"
         />
       ) : (

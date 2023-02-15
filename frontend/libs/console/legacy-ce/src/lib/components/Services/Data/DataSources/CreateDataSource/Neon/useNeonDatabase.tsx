@@ -34,19 +34,29 @@ type NeonDBStatus =
     }
   | {
       status: 'error';
-      error: 'unauthorized' | string;
+      error: 'unauthorized' | string | React.ReactNode;
     }
   | {
       status: 'loading';
     };
 
+const neonDashboardLink = `https://console.${globals.neonRootDomain}/app/projects`;
+
 function getHumanReadableAPIError(err: string) {
   if (err.includes('limit exceeded')) {
-    return 'You have reached the free tier limit on Neon. Please delete a free tier project from Neon dashboard and try again.';
+    return (
+      <div>
+        You have reached the free tier limit on Neon. Please delete a free tier
+        project from{' '}
+        <a href={neonDashboardLink} target="_blank">
+          Neon dashboard
+        </a>{' '}
+        and try again.
+      </div>
+    );
   }
   return err;
 }
-
 export function useNeonDatabase() {
   const [state, setState] = React.useState<NeonDBStatus>({ status: 'idle' });
 

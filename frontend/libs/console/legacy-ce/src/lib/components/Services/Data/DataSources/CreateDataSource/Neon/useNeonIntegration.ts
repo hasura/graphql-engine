@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Dispatch } from '@/types';
 import { useNeonOAuth } from './useNeonOAuth';
 import { useNeonDatabase } from './useNeonDatabase';
@@ -38,7 +38,7 @@ type Error<Status, Payload> = {
   status: Status;
   payload: Payload;
   title: string;
-  description: string;
+  description: string | React.ReactNode;
   action: VoidFunction;
 };
 

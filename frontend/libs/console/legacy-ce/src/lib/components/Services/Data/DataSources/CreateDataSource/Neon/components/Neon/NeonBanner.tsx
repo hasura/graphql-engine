@@ -15,7 +15,7 @@ type Status =
   | {
       status: 'error';
       errorTitle: string;
-      errorDescription: string;
+      errorDescription: string | React.ReactNode;
     }
   | {
       status: 'default';
@@ -42,11 +42,13 @@ export function NeonBanner(props: Props) {
           Free
         </span>
       </div>
-      <img
-        src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/cloud-console/assets/common/img/neon.jpg"
-        alt="neon_banner"
-        className="rounded"
-      />
+      <a href="https://neon.tech/" target="_blank" rel="noopener noreferrer">
+        <img
+          src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/cloud-console/assets/common/img/neon.jpg"
+          alt="neon_banner"
+          className="rounded"
+        />
+      </a>
       <div className="mt-sm mb-sm text-gray-700 text-lg">
         <b>Hasura</b> + <b>Neon</b> are partners now!
       </div>
@@ -79,7 +81,7 @@ export function NeonBanner(props: Props) {
       </div>
       {status.status === 'error' && (
         <IndicatorCard status="negative" headline={status.errorTitle} showIcon>
-          {status.errorDescription}
+          <div className="description">{status.errorDescription}</div>
         </IndicatorCard>
       )}
     </div>

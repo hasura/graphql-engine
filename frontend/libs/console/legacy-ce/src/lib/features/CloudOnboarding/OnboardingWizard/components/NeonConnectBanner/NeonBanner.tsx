@@ -17,7 +17,7 @@ type Status =
   | {
       status: 'error';
       errorTitle: string;
-      errorDescription: string;
+      errorDescription: string | React.ReactNode;
     }
   | {
       status: 'default';
@@ -47,8 +47,15 @@ export function NeonBanner(props: Props) {
             </div>
           </div>
           <div className="text-md text-gray-700 ml-xs">
-            Need a new database? We&apos;ve partnered with Neon to help you get
-            started.
+            Need a new database? We&apos;ve partnered with{' '}
+            <a
+              href="https://neon.tech/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Neon
+            </a>{' '}
+            to help you get started.
           </div>
         </div>
         <div className="flex w-1/4 justify-end">

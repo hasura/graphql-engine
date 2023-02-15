@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+import React from 'react';
 import {
   GetTenantEnvQuery,
   UpdateTenantMutation,
@@ -11,7 +12,7 @@ type Status =
   | {
       status: 'error';
       errorTitle: string;
-      errorDescription: string;
+      errorDescription: string | React.ReactNode;
     }
   | {
       status: 'default';
