@@ -12,7 +12,7 @@ export const manualOperationsDescription =
   'Trigger manually from table data browser in console';
 
 export const webhookUrlDescription =
-  'POST endpoint which will be triggered with payload on configured events';
+  'Environment variables and secrets are available using the {{VARIABLE}} tag. Environment variable templating is available for this field. Example: https://{{ENV_VAR}}/endpoint_url';
 
 export const advancedOperationDescription =
   'For update triggers, webhook will be triggered only when selected columns are modified';

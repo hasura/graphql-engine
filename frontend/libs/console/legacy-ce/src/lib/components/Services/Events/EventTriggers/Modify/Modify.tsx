@@ -65,6 +65,7 @@ import {
   getEventTriggerByName,
 } from '../../../../../metadata/selector';
 import { AutoCleanupForm } from '../Common/AutoCleanupForm';
+import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
 
 interface Props extends InjectedProps {}
 
@@ -291,25 +292,29 @@ const Modify: React.FC<Props> = props => {
     transformState.sessionVars,
   ]);
 
-  useEffect(() => {
-    if (
-      transformState.requestBody &&
-      state.webhook?.value &&
-      !transformState.requestTransformedBody
-    ) {
-      requestBodyErrorOnChange('');
-      dispatch(
-        requestAction(
-          Endpoints.metadata,
-          reqBodyoptions,
-          undefined,
-          undefined,
-          true,
-          true
-        )
-      ).then(onRequestBodyResponse, onRequestBodyResponse);
-    }
-  }, [transformState.requestTransformedBody]);
+  useDebouncedEffect(
+    () => {
+      if (
+        transformState.requestBody &&
+        state.webhook?.value &&
+        !transformState.requestTransformedBody
+      ) {
+        requestBodyErrorOnChange('');
+        dispatch(
+          requestAction(
+            Endpoints.metadata,
+            reqBodyoptions,
+            undefined,
+            undefined,
+            true,
+            true
+          )
+        ).then(onRequestBodyResponse, onRequestBodyResponse);
+      }
+    },
+    1000,
+    [transformState.requestTransformedBody]
+  );
 
   const saveWrapper =
     (property?: EventTriggerProperty) =>

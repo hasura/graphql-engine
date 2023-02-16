@@ -199,6 +199,12 @@ class Edit extends React.Component {
       { redactText: true }
     );
 
+    const isEnvVarEnabled = () => {
+      return this.props.allRemoteSchemas.some(
+        rs => rs.name === remoteSchemaName && rs.definition.url_from_env
+      );
+    };
+
     return (
       <div>
         <Helmet>
@@ -227,7 +233,7 @@ class Edit extends React.Component {
                 this.editClicked();
               }}
             >
-              <Common {...this.props} />
+              <Common {...this.props} isEnvVarEnabled={isEnvVarEnabled()} />
               {generateMigrateBtns()}
             </form>
           </Analytics>

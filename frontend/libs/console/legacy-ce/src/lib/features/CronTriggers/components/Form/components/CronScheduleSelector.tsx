@@ -16,7 +16,9 @@ export const CronScheduleSelector = () => {
   return (
     <>
       <div className="block flex items-center text-gray-600 font-semibold">
-        <label htmlFor="schedule">Cron Schedule</label>
+        <label htmlFor="schedule" className="font-semibold">
+          Cron Schedule
+        </label>
         <IconTooltip message="Schedule for your cron (events are created based on the UTC timezone)" />
         <LearnMoreLink
           href="https://crontab.guru/#*_*_*_*_*"

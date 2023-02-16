@@ -18,7 +18,7 @@ export const LearnMoreLink: React.VFC<LearnMoreLinkProps> = props => {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`ml-xs italic text-sm text-secondary ${className}`}
+      className={`ml-xs italic text-sm font-thin text-secondary ${className}`}
     >
       {text}
     </a>

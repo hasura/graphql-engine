@@ -18,9 +18,9 @@ import {
 } from '../../types';
 import ColumnList from '../Common/ColumnList';
 import FormLabel from './FormLabel';
-import DebouncedDropdownInput from '../Common/DropdownWrapper';
 import { inputStyles, heading } from '../../constants';
 import { AutoCleanupForm } from '../Common/AutoCleanupForm';
+import { FaShieldAlt } from 'react-icons/fa';
 
 type CreateETFormProps = {
   state: LocalEventTriggerState;
@@ -62,7 +62,6 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
     handleDatabaseChange,
     handleSchemaChange,
     handleTableChange,
-    handleWebhookTypeChange,
     handleWebhookValueChange,
     handleOperationsChange,
     handleOperationsColumnsChange,
@@ -166,36 +165,31 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
         <FormLabel
           title="Webhook (HTTP/S) Handler"
           tooltip={tooltip.webhookUrlDescription}
+          tooltipIcon={
+            <FaShieldAlt className="h-4 text-muted cursor-pointer" />
+          }
+          knowMoreLink="https://hasura.io/docs/latest/api-reference/syntax-defs/#webhookurl"
         />
         <div>
-          <div className="w-72">
-            <DebouncedDropdownInput
-              dropdownOptions={[
-                { display_text: 'URL', value: 'static' },
-                { display_text: 'From env var', value: 'env' },
-              ]}
-              title={webhook.type === 'static' ? 'URL' : 'From env var'}
-              dataKey={webhook.type === 'static' ? 'static' : 'env'}
-              onButtonChange={handleWebhookTypeChange}
-              onHandlerValChange={handleWebhookValueChange}
+          <div className="w-1/2">
+            <p className="text-sm text-gray-600 mb-sm">
+              Note: Provide an URL or use an env var to template the handler URL
+              if you have different URLs for multiple environments.
+            </p>
+            <input
+              type="text"
+              name="handler"
+              onChange={e => handleWebhookValueChange(e.target.value)}
               required
-              bsClass="w-72"
-              handlerVal={webhook.value}
+              value={webhook.value}
               id="webhook-url"
-              inputPlaceHolder={
-                webhook.type === 'static'
-                  ? 'http://httpbin.org/post'
-                  : 'MY_WEBHOOK_URL'
-              }
-              testId="webhook"
+              placeholder="http://httpbin.org/post or {{MY_WEBHOOK_URL}}/handler"
+              data-test="webhook"
+              className={`w-82 ${inputStyles}`}
             />
           </div>
         </div>
         <br />
-        <small>
-          Note: Specifying the webhook URL via an environmental variable is
-          recommended if you have different URLs for multiple environments.
-        </small>
       </div>
       <hr className="my-md" />
       {isProConsole(window.__env) && (

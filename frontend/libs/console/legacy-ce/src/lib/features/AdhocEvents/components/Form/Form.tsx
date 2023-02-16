@@ -11,6 +11,7 @@ import {
   ScheduleEventPayloadInput,
 } from './components';
 import { ScheduledTime } from './components/ScheduledTime';
+import { FaShieldAlt } from 'react-icons/fa';
 
 type Props = {
   /**
@@ -51,10 +52,15 @@ const OneOffScheduledEventForm = (props: Props) => {
         </div>
         <div className="mb-md">
           <InputField
+            learnMoreLink="https://hasura.io/docs/latest/api-reference/syntax-defs/#webhookurl"
+            tooltipIcon={
+              <FaShieldAlt className="h-4 text-muted cursor-pointer" />
+            }
             name="webhook"
             label="Webhook URL"
-            placeholder="https://httpbin.com/post"
-            tooltip="The HTTP URL that should be triggered."
+            placeholder="https://httpbin.com/post or {{MY_WEBHOOK_URL}}/handler"
+            tooltip="Environment variables and secrets are available using the {{VARIABLE}} tag. Environment variable templating is available for this field. Example: https://{{ENV_VAR}}/endpoint_url"
+            description="Note: Provide an URL or use an env var to template the handler URL if you have different URLs for multiple environments."
           />
         </div>
         <div className="mb-md">

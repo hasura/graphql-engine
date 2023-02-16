@@ -39,6 +39,10 @@ export type FieldWrapperPassThroughProps = {
    * Render line breaks in the description
    */
   renderDescriptionLineBreaks?: boolean;
+  /**
+   * tooltip icon other then ?
+   */
+  tooltipIcon?: React.ReactElement;
 } & DiscriminatedTypes<
   {
     /**
@@ -110,6 +114,7 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
     className,
     size = 'full',
     error,
+    tooltipIcon,
     children,
     description,
     tooltip,
@@ -158,7 +163,9 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
             {label}
             {loading ? <Skeleton className="absolute inset-0" /> : null}
           </span>
-          {!loading && tooltip ? <IconTooltip message={tooltip} /> : null}
+          {!loading && tooltip ? (
+            <IconTooltip message={tooltip} icon={tooltipIcon} />
+          ) : null}
           {!loading && !!learnMoreLink && (
             <LearnMoreLink href={learnMoreLink} />
           )}
