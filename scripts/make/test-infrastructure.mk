@@ -1,4 +1,5 @@
 API_TESTS_DOCKER_COMPOSE = docker compose --project-directory=./server/lib/api-tests
+API_PRO_TESTS_DOCKER_COMPOSE = docker compose --project-directory=./pro/server/lib/api-tests
 PYTHON_TESTS_DOCKER_COMPOSE = docker compose --project-directory=./server/tests-py
 
 # Use the Azure SQL Edge image instead of the SQL Server image on arm64.
@@ -28,6 +29,7 @@ start-backends: build-backends
 ## stop-everything: tear down test databases
 stop-everything:
 	$(API_TESTS_DOCKER_COMPOSE) down --volumes
+	$(API_PRO_TESTS_DOCKER_COMPOSE) down --volumes
 	$(PYTHON_TESTS_DOCKER_COMPOSE) down --volumes
 
 .PHONY: remove-tix-file

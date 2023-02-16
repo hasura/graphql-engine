@@ -147,3 +147,12 @@ services:
     # depends_on:
     #   sqlserver:
     #     condition: service_started
+
+  mysql:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Password123#
+    ports:
+      - "3306:3306"

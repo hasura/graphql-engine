@@ -76,7 +76,7 @@ test-matrix: build remove-tix-file
 		cabal run api-tests:exe:produce-feature-matrix +RTS -N4 -RTS
 
 .PHONY: test-data-connectors-pro
-## test-backends-pro: run tests for HGE pro for all backends
+## test-data-connectors-pro: run tests for HGE pro for all backends
 test-data-connectors-pro: build-pro remove-tix-file
 	docker compose up -d --wait postgres dc-sqlite-agent
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
@@ -88,6 +88,22 @@ test-data-connectors-snowflake-pro: build-pro remove-tix-file
 	docker compose up -d --wait postgres dc-sqlite-agent
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		cabal run api-tests-pro:exe:api-tests-pro -- --match "DataConnector \"snowflake\""
+
+.PHONY: test-data-connectors-athena-pro
+## test-data-connectors-athena-pro: run tests for HGE pro for all backends
+test-data-connectors-athena-pro: build-pro remove-tix-file
+	docker compose up -d --wait postgres dc-sqlite-agent
+	$(call stop_after, \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		cabal run api-tests-pro:exe:api-tests-pro -- --match "DataConnector \"athena\"")
+
+.PHONY: test-data-connectors-mysql-pro
+## test-data-connectors-mysql-pro: run tests for HGE pro for all backends
+test-data-connectors-mysql-pro: build-pro remove-tix-file
+	cd pro/server/lib/api-tests && docker compose up -d --wait postgres dc-sqlite-agent --wait mysql
+	$(call stop_after, \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		cabal run api-tests-pro:exe:api-tests-pro -- --match "DataConnector \"mysql2\"")
 
 .PHONY: test-backends-pro
 ## test-backends-pro: run tests for HGE pro for all backends

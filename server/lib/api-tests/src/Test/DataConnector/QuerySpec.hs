@@ -35,6 +35,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.TestEnvironment qualified as TE
 import Harness.Yaml (shouldReturnYaml)
+import Hasura.Backends.DataConnector.API.V0 qualified as API
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it, pendingWith)
 
@@ -271,27 +272,32 @@ objectRelatationshipsTests opts =
           |]
 
     describe "Foreign Key Constraint On" $ do
-      it "joins on PlaylistId" $ \(testEnvironment, _) ->
-        shouldReturnYaml
-          opts
-          ( GraphqlEngine.postGraphql
-              testEnvironment
-              [graphql|
-                query getPlaylist {
-                    PlaylistTrack(where: {PlaylistId: {_eq: 1}, TrackId: {_eq: 2}}) {
-                      Playlist {
-                        Name
-                      }
+      it "joins on PlaylistId" $ \(testEnvironment, _) -> do
+        let dataSchema = (TE.getBackendTypeConfig testEnvironment >>= BackendType.parseCapabilities) <&> API._cDataSchema
+        let supportsForeignKeys = any API._dscSupportsForeignKeys $ dataSchema
+        if supportsForeignKeys
+          then
+            shouldReturnYaml
+              opts
+              ( GraphqlEngine.postGraphql
+                  testEnvironment
+                  [graphql|
+                    query getPlaylist {
+                        PlaylistTrack(where: {PlaylistId: {_eq: 1}, TrackId: {_eq: 2}}) {
+                          Playlist {
+                            Name
+                          }
+                        }
                     }
-                }
+                  |]
+              )
+              [yaml|
+                data:
+                  PlaylistTrack:
+                    - Playlist:
+                        Name: "Music"
               |]
-          )
-          [yaml|
-            data:
-              PlaylistTrack:
-                - Playlist:
-                    Name: "Music"
-          |]
+          else pendingWith "Backend does not support Foreign Key Constraints"
 
 whereClauseTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
 whereClauseTests opts =
