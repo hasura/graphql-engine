@@ -1,14 +1,11 @@
 ﻿import { DatasetDeleteCloneResponse, DatasetGetTemplateResponse, DatasetCreateCloneRequest, DatasetCreateCloneResponse, } from '@hasura/dc-api-types';
-import { loadStaticData, StaticData } from './data';
+import { loadStaticData, StaticData, staticDataExists } from './data';
 
 export async function getDataset(name: string): Promise<DatasetGetTemplateResponse> {
   const safePath = mkPath(name);
-  const data = await loadStaticData(safePath); // TODO: Could make this more efficient, but this works for now!
-  if(data) {
-    return { exists: true };
-  } else {
-    return { exists: false };
-  }
+  return {
+    exists: await staticDataExists(safePath)
+  };
 }
 
 export async function cloneDataset(store: Record<string, StaticData>, dbName: string, body: DatasetCreateCloneRequest): Promise<DatasetCreateCloneResponse> {

@@ -1,6 +1,6 @@
 import { ArrayRelationInsertFieldValue, ColumnInsertFieldValue, DeleteMutationOperation, Expression, Field, InsertFieldSchema, InsertMutationOperation, MutationOperation, MutationOperationResults, MutationRequest, MutationResponse, ObjectRelationInsertFieldValue, QueryRequest, RowObject, RowUpdate, TableInsertSchema, TableName, TableRelationships, UpdateMutationOperation } from "@hasura/dc-api-types";
 import { Config } from "./config";
-import { connect2, Connected, SqlLogger } from "./db";
+import { Connection, defaultMode, SqlLogger, withConnection } from "./db";
 import { escapeIdentifier, escapeTableName, escapeTableNameSansSchema, json_object, where_clause, } from "./query";
 import { asyncSequenceFromInputs, ErrorWithStatusCode, mapObjectToArray, tableNameEquals, unreachable, zip } from "./util";
 
@@ -79,8 +79,8 @@ function columnsString(infos: Array<RowInfo>): string {
 }
 
 /**
- * @param schemas 
- * @param table 
+ * @param schemas
+ * @param table
  * @returns schema | null
  */
 function getTableInsertSchema(schemas: Array<TableInsertSchema>, table: TableName): TableInsertSchema | null {
@@ -94,10 +94,10 @@ function getTableInsertSchema(schemas: Array<TableInsertSchema>, table: TableNam
 }
 
 /**
- * 
- * @param e 
+ *
+ * @param e
  * @returns boolean check on returned data
- * 
+ *
  * Note: The heavy lifting is performed by `where_clause` from query.ts
  */
 function whereString(relationships: Array<TableRelationships>, e: Expression, table: TableName): string {
@@ -106,9 +106,9 @@ function whereString(relationships: Array<TableRelationships>, e: Expression, ta
 }
 
 /**
- * @param op 
+ * @param op
  * @returns SQLite expression that can be used in RETURNING clauses
- * 
+ *
  * The `json_object` function from query.ts performs the heavy lifting here.
  */
 function returningString(relationships: Array<TableRelationships>, fields: Record<string, Field>, table: TableName): string {
@@ -169,9 +169,9 @@ function updateString(relationships: Array<TableRelationships>, op: UpdateMutati
 
 /**
  * @param schemas
- * @param op 
+ * @param op
  * @returns Nested Array of RowInfo
- * 
+ *
  * This function compiles all the useful information for constructing query-strings and variable data
  * into arrays of RowInfo packets. It is done this way to avoid repeated lookups and to keep the alignment
  * of identifiers, variables, and data in sync.
@@ -209,7 +209,7 @@ function getUpdateRowInfos(op: UpdateMutationOperation): Array<UpdateInfo> {
   });
 }
 
-async function insertRow(db: Connected, relationships: Array<TableRelationships>, op: InsertMutationOperation, info: Array<RowInfo>):  Promise<Array<Row>> {
+async function insertRow(db: Connection, relationships: Array<TableRelationships>, op: InsertMutationOperation, info: Array<RowInfo>):  Promise<Array<Row>> {
   const q = insertString(relationships, op, info);
   const v = queryValues(info);
   const results = await db.query(q,v);
@@ -222,7 +222,7 @@ async function insertRow(db: Connected, relationships: Array<TableRelationships>
   return results;
 }
 
-async function updateRow(db: Connected, relationships: Array<TableRelationships>, op: UpdateMutationOperation, info: Array<UpdateInfo>):  Promise<Array<Row>> {
+async function updateRow(db: Connection, relationships: Array<TableRelationships>, op: UpdateMutationOperation, info: Array<UpdateInfo>):  Promise<Array<Row>> {
   const q = updateString(relationships, op, info);
   const v = queryValues(info);
   const results = await db.query(q,v);
@@ -235,7 +235,7 @@ async function updateRow(db: Connected, relationships: Array<TableRelationships>
   return results;
 }
 
-async function deleteRows(db: Connected, relationships: Array<TableRelationships>, op: DeleteMutationOperation):  Promise<Array<Row>> {
+async function deleteRows(db: Connection, relationships: Array<TableRelationships>, op: DeleteMutationOperation):  Promise<Array<Row>> {
   const q = deleteString(relationships, op);
   const results = await db.query(q);
   return results;
@@ -248,7 +248,7 @@ function postMutationCheckError(op: MutationOperation, failed: Array<Row>): Erro
   );
 }
 
-async function mutationOperation(db: Connected, relationships: Array<TableRelationships>, schema: Array<TableInsertSchema>, op: MutationOperation): Promise<MutationOperationResults> {
+async function mutationOperation(db: Connection, relationships: Array<TableRelationships>, schema: Array<TableInsertSchema>, op: MutationOperation): Promise<MutationOperationResults> {
   switch(op.type) {
     case 'insert':
       const infos = getInsertRowInfos(schema, op);
@@ -313,18 +313,19 @@ async function mutationOperation(db: Connected, relationships: Array<TableRelati
 }
 
 /**
- * @param config 
- * @param sqlLogger 
- * @param request 
+ * @param config
+ * @param sqlLogger
+ * @param request
  * @returns MutationResponse
- * 
+ *
  * Top-Level function for mutations.
  * This performs inserts/updates/deletes.
  */
 export async function runMutation(config: Config, sqlLogger: SqlLogger, request: MutationRequest): Promise<MutationResponse> {
-  const db = connect2(config, sqlLogger);
-  const resultSet = await asyncSequenceFromInputs(request.operations, (op) => mutationOperation(db, request.table_relationships, request.insert_schema, op));
-  return {
-    operation_results: resultSet
-  };
+  return await withConnection(config, defaultMode, sqlLogger, async db => {
+    const resultSet = await asyncSequenceFromInputs(request.operations, (op) => mutationOperation(db, request.table_relationships, request.insert_schema, op));
+    return {
+      operation_results: resultSet
+    };
+  });
 }

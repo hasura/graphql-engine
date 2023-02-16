@@ -31,6 +31,12 @@ const parseNumbersInNumericColumns = (schema: SchemaResponse) => {
   };
 }
 
+export const staticDataExists = async(name: string): Promise<boolean> => {
+  return new Promise((resolve) => {
+    fs.access(__dirname + "/" + name, fs.constants.R_OK, err => err ? resolve(false) : resolve(true));
+  });
+}
+
 export const loadStaticData = async (name: string): Promise<StaticData> => {
   const gzipReadStream = fs.createReadStream(__dirname + "/" + name);
   const unzipStream = stream.pipeline(gzipReadStream, zlib.createGunzip(), () => { });

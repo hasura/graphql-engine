@@ -1,42 +1,44 @@
-import { connect, SqlLogger } from './db';
+import { connect, createDbMode, SqlLogger, withConnection } from './db';
 import { DatasetDeleteCloneResponse, DatasetGetTemplateResponse, DatasetCreateCloneRequest, DatasetCreateCloneResponse, } from '@hasura/dc-api-types';
-import { promises, existsSync } from 'fs';
+import { access, constants, promises, existsSync } from 'fs';
 import { DATASET_CLONES, DATASET_DELETE, DATASET_TEMPLATES } from "./environment";
 import path from 'path';
 
 export async function getDataset(template_name: string): Promise<DatasetGetTemplateResponse> {
-  const path = mkTemplatePath(template_name);
-  if(existsSync(path)) {
-    const stats = await promises.stat(path);
-    if(stats.isFile()) {
-      return { exists: true };
-    } else {
-      return { exists: false };
-    }
-  } else {
-    return { exists: false };
-  }
+  const templatePaths = mkTemplatePaths(template_name);
+  return {
+    exists: await fileIsReadable(templatePaths.dbFileTemplatePath) || await fileIsReadable(templatePaths.sqlFileTemplatePath)
+  };
 }
 
 export async function cloneDataset(logger: SqlLogger, clone_name: string, body: DatasetCreateCloneRequest): Promise<DatasetCreateCloneResponse> {
-  const fromPath = mkTemplatePath(body.from);
+  const templatePaths = mkTemplatePaths(body.from);
   const toPath = mkClonePath(clone_name);
-  const fromStats = await promises.stat(fromPath);
-  const exists = existsSync(toPath);
-  if(fromStats.isFile() && ! exists) {
-    // Check if this is a real SQLite DB
-    const db = connect({ db: fromPath, explicit_main_schema: false, tables: [], meta: false }, logger);
-    if(db) {
+  const cloneExistsAlready = await fileIsReadable(toPath);
+  if (cloneExistsAlready) {
+    throw new Error("Dataset clone already exists");
+  }
+
+  if (await fileIsReadable(templatePaths.dbFileTemplatePath)) {
+    const db = connect({ db: templatePaths.dbFileTemplatePath, explicit_main_schema: false, tables: [], meta: false }, logger);
+    if (db) {
       db.close();
     } else {
-      throw(Error("Dataset is not an SQLite Database!"))
+      throw new Error("Dataset template is not a valid SQLite database!");
     }
-    await promises.cp(fromPath, toPath);
+    await promises.cp(templatePaths.dbFileTemplatePath, toPath);
     return { config: { db: toPath } };
-  } else if(exists) {
-    throw(Error("Dataset already exists!"))
+
+  } else if (await fileIsReadable(templatePaths.sqlFileTemplatePath)) {
+    const sql = await promises.readFile(templatePaths.sqlFileTemplatePath, { encoding: "utf-8" });
+    await withConnection({db: toPath, explicit_main_schema: false, tables: [], meta: false}, createDbMode, logger, async db => {
+      await db.withTransaction(async () => {
+        await db.exec(sql);
+      });
+    });
+    return { config: { db: toPath } };
   } else {
-    throw(Error("Can't Clone!"))
+    throw new Error("Dataset template does not exist");
   }
 }
 
@@ -60,13 +62,21 @@ export async function deleteDataset(clone_name: string): Promise<DatasetDeleteCl
   }
 }
 
-function mkTemplatePath(name: string): string {
+type TemplatePaths = {
+  dbFileTemplatePath: string,
+  sqlFileTemplatePath: string,
+}
+
+function mkTemplatePaths(name: string): TemplatePaths {
   const parsed = path.parse(name);
   const safeName = parsed.base;
   if(name != safeName) {
     throw(Error(`Template name ${name} is not valid.`));
   }
-  return path.join(DATASET_TEMPLATES, safeName + ".sqlite");
+  return {
+    dbFileTemplatePath: path.join(DATASET_TEMPLATES, safeName + ".sqlite"),
+    sqlFileTemplatePath: path.join(DATASET_TEMPLATES, safeName + ".sql"),
+  };
 }
 
 function mkClonePath(name: string): string {
@@ -76,4 +86,10 @@ function mkClonePath(name: string): string {
     throw(Error(`Template name ${name} is not valid.`));
   }
   return path.join(DATASET_CLONES, safeName + ".sqlite");
+}
+
+export const fileIsReadable = async(filepath: string): Promise<boolean> => {
+  return new Promise((resolve) => {
+    access(filepath, constants.R_OK, err => err ? resolve(false) : resolve(true));
+  });
 }

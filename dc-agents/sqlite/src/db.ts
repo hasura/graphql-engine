@@ -11,7 +11,8 @@ export type SqlLogger = (sql: string) => void
 const readMode   = DB_READONLY     ? SQLite.OPEN_READONLY     : SQLite.OPEN_READWRITE;
 const createMode = DB_CREATE       ? SQLite.OPEN_CREATE       : 0; // Flag style means 0=off
 const cacheMode  = DB_PRIVATECACHE ? SQLite.OPEN_PRIVATECACHE : SQLite.OPEN_SHAREDCACHE;
-const mode       = readMode | createMode | cacheMode;
+export const defaultMode = readMode | createMode | cacheMode;
+export const createDbMode = SQLite.OPEN_CREATE | readMode | cacheMode;
 
 export function connect(config: Config, sqlLogger: SqlLogger): Sequelize {
   if(DB_ALLOW_LIST != null) {
@@ -23,27 +24,20 @@ export function connect(config: Config, sqlLogger: SqlLogger): Sequelize {
   const db = new Sequelize({
     dialect: 'sqlite',
     storage: config.db,
-    dialectOptions: { mode: mode },
+    dialectOptions: { mode: defaultMode },
     logging: sqlLogger
   });
 
   return db;
 };
 
-export type Connected = {
-  query: ((query: string, params?: Record<string, unknown>) => Promise<Array<any>>),
-  close: (() => Promise<boolean>)
+export type Connection = {
+  query: (query: string, params?: Record<string, unknown>) => Promise<Array<any>>,
+  exec: (sql: string) => Promise<void>;
+  withTransaction: <Result>(action: () => Promise<Result>) => Promise<Result>
 }
 
-/**
- * @param config: Config
- * @param sqlLogger: SqlLogger
- * @returns {query, mutation}
- * 
- * Query and mutation support implemented directly on the SQLite3 library.
- * See: https://github.com/TryGhost/node-sqlite3/wiki/API
- */
-export function connect2(config: Config, sqlLogger: SqlLogger): Connected {
+export async function withConnection<Result>(config: Config, mode: number, sqlLogger: SqlLogger, useConnection: (connection: Connection) => Promise<Result>): Promise<Result> {
   if(DB_ALLOW_LIST != null) {
     if(DB_ALLOW_LIST.includes(config.db)) {
       throw new Error(`Database ${config.db} is not present in DB_ALLOW_LIST 😭`);
@@ -51,9 +45,9 @@ export function connect2(config: Config, sqlLogger: SqlLogger): Connected {
   }
 
   const db_ = new SQLite.Database(config.db, mode);
-  
+
   // NOTE: Avoiding util.promisify as this seems to be causing connection failures.
-  const dbQueryPromise = (query: string, params?: Record<string, unknown>): Promise<Array<any>> => {
+  const query = (query: string, params?: Record<string, unknown>): Promise<Array<any>> => {
     return new Promise((resolve, reject) => {
       /* Pass named params:
        * db.run("UPDATE tbl SET name = $name WHERE id = $id", {
@@ -71,8 +65,35 @@ export function connect2(config: Config, sqlLogger: SqlLogger): Connected {
     })
   }
 
-  const dbClosePromise = (): Promise<boolean> => {
+  const exec = (sql: string): Promise<void> => {
     return new Promise((resolve, reject) => {
+      db_.exec(sql, err => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      })
+    })
+  };
+
+  const withTransaction = async <Result>(action: () => Promise<Result>): Promise<Result> => {
+    await exec("BEGIN TRANSACTION");
+    try {
+      const result = await action();
+      await exec("COMMIT");
+      return result;
+    } catch (err) {
+      await exec("ROLLBACK")
+      throw err;
+    }
+  }
+
+  try {
+    return await useConnection({ query, exec, withTransaction });
+  }
+  finally {
+    await new Promise((resolve, reject) => {
       db_.close((err) => {
         if (err) {
           return reject(err);
@@ -80,11 +101,6 @@ export function connect2(config: Config, sqlLogger: SqlLogger): Connected {
           resolve(true); // What should we resolve with if there's no data to promise?
         }
       })
-    })
+    });
   }
-
-  return {
-    query: dbQueryPromise,
-    close: dbClosePromise,
-  };
 }

@@ -2,11 +2,14 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Test.Data
-  ( -- = Test Data
+  ( -- = Chinook Test Data
     TestData (..),
     mkTestData,
     schemaTables,
     allTableRows,
+    -- = TestingEdgeCases Test Data
+    EdgeCasesTestData (..),
+    mkEdgeCasesTestData,
     -- = Utilities
     emptyQuery,
     emptyMutationRequest,
@@ -357,94 +360,113 @@ data TestData = TestData
     _tdOrderByColumn :: [API.RelationshipName] -> Text -> API.OrderDirection -> API.OrderByElement
   }
 
+-- | Test data from the Chinook dataset template
 mkTestData :: API.SchemaResponse -> TestConfig -> TestData
-mkTestData schemaResponse TestConfig {..} =
+mkTestData schemaResponse testConfig =
   TestData
     { _tdSchemaTables = formatTableInfo <$> schemaTables,
-      _tdArtistsTableName = formatTableName artistsTableName,
+      _tdArtistsTableName = formatTableName testConfig artistsTableName,
       _tdArtistsRows = artistsRows,
       _tdArtistsRowsById = artistsRowsById,
       _tdArtistsTableRelationships = formatTableRelationships artistsTableRelationships,
       _tdAlbumsRelationshipName = albumsRelationshipName,
-      _tdAlbumsTableName = formatTableName albumsTableName,
+      _tdAlbumsTableName = formatTableName testConfig albumsTableName,
       _tdAlbumsRows = albumsRows,
       _tdAlbumsRowsById = albumsRowsById,
       _tdAlbumsTableRelationships = formatTableRelationships albumsTableRelationships,
       _tdArtistRelationshipName = artistRelationshipName,
       _tdTracksRelationshipName = tracksRelationshipName,
-      _tdCustomersTableName = formatTableName customersTableName,
+      _tdCustomersTableName = formatTableName testConfig customersTableName,
       _tdCustomersRows = customersRows,
       _tdCustomersTableRelationships = formatTableRelationships customersTableRelationships,
       _tdSupportRepRelationshipName = supportRepRelationshipName,
-      _tdEmployeesTableName = formatTableName employeesTableName,
+      _tdEmployeesTableName = formatTableName testConfig employeesTableName,
       _tdEmployeesRows = employeesRows,
       _tdEmployeesRowsById = employeesRowsById,
       _tdEmployeesTableRelationships = formatTableRelationships employeesTableRelationships,
       _tdSupportRepForCustomersRelationshipName = supportRepForCustomersRelationshipName,
-      _tdInvoicesTableName = formatTableName invoicesTableName,
+      _tdInvoicesTableName = formatTableName testConfig invoicesTableName,
       _tdInvoicesRows = invoicesRows,
-      _tdInvoiceLinesTableName = formatTableName invoiceLinesTableName,
+      _tdInvoiceLinesTableName = formatTableName testConfig invoiceLinesTableName,
       _tdInvoiceLinesRows = invoiceLinesRows,
-      _tdMediaTypesTableName = formatTableName mediaTypesTableName,
+      _tdMediaTypesTableName = formatTableName testConfig mediaTypesTableName,
       _tdMediaTypesRows = mediaTypesRows,
-      _tdTracksTableName = formatTableName tracksTableName,
+      _tdTracksTableName = formatTableName testConfig tracksTableName,
       _tdTracksRows = tracksRows,
       _tdTracksTableRelationships = formatTableRelationships tracksTableRelationships,
       _tdInvoiceLinesRelationshipName = invoiceLinesRelationshipName,
       _tdMediaTypeRelationshipName = mediaTypeRelationshipName,
       _tdAlbumRelationshipName = albumRelationshipName,
       _tdGenreRelationshipName = genreRelationshipName,
-      _tdGenresTableName = formatTableName genresTableName,
+      _tdGenresTableName = formatTableName testConfig genresTableName,
       _tdGenresRows = genresRows,
       _tdGenresTableRelationships = formatTableRelationships genresTableRelationships,
-      _tdColumnName = formatColumnName . API.ColumnName,
-      _tdColumnField = columnField,
-      _tdColumnInsertSchema = columnInsertSchema,
-      _tdFindColumnScalarType = \tableName name -> findColumnScalarType schemaResponse tableName (formatColumnName $ API.ColumnName name),
-      _tdQueryComparisonColumn = API.ComparisonColumn API.QueryTable . formatColumnName . API.ColumnName,
-      _tdCurrentComparisonColumn = API.ComparisonColumn API.CurrentTable . formatColumnName . API.ColumnName,
-      _tdOrderByColumn = \targetPath name -> orderByColumn targetPath (formatColumnName $ API.ColumnName name)
+      _tdColumnName = formatColumnName testConfig . API.ColumnName,
+      _tdColumnField = columnField schemaResponse testConfig,
+      _tdColumnInsertSchema = columnInsertSchema schemaResponse testConfig,
+      _tdFindColumnScalarType = \tableName name -> findColumnScalarType schemaResponse tableName (formatColumnName testConfig $ API.ColumnName name),
+      _tdQueryComparisonColumn = API.ComparisonColumn API.QueryTable . formatColumnName testConfig . API.ColumnName,
+      _tdCurrentComparisonColumn = API.ComparisonColumn API.CurrentTable . formatColumnName testConfig . API.ColumnName,
+      _tdOrderByColumn = \targetPath name -> orderByColumn targetPath (formatColumnName testConfig $ API.ColumnName name)
     }
   where
-    formatTableName :: API.TableName -> API.TableName
-    formatTableName = applyTableNamePrefix _tcTableNamePrefix . API.TableName . fmap (applyNameCasing _tcTableNameCasing) . API.unTableName
-
     formatTableRelationships :: API.TableRelationships -> API.TableRelationships
     formatTableRelationships =
       prefixTableRelationships
-        >>> API.trRelationships . traverse . API.rColumnMapping %~ (HashMap.toList >>> fmap (bimap formatColumnName formatColumnName) >>> HashMap.fromList)
-
-    formatColumnName :: API.ColumnName -> API.ColumnName
-    formatColumnName = API.ColumnName . applyNameCasing _tcColumnNameCasing . API.unColumnName
+        >>> API.trRelationships . traverse . API.rColumnMapping %~ (HashMap.toList >>> fmap (bimap (formatColumnName testConfig) (formatColumnName testConfig)) >>> HashMap.fromList)
 
     prefixTableRelationships :: API.TableRelationships -> API.TableRelationships
     prefixTableRelationships =
-      API.trSourceTable %~ formatTableName
-        >>> API.trRelationships . traverse . API.rTargetTable %~ formatTableName
+      API.trSourceTable %~ formatTableName testConfig
+        >>> API.trRelationships . traverse . API.rTargetTable %~ formatTableName testConfig
 
     formatTableInfo :: API.TableInfo -> API.TableInfo
     formatTableInfo =
-      API.tiName %~ formatTableName
-        >>> API.tiColumns . traverse . API.ciName %~ formatColumnName
-        >>> API.tiPrimaryKey . traverse %~ formatColumnName
+      API.tiName %~ formatTableName testConfig
+        >>> API.tiColumns . traverse . API.ciName %~ formatColumnName testConfig
+        >>> API.tiPrimaryKey . traverse %~ formatColumnName testConfig
         >>> API.tiForeignKeys . lens API.unForeignKeys (const API.ForeignKeys) . traverse
-          %~ ( API.cForeignTable %~ formatTableName
-                 >>> API.cColumnMapping %~ (HashMap.toList >>> fmap (bimap formatColumnName formatColumnName) >>> HashMap.fromList)
+          %~ ( API.cForeignTable %~ formatTableName testConfig
+                 >>> API.cColumnMapping %~ (HashMap.toList >>> fmap (bimap (formatColumnName testConfig) (formatColumnName testConfig)) >>> HashMap.fromList)
              )
 
-    columnField :: API.TableName -> Text -> API.Field
-    columnField tableName columnName =
-      API.ColumnField columnName' scalarType
-      where
-        columnName' = formatColumnName $ API.ColumnName columnName
-        scalarType = findColumnScalarType schemaResponse tableName columnName'
+-- | Test data from the TestingEdgeCases dataset template
+data EdgeCasesTestData = EdgeCasesTestData
+  { -- = NoPrimaryKey table
+    _ectdNoPrimaryKeyTableName :: API.TableName,
+    -- = DefaultedPrimaryKey table
+    _ectdDefaultedPrimaryKeyTableName :: API.TableName,
+    -- = AllColumnsDefaultable table
+    _ectdAllColumnsDefaultableTableName :: API.TableName,
+    -- = Scalar Types
+    _ectdFindColumnScalarType :: API.TableName -> Text -> API.ScalarType,
+    -- = Utility functions
+    _ectdTableExists :: API.TableName -> Bool,
+    _ectdColumnField :: API.TableName -> Text -> API.Field,
+    _ectdColumnInsertSchema :: API.TableName -> Text -> API.ColumnInsertSchema
+  }
 
-    columnInsertSchema :: API.TableName -> Text -> API.ColumnInsertSchema
-    columnInsertSchema tableName columnName =
-      API.ColumnInsertSchema columnName' scalarType
-      where
-        columnName' = formatColumnName $ API.ColumnName columnName
-        scalarType = findColumnScalarType schemaResponse tableName columnName'
+mkEdgeCasesTestData :: TestConfig -> API.SchemaResponse -> EdgeCasesTestData
+mkEdgeCasesTestData testConfig schemaResponse =
+  EdgeCasesTestData
+    { _ectdNoPrimaryKeyTableName = noPrimaryKeyTableName,
+      _ectdDefaultedPrimaryKeyTableName = defaultedPrimaryKeyTableName,
+      _ectdAllColumnsDefaultableTableName = allColumnsDefaultableTableName,
+      _ectdFindColumnScalarType = \tableName name -> findColumnScalarType schemaResponse tableName (formatColumnName testConfig $ API.ColumnName name),
+      _ectdTableExists = tableExists,
+      _ectdColumnField = columnField schemaResponse testConfig,
+      _ectdColumnInsertSchema = columnInsertSchema schemaResponse testConfig
+    }
+  where
+    tableExists :: API.TableName -> Bool
+    tableExists tableName = tableName `elem` (API._tiName <$> API._srTables schemaResponse)
+
+    noPrimaryKeyTableName = formatTableName testConfig (API.TableName $ "NoPrimaryKey" :| [])
+    defaultedPrimaryKeyTableName = formatTableName testConfig (API.TableName $ "DefaultedPrimaryKey" :| [])
+    allColumnsDefaultableTableName = formatTableName testConfig (API.TableName $ "AllColumnsDefaultable" :| [])
+
+formatTableName :: TestConfig -> API.TableName -> API.TableName
+formatTableName TestConfig {..} = applyTableNamePrefix _tcTableNamePrefix . API.TableName . fmap (applyNameCasing _tcTableNameCasing) . API.unTableName
 
 applyTableNamePrefix :: [Text] -> API.TableName -> API.TableName
 applyTableNamePrefix prefix tableName@(API.TableName rawTableName) =
@@ -457,6 +479,23 @@ applyNameCasing casing text = case casing of
   PascalCase -> text
   Lowercase -> Text.toLower text
   Uppercase -> Text.toUpper text
+
+formatColumnName :: TestConfig -> API.ColumnName -> API.ColumnName
+formatColumnName TestConfig {..} = API.ColumnName . applyNameCasing _tcColumnNameCasing . API.unColumnName
+
+columnField :: API.SchemaResponse -> TestConfig -> API.TableName -> Text -> API.Field
+columnField schemaResponse testConfig tableName columnName =
+  API.ColumnField columnName' scalarType
+  where
+    columnName' = formatColumnName testConfig $ API.ColumnName columnName
+    scalarType = findColumnScalarType schemaResponse tableName columnName'
+
+columnInsertSchema :: API.SchemaResponse -> TestConfig -> API.TableName -> Text -> API.ColumnInsertSchema
+columnInsertSchema schemaResponse testConfig tableName columnName =
+  API.ColumnInsertSchema columnName' scalarType
+  where
+    columnName' = formatColumnName testConfig $ API.ColumnName columnName
+    scalarType = findColumnScalarType schemaResponse tableName columnName'
 
 findColumnScalarType :: API.SchemaResponse -> API.TableName -> API.ColumnName -> API.ScalarType
 findColumnScalarType API.SchemaResponse {..} tableName columnName =
