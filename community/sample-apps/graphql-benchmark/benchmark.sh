@@ -8,7 +8,7 @@ sleep 5
 
 docker run --net=host -v "$PWD":/app/tmp -it \
  graphql-bench-local query \
- --config="./tmp/config.query.yaml" \
+ --config="./tmp/config.query.hasura.yaml" \
  --outfile="./tmp/report.hasura.json"
 
 docker compose -f docker-compose.hasura.yml down
@@ -23,7 +23,7 @@ sleep 5
 
 docker run --net=host -v "$PWD":/app/tmp -it \
  graphql-bench-local query \
- --config="./tmp/config.query.yaml" \
+ --config="./tmp/config.query.node.yaml" \
  --outfile="./tmp/report.nodejs.json"
 
 docker compose -f docker-compose.node.yml down

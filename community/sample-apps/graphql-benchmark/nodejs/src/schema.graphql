@@ -3,14 +3,14 @@ schema {
 }
 
 type Query {
-  Album(id: Int!): Album
-  Albums: [Album!]!
-  Artist(id: Int!): Artist
-  Artists: [Artist!]!
-  Track(id: Int!): Track
-  Tracks: [Track!]!
-  Genre(id: Int!): Genre
-  Genres: [Genre!]!
+  Album_by_pk(AlbumId: Int!): Album
+  Album: [Album!]!
+  Artist_by_pk(ArtistId: Int!): Artist
+  Artist: [Artist!]!
+  Track_by_pk(TrackId: Int!): Track
+  Track: [Track!]!
+  Genre_by_pk(GenreId: Int!): Genre
+  Genre: [Genre!]!
 }
 
 type Album {
