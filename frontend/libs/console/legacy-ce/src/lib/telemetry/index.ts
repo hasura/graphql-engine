@@ -20,7 +20,18 @@ export type ConnectDBEvent = {
   };
 };
 
-export type TelemetryEvent = RunTimeErrorEvent | ConnectDBEvent;
+export type SetFeatureFlagEvent = {
+  type: 'SET_FEATURE_FLAG';
+  data: {
+    feature_flag: string;
+    value: boolean;
+  };
+};
+
+export type TelemetryEvent =
+  | RunTimeErrorEvent
+  | ConnectDBEvent
+  | SetFeatureFlagEvent;
 
 export type TelemetryPayload = {
   server_version: string;
