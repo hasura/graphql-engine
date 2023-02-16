@@ -50,7 +50,7 @@ export const getEditSourceQueryType = (
 export const useSubmit = () => {
   const drivers = useAvailableDrivers();
   const { fireNotification } = useFireNotification();
-  const redirect = useRedirect({ redirectWithLatencyCheck: true });
+  const redirect = useRedirect({ redirectWithLatencyCheck: false });
   const queryClient = useQueryClient();
 
   const { mutate, ...rest } = useMetadataMigration({

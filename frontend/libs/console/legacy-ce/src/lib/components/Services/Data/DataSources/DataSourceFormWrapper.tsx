@@ -1,11 +1,6 @@
-/* eslint-disable react/jsx-no-useless-fragment */
 import React, { FormEvent } from 'react';
 import { LabeledInput } from '@/components/Common/LabeledInput';
 import { Connect, useAvailableDrivers } from '@/features/ConnectDB';
-import {
-  availableFeatureFlagIds,
-  useIsFeatureFlagEnabled,
-} from '@/features/FeatureFlags';
 import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { Button } from '@/new-components/Button';
 import ConnectDatabaseForm, { ConnectDatabaseFormProps } from './ConnectDBForm';

@@ -15,10 +15,6 @@ import produce from 'immer';
 import { ManageAgents } from '@/features/ManageAgents';
 import { Button } from '@/new-components/Button';
 import { useMetadataSource } from '@/features/MetadataAPI';
-import {
-  availableFeatureFlagIds,
-  useIsFeatureFlagEnabled,
-} from '@/features/FeatureFlags';
 import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { nativeDrivers } from '@/features/DataSource';
 import { getProjectId } from '@/utils/cloudConsole';
