@@ -53,6 +53,7 @@ where
 import Data.Aeson (Value, (.=))
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Key qualified as K
+import Data.Aeson.Types qualified as Aeson
 import Data.Time (UTCTime, defaultTimeLocale)
 import Data.Time.Format (parseTimeOrError)
 import Data.Vector qualified as V
@@ -153,7 +154,8 @@ data Column = Column
   { columnName :: Text,
     columnType :: ScalarType,
     columnNullable :: Bool,
-    columnDefault :: Maybe Text
+    columnDefault :: Maybe Text,
+    columnGqlAlias :: Maybe Text
   }
   deriving (Show, Eq)
 
@@ -314,11 +316,11 @@ defaultSerialType =
 
 -- | Helper function to construct 'Column's with common defaults
 column :: Text -> ScalarType -> Column
-column name typ = Column name typ False Nothing
+column name typ = Column name typ False Nothing Nothing
 
 -- | Helper function to construct 'Column's that are null-able
 columnNull :: Text -> ScalarType -> Column
-columnNull name typ = Column name typ True Nothing
+columnNull name typ = (column name typ) {columnNullable = True}
 
 -- | Helper to construct UTCTime using @%F %T@ format. For e.g. @YYYY-MM-DD HH:MM:SS@
 parseUTCTimeOrError :: String -> ScalarValue
@@ -351,6 +353,7 @@ trackTable source tbl@(Table {tableName}) testEnvironment = do
       backendType = BackendType.backendTypeString backendTypeMetadata
       schema = resolveTableSchema testEnvironment tbl
       requestType = backendType <> "_track_table"
+      column_config = columnsConfig (tableColumns tbl)
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -360,7 +363,22 @@ trackTable source tbl@(Table {tableName}) testEnvironment = do
         table:
           schema: *schema
           name: *tableName
+        configuration:
+          column_config: *column_config
     |]
+  where
+    columnsConfig :: [Column] -> Value
+    columnsConfig = Aeson.object . mapMaybe columnConfig
+
+    columnConfig :: Column -> Maybe Aeson.Pair
+    columnConfig col = do
+      alias <- columnGqlAlias col
+      return $
+        ( K.fromText $ columnName col,
+          [yaml|
+        custom_name: *alias
+        |]
+        )
 
 -- | Native Backend track table
 --

@@ -771,13 +771,31 @@ fromAliased Aliased {..} =
     <+> ((" AS " <+>) . fromNameText) aliasedAlias
 
 fromColumnName :: ColumnName -> Printer
-fromColumnName (ColumnName colname) = fromNameText colname
+fromColumnName (ColumnName colname) = quoteIdentifier colname
 
 fromNameText :: Text -> Printer
-fromNameText t = QueryPrinter (rawUnescapedText ("[" <> t <> "]"))
+fromNameText = quoteIdentifier
 
 fromRawUnescapedText :: Text -> Printer
 fromRawUnescapedText t = QueryPrinter (rawUnescapedText t)
+
+-- | In Sql Server identifiers can be quoted using square brackets or double
+-- quotes, "Delimited Identifiers" in T-SQL parlance, which gives full freedom
+-- in what can syntactically constitute a name of a thing.
+--
+-- The delimiting characters may themselves appear in a delimited identifier,
+-- in which case they are quoted by duplication of the terminal delimiter. This
+-- is the only character escaping that happens within a delimited identifier.
+--
+-- (TODO: That fact does not seem to be documented anywhere I could find, but
+-- seems to be folklore. I verified it myself at any rate)
+--
+-- Reference: https://learn.microsoft.com/en-us/sql/relational-databases/databases/database-identifiers?view=sql-server-ver16
+quoteIdentifier :: Text -> Printer
+quoteIdentifier ident = QueryPrinter (rawUnescapedText ("[" <> duplicateBrackets ident <> "]"))
+  where
+    duplicateBrackets :: Text -> Text
+    duplicateBrackets = T.replace "]" "]]"
 
 truePrinter :: Printer
 truePrinter = "(1=1)"

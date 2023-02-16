@@ -200,6 +200,7 @@ library
     Test.Regression.RemoteRelationshipStringifyNum8387Spec
     Test.Regression.StreamConflictSpec
     Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
+    Test.Regression.SqlServerIdentifierQuotingSpec
     Test.Schema.ComputedFields.ScalarSpec
     Test.Schema.ComputedFields.TableSpec
     Test.Schema.ConflictsSpec
