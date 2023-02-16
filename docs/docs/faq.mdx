@@ -37,12 +37,6 @@ import FAQ from '@site/static/icons/features/faq.svg';
 
 ## What databases does Hasura support? {#faq-db}
 
-Hasura supports the following databases natively:
-
-- PostgreSQL (and the Postgres family of compatible databases)
-- Microsoft SQL Server
-- Google Cloud BigQuery
-
 Check out the list of [compatible databases](/databases/index.mdx#supported-databases).
 
 ## How does Hasura work? {#faq-how-hasura-works}
@@ -83,9 +77,27 @@ track tables and relationships, and you can immediately start exploring your new
 
 ## What's so great about GraphQL?
 
-GraphQL's declarative and efficient fetching paradigm allows your API consumers to easily specify exactly which data
-they want and get only what they need returned to them, saving multiple request round trips. GraphQL is also strongly
-typed which allows users to know exactly what is available and what the data will look like.
+GraphQL is a query language that was developed by Facebook and released in 2015. It has gained a great deal of
+popularity due to its unique features, benefits and advantages over REST APIs and other alternatives.
+
+As opposed to multiple disparate endpoints with REST APIs, GraphQL uses one `POST`-enabled endpoint which can service
+many types of data requests from the client. Queries, mutations and subscriptions are made with a simple and intuitive
+syntax which describes the shape of the resulting data, so you know exactly what you're getting back. This
+declarative syntax makes it easier to understand and reason about the code and allows for more complex, nested, joined,
+queries to be written in a simple, clear and concise way.
+
+GraphQL allows developers to retrieve only the data they need and nothing more, resolving problems with over and
+under-fetching. This can lead to faster and more efficient performance and reduced network traffic.
+
+GraphQL uses a strong type system to define the structure of the data that can be queried. This provides better
+documentation, tooling, and error checking.
+
+GraphQL has a thriving ecosystem of libraries, tools, and services that make it easier to work with. This includes
+things like code generators, testing frameworks, and middleware.
+
+Overall, GraphQL is a powerful tool for building APIs that are flexible, efficient, and easy to use. Its popularity
+continues to grow, and it is likely to become an increasingly important part of more developers and businesses
+toolkits in the coming years.
 
 ## How do I manage my database once it's connected to Hasura?
 
