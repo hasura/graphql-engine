@@ -26,7 +26,7 @@
 </span><span id="line-26"></span><span>
 </span><span id="line-27"></span><span class="hs-comment">-- | Revision 3 of the Metadata export format. Note that values of the types,</span><span>
 </span><span id="line-28"></span><span class="hs-comment">-- 'PlaceholderArray' and 'PlaceholderObject' will eventually be expanded to represent more detail.</span><span>
-</span><span id="line-29"></span><span id="local-6989586621690581697"><span id="local-6989586621690581698"></span></span><span class="hs-keyword">data</span><span> </span><span id="MetadataV3"><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-var">MetadataV3</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MetadataV3"><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-var">MetadataV3</span></a></span></span><span>
+</span><span id="line-29"></span><span id="local-6989586621690585725"><span id="local-6989586621690585726"></span></span><span class="hs-keyword">data</span><span> </span><span id="MetadataV3"><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-var">MetadataV3</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MetadataV3"><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-var">MetadataV3</span></a></span></span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="metaV3Sources"><span class="annot"><span class="annottext">MetadataV3 -&gt; Sources
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3Sources"><span class="hs-identifier hs-var hs-var">metaV3Sources</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#Sources"><span class="hs-identifier hs-type">Sources</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-31"></span><span>    </span><span id="metaV3RemoteSchemas"><span class="annot"><span class="annottext">MetadataV3 -&gt; RemoteSchemas
@@ -58,7 +58,7 @@
 </span><span id="line-44"></span><span>    </span><span id="metaV3OpenTelemetryConfig"><span class="annot"><span class="annottext">MetadataV3 -&gt; Maybe PlaceholderObject
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3OpenTelemetryConfig"><span class="hs-identifier hs-var hs-var">metaV3OpenTelemetryConfig</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderObject"><span class="hs-identifier hs-type">PlaceholderObject</span></a></span><span>
 </span><span id="line-45"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690581647"><span id="local-6989586621690581649"><span id="local-6989586621690581679"><span class="annot"><span class="annottext">Int -&gt; MetadataV3 -&gt; ShowS
+</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690585675"><span id="local-6989586621690585677"><span id="local-6989586621690585707"><span class="annot"><span class="annottext">Int -&gt; MetadataV3 -&gt; ShowS
 [MetadataV3] -&gt; ShowS
 MetadataV3 -&gt; String
 forall a.
@@ -69,7 +69,7 @@ show :: MetadataV3 -&gt; String
 $cshow :: MetadataV3 -&gt; String
 showsPrec :: Int -&gt; MetadataV3 -&gt; ShowS
 $cshowsPrec :: Int -&gt; MetadataV3 -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690581606"><span id="local-6989586621690581634"><span class="annot"><span class="annottext">MetadataV3 -&gt; MetadataV3 -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690585634"><span id="local-6989586621690585662"><span class="annot"><span class="annottext">MetadataV3 -&gt; MetadataV3 -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: MetadataV3 -&gt; MetadataV3 -&gt; Bool
 $c/= :: MetadataV3 -&gt; MetadataV3 -&gt; Bool
@@ -82,7 +82,7 @@ forall a.
 $cto :: forall x. Rep MetadataV3 x -&gt; MetadataV3
 $cfrom :: forall x. MetadataV3 -&gt; Rep MetadataV3 x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-47"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690581583"><span id="local-6989586621690581589"><span class="annot"><span class="annottext">Value -&gt; Parser [MetadataV3]
+</span><span id="line-47"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690585611"><span id="local-6989586621690585617"><span class="annot"><span class="annottext">Value -&gt; Parser [MetadataV3]
 Value -&gt; Parser MetadataV3
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -90,7 +90,7 @@ parseJSONList :: Value -&gt; Parser [MetadataV3]
 $cparseJSONList :: Value -&gt; Parser [MetadataV3]
 parseJSON :: Value -&gt; Parser MetadataV3
 $cparseJSON :: Value -&gt; Parser MetadataV3
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690581560"><span id="local-6989586621690581565"><span id="local-6989586621690581570"><span id="local-6989586621690581576"><span class="annot"><span class="annottext">[MetadataV3] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690585588"><span id="local-6989586621690585593"><span id="local-6989586621690585598"><span id="local-6989586621690585604"><span class="annot"><span class="annottext">[MetadataV3] -&gt; Value
 [MetadataV3] -&gt; Encoding
 MetadataV3 -&gt; Value
 MetadataV3 -&gt; Encoding
@@ -108,7 +108,7 @@ toEncoding :: MetadataV3 -&gt; Encoding
 $ctoEncoding :: MetadataV3 -&gt; Encoding
 toJSON :: MetadataV3 -&gt; Value
 $ctoJSON :: MetadataV3 -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690581551"><span class="annot"><span class="annottext">Typeable MetadataV3
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690585579"><span class="annot"><span class="annottext">Typeable MetadataV3
 Proxy MetadataV3 -&gt; Declare (Definitions Schema) NamedSchema
 forall a.
 Typeable a
@@ -123,9 +123,9 @@ $cdeclareNamedSchema :: Proxy MetadataV3 -&gt; Declare (Definitions Schema) Name
 </span><span id="line-51"></span><span class="hs-comment">-- another format that matches the JSON serialization of the same type.</span><span>
 </span><span id="line-52"></span><span class="hs-comment">-- Documentation strings (the second argument to 'optionalField' and to</span><span>
 </span><span id="line-53"></span><span class="hs-comment">-- 'requiredField') appear in the generated specification for users' reference.</span><span>
-</span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690581541"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-type">MetadataV3</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-55"></span><span>  </span><span id="local-6989586621690581443"><span class="annot"><span class="annottext">codec :: JSONCodec MetadataV3
-</span><a href="#local-6989586621690581443"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690585569"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-type">MetadataV3</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621690585471"><span class="annot"><span class="annottext">codec :: JSONCodec MetadataV3
+</span><a href="#local-6989586621690585471"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-56"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="annot"><span class="annottext">Text

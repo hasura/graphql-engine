@@ -23345,8 +23345,12 @@ ActionMetric :: Int -> Int -> Int -> Int -> Int -> ActionMetric
 [_amQueryActions] :: ActionMetric -> Int
 [_amTypeRelationships] :: ActionMetric -> Int
 [_amCustomTypes] :: ActionMetric -> Int
+data NativeQueriesMetrics
+NativeQueriesMetrics :: Int -> Int -> NativeQueriesMetrics
+[_nqmWithParameters] :: NativeQueriesMetrics -> Int
+[_nqmWithoutParameters] :: NativeQueriesMetrics -> Int
 data Metrics
-Metrics :: Int -> Int -> Int -> RelationshipMetric -> PermissionMetric -> Int -> Int -> Maybe Int -> Maybe ServiceTimingMetrics -> Maybe ActionMetric -> Metrics
+Metrics :: Int -> Int -> Int -> RelationshipMetric -> PermissionMetric -> Int -> Int -> Maybe Int -> Maybe ServiceTimingMetrics -> Maybe ActionMetric -> NativeQueriesMetrics -> Metrics
 [_mtTables] :: Metrics -> Int
 [_mtViews] :: Metrics -> Int
 [_mtEnumTables] :: Metrics -> Int
@@ -23357,6 +23361,7 @@ Metrics :: Int -> Int -> Int -> RelationshipMetric -> PermissionMetric -> Int ->
 [_mtRemoteSchemas] :: Metrics -> Maybe Int
 [_mtServiceTimings] :: Metrics -> Maybe ServiceTimingMetrics
 [_mtActions] :: Metrics -> Maybe ActionMetric
+[_mtNativeQueries] :: Metrics -> NativeQueriesMetrics
 data SourceMetadata
 SourceMetadata :: Maybe DbUid -> BackendType -> Maybe DbVersion -> SourceMetadata
 [_smDbUid] :: SourceMetadata -> Maybe DbUid
@@ -23394,6 +23399,11 @@ instance GHC.Show.Show Hasura.Server.Telemetry.Types.SourceMetadata
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Telemetry.Types.Metrics
 instance GHC.Classes.Eq Hasura.Server.Telemetry.Types.Metrics
 instance GHC.Show.Show Hasura.Server.Telemetry.Types.Metrics
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Telemetry.Types.NativeQueriesMetrics
+instance GHC.Classes.Eq Hasura.Server.Telemetry.Types.NativeQueriesMetrics
+instance GHC.Show.Show Hasura.Server.Telemetry.Types.NativeQueriesMetrics
+instance GHC.Base.Semigroup Hasura.Server.Telemetry.Types.NativeQueriesMetrics
+instance GHC.Base.Monoid Hasura.Server.Telemetry.Types.NativeQueriesMetrics
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Telemetry.Types.ActionMetric
 instance GHC.Classes.Eq Hasura.Server.Telemetry.Types.ActionMetric
 instance GHC.Show.Show Hasura.Server.Telemetry.Types.ActionMetric
