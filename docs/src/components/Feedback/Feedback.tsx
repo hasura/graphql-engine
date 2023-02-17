@@ -1,7 +1,7 @@
-import React, {ReactNode, useRef, useState} from 'react';
-import {saTrack} from '@site/src/utils/segmentAnalytics';
+import React, { ReactNode, useRef, useState } from 'react';
+import { saTrack } from '@site/src/utils/segmentAnalytics';
 import styles from './styles.module.scss';
-export const Feedback = ({metadata}: {metadata: any}) => {
+export const Feedback = ({ metadata }: { metadata: any }) => {
   const [rating, setRating] = useState<1 | 2 | 3 | 4 | 5 | null>(null);
   const [notes, setNotes] = useState<string | null>(null);
   const [errorText, setErrorText] = useState<string | null>(null);
@@ -46,7 +46,7 @@ export const Feedback = ({metadata}: {metadata: any}) => {
         headers: myHeaders,
         body: raw,
         redirect: 'follow',
-      }
+      };
 
       fetch('https://us-central1-websitecloud-352908.cloudfunctions.net/docs-feedback', requestOptions)
         .then(response => response.text())
@@ -61,16 +61,20 @@ export const Feedback = ({metadata}: {metadata: any}) => {
       return;
     }
 
-    sendData().then(() => {
-      saTrack('Responded to Did You Find This Page Helpful', {
-        label: 'Responded to Did You Find This Page Helpful',
-        response: rating >= 4 ? 'YES' : 'NO',
-        pageUrl: window.location.href,
+    sendData()
+      .then(() => {
+        saTrack('Responded to Did You Find This Page Helpful', {
+          label: 'Responded to Did You Find This Page Helpful',
+          response: rating >= 4 ? 'YES' : 'NO',
+          pageUrl: window.location.href,
+        });
+        setRating(null);
+        setNotes(null);
+        setIsSubmitSuccess(true);
+      })
+      .catch(e => {
+        console.error(e);
       });
-      setRating(null);
-      setNotes(null);
-      setIsSubmitSuccess(true);
-    }).catch((e) => {console.error(e)});
 
     return;
   };
@@ -80,15 +84,17 @@ export const Feedback = ({metadata}: {metadata: any}) => {
       setRating(null);
       setErrorText(null);
       setHoveredScore(null);
-      return
+      return;
     }
     setErrorText(null);
     setRating(scoreItem);
     if (scoreItem < 4) {
-      setTextAreaLabel(<>
-        <p>What can we do to improve it? Please be as detailed as you like.</p>
-        <p>Real human beings read every single review.</p>
-      </>);
+      setTextAreaLabel(
+        <>
+          <p>What can we do to improve it? Please be as detailed as you like.</p>
+          <p>Real human beings read every single review.</p>
+        </>
+      );
       setTextAreaPlaceholder('This section is required... how can we do better? ✍️');
     }
     if (scoreItem >= 4) {
@@ -114,33 +120,42 @@ export const Feedback = ({metadata}: {metadata: any}) => {
         <div className={styles.topSection}>
           <h3>What did you think of this doc?</h3>
 
-          {isSubmitSuccess ?
+          {isSubmitSuccess ? (
             <div className={styles.successMessage}>
               <p>Thanks for your feedback.</p>
               <p>Feel free to review as many docs pages as you like!</p>
             </div>
-            : <div className={styles.numberRow}>
-              {scores.map((star, index) => (
-                <div className={styles.star} key={star} onClick={() => handleScoreClick(star)}
-                      onMouseEnter={() => setHoveredScore(index + 1)}
-                      onMouseLeave={() => setHoveredScore(-1)}>
-          {rating >= star ? (
-            <svg width="45" height="45" viewBox="0 0 24 24">
-              <path fill="#ffc107"
-                    d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"/>
-            </svg>
           ) : (
-            <svg width="45" height="45" viewBox="0 0 24 24">
-              <path fill={hoveredScore > index ? '#ffc107' : '#B1BCC7'}
-                    d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"/>
-            </svg>
-          )}
-          </div>
+            <div className={styles.numberRow}>
+              {scores.map((star, index) => (
+                <div
+                  className={styles.star}
+                  key={star}
+                  onClick={() => handleScoreClick(star)}
+                  onMouseEnter={() => setHoveredScore(index + 1)}
+                  onMouseLeave={() => setHoveredScore(-1)}
+                >
+                  {rating >= star ? (
+                    <svg width="36" height="36" viewBox="0 0 24 24">
+                      <path
+                        fill="#ffc107"
+                        d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"
+                      />
+                    </svg>
+                  ) : (
+                    <svg width="36" height="36" viewBox="0 0 24 24">
+                      <path
+                        fill={hoveredScore > index ? '#ffc107' : '#B1BCC7'}
+                        d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"
+                      />
+                    </svg>
+                  )}
+                </div>
               ))}
             </div>
-          }
+          )}
         </div>
-        <div style={rating ? {display: "block"} : {display: "none"}}>
+        <div style={rating ? { display: 'block' } : { display: 'none' }}>
           <div className={styles.textAreaLabel}>{textAreaLabel}</div>
           <textarea
             className={styles.textarea}
@@ -152,8 +167,8 @@ export const Feedback = ({metadata}: {metadata: any}) => {
           <div className={styles.errorAndButton}>
             <p className={styles.errorText}>{errorText}</p>
             <div className={styles.buttonContainer}>
-              <button className={submitDisabled ? styles.buttonDisabled : ''} onClick={() => handleSubmit()}>Send your
-                review!
+              <button className={submitDisabled ? styles.buttonDisabled : ''} onClick={() => handleSubmit()}>
+                Send your review!
               </button>
             </div>
           </div>
