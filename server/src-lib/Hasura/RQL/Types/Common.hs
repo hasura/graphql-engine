@@ -16,6 +16,7 @@ module Hasura.RQL.Types.Common
     isSystemDefined,
     SQLGenCtx (..),
     successMsg,
+    failureMsg,
     InputWebhook (..),
     ResolvedWebhook (..),
     resolveWebhook,
@@ -300,6 +301,9 @@ data SQLGenCtx = SQLGenCtx
 
 successMsg :: EncJSON
 successMsg = encJFromBuilder "{\"message\":\"success\"}"
+
+failureMsg :: EncJSON
+failureMsg = encJFromBuilder "{\"message\":\"failure\"}"
 
 newtype ResolvedWebhook = ResolvedWebhook {unResolvedWebhook :: Text}
   deriving (Show, Eq, FromJSON, ToJSON, Hashable, ToTxt, Generic)

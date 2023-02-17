@@ -200,7 +200,7 @@ runGetSourceKindCapabilities ::
   m EncJSON
 runGetSourceKindCapabilities x = EncJSON.encJFromJValue <$> runGetSourceKindCapabilities' x
 
--- Main implementation of runGetSourceKindCapabilities that actually returns the DataConnectorInfo
+-- | Main implementation of runGetSourceKindCapabilities that actually returns the DataConnectorInfo
 -- and defers json encoding to `runGetSourceKindCapabilities`. This allows reuse and ensures a
 -- correct assembly of DataConnectorInfo
 runGetSourceKindCapabilities' ::
