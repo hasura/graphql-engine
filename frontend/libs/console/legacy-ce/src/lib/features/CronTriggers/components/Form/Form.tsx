@@ -70,7 +70,7 @@ const FormContent = (props: FormContentProps) => {
           }
           name="webhook"
           label="Webhook URL"
-          placeholder="https://httpbin.com/post or {{MY_WEBHOOK_URL}}/handler"
+          placeholder="http://httpbin.org/post or {{MY_WEBHOOK_URL}}/handler"
           tooltip="Environment variables and secrets are available using the {{VARIABLE}} tag. Environment variable templating is available for this field. Example: https://{{ENV_VAR}}/endpoint_url"
           description="Note: Provide an URL or use an env var to template the handler URL if you have different URLs for multiple environments."
         />
