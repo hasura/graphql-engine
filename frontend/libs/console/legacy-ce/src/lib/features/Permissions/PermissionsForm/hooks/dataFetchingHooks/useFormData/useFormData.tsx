@@ -25,7 +25,7 @@ export type Args = {
   metadataSource: MetadataDataSource | undefined;
 };
 
-type ReturnValue = {
+export type ReturnValue = {
   formData: ReturnType<typeof createFormData> | undefined;
   defaultValues: ReturnType<typeof createDefaultValues> | undefined;
 };

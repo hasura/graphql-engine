@@ -5,12 +5,17 @@ import { columnsFromSchema } from '../components/utils/columnsFromSchema';
 import { getTableDisplayName } from '@/features/DatabaseRelationships';
 import { useIntrospectSchema } from '.';
 
+const getTableName = (table: MetadataTable) => {
+  // Table name. Replace . with _ because GraphQL doesn't allow . in field names
+  if (table?.configuration?.custom_name)
+    return table.configuration.custom_name.replace(/\./g, '_');
+  return getTableDisplayName(table.table).replace(/\./g, '_');
+};
+
 export const usePermissionTables = ({
   dataSourceName,
-  tableCustomName,
 }: {
   dataSourceName: string;
-  tableCustomName: string | undefined;
 }) => {
   const { data: tables } = useMetadata(
     MetadataSelectors.getTables(dataSourceName)
@@ -19,15 +24,12 @@ export const usePermissionTables = ({
   if (!tables) return [];
   const allColumns = columnsFromSchema(schema);
   return tables.map(table => {
-    // Table name. Replace . with _ because GraphQL doesn't allow . in field names
-    const tableName = getTableDisplayName(table.table).replace(/\./g, '_');
-    const customName = tableCustomName ?? tableName;
-
+    const tableName = getTableName(table);
     return {
       table: table.table,
       dataSource: dataSourceName,
       relationships: tableRelationships(table),
-      columns: allColumns[customName] ?? [],
+      columns: allColumns[tableName] ?? [],
     };
   });
 };

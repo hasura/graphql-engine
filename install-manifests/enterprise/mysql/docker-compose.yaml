@@ -57,11 +57,19 @@ services:
       QUARKUS_OPENTELEMETRY_ENABLED: 'false'
       ## QUARKUS_OPENTELEMETRY_TRACER_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/api/v1/mysql/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8081/api/v1/mysql/health']
       interval: 5s
       timeout: 10s
       retries: 5
       start_period: 5s
+  database:
+    image: mysql
+    # NOTE: use of "mysql_native_password" is not recommended: https://dev.mysql.com/doc/refman/8.0/en/upgrading-from-previous-series.html#upgrade-caching-sha2-password
+    # (this is just an example, not intended to be a production configuration)
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: example
   # jaeger:
   #   image: jaegertracing/all-in-one:1.37
   #   restart: always
@@ -81,4 +89,4 @@ services:
   #     COLLECTOR_OTLP_ENABLED: 'true'
   #     COLLECTOR_ZIPKIN_HOST_PORT: '9411'
 volumes:
-    db_data:
+  db_data:

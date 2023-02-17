@@ -7,6 +7,7 @@ import { getTableDisplayName } from '@/features/DatabaseRelationships';
 import { isEmpty } from 'lodash';
 import { Button } from '@/new-components/Button';
 import { graphQLTypeToJsType, isComparator } from './utils';
+import { ValueInputType } from './ValueInputType';
 
 export const ValueInput = ({
   value,
@@ -23,9 +24,7 @@ export const ValueInput = ({
   const componentLevelId = `${path.join('.')}-select${
     noValue ? '-no-value' : ''
   }`;
-  const componentLevelInputId = `${path.join('.')}-input${
-    noValue ? '-no-value' : ''
-  }`;
+
   const stringifiedTable = JSON.stringify(table);
   // Sync table name with ColumnsContext table value
   useEffect(() => {
@@ -62,45 +61,34 @@ export const ValueInput = ({
       </div>
     );
   }
-
   const parent = path[path.length - 2];
   const column = columns.find(c => c.name === parent);
   const comparator = comparators[column?.type || '']?.operators.find(
     o => o.operator === comparatorName
   );
   const jsType = typeof graphQLTypeToJsType(value, comparator?.type);
-  const inputType =
-    jsType === 'boolean' ? 'checkbox' : jsType === 'string' ? 'text' : 'number';
 
   return (
     <>
-      <input
-        data-testid={`${componentLevelInputId}`}
-        disabled={comparatorName === '_where' && isEmpty(table)}
-        className="border border-gray-200 rounded-md p-2 !mr-4"
-        // Set checked attribute if jsType is boolean, value otherwise
-        {...(jsType === 'boolean' ? { checked: value } : { value })}
-        type={inputType}
-        onChange={e => {
-          if (jsType === 'boolean') {
-            setValue(path, e.target.checked);
-          } else {
-            setValue(
-              path,
-              graphQLTypeToJsType(e.target.value, comparator?.type)
-            );
-          }
-        }}
+      <ValueInputType
+        jsType={jsType}
+        componentLevelId={componentLevelId}
+        path={path}
+        noValue={noValue}
+        comparatorName={comparatorName}
+        value={value}
+        comparatorType={comparator?.type}
       />
-      {isComparator(comparatorName) && (
-        <Button
-          disabled={comparatorName === '_where' && isEmpty(table)}
-          onClick={() => setValue(path, 'X-Hasura-User-Id')}
-          mode="default"
-        >
-          [x-hasura-user-id]
-        </Button>
-      )}
+      {jsType === 'boolean' ||
+        (isComparator(comparatorName) && (
+          <Button
+            disabled={comparatorName === '_where' && isEmpty(table)}
+            onClick={() => setValue(path, 'X-Hasura-User-Id')}
+            mode="default"
+          >
+            [x-hasura-user-id]
+          </Button>
+        ))}
     </>
   );
 };

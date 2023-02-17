@@ -6,49 +6,50 @@ describe('comparatorsFromSchema', () => {
   it('should return comparators from schema', () => {
     const result = comparatorsFromSchema(schema);
     const operator = result['number_SQLite_comparison_exp'];
+
     expect(operator?.operators).toEqual([
       {
-        name: 'equals',
+        name: '_eq',
         operator: '_eq',
         type: typeFromAST(schema, parseType('number') as NamedTypeNode),
       },
       {
-        name: '>',
+        name: '_gt',
         operator: '_gt',
         type: typeFromAST(schema, parseType('number') as NamedTypeNode),
       },
       {
-        name: '>=',
+        name: '_gte',
         operator: '_gte',
         type: typeFromAST(schema, parseType('number') as NamedTypeNode),
       },
       {
-        name: 'in',
+        name: '_in',
         operator: '_in',
         type: typeFromAST(schema, parseType('[number!]') as NamedTypeNode),
       },
       {
-        name: 'is null',
+        name: '_is_null',
         operator: '_is_null',
         type: typeFromAST(schema, parseType('Boolean') as NamedTypeNode),
       },
       {
-        name: '<',
+        name: '_lt',
         operator: '_lt',
         type: typeFromAST(schema, parseType('number') as NamedTypeNode),
       },
       {
-        name: '<=',
+        name: '_lte',
         operator: '_lte',
         type: typeFromAST(schema, parseType('number') as NamedTypeNode),
       },
       {
-        name: 'not equals',
+        name: '_neq',
         operator: '_neq',
         type: typeFromAST(schema, parseType('number') as NamedTypeNode),
       },
       {
-        name: 'not in',
+        name: '_nin',
         operator: '_nin',
         type: typeFromAST(schema, parseType('[number!]') as NamedTypeNode),
       },

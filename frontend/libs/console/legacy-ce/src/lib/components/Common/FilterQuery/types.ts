@@ -23,6 +23,7 @@ export type Operator =
   | '$regex'
   | '$iregex'
   | '$nregex'
+  | '_is_null'
   | '$niregex';
 
 // Operator with names and aliases

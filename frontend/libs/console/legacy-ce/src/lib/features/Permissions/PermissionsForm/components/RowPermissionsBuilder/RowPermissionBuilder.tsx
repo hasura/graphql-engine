@@ -4,8 +4,6 @@ import { useFormContext } from 'react-hook-form';
 import { RowPermissionsInput } from './components';
 import { usePermissionTables } from './hooks/usePermissionTables';
 import { usePermissionComparators } from './hooks/usePermissionComparators';
-import { useMetadataTable } from '../../../../hasura-metadata-api/metadataHooks';
-import { getMetadataTableCustomName } from './utils/getMetadataTableCustomName';
 
 interface Props {
   nesting: string[];
@@ -26,10 +24,8 @@ export const RowPermissionBuilder = ({
 
   const value = watch(permissionsKey);
 
-  const { data: tableConfig } = useMetadataTable(dataSourceName, table);
   const tables = usePermissionTables({
     dataSourceName,
-    tableCustomName: getMetadataTableCustomName(tableConfig),
   });
 
   const comparators = usePermissionComparators();

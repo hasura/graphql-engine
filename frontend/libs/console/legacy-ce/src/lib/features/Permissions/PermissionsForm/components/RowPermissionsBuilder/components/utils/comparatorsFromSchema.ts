@@ -16,7 +16,8 @@ export function comparatorsFromSchema(schema: GraphQLSchema): Comparators {
     const operators = Object.values(inputType.getFields()).map(field => {
       const name = field.name;
       return {
-        name: allOperators.find(o => o.alias === name)?.name ?? lowerCase(name),
+        name:
+          allOperators.find(o => o.alias === name)?.alias ?? lowerCase(name),
         operator: name,
         type: field.type,
       };

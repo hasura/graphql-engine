@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AceEditor from 'react-ace';
 import { useFormContext } from 'react-hook-form';
 import { Table } from '@/features/hasura-metadata-types';
@@ -15,6 +15,7 @@ import { getIngForm } from '../../../../components/Services/Data/utils';
 import { RowPermissionBuilder } from './RowPermissionsBuilder';
 
 import { QueryType } from '../../types';
+import { ReturnValue } from '../hooks';
 
 const NoChecksLabel = () => (
   <span data-test="without-checks">
@@ -41,6 +42,7 @@ export interface RowPermissionsProps {
   allRowChecks: Array<{ queryType: QueryType; value: string }>;
   dataSourceName: string;
   supportedOperators: Operator[];
+  defaultValues: ReturnValue['defaultValues'];
 }
 
 enum SelectedSection {
@@ -133,7 +135,7 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
   subQueryType,
   allRowChecks,
   dataSourceName,
-  supportedOperators,
+  defaultValues,
 }) => {
   const { data: tableName, isLoading } = useTypeName({ table, dataSourceName });
   const { register, watch, setValue } = useFormContext();
@@ -200,7 +202,7 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
               disabled={disabled}
               onClick={() => {
                 setValue(rowPermissionsCheckType, query);
-                setValue(rowPermissions, value);
+                setValue(rowPermissions, JSON.parse(value));
               }}
               {...register(rowPermissionsCheckType)}
             />
@@ -239,6 +241,13 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
             value={SelectedSection.Custom}
             disabled={disabled}
             {...register(rowPermissionsCheckType)}
+            onClick={() => {
+              setValue(rowPermissionsCheckType, SelectedSection.Custom);
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
+              // problem with inferring other types than select which does not have 'check'
+              setValue(rowPermissions, defaultValues[rowPermissions]);
+            }}
           />
           <CustomLabel />
         </label>

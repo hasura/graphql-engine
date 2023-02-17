@@ -21,10 +21,11 @@ import {
   RowPermissionsSectionWrapper,
 } from './components';
 
-import { useFormData, useUpdatePermissions } from './hooks';
+import { ReturnValue, useFormData, useUpdatePermissions } from './hooks';
 import ColumnRootFieldPermissions from './components/RootFieldPermissions/RootFieldPermissions';
 import { useListAllTableColumns } from '@/features/Data';
 import { useMetadataSource } from '@/features/MetadataAPI';
+import { omit } from 'lodash';
 
 export interface ComponentProps {
   dataSourceName: string;
@@ -35,6 +36,17 @@ export interface ComponentProps {
   handleClose: () => void;
   data: ReturnType<typeof useFormData>['data'];
 }
+
+const getCanSave = (
+  defaultValues: ReturnValue['defaultValues'],
+  newValues: Record<string, any>
+) => {
+  const cloneWithoutClonePermissions = omit(newValues, 'clonePermissions');
+  return (
+    JSON.stringify(cloneWithoutClonePermissions) ===
+    JSON.stringify(defaultValues)
+  );
+};
 
 const Component = (props: ComponentProps) => {
   const {
@@ -144,6 +156,7 @@ const Component = (props: ComponentProps) => {
                 supportedOperators={
                   data?.defaultValues?.supportedOperators ?? []
                 }
+                defaultValues={defaultValues}
               />
             </React.Fragment>
           ))}
@@ -196,7 +209,7 @@ const Component = (props: ComponentProps) => {
                 ? 'You must select an option for row permissions'
                 : 'Submit'
             }
-            disabled={filterType === 'none'}
+            disabled={getCanSave(defaultValues, getValues())}
             isLoading={updatePermissions.isLoading}
           >
             Save Permissions

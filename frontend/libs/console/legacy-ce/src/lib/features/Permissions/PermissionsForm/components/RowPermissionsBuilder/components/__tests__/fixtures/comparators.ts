@@ -291,7 +291,6 @@ export const comparators: Comparators = {
         operator: '_is_null',
         type: StringType,
       },
-
       {
         name: 'like',
         operator: '_like',

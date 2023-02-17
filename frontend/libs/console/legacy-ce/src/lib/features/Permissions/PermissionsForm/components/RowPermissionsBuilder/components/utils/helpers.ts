@@ -51,6 +51,9 @@ const getInitialValue = (key: string, type?: PermissionType) => {
         _where: {},
         _table: {},
       };
+    case '_nin':
+    case '_in':
+      return [''];
   }
 
   switch (type) {
