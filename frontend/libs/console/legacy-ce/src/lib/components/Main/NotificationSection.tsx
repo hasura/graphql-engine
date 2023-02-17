@@ -407,7 +407,7 @@ const ToReadBadge: React.FC<ToReadBadgeProps> = ({
   }
   return (
     <Flex
-      className={`${styles.numBadge} ${showBadge}`}
+      className={`${styles.numBadge} ${showBadge} !-top-3 !-right-2`}
       justifyContent="center"
       alignItems="center"
     >
@@ -738,7 +738,7 @@ const HasuraNotifications: React.FC<
           onClick={onClickNotificationButton}
           ref={wrapperRef}
         >
-          <span className="text-sm">
+          <span className="text-sm relative">
             <FaBell className={styles.bellIcon} />
             <ToReadBadge
               numberNotifications={numberNotifications}
