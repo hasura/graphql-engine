@@ -316,7 +316,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
                 available: true
               - *dataConnectorSource
               - builtin: false
-                display_name: "FOOBARDB (foobar)"
+                display_name: "FOOBARDB"
                 kind: foobar
                 available: true
             |]

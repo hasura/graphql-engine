@@ -97,7 +97,7 @@ backendTypeConfig =
             raw: {}
         |],
       backendTypeString = "sqlite",
-      backendDisplayNameString = "Hasura SQLite (sqlite)",
+      backendDisplayNameString = "Hasura SQLite",
       backendReleaseNameString = Nothing,
       backendServerUrl = Just "http://localhost:65007",
       backendSchemaKeyword = "schema"

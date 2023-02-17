@@ -94,7 +94,7 @@ runAddDataConnectorAgent ::
 runAddDataConnectorAgent DCAddAgent {..} = do
   let agent :: DC.Types.DataConnectorOptions
       agent = DC.Types.DataConnectorOptions _gdcaUrl _gdcaDisplayName
-  sourceKinds <- (:) "postgres" . fmap _skiSourceKind <$> agentSourceKinds
+  sourceKinds <- (:) "postgres" . fmap _skiSourceKind . unSourceKinds <$> agentSourceKinds
   if
       | toTxt _gdcaName `elem` sourceKinds -> Error.throw400 Error.AlreadyExists $ "SourceKind '" <> toTxt _gdcaName <> "' already exists."
       | _gdcaSkipCheck == SkipCheck True -> addAgent _gdcaName agent

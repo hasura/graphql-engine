@@ -39,7 +39,7 @@ tests _ = do
             expected =
               [yaml|
             builtin: false
-            display_name: "FOOBARDB (foobar)"
+            display_name: "FOOBARDB"
             kind: foobar
             available: true
           |]
