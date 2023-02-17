@@ -39,6 +39,7 @@ import Data.Text qualified as T
 import Data.Text.Conversions (UTF8 (..), decodeText)
 import Hasura.HTTP
 import Hasura.Logging
+import Hasura.NativeQuery.Metadata (NativeQueryInfo, nqiArguments)
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Common
@@ -257,6 +258,7 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
       _mtRemoteSchemas = Map.size <$> remoteSchemaMap
       _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . _fiSystemDefined) sourceFunctionCache
       _mtActions = computeActionsMetrics <$> actionCache
+      _mtNativeQueries = calculateNativeQueries (_siNativeQueries sourceInfo)
    in Metrics {..}
   where
     sourceTableCache = _siTables sourceInfo
@@ -268,6 +270,15 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
 
     permsOfTbl :: TableInfo b -> [(RoleName, RolePermInfo b)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap
+
+    calculateNativeQueries :: [NativeQueryInfo b] -> NativeQueriesMetrics
+    calculateNativeQueries =
+      foldMap
+        ( \naqi ->
+            if null (nqiArguments naqi)
+              then mempty {_nqmWithoutParameters = 1}
+              else mempty {_nqmWithParameters = 1}
+        )
 
 -- | Compute the relevant metrics for actions from the action cache.
 computeActionsMetrics :: ActionCache -> ActionMetric

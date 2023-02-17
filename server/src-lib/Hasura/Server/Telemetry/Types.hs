@@ -8,6 +8,7 @@ module Hasura.Server.Telemetry.Types
     RelationshipMetric (..),
     PermissionMetric (..),
     ActionMetric (..),
+    NativeQueriesMetrics (..),
     Metrics (..),
     SourceMetadata (..),
     HasuraTelemetry (..),
@@ -73,6 +74,23 @@ data ActionMetric = ActionMetric
 
 $(A.deriveToJSON hasuraJSON ''ActionMetric)
 
+data NativeQueriesMetrics = NativeQueriesMetrics
+  { _nqmWithParameters :: Int,
+    _nqmWithoutParameters :: Int
+  }
+  deriving (Show, Eq)
+
+instance Semigroup NativeQueriesMetrics where
+  a <> b =
+    NativeQueriesMetrics
+      (_nqmWithParameters a + _nqmWithParameters b)
+      (_nqmWithoutParameters a + _nqmWithoutParameters b)
+
+instance Monoid NativeQueriesMetrics where
+  mempty = NativeQueriesMetrics 0 0
+
+$(A.deriveToJSON hasuraJSON ''NativeQueriesMetrics)
+
 data Metrics = Metrics
   { _mtTables :: Int,
     _mtViews :: Int,
@@ -83,7 +101,8 @@ data Metrics = Metrics
     _mtFunctions :: Int,
     _mtRemoteSchemas :: Maybe Int,
     _mtServiceTimings :: Maybe ServiceTimingMetrics,
-    _mtActions :: Maybe ActionMetric
+    _mtActions :: Maybe ActionMetric,
+    _mtNativeQueries :: NativeQueriesMetrics
   }
   deriving (Show, Eq)
 
