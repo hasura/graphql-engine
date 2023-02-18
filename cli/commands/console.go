@@ -90,7 +90,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
 	f.StringVar(&opts.Browser, "browser", "", "open console in a specific browser")
 	f.BoolVar(&opts.UseServerAssets, "use-server-assets", false, "when rendering console, use assets provided by HGE server")
-	f.StringVar(&opts.DataApiUrl, "console-hge-endpoint", "", "endpoint on which the CLI console should reach the HGE server")
+	f.StringVar(&opts.DataApiUrl, "console-hge-endpoint", "", "endpoint on which the CLI Console should reach the HGE Server")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")

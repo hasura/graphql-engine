@@ -21,6 +21,9 @@ import (
 const migrateCreateCmdExamples = `  # Setup migration files for the first time by introspecting a server:
   hasura migrate create "init" --from-server
 
+  # Setup migration files for the first time by introspecting a server when there are multiple schemas:
+  hasura migrate create "init" --from-server --schema myschema1,myschema2
+
   # Use with admin secret:
   hasura migrate create --admin-secret "<admin-secret>"
 
