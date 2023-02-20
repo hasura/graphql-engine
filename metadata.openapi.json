@@ -3576,6 +3576,53 @@
                 ],
                 "type": "object"
             },
+            "EndpointDef_QueryReference": {
+                "properties": {
+                    "query": {
+                        "$ref": "#/components/schemas/QueryReference"
+                    }
+                },
+                "required": [
+                    "query"
+                ],
+                "type": "object"
+            },
+            "EndpointMetadata_QueryReference": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "definition": {
+                        "$ref": "#/components/schemas/EndpointDef_QueryReference"
+                    },
+                    "methods": {
+                        "items": {
+                            "enum": [
+                                "GET",
+                                "POST",
+                                "PUT",
+                                "DELETE",
+                                "PATCH"
+                            ],
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "url": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name",
+                    "url",
+                    "methods",
+                    "definition"
+                ],
+                "type": "object"
+            },
             "EnumTypeDefinition": {
                 "properties": {
                     "description": {
@@ -4097,9 +4144,10 @@
                         "type": "array"
                     },
                     "rest_endpoints": {
-                        "description": "REST interfaces to saved GraphQL queries and mutations\n\n\narray of values of unspecified type - this is a placeholder that will eventually be replaced with a more detailed description",
+                        "default": [],
+                        "description": "REST interfaces to saved GraphQL queries and mutations",
                         "items": {
-                            "additionalProperties": true
+                            "$ref": "#/components/schemas/EndpointMetadata_QueryReference"
                         },
                         "type": "array"
                     },
@@ -6791,6 +6839,21 @@
                 "required": [
                     "role",
                     "permission"
+                ],
+                "type": "object"
+            },
+            "QueryReference": {
+                "properties": {
+                    "collection_name": {
+                        "type": "string"
+                    },
+                    "query_name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "collection_name",
+                    "query_name"
                 ],
                 "type": "object"
             },

@@ -21,7 +21,8 @@ import Hasura.Metadata.DTO.Utils (versionField)
 import Hasura.Prelude
 import Hasura.RQL.Types.Action (ActionMetadata (_amName))
 import Hasura.RQL.Types.CustomTypes (CustomTypes, emptyCustomTypes)
-import Hasura.RQL.Types.Metadata.Common (Actions, CronTriggers, QueryCollections, RemoteSchemas, Sources, sourcesCodec)
+import Hasura.RQL.Types.Endpoint (_ceName)
+import Hasura.RQL.Types.Metadata.Common (Actions, CronTriggers, Endpoints, QueryCollections, RemoteSchemas, Sources, sourcesCodec)
 import Hasura.RQL.Types.QueryCollection qualified as QC
 import Hasura.RQL.Types.ScheduledTrigger (CronTriggerMetadata (ctName))
 import Hasura.RemoteSchema.Metadata.Core (RemoteSchemaMetadataG (_rsmName))
@@ -36,7 +37,7 @@ data MetadataV3 = MetadataV3
     metaV3Actions :: Actions,
     metaV3CustomTypes :: CustomTypes,
     metaV3CronTriggers :: CronTriggers,
-    metaV3RestEndpoints :: Maybe PlaceholderArray,
+    metaV3RestEndpoints :: Endpoints,
     metaV3ApiLimits :: Maybe PlaceholderObject,
     metaV3MetricsConfig :: Maybe PlaceholderObject,
     metaV3InheritedRoles :: Maybe PlaceholderArray,
@@ -70,7 +71,7 @@ instance HasCodec MetadataV3 where
         <*> optionalFieldWithOmittedDefaultWith "actions" (sortedElemsCodec _amName) mempty "action definitions which extend Hasura's schema with custom business logic using custom queries and mutations" .= metaV3Actions
         <*> optionalFieldWithOmittedDefault "custom_types" emptyCustomTypes "custom type definitions" .= metaV3CustomTypes
         <*> optionalFieldWithOmittedDefaultWith "cron_triggers" (sortedElemsCodec ctName) [] "reliably trigger HTTP endpoints to run custom business logic periodically based on a cron schedule" .= metaV3CronTriggers
-        <*> optionalField "rest_endpoints" "REST interfaces to saved GraphQL queries and mutations" .= metaV3RestEndpoints
+        <*> optionalFieldWithOmittedDefaultWith "rest_endpoints" (sortedElemsCodec _ceName) [] "REST interfaces to saved GraphQL queries and mutations" .= metaV3RestEndpoints
         <*> optionalField "api_limits" "limts to depth and/or rate of API requests" .= metaV3ApiLimits
         <*> optionalField "metrics_config" "TODO" .= metaV3MetricsConfig
         <*> optionalField "inherited_roles" "an inherited role is a way to create a new role which inherits permissions from two or more roles" .= metaV3InheritedRoles
