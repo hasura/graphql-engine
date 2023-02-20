@@ -1,7 +1,7 @@
 import { RequestTransformMethod } from '@/metadata/types';
 import { createGraphQLSchema } from 'openapi-to-graphql';
 import z from 'zod';
-import { formSchema } from './OASGeneratorForm';
+import { formSchema } from './OASGeneratorPage';
 
 export type SchemaType = z.infer<typeof formSchema>;
 export type GeneratedAction = {

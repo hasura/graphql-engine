@@ -44,7 +44,7 @@ export const DropdownMenuItem: React.FC<
 // an implementation of a dropdownmenu.
 // for more flexibility, such as being able to use labels, combine the styled components with other primatives from radix.
 
-interface DropdownMenuProps {
+export interface DropdownMenuProps {
   options?: {
     root?: React.ComponentProps<typeof DropdownMenuPrimitive.Root>;
     trigger?: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>;

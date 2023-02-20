@@ -1,17 +1,19 @@
 import React from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { Button } from '../Button';
-import { DropdownMenu } from '../DropdownMenu';
+import { DropdownMenu, DropdownMenuProps } from '../DropdownMenu';
 
 interface DropdownButtonProps extends React.ComponentProps<typeof Button> {
   items: React.ReactNode[][];
+  options?: DropdownMenuProps['options'];
 }
 
 export const DropdownButton: React.FC<DropdownButtonProps> = ({
   items,
+  options,
   ...rest
 }) => (
-  <DropdownMenu items={items}>
+  <DropdownMenu options={options} items={items}>
     <Button
       iconPosition="end"
       icon={

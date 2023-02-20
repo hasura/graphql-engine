@@ -58,3 +58,5 @@ export const isEnvironmentSupportMultiTenantConnectionPooling = (
   // there should not be any other console modes
   throw new Error(`Invalid consoleMode:  ${env.consoleMode}`);
 };
+
+export const isImportFromOpenAPIEnabled = isProConsole;

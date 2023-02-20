@@ -1,10 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { browserHistory, Link } from 'react-router';
 import { FaSearch } from 'react-icons/fa';
 
 import { Button } from '@/new-components/Button';
 import { Analytics } from '@/features/Analytics';
 import styles from './LeftSubSidebar.module.scss';
+import { DropdownButton } from '@/new-components/DropdownButton';
 
 interface Props extends React.ComponentProps<'div'> {
   showAddBtn: boolean;
@@ -15,6 +16,11 @@ interface Props extends React.ComponentProps<'div'> {
   addTrackId: string;
   addTestString: string;
   childListTestString: string;
+  /* padding addBtn override the default "create" button 
+  e.g. for action creation in pro console we pass the dropdown button to choose between
+  action form and import from OpenAPI
+  */
+  addBtn?: React.ReactNode;
 }
 
 const LeftSubSidebar: React.FC<Props> = props => {
@@ -28,6 +34,7 @@ const LeftSubSidebar: React.FC<Props> = props => {
     addTestString,
     children,
     childListTestString,
+    addBtn,
   } = props;
 
   const getAddButton = () => {
@@ -71,7 +78,7 @@ const LeftSubSidebar: React.FC<Props> = props => {
           >
             {heading}
           </div>
-          {getAddButton()}
+          {addBtn ?? getAddButton()}
         </div>
         <ul className={styles.subSidebarListUL} data-test={childListTestString}>
           {children}

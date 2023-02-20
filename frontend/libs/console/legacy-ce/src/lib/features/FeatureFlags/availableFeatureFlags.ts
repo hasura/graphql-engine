@@ -11,17 +11,6 @@ export const availableFeatureFlagIds = {
   enabledNewUIForBigQuery,
 };
 
-const importActionFromOpenApi: FeatureFlagDefinition = {
-  id: importActionFromOpenApiId,
-  title: 'Import Action from OpenAPI',
-  description:
-    'Try out the very experimental feature to generate one action from an OpenAPI endpoint',
-  section: 'data',
-  status: 'experimental',
-  defaultValue: false,
-  discussionUrl: '',
-};
-
 export const availableFeatureFlags: FeatureFlagDefinition[] = [
   {
     id: relationshipTabTablesId,
@@ -42,6 +31,4 @@ export const availableFeatureFlags: FeatureFlagDefinition[] = [
     defaultValue: false,
     discussionUrl: '',
   },
-  // eslint-disable-next-line no-underscore-dangle
-  ...(isProConsole(window.__env) ? [importActionFromOpenApi] : []),
 ];

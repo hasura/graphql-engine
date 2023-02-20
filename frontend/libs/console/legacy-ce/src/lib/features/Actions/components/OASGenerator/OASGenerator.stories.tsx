@@ -5,23 +5,25 @@ import { handlers } from '@/mocks/metadata.mock';
 import { within, userEvent } from '@storybook/testing-library';
 import { waitFor } from '@testing-library/react';
 import { expect } from '@storybook/jest';
-import { OasGenerator, OasGeneratorProps } from './OASGenerator';
-import petstore from '../OASGeneratorModal/petstore.json';
+import { OASGenerator, OASGeneratorProps } from './OASGenerator';
+import petstore from './petstore.json';
 
 export default {
   title: 'Features/Actions/OASGenerator',
-  component: OasGenerator,
+  component: OASGenerator,
   decorators: [ReactQueryDecorator()],
   parameters: {
     msw: handlers({ delay: 500 }),
   },
   argTypes: {
-    onGenerate: { action: 'Generate Action' },
+    onGenerate: { action: 'Create Action' },
+    onDelete: { action: 'Create Action' },
+    disabled: false,
   },
-} as Meta;
+} as unknown as Meta;
 
-export const Default: Story<OasGeneratorProps> = args => {
-  return <OasGenerator {...args} />;
+export const Default: Story<OASGeneratorProps> = args => {
+  return <OASGenerator {...args} />;
 };
 
 Default.play = async ({ canvasElement }) => {
@@ -56,14 +58,4 @@ Default.play = async ({ canvasElement }) => {
   expect(canvas.queryAllByTestId(/^operation.*/)).toHaveLength(0);
   // clear search
   userEvent.clear(searchBox);
-  // Generate action button should be disabled
-  expect(canvas.getByText('Generate Action').parentElement).toBeDisabled();
-  // click on the first operation
-  userEvent.click(canvas.getByTestId('operation-findPets'));
-  // wait for generate action button to be enabled
-  await waitFor(() => {
-    return expect(
-      canvas.getByText('Generate Action').parentElement
-    ).toHaveAttribute('disabled', '');
-  });
 };

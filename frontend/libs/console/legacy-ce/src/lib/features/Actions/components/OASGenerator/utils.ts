@@ -1,4 +1,8 @@
-import { RequestTransformMethod } from '@/metadata/types';
+import {
+  RequestTransform,
+  RequestTransformMethod,
+  ResponseTranform,
+} from '@/metadata/types';
 import {
   buildClientSchema,
   getIntrospectionQuery,
@@ -484,4 +488,95 @@ export const generateAction = async (
 export const getOperations = async (oas: Oas2 | Oas3): Promise<Operation[]> => {
   const graphqlSchema = await parseOas(oas);
   return Object.values(graphqlSchema.data.operations);
+};
+
+type ActionState = {
+  handler: string;
+  actionDefinition: {
+    sdl: string;
+  };
+  typeDefinition: {
+    sdl: string;
+  };
+  headers: {
+    name: string;
+    value: string;
+    type: 'static';
+  }[];
+  forwardClientHeaders: boolean;
+  kind: 'synchronous';
+  timeout: string;
+  comment: string;
+};
+
+export const generatedActionToHasuraAction = (
+  generatedAction: GeneratedAction
+): {
+  state: ActionState;
+  requestTransform: RequestTransform;
+  responseTransform: ResponseTranform | null;
+} => {
+  const state: ActionState = {
+    handler: generatedAction.baseUrl,
+    actionDefinition: {
+      sdl: generatedAction.action,
+    },
+    typeDefinition: {
+      sdl: generatedAction.types,
+    },
+    headers: generatedAction.headers.map(name => ({
+      name,
+      value: `{{$body.input.${name}}}`,
+      type: 'static',
+    })),
+    forwardClientHeaders: true,
+    kind: 'synchronous',
+    timeout: '',
+    comment: generatedAction.description,
+  };
+
+  const requestTransform: RequestTransform = {
+    version: 2,
+    template_engine: 'Kriti',
+    method: generatedAction.method,
+    url: `{{$base_url}}${generatedAction.path}`,
+    query_params:
+      typeof generatedAction.queryParams === 'string'
+        ? generatedAction.queryParams
+        : generatedAction.queryParams.reduce(
+            (acc, curr) => ({
+              ...acc,
+              [curr.name]: curr.value,
+            }),
+
+            {} as Record<string, string>
+          ),
+
+    ...(generatedAction.requestTransforms
+      ? {
+          body: {
+            action: 'transform',
+            template: generatedAction.requestTransforms,
+          },
+        }
+      : {}),
+  };
+
+  const responseTransform: ResponseTranform | null =
+    generatedAction.responseTransforms
+      ? {
+          version: 2,
+          body: {
+            action: 'transform',
+            template: generatedAction.responseTransforms,
+          },
+          template_engine: 'Kriti',
+        }
+      : null;
+
+  return {
+    state,
+    requestTransform,
+    responseTransform,
+  };
 };
