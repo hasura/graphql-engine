@@ -32,11 +32,11 @@
 - functions:
 
       - name: "System.Environment.getEnvironment"
-        within: []
+        within: ["Harness.**", "Main", "Spec.**", "SpecHook", "Test.**"]
         message: "Instead of 'getEnvironment', use the environment from the server context"
 
       - name: "Data.Environment.getEnvironment"
-        within: []
+        within: ["Harness.**", "Main", "Spec.**", "SpecHook", "Test.**"]
         message: "Instead of 'getEnvironment', use the environment from the server context"
 
       - name: "Test.Hspec.focus"
@@ -246,3 +246,8 @@
       - error: {lhs: "Control.Concurrent.threadDelay", rhs: "Control.Concurrent.Extended.sleep", note: "Please use `sleep` instead (and read the docs!)"}
       - suggest: {lhs: "Control.Concurrent.Async.Lifted.Safe.async", rhs: "Control.Concurrent.Async.Lifted.Safe.withAsync", note: "Please use 'Control.Control.Concurrent.Async.Lifted.Safe.withAsync' or our 'forkImmortal' instead for more robust threading."}
       - suggest: {lhs: "Control.Concurrent.forkIO", rhs: "Control.Concurrent.Async.Lifted.Safe.withAsync", note: "Please use 'Control.Control.Concurrent.Async.Lifted.Safe.withAsync' or our 'forkImmortal' instead for more robust threading."}
+
+- ignore: {
+    group: {name: "unsafe"},
+    within: ["Harness.**", "Spec", "Spec.**", "SpecHook", "Test.**"]
+    }

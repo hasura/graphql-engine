@@ -5,6 +5,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
+{-# HLINT ignore "Use withAsync" #-}
 {-# HLINT ignore "Use sleep" #-}
 
 module Main (main) where

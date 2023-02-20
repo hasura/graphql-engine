@@ -19,7 +19,6 @@ import Hasura.App
 import Hasura.Backends.Postgres.Connection.Settings
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Base.Error
-import Hasura.EventTriggerCleanupSuite qualified as EventTriggerCleanupSuite
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging
 import Hasura.Prelude
@@ -32,13 +31,14 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.Server.Init
 import Hasura.Server.Init.FeatureFlag as FF
 import Hasura.Server.Migrate
-import Hasura.Server.MigrateSuite qualified as MigrateSuite
 import Hasura.Server.Types
-import Hasura.StreamingSubscriptionSuite qualified as StreamingSubscriptionSuite
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.TLS qualified as HTTP
 import System.Environment (getEnvironment)
 import System.Exit (exitFailure)
+import Test.Hasura.EventTriggerCleanupSuite qualified as EventTriggerCleanupSuite
+import Test.Hasura.Server.MigrateSuite qualified as MigrateSuite
+import Test.Hasura.StreamingSubscriptionSuite qualified as StreamingSubscriptionSuite
 import Test.Hspec
 
 main :: IO ()

@@ -128,7 +128,7 @@ getAcceptedEncodings reqHeaders = Set.fromList acceptedEncodingTypes
         ||
         -- ...rejecting anything not listed and identity is not listed
         ( "*;q=0" `elem` rawHeaderVals
-            && (not $ any ("identity" `T.isPrefixOf`) rawHeaderVals)
+            && not (any ("identity" `T.isPrefixOf`) rawHeaderVals)
         )
     gzipAccepted =
       any ("gzip" `T.isPrefixOf`) rawHeaderVals

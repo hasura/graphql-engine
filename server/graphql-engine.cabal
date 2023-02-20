@@ -1249,6 +1249,6 @@ test-suite graphql-engine-test-postgres
   hs-source-dirs: test-postgres
   main-is: Main.hs
   other-modules:
-    Hasura.EventTriggerCleanupSuite
-    Hasura.StreamingSubscriptionSuite
-    Hasura.Server.MigrateSuite
+    Test.Hasura.EventTriggerCleanupSuite
+    Test.Hasura.StreamingSubscriptionSuite
+    Test.Hasura.Server.MigrateSuite

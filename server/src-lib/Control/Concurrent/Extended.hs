@@ -1,5 +1,7 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
+{-# HLINT ignore "Use withAsync" #-}
+
 module Control.Concurrent.Extended
   ( module Control.Concurrent,
     sleep,

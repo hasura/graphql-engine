@@ -2,7 +2,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Hasura.StreamingSubscriptionSuite (buildStreamingSubscriptionSuite) where
+module Test.Hasura.StreamingSubscriptionSuite (buildStreamingSubscriptionSuite) where
 
 import Control.Concurrent.Async qualified as Async
 import Control.Concurrent.MVar qualified as MVar

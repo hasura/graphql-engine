@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Hasura.Server.MigrateSuite (CacheRefT (..), suite) where
+module Test.Hasura.Server.MigrateSuite (CacheRefT (..), suite) where
 
 import Control.Concurrent.MVar.Lifted
 import Control.Monad.Morph

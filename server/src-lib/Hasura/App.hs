@@ -573,6 +573,7 @@ flushLogger = liftIO . FL.flushLogStr . _lcLoggerSet
 -- code.
 
 {- HLINT ignore runHGEServer "Avoid lambda" -}
+{- HLINT ignore runHGEServer "Use withAsync" -}
 runHGEServer ::
   forall m impl.
   ( MonadIO m,

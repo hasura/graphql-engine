@@ -106,10 +106,12 @@ tableSelectColumnsEnum tableInfo = do
     Nothing -> pure Nothing
     Just columnDefinitions ->
       Just
-        <$> ( P.memoizeOn 'tableSelectColumnsEnum (enumName, description, columns) $
-                pure $
-                  P.enum enumName description columnDefinitions
-            )
+        <$> P.memoizeOn
+          'tableSelectColumnsEnum
+          (enumName, description, columns)
+          ( pure $
+              P.enum enumName description columnDefinitions
+          )
   where
     define name =
       P.Definition name (Just $ G.Description "column name") Nothing [] P.EnumValueInfo

@@ -266,6 +266,8 @@ logFetchedEventsStatistics logger backendEvents =
             \backendEvent -> AB.dispatchAnyBackend @Backend backendEvent _ewsSourceName
        in NumEventsFetchedPerSource $ M.fromListWith (+) [(sourceName, 1) | sourceName <- sourceNames]
 
+{-# ANN processEventQueue ("HLint: ignore Use withAsync" :: String) #-}
+
 -- | Service events from our in-DB queue.
 --
 -- There are a few competing concerns and constraints here; we want to...

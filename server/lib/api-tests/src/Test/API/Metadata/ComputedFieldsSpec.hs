@@ -196,23 +196,23 @@ code: invalid-configuration
           400
           testEnv
           [yaml|
-type: bigquery_add_computed_field
-args:
-  source: bigquery
-  name: search_articles
-  table:
-    dataset: *schemaName
-    name: author
-  definition:
-    function:
-      dataset: *schemaName
-      name: fetch_articles
-    argument_mapping:
-      a_id: id
-#    return_table:
-#      name: article
-#      dataset: *schemaName
-|]
+            type: bigquery_add_computed_field
+            args:
+              source: bigquery
+              name: search_articles
+              table:
+                dataset: *schemaName
+                name: author
+              definition:
+                function:
+                  dataset: *schemaName
+                  name: fetch_articles
+                argument_mapping:
+                  a_id: id
+            #    return_table:
+            #      name: article
+            #      dataset: *schemaName
+            |]
       )
       [interpolateYaml|
 internal:
