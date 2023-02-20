@@ -36,6 +36,7 @@
   - [Avoiding GraphQL schema rebuilds when changing irrelevant Metadata](avoiding-graphql-schema-rebuilds-when-changing-irrelevant-metadata.md)
   - [Keep invalidation keys for inconsistent objects](keep-invalidation-keys-for-inconsistent-objects.md)
   - [Function Permissions](function-permissions.md)
+  - [Warnings in metadata API](warnings-in-metadata-api.md)
   - [Remote Schema Argument Presets](remote-schema-argument-presets.md)
   - [Remote Schema Permissions Architecture](remote-schema-permissions-architecture.md)
   - [ReadOnly Mode](readonly-mode.md)
