@@ -25,6 +25,7 @@ import Autodocodec qualified as AC
 import Control.Lens (preview, (^?))
 import Data.Aeson
 import Data.Environment qualified as Env
+import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Hasura.Base.Error
 import Hasura.CustomReturnType (CustomReturnType)
 import Hasura.EncJSON
@@ -152,7 +153,7 @@ runGetNativeQuery q = do
   let nativeQuery :: Maybe (NativeQueries b)
       nativeQuery = metadata ^? metaSources . ix (gnqSource q) . toSourceMetadata . smNativeQueries @b
 
-  pure (encJFromJValue nativeQuery)
+  pure (encJFromJValue (OMap.elems <$> nativeQuery))
 
 -- | Handler for the 'track_native_query' endpoint. The type 'TrackNativeQuery
 -- b' (appearing here in wrapped as 'BackendTrackNativeQuery b' for 'AnyBackend'
@@ -190,7 +191,7 @@ runTrackNativeQuery env trackNativeQueryRequest = do
   buildSchemaCacheFor metadataObj $
     MetadataModifier $
       (metaSources . ix source . toSourceMetadata @b . smNativeQueries)
-        %~ \nqs -> metadata : (filter ((/= fieldName) . nqiRootFieldName) nqs)
+        %~ OMap.insert fieldName metadata
 
   pure successMsg
   where
@@ -260,7 +261,8 @@ runUntrackNativeQuery q = do
 dropNativeQueryInMetadata :: forall b. BackendMetadata b => SourceName -> NativeQueryName -> MetadataModifier
 dropNativeQueryInMetadata source rootFieldName =
   MetadataModifier $
-    metaSources . ix source . toSourceMetadata @b . smNativeQueries %~ filter ((/= rootFieldName) . nqiRootFieldName)
+    metaSources . ix source . toSourceMetadata @b . smNativeQueries
+      %~ OMap.delete rootFieldName
 
 -- | check feature flag is enabled before carrying out any actions
 throwIfFeatureDisabled :: (HasServerConfigCtx m, MonadIO m, MonadError QErr m) => m ()

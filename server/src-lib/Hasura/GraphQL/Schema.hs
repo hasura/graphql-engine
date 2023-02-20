@@ -693,7 +693,7 @@ buildNativeQueryFields sourceInfo nativeQueries = runMaybeTmempty $ do
   -- permissions for native queries.
   guard $ roleName == adminRoleName
 
-  map mkRF . catMaybes <$> for nativeQueries \nativeQuery -> do
+  map mkRF . catMaybes <$> for (OMap.elems nativeQueries) \nativeQuery -> do
     lift $ (buildNativeQueryRootFields nativeQuery)
   where
     mkRF ::

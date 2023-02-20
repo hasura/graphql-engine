@@ -83,7 +83,7 @@ import Data.Text qualified as T
 import Data.Text.Extended qualified as T
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
-import Hasura.NativeQuery.Metadata (NativeQueryInfo)
+import Hasura.NativeQuery.Metadata (NativeQueryInfo (..), NativeQueryName)
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
@@ -405,8 +405,7 @@ type Tables b = InsOrdHashMap (TableName b) (TableMetadata b)
 
 type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 
--- type NativeQueries b = InsOrdHashMap (NativeQueryName b) (NativeQueryInfo b)
-type NativeQueries b = [NativeQueryInfo b]
+type NativeQueries b = InsOrdHashMap NativeQueryName (NativeQueryInfo b)
 
 type Endpoints = InsOrdHashMap EndpointName CreateEndpoint
 
@@ -441,7 +440,7 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadat
     _smName <- o .: "name"
     _smTables <- oMapFromL _tmTable <$> o .: "tables"
     _smFunctions <- oMapFromL _fmFunction <$> o .:? "functions" .!= []
-    _smNativeQueries <- o .:? "native_queries" .!= []
+    _smNativeQueries <- oMapFromL nqiRootFieldName <$> o .:? "native_queries" .!= []
     _smConfiguration <- o .: "configuration"
     _smQueryTags <- o .:? "query_tags"
     _smCustomization <- o .:? "customization" .!= emptySourceCustomization
@@ -500,7 +499,7 @@ instance Backend b => HasCodec (SourceMetadata b) where
           .== _smTables
         <*> optionalFieldOrNullWithOmittedDefaultWith' "functions" (sortedElemsCodec _fmFunction) mempty
           .== _smFunctions
-        <*> optionalFieldOrNullWithOmittedDefault' "native_queries" []
+        <*> optionalFieldOrNullWithOmittedDefaultWith' "native_queries" (sortedElemsCodec nqiRootFieldName) mempty
           .== _smNativeQueries
         <*> requiredField' "configuration"
           .== _smConfiguration

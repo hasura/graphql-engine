@@ -25,6 +25,7 @@ import Data.Aeson.Ordered qualified as AO
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Text.Extended qualified as T
 import Data.Vector qualified as Vector
+import Hasura.NativeQuery.Metadata (NativeQueryInfo (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
   ( ActionDefinition (..),
@@ -119,10 +120,7 @@ sourcesToOrdJSONList sources =
             sourceKindPair = ("kind", AO.toOrdered _smKind)
             tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems _smTables)
             functionsPair = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction _smFunctions
-            nativeQueriesPair =
-              [ ("native_queries", AO.toOrdered nativeQueries)
-                | nativeQueries@(_ : _) <- pure _smNativeQueries
-              ]
+            nativeQueriesPair = listToMaybeOrdPairSort "native_queries" AO.toOrdered nqiRootFieldName (OM.elems _smNativeQueries)
             configurationPair = [("configuration", AO.toOrdered _smConfiguration)]
             queryTagsConfigPair = maybe [] (\queryTagsConfig -> [("query_tags", AO.toOrdered queryTagsConfig)]) _smQueryTags
 
@@ -133,7 +131,7 @@ sourcesToOrdJSONList sources =
          in AO.object $
               [sourceNamePair, sourceKindPair, tablesPair]
                 <> maybeToList functionsPair
-                <> nativeQueriesPair
+                <> maybeToList nativeQueriesPair
                 <> configurationPair
                 <> queryTagsConfigPair
                 <> customizationPair

@@ -33,6 +33,7 @@ import Data.Aeson qualified as A
 import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.List qualified as L
 import Data.List.Extended qualified as L
 import Data.Text qualified as T
@@ -258,7 +259,7 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
       _mtRemoteSchemas = Map.size <$> remoteSchemaMap
       _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . _fiSystemDefined) sourceFunctionCache
       _mtActions = computeActionsMetrics <$> actionCache
-      _mtNativeQueries = calculateNativeQueries (_siNativeQueries sourceInfo)
+      _mtNativeQueries = calculateNativeQueries (OMap.elems $ _siNativeQueries sourceInfo)
    in Metrics {..}
   where
     sourceTableCache = _siTables sourceInfo
