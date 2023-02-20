@@ -1,6 +1,206 @@
 {
     "components": {
         "schemas": {
+            "ActionDefinition_Mutation_GraphQLType_InputWebhook": {
+                "properties": {
+                    "arguments": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/ArgumentDefinition_GraphQLType"
+                        },
+                        "type": "array"
+                    },
+                    "forward_client_headers": {
+                        "default": false,
+                        "type": "boolean"
+                    },
+                    "handler": {
+                        "type": "string"
+                    },
+                    "headers": {
+                        "default": [],
+                        "items": {
+                            "oneOf": [
+                                {
+                                    "$ref": "#/components/schemas/HeaderConfValue"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/HeaderConfFromEnv"
+                                }
+                            ]
+                        },
+                        "type": "array"
+                    },
+                    "kind": {
+                        "default": "synchronous",
+                        "enum": [
+                            "synchronous",
+                            "asynchronous"
+                        ],
+                        "type": "string"
+                    },
+                    "output_type": {
+                        "type": "string"
+                    },
+                    "request_transform": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/RequestTransformV1"
+                            },
+                            {
+                                "$ref": "#/components/schemas/RequestTransformV2"
+                            }
+                        ]
+                    },
+                    "response_transform": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/ResponseTransformV1"
+                            },
+                            {
+                                "$ref": "#/components/schemas/ResponseTransformV2"
+                            }
+                        ]
+                    },
+                    "timeout": {
+                        "default": 30,
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "type": "number"
+                    },
+                    "type": {
+                        "enum": [
+                            "mutation"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "output_type",
+                    "type",
+                    "handler"
+                ],
+                "type": "object"
+            },
+            "ActionDefinition_Query_GraphQLType_InputWebhook": {
+                "properties": {
+                    "arguments": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/ArgumentDefinition_GraphQLType"
+                        },
+                        "type": "array"
+                    },
+                    "forward_client_headers": {
+                        "default": false,
+                        "type": "boolean"
+                    },
+                    "handler": {
+                        "type": "string"
+                    },
+                    "headers": {
+                        "default": [],
+                        "items": {
+                            "oneOf": [
+                                {
+                                    "$ref": "#/components/schemas/HeaderConfValue"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/HeaderConfFromEnv"
+                                }
+                            ]
+                        },
+                        "type": "array"
+                    },
+                    "output_type": {
+                        "type": "string"
+                    },
+                    "request_transform": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/RequestTransformV1"
+                            },
+                            {
+                                "$ref": "#/components/schemas/RequestTransformV2"
+                            }
+                        ]
+                    },
+                    "response_transform": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/ResponseTransformV1"
+                            },
+                            {
+                                "$ref": "#/components/schemas/ResponseTransformV2"
+                            }
+                        ]
+                    },
+                    "timeout": {
+                        "default": 30,
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "type": "number"
+                    },
+                    "type": {
+                        "enum": [
+                            "query"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "output_type",
+                    "type",
+                    "handler"
+                ],
+                "type": "object"
+            },
+            "ActionMetadata": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "definition": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/ActionDefinition_Query_GraphQLType_InputWebhook"
+                            },
+                            {
+                                "$ref": "#/components/schemas/ActionDefinition_Mutation_GraphQLType_InputWebhook"
+                            }
+                        ]
+                    },
+                    "name": {
+                        "$ref": "#/components/schemas/GraphQLName"
+                    },
+                    "permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/ActionPermissionMetadata"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "definition"
+                ],
+                "type": "object"
+            },
+            "ActionPermissionMetadata": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "role"
+                ],
+                "type": "object"
+            },
             "AddReplaceOrRemoveFields": {
                 "properties": {
                     "add_headers": {
@@ -33,6 +233,24 @@
                 },
                 "required": [
                     "enable"
+                ],
+                "type": "object"
+            },
+            "ArgumentDefinition_GraphQLType": {
+                "properties": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "$ref": "#/components/schemas/GraphQLName"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name",
+                    "type"
                 ],
                 "type": "object"
             },
@@ -3806,9 +4024,10 @@
             "MetadataV3": {
                 "properties": {
                     "actions": {
-                        "description": "action definitions which extend Hasura's schema with custom business logic using custom queries and mutations\n\n\narray of values of unspecified type - this is a placeholder that will eventually be replaced with a more detailed description",
+                        "default": [],
+                        "description": "action definitions which extend Hasura's schema with custom business logic using custom queries and mutations",
                         "items": {
-                            "additionalProperties": true
+                            "$ref": "#/components/schemas/ActionMetadata"
                         },
                         "type": "array"
                     },

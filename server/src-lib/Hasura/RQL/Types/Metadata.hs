@@ -513,7 +513,7 @@ metadataToDTO
         metaV3RemoteSchemas = remoteSchemas,
         metaV3QueryCollections = queryCollections,
         metaV3Allowlist = placeholder <$> allowlistToOrdJSONList allowlist,
-        metaV3Actions = placeholder <$> actionMetadataToOrdJSONList actions,
+        metaV3Actions = actions,
         metaV3CustomTypes = customTypes,
         metaV3CronTriggers = cronTriggers,
         metaV3RestEndpoints = placeholder <$> endpointsToOrdJSONList endpoints,

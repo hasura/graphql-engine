@@ -55,6 +55,9 @@ module Hasura.RQL.Types.Action
   )
 where
 
+import Autodocodec (HasCodec, dimapCodec, disjointEitherCodec, optionalField', optionalFieldWith', optionalFieldWithDefault', optionalFieldWithOmittedDefault', requiredField')
+import Autodocodec qualified as AC
+import Autodocodec.Extended (graphQLFieldDescriptionCodec, graphQLFieldNameCodec)
 import Control.Lens (makeLenses)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
@@ -62,10 +65,12 @@ import Data.Aeson.Extended
 import Data.Aeson.TH qualified as J
 import Data.Text.Extended
 import Data.Time.Clock qualified as UTC
+import Data.Typeable (Typeable)
 import Data.UUID qualified as UUID
 import Database.PG.Query qualified as PG
 import Database.PG.Query.PTI qualified as PTI
 import Hasura.Base.Error
+import Hasura.Metadata.DTO.Utils (boundedEnumCodec, discriminatorField, typeableName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
@@ -91,6 +96,15 @@ data ActionMetadata = ActionMetadata
 
 instance NFData ActionMetadata
 
+instance HasCodec ActionMetadata where
+  codec =
+    AC.object "ActionMetadata" $
+      ActionMetadata
+        <$> requiredField' "name" AC..= _amName
+        <*> optionalField' "comment" AC..= _amComment
+        <*> requiredField' "definition" AC..= _amDefinition
+        <*> optionalFieldWithOmittedDefault' "permissions" [] AC..= _amPermissions
+
 data ActionPermissionMetadata = ActionPermissionMetadata
   { _apmRole :: RoleName,
     _apmComment :: Maybe Text
@@ -99,8 +113,18 @@ data ActionPermissionMetadata = ActionPermissionMetadata
 
 instance NFData ActionPermissionMetadata
 
+instance HasCodec ActionPermissionMetadata where
+  codec =
+    AC.object "ActionPermissionMetadata" $
+      ActionPermissionMetadata
+        <$> requiredField' "role" AC..= _apmRole
+        <*> optionalField' "comment" AC..= _apmComment
+
 newtype ActionName = ActionName {unActionName :: G.Name}
   deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey, ToTxt, Generic, NFData, Hashable)
+
+instance HasCodec ActionName where
+  codec = dimapCodec ActionName unActionName graphQLFieldNameCodec
 
 newtype ActionId = ActionId {unActionId :: UUID.UUID}
   deriving (Show, Eq, PG.ToPrepArg, PG.FromCol, J.ToJSON, J.FromJSON, Hashable)
@@ -143,6 +167,50 @@ data ActionDefinition arg webhook = ActionDefinition
 
 instance (NFData a, NFData w) => NFData (ActionDefinition a w)
 
+instance
+  (Eq arg, HasCodec (ArgumentDefinition arg), HasCodec webhook, Typeable arg, Typeable webhook) =>
+  HasCodec (ActionDefinition arg webhook)
+  where
+  codec =
+    dimapCodec dec enc $
+      disjointEitherCodec (actionCodec (const ActionQuery)) (actionCodec ActionMutation)
+    where
+      actionCodec :: (ActionMutationKind -> ActionType) -> AC.JSONCodec (ActionDefinition arg webhook)
+      actionCodec actionTypeConstructor =
+        AC.object (typeId actionTypeConstructor) $
+          ActionDefinition
+            <$> optionalFieldWithOmittedDefault' "arguments" [] AC..= _adArguments
+            <*> requiredField' "output_type" AC..= _adOutputType
+            <*> typeAndKind actionTypeConstructor AC..= _adType
+            <*> optionalFieldWithOmittedDefault' "headers" [] AC..= _adHeaders
+            <*> optionalFieldWithOmittedDefault' "forward_client_headers" False AC..= _adForwardClientHeaders
+            <*> optionalFieldWithOmittedDefault' "timeout" defaultActionTimeoutSecs AC..= _adTimeout
+            <*> requiredField' "handler" AC..= _adHandler
+            <*> optionalField' "request_transform" AC..= _adRequestTransform
+            <*> optionalField' "response_transform" AC..= _adResponseTransform
+
+      typeAndKind :: (ActionMutationKind -> ActionType) -> AC.ObjectCodec ActionType ActionType
+      typeAndKind actionTypeConstructor = case (actionTypeConstructor ActionSynchronous) of
+        (ActionMutation _) ->
+          ActionMutation
+            <$ discriminatorField "type" "mutation"
+            <*> optionalFieldWithDefault' "kind" ActionSynchronous AC..= \case
+              (ActionMutation kind) -> kind
+              ActionQuery -> ActionSynchronous
+        ActionQuery -> ActionQuery <$ discriminatorField "type" "query"
+
+      dec (Left a) = a
+      dec (Right a) = a
+      enc a
+        | _adType a == ActionQuery = Left a
+        | otherwise = Right a
+
+      typeId actionTypeConstructor =
+        let typeLabel = case (actionTypeConstructor ActionSynchronous) of
+              (ActionMutation _) -> "Mutation"
+              ActionQuery -> "Query"
+         in "ActionDefinition_" <> typeLabel <> "_" <> typeableName @arg <> "_" <> typeableName @webhook
+
 data ActionType
   = ActionQuery
   | ActionMutation ActionMutationKind
@@ -153,9 +221,18 @@ instance NFData ActionType
 data ActionMutationKind
   = ActionSynchronous
   | ActionAsynchronous
-  deriving (Show, Eq, Generic)
+  deriving (Show, Bounded, Enum, Eq, Generic)
 
 instance NFData ActionMutationKind
+
+instance HasCodec ActionMutationKind where
+  codec = boundedEnumCodec jsonStringConst
+
+-- | Defines representation of 'ActionMutationKind' when serializing to JSON.
+jsonStringConst :: ActionMutationKind -> String
+jsonStringConst = \case
+  ActionSynchronous -> "synchronous"
+  ActionAsynchronous -> "asynchronous"
 
 --------------------------------------------------------------------------------
 -- Arguments
@@ -169,8 +246,19 @@ data ArgumentDefinition a = ArgumentDefinition
 
 instance (NFData a) => NFData (ArgumentDefinition a)
 
+instance (HasCodec a, Typeable a) => HasCodec (ArgumentDefinition a) where
+  codec =
+    AC.object ("ArgumentDefinition_" <> typeableName @a) $
+      ArgumentDefinition
+        <$> requiredField' "name" AC..= _argName
+        <*> requiredField' "type" AC..= _argType
+        <*> optionalFieldWith' "description" graphQLFieldDescriptionCodec AC..= _argDescription
+
 newtype ArgumentName = ArgumentName {unArgumentName :: G.Name}
   deriving (Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey, ToTxt, Generic, NFData)
+
+instance HasCodec ArgumentName where
+  codec = dimapCodec ArgumentName unArgumentName graphQLFieldNameCodec
 
 --------------------------------------------------------------------------------
 -- Schema cache

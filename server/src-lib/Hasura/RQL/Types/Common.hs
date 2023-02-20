@@ -53,6 +53,7 @@ import Autodocodec
   ( HasCodec (codec),
     JSONCodec,
     bimapCodec,
+    boundedIntegralCodec,
     dimapCodec,
     disjointEitherCodec,
     optionalFieldOrNull',
@@ -350,6 +351,14 @@ resolveWebhook env (InputWebhook urlTemplate) = do
 
 newtype Timeout = Timeout {unTimeout :: Int}
   deriving (Show, Eq, ToJSON, Generic, NFData)
+
+instance HasCodec Timeout where
+  codec = bimapCodec dec enc boundedIntegralCodec
+    where
+      dec timeout = case timeout >= 0 of
+        True -> Right $ Timeout timeout
+        False -> Left "timeout value cannot be negative"
+      enc (Timeout n) = n
 
 instance FromJSON Timeout where
   parseJSON = withScientific "Timeout" $ \t -> do
