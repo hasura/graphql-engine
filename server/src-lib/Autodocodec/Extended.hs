@@ -14,6 +14,8 @@ module Autodocodec.Extended
     optionalFieldOrIncludedNull',
     optionalFieldOrIncludedNullWith,
     optionalFieldOrIncludedNullWith',
+    refinedCodec,
+    refinedCodecWith,
   )
 where
 
@@ -32,6 +34,7 @@ import Language.GraphQL.Draft.Parser qualified as GParser
 import Language.GraphQL.Draft.Printer qualified as G
 import Language.GraphQL.Draft.Printer qualified as GPrinter
 import Language.GraphQL.Draft.Syntax qualified as G
+import Refined qualified as R
 import Text.Builder qualified as TB
 
 -- | Like 'hashMapCodec', but with case-insensitive keys.
@@ -225,3 +228,20 @@ orIncludedNullHelper = dimapCodec dec enc
     enc = \case
       Nothing -> Just Nothing -- This is the case that differs from the stock `orNullHelper`
       Just a -> Just (Just a)
+
+-- | Codec for values wrapped with a type-level predicate using the refined
+-- package.
+--
+-- This version assumes that the underlying value type implements @HasCodec@.
+refinedCodec :: (HasCodec a, R.Predicate p a) => JSONCodec (R.Refined p a)
+refinedCodec = refinedCodecWith codec
+
+-- | Codec for values wrapped with a type-level predicate using the refined
+-- package.
+--
+-- This version requires a codec to be provided for the underlying value type.
+refinedCodecWith :: R.Predicate p a => JSONCodec a -> JSONCodec (R.Refined p a)
+refinedCodecWith underlyingCodec = bimapCodec dec enc underlyingCodec
+  where
+    dec = mapLeft show . R.refine
+    enc = R.unrefine

@@ -2620,6 +2620,72 @@
             "CronSchedule": {
                 "type": "string"
             },
+            "CronTriggerMetadata": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "headers": {
+                        "default": [],
+                        "items": {
+                            "oneOf": [
+                                {
+                                    "$ref": "#/components/schemas/HeaderConfValue"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/HeaderConfFromEnv"
+                                }
+                            ]
+                        },
+                        "type": "array"
+                    },
+                    "include_in_metadata": {
+                        "type": "boolean"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "payload": {
+                        "additionalProperties": true
+                    },
+                    "request_transform": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/RequestTransformV1"
+                            },
+                            {
+                                "$ref": "#/components/schemas/RequestTransformV2"
+                            }
+                        ]
+                    },
+                    "response_transform": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/ResponseTransformV1"
+                            },
+                            {
+                                "$ref": "#/components/schemas/ResponseTransformV2"
+                            }
+                        ]
+                    },
+                    "retry_conf": {
+                        "$ref": "#/components/schemas/STRetryConf"
+                    },
+                    "schedule": {
+                        "$ref": "#/components/schemas/CronSchedule"
+                    },
+                    "webhook": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name",
+                    "webhook",
+                    "schedule",
+                    "include_in_metadata"
+                ],
+                "type": "object"
+            },
             "CustomRootField": {
                 "properties": {
                     "comment": {
@@ -3762,9 +3828,10 @@
                         "description": "TODO\n\n\nobject with unspecified properties - this is a placeholder that will eventually be replaced with a more detailed description"
                     },
                     "cron_triggers": {
-                        "description": "reliably trigger HTTP endpoints to run custom business logic periodically based on a cron schedule\n\n\narray of values of unspecified type - this is a placeholder that will eventually be replaced with a more detailed description",
+                        "default": [],
+                        "description": "reliably trigger HTTP endpoints to run custom business logic periodically based on a cron schedule",
                         "items": {
-                            "additionalProperties": true
+                            "$ref": "#/components/schemas/CronTriggerMetadata"
                         },
                         "type": "array"
                     },
@@ -7606,6 +7673,29 @@
                     "verify-full"
                 ],
                 "type": "string"
+            },
+            "STRetryConf": {
+                "properties": {
+                    "num_retries": {
+                        "default": 0,
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "type": "number"
+                    },
+                    "retry_interval_seconds": {
+                        "default": 10,
+                        "type": "number"
+                    },
+                    "timeout_seconds": {
+                        "default": 60,
+                        "type": "number"
+                    },
+                    "tolerance_seconds": {
+                        "default": 21600,
+                        "type": "number"
+                    }
+                },
+                "type": "object"
             },
             "ScalarType": {
                 "additionalProperties": true,

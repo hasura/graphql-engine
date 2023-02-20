@@ -515,7 +515,7 @@ metadataToDTO
         metaV3Allowlist = placeholder <$> allowlistToOrdJSONList allowlist,
         metaV3Actions = placeholder <$> actionMetadataToOrdJSONList actions,
         metaV3CustomTypes = customTypes,
-        metaV3CronTriggers = placeholder <$> cronTriggersToOrdJSONList cronTriggers,
+        metaV3CronTriggers = cronTriggers,
         metaV3RestEndpoints = placeholder <$> endpointsToOrdJSONList endpoints,
         metaV3ApiLimits = placeholder . objectFromOrdJSON <$> apiLimitsToOrdJSON apiLimits,
         metaV3MetricsConfig = placeholder . objectFromOrdJSON <$> metricsConfigToOrdJSON metricsConfig,

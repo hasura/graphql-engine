@@ -44,6 +44,9 @@ module Hasura.RQL.Types.ScheduledTrigger
   )
 where
 
+import Autodocodec (HasCodec (codec), bimapCodec, optionalField', optionalFieldWithDefaultWith', optionalFieldWithOmittedDefault', requiredField')
+import Autodocodec qualified as AC
+import Autodocodec.Extended (refinedCodec)
 import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.Aeson qualified as J
@@ -85,7 +88,31 @@ data STRetryConf = STRetryConf
   }
   deriving (Show, Eq, Generic)
 
+defaultSTRetryConf :: STRetryConf
+defaultSTRetryConf =
+  STRetryConf
+    { strcNumRetries = 0,
+      strcRetryIntervalSeconds = $$(refineTH (seconds 10)),
+      strcTimeoutSeconds = $$(refineTH (seconds 60)),
+      strcToleranceSeconds = $$(refineTH (hours 6))
+    }
+
 instance NFData STRetryConf
+
+instance HasCodec STRetryConf where
+  codec =
+    AC.object "STRetryConf" $
+      STRetryConf
+        <$> optionalFieldWithDefaultWith' "num_retries" nonNegativeCodec (strcNumRetries defaultSTRetryConf) AC..= strcNumRetries
+        <*> optionalFieldWithDefaultWith' "retry_interval_seconds" refinedCodec (strcRetryIntervalSeconds defaultSTRetryConf) AC..= strcRetryIntervalSeconds
+        <*> optionalFieldWithDefaultWith' "timeout_seconds" refinedCodec (strcTimeoutSeconds defaultSTRetryConf) AC..= strcTimeoutSeconds
+        <*> optionalFieldWithDefaultWith' "tolerance_seconds" refinedCodec (strcToleranceSeconds defaultSTRetryConf) AC..= strcToleranceSeconds
+    where
+      nonNegativeCodec = bimapCodec validateNonNegative id codec
+      validateNonNegative n =
+        if n < 0
+          then Left "cannot be a negative value"
+          else Right n
 
 instance FromJSON STRetryConf where
   parseJSON = withObject "STRetryConf" \o -> do
@@ -102,15 +129,6 @@ instance FromJSON STRetryConf where
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''STRetryConf)
 
-defaultSTRetryConf :: STRetryConf
-defaultSTRetryConf =
-  STRetryConf
-    { strcNumRetries = 0,
-      strcRetryIntervalSeconds = $$(refineTH (seconds 10)),
-      strcTimeoutSeconds = $$(refineTH (seconds 60)),
-      strcToleranceSeconds = $$(refineTH (hours 6))
-    }
-
 data CronTriggerMetadata = CronTriggerMetadata
   { ctName :: TriggerName,
     ctWebhook :: InputWebhook,
@@ -126,6 +144,21 @@ data CronTriggerMetadata = CronTriggerMetadata
   deriving (Show, Eq, Generic)
 
 instance NFData CronTriggerMetadata
+
+instance HasCodec CronTriggerMetadata where
+  codec =
+    AC.object "CronTriggerMetadata" $
+      CronTriggerMetadata
+        <$> requiredField' "name" AC..= ctName
+        <*> requiredField' "webhook" AC..= ctWebhook
+        <*> requiredField' "schedule" AC..= ctSchedule
+        <*> optionalField' "payload" AC..= ctPayload
+        <*> optionalFieldWithOmittedDefault' "retry_conf" defaultSTRetryConf AC..= ctRetryConf
+        <*> optionalFieldWithOmittedDefault' "headers" [] AC..= ctHeaders
+        <*> requiredField' "include_in_metadata" AC..= ctIncludeInMetadata
+        <*> optionalField' "comment" AC..= ctComment
+        <*> optionalField' "request_transform" AC..= ctRequestTransform
+        <*> optionalField' "response_transform" AC..= ctResponseTransform
 
 instance FromJSON CronTriggerMetadata where
   parseJSON =
