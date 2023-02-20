@@ -81,6 +81,13 @@ weirdTriggerNameAllowed opts =
             createEventTriggerWithWeirdNameExpectedResponse =
               [yaml|
                 message: success
+                warnings:
+                  - message: >-
+                      The event trigger with name "weird]name]" may not work as expected,
+                      hasura suggests to use only alphanumeric, underscore and hyphens in
+                      an event trigger name
+                    type: event_trigger
+                    name: event_trigger weird]name] in table hasura.authors in source mssql
               |]
 
         -- Creating a event trigger with weird name should succeed

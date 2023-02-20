@@ -83,6 +83,7 @@ For version 2, the following structure is used:
 | Key                         | Required | Schema                                              | Description                                                                                                                           |
 | --------------------------- | -------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | allow_inconsistent_metadata | false    | Boolean                                             | If set to `true`, Metadata will be replaced with a warning in the response indicating which items are inconsistent (default: `false`) |
+| allow_warnings              | false    | Boolean                                             | If set to `false`, any warnings will cause the metadata API call to fail (default: `true`)                                            |
 | metadata                    | true     | [export_metadata](#schema-metadata-export-metadata) | The Metadata that will replace the current metadata.                                                                                  |
 
 If the version is not specified, then it is inferred from the format of `args`.

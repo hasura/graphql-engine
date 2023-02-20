@@ -98,6 +98,7 @@ library
     Test.API.Metadata.SuggestRelationshipsSpec
     Test.API.Metadata.TestConnectionTemplateSpec
     Test.API.Metadata.TransparentDefaultsSpec
+    Test.API.Metadata.WarningsSpec
     Test.API.Schema.RunSQLSpec
     Test.Auth.Authorization.DisableRootFields.Common
     Test.Auth.Authorization.DisableRootFields.DefaultRootFieldsSpec

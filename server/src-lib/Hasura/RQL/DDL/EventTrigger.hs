@@ -14,6 +14,7 @@ module Hasura.RQL.DDL.EventTrigger
     getHeaderInfosFromConf,
     getWebhookInfoFromConf,
     buildEventTriggerInfo,
+    getSourceTableAndTriggers,
     getTriggerNames,
     getTriggersMap,
     getTableNameFromTrigger,
@@ -45,7 +46,6 @@ where
 
 import Control.Lens (ifor_, makeLenses, (.~))
 import Data.Aeson
-import Data.ByteString.Lazy qualified as LBS
 import Data.Environment qualified as Env
 import Data.Has (Has)
 import Data.HashMap.Strict qualified as HM
@@ -81,7 +81,6 @@ import Hasura.SQL.Backend
 import Hasura.Session
 import Hasura.Tracing (TraceT)
 import Hasura.Tracing qualified as Tracing
-import Text.Regex.TDFA qualified as TDFA
 
 data CreateEventTriggerQuery (b :: BackendType) = CreateEventTriggerQuery
   { _cetqSource :: SourceName,
@@ -121,10 +120,7 @@ instance Backend b => FromJSON (CreateEventTriggerQuery b) where
     requestTransform <- o .:? "request_transform"
     responseTransform <- o .:? "response_transform"
     cleanupConfig <- o .:? "cleanup_config"
-    let regex = "^[A-Za-z]+[A-Za-z0-9_\\-]*$" :: LBS.ByteString
-        compiledRegex = TDFA.makeRegex regex :: TDFA.Regex
-        isMatch = TDFA.match compiledRegex . T.unpack $ triggerNameToTxt name
-    unless isMatch $
+    when (isIllegalTriggerName name) $
       fail "only alphanumeric and underscore and hyphens allowed for name"
     unless (T.length (triggerNameToTxt name) <= maxTriggerNameLength) $
       fail "event trigger name can be at most 42 characters"
@@ -236,6 +232,11 @@ instance (MonadEventLogCleanup m) => MonadEventLogCleanup (MetadataT m) where
   updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
 
 instance (MonadEventLogCleanup m) => MonadEventLogCleanup (TraceT m) where
+  runLogCleaner conf = lift $ runLogCleaner conf
+  generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
+  updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
+
+instance (MonadEventLogCleanup m) => MonadEventLogCleanup (StateT w m) where
   runLogCleaner conf = lift $ runLogCleaner conf
   generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
   updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
@@ -572,6 +573,14 @@ getTriggersMap ::
   SourceMetadata b ->
   InsOrdHashMap TriggerName (EventTriggerConf b)
 getTriggersMap = OMap.unions . map _tmEventTriggers . OMap.elems . _smTables
+
+getSourceTableAndTriggers ::
+  SourceMetadata b ->
+  [(TableName b, TriggerName)]
+getSourceTableAndTriggers =
+  (concatMap mkKeyValue) . OMap.toList . _smTables
+  where
+    mkKeyValue (tableName, tableMetadata) = map (tableName,) $ OMap.keys (_tmEventTriggers tableMetadata)
 
 getTriggerNames ::
   SourceMetadata b ->

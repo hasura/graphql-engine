@@ -47,6 +47,7 @@ import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Prelude
+import Hasura.RQL.DDL.Warnings (AllowWarnings (..))
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Common qualified as Common
 import Hasura.RQL.Types.Metadata (Metadata, MetadataNoSources)
@@ -216,6 +217,7 @@ instance ToJSON ReplaceMetadataV1 where
 -- https://hasura.io/docs/latest/api-reference/metadata-api/manage-metadata/#metadata-replace-metadata-syntax
 data ReplaceMetadataV2 = ReplaceMetadataV2
   { _rmv2AllowInconsistentMetadata :: AllowInconsistentMetadata,
+    _rmv2AllowWarningss :: AllowWarnings,
     _rmv2Metadata :: ReplaceMetadataV1
   }
   deriving (Eq)
@@ -224,12 +226,14 @@ instance FromJSON ReplaceMetadataV2 where
   parseJSON = Aeson.withObject "ReplaceMetadataV2" $ \o ->
     ReplaceMetadataV2
       <$> o .:? "allow_inconsistent_metadata" .!= NoAllowInconsistentMetadata
+      <*> o .:? "allow_warnings" .!= AllowWarnings
       <*> o .: "metadata"
 
 instance ToJSON ReplaceMetadataV2 where
   toJSON ReplaceMetadataV2 {..} =
     Aeson.object
       [ "allow_inconsistent_metadata" .= _rmv2AllowInconsistentMetadata,
+        "allow_warnings" .= _rmv2AllowWarningss,
         "metadata" .= _rmv2Metadata
       ]
 
