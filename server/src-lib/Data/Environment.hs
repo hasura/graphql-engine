@@ -20,6 +20,8 @@ newtype Environment = Environment (M.Map String String) deriving (Eq, Show, Gene
 
 instance FromJSON Environment
 
+-- 'getEnvironment' is allowed to use 'System.Environment.getEnvironment'
+{-# ANN getEnvironment ("HLINT: ignore Avoid restricted function" :: String) #-}
 getEnvironment :: IO Environment
 getEnvironment = mkEnvironment <$> System.Environment.getEnvironment
 

@@ -58,9 +58,9 @@ resolveSourceConfig ::
   Env.Environment ->
   manager ->
   m (Either QErr MSSQLSourceConfig)
-resolveSourceConfig _logger name config _backendKind _backendConfig _env _manager = runExceptT do
+resolveSourceConfig _logger name config _backendKind _backendConfig env _manager = runExceptT do
   sourceResolver <- getMSSQLSourceResolver
-  liftEitherM $ liftIO $ sourceResolver name config
+  liftEitherM $ liftIO $ sourceResolver env name config
 
 resolveDatabaseMetadata ::
   (MonadIO m, MonadBaseControl IO m) =>

@@ -30,6 +30,15 @@
 #   - {name: unsafePerformIO, within: []} # unsafePerformIO can only appear in no modules
 
 - functions:
+
+      - name: "System.Environment.getEnvironment"
+        within: []
+        message: "Instead of 'getEnvironment', use the environment from the server context"
+
+      - name: "Data.Environment.getEnvironment"
+        within: []
+        message: "Instead of 'getEnvironment', use the environment from the server context"
+
       - name: "Test.Hspec.focus"
         within: []
         message: "Specs with focusing should only be used during development"

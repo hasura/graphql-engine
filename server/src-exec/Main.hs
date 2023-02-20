@@ -32,7 +32,7 @@ import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
 import Hasura.Server.Version
 import Hasura.ShutdownLatch
 import Hasura.Tracing (sampleAlways)
-import System.Environment (lookupEnv)
+import System.Environment (getEnvironment, lookupEnv, unsetEnv)
 import System.Exit qualified as Sys
 import System.Metrics qualified as EKG
 import System.Posix.Signals qualified as Signals
@@ -41,10 +41,18 @@ main :: IO ()
 main = maybeWithGhcDebug $ do
   catch
     do
-      args <- parseArgs
       env <- Env.getEnvironment
+      clearEnvironment
+      args <- parseArgs env
       runApp env args
     (\(ExitException _code msg) -> BC.putStrLn msg >> Sys.exitFailure)
+  where
+    -- Since the handling of environment variables works differently between the
+    -- Cloud version and the OSSS version we clear the process environment to
+    -- avoid accidentally reading directly from the operating system environment
+    -- variables.
+    clearEnvironment :: IO ()
+    clearEnvironment = getEnvironment >>= traverse_ \(v, _) -> unsetEnv v
 
 runApp :: Env.Environment -> HGEOptions (ServeOptions Hasura) -> IO ()
 runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do

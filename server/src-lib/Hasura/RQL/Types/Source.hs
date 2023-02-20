@@ -43,6 +43,7 @@ where
 
 import Control.Lens hiding ((.=))
 import Data.Aeson.Extended
+import Data.Environment
 import Data.HashMap.Strict qualified as Map
 import Database.PG.Query qualified as PG
 import Hasura.Base.Error
@@ -169,7 +170,7 @@ deriving stock instance Backend b => Eq (ScalarMap b)
 -- 'BackendResolve', instead of listing backends explicitly. It could also be
 -- moved to the app level.
 type SourceResolver b =
-  SourceName -> SourceConnConfiguration b -> IO (Either QErr (SourceConfig b))
+  Environment -> SourceName -> SourceConnConfiguration b -> IO (Either QErr (SourceConfig b))
 
 class (Monad m) => MonadResolveSource m where
   getPGSourceResolver :: m (SourceResolver ('Postgres 'Vanilla))

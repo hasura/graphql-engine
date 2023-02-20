@@ -151,7 +151,6 @@ import Network.Wai (Application)
 import Network.Wai.Handler.Warp qualified as Warp
 import Options.Applicative
 import Refined (unrefine)
-import System.Environment (getEnvironment)
 import System.Log.FastLogger qualified as FL
 import System.Metrics qualified as EKG
 import System.Metrics.Gauge qualified as EKG.Gauge
@@ -193,11 +192,10 @@ throwErrJExit reason = liftIO . throwIO . ExitException reason . BLC.toStrict . 
 -- currently due `throwErrExit`.
 
 -- | Parse cli arguments to graphql-engine executable.
-parseArgs :: EnabledLogTypes impl => IO (HGEOptions (ServeOptions impl))
-parseArgs = do
+parseArgs :: EnabledLogTypes impl => Env.Environment -> IO (HGEOptions (ServeOptions impl))
+parseArgs env = do
   rawHGEOpts <- execParser opts
-  env <- getEnvironment
-  let eitherOpts = runWithEnv env $ mkHGEOptions rawHGEOpts
+  let eitherOpts = runWithEnv (Env.toList env) $ mkHGEOptions rawHGEOpts
   onLeft eitherOpts $ throwErrExit InvalidEnvironmentVariableOptionsError
   where
     opts =
@@ -1277,8 +1275,7 @@ telemetryNotice =
     <> "To read more or opt-out, visit https://hasura.io/docs/latest/graphql/core/guides/telemetry.html"
 
 mkPgSourceResolver :: PG.PGLogger -> SourceResolver ('Postgres 'Vanilla)
-mkPgSourceResolver pgLogger _ config = runExceptT do
-  env <- lift Env.getEnvironment
+mkPgSourceResolver pgLogger env _ config = runExceptT do
   let PostgresSourceConnInfo urlConf poolSettings allowPrepare isoLevel _ = _pccConnectionInfo config
   -- If the user does not provide values for the pool settings, then use the default values
   let (maxConns, idleTimeout, retries) = getDefaultPGPoolSettingIfNotExists poolSettings defaultPostgresPoolSettings
@@ -1297,8 +1294,7 @@ mkPgSourceResolver pgLogger _ config = runExceptT do
   pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty (_pccExtensionsSchema config) mempty Nothing
 
 mkMSSQLSourceResolver :: SourceResolver ('MSSQL)
-mkMSSQLSourceResolver _name (MSSQLConnConfiguration connInfo _) = runExceptT do
-  env <- lift Env.getEnvironment
+mkMSSQLSourceResolver env _name (MSSQLConnConfiguration connInfo _) = runExceptT do
   let MSSQLConnectionInfo iConnString MSSQLPoolSettings {..} = connInfo
       connOptions =
         MSPool.ConnectionOptions

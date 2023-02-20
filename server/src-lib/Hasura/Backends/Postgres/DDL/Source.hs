@@ -83,9 +83,9 @@ resolveSourceConfig ::
   Env.Environment ->
   manager ->
   m (Either QErr (SourceConfig ('Postgres pgKind)))
-resolveSourceConfig _logger name config _backendKind _backendConfig _env _manager = runExceptT do
+resolveSourceConfig _logger name config _backendKind _backendConfig env _manager = runExceptT do
   sourceResolver <- getPGSourceResolver
-  liftEitherM $ liftIO $ sourceResolver name config
+  liftEitherM $ liftIO $ sourceResolver env name config
 
 -- | 'PGSourceLockQuery' is a data type which represents the contents of a single object of the
 --   locked queries which are queried from the `pg_stat_activity`. See `logPGSourceCatalogMigrationLockedQueries`.
