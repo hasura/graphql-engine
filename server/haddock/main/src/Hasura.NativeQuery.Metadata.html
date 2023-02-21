@@ -4,7 +4,7 @@
 </span><span id="line-4"></span><span class="hs-comment">-- | This module houses the types and functions associated with the default</span><span>
 </span><span id="line-5"></span><span class="hs-comment">-- implementation of the metadata of native queries.</span><span>
 </span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.NativeQuery.Metadata</span><span>
-</span><span id="line-7"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier">NativeQueryName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#LogicalModelName"><span class="hs-identifier">LogicalModelName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfo"><span class="hs-identifier">NativeQueryInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier">NativeQueryArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#InterpolatedItem"><span class="hs-identifier">InterpolatedItem</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
@@ -763,8 +763,8 @@ $cfrom :: forall x. NativeQueryArgumentName -&gt; Rep NativeQueryArgumentName x
 </span><span id="line-105"></span><span>
 </span><span id="line-106"></span><span class="hs-comment">-- | Default implementation of the Native Query metadata info object.</span><span>
 </span><span id="line-107"></span><span id="local-6989586621690454465"><span id="local-6989586621690454466"></span></span><span class="hs-keyword">data</span><span> </span><span id="NativeQueryInfo"><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfo"><span class="hs-identifier hs-var">NativeQueryInfo</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690455343"><span class="annot"><a href="#local-6989586621690455343"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NativeQueryInfo"><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfo"><span class="hs-identifier hs-var">NativeQueryInfo</span></a></span></span><span>
-</span><span id="line-108"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="nqiRootFieldName"><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryInfo b -&gt; NativeQueryName
-</span><a href="Hasura.NativeQuery.Metadata.html#nqiRootFieldName"><span class="hs-identifier hs-var hs-var">nqiRootFieldName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-108"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="nqiRootFieldName"><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryInfo b -&gt; LogicalModelName
+</span><a href="Hasura.NativeQuery.Metadata.html#nqiRootFieldName"><span class="hs-identifier hs-var hs-var">nqiRootFieldName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-109"></span><span>    </span><span id="nqiCode"><span class="annot"><span class="annottext">forall (b :: BackendType).
 NativeQueryInfo b -&gt; InterpolatedQuery NativeQueryArgumentName
 </span><a href="Hasura.NativeQuery.Metadata.html#nqiCode"><span class="hs-identifier hs-var hs-var">nqiCode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#InterpolatedQuery"><span class="hs-identifier hs-type">InterpolatedQuery</span></a></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier hs-type">NativeQueryArgumentName</span></a></span><span class="hs-special">,</span><span>
@@ -813,7 +813,7 @@ Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-string">&quot;NativeQueryInfo&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-129"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
-NativeQueryName
+LogicalModelName
 -&gt; InterpolatedQuery NativeQueryArgumentName
 -&gt; CustomReturnType b
 -&gt; HashMap NativeQueryArgumentName (ScalarType b)
@@ -830,7 +830,7 @@ Text -&gt; Text -&gt; ObjectCodec output output
 </span><span id="line-131"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryInfo b -&gt; NativeQueryName
+</span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryInfo b -&gt; LogicalModelName
 </span><a href="Hasura.NativeQuery.Metadata.html#nqiRootFieldName"><span class="hs-identifier hs-var">nqiRootFieldName</span></a></span><span>
 </span><span id="line-132"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.

@@ -767,9 +767,9 @@ _pmRoles :: Int
 </span><a href="Hasura.Server.Telemetry.html#computeActionsMetrics"><span class="hs-identifier hs-var">computeActionsMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ActionCache
 </span><a href="#local-6989586621690732299"><span class="hs-identifier hs-var">actionCache</span></a></span><span>
-</span><span id="line-262"></span><span>      </span><span id="local-6989586621690732243"><span class="annot"><span class="annottext">_mtNativeQueries :: NativeQueriesMetrics
-</span><a href="#local-6989586621690732243"><span class="hs-identifier hs-var hs-var">_mtNativeQueries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[NativeQueryInfo b] -&gt; NativeQueriesMetrics
-</span><a href="#local-6989586621690732242"><span class="hs-identifier hs-var">calculateNativeQueries</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [v]
+</span><span id="line-262"></span><span>      </span><span id="local-6989586621690732243"><span class="annot"><span class="annottext">_mtLogicalModels :: LogicalModelsMetrics
+</span><a href="#local-6989586621690732243"><span class="hs-identifier hs-var hs-var">_mtLogicalModels</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[NativeQueryInfo b] -&gt; LogicalModelsMetrics
+</span><a href="#local-6989586621690732242"><span class="hs-identifier hs-var">countLogicalModels</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [v]
 </span><span class="hs-identifier hs-var">OMap.elems</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceInfo b -&gt; NativeQueries b
 </span><a href="Hasura.RQL.Types.Source.html#_siNativeQueries"><span class="hs-identifier hs-var">_siNativeQueries</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
@@ -780,8 +780,8 @@ Maybe ServiceTimingMetrics
 Maybe ActionMetric
 RelationshipMetric
 PermissionMetric
-NativeQueriesMetrics
-_mtNativeQueries :: NativeQueriesMetrics
+LogicalModelsMetrics
+_mtLogicalModels :: LogicalModelsMetrics
 _mtActions :: Maybe ActionMetric
 _mtServiceTimings :: Maybe ServiceTimingMetrics
 _mtRemoteSchemas :: Maybe Int
@@ -792,7 +792,7 @@ _mtRelationships :: RelationshipMetric
 _mtEnumTables :: Int
 _mtViews :: Int
 _mtTables :: Int
-_mtNativeQueries :: NativeQueriesMetrics
+_mtLogicalModels :: LogicalModelsMetrics
 _mtActions :: Maybe ActionMetric
 _mtFunctions :: Int
 _mtRemoteSchemas :: Maybe Int
@@ -844,27 +844,27 @@ Filterable f =&gt;
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). TableInfo b -&gt; RolePermInfoMap b
 </span><a href="Hasura.RQL.Types.Table.html#_tiRolePermInfoMap"><span class="hs-identifier hs-var">_tiRolePermInfoMap</span></a></span><span>
 </span><span id="line-274"></span><span>
-</span><span id="line-275"></span><span>    </span><span class="annot"><a href="#local-6989586621690732242"><span class="hs-identifier hs-type">calculateNativeQueries</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfo"><span class="hs-identifier hs-type">NativeQueryInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690732777"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#NativeQueriesMetrics"><span class="hs-identifier hs-type">NativeQueriesMetrics</span></a></span><span>
-</span><span id="line-276"></span><span>    </span><span id="local-6989586621690732242"><span class="annot"><span class="annottext">calculateNativeQueries :: [NativeQueryInfo b] -&gt; NativeQueriesMetrics
-</span><a href="#local-6989586621690732242"><span class="hs-identifier hs-var hs-var">calculateNativeQueries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-275"></span><span>    </span><span class="annot"><a href="#local-6989586621690732242"><span class="hs-identifier hs-type">countLogicalModels</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfo"><span class="hs-identifier hs-type">NativeQueryInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690732777"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#LogicalModelsMetrics"><span class="hs-identifier hs-type">LogicalModelsMetrics</span></a></span><span>
+</span><span id="line-276"></span><span>    </span><span id="local-6989586621690732242"><span class="annot"><span class="annottext">countLogicalModels :: [NativeQueryInfo b] -&gt; LogicalModelsMetrics
+</span><a href="#local-6989586621690732242"><span class="hs-identifier hs-var hs-var">countLogicalModels</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-277"></span><span>      </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) m a.
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldMap</span></a></span><span>
 </span><span id="line-278"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690732215"><span class="annot"><span class="annottext">NativeQueryInfo b
-</span><a href="#local-6989586621690732215"><span class="hs-identifier hs-var">naqi</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621690732215"><span class="hs-identifier hs-var">logimo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-279"></span><span>            </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">null</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType).
 NativeQueryInfo b -&gt; HashMap NativeQueryArgumentName (ScalarType b)
 </span><a href="Hasura.NativeQuery.Metadata.html#nqiArguments"><span class="hs-identifier hs-var">nqiArguments</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueryInfo b
-</span><a href="#local-6989586621690732215"><span class="hs-identifier hs-var">naqi</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690732215"><span class="hs-identifier hs-var">logimo</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-280"></span><span>              </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_nqmWithoutParameters :: Int
-</span><a href="#local-6989586621690732213"><span class="hs-identifier hs-var">_nqmWithoutParameters</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_lmmWithoutParameters :: Int
+</span><a href="#local-6989586621690732213"><span class="hs-identifier hs-var">_lmmWithoutParameters</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span class="hs-special">}</span><span>
 </span><span id="line-281"></span><span>              </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_nqmWithParameters :: Int
-</span><a href="#local-6989586621690732212"><span class="hs-identifier hs-var">_nqmWithParameters</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_lmmWithParameters :: Int
+</span><a href="#local-6989586621690732212"><span class="hs-identifier hs-var">_lmmWithParameters</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span class="hs-special">}</span><span>
 </span><span id="line-282"></span><span>        </span><span class="hs-special">)</span><span>
 </span><span id="line-283"></span><span>

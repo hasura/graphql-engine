@@ -1092,7 +1092,7 @@ SchemaContext
 </span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621690748406"><span class="annot"><span class="annottext">TableCache b
 </span><a href="#local-6989586621690748406"><span class="hs-identifier hs-var">tables</span></a></span></span><span> </span><span id="local-6989586621690748405"><span class="annot"><span class="annottext">FunctionCache b
 </span><a href="#local-6989586621690748405"><span class="hs-identifier hs-var">functions</span></a></span></span><span> </span><span id="local-6989586621690748404"><span class="annot"><span class="annottext">NativeQueries b
-</span><a href="#local-6989586621690748404"><span class="hs-identifier hs-var">nativeQueries</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig b
+</span><a href="#local-6989586621690748404"><span class="hs-identifier hs-var">logicalModels</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig b
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe QueryTagsConfig
 </span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621690748403"><span class="annot"><span class="annottext">ResolvedSourceCustomization
 </span><a href="#local-6989586621690748403"><span class="hs-identifier hs-var">sourceCustomization</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
@@ -1146,16 +1146,16 @@ MkRootFieldName
 </span><a href="#local-6989586621690748408"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableCache b
 </span><a href="#local-6989586621690748399"><span class="hs-identifier hs-var">validTables</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionCache b
 </span><a href="#local-6989586621690748401"><span class="hs-identifier hs-var">validFunctions</span></a></span><span>
-</span><span id="line-340"></span><span>        </span><span class="hs-special">(</span><span id="local-6989586621690748389"><span class="annot"><span class="annottext">[FieldParser Parse (QueryRootField UnpreparedValue)]
-</span><a href="#local-6989586621690748389"><span class="hs-identifier hs-var">nativeQueryRootFields</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-340"></span><span>        </span><span id="local-6989586621690748389"><span class="annot"><span class="annottext">[FieldParser Parse (QueryRootField UnpreparedValue)]
+</span><a href="#local-6989586621690748389"><span class="hs-identifier hs-var">logicalModelRootFields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-341"></span><span>          </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema b r m n =&gt;
 SourceInfo b
 -&gt; NativeQueries b
 -&gt; SchemaT r m [FieldParser n (QueryRootField UnpreparedValue)]
-</span><a href="Hasura.GraphQL.Schema.html#buildNativeQueryFields"><span class="hs-identifier hs-var">buildNativeQueryFields</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="Hasura.GraphQL.Schema.html#buildLogicalModelFields"><span class="hs-identifier hs-var">buildLogicalModelFields</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
 </span><a href="#local-6989586621690748408"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueries b
-</span><a href="#local-6989586621690748404"><span class="hs-identifier hs-var">nativeQueries</span></a></span><span>
+</span><a href="#local-6989586621690748404"><span class="hs-identifier hs-var">logicalModels</span></a></span><span>
 </span><span id="line-342"></span><span>        </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="annot"><span class="annottext">[(Name,
   Parser 'Output Parse (ApolloFederationParserFunction Parse))]
 </span><a href="#local-6989586621690748391"><span class="hs-identifier hs-var">apolloFedTableParsers</span></a></span><span class="hs-special">)</span><span>
@@ -1181,7 +1181,7 @@ ResolvedSourceCustomization
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[FieldParser Parse (QueryRootField UnpreparedValue)]
 </span><a href="#local-6989586621690748393"><span class="hs-identifier hs-var">uncustomizedQueryRootFields</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldParser Parse (QueryRootField UnpreparedValue)]
-</span><a href="#local-6989586621690748389"><span class="hs-identifier hs-var">nativeQueryRootFields</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690748389"><span class="hs-identifier hs-var">logicalModelRootFields</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-347"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) (n :: * -&gt; *) (db :: BackendType -&gt; *) remote
        action.
@@ -3010,20 +3010,20 @@ QueryDB b r (v b) -&gt; QueryDBRoot r v b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runMaybeT</span></a></span><span>
 </span><span id="line-682"></span><span>
-</span><span id="line-683"></span><span class="annot"><a href="Hasura.GraphQL.Schema.html#buildNativeQueryFields"><span class="hs-identifier hs-type">buildNativeQueryFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-683"></span><span class="annot"><a href="Hasura.GraphQL.Schema.html#buildLogicalModelFields"><span class="hs-identifier hs-type">buildLogicalModelFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-684"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690749343"><span class="annot"><a href="#local-6989586621690749343"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621690749342"><span class="annot"><a href="#local-6989586621690749342"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621690749341"><span class="annot"><a href="#local-6989586621690749341"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621690749340"><span class="annot"><a href="#local-6989586621690749340"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
 </span><span id="line-685"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690749343"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690749342"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690749341"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690749340"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-686"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690749343"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-687"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#NativeQueries"><span class="hs-identifier hs-type">NativeQueries</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690749343"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-688"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690749342"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690749341"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier hs-type">P.FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690749340"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryRootField"><span class="hs-identifier hs-type">QueryRootField</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
-</span><span id="line-689"></span><span id="buildNativeQueryFields"><span class="annot"><span class="annottext">buildNativeQueryFields :: forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-689"></span><span id="buildLogicalModelFields"><span class="annot"><span class="annottext">buildLogicalModelFields :: forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema b r m n =&gt;
 SourceInfo b
 -&gt; NativeQueries b
 -&gt; SchemaT r m [FieldParser n (QueryRootField UnpreparedValue)]
-</span><a href="Hasura.GraphQL.Schema.html#buildNativeQueryFields"><span class="hs-identifier hs-var hs-var">buildNativeQueryFields</span></a></span></span><span> </span><span id="local-6989586621690747767"><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="Hasura.GraphQL.Schema.html#buildLogicalModelFields"><span class="hs-identifier hs-var hs-var">buildLogicalModelFields</span></a></span></span><span> </span><span id="local-6989586621690747767"><span class="annot"><span class="annottext">SourceInfo b
 </span><a href="#local-6989586621690747767"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621690747766"><span class="annot"><span class="annottext">NativeQueries b
-</span><a href="#local-6989586621690747766"><span class="hs-identifier hs-var">nativeQueries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. (Monad m, Monoid a) =&gt; MaybeT m a -&gt; m a
+</span><a href="#local-6989586621690747766"><span class="hs-identifier hs-var">logicalModels</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. (Monad m, Monoid a) =&gt; MaybeT m a -&gt; m a
 </span><a href="Hasura.GraphQL.Schema.html#runMaybeTmempty"><span class="hs-identifier hs-var">runMaybeTmempty</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-690"></span><span>  </span><span id="local-6989586621690747765"><span class="annot"><span class="annottext">RoleName
@@ -3033,8 +3033,8 @@ SourceInfo b
 </span><a href="Hasura.GraphQL.Schema.Common.html#retrieve"><span class="hs-identifier hs-var">retrieve</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaContext -&gt; RoleName
 </span><a href="Hasura.GraphQL.Schema.Common.html#scRole"><span class="hs-identifier hs-var">scRole</span></a></span><span>
 </span><span id="line-691"></span><span>
-</span><span id="line-692"></span><span>  </span><span class="hs-comment">-- Native queries are only enabled for the admin role, pending the design of</span><span>
-</span><span id="line-693"></span><span>  </span><span class="hs-comment">-- permissions for native queries.</span><span>
+</span><span id="line-692"></span><span>  </span><span class="hs-comment">-- Logical models are only enabled for the admin role, pending the design of</span><span>
+</span><span id="line-693"></span><span>  </span><span class="hs-comment">-- permissions for logical models.</span><span>
 </span><span id="line-694"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Alternative f =&gt; Bool -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">guard</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
@@ -3056,8 +3056,8 @@ SourceInfo b
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [v]
 </span><span class="hs-identifier hs-var">OMap.elems</span></span><span> </span><span class="annot"><span class="annottext">NativeQueries b
-</span><a href="#local-6989586621690747766"><span class="hs-identifier hs-var">nativeQueries</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690747762"><span class="annot"><span class="annottext">NativeQueryInfo b
-</span><a href="#local-6989586621690747762"><span class="hs-identifier hs-var">nativeQuery</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621690747766"><span class="hs-identifier hs-var">logicalModels</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690747762"><span class="annot"><span class="annottext">NativeQueryInfo b
+</span><a href="#local-6989586621690747762"><span class="hs-identifier hs-var">model</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-697"></span><span>    </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
@@ -3073,8 +3073,8 @@ NativeQueryInfo b
            n
            (QueryDB
               b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
-</span><a href="Hasura.GraphQL.Schema.Backend.html#buildNativeQueryRootFields"><span class="hs-identifier hs-var">buildNativeQueryRootFields</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueryInfo b
-</span><a href="#local-6989586621690747762"><span class="hs-identifier hs-var">nativeQuery</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.GraphQL.Schema.Backend.html#buildLogicalModelRootFields"><span class="hs-identifier hs-var">buildLogicalModelRootFields</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueryInfo b
+</span><a href="#local-6989586621690747762"><span class="hs-identifier hs-var">model</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-698"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-699"></span><span>    </span><span class="annot"><a href="#local-6989586621690747764"><span class="hs-identifier hs-type">mkRF</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-700"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690749340"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#QueryDB"><span class="hs-identifier hs-type">QueryDB</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690749343"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690749343"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>

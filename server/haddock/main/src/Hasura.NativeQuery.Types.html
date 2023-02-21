@@ -1,33 +1,28 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | This module houses the types that are necessary to even talk about native</span><span>
-</span><span id="line-2"></span><span class="hs-comment">-- queries abstract of a concrete implementation.</span><span>
-</span><span id="line-3"></span><span class="hs-comment">--</span><span>
-</span><span id="line-4"></span><span class="hs-comment">-- The default implementation is given in modules</span><span>
-</span><span id="line-5"></span><span class="hs-comment">-- 'Hasura.NativeQuery.Metadata', and 'Hasura.NativeQuery.API', but backends</span><span>
-</span><span id="line-6"></span><span class="hs-comment">-- are free to provide their own as needed.</span><span>
-</span><span id="line-7"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.NativeQuery.Types</span><span>
-</span><span id="line-8"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier">NativeQueryName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-9"></span><span>  </span><span class="hs-special">)</span><span>
-</span><span id="line-10"></span><span class="hs-keyword">where</span><span>
-</span><span id="line-11"></span><span>
-</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">codec</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">dimapCodec</span></span><span class="hs-special">)</span><span>
-</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">FromJSONKey</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSONKey</span></span><span class="hs-special">)</span><span>
-</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier">ToTxt</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
-</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
-</span><span id="line-17"></span><span>
-</span><span id="line-18"></span><span class="hs-comment">-- The name of a native query. This appears as a root field name in the graphql schema.</span><span>
-</span><span id="line-19"></span><span id="local-6989586621690419256"><span id="local-6989586621690419257"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="NativeQueryName"><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-var">NativeQueryName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NativeQueryName"><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-var">NativeQueryName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getNativeQueryName"><span class="annot"><span class="annottext">NativeQueryName -&gt; Name
-</span><a href="Hasura.NativeQuery.Types.html#getNativeQueryName"><span class="hs-identifier hs-var hs-var">getNativeQueryName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-20"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690419247"><span id="local-6989586621690419252"><span class="annot"><span class="annottext">NativeQueryName -&gt; NativeQueryName -&gt; Bool
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | A name for a logical model as it is recognized by the graphql schema.</span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.NativeQuery.Types</span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#LogicalModelName"><span class="hs-identifier">LogicalModelName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">codec</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">dimapCodec</span></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">FromJSONKey</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSONKey</span></span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier">ToTxt</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- The name of a logical model. This appears as a root field name in the graphql schema.</span><span>
+</span><span id="line-14"></span><span id="local-6989586621690419256"><span id="local-6989586621690419257"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="LogicalModelName"><span class="annot"><a href="Hasura.NativeQuery.Types.html#LogicalModelName"><span class="hs-identifier hs-var">LogicalModelName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="LogicalModelName"><span class="annot"><a href="Hasura.NativeQuery.Types.html#LogicalModelName"><span class="hs-identifier hs-var">LogicalModelName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getLogicalModelName"><span class="annot"><span class="annottext">LogicalModelName -&gt; Name
+</span><a href="Hasura.NativeQuery.Types.html#getLogicalModelName"><span class="hs-identifier hs-var hs-var">getLogicalModelName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690419247"><span id="local-6989586621690419252"><span class="annot"><span class="annottext">LogicalModelName -&gt; LogicalModelName -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
-$c/= :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
-== :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
-$c== :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690419214"><span id="local-6989586621690419218"><span id="local-6989586621690419222"><span id="local-6989586621690419226"><span id="local-6989586621690419230"><span id="local-6989586621690419234"><span id="local-6989586621690419239"><span class="annot"><span class="annottext">Eq NativeQueryName
-NativeQueryName -&gt; NativeQueryName -&gt; Bool
-NativeQueryName -&gt; NativeQueryName -&gt; Ordering
-NativeQueryName -&gt; NativeQueryName -&gt; NativeQueryName
+/= :: LogicalModelName -&gt; LogicalModelName -&gt; Bool
+$c/= :: LogicalModelName -&gt; LogicalModelName -&gt; Bool
+== :: LogicalModelName -&gt; LogicalModelName -&gt; Bool
+$c== :: LogicalModelName -&gt; LogicalModelName -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690419214"><span id="local-6989586621690419218"><span id="local-6989586621690419222"><span id="local-6989586621690419226"><span id="local-6989586621690419230"><span id="local-6989586621690419234"><span id="local-6989586621690419239"><span class="annot"><span class="annottext">Eq LogicalModelName
+LogicalModelName -&gt; LogicalModelName -&gt; Bool
+LogicalModelName -&gt; LogicalModelName -&gt; Ordering
+LogicalModelName -&gt; LogicalModelName -&gt; LogicalModelName
 forall a.
 Eq a
 -&gt; (a -&gt; a -&gt; Ordering)
@@ -38,95 +33,95 @@ Eq a
 -&gt; (a -&gt; a -&gt; a)
 -&gt; (a -&gt; a -&gt; a)
 -&gt; Ord a
-min :: NativeQueryName -&gt; NativeQueryName -&gt; NativeQueryName
-$cmin :: NativeQueryName -&gt; NativeQueryName -&gt; NativeQueryName
-max :: NativeQueryName -&gt; NativeQueryName -&gt; NativeQueryName
-$cmax :: NativeQueryName -&gt; NativeQueryName -&gt; NativeQueryName
-&gt;= :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
-$c&gt;= :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
-&gt; :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
-$c&gt; :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
-&lt;= :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
-$c&lt;= :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
-&lt; :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
-$c&lt; :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
-compare :: NativeQueryName -&gt; NativeQueryName -&gt; Ordering
-$ccompare :: NativeQueryName -&gt; NativeQueryName -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690419199"><span id="local-6989586621690419203"><span id="local-6989586621690419208"><span class="annot"><span class="annottext">Int -&gt; NativeQueryName -&gt; ShowS
-[NativeQueryName] -&gt; ShowS
-NativeQueryName -&gt; String
+min :: LogicalModelName -&gt; LogicalModelName -&gt; LogicalModelName
+$cmin :: LogicalModelName -&gt; LogicalModelName -&gt; LogicalModelName
+max :: LogicalModelName -&gt; LogicalModelName -&gt; LogicalModelName
+$cmax :: LogicalModelName -&gt; LogicalModelName -&gt; LogicalModelName
+&gt;= :: LogicalModelName -&gt; LogicalModelName -&gt; Bool
+$c&gt;= :: LogicalModelName -&gt; LogicalModelName -&gt; Bool
+&gt; :: LogicalModelName -&gt; LogicalModelName -&gt; Bool
+$c&gt; :: LogicalModelName -&gt; LogicalModelName -&gt; Bool
+&lt;= :: LogicalModelName -&gt; LogicalModelName -&gt; Bool
+$c&lt;= :: LogicalModelName -&gt; LogicalModelName -&gt; Bool
+&lt; :: LogicalModelName -&gt; LogicalModelName -&gt; Bool
+$c&lt; :: LogicalModelName -&gt; LogicalModelName -&gt; Bool
+compare :: LogicalModelName -&gt; LogicalModelName -&gt; Ordering
+$ccompare :: LogicalModelName -&gt; LogicalModelName -&gt; Ordering
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690419199"><span id="local-6989586621690419203"><span id="local-6989586621690419208"><span class="annot"><span class="annottext">Int -&gt; LogicalModelName -&gt; ShowS
+[LogicalModelName] -&gt; ShowS
+LogicalModelName -&gt; String
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [NativeQueryName] -&gt; ShowS
-$cshowList :: [NativeQueryName] -&gt; ShowS
-show :: NativeQueryName -&gt; String
-$cshow :: NativeQueryName -&gt; String
-showsPrec :: Int -&gt; NativeQueryName -&gt; ShowS
-$cshowsPrec :: Int -&gt; NativeQueryName -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690419186"><span id="local-6989586621690419191"><span class="annot"><span class="annottext">Eq NativeQueryName
-Int -&gt; NativeQueryName -&gt; Int
-NativeQueryName -&gt; Int
+showList :: [LogicalModelName] -&gt; ShowS
+$cshowList :: [LogicalModelName] -&gt; ShowS
+show :: LogicalModelName -&gt; String
+$cshow :: LogicalModelName -&gt; String
+showsPrec :: Int -&gt; LogicalModelName -&gt; ShowS
+$cshowsPrec :: Int -&gt; LogicalModelName -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690419186"><span id="local-6989586621690419191"><span class="annot"><span class="annottext">Eq LogicalModelName
+Int -&gt; LogicalModelName -&gt; Int
+LogicalModelName -&gt; Int
 forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
-hash :: NativeQueryName -&gt; Int
-$chash :: NativeQueryName -&gt; Int
-hashWithSalt :: Int -&gt; NativeQueryName -&gt; Int
-$chashWithSalt :: Int -&gt; NativeQueryName -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690419180"><span class="annot"><span class="annottext">NativeQueryName -&gt; ()
+hash :: LogicalModelName -&gt; Int
+$chash :: LogicalModelName -&gt; Int
+hashWithSalt :: Int -&gt; LogicalModelName -&gt; Int
+$chashWithSalt :: Int -&gt; LogicalModelName -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690419180"><span class="annot"><span class="annottext">LogicalModelName -&gt; ()
 forall a. (a -&gt; ()) -&gt; NFData a
-rnf :: NativeQueryName -&gt; ()
-$crnf :: NativeQueryName -&gt; ()
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690419160"><span id="local-6989586621690419164"><span id="local-6989586621690419168"><span id="local-6989586621690419173"><span class="annot"><span class="annottext">[NativeQueryName] -&gt; Value
-[NativeQueryName] -&gt; Encoding
-NativeQueryName -&gt; Value
-NativeQueryName -&gt; Encoding
+rnf :: LogicalModelName -&gt; ()
+$crnf :: LogicalModelName -&gt; ()
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690419160"><span id="local-6989586621690419164"><span id="local-6989586621690419168"><span id="local-6989586621690419173"><span class="annot"><span class="annottext">[LogicalModelName] -&gt; Value
+[LogicalModelName] -&gt; Encoding
+LogicalModelName -&gt; Value
+LogicalModelName -&gt; Encoding
 forall a.
 (a -&gt; Value)
 -&gt; (a -&gt; Encoding)
 -&gt; ([a] -&gt; Value)
 -&gt; ([a] -&gt; Encoding)
 -&gt; ToJSON a
-toEncodingList :: [NativeQueryName] -&gt; Encoding
-$ctoEncodingList :: [NativeQueryName] -&gt; Encoding
-toJSONList :: [NativeQueryName] -&gt; Value
-$ctoJSONList :: [NativeQueryName] -&gt; Value
-toEncoding :: NativeQueryName -&gt; Encoding
-$ctoEncoding :: NativeQueryName -&gt; Encoding
-toJSON :: NativeQueryName -&gt; Value
-$ctoJSON :: NativeQueryName -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690419150"><span id="local-6989586621690419155"><span class="annot"><span class="annottext">Value -&gt; Parser [NativeQueryName]
-Value -&gt; Parser NativeQueryName
+toEncodingList :: [LogicalModelName] -&gt; Encoding
+$ctoEncodingList :: [LogicalModelName] -&gt; Encoding
+toJSONList :: [LogicalModelName] -&gt; Value
+$ctoJSONList :: [LogicalModelName] -&gt; Value
+toEncoding :: LogicalModelName -&gt; Encoding
+$ctoEncoding :: LogicalModelName -&gt; Encoding
+toJSON :: LogicalModelName -&gt; Value
+$ctoJSON :: LogicalModelName -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690419150"><span id="local-6989586621690419155"><span class="annot"><span class="annottext">Value -&gt; Parser [LogicalModelName]
+Value -&gt; Parser LogicalModelName
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
-parseJSONList :: Value -&gt; Parser [NativeQueryName]
-$cparseJSONList :: Value -&gt; Parser [NativeQueryName]
-parseJSON :: Value -&gt; Parser NativeQueryName
-$cparseJSON :: Value -&gt; Parser NativeQueryName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690419145"><span class="annot"><span class="annottext">NativeQueryName -&gt; Text
+parseJSONList :: Value -&gt; Parser [LogicalModelName]
+$cparseJSONList :: Value -&gt; Parser [LogicalModelName]
+parseJSON :: Value -&gt; Parser LogicalModelName
+$cparseJSON :: Value -&gt; Parser LogicalModelName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690419145"><span class="annot"><span class="annottext">LogicalModelName -&gt; Text
 forall a. (a -&gt; Text) -&gt; ToTxt a
-toTxt :: NativeQueryName -&gt; Text
-$ctoTxt :: NativeQueryName -&gt; Text
+toTxt :: LogicalModelName -&gt; Text
+$ctoTxt :: LogicalModelName -&gt; Text
 </span><a href="Data.Text.Extended.html#C%3AToTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">)</span><span>
-</span><span id="line-21"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall x. Rep NativeQueryName x -&gt; NativeQueryName
-forall x. NativeQueryName -&gt; Rep NativeQueryName x
+</span><span id="line-16"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall x. Rep LogicalModelName x -&gt; LogicalModelName
+forall x. LogicalModelName -&gt; Rep LogicalModelName x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
-$cto :: forall x. Rep NativeQueryName x -&gt; NativeQueryName
-$cfrom :: forall x. NativeQueryName -&gt; Rep NativeQueryName x
+$cto :: forall x. Rep LogicalModelName x -&gt; LogicalModelName
+$cfrom :: forall x. LogicalModelName -&gt; Rep LogicalModelName x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-22"></span><span>
-</span><span id="line-23"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690419133"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-24"></span><span>  </span><span id="local-6989586621690419129"><span class="annot"><span class="annottext">codec :: JSONCodec NativeQueryName
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690419133"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-19"></span><span>  </span><span id="local-6989586621690419129"><span class="annot"><span class="annottext">codec :: JSONCodec LogicalModelName
 </span><a href="#local-6989586621690419129"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
 (oldOutput -&gt; newOutput)
 -&gt; (newInput -&gt; oldInput)
 -&gt; Codec context oldInput oldOutput
 -&gt; Codec context newInput newOutput
-</span><span class="hs-identifier hs-var">dimapCodec</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; NativeQueryName
-</span><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-var">NativeQueryName</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueryName -&gt; Name
-</span><a href="Hasura.NativeQuery.Types.html#getNativeQueryName"><span class="hs-identifier hs-var">getNativeQueryName</span></a></span><span> </span><span class="annot"><span class="annottext">forall value. HasCodec value =&gt; JSONCodec value
+</span><span class="hs-identifier hs-var">dimapCodec</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; LogicalModelName
+</span><a href="Hasura.NativeQuery.Types.html#LogicalModelName"><span class="hs-identifier hs-var">LogicalModelName</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName -&gt; Name
+</span><a href="Hasura.NativeQuery.Types.html#getLogicalModelName"><span class="hs-identifier hs-var">getLogicalModelName</span></a></span><span> </span><span class="annot"><span class="annottext">forall value. HasCodec value =&gt; JSONCodec value
 </span><span class="hs-identifier hs-var">codec</span></span><span>
-</span><span id="line-25"></span><span>
-</span><span id="line-26"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690419125"><span id="local-6989586621690419127"><span class="annot"><span class="hs-identifier hs-type">FromJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span></span></span><span>
-</span><span id="line-27"></span><span>
-</span><span id="line-28"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690419120"><span id="local-6989586621690419122"><span class="annot"><span class="hs-identifier hs-type">ToJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span></span></span><span>
-</span><span id="line-29"></span></pre></body></html>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690419125"><span id="local-6989586621690419127"><span class="annot"><span class="hs-identifier hs-type">FromJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span></span></span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690419120"><span id="local-6989586621690419122"><span class="annot"><span class="hs-identifier hs-type">ToJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span></span></span><span>
+</span><span id="line-24"></span></pre></body></html>

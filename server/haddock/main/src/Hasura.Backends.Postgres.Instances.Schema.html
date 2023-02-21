@@ -66,7 +66,7 @@
 </span><span id="line-66"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Update.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Update</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">SU</span></span><span>
 </span><span id="line-67"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Update.Batch.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Update.Batch</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">SUB</span></span><span>
 </span><span id="line-68"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Name.html"><span class="hs-identifier">Hasura.Name</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Name</span></span><span>
-</span><span id="line-69"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Schema.html"><span class="hs-identifier">Hasura.NativeQuery.Schema</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NativeQueries</span></span><span>
+</span><span id="line-69"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Schema.html"><span class="hs-identifier">Hasura.NativeQuery.Schema</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">LogicalModels</span></span><span>
 </span><span id="line-70"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-71"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp</span></a></span><span>
 </span><span id="line-72"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Root.html"><span class="hs-identifier">Hasura.RQL.IR.Root</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier">RemoteRelationshipField</span></a></span><span class="hs-special">)</span><span>
@@ -1198,7 +1198,7 @@ MkRootFieldName
            (RemoteRelationshipField UnpreparedValue)
            (UnpreparedValue ('Postgres pgKind)))]
 </span><a href="Hasura.Backends.Postgres.Schema.Select.html#buildFunctionMutationFieldsPG"><span class="hs-identifier hs-var">buildFunctionMutationFieldsPG</span></a></span><span>
-</span><span id="line-310"></span><span>  </span><span id="local-6989586621690672988"><span class="annot"><span class="annottext">buildNativeQueryRootFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-310"></span><span>  </span><span id="local-6989586621690672988"><span class="annot"><span class="annottext">buildLogicalModelRootFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema ('Postgres pgKind) r m n =&gt;
 NativeQueryInfo ('Postgres pgKind)
 -&gt; SchemaT
@@ -1211,7 +1211,7 @@ NativeQueryInfo ('Postgres pgKind)
               ('Postgres pgKind)
               (RemoteRelationshipField UnpreparedValue)
               (UnpreparedValue ('Postgres pgKind)))))
-</span><a href="Hasura.GraphQL.Schema.Backend.html#buildNativeQueryRootFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildNativeQueryRootFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><a href="Hasura.GraphQL.Schema.Backend.html#buildLogicalModelRootFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildLogicalModelRootFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 (MonadBuildSchema b r m n, BackendCustomTypeSelectSchema b) =&gt;
 NativeQueryInfo b
 -&gt; SchemaT
@@ -1222,7 +1222,7 @@ NativeQueryInfo b
            n
            (QueryDB
               b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
-</span><a href="Hasura.NativeQuery.Schema.html#defaultBuildNativeQueryRootFields"><span class="hs-identifier hs-var">NativeQueries.defaultBuildNativeQueryRootFields</span></a></span><span>
+</span><a href="Hasura.NativeQuery.Schema.html#defaultBuildLogicalModelRootFields"><span class="hs-identifier hs-var">LogicalModels.defaultBuildLogicalModelRootFields</span></a></span><span>
 </span><span id="line-311"></span><span>
 </span><span id="line-312"></span><span>  </span><span id="local-6989586621690672982"><span class="annot"><span class="annottext">mkRelationshipParser :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema ('Postgres pgKind) r m n =&gt;

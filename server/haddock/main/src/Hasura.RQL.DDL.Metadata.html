@@ -2188,13 +2188,13 @@ SourceName -&gt; FunctionName b -&gt; RoleName -&gt; MetadataModifier
 </span><a href="#local-6989586621690787573"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionName b
 </span><a href="#local-6989586621690787565"><span class="hs-identifier hs-var">qf</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621690787564"><span class="hs-identifier hs-var">rn</span></a></span><span>
-</span><span id="line-692"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#SMONativeQuery"><span class="hs-identifier hs-type">SMONativeQuery</span></a></span><span> </span><span id="local-6989586621690787561"><span class="annot"><span class="annottext">NativeQueryName
-</span><a href="#local-6989586621690787561"><span class="hs-identifier hs-var">nq</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><span id="line-692"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#SMOLogicalModel"><span class="hs-identifier hs-type">SMOLogicalModel</span></a></span><span> </span><span id="local-6989586621690787561"><span class="annot"><span class="annottext">LogicalModelName
+</span><a href="#local-6989586621690787561"><span class="hs-identifier hs-var">lm</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 BackendMetadata b =&gt;
-SourceName -&gt; NativeQueryName -&gt; MetadataModifier
-</span><a href="Hasura.NativeQuery.API.html#dropNativeQueryInMetadata"><span class="hs-identifier hs-var">dropNativeQueryInMetadata</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621690789025"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621690787573"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueryName
-</span><a href="#local-6989586621690787561"><span class="hs-identifier hs-var">nq</span></a></span><span>
+SourceName -&gt; LogicalModelName -&gt; MetadataModifier
+</span><a href="Hasura.NativeQuery.API.html#dropLogicalModelInMetadata"><span class="hs-identifier hs-var">dropLogicalModelInMetadata</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621690789025"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621690787573"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
+</span><a href="#local-6989586621690787561"><span class="hs-identifier hs-var">lm</span></a></span><span>
 </span><span id="line-693"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#SMOTableObj"><span class="hs-identifier hs-type">SMOTableObj</span></a></span><span> </span><span id="local-6989586621690787559"><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621690787559"><span class="hs-identifier hs-var">qt</span></a></span></span><span> </span><span id="local-6989586621690787558"><span class="annot"><span class="annottext">TableMetadataObjId
 </span><a href="#local-6989586621690787558"><span class="hs-identifier hs-var">tableObj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
