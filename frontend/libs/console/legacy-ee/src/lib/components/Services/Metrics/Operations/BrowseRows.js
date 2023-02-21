@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 import { useQuery } from '@apollo/react-hooks';
 
-import { Button } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
 
 import { fetchOperations, getProjectConfigs } from './graphql.queries';
 import Inspect from './Inspect';
@@ -15,7 +15,7 @@ import {
   getWhereClause,
 } from './utils';
 
-import { DragFoldTable, tableScss } from '@hasura/console-oss';
+import { DragFoldTable, tableScss } from '@hasura/console-legacy-ce';
 
 import {
   // NO_ROLE_SYMBOL,

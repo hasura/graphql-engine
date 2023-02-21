@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/new-components/Button';
-import { IconTooltip } from '@hasura/console-oss';
+import { IconTooltip } from '@/new-components/Tooltip';
 import { addInsecureDomain } from '../../../../metadata/actions';
 
 import { inputStyles } from '../constants';

@@ -13,7 +13,7 @@ import {
   prefetchSurveysData,
   prefetchOnboardingData,
   PageNotFound,
-} from '@hasura/console-oss';
+} from '@hasura/console-legacy-ce';
 import {
   dataRouterUtils,
   eventsRoutes,
@@ -21,9 +21,9 @@ import {
   getRemoteSchemaRouter,
   generatedApiExplorer,
   generatedVoyagerConnector,
-} from '@hasura/console-oss/lib/hoc';
+} from '@hasura/console-legacy-ce';
 
-import { requireAsyncGlobals, App } from '@hasura/console-oss/lib/app';
+import { requireAsyncGlobals, App } from '@hasura/console-legacy-ce';
 
 import {
   loadMigrationStatus,
@@ -45,7 +45,7 @@ import {
   AllowListDetail,
   PrometheusSettings,
   OpenTelemetryFeature,
-} from '@hasura/console-oss';
+} from '@hasura/console-legacy-ce';
 import AccessDeniedComponent from './components/AccessDenied/AccessDenied';
 import { restrictedPathsMetadata } from './utils/redirectUtils';
 import generatedCallbackConnector from './components/OAuthCallback/OAuthCallback';

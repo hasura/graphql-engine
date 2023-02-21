@@ -11,21 +11,24 @@ import {
   loadPATState,
   loadAdminSecretState,
 } from '../AppState';
-import { ADMIN_SECRET_ERROR, UPDATE_DATA_HEADERS } from '@hasura/console-oss';
+import {
+  ADMIN_SECRET_ERROR,
+  UPDATE_DATA_HEADERS,
+} from '@hasura/console-legacy-ce';
 import { getFeaturesCompatibility } from '../../helpers/versionUtils';
 import {
   changeRequestHeader,
   removeRequestHeader,
   showErrorNotification,
   mainState,
-} from '@hasura/console-oss';
+} from '@hasura/console-legacy-ce';
 import {
   CONSTANT_HEADERS,
   SERVER_CONSOLE_MODE,
   CLIENT_NAME_HEADER,
   CLIENT_NAME_HEADER_VALUE,
 } from '../../constants';
-import { mainReducer } from '@hasura/console-oss/lib/hoc';
+import { mainReducer } from '@hasura/console-legacy-ce';
 import { getKeyFromLS, initLS } from '../Login/localStorage';
 import { parseQueryParams } from '../Login/utils';
 import upsertToLS, { removeHeaderFromLS } from '../../utils/upsertToLS';
@@ -659,7 +662,7 @@ export const loadLuxProjectInfo = () => (dispatch, getState) => {
               is_active
             }
           }
-        } 
+        }
       `,
       variables: {
         id: globals.hasuraCloudProjectId,

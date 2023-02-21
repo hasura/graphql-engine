@@ -1,4 +1,7 @@
-import { changeRequestHeader, UPDATE_DATA_HEADERS } from '@hasura/console-oss';
+import {
+  changeRequestHeader,
+  UPDATE_DATA_HEADERS,
+} from '@hasura/console-legacy-ce';
 import {
   clearAdminSecretState,
   clearPATState,

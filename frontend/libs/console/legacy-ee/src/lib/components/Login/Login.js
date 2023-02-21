@@ -11,7 +11,7 @@ import {
   UPDATE_PROJECT_ID,
   UPDATE_PROJECT_NAME,
 } from '../Main/Actions';
-import { IconTooltip } from '@hasura/console-oss';
+import { IconTooltip } from '@hasura/console-legacy-ce';
 
 // import { FT_LOGIN_WITH_HASURA } from '../../helpers/versionUtils';
 

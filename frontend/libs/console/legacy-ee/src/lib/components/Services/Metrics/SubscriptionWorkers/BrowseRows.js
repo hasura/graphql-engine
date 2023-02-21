@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 
 import moment from 'moment';
-import { Button } from '@hasura/console-oss';
-import { Tooltip } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
+import { Tooltip } from '@hasura/console-legacy-ce';
 
 import { useQuery } from '@apollo/react-hooks';
-import { DragFoldTable, tableScss } from '@hasura/console-oss';
+import { DragFoldTable, tableScss } from '@hasura/console-legacy-ce';
 
 import { arrayToPostgresArray, isAdmin } from '../utils';
 import { getConfig } from './Actions';

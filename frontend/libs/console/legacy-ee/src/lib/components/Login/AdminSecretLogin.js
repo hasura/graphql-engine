@@ -1,5 +1,5 @@
 import React from 'react';
-import { generatedAdminSecretLoginConnector } from '@hasura/console-oss';
+import { generatedAdminSecretLoginConnector } from '@hasura/console-legacy-ce';
 import { connect } from 'react-redux';
 
 const AdminLogin = generatedAdminSecretLoginConnector(connect);

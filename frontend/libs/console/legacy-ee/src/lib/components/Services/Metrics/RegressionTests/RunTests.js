@@ -1,7 +1,7 @@
 import React, { useState, Fragment } from 'react';
 import BootstrapModal from 'react-bootstrap/lib/Modal';
 // import { useMutation } from '@apollo/react-hooks';
-import { Button } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
 
 import { BrowseRunTests } from './BrowseRunTests';
 import { BrowseRunTestsPreview } from './BrowseTestRunPreview';

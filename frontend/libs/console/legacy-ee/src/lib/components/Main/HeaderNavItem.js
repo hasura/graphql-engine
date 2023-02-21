@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router';
 import clsx from 'clsx';
 
-import { Tooltip } from '@hasura/console-oss';
+import { Tooltip } from '@hasura/console-legacy-ce';
 
 export const linkStyle =
   'flex items-stretch gap-2 text-white font-bold rounded py-2 px-3 hover:!text-white active:text-primary focus:text-primary bg-transparent hover:bg-slate-900 !no-underline cursor-pointer';

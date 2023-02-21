@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 
 import { Link } from 'react-router';
-import { Button } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
 
 import { getFetchErrorsWithGroupBy } from './graphql.queries';
 import {
@@ -20,7 +20,7 @@ import {
 
 import { SHOW_ONLY_ERRORS_SYMBOL, relativeModulePath } from '../constants';
 
-import { DragFoldTable, tableScss } from '@hasura/console-oss';
+import { DragFoldTable, tableScss } from '@hasura/console-legacy-ce';
 
 import {
   defaultColumns,

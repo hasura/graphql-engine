@@ -13,9 +13,9 @@ import {
   invokeEventTriggerReducer,
   modalReducer,
   notificationsReducer,
-} from '@hasura/console-oss/lib/hoc';
+} from '@hasura/console-legacy-ce';
 
-import { progressBarReducer } from '@hasura/console-oss/lib/app';
+import { progressBarReducer } from '@hasura/console-legacy-ce';
 
 import mainReducer from './components/Main/Actions';
 // import progressBarReducer from 'components/App/Actions';

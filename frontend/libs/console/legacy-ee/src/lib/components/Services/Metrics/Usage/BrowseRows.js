@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import { useQuery } from '@apollo/react-hooks';
-import { Button } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
 
 import { fetchQueryList } from './graphql.queries';
 import Inspect from './Inspect';
@@ -20,7 +20,7 @@ import { getWhereClauseEx } from '../Error/utils';
 
 import { FILTER_MAP } from './constants';
 
-import { DragFoldTable, tableScss } from '@hasura/console-oss';
+import { DragFoldTable, tableScss } from '@hasura/console-legacy-ce';
 
 import { TIME_RANGE_SYMBOL } from '../constants';
 

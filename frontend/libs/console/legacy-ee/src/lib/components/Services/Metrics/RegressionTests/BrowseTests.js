@@ -1,5 +1,5 @@
 import React from 'react';
-import { DragFoldTable, tableScss } from '@hasura/console-oss';
+import { DragFoldTable, tableScss } from '@hasura/console-legacy-ce';
 
 import { getTitle, getColWidth, transformMessage, StatusIcon } from './utils';
 

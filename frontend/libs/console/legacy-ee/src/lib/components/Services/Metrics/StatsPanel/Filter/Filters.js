@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import GenerateFilters from './GenerateFilters';
-import { Button } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
 import FilterSection from './FilterSection';
 import FilterBadge from './FilterBadge';
 import filter from '../../images/filter.svg';

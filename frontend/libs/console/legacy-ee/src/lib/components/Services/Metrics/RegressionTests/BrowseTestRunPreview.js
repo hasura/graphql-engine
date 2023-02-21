@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@apollo/react-hooks';
 
-import { tableScss } from '@hasura/console-oss';
+import { tableScss } from '@hasura/console-legacy-ce';
 import { fetchRunTestPreview } from './graphql.queries';
 import styles from '../Metrics.module.scss';
 

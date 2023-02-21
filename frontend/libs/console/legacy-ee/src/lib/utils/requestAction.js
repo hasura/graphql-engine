@@ -1,7 +1,7 @@
 import fetch from 'isomorphic-fetch';
 import { push } from 'react-router-redux';
 import globals from '../Globals';
-import { UPDATE_DATA_HEADERS } from '@hasura/console-oss';
+import { UPDATE_DATA_HEADERS } from '@hasura/console-legacy-ce';
 import { getHeaders } from '../components/Main/Actions';
 
 import {
@@ -10,7 +10,7 @@ import {
   FAILED_REQUEST,
   ERROR_REQUEST,
   CONNECTION_FAILED,
-} from '@hasura/console-oss/lib/app';
+} from '@hasura/console-legacy-ce';
 // } from 'components/App/Actions';
 
 import { LOGIN_IN_PROGRESS, LOGIN_ERROR } from '../components/Main/Actions';

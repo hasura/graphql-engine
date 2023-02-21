@@ -8,7 +8,7 @@ import { fetchOperations, fetchRemoteOperations } from './graphql.queries';
 
 import { allowListOperationGroupName } from './constants';
 
-import { Tooltip } from '@hasura/console-oss';
+import { Tooltip } from '@hasura/console-legacy-ce';
 
 import { createFilter } from '../Error/utils';
 
@@ -31,7 +31,7 @@ import { aliasedNames } from './constants';
 
 import { OPERATION_NAME_SYMBOL, relativeModulePath } from '../constants';
 
-import { DragFoldTable, tableScss } from '@hasura/console-oss';
+import { DragFoldTable, tableScss } from '@hasura/console-legacy-ce';
 
 import { checkObjectValidity } from './utils';
 

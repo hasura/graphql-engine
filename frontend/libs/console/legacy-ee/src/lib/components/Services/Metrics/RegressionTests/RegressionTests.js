@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
-import { Analytics, REDACT_EVERYTHING } from '@hasura/console-oss';
+import { Analytics, REDACT_EVERYTHING } from '@hasura/console-legacy-ce';
 
 import { NewOperations } from './NewOperations';
 import { ExistingTestsOperations } from './ExistingTestsOperations';

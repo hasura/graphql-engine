@@ -1,6 +1,6 @@
 import React, { useState, Fragment } from 'react';
 import BootstrapModal from 'react-bootstrap/lib/Modal';
-import { Tooltip } from '@hasura/console-oss';
+import { Tooltip } from '@hasura/console-legacy-ce';
 import { useMutation } from '@apollo/react-hooks';
 
 import CustomCopy from '../Common/CustomCopy';

@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import { Link } from 'react-router';
 import BootstrapModal from 'react-bootstrap/lib/Modal';
-import { Button } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
 import CustomCopy from './CustomCopy';
 
 import { transformedVals } from '../Usage/utils';

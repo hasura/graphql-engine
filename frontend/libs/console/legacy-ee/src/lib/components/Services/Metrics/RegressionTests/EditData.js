@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import AceEditor from 'react-ace';
-import { Button } from '@hasura/console-oss';
-import { Tooltip } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
+import { Tooltip } from '@hasura/console-legacy-ce';
 
 import styles from '../Metrics.module.scss';
 

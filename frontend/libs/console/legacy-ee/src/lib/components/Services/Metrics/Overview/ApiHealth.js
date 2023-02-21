@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useQuery } from 'react-apollo';
 import { Col, Row } from 'react-bootstrap';
-import { Tooltip } from '@hasura/console-oss';
+import { Tooltip } from '@hasura/console-legacy-ce';
 import ApiHealthChart from './ApiHealthChart';
 import styles from '../MetricsV1.module.scss';
 import {

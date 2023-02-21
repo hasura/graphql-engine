@@ -27,7 +27,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
 import globals from '../../Globals';
 import 'react-toggle/style.css';
-import { Spinner } from '@hasura/console-oss';
+import { Spinner } from '@hasura/console-legacy-ce';
 import {
   Badge,
   NotificationSection,
@@ -40,7 +40,7 @@ import {
   updateRequestHeaders,
   showErrorNotification,
   isMonitoringTabSupportedEnvironment,
-} from '@hasura/console-oss';
+} from '@hasura/console-legacy-ce';
 import { versionGT, FT_JWT_ANALYZER } from '../../helpers/versionUtils';
 import {
   loadServerVersion,

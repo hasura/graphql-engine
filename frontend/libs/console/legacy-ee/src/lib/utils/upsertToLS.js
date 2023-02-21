@@ -1,7 +1,7 @@
 import {
   persistGraphiQLHeaders,
   getPersistedGraphiQLHeaders,
-} from '@hasura/console-oss';
+} from '@hasura/console-legacy-ce';
 
 import globals from '../Globals';
 
