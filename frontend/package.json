@@ -211,6 +211,7 @@
     "@nrwl/jest": "14.5.2",
     "@nrwl/js": "14.5.2",
     "@nrwl/linter": "14.5.2",
+    "@nrwl/nx-cloud": "^15.0.3",
     "@nrwl/nx-plugin": "14.5.2",
     "@nrwl/react": "14.5.2",
     "@nrwl/storybook": "^14.5.6",
