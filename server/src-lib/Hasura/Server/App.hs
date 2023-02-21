@@ -919,20 +919,36 @@ httpApp setupHook corsCfg serverCtx consoleStatus consoleAssetsDir consoleSentry
   -- Health check endpoint with logs
   let healthzAction = do
         let errorMsg = "ERROR"
+        isStrict <- fromMaybe False <$> Spock.param "strict"
         lift checkMetadataStorageHealth >>= \case
           Left err -> do
             -- error running the health check
             logError err
             Spock.setStatus HTTP.status500 >> Spock.text errorMsg
           Right _ -> do
-            -- healthy
+            -- metadata storage is healthy
             sc <- liftIO $ getSchemaCache $ scCacheRef serverCtx
-            let responseText =
-                  if null (scInconsistentObjs sc)
-                    then "OK"
-                    else "WARN: inconsistent objects in schema"
-            logSuccess responseText
-            Spock.setStatus HTTP.status200 >> Spock.text (LT.toStrict responseText)
+            let isInconsistent = not $ null $ scInconsistentObjs sc
+                inconsistenciesMessage = "inconsistent objects in schema"
+            (status, responseText) <-
+              if
+                  | (isInconsistent && isStrict) -> do
+                      -- Inconsistencies exist and strict mode enabled. Report inconsistencies as ERROR with status 500.
+                      let message = "ERROR: " <> inconsistenciesMessage
+                      logError $ err500 InvalidConfiguration message
+                      pure (HTTP.status500, message)
+                  | (isInconsistent && not isStrict) -> do
+                      -- Inconsistencies exist and strict mode disabled. Warn inconsistencies with status 200.
+                      let message = "WARN: " <> inconsistenciesMessage
+                      logSuccess $ LT.fromStrict message
+                      pure (HTTP.status200, message)
+                  | otherwise -> do
+                      -- No inconsistencies in schema cache, report OK
+                      let message = "OK"
+                      logSuccess $ LT.fromStrict message
+                      pure (HTTP.status200, message)
+
+            Spock.setStatus status >> Spock.text responseText
 
   Spock.get "healthz" healthzAction
 
