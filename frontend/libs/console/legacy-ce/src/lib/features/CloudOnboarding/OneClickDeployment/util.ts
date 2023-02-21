@@ -16,12 +16,23 @@ const getStepError = (
   allStateTransitionsOrdered: OneClickDeploymentStateTransition[],
   step: UserFacingStep
 ): ProgressStateStatus | null => {
-  const lastTransition =
-    allStateTransitionsOrdered[allStateTransitionsOrdered.length - 1];
-  return lastTransition?.from_state === step &&
-    lastTransition.to_state === OneClickDeploymentState.Error
-    ? { kind: 'error', error: lastTransition.additional_info }
-    : null;
+  let errorStatus: ProgressStateStatus | null = null;
+  // run through all transitions to get the latest state of a step
+  allStateTransitionsOrdered.forEach(transition => {
+    if (transition.from_state === step) {
+      if (transition.to_state === OneClickDeploymentState.Error) {
+        errorStatus = {
+          kind: 'error',
+          error: transition.additional_info,
+          logId: transition.id,
+        };
+      } else {
+        errorStatus = null;
+      }
+    }
+  });
+
+  return errorStatus;
 };
 
 /**
@@ -34,6 +45,7 @@ const getStepSuccess = (
   step: UserFacingStep
 ): ProgressStateStatus | null => {
   let successStatus: ProgressStateStatus | null = null;
+  // run through all transitions to get the latest state of a step
   allStateTransitionsOrdered.forEach(transition => {
     if (transition.from_state === step) {
       // it's not a success if the step goes into an error
@@ -129,17 +141,19 @@ const getStepProgressState = (
     return { kind: 'idle' };
   }
 
-  // return error if error
-  const stepError = getStepError(allStateTransitionsOrdered, step);
-  if (stepError) return stepError;
-
   // return success if success
   const stepSuccess = getStepSuccess(allStateTransitionsOrdered, step);
   if (stepSuccess) return stepSuccess;
 
-  return (
-    getStepPendingState(allStateTransitionsOrdered, step) || { kind: 'idle' }
-  );
+  // return pending if in progress
+  const stepPending = getStepPendingState(allStateTransitionsOrdered, step);
+  if (stepPending) return stepPending;
+
+  // return error if error
+  const stepError = getStepError(allStateTransitionsOrdered, step);
+  if (stepError) return stepError;
+
+  return { kind: 'idle' };
 };
 
 export const getCliProgressState = (

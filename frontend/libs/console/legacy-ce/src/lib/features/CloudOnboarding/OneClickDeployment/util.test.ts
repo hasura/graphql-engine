@@ -76,6 +76,7 @@ const tc: {
       [OneClickDeploymentState.ReadingEnvironmentVariables]: {
         kind: 'error',
         error: { message: 'unexpected' },
+        logId: 2,
       },
       [OneClickDeploymentState.AwaitingEnvironmentVariables]: { kind: 'idle' },
       [OneClickDeploymentState.SufficientEnvironmentVariables]: {
@@ -158,6 +159,7 @@ const tc: {
       [OneClickDeploymentState.ApplyingMetadataMigrationsSeeds]: {
         kind: 'error',
         error: { message: 'unable to connect' },
+        logId: 2,
       },
       [OneClickDeploymentState.Completed]: { kind: 'idle' },
     },

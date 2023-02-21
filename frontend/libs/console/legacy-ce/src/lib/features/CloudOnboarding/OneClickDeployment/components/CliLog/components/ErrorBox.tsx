@@ -15,25 +15,20 @@ import { transformFallbackAppToLinkButtonProps } from '../fallbackAppUtil';
 type Props = {
   step: UserFacingStep;
   error: Record<string, any>;
+  logId: number;
   retryAction: VoidFunction;
   fallbackApps: FallbackApp[];
 };
 
 export function ErrorBox(props: Props) {
-  const { step, error, retryAction, fallbackApps } = props;
+  const { step, error, retryAction, fallbackApps, logId } = props;
 
   const [isRetrying, setIsRetrying] = React.useState(false);
+
+  // mark retry as complete if logId is different
   React.useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    if (isRetrying) {
-      timeout = setTimeout(() => {
-        setIsRetrying(false);
-      }, 5000);
-    }
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [isRetrying]);
+    setIsRetrying(false);
+  }, [logId]);
 
   const onRetryClick = () => {
     if (!isRetrying && retryAction) {

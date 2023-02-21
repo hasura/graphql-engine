@@ -62,6 +62,7 @@ export type ProgressStateStatus =
   | {
       kind: 'error';
       error: Record<string, any>;
+      logId: number;
     }
   | {
       kind: 'awaiting';

@@ -72,6 +72,7 @@ export const CliLog: React.VFC<Props> = props => {
               <ErrorBox
                 step={step}
                 error={status.error}
+                logId={status.logId}
                 retryAction={retryAction}
                 fallbackApps={fallbackApps}
               />
