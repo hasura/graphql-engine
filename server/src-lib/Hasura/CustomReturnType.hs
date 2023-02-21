@@ -12,7 +12,7 @@ import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.SQL.Backend (BackendType)
 
--- | Description of a custom return type for a Native Query
+-- | Description of a custom return type for a Logical Model
 newtype CustomReturnType (b :: BackendType) = CustomReturnType
   { crtColumns :: HashMap (Column b) (ScalarType b)
   }
@@ -20,13 +20,13 @@ newtype CustomReturnType (b :: BackendType) = CustomReturnType
 instance (Backend b) => HasCodec (CustomReturnType b) where
   codec =
     AC.CommentCodec
-      ("A return type for a native query.")
+      ("A return type for a logical model.")
       $ AC.object (codecNamePrefix @b <> "CustomReturnType")
       $ CustomReturnType
         <$> requiredField "columns" columnsDoc
           AC..= crtColumns
     where
-      columnsDoc = "Return types for the native query"
+      columnsDoc = "Return types for the logical model"
 
 deriving stock instance (Backend b) => Eq (CustomReturnType b)
 

@@ -329,7 +329,7 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
           [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))],
           [(G.Name, Parser 'Output P.Parse (ApolloFederationParserFunction P.Parse))]
         )
-    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo _ tables functions nativeQueries _ _ sourceCustomization) =
+    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo _ tables functions logicalModels _ _ sourceCustomization) =
       runSourceSchema schemaContext schemaOptions sourceInfo do
         let validFunctions = takeValidFunctions functions
             validTables = takeValidTables tables
@@ -337,13 +337,13 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
             makeTypename = SC._rscTypeNames sourceCustomization
         (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields, apolloFedTableParsers) <-
           buildQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions
-        (nativeQueryRootFields) <-
-          buildNativeQueryFields sourceInfo nativeQueries
+        logicalModelRootFields <-
+          buildLogicalModelFields sourceInfo logicalModels
         (,,,,apolloFedTableParsers)
           <$> customizeFields
             sourceCustomization
             (makeTypename <> MkTypename (<> Name.__query))
-            (pure (uncustomizedQueryRootFields <> nativeQueryRootFields))
+            (pure (uncustomizedQueryRootFields <> logicalModelRootFields))
           <*> customizeFields
             sourceCustomization
             (makeTypename <> MkTypename (<> Name.__mutation_frontend))
@@ -680,21 +680,21 @@ buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs
 runMaybeTmempty :: (Monad m, Monoid a) => MaybeT m a -> m a
 runMaybeTmempty = (`onNothingM` (pure mempty)) . runMaybeT
 
-buildNativeQueryFields ::
+buildLogicalModelFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   SourceInfo b ->
   NativeQueries b ->
   SchemaT r m [P.FieldParser n (QueryRootField UnpreparedValue)]
-buildNativeQueryFields sourceInfo nativeQueries = runMaybeTmempty $ do
+buildLogicalModelFields sourceInfo logicalModels = runMaybeTmempty $ do
   roleName <- retrieve scRole
 
-  -- Native queries are only enabled for the admin role, pending the design of
-  -- permissions for native queries.
+  -- Logical models are only enabled for the admin role, pending the design of
+  -- permissions for logical models.
   guard $ roleName == adminRoleName
 
-  map mkRF . catMaybes <$> for (OMap.elems nativeQueries) \nativeQuery -> do
-    lift $ (buildNativeQueryRootFields nativeQuery)
+  map mkRF . catMaybes <$> for (OMap.elems logicalModels) \model -> do
+    lift $ (buildLogicalModelRootFields model)
   where
     mkRF ::
       FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)) ->

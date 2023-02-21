@@ -9,7 +9,7 @@ module Hasura.Backends.Postgres.Instances.Metadata () where
 import Data.HashMap.Strict qualified as Map
 import Data.Text.Extended
 import Hasura.Backends.Postgres.DDL qualified as Postgres
-import Hasura.Backends.Postgres.Instances.NativeQueries as Postgres (validateNativeQuery)
+import Hasura.Backends.Postgres.Instances.LogicalModels as Postgres (validateLogicalModel)
 import Hasura.Backends.Postgres.SQL.Types (QualifiedTable)
 import Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
 import Hasura.Base.Error
@@ -137,4 +137,4 @@ instance
   postDropSourceHook = Postgres.postDropSourceHook
   validateRelationship = validateRel @pgKind
   buildComputedFieldBooleanExp = Postgres.buildComputedFieldBooleanExp
-  validateNativeQuery = Postgres.validateNativeQuery
+  validateLogicalModel = Postgres.validateLogicalModel

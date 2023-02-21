@@ -22,7 +22,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
-import Hasura.NativeQuery.API qualified as NativeQuery
+import Hasura.NativeQuery.API qualified as LogicalModels
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ApiLimit
@@ -133,10 +133,10 @@ data RQLMetadataV1
   | RMDropComputedField !(AnyBackend DropComputedField)
   | -- Connection template
     RMTestConnectionTemplate !(AnyBackend TestConnectionTemplate)
-  | -- Native access
-    RMGetNativeQuery !(AnyBackend NativeQuery.GetNativeQuery)
-  | RMTrackNativeQuery !(AnyBackend NativeQuery.TrackNativeQuery)
-  | RMUntrackNativeQuery !(AnyBackend NativeQuery.UntrackNativeQuery)
+  | -- Logical Models
+    RMGetLogicalModel !(AnyBackend LogicalModels.GetLogicalModel)
+  | RMTrackLogicalModel !(AnyBackend LogicalModels.TrackLogicalModel)
+  | RMUntrackLogicalModel !(AnyBackend LogicalModels.UntrackLogicalModel)
   | -- Tables event triggers
     RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)
@@ -492,9 +492,9 @@ queryModifiesMetadata = \case
       RMGetTableInfo _ -> False
       RMTestConnectionTemplate _ -> False
       RMSuggestRelationships _ -> False
-      RMGetNativeQuery _ -> False
-      RMTrackNativeQuery _ -> True
-      RMUntrackNativeQuery _ -> True
+      RMGetLogicalModel _ -> False
+      RMTrackLogicalModel _ -> True
+      RMUntrackLogicalModel _ -> True
       RMBulk qs -> any queryModifiesMetadata qs
       -- We used to assume that the fallthrough was True,
       -- but it is better to be explicit here to warn when new constructors are added.
@@ -677,9 +677,9 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMAddComputedField q -> dispatchMetadata runAddComputedField q
   RMDropComputedField q -> dispatchMetadata runDropComputedField q
   RMTestConnectionTemplate q -> dispatchMetadata runTestConnectionTemplate q
-  RMGetNativeQuery q -> dispatchMetadata NativeQuery.runGetNativeQuery q
-  RMTrackNativeQuery q -> dispatchMetadata (NativeQuery.runTrackNativeQuery env) q
-  RMUntrackNativeQuery q -> dispatchMetadata NativeQuery.runUntrackNativeQuery q
+  RMGetLogicalModel q -> dispatchMetadata LogicalModels.runGetLogicalModel q
+  RMTrackLogicalModel q -> dispatchMetadata (LogicalModels.runTrackLogicalModel env) q
+  RMUntrackLogicalModel q -> dispatchMetadata LogicalModels.runUntrackLogicalModel q
   RMCreateEventTrigger q ->
     dispatchMetadataAndEventTrigger
       ( validateTransforms

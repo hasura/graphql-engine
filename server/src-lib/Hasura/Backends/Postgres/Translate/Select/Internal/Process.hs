@@ -64,7 +64,7 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
     fromTableRowArgs,
     hasNextPageIdentifier,
     hasPreviousPageIdentifier,
-    nativeQueryNameToAlias,
+    logicalModelNameToAlias,
     pageInfoSelectAliasIdentifier,
     selectFromToFromItem,
     startCursorIdentifier,
@@ -170,7 +170,7 @@ processSelectParams
         FromFunction qf _ _ -> pure $ S.QualifiedIdentifier (TableIdentifier $ qualifiedObjectToText qf) Nothing
         FromNativeQuery nq -> do
           -- we are going to cram our SQL in a CTE, and this is what we will call it
-          let cteName = nativeQueryNameToAlias (nqRootFieldName nq)
+          let cteName = logicalModelNameToAlias (nqRootFieldName nq)
 
           -- emit the query itself to the Writer
           tell $

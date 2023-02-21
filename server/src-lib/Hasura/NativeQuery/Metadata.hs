@@ -4,7 +4,7 @@
 -- | This module houses the types and functions associated with the default
 -- implementation of the metadata of native queries.
 module Hasura.NativeQuery.Metadata
-  ( NativeQueryName (..),
+  ( LogicalModelName (..),
     NativeQueryInfo (..),
     NativeQueryArgumentName (..),
     InterpolatedItem (..),
@@ -105,7 +105,7 @@ instance NFData (NativeQueryArgumentName)
 
 -- | Default implementation of the Native Query metadata info object.
 data NativeQueryInfo (b :: BackendType) = NativeQueryInfo
-  { nqiRootFieldName :: NativeQueryName,
+  { nqiRootFieldName :: LogicalModelName,
     nqiCode :: InterpolatedQuery NativeQueryArgumentName,
     nqiReturns :: CustomReturnType b,
     nqiArguments :: HashMap NativeQueryArgumentName (ScalarType b),

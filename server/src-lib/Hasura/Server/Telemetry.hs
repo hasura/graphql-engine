@@ -259,7 +259,7 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
       _mtRemoteSchemas = Map.size <$> remoteSchemaMap
       _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . _fiSystemDefined) sourceFunctionCache
       _mtActions = computeActionsMetrics <$> actionCache
-      _mtNativeQueries = calculateNativeQueries (OMap.elems $ _siNativeQueries sourceInfo)
+      _mtLogicalModels = countLogicalModels (OMap.elems $ _siNativeQueries sourceInfo)
    in Metrics {..}
   where
     sourceTableCache = _siTables sourceInfo
@@ -272,13 +272,13 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
     permsOfTbl :: TableInfo b -> [(RoleName, RolePermInfo b)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap
 
-    calculateNativeQueries :: [NativeQueryInfo b] -> NativeQueriesMetrics
-    calculateNativeQueries =
+    countLogicalModels :: [NativeQueryInfo b] -> LogicalModelsMetrics
+    countLogicalModels =
       foldMap
-        ( \naqi ->
-            if null (nqiArguments naqi)
-              then mempty {_nqmWithoutParameters = 1}
-              else mempty {_nqmWithParameters = 1}
+        ( \logimo ->
+            if null (nqiArguments logimo)
+              then mempty {_lmmWithoutParameters = 1}
+              else mempty {_lmmWithParameters = 1}
         )
 
 -- | Compute the relevant metrics for actions from the action cache.

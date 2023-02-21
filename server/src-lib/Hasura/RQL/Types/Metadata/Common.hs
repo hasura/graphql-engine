@@ -83,7 +83,7 @@ import Data.Text qualified as T
 import Data.Text.Extended qualified as T
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
-import Hasura.NativeQuery.Metadata (NativeQueryInfo (..), NativeQueryName)
+import Hasura.NativeQuery.Metadata (LogicalModelName, NativeQueryInfo (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
@@ -405,7 +405,7 @@ type Tables b = InsOrdHashMap (TableName b) (TableMetadata b)
 
 type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 
-type NativeQueries b = InsOrdHashMap NativeQueryName (NativeQueryInfo b)
+type NativeQueries b = InsOrdHashMap LogicalModelName (NativeQueryInfo b)
 
 type Endpoints = InsOrdHashMap EndpointName CreateEndpoint
 

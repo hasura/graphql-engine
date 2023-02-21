@@ -1,7 +1,7 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Hasura.Backends.Postgres.NativeQuery.NativeQuerySpec
+module Hasura.Backends.Postgres.LogicalModels.LogicalModelsSpec
   ( spec,
   )
 where

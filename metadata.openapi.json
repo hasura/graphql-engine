@@ -513,13 +513,13 @@
                 "type": "object"
             },
             "BigqueryCustomReturnType": {
-                "description": "A return type for a native query.",
+                "description": "A return type for a logical model.",
                 "properties": {
                     "columns": {
                         "additionalProperties": {
                             "$ref": "#/components/schemas/ScalarType"
                         },
-                        "description": "Return types for the native query",
+                        "description": "Return types for the logical model",
                         "type": "object"
                     }
                 },
@@ -1197,14 +1197,14 @@
                 "type": "object"
             },
             "CitusCustomReturnType": {
-                "description": "A return type for a native query.",
+                "description": "A return type for a logical model.",
                 "properties": {
                     "columns": {
                         "additionalProperties": {
                             "description": "Postgres Scalar Types",
                             "type": "string"
                         },
-                        "description": "Return types for the native query",
+                        "description": "Return types for the logical model",
                         "type": "object"
                     }
                 },
@@ -2020,14 +2020,14 @@
                 "type": "object"
             },
             "CockroachCustomReturnType": {
-                "description": "A return type for a native query.",
+                "description": "A return type for a logical model.",
                 "properties": {
                     "columns": {
                         "additionalProperties": {
                             "description": "Postgres Scalar Types",
                             "type": "string"
                         },
-                        "description": "Return types for the native query",
+                        "description": "Return types for the logical model",
                         "type": "object"
                     }
                 },
@@ -3018,13 +3018,13 @@
                 "type": "object"
             },
             "DataconnectorCustomReturnType": {
-                "description": "A return type for a native query.",
+                "description": "A return type for a logical model.",
                 "properties": {
                     "columns": {
                         "additionalProperties": {
                             "$ref": "#/components/schemas/ScalarType"
                         },
-                        "description": "Return types for the native query",
+                        "description": "Return types for the logical model",
                         "type": "object"
                     }
                 },
@@ -4245,13 +4245,13 @@
                 "type": "object"
             },
             "MssqlCustomReturnType": {
-                "description": "A return type for a native query.",
+                "description": "A return type for a logical model.",
                 "properties": {
                     "columns": {
                         "additionalProperties": {
                             "$ref": "#/components/schemas/ScalarType"
                         },
-                        "description": "Return types for the native query",
+                        "description": "Return types for the logical model",
                         "type": "object"
                     }
                 },
@@ -5124,7 +5124,7 @@
                 "type": "object"
             },
             "MysqlCustomReturnType": {
-                "description": "A return type for a native query.",
+                "description": "A return type for a logical model.",
                 "properties": {
                     "columns": {
                         "additionalProperties": {
@@ -5161,7 +5161,7 @@
                             ],
                             "type": "string"
                         },
-                        "description": "Return types for the native query",
+                        "description": "Return types for the logical model",
                         "type": "object"
                     }
                 },
@@ -5979,14 +5979,14 @@
                 "type": "object"
             },
             "PostgresCustomReturnType": {
-                "description": "A return type for a native query.",
+                "description": "A return type for a logical model.",
                 "properties": {
                     "columns": {
                         "additionalProperties": {
                             "description": "Postgres Scalar Types",
                             "type": "string"
                         },
-                        "description": "Return types for the native query",
+                        "description": "Return types for the logical model",
                         "type": "object"
                     }
                 },

@@ -689,7 +689,7 @@ purgeMetadataObj = \case
       SMOTable qt -> dropTableInMetadata @b source qt
       SMOFunction qf -> dropFunctionInMetadata @b source qf
       SMOFunctionPermission qf rn -> dropFunctionPermissionInMetadata @b source qf rn
-      SMONativeQuery nq -> dropNativeQueryInMetadata @b source nq
+      SMOLogicalModel lm -> dropLogicalModelInMetadata @b source lm
       SMOTableObj qt tableObj ->
         MetadataModifier $
           tableMetadataSetter @b source qt %~ case tableObj of

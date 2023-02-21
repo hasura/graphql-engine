@@ -605,7 +605,7 @@ library
                      , Hasura.Backends.Postgres.Instances.API
                      , Hasura.Backends.Postgres.Instances.Execute
                      , Hasura.Backends.Postgres.Instances.Metadata
-                     , Hasura.Backends.Postgres.Instances.NativeQueries
+                     , Hasura.Backends.Postgres.Instances.LogicalModels
                      , Hasura.Backends.Postgres.Instances.PingSource
                      , Hasura.Backends.Postgres.Instances.Schema
                      , Hasura.Backends.Postgres.Instances.SchemaCache
@@ -1158,7 +1158,7 @@ test-suite graphql-engine-tests
     Hasura.Backends.MySQL.TypesSpec
     Hasura.Backends.Postgres.Connection.VersionCheckSpec
     Hasura.Backends.Postgres.Execute.PrepareSpec
-    Hasura.Backends.Postgres.NativeQuery.NativeQuerySpec
+    Hasura.Backends.Postgres.LogicalModels.LogicalModelsSpec
     Hasura.Backends.Postgres.RQLGenerator
     Hasura.Backends.Postgres.RQLGenerator.GenAnnSelectG
     Hasura.Backends.Postgres.RQLGenerator.GenAssociatedTypes

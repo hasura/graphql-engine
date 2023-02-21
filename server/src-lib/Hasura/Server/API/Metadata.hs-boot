@@ -3,7 +3,7 @@ module Hasura.Server.API.Metadata
   )
 where
 
-import Hasura.NativeQuery.API qualified as NativeQuery
+import Hasura.NativeQuery.API qualified as LogicalModels
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.ConnectionTemplate
@@ -87,10 +87,10 @@ data RQLMetadataV1
   | RMDropComputedField !(AnyBackend DropComputedField)
   | -- Connection template
     RMTestConnectionTemplate !(AnyBackend TestConnectionTemplate)
-  | -- Native access
-    RMGetNativeQuery !(AnyBackend NativeQuery.GetNativeQuery)
-  | RMTrackNativeQuery !(AnyBackend NativeQuery.TrackNativeQuery)
-  | RMUntrackNativeQuery !(AnyBackend NativeQuery.UntrackNativeQuery)
+  | -- Logical Models
+    RMGetLogicalModel !(AnyBackend LogicalModels.GetLogicalModel)
+  | RMTrackLogicalModel !(AnyBackend LogicalModels.TrackLogicalModel)
+  | RMUntrackLogicalModel !(AnyBackend LogicalModels.UntrackLogicalModel)
   | -- Tables event triggers
     RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)

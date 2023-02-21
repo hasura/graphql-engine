@@ -187,11 +187,11 @@ class
     SourceConfig b ->
     ExceptT QErr m (RecreateEventTriggers, SourceCatalogMigrationState)
 
-  validateNativeQuery ::
+  validateLogicalModel ::
     (MonadIO m, MonadError QErr m) =>
     Env.Environment ->
     SourceConnConfiguration b ->
     NativeQueryInfo b ->
     m ()
-  validateNativeQuery _ _ _ =
+  validateLogicalModel _ _ _ =
     throw500 "validateNativeQuery: not implemented for this backend."

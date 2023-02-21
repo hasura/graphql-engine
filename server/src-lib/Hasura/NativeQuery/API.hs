@@ -1,21 +1,14 @@
 {-# LANGUAGE UndecidableInstances #-}
 
--- | This module houses the function associated with the default implementation
--- of Metadata V1 commands (and their types) for handling user-specified Native
--- Query fragments.
---
--- The definitions herein ought to suffice for any instantiation of Native
--- Queries that only deviates in the contents of the 'TrackNativeQuery' payload.
--- And as such, the metadata endpoint 'Hasura.Server.API.Metadata' is hardwired
--- directly to this module without any overloading provided.
+-- | Define and handle v1/metadata API operations to track, untrack, and get logical models.
 module Hasura.NativeQuery.API
-  ( GetNativeQuery (..),
-    TrackNativeQuery (..),
-    UntrackNativeQuery (..),
-    runGetNativeQuery,
-    runTrackNativeQuery,
-    runUntrackNativeQuery,
-    dropNativeQueryInMetadata,
+  ( GetLogicalModel (..),
+    TrackLogicalModel (..),
+    UntrackLogicalModel (..),
+    runGetLogicalModel,
+    runTrackLogicalModel,
+    runUntrackLogicalModel,
+    dropLogicalModelInMetadata,
     module Hasura.NativeQuery.Types,
   )
 where
@@ -45,22 +38,22 @@ import Hasura.Server.Init.FeatureFlag as FF
 import Hasura.Server.Types (HasServerConfigCtx (..), ServerConfigCtx (..))
 import Language.GraphQL.Draft.Syntax (unName)
 
--- | Default implementation of the 'track_native_query' request payload.
-data TrackNativeQuery (b :: BackendType) = TrackNativeQuery
+-- | Default implementation of the 'track_logical_model' request payload.
+data TrackLogicalModel (b :: BackendType) = TrackLogicalModel
   { tnqSource :: SourceName,
-    tnqRootFieldName :: NativeQueryName,
+    tnqRootFieldName :: LogicalModelName,
     tnqCode :: Text,
     tnqArguments :: HashMap NativeQueryArgumentName (ScalarType b),
     tnqDescription :: Maybe Text,
     tnqReturns :: CustomReturnType b
   }
 
-instance (Backend b) => HasCodec (TrackNativeQuery b) where
+instance (Backend b) => HasCodec (TrackLogicalModel b) where
   codec =
     AC.CommentCodec
-      ("A request to track a native query")
-      $ AC.object (codecNamePrefix @b <> "TrackNativeQuery")
-      $ TrackNativeQuery
+      ("A request to track a logical model")
+      $ AC.object (codecNamePrefix @b <> "TrackLogicalModel")
+      $ TrackLogicalModel
         <$> AC.requiredField "source" sourceDoc
           AC..= tnqSource
         <*> AC.requiredField "root_field_name" rootFieldDoc
@@ -74,25 +67,25 @@ instance (Backend b) => HasCodec (TrackNativeQuery b) where
         <*> AC.requiredField "returns" returnsDoc
           AC..= tnqReturns
     where
-      sourceDoc = "The source in whic this native query should be tracked"
-      rootFieldDoc = "Root field name for the native query"
+      sourceDoc = "The source in which this logical model should be tracked"
+      rootFieldDoc = "Root field name for the logical model"
       codeDoc = "Native code expression (SQL) to run"
       argumentsDoc = "Free variables in the expression and their types"
       returnsDoc = "Return type (table) of the expression"
       descriptionDoc = "A description of the query which appears in the graphql schema"
 
 deriving via
-  (AC.Autodocodec (TrackNativeQuery b))
+  (AC.Autodocodec (TrackLogicalModel b))
   instance
-    (Backend b) => FromJSON (TrackNativeQuery b)
+    (Backend b) => FromJSON (TrackLogicalModel b)
 
 deriving via
-  (AC.Autodocodec (TrackNativeQuery b))
+  (AC.Autodocodec (TrackLogicalModel b))
   instance
-    (Backend b) => ToJSON (TrackNativeQuery b)
+    (Backend b) => ToJSON (TrackLogicalModel b)
 
--- | Default implementation of the method 'nativeQueryTrackToInfo'.
-nativeQueryTrackToInfo ::
+-- | Validate a logical model and extract the logical model info from the request.
+logicalModelTrackToInfo ::
   forall b m.
   ( BackendMetadata b,
     MonadIO m,
@@ -100,9 +93,9 @@ nativeQueryTrackToInfo ::
   ) =>
   Env.Environment ->
   SourceConnConfiguration b ->
-  TrackNativeQuery b ->
+  TrackLogicalModel b ->
   m (NativeQueryInfo b)
-nativeQueryTrackToInfo env sourceConnConfig TrackNativeQuery {..} = do
+logicalModelTrackToInfo env sourceConnConfig TrackLogicalModel {..} = do
   nqiCode <- parseInterpolatedQuery tnqCode `onLeft` \e -> throw400 ParseFailed e
   let nqiRootFieldName = tnqRootFieldName
       nqiReturns = tnqReturns
@@ -110,32 +103,32 @@ nativeQueryTrackToInfo env sourceConnConfig TrackNativeQuery {..} = do
       nqiDescription = tnqDescription
       nqInfoImpl = NativeQueryInfo {..}
 
-  validateNativeQuery @b env sourceConnConfig nqInfoImpl
+  validateLogicalModel @b env sourceConnConfig nqInfoImpl
 
   pure nqInfoImpl
 
--- | API payload for the 'get_native_query' endpoint.
-data GetNativeQuery (b :: BackendType) = GetNativeQuery
+-- | API payload for the 'get_logical_model' endpoint.
+data GetLogicalModel (b :: BackendType) = GetLogicalModel
   { gnqSource :: SourceName
   }
 
-deriving instance Backend b => Show (GetNativeQuery b)
+deriving instance Backend b => Show (GetLogicalModel b)
 
-deriving instance Backend b => Eq (GetNativeQuery b)
+deriving instance Backend b => Eq (GetLogicalModel b)
 
-instance Backend b => FromJSON (GetNativeQuery b) where
-  parseJSON = withObject "GetNativeQuery" $ \o -> do
+instance Backend b => FromJSON (GetLogicalModel b) where
+  parseJSON = withObject "GetLogicalModel" $ \o -> do
     gnqSource <- o .: "source"
-    pure GetNativeQuery {..}
+    pure GetLogicalModel {..}
 
-instance Backend b => ToJSON (GetNativeQuery b) where
-  toJSON GetNativeQuery {..} =
+instance Backend b => ToJSON (GetLogicalModel b) where
+  toJSON GetLogicalModel {..} =
     object
       [ "source" .= gnqSource
       ]
 
--- | Handler for the 'get_native_query' endpoint.
-runGetNativeQuery ::
+-- | Handler for the 'get_logical_model' endpoint.
+runGetLogicalModel ::
   forall b m.
   ( BackendMetadata b,
     MetadataM m,
@@ -143,22 +136,22 @@ runGetNativeQuery ::
     MonadIO m,
     MonadError QErr m
   ) =>
-  GetNativeQuery b ->
+  GetLogicalModel b ->
   m EncJSON
-runGetNativeQuery q = do
+runGetLogicalModel q = do
   throwIfFeatureDisabled
 
   metadata <- getMetadata
 
-  let nativeQuery :: Maybe (NativeQueries b)
-      nativeQuery = metadata ^? metaSources . ix (gnqSource q) . toSourceMetadata . smNativeQueries @b
+  let logicalModel :: Maybe (NativeQueries b)
+      logicalModel = metadata ^? metaSources . ix (gnqSource q) . toSourceMetadata . smNativeQueries @b
 
-  pure (encJFromJValue (OMap.elems <$> nativeQuery))
+  pure (encJFromJValue (OMap.elems <$> logicalModel))
 
--- | Handler for the 'track_native_query' endpoint. The type 'TrackNativeQuery
--- b' (appearing here in wrapped as 'BackendTrackNativeQuery b' for 'AnyBackend'
--- compatibility) is defined in 'class NativeQueryMetadata'.
-runTrackNativeQuery ::
+-- | Handler for the 'track_logical_model' endpoint. The type 'TrackLogicalModel b'
+-- (appearing here in wrapped as 'BackendTrackLogicalModel b' for 'AnyBackend'
+-- compatibility) is defined in 'class LogicalModelMetadata'.
+runTrackLogicalModel ::
   forall b m.
   ( BackendMetadata b,
     CacheRWM m,
@@ -168,9 +161,9 @@ runTrackNativeQuery ::
     MonadIO m
   ) =>
   Env.Environment ->
-  TrackNativeQuery b ->
+  TrackLogicalModel b ->
   m EncJSON
-runTrackNativeQuery env trackNativeQueryRequest = do
+runTrackLogicalModel env trackLogicalModelRequest = do
   throwIfFeatureDisabled
 
   sourceConnConfig <-
@@ -179,14 +172,14 @@ runTrackNativeQuery env trackNativeQueryRequest = do
       =<< getMetadata
 
   (metadata :: NativeQueryInfo b) <- do
-    liftIO (runExceptT (nativeQueryTrackToInfo @b env sourceConnConfig trackNativeQueryRequest))
+    liftIO (runExceptT (logicalModelTrackToInfo @b env sourceConnConfig trackLogicalModelRequest))
       `onLeftM` throwError
 
   let fieldName = nqiRootFieldName metadata
       metadataObj =
         MOSourceObjId source $
           AB.mkAnyBackend $
-            SMONativeQuery @b fieldName
+            SMOLogicalModel @b fieldName
 
   buildSchemaCacheFor metadataObj $
     MetadataModifier $
@@ -195,33 +188,33 @@ runTrackNativeQuery env trackNativeQueryRequest = do
 
   pure successMsg
   where
-    source = tnqSource trackNativeQueryRequest
+    source = tnqSource trackLogicalModelRequest
 
--- | API payload for the 'untrack_native_query' endpoint.
-data UntrackNativeQuery (b :: BackendType) = UntrackNativeQuery
+-- | API payload for the 'untrack_logical_model' endpoint.
+data UntrackLogicalModel (b :: BackendType) = UntrackLogicalModel
   { utnqSource :: SourceName,
-    utnqRootFieldName :: NativeQueryName
+    utnqRootFieldName :: LogicalModelName
   }
 
-deriving instance Show (UntrackNativeQuery b)
+deriving instance Show (UntrackLogicalModel b)
 
-deriving instance Eq (UntrackNativeQuery b)
+deriving instance Eq (UntrackLogicalModel b)
 
-instance FromJSON (UntrackNativeQuery b) where
-  parseJSON = withObject "UntrackNativeQuery" $ \o -> do
+instance FromJSON (UntrackLogicalModel b) where
+  parseJSON = withObject "UntrackLogicalModel" $ \o -> do
     utnqSource <- o .: "source"
     utnqRootFieldName <- o .: "root_field_name"
-    pure UntrackNativeQuery {..}
+    pure UntrackLogicalModel {..}
 
-instance ToJSON (UntrackNativeQuery b) where
-  toJSON UntrackNativeQuery {..} =
+instance ToJSON (UntrackLogicalModel b) where
+  toJSON UntrackLogicalModel {..} =
     object
       [ "source" .= utnqSource,
         "root_field_name" .= utnqRootFieldName
       ]
 
--- | Handler for the 'untrack_native_query' endpoint.
-runUntrackNativeQuery ::
+-- | Handler for the 'untrack_logical_model' endpoint.
+runUntrackLogicalModel ::
   forall b m.
   ( BackendMetadata b,
     MonadError QErr m,
@@ -230,9 +223,9 @@ runUntrackNativeQuery ::
     HasServerConfigCtx m,
     MonadIO m
   ) =>
-  UntrackNativeQuery b ->
+  UntrackLogicalModel b ->
   m EncJSON
-runUntrackNativeQuery q = do
+runUntrackLogicalModel q = do
   throwIfFeatureDisabled
 
   -- Check source exists
@@ -241,25 +234,25 @@ runUntrackNativeQuery q = do
       . preview (metaSources . ix source . toSourceMetadata @b)
       =<< getMetadata
 
-  -- Check native query exists
+  -- Check the logical model exists
   unless (any ((== fieldName) . nqiRootFieldName) $ _smNativeQueries sourceMetadata) do
-    throw400 NotFound $ "Native query '" <> unName (getNativeQueryName fieldName) <> "' not found in source '" <> sourceNameToText source <> "'."
+    throw400 NotFound $ "Logical model '" <> unName (getLogicalModelName fieldName) <> "' not found in source '" <> sourceNameToText source <> "'."
 
   let metadataObj =
         MOSourceObjId source $
           AB.mkAnyBackend $
-            SMONativeQuery @b fieldName
+            SMOLogicalModel @b fieldName
 
   buildSchemaCacheFor metadataObj $
-    dropNativeQueryInMetadata @b source fieldName
+    dropLogicalModelInMetadata @b source fieldName
 
   pure successMsg
   where
     source = utnqSource q
     fieldName = utnqRootFieldName q
 
-dropNativeQueryInMetadata :: forall b. BackendMetadata b => SourceName -> NativeQueryName -> MetadataModifier
-dropNativeQueryInMetadata source rootFieldName =
+dropLogicalModelInMetadata :: forall b. BackendMetadata b => SourceName -> LogicalModelName -> MetadataModifier
+dropLogicalModelInMetadata source rootFieldName =
   MetadataModifier $
     metaSources . ix source . toSourceMetadata @b . smNativeQueries
       %~ OMap.delete rootFieldName
@@ -269,6 +262,6 @@ throwIfFeatureDisabled :: (HasServerConfigCtx m, MonadIO m, MonadError QErr m) =
 throwIfFeatureDisabled = do
   configCtx <- askServerConfigCtx
 
-  enableNativeQuery <- liftIO (_sccCheckFeatureFlag configCtx FF.nativeQueryInterface)
+  enableLogicalModels <- liftIO (_sccCheckFeatureFlag configCtx FF.nativeQueryInterface)
 
-  unless enableNativeQuery (throw500 "NativeQuery is disabled!")
+  unless enableLogicalModels (throw500 "LogicalModels is disabled!")

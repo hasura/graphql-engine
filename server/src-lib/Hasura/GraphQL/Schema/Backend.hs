@@ -183,14 +183,14 @@ class
     TableName b ->
     SchemaT r m [FieldParser n (MutationDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
-  buildNativeQueryRootFields ::
+  buildLogicalModelRootFields ::
     MonadBuildSchema b r m n =>
     NativeQueryInfo b ->
     SchemaT
       r
       m
       (Maybe (FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
-  buildNativeQueryRootFields _ = pure Nothing
+  buildLogicalModelRootFields _ = pure Nothing
 
   -- | Make a parser for relationships. Default implementaton elides
   -- relationships altogether.

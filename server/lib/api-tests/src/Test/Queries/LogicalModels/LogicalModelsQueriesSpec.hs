@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Access to the SQL
-module Test.Queries.NativeAccess.NativeAccessQueriesSpec (spec) where
+module Test.Queries.LogicalModels.LogicalModelsQueriesSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
@@ -23,12 +23,12 @@ import Test.Hspec (SpecWith, describe, it)
 
 -- ** Preamble
 
-featureFlagForNativeQuery :: String
-featureFlagForNativeQuery = "HASURA_FF_NATIVE_QUERY_INTERFACE"
+featureFlagForLogicalModels :: String
+featureFlagForLogicalModels = "HASURA_FF_NATIVE_QUERY_INTERFACE"
 
 spec :: SpecWith GlobalTestEnvironment
 spec =
-  Fixture.hgeWithEnv [(featureFlagForNativeQuery, "True")] $
+  Fixture.hgeWithEnv [(featureFlagForLogicalModels, "True")] $
     Fixture.run
       ( NE.fromList
           [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
@@ -71,7 +71,7 @@ tests opts = do
       shouldBe :: IO Value -> Value -> IO ()
       shouldBe = shouldReturnYaml opts
 
-  describe "Testing Native Access" $ do
+  describe "Testing Logical Models" $ do
     it "Runs the absolute simplest query that takes no parameters" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
@@ -81,7 +81,7 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: pg_track_native_query
+              type: pg_track_logical_model
               args:
                 type: query
                 source: *source
@@ -131,7 +131,7 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: pg_track_native_query
+              type: pg_track_logical_model
               args:
                 type: query
                 source: *source
@@ -182,9 +182,9 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: pg_track_native_query
+              type: pg_track_logical_model
               args:
-                type: query 
+                type: query
                 source: *source
                 root_field_name: hello_world_function
                 code: *queryWithDuplicates
@@ -212,7 +212,7 @@ tests opts = do
               testEnvironment
               [graphql|
               query {
-                hello_world_function ( 
+                hello_world_function (
                   distinct_on: [one]
                   order_by: [{one:asc}]
                 ){
@@ -233,7 +233,7 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: pg_track_native_query
+              type: pg_track_logical_model
               args:
                 type: query
                 source: *source
@@ -281,7 +281,7 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: pg_track_native_query
+              type: pg_track_logical_model
               args:
                 type: query
                 source: *source
@@ -333,7 +333,7 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: pg_track_native_query
+              type: pg_track_logical_model
               args:
                 type: query
                 source: *source
@@ -393,7 +393,7 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: pg_track_native_query
+              type: pg_track_logical_model
               args:
                 type: query
                 source: *source
@@ -459,7 +459,7 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: pg_track_native_query
+              type: pg_track_logical_model
               args:
                 type: query
                 source: *source
@@ -484,7 +484,7 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: pg_track_native_query
+              type: pg_track_logical_model
               args:
                 type: query
                 source: *source
@@ -522,7 +522,7 @@ tests opts = do
           expected =
             [yaml|
                 data:
-                  article_with_excerpt_1: 
+                  article_with_excerpt_1:
                     - excerpt: "I like to eat dog food I am a dogs..."
                   article_with_excerpt_2:
                     - excerpt: "I like to eat..."
@@ -549,7 +549,7 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: pg_track_native_query
+              type: pg_track_logical_model
               args:
                 type: query
                 source: *source
@@ -614,7 +614,7 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: pg_track_native_query
+              type: pg_track_logical_model
               args:
                 type: query
                 source: *source

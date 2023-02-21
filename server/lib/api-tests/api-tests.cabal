@@ -94,7 +94,7 @@ library
     Test.API.GraphQL.ContentLengthSpec
     Test.API.Metadata.ComputedFieldsSpec
     Test.API.Metadata.InconsistentSpec
-    Test.API.Metadata.NativeQuerySpec
+    Test.API.Metadata.LogicalModelsSpec
     Test.API.Metadata.SuggestRelationshipsSpec
     Test.API.Metadata.TestConnectionTemplateSpec
     Test.API.Metadata.TransparentDefaultsSpec
@@ -172,7 +172,7 @@ library
     Test.Queries.Errors.NoQueriesAvailableSpec
     Test.Queries.FilterSearch.AggregationPredicatesSpec
     Test.Queries.FilterSearch.FilterSearchSpec
-    Test.Queries.NativeAccess.NativeAccessQueriesSpec
+    Test.Queries.LogicalModels.LogicalModelsQueriesSpec
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
     Test.Queries.Paginate.OffsetSpec

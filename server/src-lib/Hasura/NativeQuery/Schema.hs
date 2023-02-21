@@ -1,6 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Hasura.NativeQuery.Schema (defaultBuildNativeQueryRootFields) where
+-- | Schema parsers for logical models.
+module Hasura.NativeQuery.Schema (defaultBuildLogicalModelRootFields) where
 
 import Data.Has (Has (getter))
 import Data.HashMap.Strict qualified as HM
@@ -42,7 +43,7 @@ import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 
-defaultBuildNativeQueryRootFields ::
+defaultBuildLogicalModelRootFields ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
     BackendCustomTypeSelectSchema b
@@ -52,9 +53,9 @@ defaultBuildNativeQueryRootFields ::
     r
     m
     (Maybe (P.FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
-defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
-  let fieldName = getNativeQueryName nqiRootFieldName
-  nativeQueryArgsParser <- nativeQueryArgumentsSchema @b @r @m @n fieldName nqiArguments
+defaultBuildLogicalModelRootFields NativeQueryInfo {..} = runMaybeT $ do
+  let fieldName = getLogicalModelName nqiRootFieldName
+  logicalModelArgsParser <- logicalModelArgumentsSchema @b @r @m @n fieldName nqiArguments
 
   sourceInfo :: SourceInfo b <- asks getter
 
@@ -64,8 +65,8 @@ defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
 
   stringifyNumbers <- retrieve Options.soStringifyNumbers
 
-  selectionSetParser <- MaybeT $ customTypeSelectionList @b @r @m @n (getNativeQueryName nqiRootFieldName) nqiReturns
-  customTypesArgsParser <- lift $ customTypeArguments @b @r @m @n (getNativeQueryName nqiRootFieldName) nqiReturns
+  selectionSetParser <- MaybeT $ customTypeSelectionList @b @r @m @n (getLogicalModelName nqiRootFieldName) nqiReturns
+  customTypesArgsParser <- lift $ customTypeArguments @b @r @m @n (getLogicalModelName nqiRootFieldName) nqiReturns
 
   let interpolatedQuery nqArgs =
         InterpolatedQuery $
@@ -73,7 +74,7 @@ defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
             ( \var -> case HM.lookup var nqArgs of
                 Just arg -> UVParameter Nothing arg
                 Nothing ->
-                  -- the `nativeQueryArgsParser` will already have checked
+                  -- the `logicalModelArgsParser` will already have checked
                   -- we have all the args the query needs so this _should
                   -- not_ happen
                   error $ "No native query arg passed for " <> show var
@@ -81,13 +82,13 @@ defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
             (getInterpolatedQuery nqiCode)
 
   pure $
-    P.setFieldParserOrigin (MO.MOSourceObjId sourceName (mkAnyBackend $ MO.SMONativeQuery @b nqiRootFieldName)) $
+    P.setFieldParserOrigin (MO.MOSourceObjId sourceName (mkAnyBackend $ MO.SMOLogicalModel @b nqiRootFieldName)) $
       P.subselection
         fieldName
         description
         ( (,)
             <$> customTypesArgsParser
-            <*> nativeQueryArgsParser
+            <*> logicalModelArgsParser
         )
         selectionSetParser
         <&> \((args, nqArgs), fields) ->
@@ -107,13 +108,13 @@ defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
                 IR._asnNamingConvention = Just tCase
               }
 
-nativeQueryArgumentsSchema ::
+logicalModelArgumentsSchema ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   G.Name ->
   HashMap NativeQueryArgumentName (ScalarType b) ->
   MaybeT (SchemaT r m) (P.InputFieldsParser n (HashMap NativeQueryArgumentName (Column.ColumnValue b)))
-nativeQueryArgumentsSchema nativeQueryName argsSignature = do
+logicalModelArgumentsSchema logicalModelName argsSignature = do
   -- Lift 'SchemaT r m (InputFieldsParser ..)' into a monoid using Applicative.
   -- This lets us use 'foldMap' + monoid structure of hashmaps to avoid awkwardly
   -- traversing the arguments and building the resulting parser.
@@ -131,12 +132,12 @@ nativeQueryArgumentsSchema nativeQueryName argsSignature = do
             return $
               P.field
                 argName
-                (Just $ G.Description ("Native query argument " <> getNativeQueryArgumentName name))
+                (Just $ G.Description ("Logical model argument " <> getNativeQueryArgumentName name))
                 argValueParser
         )
         (HM.toList argsSignature)
 
-  let desc = Just $ G.Description $ G.unName nativeQueryName <> " Native Query Arguments"
+  let desc = Just $ G.Description $ G.unName logicalModelName <> " Logical Model Arguments"
 
   pure $
     if null argsSignature
@@ -145,4 +146,4 @@ nativeQueryArgumentsSchema nativeQueryName argsSignature = do
         P.field
           [G.name|args|]
           desc
-          (P.object (nativeQueryName <> [G.name|_arguments|]) desc argsParser)
+          (P.object (logicalModelName <> [G.name|_arguments|]) desc argsParser)

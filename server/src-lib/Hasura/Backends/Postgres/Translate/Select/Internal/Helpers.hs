@@ -19,7 +19,7 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
     withForceAggregation,
     selectToSelectWith,
     customSQLToTopLevelCTEs,
-    nativeQueryNameToAlias,
+    logicalModelNameToAlias,
     toQuery,
   )
 where
@@ -42,7 +42,7 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
 import Hasura.Backends.Postgres.Translate.Types (CustomSQLCTEs (..))
 import Hasura.Backends.Postgres.Types.Function
 import Hasura.NativeQuery.IR (NativeQuery (..))
-import Hasura.NativeQuery.Metadata (NativeQueryName (..))
+import Hasura.NativeQuery.Metadata (LogicalModelName (..))
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Common (FieldName)
@@ -129,11 +129,11 @@ selectFromToFromItem prefix = \case
             qf
             (fmap (fmap (first S.toColumnAlias)) defListM)
   FromNativeQuery nq ->
-    S.FIIdentifier (S.tableAliasToIdentifier $ nativeQueryNameToAlias (nqRootFieldName nq))
+    S.FIIdentifier (S.tableAliasToIdentifier $ logicalModelNameToAlias (nqRootFieldName nq))
 
--- | Given a @NativeQueryName@, what should we call the CTE generated for it?
-nativeQueryNameToAlias :: NativeQueryName -> S.TableAlias
-nativeQueryNameToAlias nqName = S.mkTableAlias ("cte_" <> toTxt (getNativeQueryName nqName))
+-- | Given a @LogicalModelName@, what should we call the CTE generated for it?
+logicalModelNameToAlias :: LogicalModelName -> S.TableAlias
+logicalModelNameToAlias nqName = S.mkTableAlias ("cte_" <> toTxt (getLogicalModelName nqName))
 
 -- | Converts a function name to an 'Identifier'.
 --

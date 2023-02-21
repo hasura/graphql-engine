@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
--- | Tests of the Native Queryies feature.
-module Test.API.Metadata.NativeQuerySpec (spec) where
+-- | Tests of the Logical Models feature.
+module Test.API.Metadata.LogicalModelsSpec (spec) where
 
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
@@ -16,15 +16,15 @@ import Test.Hspec (SpecWith, describe, it)
 
 -- ** Preamble
 
--- We currently don't need the table to exist in order to set up a Native Query
+-- We currently don't need the table to exist in order to set up a logical model
 -- stanza.
 
-featureFlagForNativeQuery :: String
-featureFlagForNativeQuery = "HASURA_FF_NATIVE_QUERY_INTERFACE"
+featureFlagForLogicalModels :: String
+featureFlagForLogicalModels = "HASURA_FF_NATIVE_QUERY_INTERFACE"
 
 spec :: SpecWith GlobalTestEnvironment
 spec =
-  Fixture.hgeWithEnv [(featureFlagForNativeQuery, "True")] $
+  Fixture.hgeWithEnv [(featureFlagForLogicalModels, "True")] $
     Fixture.run
       ( NE.fromList
           [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
@@ -61,7 +61,7 @@ tests opts = do
   let query :: Text
       query = "SELECT thing / {{denominator}} AS divided FROM stuff WHERE date = {{target_date}}"
 
-  it "Fails to track a Native Query without admin access" $
+  it "Fails to track a Logical Model without admin access" $
     \testEnv -> do
       shouldReturnYaml
         opts
@@ -71,7 +71,7 @@ tests opts = do
             [ ("X-Hasura-Role", "not-admin")
             ]
             [yaml|
-              type: pg_track_native_query
+              type: pg_track_logical_model
               args:
                 type: query
                 source: postgres
@@ -91,7 +91,7 @@ tests opts = do
           path: "$.args"
         |]
   it
-    "Fails to untrack a Native Query without admin access"
+    "Fails to untrack a Logical Model without admin access"
     $ \testEnv -> do
       shouldReturnYaml
         opts
@@ -101,7 +101,7 @@ tests opts = do
             [ ("X-Hasura-Role", "not-admin")
             ]
             [yaml|
-              type: pg_untrack_native_query
+              type: pg_untrack_logical_model
               args:
                 root_field_name: divided_stuff
                 source: postgres
@@ -113,7 +113,7 @@ tests opts = do
           path: "$.args"
         |]
   it
-    "Fails to list a Native Query without admin access"
+    "Fails to list a Logical Model without admin access"
     $ \testEnv -> do
       shouldReturnYaml
         opts
@@ -123,7 +123,7 @@ tests opts = do
             [ ("X-Hasura-Role", "not-admin")
             ]
             [yaml|
-              type: pg_get_native_query
+              type: pg_get_logical_model
               args:
                 source: postgres
             |]
@@ -135,13 +135,13 @@ tests opts = do
         |]
 
   describe "Implementation" $ do
-    it "Adds a simple native access function with no arguments and returns a 200" $ \testEnv -> do
+    it "Adds a simple logical model of a function with no arguments and returns a 200" $ \testEnv -> do
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
             testEnv
             [yaml|
-              type: pg_track_native_query
+              type: pg_track_logical_model
               args:
                 type: query
                 source: postgres
@@ -158,14 +158,14 @@ tests opts = do
           message: success
         |]
 
-    it "Adding a native access function with broken SQL returns a 400" $ \testEnv -> do
+    it "Adding a logical model of a function with broken SQL returns a 400" $ \testEnv -> do
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadataWithStatus
             400
             testEnv
             [yaml|
-              type: pg_track_native_query
+              type: pg_track_logical_model
               args:
                 type: query
                 source: postgres
@@ -185,13 +185,13 @@ tests opts = do
           path: "$.args"
         |]
 
-    it "Checks for the native access function" $ \testEnv -> do
+    it "Checks for the logical model of a function" $ \testEnv -> do
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
             testEnv
             [yaml|
-              type: pg_track_native_query
+              type: pg_track_logical_model
               args:
                 type: query
                 source: postgres
@@ -214,7 +214,7 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnv
             [yaml|
-              type: pg_get_native_query
+              type: pg_get_logical_model
               args:
                 source: postgres
             |]
@@ -230,12 +230,12 @@ tests opts = do
                 divided: integer
         |]
 
-    it "Drops a native access function and returns a 200" $ \testEnv -> do
+    it "Drops a logical model of a function and returns a 200" $ \testEnv -> do
       _ <-
         GraphqlEngine.postMetadata
           testEnv
           [yaml|
-            type: pg_track_native_query
+            type: pg_track_logical_model
             args:
               type: query
               source: postgres
@@ -254,7 +254,7 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnv
             [yaml|
-              type: pg_untrack_native_query
+              type: pg_untrack_logical_model
               args:
                 source: postgres
                 root_field_name: divided_stuff
@@ -264,12 +264,12 @@ tests opts = do
           message: success
         |]
 
-    it "Checks the native access function can be deleted" $ \testEnv -> do
+    it "Checks the logical model of a function can be deleted" $ \testEnv -> do
       _ <-
         GraphqlEngine.postMetadata
           testEnv
           [yaml|
-            type: pg_track_native_query
+            type: pg_track_logical_model
             args:
               type: query
               source: postgres
@@ -287,7 +287,7 @@ tests opts = do
         GraphqlEngine.postMetadata
           testEnv
           [yaml|
-            type: pg_untrack_native_query
+            type: pg_untrack_logical_model
             args:
               root_field_name: divided_stuff
               source: postgres
@@ -298,7 +298,7 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnv
             [yaml|
-              type: pg_get_native_query
+              type: pg_get_logical_model
               args:
                 source: postgres
             |]
@@ -307,8 +307,8 @@ tests opts = do
           []
         |]
 
-  describe "Validation fails on untrack a native query" do
-    it "when native query does not exist" $
+  describe "Validation fails on untrack a logical model" do
+    it "when a logical model does not exist" $
       \testEnv -> do
         shouldReturnYaml
           opts
@@ -316,7 +316,7 @@ tests opts = do
               400
               testEnv
               [yaml|
-              type: pg_untrack_native_query
+              type: pg_untrack_logical_model
               args:
                 root_field_name: some_native_query
                 source: postgres
@@ -324,11 +324,11 @@ tests opts = do
           )
           [yaml|
           code: not-found
-          error: "Native query 'some_native_query' not found in source 'postgres'."
+          error: "Logical model 'some_native_query' not found in source 'postgres'."
           path: "$.args"
         |]
 
-  describe "Validation fails on track a native query when query" do
+  describe "Validation fails on track a logical model when query" do
     it "has a syntax error" $
       \testEnv -> do
         let spicyQuery :: Text
@@ -339,7 +339,7 @@ tests opts = do
               400
               testEnv
               [yaml|
-                type: pg_track_native_query
+                type: pg_track_logical_model
                 args:
                   type: query
                   source: postgres
@@ -365,7 +365,7 @@ tests opts = do
                   message: "syntax error at or near \"query\""
                   status_code: "42601"
                 prepared: false
-                statement: "PREPARE _naqi_vali_divided_stuff AS query bad"
+                statement: "PREPARE _logimo_vali_divided_stuff AS query bad"
               path: "$.args"
           |]
 
@@ -379,7 +379,7 @@ tests opts = do
               400
               testEnv
               [yaml|
-                type: pg_track_native_query
+                type: pg_track_logical_model
                 args:
                   type: query
                   source: postgres
@@ -405,6 +405,6 @@ tests opts = do
                   message: "relation \"does_not_exist\" does not exist"
                   status_code: "42P01"
                 prepared: false
-                statement: "PREPARE _naqi_vali_divided_stuff AS SELECT thing / $1 AS divided FROM does_not_exist WHERE date = $2"
+                statement: "PREPARE _logimo_vali_divided_stuff AS SELECT thing / $1 AS divided FROM does_not_exist WHERE date = $2"
               path: "$.args"
           |]

@@ -130,11 +130,11 @@ test-integration-postgres: remove-tix-file
 	HASURA_GRAPHQL_DATABASE_URL='$(TEST_POSTGRES_URL)' \
 			cabal run graphql-engine:test:graphql-engine-test-postgres
 
-.PHONY: test-native-queries
-## test-native-queries: run all tests for Native Queries feature
-test-native-queries:
-	HSPEC_MATCH=Native make test-unit
-	HSPEC_MATCH=Native make test-postgres
+.PHONY: test-logical-models
+## test-logical-models: run all tests for the Logical Model feature
+test-logical-models:
+	HSPEC_MATCH=LogicalModels make test-unit
+	HSPEC_MATCH=LogicalModels make test-postgres
 
 .PHONY: py-tests
 ## py-tests: run the python-based test suite
