@@ -70,3 +70,7 @@ export const getErrorText = (uFacingStep: UserFacingStep) => {
       return 'There was an unexpected problem with deploying your project';
   }
 };
+
+export const getProjectEnvVarPageLink = () => {
+  return window.location.pathname.replace(/(console.*)$/g, 'env-vars');
+};

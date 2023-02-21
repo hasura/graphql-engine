@@ -8,7 +8,7 @@ import {
 } from 'react-icons/fa';
 import { capitalize } from '@/components/Common/utils/jsUtils';
 import { UserFacingStep, FallbackApp } from '../../../types';
-import { getErrorText } from '../utils';
+import { getErrorText, getProjectEnvVarPageLink } from '../utils';
 import { LinkButton } from './LinkButton';
 import { transformFallbackAppToLinkButtonProps } from '../fallbackAppUtil';
 
@@ -43,10 +43,37 @@ export function ErrorBox(props: Props) {
   };
 
   const getErrorMessage = () => {
+    let errorMsg: string | React.ReactElement = '';
+
     if (error?.error?.message) {
-      return capitalize(error.error.message);
+      errorMsg = capitalize(error.error.message);
+    } else {
+      errorMsg = JSON.stringify(error);
     }
-    return JSON.stringify(error);
+
+    // add link to project env vars page in case of database connection error
+    if (errorMsg.includes('Database connection error')) {
+      errorMsg = (
+        <>
+          <div className="whitespace-pre-line">{errorMsg}</div>
+          <br />
+          <div>
+            You can update the project environment variables{' '}
+            <a
+              href={getProjectEnvVarPageLink()}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-zinc-400 hover:text-zinc-500"
+            >
+              here
+            </a>
+            .
+          </div>
+        </>
+      );
+    }
+
+    return errorMsg;
   };
 
   return (

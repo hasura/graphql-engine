@@ -84,10 +84,7 @@ export function WorkflowProgress(props: WorkflowProgressProps) {
       }
 
       setEnvVarsFormState('default');
-    }
-    const sufficientEnvStepStatus =
-      progressState[OneClickDeploymentState.SufficientEnvironmentVariables];
-    if (sufficientEnvStepStatus.kind === 'success') {
+    } else {
       setEnvVarsFormState('hidden');
     }
   }, [progressState]);
