@@ -329,6 +329,7 @@ common lib-depends
                      , these
                      , time >= 1.9
                      , time-compat
+                     , time-manager
                      , transformers
                      , transformers-base
                      , unordered-containers >= 0.2.12
