@@ -1,6 +1,6 @@
-import { TriggerOperation } from '@/components/Common/FilterQuery/state';
-import globals from '@/Globals';
-import { isEnvironmentSupportMultiTenantConnectionPooling } from '@/utils/proConsole';
+import { TriggerOperation } from '../../../components/Common/FilterQuery/state';
+import globals from '../../../Globals';
+import { isEnvironmentSupportMultiTenantConnectionPooling } from '../../../utils/proConsole';
 import React from 'react';
 import { DeepRequired } from 'ts-essentials';
 import { DataSourcesAPI } from '../..';

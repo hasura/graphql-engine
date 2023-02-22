@@ -1,5 +1,5 @@
-import { CustomizationForm } from '@/features/ConnectDB';
-import { SimpleForm } from '@/new-components/Form';
+import { CustomizationForm } from '../..';
+import { SimpleForm } from '../../../../new-components/Form';
 import { expect } from '@storybook/jest';
 import { ComponentStory, Meta } from '@storybook/react';
 import { userEvent, waitFor, within } from '@storybook/testing-library';

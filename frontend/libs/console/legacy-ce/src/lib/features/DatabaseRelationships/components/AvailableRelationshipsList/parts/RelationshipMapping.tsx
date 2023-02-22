@@ -1,5 +1,5 @@
-import { Tooltip } from '@/new-components/Tooltip';
-import { getRemoteFieldPath } from '@/features/RelationshipsTable';
+import { Tooltip } from '../../../../../new-components/Tooltip';
+import { getRemoteFieldPath } from '../../../../RelationshipsTable';
 import React from 'react';
 import {
   FaArrowRight,

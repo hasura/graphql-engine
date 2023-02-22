@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useFamiliaritySurveyData } from '@/features/Surveys';
-import { trackCustomEvent } from '@/features/Analytics';
+import { useFamiliaritySurveyData } from '../../../Surveys';
+import { trackCustomEvent } from '../../../Analytics';
 import { useOnboardingData } from './useOnboardingData';
 import { getWizardState } from '../utils';
 

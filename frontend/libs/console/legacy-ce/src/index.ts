@@ -10,9 +10,12 @@ import { ApiLimits } from './lib/components/Services/ApiExplorer/Security';
 import { IntrospectionOptions } from './lib/components/Services/ApiExplorer/Security/Introspection';
 
 import * as EndpointNamedExps from './lib/Endpoints';
+import * as ControlPlane from './lib/features/ControlPlane';
 const CommonScss = require('./lib/components/Common/Common.module.scss');
 const filterQueryScss = require('./lib/components/Common/FilterQuery/FilterQuery.module.scss');
 const tableScss = require('./lib/components/Common/TableCommon/Table.module.scss');
+
+export { ControlPlane };
 
 export { App as ConsoleCeApp } from './lib/client';
 
@@ -21,9 +24,12 @@ export type {
   SetOpenTelemetryQuery,
   unexistingEnvVarSchema,
   hasuraEnvVarsNotAllowedSchema,
-} from '@/features/hasura-metadata-types';
+} from './lib/features/hasura-metadata-types';
 export type { ServerConfig } from './lib/hooks';
-export type { MetadataResponse, SchemaResponse } from '@/features/MetadataAPI';
+export type {
+  MetadataResponse,
+  SchemaResponse,
+} from './lib/features/MetadataAPI';
 export { DragFoldTable };
 
 export { Editor, SearchableSelectBox };
@@ -129,6 +135,8 @@ export {
   isMonitoringTabSupportedEnvironment,
   isEnvironmentSupportMultiTenantConnectionPooling,
 } from './lib/utils/proConsole';
+
+export { isCloudConsole } from './lib/utils/cloudConsole';
 
 export { AllowListDetail } from './lib/components/Services/AllowList/AllowListDetail';
 

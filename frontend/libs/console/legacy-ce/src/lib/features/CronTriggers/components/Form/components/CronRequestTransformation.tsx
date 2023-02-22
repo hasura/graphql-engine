@@ -1,5 +1,5 @@
 import React, { useEffect, useReducer } from 'react';
-import ConfigureTransformation from '@/components/Common/ConfigureTransformation/ConfigureTransformation';
+import ConfigureTransformation from '../../../../../components/Common/ConfigureTransformation/ConfigureTransformation';
 import {
   getCronTriggerRequestTransformDefaultState,
   requestTransformReducer,
@@ -19,27 +19,27 @@ import {
   setRequestUrlPreview,
   setRequestUrlTransform,
   setSessionVars,
-} from '@/components/Common/ConfigureTransformation/requestTransformState';
+} from '../../../../../components/Common/ConfigureTransformation/requestTransformState';
 import {
   QueryParams,
   RequestTransform,
   RequestTransformContentType,
   RequestTransformMethod,
-} from '@/metadata/types';
+} from '../../../../../metadata/types';
 import {
   KeyValuePair,
   RequestTransformStateBody,
-} from '@/components/Common/ConfigureTransformation/stateDefaults';
+} from '../../../../../components/Common/ConfigureTransformation/stateDefaults';
 import {
   getRequestTransformObject,
   getTransformState,
   getValidateTransformOptions,
   parseValidateApiData,
-} from '@/components/Common/ConfigureTransformation/utils';
+} from '../../../../../components/Common/ConfigureTransformation/utils';
 import { useDispatch } from 'react-redux';
-import Endpoints from '@/Endpoints';
-import requestAction from '@/utils/requestAction';
-import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
+import Endpoints from '../../../../../Endpoints';
+import requestAction from '../../../../../utils/requestAction';
+import { useDebouncedEffect } from '../../../../../hooks/useDebounceEffect';
 
 interface CronRequestTransformationProps {
   initialValue?: RequestTransform;

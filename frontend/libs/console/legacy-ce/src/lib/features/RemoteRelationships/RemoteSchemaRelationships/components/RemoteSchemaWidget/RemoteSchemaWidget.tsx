@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 
-import { IndicatorCard } from '@/new-components/IndicatorCard';
-import { useRemoteSchema } from '@/features/MetadataAPI';
-import { RemoteRelationship } from '@/metadata/types';
+import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
+import { useRemoteSchema } from '../../../../MetadataAPI';
+import { RemoteRelationship } from '../../../../../metadata/types';
 
 import {
   RemoteSchemaTree,

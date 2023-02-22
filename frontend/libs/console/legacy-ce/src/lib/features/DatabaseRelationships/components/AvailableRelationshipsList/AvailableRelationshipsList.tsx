@@ -1,7 +1,7 @@
 import React from 'react';
-import { Table } from '@/features/hasura-metadata-types';
-import { CardedTable } from '@/new-components/CardedTable';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { Table } from '../../../hasura-metadata-types';
+import { CardedTable } from '../../../../new-components/CardedTable';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { FiRefreshCcw } from 'react-icons/fi';
 import Skeleton from 'react-loading-skeleton';
 import { QueryClient, useQueryClient } from 'react-query';

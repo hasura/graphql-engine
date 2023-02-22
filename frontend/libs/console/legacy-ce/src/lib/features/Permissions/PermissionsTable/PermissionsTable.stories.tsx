@@ -1,6 +1,6 @@
 import React from 'react';
 import { Story, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 
 import { PermissionsTable, PermissionsTableProps } from './PermissionsTable';
 import { handlers } from '../PermissionsForm/mocks/handlers.mock';

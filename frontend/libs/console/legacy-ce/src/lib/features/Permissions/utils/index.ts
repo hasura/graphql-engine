@@ -1,4 +1,4 @@
-import { Permission } from '@/features/hasura-metadata-types';
+import { Permission } from '../../hasura-metadata-types';
 
 export const permissionToKey = {
   insert: 'insert_permissions',

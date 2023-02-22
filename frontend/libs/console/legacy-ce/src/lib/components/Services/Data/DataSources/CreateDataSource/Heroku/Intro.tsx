@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { Button } from '@/new-components/Button';
-import { Analytics } from '@/features/Analytics';
+import { Button } from '../../../../../../new-components/Button';
+import { Analytics } from '../../../../../../features/Analytics';
 import styles from '../styles.module.scss';
 import { HerokuSession } from './types';
 import { Dispatch } from '../../../../../../types';

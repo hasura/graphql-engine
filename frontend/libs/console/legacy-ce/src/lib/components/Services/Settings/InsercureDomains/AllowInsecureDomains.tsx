@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
-import { Button } from '@/new-components/Button';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Button } from '../../../../new-components/Button';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import { Dispatch, ReduxState } from '../../../../types';
 import AddDomain from './AddDomain';
 import { getConfirmation } from '../../../Common/utils/jsUtils';

@@ -1,5 +1,5 @@
-import { MetadataTableConfig } from '@/features/hasura-metadata-types';
-import { Driver } from '@/dataSources';
+import { MetadataTableConfig } from '../../hasura-metadata-types';
+import { Driver } from '../../../dataSources';
 
 export type CustomFieldNamesFormVals = {
   custom_name: string;

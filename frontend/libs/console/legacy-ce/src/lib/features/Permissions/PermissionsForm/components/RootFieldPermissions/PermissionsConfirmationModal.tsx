@@ -1,10 +1,10 @@
 import React from 'react';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../../Analytics';
 import { FaExclamationTriangle } from 'react-icons/fa';
-import { Button } from '@/new-components/Button';
-import { Dialog } from '@/new-components/Dialog';
-import { LS_KEYS, setLSItem } from '@/utils/localStorage';
-import { Checkbox } from '@/new-components/Form';
+import { Button } from '../../../../../new-components/Button';
+import { Dialog } from '../../../../../new-components/Dialog';
+import { LS_KEYS, setLSItem } from '../../../../../utils/localStorage';
+import { Checkbox } from '../../../../../new-components/Form';
 
 type CustomDialogFooterProps = {
   onSubmit: () => void;

@@ -1,11 +1,7 @@
 import React from 'react';
-import { isEnvironmentSupportMultiTenantConnectionPooling } from '@/utils/proConsole';
+import { isEnvironmentSupportMultiTenantConnectionPooling } from '../../../utils/proConsole';
 import { DeepRequired } from 'ts-essentials';
-import {
-  ColumnsInfoResult,
-  currentDriver,
-  DataSourcesAPI,
-} from '@/dataSources';
+import { ColumnsInfoResult, currentDriver, DataSourcesAPI } from '../..';
 
 import {
   Table,

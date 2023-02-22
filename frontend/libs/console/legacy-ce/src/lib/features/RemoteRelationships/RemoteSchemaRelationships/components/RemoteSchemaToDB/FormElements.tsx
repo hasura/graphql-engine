@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { useRemoteSchema } from '@/features/MetadataAPI';
-import { useTableColumns } from '@/features/SqlQueries';
-import { InputField, Select } from '@/new-components/Form';
-import { MapSelector } from '@/new-components/MapSelector';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { useRemoteSchema } from '../../../../MetadataAPI';
+import { useTableColumns } from '../../../../SqlQueries';
+import { InputField, Select } from '../../../../../new-components/Form';
+import { MapSelector } from '../../../../../new-components/MapSelector';
+import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
 import {
   LinkBlockHorizontal,
   LinkBlockVertical,
-} from '@/new-components/LinkBlock';
+} from '../../../../../new-components/LinkBlock';
 import { RemoteDatabaseWidget } from '../RemoteDatabaseWidget';
 import { RsSourceTypeSelector } from '../RsSourceTypeSelector';
 import { Schema } from './schema';

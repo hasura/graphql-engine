@@ -1,8 +1,8 @@
 import { useQuery } from 'react-query';
-import Endpoints from '@/Endpoints';
-import { Api } from '@/hooks/apiUtils';
-import { CronTrigger } from '@/metadata/types';
-import { useAppSelector } from '@/store';
+import Endpoints from '../../../../../Endpoints';
+import { Api } from '../../../../../hooks/apiUtils';
+import { CronTrigger } from '../../../../../metadata/types';
+import { useAppSelector } from '../../../../../store';
 
 interface GetCronTriggersResponse {
   cron_triggers: CronTrigger[];

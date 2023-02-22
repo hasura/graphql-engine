@@ -1,5 +1,5 @@
-import { TableColumn } from '@/features/DataSource';
-import { MetadataDataSource } from '@/metadata/types';
+import { TableColumn } from '../../../../../DataSource';
+import { MetadataDataSource } from '../../../../../../metadata/types';
 export const tableColumns = [
   {
     name: 'Series_reference',

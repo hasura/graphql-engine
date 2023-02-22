@@ -2,10 +2,10 @@ import React from 'react';
 import { browserHistory, Link } from 'react-router';
 import { FaSearch } from 'react-icons/fa';
 
-import { Button } from '@/new-components/Button';
-import { Analytics } from '@/features/Analytics';
+import { Button } from '../../../../new-components/Button';
+import { Analytics } from '../../../../features/Analytics';
 import styles from './LeftSubSidebar.module.scss';
-import { DropdownButton } from '@/new-components/DropdownButton';
+import { DropdownButton } from '../../../../new-components/DropdownButton';
 
 interface Props extends React.ComponentProps<'div'> {
   showAddBtn: boolean;

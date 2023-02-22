@@ -6,8 +6,8 @@ import {
   showSuccessNotificationLegacy,
   showWarningNotificationLegacy,
   showInfoNotificationLegacy,
-} from '@/new-components/Toasts';
-import { Button } from '@/new-components/Button';
+} from '.';
+import { Button } from '../Button';
 import { HasuraLogoFull } from '../HasuraLogo';
 
 export default {

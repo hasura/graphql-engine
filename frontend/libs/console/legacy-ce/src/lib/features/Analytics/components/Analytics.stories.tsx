@@ -3,7 +3,7 @@ import type { ComponentMeta, ComponentStory } from '@storybook/react';
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../new-components/Button';
 import { Analytics } from './Analytics';
 
 export default {

@@ -1,4 +1,4 @@
-import { RequestTransformMethod } from '@/metadata/types';
+import { RequestTransformMethod } from '../../../../metadata/types';
 import { createGraphQLSchema } from 'openapi-to-graphql';
 import z from 'zod';
 import { formSchema } from './OASGeneratorPage';

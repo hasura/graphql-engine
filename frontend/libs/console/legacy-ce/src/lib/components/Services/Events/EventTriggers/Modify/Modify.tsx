@@ -1,7 +1,10 @@
 /* eslint-disable no-underscore-dangle */
 import React, { useEffect, useReducer } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+} from '../../../../../features/Analytics';
 
 import {
   requestTransformReducer,
@@ -22,28 +25,28 @@ import {
   setRequestTransformState,
   setRequestPayloadTransform,
   getEventRequestTransformDefaultState,
-} from '@/components/Common/ConfigureTransformation/requestTransformState';
+} from '../../../../Common/ConfigureTransformation/requestTransformState';
 import {
   QueryParams,
   RequestTransformContentType,
   RequestTransformMethod,
-} from '@/metadata/types';
+} from '../../../../../metadata/types';
 import {
   KeyValuePair,
   RequestTransformStateBody,
-} from '@/components/Common/ConfigureTransformation/stateDefaults';
-import ConfigureTransformation from '@/components/Common/ConfigureTransformation/ConfigureTransformation';
-import requestAction from '@/utils/requestAction';
-import Endpoints from '@/Endpoints';
-import defaultState from '@/components/Services/Events/EventTriggers/state';
+} from '../../../../Common/ConfigureTransformation/stateDefaults';
+import ConfigureTransformation from '../../../../Common/ConfigureTransformation/ConfigureTransformation';
+import requestAction from '../../../../../utils/requestAction';
+import Endpoints from '../../../../../Endpoints';
+import defaultState from '../state';
 import {
   getValidateTransformOptions,
   parseValidateApiData,
   getTransformState,
-} from '@/components/Common/ConfigureTransformation/utils';
-import { showErrorNotification } from '@/components/Services/Common/Notification';
-import { Button } from '@/new-components/Button';
-import { isProConsole } from '@/utils/proConsole';
+} from '../../../../Common/ConfigureTransformation/utils';
+import { showErrorNotification } from '../../../Common/Notification';
+import { Button } from '../../../../../new-components/Button';
+import { isProConsole } from '../../../../../utils/proConsole';
 import { getSourceDriver } from '../../../Data/utils';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { getEventRequestSampleInput } from '../utils';
@@ -65,7 +68,7 @@ import {
   getEventTriggerByName,
 } from '../../../../../metadata/selector';
 import { AutoCleanupForm } from '../Common/AutoCleanupForm';
-import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
+import { useDebouncedEffect } from '../../../../../hooks/useDebounceEffect';
 
 interface Props extends InjectedProps {}
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import CustomTypesContainer from '../../Containers/CustomTypesContainer';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../../new-components/Button';
 import {
   getTypesSdl,
   getTypesFromSdl,

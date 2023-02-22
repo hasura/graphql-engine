@@ -1,8 +1,8 @@
-import endpoints from '@/Endpoints';
-import globals from '@/Globals';
-import { isCloudConsole } from '@/utils/cloudConsole';
-import { Api } from '@/hooks/apiUtils';
-import { getGraphqlSubscriptionsClient } from '@/utils/graphqlSubscriptions';
+import endpoints from '../../Endpoints';
+import globals from '../../Globals';
+import { isCloudConsole } from '../../utils/cloudConsole';
+import { Api } from '../../hooks/apiUtils';
+import { getGraphqlSubscriptionsClient } from '../../utils/graphqlSubscriptions';
 import { print, DocumentNode } from 'graphql/language';
 import { GraphQLError } from 'graphql/error';
 

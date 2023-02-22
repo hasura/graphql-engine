@@ -1,4 +1,4 @@
-import { useMetadata } from '@/features/hasura-metadata-api';
+import { useMetadata } from '../../../hasura-metadata-api';
 
 import { openTelemetryToFormValues } from '../utils/openTelemetryToFormValues';
 import { useNotifyMetadataLoadingError } from './useNotifyMetadataLoadingError';

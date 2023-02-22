@@ -1,7 +1,7 @@
 import AceEditor from 'react-ace';
 import { useContext } from 'react';
 
-import { getTableDisplayName } from '@/features/DatabaseRelationships';
+import { getTableDisplayName } from '../../../../../DatabaseRelationships';
 import { rowPermissionsContext } from './RowPermissionsProvider';
 
 export const JsonEditor = () => {

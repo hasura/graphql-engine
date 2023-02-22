@@ -1,13 +1,13 @@
-import { DropdownButton } from '@/new-components/DropdownButton';
-import { Analytics } from '@/features/Analytics';
+import { DropdownButton } from '../../../../new-components/DropdownButton';
+import { Analytics } from '../../../../features/Analytics';
 import React, { useMemo } from 'react';
 import { FaBook, FaEdit, FaFileImport, FaWrench } from 'react-icons/fa';
 import { browserHistory, Link } from 'react-router';
 
 import LeftSubSidebar from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
-import { isProConsole } from '@/utils';
-import { Badge } from '@/new-components/Badge';
+import { isProConsole } from '../../../../utils';
+import { Badge } from '../../../../new-components/Badge';
 
 const LeftSidebar = ({
   appPrefix,

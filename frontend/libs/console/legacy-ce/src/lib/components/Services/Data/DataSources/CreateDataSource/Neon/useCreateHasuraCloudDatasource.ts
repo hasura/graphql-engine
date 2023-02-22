@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { programmaticallyTraceError } from '@/features/Analytics';
-import { Dispatch } from '@/types';
+import { programmaticallyTraceError } from '../../../../../../features/Analytics';
+import { Dispatch } from '../../../../../../types';
 import {
   setDBURLInEnvVars,
   verifyProjectHealthAndConnectDataSource,

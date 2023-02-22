@@ -1,4 +1,4 @@
-import { hasuraToast } from '@/new-components/Toasts';
+import { hasuraToast } from '../../new-components/Toasts';
 import { useState } from 'react';
 import { useInsertRow, FormData } from '../Data/hooks/useInsertRow';
 import { useListAllTableColumns } from '../Data/hooks/useListAllTableColumns';

@@ -2,20 +2,20 @@ import React, { useEffect, useReducer } from 'react';
 import { GraphQLError } from 'graphql';
 import Helmet from 'react-helmet';
 import { connect, ConnectedProps } from 'react-redux';
-import Endpoints from '@/Endpoints';
+import Endpoints from '../../../../Endpoints';
 import {
   Analytics,
   REDACT_EVERYTHING,
   useGetAnalyticsAttributes,
-} from '@/features/Analytics';
+} from '../../../../features/Analytics';
 import {
   parseValidateApiData,
   getValidateTransformOptions,
   getTransformState,
   getResponseTransformState,
-} from '@/components/Common/ConfigureTransformation/utils';
-import { Button } from '@/new-components/Button';
-import requestAction from '@/utils/requestAction';
+} from '../../../Common/ConfigureTransformation/utils';
+import { Button } from '../../../../new-components/Button';
+import requestAction from '../../../../utils/requestAction';
 import {
   getActionRequestTransformDefaultState,
   requestTransformReducer,
@@ -40,17 +40,17 @@ import {
   setResponsePayloadTransform,
   setResponseBody,
   setResponseTransformState,
-} from '@/components/Common/ConfigureTransformation/requestTransformState';
+} from '../../../Common/ConfigureTransformation/requestTransformState';
 import {
   KeyValuePair,
   RequestTransformStateBody,
   ResponseTransformStateBody,
-} from '@/components/Common/ConfigureTransformation/stateDefaults';
+} from '../../../Common/ConfigureTransformation/stateDefaults';
 import {
   QueryParams,
   RequestTransformContentType,
   RequestTransformMethod,
-} from '@/metadata/types';
+} from '../../../../metadata/types';
 import ActionEditor from '../Common/components/ActionEditor';
 import ActionContainer from '../Containers/ActionContainer';
 import { getModifyState } from './utils';

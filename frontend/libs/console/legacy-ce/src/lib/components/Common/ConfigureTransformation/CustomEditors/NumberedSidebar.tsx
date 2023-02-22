@@ -1,5 +1,5 @@
 import React from 'react';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 import { sidebarNumberStyles } from '../utils';
 
 interface NumberedSidebarProps {

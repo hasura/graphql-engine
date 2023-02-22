@@ -1,6 +1,6 @@
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { ConnectBigQueryWidget } from './ConnectBigQueryWidget';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { handlers } from '../../mocks/handlers.mock';
 
 export default {

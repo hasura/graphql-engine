@@ -1,5 +1,5 @@
-import { DataSourcesAPI } from '@/dataSources';
-import { TriggerOperation } from '@/components/Common/FilterQuery/state';
+import { DataSourcesAPI } from '../..';
+import { TriggerOperation } from '../../../components/Common/FilterQuery/state';
 import { FrequentlyUsedColumn, IndexType } from '../../types';
 import { isColTypeString } from '.';
 import { FunctionState } from './types';

@@ -1,4 +1,4 @@
-import { allOperators } from '@/components/Common/FilterQuery/utils';
+import { allOperators } from '../../../../../../../components/Common/FilterQuery/utils';
 import { GraphQLSchema, isInputObjectType } from 'graphql';
 import { lowerCase } from 'lodash';
 import { Comparators } from '../types';

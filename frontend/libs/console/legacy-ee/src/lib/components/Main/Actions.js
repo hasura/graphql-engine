@@ -36,7 +36,7 @@ import { constructRedirectUrl } from '../../utils/utils';
 import { retrieveByRefreshToken } from '../OAuthCallback/Actions';
 import { decodeToken } from '../../utils/computeAccess';
 import extendedGlobals from '../../Globals';
-import { isCloudConsole } from '@/utils';
+import { isCloudConsole } from '@hasura/console-legacy-ce';
 
 const UPDATE_HASURA_DOT_COM_ACCESS = 'Main/UPDATE_HASURA_DOT_COM_ACCESS';
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';

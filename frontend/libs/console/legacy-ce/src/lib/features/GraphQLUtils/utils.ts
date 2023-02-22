@@ -1,4 +1,4 @@
-import { MetadataTable } from '@/features/hasura-metadata-types';
+import { MetadataTable } from '../hasura-metadata-types';
 import { WhereClause } from '../DataSource/types';
 import { OrderBy } from './types';
 

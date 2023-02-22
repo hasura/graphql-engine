@@ -1,4 +1,4 @@
-import { getEntries } from '@/components/Services/Data/Common/tsUtils';
+import { getEntries } from '../../../../components/Services/Data/Common/tsUtils';
 import { RunSQLResponse } from '../../api';
 import { IntrospectedTable, TableColumn } from '../../types';
 

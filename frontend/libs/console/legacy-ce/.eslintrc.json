@@ -15,12 +15,6 @@
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "rules": {
-        "@nrwl/nx/enforce-module-boundaries": [
-          "error",
-          {
-            "allowCircularSelfDependency": true
-          }
-        ],
         "react/forbid-dom-props": [
           "error",
           {

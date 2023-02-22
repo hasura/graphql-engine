@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router';
 import { FaExternalLinkAlt, FaDatabase } from 'react-icons/fa';
-import { Button } from '@/new-components/Button';
-import { isCloudConsole } from '@/utils/cloudConsole';
+import { Button } from '../../../new-components/Button';
+import { isCloudConsole } from '../../../utils/cloudConsole';
 
 import YouTube from 'react-youtube';
 

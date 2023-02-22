@@ -2,14 +2,14 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { useFormState } from 'react-hook-form';
 
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../../new-components/Button';
 import {
   CheckboxesField,
   useConsoleForm,
   InputField,
   Radio,
-} from '@/new-components/Form';
-import { RequestHeadersSelector } from '@/new-components/RequestHeadersSelector';
+} from '../../../../../new-components/Form';
+import { RequestHeadersSelector } from '../../../../../new-components/RequestHeadersSelector';
 
 import type { FormValues } from './schema';
 import { formSchema } from './schema';

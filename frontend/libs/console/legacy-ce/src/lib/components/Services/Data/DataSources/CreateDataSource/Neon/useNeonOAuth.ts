@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useMemo, useState, useCallback } from 'react';
-import globals from '@/Globals';
-import { createFetchControlPlaneData } from '@/hooks/createFetchControlPlaneData';
+import globals from '../../../../../../Globals';
+import { createFetchControlPlaneData } from '../../../../../../hooks/createFetchControlPlaneData';
 import { generateRandomString } from '../utils';
 import {
   getPersistedNeonCallbackSearch,

@@ -1,7 +1,7 @@
 import React from 'react';
-import { IconTooltip } from '@/new-components/Tooltip';
+import { IconTooltip } from '../../../../../new-components/Tooltip';
 import { useFormContext } from 'react-hook-form';
-import { Switch } from '@/new-components/Switch';
+import { Switch } from '../../../../../new-components/Switch';
 
 export const IncludeInMetadataSwitch = () => {
   const { watch, setValue } = useFormContext();

@@ -1,14 +1,14 @@
 import React from 'react';
 
-import { useConsoleForm } from '@/new-components/Form';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
-import { Button } from '@/new-components/Button';
+import { useConsoleForm } from '../../../../../new-components/Form';
+import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
+import { Button } from '../../../../../new-components/Button';
 import {
   allowedMetadataTypes,
   useMetadataMigration,
-} from '@/features/MetadataAPI';
+} from '../../../../MetadataAPI';
 
-import { useFireNotification } from '@/new-components/Notifications';
+import { useFireNotification } from '../../../../../new-components/Notifications';
 import { useFormContext } from 'react-hook-form';
 import {
   RelationshipTypeCardRadioGroup,

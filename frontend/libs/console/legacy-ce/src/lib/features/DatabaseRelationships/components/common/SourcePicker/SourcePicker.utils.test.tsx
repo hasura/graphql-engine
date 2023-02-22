@@ -1,4 +1,4 @@
-import { DatasetTable, SchemaTable } from '@/features/DataSource/utils';
+import { DatasetTable, SchemaTable } from '../../../../DataSource/utils';
 import {
   getTableLabel,
   SourcePickerLabel,

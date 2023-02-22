@@ -1,6 +1,6 @@
 import { Fragment, useContext, ReactNode } from 'react';
 import { get, isEmpty, isPlainObject } from 'lodash';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../../../new-components/Button';
 import { isComparator } from './utils/helpers';
 import { tableContext, TableProvider } from './TableProvider';
 import { typesContext } from './TypesProvider';

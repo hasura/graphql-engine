@@ -1,16 +1,16 @@
 import React, { useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 
 import {
   FeatureFlagToast,
   useFeatureFlags,
   availableFeatureFlagIds,
-} from '@/features/FeatureFlags';
-import { DatabaseRelationshipsTab } from '@/features/DatabaseRelationships';
-import { Button } from '@/new-components/Button';
-import { areTablesEqual } from '@/features/hasura-metadata-api';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+} from '../../../../features/FeatureFlags';
+import { DatabaseRelationshipsTab } from '../../../../features/DatabaseRelationships';
+import { Button } from '../../../../new-components/Button';
+import { areTablesEqual } from '../../../../features/hasura-metadata-api';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 import TableHeader from '../TableCommon/TableHeader';
 import {
   addNewRelClicked,

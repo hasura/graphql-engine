@@ -1,5 +1,5 @@
-import Endpoints from '@/Endpoints';
-import { Api } from '@/hooks/apiUtils';
+import Endpoints from '../Endpoints';
+import { Api } from './apiUtils';
 import { GraphQLError } from 'graphql';
 
 /**

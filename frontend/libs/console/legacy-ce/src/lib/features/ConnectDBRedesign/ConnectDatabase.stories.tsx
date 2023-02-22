@@ -1,4 +1,4 @@
-import { hasuraToast } from '@/new-components/Toasts';
+import { hasuraToast } from '../../new-components/Toasts';
 import { useArgs } from '@storybook/client-api';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import { ConnectDatabase } from './ConnectDatabase';

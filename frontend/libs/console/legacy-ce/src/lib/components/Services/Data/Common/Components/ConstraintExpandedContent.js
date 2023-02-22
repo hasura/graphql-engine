@@ -1,7 +1,7 @@
 import React from 'react';
 import AceEditor from 'react-ace';
 
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 
 import { checkConstraintExpression } from '../TooltipMessages';

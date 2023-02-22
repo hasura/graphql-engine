@@ -1,5 +1,5 @@
-import { areTablesEqual } from '@/features/hasura-metadata-api';
-import { Source, Table } from '@/features/hasura-metadata-types';
+import { areTablesEqual } from '../../../hasura-metadata-api';
+import { Source, Table } from '../../../hasura-metadata-types';
 import { SourceSelectorItem } from './SourcePicker/SourcePicker.types';
 import { TablePickerProps } from './TablePicker.types';
 

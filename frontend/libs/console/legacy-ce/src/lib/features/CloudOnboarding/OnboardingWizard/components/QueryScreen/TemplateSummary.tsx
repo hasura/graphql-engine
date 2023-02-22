@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useQuery } from 'react-query';
-import { programmaticallyTraceError } from '@/features/Analytics';
-import { Dispatch } from '@/types';
+import { programmaticallyTraceError } from '../../../../Analytics';
+import { Dispatch } from '../../../../../types';
 import {
   staleTime,
   templateSummaryRunQueryClickVariables,

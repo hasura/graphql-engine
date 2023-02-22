@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Badge } from '@/new-components/Badge';
+import { Badge } from '../../../../../../new-components/Badge';
 import { FaTimesCircle } from 'react-icons/fa';
 
 export function BadgeDisabled() {

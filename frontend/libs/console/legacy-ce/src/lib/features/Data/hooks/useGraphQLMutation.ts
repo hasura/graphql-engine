@@ -1,6 +1,6 @@
 import { useMutation } from 'react-query';
-import { runGraphQL } from '@/features/DataSource';
-import { useHttpClient } from '@/features/Network';
+import { runGraphQL } from '../../DataSource';
+import { useHttpClient } from '../../Network';
 import { AxiosResponseHeaders } from 'axios';
 
 export function useGraphQLMutation({

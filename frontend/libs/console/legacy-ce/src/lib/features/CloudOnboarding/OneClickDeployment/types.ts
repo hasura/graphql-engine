@@ -1,8 +1,8 @@
-import { Driver } from '@/dataSources';
+import { Driver } from '../../../dataSources';
 import {
   FetchOneClickDeploymentStateLogSubscriptionSubscription,
   One_Click_Deployment_States_Enum as OneClickDeploymentState,
-} from '@/features/ControlPlane';
+} from '../../ControlPlane';
 
 export type OneClickDeployment = NonNullable<
   FetchOneClickDeploymentStateLogSubscriptionSubscription['one_click_deployment_by_pk']

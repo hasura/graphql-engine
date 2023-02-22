@@ -1,8 +1,8 @@
-import { useMetadataVersion } from '@/features/MetadataAPI';
-import { Button } from '@/new-components/Button';
-import HookStatusWrapperWithMetadataVersion from '@/storybook/HookStatusWrapperWithMetadataVersion';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
+import { useMetadataVersion } from '../../../../MetadataAPI';
+import { Button } from '../../../../../new-components/Button';
+import HookStatusWrapperWithMetadataVersion from '../../../../../storybook/HookStatusWrapperWithMetadataVersion';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
+import { ReduxDecorator } from '../../../../../storybook/decorators/redux-decorator';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import React from 'react';
 import { useAddRemoteSchemaRelationship } from '..';

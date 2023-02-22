@@ -1,13 +1,10 @@
-import {
-  CopyableInputField,
-  InformationCard,
-} from '@/features/ConnectDBRedesign/components/SelectDatabase/components';
-import { dbDisplayNames } from '@/features/ConnectDBRedesign/components/SelectDatabase/databases';
-import { indefiniteArticle } from '@/features/ConnectDBRedesign/components/SelectDatabase/utils';
-import { DatabaseKind } from '@/features/ConnectDBRedesign/types';
-import { Button } from '@/new-components/Button';
-import { InputField, SimpleForm } from '@/new-components/Form';
-import { hasuraToast } from '@/new-components/Toasts';
+import { CopyableInputField, InformationCard } from '.';
+import { dbDisplayNames } from '../databases';
+import { indefiniteArticle } from '../utils';
+import { DatabaseKind } from '../../../types';
+import { Button } from '../../../../../new-components/Button';
+import { InputField, SimpleForm } from '../../../../../new-components/Form';
+import { hasuraToast } from '../../../../../new-components/Toasts';
 import React from 'react';
 import { FaExternalLinkAlt } from 'react-icons/fa';
 import { GrDocker } from 'react-icons/gr';

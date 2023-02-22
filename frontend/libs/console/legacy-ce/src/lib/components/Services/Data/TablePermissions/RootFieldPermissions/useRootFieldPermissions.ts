@@ -1,4 +1,4 @@
-import { useServerConfig } from '@/hooks';
+import { useServerConfig } from '../../../../../hooks';
 import {
   RootKeyValues,
   SUBSCRIPTION_ROOT_VALUES,

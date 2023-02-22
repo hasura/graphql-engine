@@ -1,8 +1,8 @@
 import {
   FieldWrapper,
   FieldWrapperPassThroughProps,
-} from '@/new-components/Form';
-import { Switch } from '@/new-components/Switch';
+} from '../../../../../new-components/Form';
+import { Switch } from '../../../../../new-components/Switch';
 import { get } from 'lodash';
 import { Controller, FieldError, useFormContext } from 'react-hook-form';
 

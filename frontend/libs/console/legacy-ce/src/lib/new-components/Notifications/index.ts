@@ -4,7 +4,7 @@ import {
   showErrorNotification,
   showInfoNotification,
   showWarningNotification,
-} from '@/components/Services/Common/Notification';
+} from '../../components/Services/Common/Notification';
 import { useDispatch } from 'react-redux';
 
 // this is just a placeholder until we can revamp our notif system to react-hot-toast

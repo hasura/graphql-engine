@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { FaPlusCircle } from 'react-icons/fa';
 
-import { QueryCollectionEntry } from '@/metadata/types';
-import { Button } from '@/new-components/Button';
+import { QueryCollectionEntry } from '../../../../metadata/types';
+import { Button } from '../../../../new-components/Button';
 
 import { QueryCollectionRenameDialog } from './QueryCollectionRenameDialog';
 import { QueryCollectionHeaderMenu } from './QueryCollectionHeaderMenu';

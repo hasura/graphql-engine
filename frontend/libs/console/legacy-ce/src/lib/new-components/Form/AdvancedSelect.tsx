@@ -12,7 +12,7 @@ import Select, {
   components,
 } from 'react-select';
 import { FiX, FiChevronDown } from 'react-icons/fi';
-import { Tooltip } from '@/new-components/Tooltip';
+import { Tooltip } from '../Tooltip';
 import { FieldWrapperPassThroughProps } from './FieldWrapper';
 
 export type MultiSelectItem = {

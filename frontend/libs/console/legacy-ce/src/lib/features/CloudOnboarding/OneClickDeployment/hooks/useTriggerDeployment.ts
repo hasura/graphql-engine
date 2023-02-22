@@ -3,8 +3,8 @@ import {
   TriggerOneClickDeploymentMutation,
   TriggerOneClickDeploymentMutationVariables,
   TRIGGER_ONE_CLICK_DEPLOYMENT,
-} from '@/features/ControlPlane';
-import { useFireNotification } from '@/new-components/Notifications';
+} from '../../../ControlPlane';
+import { useFireNotification } from '../../../../new-components/Notifications';
 import { GraphQLError } from 'graphql';
 import { useMutation } from 'react-query';
 

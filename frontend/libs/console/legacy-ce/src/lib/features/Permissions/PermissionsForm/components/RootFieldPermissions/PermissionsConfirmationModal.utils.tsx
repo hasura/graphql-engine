@@ -1,5 +1,5 @@
 import React from 'react';
-import { LS_KEYS, getLSItem } from '@/utils/localStorage';
+import { LS_KEYS, getLSItem } from '../../../../../utils/localStorage';
 
 type Scenario = 'aggregate' | 'pk' | 'pks';
 

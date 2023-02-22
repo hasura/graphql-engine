@@ -1,7 +1,7 @@
 import React, { ChangeEvent, useReducer, useCallback, Dispatch } from 'react';
 import { FaPlay, FaPlusCircle } from 'react-icons/fa';
 
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../../new-components/Button';
 import {
   composeEndpoint,
   getCurrentPageHost,

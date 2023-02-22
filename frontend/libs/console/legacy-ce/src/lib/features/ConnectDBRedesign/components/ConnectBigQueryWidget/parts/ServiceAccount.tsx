@@ -1,4 +1,4 @@
-import { InputField, Radio } from '@/new-components/Form';
+import { InputField, Radio } from '../../../../../new-components/Form';
 import { useFormContext } from 'react-hook-form';
 import { BigQueryConnectionSchema } from '../schema';
 

@@ -7,9 +7,9 @@ import {
   waitForElementToBeRemoved,
   within,
 } from '@storybook/testing-library';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { expect } from '@storybook/jest';
-import { dangerouslyDelay } from '@/storybook/utils/dangerouslyDelay';
+import { dangerouslyDelay } from '../../../../storybook/utils/dangerouslyDelay';
 
 import { TrackTables } from '../TrackTables';
 import { handlers, resetMetadata } from './handlers.mock';

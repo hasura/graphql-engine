@@ -1,4 +1,4 @@
-import { Button } from '@/new-components/Button';
+import { Button } from '../Button';
 import clsx from 'clsx';
 import get from 'lodash.get';
 import React, { ReactElement } from 'react';

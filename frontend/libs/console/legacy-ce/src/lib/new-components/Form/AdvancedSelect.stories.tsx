@@ -5,7 +5,7 @@ import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { expect } from '@storybook/jest';
 import { userEvent } from '@storybook/testing-library';
 import { within } from '@testing-library/react';
-import { AdvancedSelect } from '@/new-components/Form';
+import { AdvancedSelect } from '.';
 
 export default {
   title: 'components/Forms 📁/Advanced Select 🧬',

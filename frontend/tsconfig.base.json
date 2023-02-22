@@ -15,7 +15,6 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["libs/console/legacy-ce/src/lib/*"],
       "@hasura/console-legacy-ce": ["libs/console/legacy-ce/src/index.ts"],
       "@hasura/console-legacy-ee": ["libs/console/legacy-ee/src/index.js"],
       "@hasura/internal-plugin": ["libs/nx/internal-plugin/src/index.ts"],

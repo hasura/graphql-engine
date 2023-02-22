@@ -1,4 +1,4 @@
-import { CheckDatabaseLatencyResponse } from '@/features/ConnectDB';
+import { CheckDatabaseLatencyResponse } from '../../../../features/ConnectDB';
 
 export const testDataOne: CheckDatabaseLatencyResponse = {
   taskEvent: {

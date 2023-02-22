@@ -1,8 +1,8 @@
 import React, { FormEvent } from 'react';
-import { LabeledInput } from '@/components/Common/LabeledInput';
-import { Connect, useAvailableDrivers } from '@/features/ConnectDB';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { Button } from '@/new-components/Button';
+import { LabeledInput } from '../../../Common/LabeledInput';
+import { Connect, useAvailableDrivers } from '../../../../features/ConnectDB';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
+import { Button } from '../../../../new-components/Button';
 import ConnectDatabaseForm, { ConnectDatabaseFormProps } from './ConnectDBForm';
 import styles from './DataSources.module.scss';
 import { Driver } from '../../../../dataSources';

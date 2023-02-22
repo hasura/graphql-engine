@@ -1,8 +1,8 @@
-import defaultState from '@/components/Services/Events/EventTriggers/state';
-import { Collapsible } from '@/new-components/Collapsible';
-import { DropdownButton } from '@/new-components/DropdownButton';
-import { InputSection } from '@/new-components/InputSetionWithoutForm';
-import { Switch } from '@/new-components/Switch';
+import defaultState from '../state';
+import { Collapsible } from '../../../../../new-components/Collapsible';
+import { DropdownButton } from '../../../../../new-components/DropdownButton';
+import { InputSection } from '../../../../../new-components/InputSetionWithoutForm';
+import { Switch } from '../../../../../new-components/Switch';
 import React from 'react';
 import { EventTriggerAutoCleanup } from '../../types';
 

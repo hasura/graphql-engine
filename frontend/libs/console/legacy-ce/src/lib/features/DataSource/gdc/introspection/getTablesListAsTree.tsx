@@ -1,4 +1,4 @@
-import { Badge } from '@/new-components/Badge';
+import { Badge } from '../../../../new-components/Badge';
 import React from 'react';
 import { FaDatabase } from 'react-icons/fa';
 import { GDCTable } from '..';

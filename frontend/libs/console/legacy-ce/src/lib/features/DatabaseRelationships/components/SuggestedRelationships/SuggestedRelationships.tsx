@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { capitaliseFirstLetter } from '@/components/Common/ConfigureTransformation/utils';
-import { Table } from '@/features/hasura-metadata-types';
-import { Button } from '@/new-components/Button';
-import { CardedTable } from '@/new-components/CardedTable';
-import { hasuraToast } from '@/new-components/Toasts';
+import { capitaliseFirstLetter } from '../../../../components/Common/ConfigureTransformation/utils';
+import { Table } from '../../../hasura-metadata-types';
+import { Button } from '../../../../new-components/Button';
+import { CardedTable } from '../../../../new-components/CardedTable';
+import { hasuraToast } from '../../../../new-components/Toasts';
 import {
   FaArrowRight,
   FaColumns,
@@ -11,8 +11,8 @@ import {
   FaMagic,
   FaTable,
 } from 'react-icons/fa';
-import { MetadataSelectors, useMetadata } from '@/features/hasura-metadata-api';
-import { getSupportsForeignKeys } from '@/features/hasura-metadata-api/utils';
+import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
+import { getSupportsForeignKeys } from '../../../hasura-metadata-api/utils';
 import { useListAllDatabaseRelationships } from '../../hooks/useListAllDatabaseRelationships';
 import { getTableDisplayName } from '../../utils/helpers';
 import {

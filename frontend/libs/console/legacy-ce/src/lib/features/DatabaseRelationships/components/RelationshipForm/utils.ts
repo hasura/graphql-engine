@@ -2,8 +2,8 @@ import {
   isSchemaTable,
   isDatasetTable,
   isGDCTable,
-} from '@/features/DataSource/utils';
-import { Table } from '@/features/hasura-metadata-types';
+} from '../../../DataSource/utils';
+import { Table } from '../../../hasura-metadata-types';
 import { useCallback } from 'react';
 import { useManageLocalRelationship } from '../../hooks/useManageLocalRelationship';
 import { useManageRemoteDatabaseRelationship } from '../../hooks/useManageRemoteDatabaseRelationship';

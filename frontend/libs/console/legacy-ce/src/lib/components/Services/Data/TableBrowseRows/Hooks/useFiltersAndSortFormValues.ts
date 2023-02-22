@@ -4,10 +4,10 @@ import {
   UserQuery,
   adaptFormValuesToQuery,
   convertUserQueryToFiltersAndSortFormValues,
-} from '@/features/BrowseRows';
-import { setLSItem, getLSItem } from '@/utils';
-import { Table } from '@/dataSources';
-import { TableColumn } from '@/features/DataSource';
+} from '../../../../../features/BrowseRows';
+import { setLSItem, getLSItem } from '../../../../../utils';
+import { Table } from '../../../../../dataSources';
+import { TableColumn } from '../../../../../features/DataSource';
 
 type Props = {
   sourceName: string;

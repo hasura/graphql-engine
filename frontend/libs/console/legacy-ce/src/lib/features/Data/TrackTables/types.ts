@@ -1,4 +1,4 @@
-import { MetadataTable, Table } from '@/features/hasura-metadata-types';
+import { MetadataTable, Table } from '../../hasura-metadata-types';
 
 export type TrackableTable = {
   /**

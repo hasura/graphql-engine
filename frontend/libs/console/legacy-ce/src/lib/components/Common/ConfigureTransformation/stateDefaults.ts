@@ -2,7 +2,7 @@ import { Action as ReduxAction } from 'redux';
 import {
   getCronTriggerRequestSampleInput,
   getEventRequestSampleInput,
-} from '@/components/Services/Events/EventTriggers/utils';
+} from '../../Services/Events/EventTriggers/utils';
 import { getActionRequestSampleInput } from '../../Services/Actions/Add/utils';
 import {
   defaultActionDefSdl,

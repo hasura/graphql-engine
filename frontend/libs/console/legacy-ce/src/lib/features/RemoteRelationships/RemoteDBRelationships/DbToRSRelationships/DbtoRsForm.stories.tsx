@@ -2,8 +2,8 @@ import React from 'react';
 import { Story, Meta } from '@storybook/react';
 import { userEvent, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { dangerouslyDelay } from '@/storybook/utils/dangerouslyDelay';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { dangerouslyDelay } from '../../../../storybook/utils/dangerouslyDelay';
 import { handlers } from '../../../RemoteRelationships/RemoteSchemaRelationships/__mocks__/handlers.mock';
 import { DbToRsForm, DbToRsFormProps } from './DbToRsForm';
 

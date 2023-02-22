@@ -1,4 +1,4 @@
-import { DatabaseKind } from '@/features/ConnectDBRedesign/types';
+import { DatabaseKind } from '../types';
 import * as RadioGroup from '@radix-ui/react-radio-group';
 import clsx from 'clsx';
 import React from 'react';

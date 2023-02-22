@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { Button } from '@/new-components/Button';
+import { Button } from '.';
 
 describe('Button', () => {
   it('When clicked, then should call the onClick callback', () => {

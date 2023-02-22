@@ -2,10 +2,10 @@ import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import { Link } from 'react-router';
 import { FaEdit, FaTimes } from 'react-icons/fa';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import { ReduxState } from '../../../../types';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 import AceEditor from '../../../Common/AceEditor/BaseEditor';

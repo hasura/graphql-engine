@@ -1,5 +1,5 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react';
-import { handlers } from '@/mocks/metadata.mock';
+import { handlers } from '../../mocks/metadata.mock';
 import { InsertRowForm, InsertRowFormProps } from './InsertRowForm';
 import { action } from '@storybook/addon-actions';
 

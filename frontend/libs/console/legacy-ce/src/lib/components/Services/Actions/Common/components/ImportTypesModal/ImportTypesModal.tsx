@@ -1,7 +1,7 @@
-import { Badge } from '@/new-components/Badge';
-import { Dialog } from '@/new-components/Dialog';
-import { SimpleForm } from '@/new-components/Form';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { Badge } from '../../../../../../new-components/Badge';
+import { Dialog } from '../../../../../../new-components/Dialog';
+import { SimpleForm } from '../../../../../../new-components/Form';
+import { LearnMoreLink } from '../../../../../../new-components/LearnMoreLink';
 import React from 'react';
 import z from 'zod';
 import { ImportTypesForm } from './ImportTypesForm';

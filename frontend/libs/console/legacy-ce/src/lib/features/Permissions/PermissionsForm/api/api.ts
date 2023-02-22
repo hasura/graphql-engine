@@ -1,9 +1,9 @@
-import { allowedMetadataTypes } from '@/features/MetadataAPI';
+import { allowedMetadataTypes } from '../../../MetadataAPI';
 
 import { AccessType, QueryType } from '../../types';
 import { PermissionsSchema } from '../../schema';
 import { createInsertArgs, ExistingPermission } from './utils';
-import { Table } from '@/features/hasura-metadata-types';
+import { Table } from '../../../hasura-metadata-types';
 
 interface CreateBodyArgs {
   dataSourceName: string;

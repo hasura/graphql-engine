@@ -1,8 +1,8 @@
 import React from 'react';
 import { MdRefresh } from 'react-icons/md';
-import { Button } from '@/new-components/Button';
-import { Analytics } from '@/features/Analytics';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { Button } from '../../../../../../../../new-components/Button';
+import { Analytics } from '../../../../../../../../features/Analytics';
+import { IndicatorCard } from '../../../../../../../../new-components/IndicatorCard';
 
 const iconMap = {
   refresh: <MdRefresh />,

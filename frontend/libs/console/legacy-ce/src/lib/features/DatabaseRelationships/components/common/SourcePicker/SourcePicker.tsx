@@ -2,7 +2,7 @@ import React, { ReactNode } from 'react';
 import {
   AdvancedSelectField,
   AdvancedSelectProps,
-} from '@/new-components/Form';
+} from '../../../../../new-components/Form';
 import { mapItemsToSourceOptions } from './SourcePicker.utils';
 import { SourceSelectorItem } from './SourcePicker.types';
 

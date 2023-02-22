@@ -1,6 +1,6 @@
 import React from 'react';
 import Helmet from 'react-helmet';
-import { useGetAnalyticsAttributes } from '@/features/Analytics';
+import { useGetAnalyticsAttributes } from '../../../../features/Analytics';
 import TypeRelationship from './Components/TypeRelationship';
 
 const Relationships = ({

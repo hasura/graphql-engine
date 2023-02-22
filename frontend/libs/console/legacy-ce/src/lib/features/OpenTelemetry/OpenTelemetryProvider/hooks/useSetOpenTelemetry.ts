@@ -1,12 +1,9 @@
-import type { SetOpenTelemetryQuery } from '@/features/hasura-metadata-types';
+import type { SetOpenTelemetryQuery } from '../../../hasura-metadata-types';
 
-import {
-  useMetadataVersion,
-  useMetadataMigration,
-} from '@/features/MetadataAPI';
+import { useMetadataVersion, useMetadataMigration } from '../../../MetadataAPI';
 
-import { useFireNotification } from '@/new-components/Notifications';
-import { useInvalidateMetadata } from '@/features/hasura-metadata-api';
+import { useFireNotification } from '../../../../new-components/Notifications';
+import { useInvalidateMetadata } from '../../../hasura-metadata-api';
 
 import type { FormValues } from '../../OpenTelemetry/components/Form/schema';
 

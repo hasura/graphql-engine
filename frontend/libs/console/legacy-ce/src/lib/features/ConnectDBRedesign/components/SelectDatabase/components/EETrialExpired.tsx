@@ -1,4 +1,4 @@
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../../new-components/Button';
 import React from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
 import { DatabaseKind } from '../../../types';

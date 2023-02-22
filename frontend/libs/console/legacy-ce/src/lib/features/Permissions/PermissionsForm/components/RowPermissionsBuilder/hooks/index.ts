@@ -1,11 +1,14 @@
 import React from 'react';
 import { buildClientSchema, GraphQLSchema, IntrospectionQuery } from 'graphql';
-import { useHttpClient } from '@/features/Network';
-import { exportMetadata, runIntrospectionQuery } from '@/features/DataSource';
-import { Table } from '@/features/hasura-metadata-types';
+import { useHttpClient } from '../../../../../Network';
+import {
+  exportMetadata,
+  runIntrospectionQuery,
+} from '../../../../../DataSource';
+import { Table } from '../../../../../hasura-metadata-types';
 import { useQuery } from 'react-query';
 import { getAllColumnsAndOperators } from '../utils';
-import { areTablesEqual } from '@/features/hasura-metadata-api';
+import { areTablesEqual } from '../../../../../hasura-metadata-api';
 
 /**
  *

@@ -1,14 +1,11 @@
-import { getConfirmation } from '@/components/Common/utils/jsUtils';
-import {
-  useAddToAllowList,
-  useRemoveFromAllowList,
-} from '@/features/AllowLists';
-import { useMetadata } from '@/features/MetadataAPI';
-import { QueryCollectionEntry } from '@/metadata/types';
-import { Button } from '@/new-components/Button';
-import { DropdownMenu } from '@/new-components/DropdownMenu';
-import { Tooltip } from '@/new-components/Tooltip';
-import { useFireNotification } from '@/new-components/Notifications';
+import { getConfirmation } from '../../../../components/Common/utils/jsUtils';
+import { useAddToAllowList, useRemoveFromAllowList } from '../../../AllowLists';
+import { useMetadata } from '../../../MetadataAPI';
+import { QueryCollectionEntry } from '../../../../metadata/types';
+import { Button } from '../../../../new-components/Button';
+import { DropdownMenu } from '../../../../new-components/DropdownMenu';
+import { Tooltip } from '../../../../new-components/Tooltip';
+import { useFireNotification } from '../../../../new-components/Notifications';
 import React from 'react';
 import { FaEllipsisH } from 'react-icons/fa';
 import { useDeleteQueryCollections } from '../../hooks/useDeleteQueryCollections';

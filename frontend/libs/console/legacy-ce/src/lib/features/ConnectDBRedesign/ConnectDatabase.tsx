@@ -1,7 +1,7 @@
 import {
   SelectDatabase,
   SelectDatabaseProps,
-} from '@/features/ConnectDBRedesign/components/SelectDatabase/SelectDatabase';
+} from './components/SelectDatabase/SelectDatabase';
 
 export const ConnectDatabase = (props: SelectDatabaseProps) => {
   return (

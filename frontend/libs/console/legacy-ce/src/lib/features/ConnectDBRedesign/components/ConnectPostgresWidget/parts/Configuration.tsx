@@ -1,4 +1,4 @@
-import { InputField } from '@/new-components/Form';
+import { InputField } from '../../../../../new-components/Form';
 import { ConnectionInfo } from './ConnectionInfo';
 
 export const Configuration = ({

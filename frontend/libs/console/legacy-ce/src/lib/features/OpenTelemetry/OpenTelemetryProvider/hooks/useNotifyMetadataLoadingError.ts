@@ -1,4 +1,4 @@
-import { useFireNotification } from '@/new-components/Notifications';
+import { useFireNotification } from '../../../../new-components/Notifications';
 import { useEffect } from 'react';
 
 /**

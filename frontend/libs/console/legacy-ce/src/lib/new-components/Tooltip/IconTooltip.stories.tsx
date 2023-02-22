@@ -4,7 +4,7 @@ import { userEvent, waitFor, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { screen } from '@testing-library/dom';
 
-import { IconTooltip } from '@/new-components/Tooltip';
+import { IconTooltip } from '.';
 
 export default {
   title: 'components/Tooltip 📁/IconTooltip 🧬',

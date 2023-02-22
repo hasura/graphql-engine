@@ -1,11 +1,11 @@
 import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
-import { useConsoleForm } from '@/new-components/Form';
+import { useConsoleForm } from '../../../../../new-components/Form';
 import { userEvent, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { action } from '@storybook/addon-actions';
 import { z } from 'zod';
-import { TableColumn } from '@/features/DataSource';
+import { TableColumn } from '../../../../DataSource';
 import { FilterRows } from './FilterRows';
 
 export default {

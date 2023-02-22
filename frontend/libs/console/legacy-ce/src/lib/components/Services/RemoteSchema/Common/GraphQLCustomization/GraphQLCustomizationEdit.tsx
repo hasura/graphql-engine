@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GraphQLSchema } from 'graphql';
-import { IconTooltip } from '@/new-components/Tooltip';
-import { Button } from '@/new-components/Button';
+import { IconTooltip } from '../../../../../new-components/Tooltip';
+import { Button } from '../../../../../new-components/Button';
 import { graphQLCustomization as GType } from '../../types';
 import TypeMapping from './TypeMapping';
 import FieldNames from './FieldNames';

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { SimpleForm, InputField } from '@/new-components/Form';
-import { Button } from '@/new-components/Button';
-import { Analytics } from '@/features/Analytics';
-import { useReadOnlyMode } from '@/hooks';
-import { getConfirmation } from '@/components/Common/utils/jsUtils';
+import { SimpleForm, InputField } from '../../../../new-components/Form';
+import { Button } from '../../../../new-components/Button';
+import { Analytics } from '../../../Analytics';
+import { useReadOnlyMode } from '../../../../hooks';
+import { getConfirmation } from '../../../../components/Common/utils/jsUtils';
 import { useFormContext } from 'react-hook-form';
-import { RequestTransform } from '@/metadata/types';
+import { RequestTransform } from '../../../../metadata/types';
 import { schema, Schema } from './schema';
 import {
   CronPayloadInput,

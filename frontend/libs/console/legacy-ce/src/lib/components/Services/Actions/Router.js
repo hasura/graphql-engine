@@ -12,7 +12,7 @@ import AddAction from './Add/Add';
 import TypesManage from './Types/Manage';
 import TypesRelationships from './Types/Relationships';
 import { exportMetadata } from '../../../metadata/actions';
-import { OASGeneratorPage } from '@/features/Actions';
+import { OASGeneratorPage } from '../../../features/Actions';
 
 const actionsInit = ({ dispatch }) => {
   return (nextState, replaceState, cb) => {

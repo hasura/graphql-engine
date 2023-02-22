@@ -1,7 +1,7 @@
 import React from 'react';
 import AceEditor from 'react-ace';
 import { OptionTypeBase } from 'react-select';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';

@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react';
-import { useConsoleForm } from '@/new-components/Form';
-import { Button } from '@/new-components/Button';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { useConsoleForm } from '../../../new-components/Form';
+import { Button } from '../../../new-components/Button';
+import { IndicatorCard } from '../../../new-components/IndicatorCard';
 import {
   MetadataSelector,
   useMetadata,
   useRoles,
   useSupportedQueryTypes,
-} from '@/features/MetadataAPI';
+} from '../../MetadataAPI';
 
 import { PermissionsSchema, schema } from './../schema';
 import { AccessType, QueryType } from '../types';
@@ -23,8 +23,8 @@ import {
 
 import { ReturnValue, useFormData, useUpdatePermissions } from './hooks';
 import ColumnRootFieldPermissions from './components/RootFieldPermissions/RootFieldPermissions';
-import { useListAllTableColumns } from '@/features/Data';
-import { useMetadataSource } from '@/features/MetadataAPI';
+import { useListAllTableColumns } from '../../Data';
+import { useMetadataSource } from '../../MetadataAPI';
 import { omit } from 'lodash';
 
 export interface ComponentProps {

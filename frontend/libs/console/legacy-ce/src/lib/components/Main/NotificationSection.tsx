@@ -1,7 +1,7 @@
 import React, { ComponentProps } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import { FaArrowRight, FaBell, FaTimes } from 'react-icons/fa';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../new-components/Button';
 
 import { Box, Flex, Heading, Text, Badge } from '../UIKit/atoms';
 import {

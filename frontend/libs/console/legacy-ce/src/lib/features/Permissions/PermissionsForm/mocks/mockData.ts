@@ -1,7 +1,10 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
-import { ArgType, PGFunction } from '@/dataSources/services/postgresql/types';
-import { NormalizedTable } from '@/dataSources/types';
+import {
+  ArgType,
+  PGFunction,
+} from '../../../../dataSources/services/postgresql/types';
+import { NormalizedTable } from '../../../../dataSources/types';
 
 export const allSchemas: NormalizedTable[] = [
   {

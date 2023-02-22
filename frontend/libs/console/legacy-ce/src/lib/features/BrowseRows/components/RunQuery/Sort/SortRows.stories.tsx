@@ -1,11 +1,11 @@
 import React from 'react';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import { z } from 'zod';
-import { FormDecorator } from '@/storybook/decorators/react-hook-form';
+import { FormDecorator } from '../../../../../storybook/decorators/react-hook-form';
 import { userEvent, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { action } from '@storybook/addon-actions';
-import { TableColumn } from '@/features/DataSource';
+import { TableColumn } from '../../../../DataSource';
 import { useConsoleForm } from './../../../../../new-components/Form';
 import { SortRows } from './SortRows';
 

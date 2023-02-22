@@ -1,10 +1,10 @@
 import isEqual from 'lodash.isequal';
-import { DataSource, exportMetadata } from '@/features/DataSource';
-import type { TableColumn } from '@/features/DataSource';
+import { DataSource, exportMetadata } from '../../../DataSource';
+import type { TableColumn } from '../../../DataSource';
 
 import { useQuery } from 'react-query';
-import { useHttpClient } from '@/features/Network';
-import { MetadataTable, Metadata } from '@/features/hasura-metadata-types';
+import { useHttpClient } from '../../../Network';
+import { MetadataTable, Metadata } from '../../../hasura-metadata-types';
 import { keyToPermission, metadataPermissionKeys } from '../../utils';
 
 interface RolePermission {

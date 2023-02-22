@@ -1,7 +1,7 @@
 import React from 'react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { ComponentMeta, Story } from '@storybook/react';
-import { CronTriggers } from '@/features/CronTriggers';
+import { CronTriggers } from '../..';
 import { within, userEvent, waitFor } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { waitForElementToBeRemoved } from '@testing-library/react';

@@ -5,7 +5,7 @@ import ReactTable, {
 } from 'react-table';
 import 'react-table/react-table.css';
 import { FaTimes } from 'react-icons/fa';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../../new-components/Button';
 import { FilterTableProps, GridHeadingProps } from './types';
 import { ordinalColSort } from '../../../Data/utils';
 import EventsSubTable from './EventsSubTable';

@@ -1,12 +1,12 @@
-import { Button } from '@/new-components/Button';
-import { Analytics } from '@/features/Analytics';
+import { Button } from '../../../../../../new-components/Button';
+import { Analytics } from '../../../../../Analytics';
 import React from 'react';
 import {
   FaExclamationCircle,
   FaExternalLinkAlt,
   FaSyncAlt,
 } from 'react-icons/fa';
-import { capitalize } from '@/components/Common/utils/jsUtils';
+import { capitalize } from '../../../../../../components/Common/utils/jsUtils';
 import { UserFacingStep, FallbackApp } from '../../../types';
 import { getErrorText, getProjectEnvVarPageLink } from '../utils';
 import { LinkButton } from './LinkButton';

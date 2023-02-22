@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router';
-import { getPathRoot } from '@/components/Common/utils/urlUtils';
-import { Tooltip } from '@/new-components/Tooltip';
+import { getPathRoot } from '../Common/utils/urlUtils';
+import { Tooltip } from '../../new-components/Tooltip';
 import { IconType } from 'react-icons';
 import { isBlockActive } from './Main.utils';
 import clsx from 'clsx';

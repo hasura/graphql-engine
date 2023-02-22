@@ -1,12 +1,12 @@
 import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 
-import { Button } from '@/new-components/Button';
-import { CardedTable } from '@/new-components/CardedTable';
-import { QueryCollection } from '@/metadata/types';
-import { getConfirmation } from '@/components/Common/utils/jsUtils';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
-import { useFireNotification } from '@/new-components/Notifications';
+import { Button } from '../../../../new-components/Button';
+import { CardedTable } from '../../../../new-components/CardedTable';
+import { QueryCollection } from '../../../../metadata/types';
+import { getConfirmation } from '../../../../components/Common/utils/jsUtils';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
+import { useFireNotification } from '../../../../new-components/Notifications';
 
 import { useOperationsFromQueryCollection } from '../../hooks/useOperationsFromQueryCollection';
 import { useRemoveOperationsFromQueryCollection } from '../../hooks';

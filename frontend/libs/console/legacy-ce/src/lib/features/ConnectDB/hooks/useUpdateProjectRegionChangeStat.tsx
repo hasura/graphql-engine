@@ -2,7 +2,7 @@ import { useMutation } from 'react-query';
 import {
   controlPlaneClient,
   updateUserClickedChangeProjectRegion,
-} from '@/features/ControlPlane';
+} from '../../ControlPlane';
 import { CheckDatabaseLatencyResponse } from './useCheckDatabaseLatency';
 
 type UpdateDBLatencyTableResponse = {

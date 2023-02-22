@@ -1,9 +1,9 @@
 import * as React from 'react';
 import Skeleton from 'react-loading-skeleton';
 
-import { IconTooltip } from '@/new-components/Tooltip';
-import { Collapsible } from '@/new-components/Collapsible';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { IconTooltip } from '../../../../../../new-components/Tooltip';
+import { Collapsible } from '../../../../../../new-components/Collapsible';
+import { LearnMoreLink } from '../../../../../../new-components/LearnMoreLink';
 
 interface CollapsibleFieldWrapperProps {
   inputFieldName: string;

@@ -1,5 +1,5 @@
-import { useConsoleForm } from '@/new-components/Form';
-import { implement } from '@/utils/zodUtils';
+import { useConsoleForm } from '../../../../new-components/Form';
+import { implement } from '../../../../utils/zodUtils';
 import React from 'react';
 import { useWatch } from 'react-hook-form';
 import { z } from 'zod';

@@ -1,5 +1,5 @@
-import { Badge } from '@/new-components/Badge';
-import { Button } from '@/new-components/Button';
+import { Badge } from '../../../../new-components/Badge';
+import { Button } from '../../../../new-components/Button';
 import React from 'react';
 import { FaKey, FaRegComment } from 'react-icons/fa';
 import { ModifyTableColumn } from '../types';

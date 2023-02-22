@@ -2,15 +2,15 @@ import React, { useEffect, useReducer } from 'react';
 import { GraphQLError } from 'graphql';
 import { connect, ConnectedProps } from 'react-redux';
 import Helmet from 'react-helmet';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { IconTooltip } from '@/new-components/Tooltip';
-import requestAction from '@/utils/requestAction';
-import { Button } from '@/new-components/Button';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
+import { IconTooltip } from '../../../../new-components/Tooltip';
+import requestAction from '../../../../utils/requestAction';
+import { Button } from '../../../../new-components/Button';
 import {
   parseValidateApiData,
   getValidateTransformOptions,
-} from '@/components/Common/ConfigureTransformation/utils';
-import Endpoints from '@/Endpoints';
+} from '../../../Common/ConfigureTransformation/utils';
+import Endpoints from '../../../../Endpoints';
 import {
   getActionRequestTransformDefaultState,
   requestTransformReducer,
@@ -33,18 +33,18 @@ import {
   setResponseBody,
   responseTransformReducer,
   getActionResponseTransformDefaultState,
-} from '@/components/Common/ConfigureTransformation/requestTransformState';
+} from '../../../Common/ConfigureTransformation/requestTransformState';
 import {
   QueryParams,
   RequestTransformContentType,
   RequestTransformMethod,
-} from '@/metadata/types';
+} from '../../../../metadata/types';
 import {
   KeyValuePair,
   RequestTransformStateBody,
   ResponseTransformStateBody,
-} from '@/components/Common/ConfigureTransformation/stateDefaults';
-import ConfigureTransformation from '@/components/Common/ConfigureTransformation/ConfigureTransformation';
+} from '../../../Common/ConfigureTransformation/stateDefaults';
+import ConfigureTransformation from '../../../Common/ConfigureTransformation/ConfigureTransformation';
 import ActionEditor from '../Common/components/ActionEditor';
 import { createAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';

@@ -1,14 +1,14 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 
-import { InputField } from '@/new-components/Form';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { InputField } from '../../../../../new-components/Form';
+import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
 import {
   LinkBlockVertical,
   LinkBlockHorizontal,
-} from '@/new-components/LinkBlock';
+} from '../../../../../new-components/LinkBlock';
 
-import { useListRemoteSchemas, useRemoteSchema } from '@/features/MetadataAPI';
+import { useListRemoteSchemas, useRemoteSchema } from '../../../../MetadataAPI';
 
 import { RemoteSchemaWidget } from '../RemoteSchemaWidget';
 import { RsSourceTypeSelector } from '../RsSourceTypeSelector';

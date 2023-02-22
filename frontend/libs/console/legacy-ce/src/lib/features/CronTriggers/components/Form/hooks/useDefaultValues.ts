@@ -1,4 +1,4 @@
-import { RequestTransform } from '@/metadata/types';
+import { RequestTransform } from '../../../../../metadata/types';
 import { Schema } from '../schema';
 import {
   emptyDefaultValues,

@@ -4,9 +4,9 @@ import Helmet from 'react-helmet';
 import AceEditor from 'react-ace';
 import 'brace/mode/sql';
 
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
-import { Button } from '@/new-components/Button';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
+import { Button } from '../../../../new-components/Button';
 import Modal from '../../../Common/Modal/Modal';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 
@@ -39,13 +39,13 @@ import { services } from '../../../../dataSources/services';
 import { isFeatureSupported, setDriver } from '../../../../dataSources';
 import { fetchDataInit, UPDATE_CURRENT_DATA_SOURCE } from '../DataActions';
 import { unsupportedRawSQLDrivers } from './utils';
-import { nativeDrivers } from '@/features/DataSource';
+import { nativeDrivers } from '../../../../features/DataSource';
 import { useRunSQL } from './hooks/useRunSQL';
-import { useFireNotification } from '@/new-components/Notifications';
+import { useFireNotification } from '../../../../new-components/Notifications';
 import {
   availableFeatureFlagIds,
   useIsFeatureFlagEnabled,
-} from '@/features/FeatureFlags';
+} from '../../../../features/FeatureFlags';
 
 const checkChangeLang = (sql, selectedDriver) => {
   return (

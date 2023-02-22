@@ -1,5 +1,5 @@
-import { SimpleForm } from '@/new-components/Form';
-import { Button } from '@/new-components/Button';
+import { SimpleForm } from '../../../../../new-components/Form';
+import { Button } from '../../../../../new-components/Button';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { z } from 'zod';
 

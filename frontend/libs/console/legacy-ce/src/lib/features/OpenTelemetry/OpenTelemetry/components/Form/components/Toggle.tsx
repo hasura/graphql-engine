@@ -1,6 +1,6 @@
 import type { ZodType, ZodTypeDef } from 'zod';
 import type { FieldError, FieldPath } from 'react-hook-form';
-import type { FieldWrapperPassThroughProps } from '@/new-components/Form';
+import type { FieldWrapperPassThroughProps } from '../../../../../../new-components/Form';
 
 import * as React from 'react';
 
@@ -8,8 +8,8 @@ import { z } from 'zod';
 import get from 'lodash.get';
 import { useFormContext, useWatch } from 'react-hook-form';
 
-import { Switch } from '@/new-components/Switch';
-import { FieldWrapper } from '@/new-components/Form';
+import { Switch } from '../../../../../../new-components/Switch';
+import { FieldWrapper } from '../../../../../../new-components/Form';
 
 type TFormValues = Record<string, unknown>;
 

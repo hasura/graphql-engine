@@ -1,6 +1,9 @@
 import React from 'react';
 import { IAceOptions } from 'react-ace';
-import { InputField, CodeEditorField } from '@/new-components/Form';
+import {
+  InputField,
+  CodeEditorField,
+} from '../../../../../../new-components/Form';
 import { RequiredEnvVar } from '../../../types';
 import { PgDatabaseField } from './PgDatabaseField';
 

@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import z from 'zod';
-import { CodeEditorField } from '@/new-components/Form';
+import { CodeEditorField } from '../../../../../../new-components/Form';
 import { formatSdl } from 'format-graphql';
 import { jsonToSchema } from '@walmartlabs/json-to-simple-graphql-schema/lib';
 import { useFormContext } from 'react-hook-form';
-import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
+import { useDebouncedEffect } from '../../../../../../hooks/useDebounceEffect';
 import { SchemaType } from './types';
 
 export const schema = z.object({

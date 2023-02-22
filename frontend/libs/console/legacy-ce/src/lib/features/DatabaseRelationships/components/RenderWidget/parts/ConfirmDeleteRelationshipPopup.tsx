@@ -1,9 +1,9 @@
-import { Dialog } from '@/new-components/Dialog';
+import { Dialog } from '../../../../../new-components/Dialog';
 import React from 'react';
 import { Relationship } from '../../../types';
 import { useManageLocalRelationship } from '../../../hooks/useManageLocalRelationship';
-import { useManageRemoteDatabaseRelationship } from '@/features/DatabaseRelationships/hooks/useManageRemoteDatabaseRelationship';
-import { useManageRemoteSchemaRelationship } from '@/features/DatabaseRelationships/hooks/useManageRemoteSchemaRelationship';
+import { useManageRemoteDatabaseRelationship } from '../../../hooks/useManageRemoteDatabaseRelationship';
+import { useManageRemoteSchemaRelationship } from '../../../hooks/useManageRemoteSchemaRelationship';
 
 interface ConfirmDeleteRelationshipPopupProps {
   relationship: Relationship;

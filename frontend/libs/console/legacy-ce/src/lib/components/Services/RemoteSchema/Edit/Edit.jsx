@@ -3,7 +3,7 @@ import {
   Analytics,
   REDACT_EVERYTHING,
   getAnalyticsAttributes,
-} from '@/features/Analytics';
+} from '../../../../features/Analytics';
 import Common from '../Common/Common';
 
 import {
@@ -17,7 +17,7 @@ import {
 import { VIEW_REMOTE_SCHEMA } from '../Actions';
 import { push } from 'react-router-redux';
 import Helmet from 'react-helmet';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 
 import { appPrefix, pageTitle } from '../constants';
 

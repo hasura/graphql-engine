@@ -1,18 +1,21 @@
 /* eslint-disable no-underscore-dangle */
 import React from 'react';
 import { browserHistory } from 'react-router';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../features/Analytics';
 
-import { Tabs } from '@/new-components/Tabs';
+import { Tabs } from '../../../new-components/Tabs';
 import {
   useQueryCollections,
   QueryCollectionsOperations,
   QueryCollectionHeader,
-} from '@/features/QueryCollections';
-import { AllowListSidebar, AllowListPermissions } from '@/features/AllowLists';
+} from '../../../features/QueryCollections';
+import {
+  AllowListSidebar,
+  AllowListPermissions,
+} from '../../../features/AllowLists';
 
-import PageContainer from '@/components/Common/Layout/PageContainer/PageContainer';
-import { isProConsole } from '@/utils/proConsole';
+import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
+import { isProConsole } from '../../../utils/proConsole';
 
 interface AllowListDetailProps {
   params: {

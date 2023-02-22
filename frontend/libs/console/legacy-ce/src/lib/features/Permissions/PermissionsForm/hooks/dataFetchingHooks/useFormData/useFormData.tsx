@@ -5,12 +5,12 @@ import {
   exportMetadata,
   Operator,
   TableColumn,
-} from '@/features/DataSource';
-import { useHttpClient } from '@/features/Network';
+} from '../../../../../DataSource';
+import { useHttpClient } from '../../../../../Network';
 
 import { createDefaultValues } from './createDefaultValues';
 import { createFormData } from './createFormData';
-import { MetadataDataSource } from '@/metadata/types';
+import { MetadataDataSource } from '../../../../../../metadata/types';
 
 export type Args = {
   dataSourceName: string;

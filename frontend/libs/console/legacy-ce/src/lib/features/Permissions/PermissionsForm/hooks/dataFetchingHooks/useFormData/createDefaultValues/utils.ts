@@ -1,6 +1,6 @@
 import isEqual from 'lodash.isequal';
 import { GraphQLSchema } from 'graphql';
-import { TableColumn } from '@/features/DataSource';
+import { TableColumn } from '../../../../../../DataSource';
 
 import type {
   DeletePermissionDefinition,
@@ -10,7 +10,7 @@ import type {
   SelectPermissionDefinition,
   Source,
   UpdatePermissionDefinition,
-} from '@/features/hasura-metadata-types';
+} from '../../../../../../hasura-metadata-types';
 
 import {
   isPermission,

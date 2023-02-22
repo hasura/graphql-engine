@@ -1,5 +1,5 @@
 import React from 'react';
-import { dataSource, currentDriver } from '@/dataSources';
+import { dataSource, currentDriver } from '../../../dataSources';
 import { OrderBy, makeOrderBy, getRunSqlQuery } from '../utils/v1QueryUtils';
 import requestAction from '../../../utils/requestAction';
 import { Dispatch } from '../../../types';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../new-components/Button';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import { RelationshipType } from '../types';
 

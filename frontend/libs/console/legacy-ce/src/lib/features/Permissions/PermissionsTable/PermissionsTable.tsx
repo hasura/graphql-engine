@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaInfo } from 'react-icons/fa';
 import Skeleton from 'react-loading-skeleton';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { IndicatorCard } from '../../../new-components/IndicatorCard';
 import { useRolePermissions } from './hooks/usePermissions';
 import { PermissionsLegend } from './components/PermissionsLegend';
 import { EditableCell, InputCell } from './components/Cells';

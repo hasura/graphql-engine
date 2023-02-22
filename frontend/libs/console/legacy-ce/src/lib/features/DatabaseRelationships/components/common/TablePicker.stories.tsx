@@ -1,10 +1,10 @@
 import React from 'react';
-import { SimpleForm } from '@/new-components/Form';
+import { SimpleForm } from '../../../../new-components/Form';
 import { z } from 'zod';
 import { action } from '@storybook/addon-actions';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { TablePicker } from './TablePicker';
 
 export default {

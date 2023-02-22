@@ -2,7 +2,7 @@ import { useSubmitForm } from './useSubmitForm';
 import { useDeletePermission } from './useDeletePermission';
 
 import { AccessType, QueryType } from '../../../types';
-import { Table } from '@/features/hasura-metadata-types';
+import { Table } from '../../../../hasura-metadata-types';
 
 export interface UseUpdatePermissionsArgs {
   dataSourceName: string;

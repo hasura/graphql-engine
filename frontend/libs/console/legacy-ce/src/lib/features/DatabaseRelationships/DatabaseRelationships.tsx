@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Table } from '@/features/hasura-metadata-types';
-import { Button } from '@/new-components/Button';
-import { useFireNotification } from '@/new-components/Notifications';
+import { Table } from '../hasura-metadata-types';
+import { Button } from '../../new-components/Button';
+import { useFireNotification } from '../../new-components/Notifications';
 import { FaPlusCircle } from 'react-icons/fa';
 import Legend from './components/Legend';
 import { SuggestedRelationships } from './components/SuggestedRelationships/SuggestedRelationships';
@@ -9,7 +9,7 @@ import { MODE, Relationship } from './types';
 import { AvailableRelationshipsList } from './components/AvailableRelationshipsList/AvailableRelationshipsList';
 import { NOTIFICATIONS } from './components/constants';
 import { RenderWidget } from './components/RenderWidget/RenderWidget';
-import { useInvalidateMetadata } from '@/features/hasura-metadata-api';
+import { useInvalidateMetadata } from '../hasura-metadata-api';
 
 export interface DatabaseRelationshipsProps {
   dataSourceName: string;

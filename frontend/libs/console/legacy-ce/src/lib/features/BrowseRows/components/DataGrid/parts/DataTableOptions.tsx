@@ -1,8 +1,8 @@
-import { Operator, OrderBy, WhereClause } from '@/features/DataSource';
-import { Badge } from '@/new-components/Badge';
-import { Button } from '@/new-components/Button';
-import { DropDown } from '@/new-components/AdvancedDropDown';
-import { UseExportRowsReturn } from '@/features/BrowseRows';
+import { Operator, OrderBy, WhereClause } from '../../../../DataSource';
+import { Badge } from '../../../../../new-components/Badge';
+import { Button } from '../../../../../new-components/Button';
+import { DropDown } from '../../../../../new-components/AdvancedDropDown';
+import { UseExportRowsReturn } from '../../..';
 import clsx from 'clsx';
 import React, { useState } from 'react';
 import {
@@ -16,8 +16,8 @@ import {
   FaSortAmountUpAlt,
   FaTimes,
 } from 'react-icons/fa';
-import type { ExportFileFormat } from '@/features/BrowseRows';
-import { useFireNotification } from '@/new-components/Notifications';
+import type { ExportFileFormat } from '../../..';
+import { useFireNotification } from '../../../../../new-components/Notifications';
 import { DEFAULT_PAGE_SIZES } from '../constants';
 
 interface DataTableOptionsProps {

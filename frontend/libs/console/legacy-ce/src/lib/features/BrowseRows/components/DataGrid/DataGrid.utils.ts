@@ -1,4 +1,4 @@
-import { TableRow, WhereClause, TableColumn } from '@/features/DataSource';
+import { TableRow, WhereClause, TableColumn } from '../../../DataSource';
 import { DataGridOptions } from './DataGrid';
 
 export type AdaptSelectedRowIdsToWhereClauseArgs = {

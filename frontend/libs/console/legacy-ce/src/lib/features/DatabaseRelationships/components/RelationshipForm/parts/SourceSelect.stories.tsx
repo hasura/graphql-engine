@@ -1,7 +1,7 @@
 import React from 'react';
-import { SimpleForm } from '@/new-components/Form';
+import { SimpleForm } from '../../../../../new-components/Form';
 import { z } from 'zod';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../../new-components/Button';
 
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { SourceOption, SourceSelect } from './SourceSelect';

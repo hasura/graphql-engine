@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { GraphQLError } from 'graphql';
-import { SimpleForm } from '@/new-components/Form';
-import { Dialog } from '@/new-components/Dialog';
-import { useFireNotification } from '@/new-components/Notifications';
+import { SimpleForm } from '../../../../../new-components/Form';
+import { Dialog } from '../../../../../new-components/Dialog';
+import { useFireNotification } from '../../../../../new-components/Notifications';
 import { useGetTenantEnvs, useUpdateTenantEnv } from './hooks';
 import { getFormProperties } from './utils';
 import { EnvVarsFormState, RequiredEnvVar } from '../../types';

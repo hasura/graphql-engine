@@ -1,4 +1,4 @@
-import { InputField } from '@/new-components/Form';
+import { InputField } from '../../../../../../../new-components/Form';
 import React from 'react';
 import { FaCheckCircle } from 'react-icons/fa';
 import { NeonButtonProps } from '../../types';

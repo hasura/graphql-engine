@@ -1,5 +1,5 @@
 import React from 'react';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../features/Analytics';
 
 import { OrderBy } from '../utils/v1QueryUtils';
 import { useFilterQuery, TriggerOperation } from './state';

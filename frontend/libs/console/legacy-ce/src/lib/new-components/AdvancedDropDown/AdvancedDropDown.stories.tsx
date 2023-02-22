@@ -1,6 +1,6 @@
-import { DropDown } from '@/new-components/AdvancedDropDown';
-import { Badge } from '@/new-components/Badge';
-import { Button } from '@/new-components/Button';
+import { DropDown } from '.';
+import { Badge } from '../Badge';
+import { Button } from '../Button';
 import { action } from '@storybook/addon-actions';
 import { expect } from '@storybook/jest';
 import { ComponentMeta, ComponentStory } from '@storybook/react';

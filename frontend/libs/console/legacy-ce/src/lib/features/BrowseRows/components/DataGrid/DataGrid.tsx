@@ -1,22 +1,22 @@
 import {
   Relationship,
   useListAllDatabaseRelationships,
-} from '@/features/DatabaseRelationships';
+} from '../../../DatabaseRelationships';
 import {
   Feature,
   Operator,
   OrderBy,
   TableRow,
   WhereClause,
-} from '@/features/DataSource';
-import { Table } from '@/features/hasura-metadata-types';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+} from '../../../DataSource';
+import { Table } from '../../../hasura-metadata-types';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { ColumnSort } from '@tanstack/react-table';
 import React, { useEffect, useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
-import { useDeleteRow } from '@/features/DeleteRow';
+import { useDeleteRow } from '../../../DeleteRow';
 import { useQueryClient } from 'react-query';
-import { useFireNotification } from '@/new-components/Notifications';
+import { useFireNotification } from '../../../../new-components/Notifications';
 import {
   DEFAULT_ORDER_BY_CLAUSES,
   DEFAULT_PAGE_INDEX,

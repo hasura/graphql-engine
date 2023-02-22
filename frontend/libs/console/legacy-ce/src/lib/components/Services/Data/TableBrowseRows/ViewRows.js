@@ -32,10 +32,10 @@ import {
   vCollapseRow,
 } from './ViewActions'; // eslint-disable-line no-unused-vars
 
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 
-import { LegacyRunQueryContainer } from '@/features/BrowseRows';
-import { PaginationWithOnlyNavContainer } from '@/new-components/PaginationWithOnlyNav/PaginationWithOnlyNavContainer';
+import { LegacyRunQueryContainer } from '../../../../features/BrowseRows';
+import { PaginationWithOnlyNavContainer } from '../../../../new-components/PaginationWithOnlyNav/PaginationWithOnlyNavContainer';
 
 import {
   setOrderCol,
@@ -72,7 +72,7 @@ import {
 } from './tableUtils';
 import { compareRows, isTableWithPK } from './utils';
 import { push } from 'react-router-redux';
-import globals from '@/Globals';
+import globals from '../../../../Globals';
 
 const ViewRows = props => {
   const {

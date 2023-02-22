@@ -1,5 +1,5 @@
-import type { TableORSchemaArg } from '@/dataSources/types';
-import { QualifiedTable } from '@/metadata/types';
+import type { TableORSchemaArg } from '../../../dataSources/types';
+import { QualifiedTable } from '../../../metadata/types';
 import type { DatasourceSqlQueries } from '.';
 
 export const bigquerySqlQueries: DatasourceSqlQueries = {

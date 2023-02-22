@@ -1,5 +1,5 @@
-import { WhereClause } from '@/features/DataSource';
-import { MetadataTable, Source } from '@/features/hasura-metadata-types';
+import { WhereClause } from '../../../../DataSource';
+import { MetadataTable, Source } from '../../../../hasura-metadata-types';
 import { OrderBy } from '../../../types';
 import {
   getFields,

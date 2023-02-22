@@ -1,6 +1,6 @@
 import React from 'react';
-import { InputField, SimpleForm } from '@/new-components/Form';
-import { Button } from '@/new-components/Button';
+import { InputField, SimpleForm } from '../../../../new-components/Form';
+import { Button } from '../../../../new-components/Button';
 import { schema, Schema } from './schema';
 import { useDefaultValues } from './hooks';
 import { useOneOffScheduledTriggerMigration } from './hooks/useOneOffScheduledTriggerMigration';

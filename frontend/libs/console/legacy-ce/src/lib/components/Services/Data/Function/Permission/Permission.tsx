@@ -6,7 +6,7 @@ import {
   Analytics,
   REDACT_EVERYTHING,
   useGetAnalyticsAttributes,
-} from '@/features/Analytics';
+} from '../../../../../features/Analytics';
 import { push } from 'react-router-redux';
 
 import globals from '../../../../../Globals';
@@ -32,7 +32,7 @@ import PermissionsEditor from './PermissionsEditor';
 import styles from '../Modify/ModifyCustomFunction.module.scss';
 import { PGFunction } from '../../../../../dataSources/services/postgresql/types';
 import { getFunctionSelector } from '../../../../../metadata/selector';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 
 const PermissionServerFlagNote = ({ isEditable = false }) =>
   !isEditable ? (

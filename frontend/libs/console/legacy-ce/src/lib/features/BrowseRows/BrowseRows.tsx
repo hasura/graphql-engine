@@ -1,5 +1,5 @@
-import { getTableDisplayName } from '@/features/DatabaseRelationships';
-import { Table } from '@/features/hasura-metadata-types';
+import { getTableDisplayName } from '../DatabaseRelationships';
+import { Table } from '../hasura-metadata-types';
 import produce from 'immer';
 import React, { useEffect, useState } from 'react';
 import { setWhereAndSortToUrl } from './BrowseRows.utils';

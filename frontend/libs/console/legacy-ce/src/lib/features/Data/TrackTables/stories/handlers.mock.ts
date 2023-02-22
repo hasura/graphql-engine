@@ -1,7 +1,7 @@
-import { RunSQLResponse } from '@/features/DataSource';
-import { areTablesEqual } from '@/features/hasura-metadata-api';
-import { Metadata } from '@/features/hasura-metadata-types';
-import { TMigration } from '@/features/MetadataAPI';
+import { RunSQLResponse } from '../../../DataSource';
+import { areTablesEqual } from '../../../hasura-metadata-api';
+import { Metadata } from '../../../hasura-metadata-types';
+import { TMigration } from '../../../MetadataAPI';
 import { rest } from 'msw';
 
 function initialMetadata(): Metadata {

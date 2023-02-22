@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
-import { createFetchControlPlaneData } from '@/hooks/createFetchControlPlaneData';
-import globals from '@/Globals';
+import { createFetchControlPlaneData } from '../../../../../../hooks/createFetchControlPlaneData';
+import globals from '../../../../../../Globals';
 
 type CreateDatabaseResponse = {
   data: {

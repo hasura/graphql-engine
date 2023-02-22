@@ -1,6 +1,6 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
-import { Analytics } from '@/features/Analytics';
+import { Analytics } from '../../../../../../Analytics';
 import { RequiredEnvVar } from '../../../../types';
 import { useNeonIntegrationForOneClickDeployment } from '../../hooks';
 import { transformNeonIntegrationStatusToNeonButtonProps } from '../../utils';

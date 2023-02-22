@@ -1,8 +1,8 @@
 import {
   isSameTableObjectRelationship,
   TableFkRelationships,
-} from '@/features/DataSource';
-import { areTablesEqual } from '@/features/hasura-metadata-api';
+} from '../../DataSource';
+import { areTablesEqual } from '../../hasura-metadata-api';
 import {
   Legacy_SourceToRemoteSchemaRelationship,
   LocalTableArrayRelationship,
@@ -13,7 +13,7 @@ import {
   SourceToRemoteSchemaRelationship,
   SourceToSourceRelationship,
   Table,
-} from '@/features/hasura-metadata-types';
+} from '../../hasura-metadata-types';
 import isEqual from 'lodash.isequal';
 import {
   LocalRelationship,

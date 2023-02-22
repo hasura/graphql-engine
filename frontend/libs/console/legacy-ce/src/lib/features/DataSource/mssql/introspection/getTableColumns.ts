@@ -1,6 +1,6 @@
-import { areTablesEqual } from '@/features/hasura-metadata-api';
+import { areTablesEqual } from '../../../hasura-metadata-api';
 import { GraphQLType } from 'graphql';
-import { getScalarType, getTypeName } from '@/features/GraphQLUtils';
+import { getScalarType, getTypeName } from '../../../GraphQLUtils';
 import { MssqlTable } from '..';
 import {
   exportMetadata,

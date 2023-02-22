@@ -1,7 +1,7 @@
-import { OrderBy, TableColumn } from '@/features/DataSource';
-import { Table } from '@/features/hasura-metadata-types';
-import { Dialog } from '@/new-components/Dialog';
-import { useConsoleForm } from '@/new-components/Form';
+import { OrderBy, TableColumn } from '../../../DataSource';
+import { Table } from '../../../hasura-metadata-types';
+import { Dialog } from '../../../../new-components/Dialog';
+import { useConsoleForm } from '../../../../new-components/Form';
 import React from 'react';
 import { UseFormTrigger } from 'react-hook-form';
 import { z } from 'zod';

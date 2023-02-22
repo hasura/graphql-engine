@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { Button } from '@/new-components/Button';
-import { DropdownMenu } from '@/new-components/DropdownMenu';
+import { Button } from '../../../../new-components/Button';
+import { DropdownMenu } from '../../../../new-components/DropdownMenu';
 import { FaChevronDown } from 'react-icons/fa';
 import { parseQueryString } from './utils';
 

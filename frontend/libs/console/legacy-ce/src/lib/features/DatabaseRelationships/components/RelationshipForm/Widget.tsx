@@ -1,6 +1,10 @@
-import { Table } from '@/features/hasura-metadata-types';
-import { Button } from '@/new-components/Button';
-import { InputField, Select, useConsoleForm } from '@/new-components/Form';
+import { Table } from '../../../hasura-metadata-types';
+import { Button } from '../../../../new-components/Button';
+import {
+  InputField,
+  Select,
+  useConsoleForm,
+} from '../../../../new-components/Form';
 import { useEffect } from 'react';
 import { Controller } from 'react-hook-form';
 import { FaArrowRight, FaLink } from 'react-icons/fa';

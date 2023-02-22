@@ -1,4 +1,4 @@
-import { capitaliseFirstLetter } from '@/components/Common/ConfigureTransformation/utils';
+import { capitaliseFirstLetter } from '../../../../components/Common/ConfigureTransformation/utils';
 import { LocalRelationship } from '../../types';
 import { SuggestedRelationshipWithName } from './hooks/useSuggestedRelationships';
 

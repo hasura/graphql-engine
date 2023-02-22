@@ -1,5 +1,5 @@
 import React from 'react';
-import globals from '@/Globals';
+import globals from '../../../Globals';
 import { FaGithub } from 'react-icons/fa';
 import { GraphiqlPopup, WorkflowProgress } from './components';
 import { stepperNavSteps } from './constants';

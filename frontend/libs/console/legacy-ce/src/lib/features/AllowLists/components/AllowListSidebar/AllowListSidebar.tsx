@@ -1,8 +1,8 @@
 import debounce from 'lodash.debounce';
 import React from 'react';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
-import { useServerConfig } from '@/hooks';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
+import { useServerConfig } from '../../../../hooks';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 import { AllowListSidebarHeader } from './AllowListSidebarHeader';
 import { QueryCollectionList } from './QueryCollectionList';
 import { AllowListSidebarSearchForm } from './AllowListSidebarSearchForm';

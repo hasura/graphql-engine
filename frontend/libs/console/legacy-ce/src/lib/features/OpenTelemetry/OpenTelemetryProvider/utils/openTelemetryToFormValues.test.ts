@@ -1,4 +1,4 @@
-import type { Metadata } from '@/features/hasura-metadata-types';
+import type { Metadata } from '../../../hasura-metadata-types';
 import type { FormValues } from '../../OpenTelemetry/components/Form/schema';
 
 import {

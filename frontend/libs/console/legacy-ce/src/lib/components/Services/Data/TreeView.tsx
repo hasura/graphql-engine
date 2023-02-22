@@ -3,7 +3,7 @@ import { DownOutlined, RightOutlined } from '@ant-design/icons';
 import {
   availableFeatureFlagIds,
   useIsFeatureFlagEnabled,
-} from '@/features/FeatureFlags'; // Run time flag
+} from '../../../features/FeatureFlags'; // Run time flag
 import {
   FaDatabase,
   FaFolder,

@@ -1,5 +1,5 @@
-import { NativeDrivers } from '@/features/hasura-metadata-types';
-import { isPostgres } from '@/metadata/dataSource.utils';
+import { NativeDrivers } from '../../../features/hasura-metadata-types';
+import { isPostgres } from '../../../metadata/dataSource.utils';
 import { currentDriver, dataSource, terminateSql } from '../../../dataSources';
 import { QualifiedTable } from '../../../metadata/types';
 import { Nullable } from './tsUtils';

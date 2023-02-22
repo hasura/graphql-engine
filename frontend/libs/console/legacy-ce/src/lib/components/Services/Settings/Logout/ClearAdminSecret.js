@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { clearAdminSecretState } from '../../../AppState';
 
 import { showSuccessNotification } from '../../Common/Notification';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 
 class ClearAdminSecret extends Component {
   constructor() {

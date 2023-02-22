@@ -1,6 +1,6 @@
 import React from 'react';
 import { GeneratedAction } from './types';
-import { SimpleForm } from '@/new-components/Form';
+import { SimpleForm } from '../../../../new-components/Form';
 import { OasGeneratorForm } from './OASGeneratorForm';
 import { formSchema } from './OASGeneratorPage';
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, RouteComponentProps } from 'react-router';
-import { canAccessSecuritySettings } from '@/utils/permissions';
+import { canAccessSecuritySettings } from '../../../utils/permissions';
 
 type TopNavProps = {
   location: RouteComponentProps<unknown, unknown>['location'];

@@ -1,6 +1,6 @@
 // Disabled based on https://github.com/typescript-eslint/typescript-eslint/issues/239
 /* eslint-disable no-inner-declarations */
-import globals from '@/Globals';
+import globals from '../Globals';
 import { browserHistory } from 'react-router';
 import { APIError } from './error';
 

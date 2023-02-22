@@ -1,5 +1,5 @@
-import { SelectDatabase } from '@/features/ConnectDBRedesign/components/SelectDatabase';
-import { hasuraToast } from '@/new-components/Toasts';
+import { SelectDatabase } from '.';
+import { hasuraToast } from '../../../../new-components/Toasts';
 import { useArgs } from '@storybook/client-api';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 

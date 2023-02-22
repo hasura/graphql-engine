@@ -1,10 +1,10 @@
-import { Analytics } from '@/features/Analytics';
-import { MetadataTableConfig } from '@/features/hasura-metadata-types';
-import { Button } from '@/new-components/Button';
-import { Collapse } from '@/new-components/deprecated';
-import { Dialog } from '@/new-components/Dialog';
-import { GraphQLSanitizedInputField } from '@/new-components/Form';
-import { SanitizeTips } from '@/utils/sanitizeGraphQLFieldNames';
+import { Analytics } from '../../Analytics';
+import { MetadataTableConfig } from '../../hasura-metadata-types';
+import { Button } from '../../../new-components/Button';
+import { Collapse } from '../../../new-components/deprecated';
+import { Dialog } from '../../../new-components/Dialog';
+import { GraphQLSanitizedInputField } from '../../../new-components/Form';
+import { SanitizeTips } from '../../../utils/sanitizeGraphQLFieldNames';
 import React from 'react';
 import { FaExclamationCircle } from 'react-icons/fa';
 import { useCustomFieldNamesForm } from './hooks';

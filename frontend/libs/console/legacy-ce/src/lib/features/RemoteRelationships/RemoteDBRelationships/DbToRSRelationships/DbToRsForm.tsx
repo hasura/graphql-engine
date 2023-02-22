@@ -2,12 +2,15 @@ import React from 'react';
 import {
   allowedMetadataTypes,
   useMetadataMigration,
-} from '@/features/MetadataAPI';
-import { useFireNotification } from '@/new-components/Notifications';
-import { DataTarget } from '@/features/Datasources';
-import { InputField, SimpleForm } from '@/new-components/Form';
-import { Button } from '@/new-components/Button';
-import { getMetadataQuery, MetadataQueryType } from '@/metadata/queryUtils';
+} from '../../../MetadataAPI';
+import { useFireNotification } from '../../../../new-components/Notifications';
+import { DataTarget } from '../../../Datasources';
+import { InputField, SimpleForm } from '../../../../new-components/Form';
+import { Button } from '../../../../new-components/Button';
+import {
+  getMetadataQuery,
+  MetadataQueryType,
+} from '../../../../metadata/queryUtils';
 import { FormElementDbToRs } from './FormElementDbToRs';
 import { schema } from './schema';
 import { refRemoteSchemaSelectorKey } from '../../RemoteSchemaRelationships/components/RefRsSelector';

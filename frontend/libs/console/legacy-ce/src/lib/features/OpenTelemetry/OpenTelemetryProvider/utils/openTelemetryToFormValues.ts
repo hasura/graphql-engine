@@ -1,4 +1,4 @@
-import type { Metadata, OpenTelemetry } from '@/features/hasura-metadata-types';
+import type { Metadata, OpenTelemetry } from '../../../hasura-metadata-types';
 import type { FormValues } from '../../OpenTelemetry/components/Form/schema';
 
 import { defaultValues } from '../../OpenTelemetry/components/Form/schema';

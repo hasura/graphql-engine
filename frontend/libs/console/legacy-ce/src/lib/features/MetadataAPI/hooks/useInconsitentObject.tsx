@@ -1,4 +1,4 @@
-import { InconsistentObject } from '@/metadata/types';
+import { InconsistentObject } from '../../../metadata/types';
 import { useSelector } from 'react-redux';
 
 export const useInconsistentObject = () => {

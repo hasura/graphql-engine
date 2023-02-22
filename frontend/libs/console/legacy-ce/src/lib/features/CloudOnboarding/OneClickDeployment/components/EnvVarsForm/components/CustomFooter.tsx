@@ -1,6 +1,6 @@
 import React from 'react';
-import { Dialog } from '@/new-components/Dialog';
-import { Analytics } from '@/features/Analytics';
+import { Dialog } from '../../../../../../new-components/Dialog';
+import { Analytics } from '../../../../../Analytics';
 import { MdRefresh } from 'react-icons/md';
 import { EnvVarsFormState } from '../../../types';
 

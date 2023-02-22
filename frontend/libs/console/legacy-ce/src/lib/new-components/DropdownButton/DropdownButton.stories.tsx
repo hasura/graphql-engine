@@ -2,7 +2,7 @@ import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { within, userEvent, screen } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
-import { Button } from '@/new-components/Button';
+import { Button } from '../Button';
 
 import { DropdownButton } from './DropdownButton';
 

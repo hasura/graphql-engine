@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import { FaFlask } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
 import _push from '../../../../components/Services/Data/push';

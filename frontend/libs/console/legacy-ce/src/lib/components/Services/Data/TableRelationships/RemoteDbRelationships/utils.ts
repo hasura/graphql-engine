@@ -1,5 +1,5 @@
-import { isEmpty } from '@/components/Common/utils/jsUtils';
-import { RemoteDBRelationship } from '@/metadata/types';
+import { isEmpty } from '../../../../Common/utils/jsUtils';
+import { RemoteDBRelationship } from '../../../../../metadata/types';
 
 export const getRelColumnsMapping = (fields: Record<string, string>) => {
   const colsMapping = Object.entries(fields).map(([k, v]) => ({

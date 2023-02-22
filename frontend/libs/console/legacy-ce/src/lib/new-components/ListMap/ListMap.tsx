@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { RiCloseCircleFill } from 'react-icons/ri';
 import { FaPlusCircle } from 'react-icons/fa';
 import { useFormContext } from 'react-hook-form';
-import { Button } from '@/new-components/Button';
+import { Button } from '../Button';
 import clsx from 'clsx';
 import { BsArrowRight } from 'react-icons/bs';
 import { Select } from './Select';

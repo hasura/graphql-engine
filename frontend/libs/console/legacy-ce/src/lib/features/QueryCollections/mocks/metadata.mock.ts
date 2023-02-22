@@ -1,10 +1,10 @@
 import produce from 'immer';
 
-import { allowedMetadataTypes } from '@/features/MetadataAPI';
-import { Metadata } from '@/features/hasura-metadata-types';
+import { allowedMetadataTypes } from '../../MetadataAPI';
+import { Metadata } from '../../hasura-metadata-types';
 
-import { deleteAllowListQuery } from '@/metadata/utils';
-import { MetadataReducer } from '@/mocks/actions';
+import { deleteAllowListQuery } from '../../../metadata/utils';
+import { MetadataReducer } from '../../../mocks/actions';
 
 export const queryCollectionInitialData: Partial<Metadata['metadata']> = {
   query_collections: [

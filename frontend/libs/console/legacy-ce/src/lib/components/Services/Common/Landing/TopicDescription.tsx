@@ -1,5 +1,5 @@
 import React from 'react';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 import styles from '../../RemoteSchema/RemoteSchema.module.scss';
 
 import Rectangle from './images/Rectangle.svg';

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { requestHeadersSelectorSchema } from '@/new-components/RequestHeadersSelector';
+import { requestHeadersSelectorSchema } from '../../../../new-components/RequestHeadersSelector';
 
 export const schema = z.object({
   name: z.string().min(1, 'Remote Schema name is a required field!'),

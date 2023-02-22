@@ -1,5 +1,5 @@
 import React from 'react';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import Skeleton from 'react-loading-skeleton';
 import { ModifyTableProps } from '../ModifyTable';
 import { ForeignKeyDescription } from './ForeignKeyDescription';

@@ -1,9 +1,9 @@
 import isEqual from 'lodash.isequal';
 
-import { TableColumn } from '@/features/DataSource';
-import { getTypeName } from '@/features/GraphQLUtils';
+import { TableColumn } from '../../../../../../DataSource';
+import { getTypeName } from '../../../../../../GraphQLUtils';
 
-import { Metadata } from '@/features/hasura-metadata-types';
+import { Metadata } from '../../../../../../hasura-metadata-types';
 
 import { PermissionsSchema } from '../../../../../schema';
 

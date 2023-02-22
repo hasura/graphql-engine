@@ -1,4 +1,4 @@
-import { isProConsole } from '@/utils/proConsole';
+import { isProConsole } from '../../utils/proConsole';
 import { FeatureFlagDefinition } from './types';
 
 const relationshipTabTablesId = '0bea35ff-d3e9-45e9-af1b-59923bf82fa9';

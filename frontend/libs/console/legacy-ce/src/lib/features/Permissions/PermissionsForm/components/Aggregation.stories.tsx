@@ -1,7 +1,7 @@
 import React from 'react';
 import { Meta, Story } from '@storybook/react';
 import { z } from 'zod';
-import { SimpleForm } from '@/new-components/Form';
+import { SimpleForm } from '../../../../new-components/Form';
 import { action } from '@storybook/addon-actions';
 
 import { AggregationProps, AggregationSection } from './Aggregation';

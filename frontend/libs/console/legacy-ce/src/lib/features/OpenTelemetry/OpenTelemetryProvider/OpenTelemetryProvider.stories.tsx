@@ -6,10 +6,13 @@ import produce from 'immer';
 import { expect } from '@storybook/jest';
 import { act } from '@testing-library/react';
 import { userEvent, waitFor, within } from '@storybook/testing-library';
-import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReduxDecorator } from '../../../storybook/decorators/redux-decorator';
+import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 
-import { createDefaultInitialData, handlers } from '@/mocks/metadata.mock';
+import {
+  createDefaultInitialData,
+  handlers,
+} from '../../../mocks/metadata.mock';
 
 import { OpenTelemetryProvider } from './OpenTelemetryProvider';
 

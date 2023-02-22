@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { isProLiteConsole } from '@/utils';
+import { isProLiteConsole } from '../../utils';
 import { OpenTelemetryProvider } from './OpenTelemetryProvider/OpenTelemetryProvider';
 
 export function OpenTelemetryFeature() {

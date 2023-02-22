@@ -1,6 +1,6 @@
 import { graphql, rest } from 'msw';
-import Endpoints from '@/Endpoints';
-import { SurveysResponseData } from '@/features/Surveys';
+import Endpoints from '../../../../Endpoints';
+import { SurveysResponseData } from '../../../Surveys';
 import {
   fetchSurveysDataResponse,
   mockMetadataUrl,

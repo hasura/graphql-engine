@@ -1,7 +1,7 @@
-import { LabeledInput } from '@/components/Common/LabeledInput';
-import { ConnectionSettingsFormProps } from '@/components/Services/Data/DataSources/ConnectionSettings/ConnectionSettingsForm';
-import { SSLModeOptions } from '@/metadata/types';
-import { IconTooltip } from '@/new-components/Tooltip';
+import { LabeledInput } from '../../../../../Common/LabeledInput';
+import { ConnectionSettingsFormProps } from '../ConnectionSettingsForm';
+import { SSLModeOptions } from '../../../../../../metadata/types';
+import { IconTooltip } from '../../../../../../new-components/Tooltip';
 import React from 'react';
 import { FaCaretDown, FaCaretRight } from 'react-icons/fa';
 import styles from '../../DataSources.module.scss';

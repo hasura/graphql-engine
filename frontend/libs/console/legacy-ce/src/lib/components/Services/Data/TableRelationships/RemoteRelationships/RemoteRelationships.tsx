@@ -1,5 +1,5 @@
 import React from 'react';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 import styles from '../../TableModify/ModifyTable.module.scss';
 import { RemoteRelationshipServer } from './utils';
 import RemoteRelationshipList from './components/RemoteRelationshipList';

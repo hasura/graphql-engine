@@ -1,8 +1,8 @@
-import { useConsoleForm } from '@/new-components/Form';
+import { useConsoleForm } from '../../../../new-components/Form';
 import { z } from 'zod';
 import { Controller } from 'react-hook-form';
-import { Button } from '@/new-components/Button';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { Button } from '../../../../new-components/Button';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { RemoteSchemaFieldMapping } from './RemoteSchemaFieldMapping';
 import { useRemoteSchemaIntrospection } from '../../hooks/useRemoteSchema';

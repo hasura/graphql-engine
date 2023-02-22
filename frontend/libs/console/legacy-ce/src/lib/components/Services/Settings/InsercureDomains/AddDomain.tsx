@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Button } from '@/new-components/Button';
-import { IconTooltip } from '@/new-components/Tooltip';
+import { Button } from '../../../../new-components/Button';
+import { IconTooltip } from '../../../../new-components/Tooltip';
 import { addInsecureDomain } from '../../../../metadata/actions';
 
 import { inputStyles } from '../constants';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 
 type Props = { setToggle: any; dispatch: any };
 

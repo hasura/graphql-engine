@@ -1,5 +1,5 @@
-import { getWebsocketProtocol } from '@/helpers/protocol';
-import { getGraphqlSubscriptionsClient } from '@/utils/graphqlSubscriptions';
+import { getWebsocketProtocol } from '../../../helpers/protocol';
+import { getGraphqlSubscriptionsClient } from '../../../utils/graphqlSubscriptions';
 import defaultState from './state';
 import requestAction from '../../../utils/requestAction';
 

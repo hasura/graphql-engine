@@ -1,7 +1,7 @@
-import { useMetadataMigration } from '@/features/MetadataAPI';
+import { useMetadataMigration } from '../../MetadataAPI';
 import { useCallback, useMemo } from 'react';
 import { useQueryClient } from 'react-query';
-import { useMetadata } from '@/features/hasura-metadata-api';
+import { useMetadata } from '../../hasura-metadata-api';
 import { RemoteSchemaRelationship } from '../types';
 import {
   generateRemoteRelationshipCreateRequest,

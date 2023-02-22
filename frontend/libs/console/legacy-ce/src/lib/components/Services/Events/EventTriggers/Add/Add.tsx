@@ -2,8 +2,11 @@
 import React, { useState, useEffect, useReducer } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import Helmet from 'react-helmet';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { isProConsole } from '@/utils';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+} from '../../../../../features/Analytics';
+import { isProConsole } from '../../../../../utils';
 import {
   getEventRequestTransformDefaultState,
   requestTransformReducer,
@@ -22,26 +25,26 @@ import {
   setRequestContentType,
   setRequestUrlTransform,
   setRequestPayloadTransform,
-} from '@/components/Common/ConfigureTransformation/requestTransformState';
-import { showErrorNotification } from '@/components/Services/Common/Notification';
+} from '../../../../Common/ConfigureTransformation/requestTransformState';
+import { showErrorNotification } from '../../../Common/Notification';
 import {
   QueryParams,
   RequestTransformContentType,
   RequestTransformMethod,
-} from '@/metadata/types';
+} from '../../../../../metadata/types';
 import {
   KeyValuePair,
   RequestTransformStateBody,
-} from '@/components/Common/ConfigureTransformation/stateDefaults';
-import ConfigureTransformation from '@/components/Common/ConfigureTransformation/ConfigureTransformation';
+} from '../../../../Common/ConfigureTransformation/stateDefaults';
+import ConfigureTransformation from '../../../../Common/ConfigureTransformation/ConfigureTransformation';
 import {
   getValidateTransformOptions,
   parseValidateApiData,
-} from '@/components/Common/ConfigureTransformation/utils';
-import { isEmpty } from '@/components/Common/utils/jsUtils';
-import requestAction from '@/utils/requestAction';
-import Endpoints from '@/Endpoints';
-import { Button } from '@/new-components/Button';
+} from '../../../../Common/ConfigureTransformation/utils';
+import { isEmpty } from '../../../../Common/utils/jsUtils';
+import requestAction from '../../../../../utils/requestAction';
+import Endpoints from '../../../../../Endpoints';
+import { Button } from '../../../../../new-components/Button';
 import { MapStateToProps } from '../../../../../types';
 import { useEventTrigger } from '../state';
 import { Header } from '../../../../Common/Headers/Headers';
@@ -61,7 +64,7 @@ import {
   RetryConf,
   EventTriggerAutoCleanup,
 } from '../../types';
-import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
+import { useDebouncedEffect } from '../../../../../hooks/useDebounceEffect';
 
 interface Props extends InjectedProps {}
 

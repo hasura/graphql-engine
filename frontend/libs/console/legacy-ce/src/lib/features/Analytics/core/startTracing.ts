@@ -1,6 +1,6 @@
-import type { EnvVars } from '@/Globals';
+import type { EnvVars } from '../../../Globals';
 
-import globals from '@/Globals';
+import globals from '../../../Globals';
 
 import { startSentryTracing } from './sentry/startSentryTracing';
 

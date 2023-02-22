@@ -1,4 +1,4 @@
-import { InputField } from '@/new-components/Form';
+import { InputField } from '../../../../../new-components/Form';
 
 export const PoolSettings = ({ name }: { name: string }) => {
   return (

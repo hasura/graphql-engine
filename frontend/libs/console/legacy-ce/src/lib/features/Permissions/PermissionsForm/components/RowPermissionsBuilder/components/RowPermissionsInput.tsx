@@ -1,4 +1,4 @@
-import { Table } from '@/features/hasura-metadata-types';
+import { Table } from '../../../../../hasura-metadata-types';
 import { Tables, Operators, Permissions, Comparators } from './types';
 import { RowPermissionsProvider } from './RowPermissionsProvider';
 import { TypesProvider } from './TypesProvider';

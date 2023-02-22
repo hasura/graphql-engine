@@ -1,9 +1,9 @@
 import React from 'react';
-import { useRemoteDatabaseRelationships } from '@/features/MetadataAPI';
-import { NormalizedTable } from '@/dataSources/types';
-import { Dispatch } from '@/types';
-import { currentDriver } from '@/dataSources';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { useRemoteDatabaseRelationships } from '../../../../../features/MetadataAPI';
+import { NormalizedTable } from '../../../../../dataSources/types';
+import { Dispatch } from '../../../../../types';
+import { currentDriver } from '../../../../../dataSources';
+import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 
 import styles from '../../TableModify/ModifyTable.module.scss';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';

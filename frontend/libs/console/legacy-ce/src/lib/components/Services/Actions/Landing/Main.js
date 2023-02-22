@@ -2,15 +2,15 @@ import React from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 
 import { appPrefix, pageTitle } from '../constants';
 import globals from '../../../../Globals';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import TopicDescription from '../../Common/Landing/TopicDescription';
-import { isImportFromOpenAPIEnabled } from '@/utils';
+import { isImportFromOpenAPIEnabled } from '../../../../utils';
 import { FaEdit, FaFileImport } from 'react-icons/fa';
-import { Badge } from '@/new-components/Badge';
+import { Badge } from '../../../../new-components/Badge';
 
 // import TryItOut from '../../Common/Landing/TryItOut';
 

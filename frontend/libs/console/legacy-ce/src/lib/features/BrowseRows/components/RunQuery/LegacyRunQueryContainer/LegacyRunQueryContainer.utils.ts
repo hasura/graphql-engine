@@ -1,10 +1,10 @@
-import { SelectItem } from '@/components/Common/SelectInputSplitField/SelectInputSplitField';
-import { TableColumn } from '@/features/DataSource';
+import { SelectItem } from '../../../../../components/Common/SelectInputSplitField/SelectInputSplitField';
+import { TableColumn } from '../../../../DataSource';
 import { createHistory } from 'history';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
-import { ReduxState } from '@/types';
-import { NormalizedTable } from '@/dataSources/types';
+import { ReduxState } from '../../../../../types';
+import { NormalizedTable } from '../../../../../dataSources/types';
 import {
   Integers,
   Reals,

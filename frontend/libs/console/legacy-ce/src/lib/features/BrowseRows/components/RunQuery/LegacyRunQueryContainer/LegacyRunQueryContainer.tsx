@@ -1,11 +1,11 @@
-import type { AppDispatch } from '@/store';
+import type { AppDispatch } from '../../../../../store';
 import React from 'react';
-import { getCurrTimeForFileName } from '@/components/Common/utils/jsUtils';
+import { getCurrTimeForFileName } from '../../../../../components/Common/utils/jsUtils';
 import {
   downloadObjectAsCsvFile,
   downloadObjectAsJsonFile,
-} from '@/components/Common/utils/export.utils';
-import { Table } from '@/features/hasura-metadata-types';
+} from '../../../../../components/Common/utils/export.utils';
+import { Table } from '../../../../hasura-metadata-types';
 import { vMakeExportRequest } from '../../../../../components/Services/Data/TableBrowseRows/ViewActions';
 import { setOffset } from '../../../../../components/Services/Data/TableBrowseRows/FilterActions';
 import {

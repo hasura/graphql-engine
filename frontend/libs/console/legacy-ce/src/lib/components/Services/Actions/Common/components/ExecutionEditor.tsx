@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 import { focusYellowRing } from '../../constants';
 import { ActionExecution } from '../stateDefaults';
 

@@ -1,4 +1,4 @@
-import type { OpenTelemetry } from '@/features/hasura-metadata-types';
+import type { OpenTelemetry } from '../../../../hasura-metadata-types';
 import type { FormValues } from '../../../OpenTelemetry/components/Form/schema';
 
 type MetadataHeaders = OpenTelemetry['exporter_otlp']['headers'];

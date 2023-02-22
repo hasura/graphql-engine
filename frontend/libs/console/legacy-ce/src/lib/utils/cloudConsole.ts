@@ -1,5 +1,5 @@
-import globals from '@/Globals';
-import type { LuxFeature } from '@/Globals';
+import globals from '../Globals';
+import type { LuxFeature } from '../Globals';
 
 /*
  * This function returns true only if the current context is Hasura Cloud

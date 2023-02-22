@@ -1,5 +1,5 @@
-import { areTablesEqual } from '@/features/hasura-metadata-api';
-import { Table } from '@/features/hasura-metadata-types';
+import { areTablesEqual } from '../../../../../../hasura-metadata-api';
+import { Table } from '../../../../../../hasura-metadata-types';
 import { isObjectLike, set } from 'lodash';
 import { Permissions, Tables } from '../types';
 

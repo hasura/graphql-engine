@@ -1,9 +1,9 @@
 import React from 'react';
 import z from 'zod';
-import { Dialog } from '@/new-components/Dialog';
-import { InputField, useConsoleForm } from '@/new-components/Form';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { useFireNotification } from '@/new-components/Notifications';
+import { Dialog } from '../../../../new-components/Dialog';
+import { InputField, useConsoleForm } from '../../../../new-components/Form';
+import { Analytics, REDACT_EVERYTHING } from '../../../Analytics';
+import { useFireNotification } from '../../../../new-components/Notifications';
 import { useCreateQueryCollection } from '../../../QueryCollections/hooks/useCreateQueryCollection';
 
 interface QueryCollectionCreateDialogProps {

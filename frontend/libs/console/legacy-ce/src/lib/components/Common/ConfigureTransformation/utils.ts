@@ -4,8 +4,8 @@ import {
   RequestTransformBody,
   RequestTransformMethod,
   ResponseTranform,
-} from '@/metadata/types';
-import { getLSItem, setLSItem, LS_KEYS } from '@/utils/localStorage';
+} from '../../../metadata/types';
+import { getLSItem, setLSItem, LS_KEYS } from '../../../utils/localStorage';
 import {
   defaultRequestContentType,
   GraphiQlHeader,

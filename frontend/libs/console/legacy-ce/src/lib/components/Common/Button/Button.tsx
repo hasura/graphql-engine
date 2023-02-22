@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { trackRuntimeError } from '@/telemetry';
-import { isConsoleError } from '@/components/Common/utils/jsUtils';
+import { trackRuntimeError } from '../../../telemetry';
+import { isConsoleError } from '../utils/jsUtils';
 
 import styles from '../Common.module.scss';
 /*

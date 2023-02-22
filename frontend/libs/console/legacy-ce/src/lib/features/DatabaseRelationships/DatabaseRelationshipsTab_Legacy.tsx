@@ -1,7 +1,7 @@
-import { RightContainer } from '@/components/Common/Layout/RightContainer';
-import { Driver } from '@/dataSources';
-import { NormalizedTable } from '@/dataSources/types';
-import { Table } from '@/features/hasura-metadata-types';
+import { RightContainer } from '../../components/Common/Layout/RightContainer';
+import { Driver } from '../../dataSources';
+import { NormalizedTable } from '../../dataSources/types';
+import { Table } from '../hasura-metadata-types';
 import TableHeader from '../../components/Services/Data/TableCommon/TableHeader';
 import { FeatureFlagFloatingButton } from '../FeatureFlags/components/FeatureFlagFloatingButton';
 import { DatabaseRelationships } from '.';

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { QualifiedTable } from '@/metadata/types';
-import { Button } from '@/new-components/Button';
+import { QualifiedTable } from '../../../../../metadata/types';
+import { Button } from '../../../../../new-components/Button';
 import { ETOperationColumn } from '../../types';
 import { ColumnSelectionRadioButton } from './ColumnSelectionRadioButton';
 

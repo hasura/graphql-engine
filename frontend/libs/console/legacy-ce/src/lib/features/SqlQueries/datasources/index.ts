@@ -1,6 +1,6 @@
-import { Driver } from '@/dataSources';
-import type { TableORSchemaArg } from '@/dataSources/types';
-import { QualifiedTable } from '@/metadata/types';
+import { Driver } from '../../../dataSources';
+import type { TableORSchemaArg } from '../../../dataSources/types';
+import { QualifiedTable } from '../../../metadata/types';
 import { msSqlQueries } from './mssql';
 import { mySqlQueries } from './mysql';
 import { postgresSqlQueries } from './postgres';

@@ -33,12 +33,12 @@ import {
 } from '../../Actions/Add/reducer';
 import { getGraphQLEndpoint } from '../utils';
 import snippets from './snippets';
-import { canAccessCacheButton } from '@/utils/permissions';
+import { canAccessCacheButton } from '../../../../utils/permissions';
 
 import './GraphiQL.css';
 import _push from '../../Data/push';
 import { isQueryValid } from '../Rest/utils';
-import { LS_KEYS, setLSItem } from '@/utils/localStorage';
+import { LS_KEYS, setLSItem } from '../../../../utils/localStorage';
 import { CodeExporterEventTracer } from './CodeExporterEventTracer';
 import { trackGraphiQlToolbarButtonClick } from '../customAnalyticsEvents';
 

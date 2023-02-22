@@ -3,9 +3,9 @@ import {
   RequestTransformMethod,
   RequestTransformContentType,
   QueryParams,
-} from '@/metadata/types';
-import { Button } from '@/new-components/Button';
-import { Analytics } from '@/features/Analytics';
+} from '../../../metadata/types';
+import { Button } from '../../../new-components/Button';
+import { Analytics } from '../../../features/Analytics';
 import {
   KeyValuePair,
   RequestTransformState,

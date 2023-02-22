@@ -12,8 +12,8 @@ import {
   Select,
   Textarea,
   useConsoleForm,
-} from '@/new-components/Form';
-import { Button } from '@/new-components/Button';
+} from '..';
+import { Button } from '../../Button';
 
 export default {
   title: 'components/Forms 📁/Form 📁/Advanced forms with hook 🪝',

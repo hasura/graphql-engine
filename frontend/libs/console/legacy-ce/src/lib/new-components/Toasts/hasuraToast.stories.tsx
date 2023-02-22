@@ -5,8 +5,8 @@ import AceEditor from 'react-ace';
 import { within, userEvent } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
-import { hasuraToast } from '@/new-components/Toasts';
-import { Button } from '@/new-components/Button';
+import { hasuraToast } from '.';
+import { Button } from '../Button';
 
 export default {
   title: 'components/Toasts 🚧/Proposal',

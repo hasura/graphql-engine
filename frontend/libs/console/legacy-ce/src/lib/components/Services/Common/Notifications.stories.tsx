@@ -1,18 +1,18 @@
 import React from 'react';
 import { ComponentStory, Meta } from '@storybook/react';
 import { Description, Stories, Subtitle, Title } from '@storybook/addon-docs';
-import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
-import { ToastsHub } from '@/new-components/Toasts';
-import { Button } from '@/new-components/Button';
+import { ReduxDecorator } from '../../../storybook/decorators/redux-decorator';
+import { ToastsHub } from '../../../new-components/Toasts';
+import { Button } from '../../../new-components/Button';
 import {
   showErrorNotification,
   showInfoNotification,
   showNotification,
   showSuccessNotification,
   showWarningNotification,
-} from '@/components/Services/Common/Notification';
-import { useAppDispatch } from '@/store';
-import { useFireNotification } from '@/new-components/Notifications';
+} from './Notification';
+import { useAppDispatch } from '../../../store';
+import { useFireNotification } from '../../../new-components/Notifications';
 
 export default {
   title: 'components/Toasts 🚧/Legacy',

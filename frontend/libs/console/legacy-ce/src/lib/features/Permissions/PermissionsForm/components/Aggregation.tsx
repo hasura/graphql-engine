@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { Collapse } from '@/new-components/deprecated';
+import { Collapse } from '../../../../new-components/deprecated';
 
-import { isFeatureSupported } from '@/dataSources';
+import { isFeatureSupported } from '../../../../dataSources';
 import { useIsDisabled } from '../hooks/useIsDisabled';
 import { QueryType } from '../../types';
 import { PermissionsConfirmationModal } from './RootFieldPermissions/PermissionsConfirmationModal';

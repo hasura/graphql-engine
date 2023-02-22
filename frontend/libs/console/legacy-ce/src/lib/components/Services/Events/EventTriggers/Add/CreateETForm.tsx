@@ -1,8 +1,8 @@
 /* eslint-disable no-underscore-dangle */
 import React from 'react';
-import { Collapsible } from '@/new-components/Collapsible';
-import { isProConsole } from '@/utils/proConsole';
-import { useSchemas } from '@/components/Services/Data/TableInsertItem/hooks/useSchemas';
+import { Collapsible } from '../../../../../new-components/Collapsible';
+import { isProConsole } from '../../../../../utils/proConsole';
+import { useSchemas } from '../../../Data/TableInsertItem/hooks/useSchemas';
 import { LocalEventTriggerState } from '../state';
 import Headers, { Header } from '../../../../Common/Headers/Headers';
 import RetryConfEditor from '../../Common/Components/RetryConfEditor';

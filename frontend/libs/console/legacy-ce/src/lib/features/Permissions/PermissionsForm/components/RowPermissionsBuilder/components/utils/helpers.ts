@@ -1,6 +1,6 @@
 import { get, isEmpty, set, unset, isObjectLike } from 'lodash';
 import { RowPermissionsState, PermissionType } from '../types';
-import { allOperators } from '@/components/Common/FilterQuery/utils';
+import { allOperators } from '../../../../../../../components/Common/FilterQuery/utils';
 import { GraphQLType, isScalarType } from 'graphql';
 
 const getKeyPath = ({

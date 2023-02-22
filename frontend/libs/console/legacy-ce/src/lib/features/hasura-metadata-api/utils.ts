@@ -1,4 +1,4 @@
-import { Metadata, Source, Table } from '@/features/hasura-metadata-types';
+import { Metadata, Source, Table } from '../hasura-metadata-types';
 import { areTablesEqual } from './areTablesEqual';
 
 /*

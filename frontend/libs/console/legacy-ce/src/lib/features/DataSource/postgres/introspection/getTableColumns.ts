@@ -1,5 +1,5 @@
-import { getScalarType, getTypeName } from '@/features/GraphQLUtils';
-import { areTablesEqual } from '@/features/hasura-metadata-api';
+import { getScalarType, getTypeName } from '../../../GraphQLUtils';
+import { areTablesEqual } from '../../../hasura-metadata-api';
 import { GraphQLType } from 'graphql';
 import { PostgresTable } from '..';
 import {

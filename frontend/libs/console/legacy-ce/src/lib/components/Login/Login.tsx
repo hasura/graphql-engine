@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { Connect } from 'react-redux';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { Button } from '@/new-components/Button';
-import { CheckboxesField, InputField, SimpleForm } from '@/new-components/Form';
+import { Analytics, REDACT_EVERYTHING } from '../../features/Analytics';
+import { Button } from '../../new-components/Button';
+import {
+  CheckboxesField,
+  InputField,
+  SimpleForm,
+} from '../../new-components/Form';
 import { push } from 'react-router-redux';
 import { z } from 'zod';
 import Helmet from 'react-helmet';

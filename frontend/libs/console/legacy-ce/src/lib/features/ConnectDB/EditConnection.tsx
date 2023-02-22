@@ -1,7 +1,7 @@
-import { CustomizationForm } from '@/features/ConnectDB';
-import { Button } from '@/new-components/Button';
-import { InputField, Select, useConsoleForm } from '@/new-components/Form';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { CustomizationForm } from '.';
+import { Button } from '../../new-components/Button';
+import { InputField, Select, useConsoleForm } from '../../new-components/Form';
+import { IndicatorCard } from '../../new-components/IndicatorCard';
 import React, { useEffect } from 'react';
 import { useQuery } from 'react-query';
 import { z } from 'zod';

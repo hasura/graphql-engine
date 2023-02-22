@@ -1,4 +1,4 @@
-import { QualifiedTable } from '@/metadata/types';
+import { QualifiedTable } from '../../../metadata/types';
 import { MetadataSelector } from './metadataSelectors';
 import { useMetadata } from './useMetadata';
 

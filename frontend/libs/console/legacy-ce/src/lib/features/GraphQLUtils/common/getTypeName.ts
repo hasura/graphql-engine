@@ -1,4 +1,4 @@
-import { MetadataTable, Source } from '@/features/hasura-metadata-types';
+import { MetadataTable, Source } from '../../hasura-metadata-types';
 import { AllowedQueryOperation } from '../query';
 import { TableEntry } from '../../../metadata/types';
 

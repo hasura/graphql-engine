@@ -1,7 +1,7 @@
 import React from 'react';
-import { RequestHeadersSelector } from '@/new-components/RequestHeadersSelector';
-import { IconTooltip } from '@/new-components/Tooltip';
-import { Collapsible } from '@/new-components/Collapsible';
+import { RequestHeadersSelector } from '../../../../../new-components/RequestHeadersSelector';
+import { IconTooltip } from '../../../../../new-components/Tooltip';
+import { Collapsible } from '../../../../../new-components/Collapsible';
 import { IncludeInMetadataSwitch } from './IncludeInMetadataSwitch';
 import { RetryConfiguration } from './RetryConfiguration';
 

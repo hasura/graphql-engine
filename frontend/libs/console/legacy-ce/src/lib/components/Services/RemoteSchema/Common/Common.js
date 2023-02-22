@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { IconTooltip } from '@/new-components/Tooltip';
+import { IconTooltip } from '../../../../new-components/Tooltip';
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 
 import {
@@ -13,7 +13,7 @@ import GraphQLCustomizationEdit from './GraphQLCustomization/GraphQLCustomizatio
 
 import { focusYellowRing, inputStyles, subHeading } from '../constants';
 import { FaShieldAlt } from 'react-icons/fa';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 
 class Common extends React.Component {
   getPlaceHolderText(valType) {

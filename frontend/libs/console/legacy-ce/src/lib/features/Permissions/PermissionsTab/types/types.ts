@@ -1,4 +1,4 @@
-import { Driver } from '@/dataSources';
+import { Driver } from '../../../../dataSources';
 
 /**
  * - contains `dataSource`: driver (e.g. postgres, mssql, etc.) and database name (e.g. default, test, etc.)

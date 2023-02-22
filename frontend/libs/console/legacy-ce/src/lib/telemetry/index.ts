@@ -1,7 +1,7 @@
-import endpoints from '@/Endpoints';
-import globals from '@/Globals';
-import { sanitiseUrl } from '@/telemetry/filters';
-import { Driver } from '@/dataSources';
+import endpoints from '../Endpoints';
+import globals from '../Globals';
+import { sanitiseUrl } from './filters';
+import { Driver } from '../dataSources';
 
 export type RunTimeErrorEvent = {
   type: 'RUN_TIME_ERROR';

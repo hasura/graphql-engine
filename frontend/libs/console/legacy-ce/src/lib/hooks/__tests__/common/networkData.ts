@@ -1,4 +1,4 @@
-import { RunSQLResponse } from '@/hooks/types';
+import { RunSQLResponse } from '../../types';
 
 /* eslint-disable no-useless-escape */
 export const ErrorResponse = {

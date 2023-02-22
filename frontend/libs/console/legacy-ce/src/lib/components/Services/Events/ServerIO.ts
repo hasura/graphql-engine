@@ -1,5 +1,5 @@
 import { push, replace } from 'react-router-redux';
-import { getDataSources } from '@/metadata/selector';
+import { getDataSources } from '../../../metadata/selector';
 import { Thunk } from '../../../types';
 import { makeMigrationCall } from '../Data/DataActions';
 import requestAction from '../../../utils/requestAction';

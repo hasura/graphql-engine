@@ -1,4 +1,4 @@
-import { generateGraphQLSelectQuery } from '@/features/GraphQLUtils';
+import { generateGraphQLSelectQuery } from '../../../GraphQLUtils';
 import get from 'lodash.get';
 import { CitusTable } from '..';
 import { exportMetadata, runGraphQL } from '../../api';

@@ -1,4 +1,4 @@
-import { DataSourcesAPI } from '@/dataSources';
+import { DataSourcesAPI } from '../..';
 import { AlterFKTableInfo, MySQLTrigger, CreatePKArgs } from './types';
 
 export const getMySQLNameString = (schemaName: string, itemName: string) =>

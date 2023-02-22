@@ -1,8 +1,8 @@
 /* eslint-disable no-underscore-dangle */
 import React from 'react';
 import { RouteComponentProps } from 'react-router';
-import { useServerConfig } from '@/hooks';
-import { useMetadata } from '@/features/MetadataAPI';
+import { useServerConfig } from '../../../hooks';
+import { useMetadata } from '../../../features/MetadataAPI';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import globals from '../../../Globals';
 import { CLI_CONSOLE_MODE } from '../../../constants';

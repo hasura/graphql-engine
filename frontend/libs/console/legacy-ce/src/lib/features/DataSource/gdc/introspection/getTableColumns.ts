@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-import { getScalarType, getTypeName } from '@/features/GraphQLUtils';
+import { getScalarType, getTypeName } from '../../../GraphQLUtils';
 import { GraphQLType } from 'graphql';
 import { GDCTable } from '..';
 import {
@@ -10,7 +10,7 @@ import {
 import { GetTableColumnsProps, TableColumn } from '../../types';
 import { adaptAgentDataType } from './utils';
 import { GetTableInfoResponse } from './types';
-import { areTablesEqual } from '@/features/hasura-metadata-api';
+import { areTablesEqual } from '../../../hasura-metadata-api';
 
 export const getTableColumns = async (props: GetTableColumnsProps) => {
   const { httpClient, dataSourceName, table } = props;

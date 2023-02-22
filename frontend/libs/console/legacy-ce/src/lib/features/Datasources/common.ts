@@ -1,6 +1,6 @@
-import { getRunSqlQuery } from '@/components/Common/utils/v1QueryUtils';
-import Endpoints from '@/Endpoints';
-import { Api } from '@/hooks/apiUtils';
+import { getRunSqlQuery } from '../../components/Common/utils/v1QueryUtils';
+import Endpoints from '../../Endpoints';
+import { Api } from '../../hooks/apiUtils';
 import { useQuery } from 'react-query';
 import { useSelector } from 'react-redux';
 import { RunSQLResponse, UseRunSQLArg } from './types';

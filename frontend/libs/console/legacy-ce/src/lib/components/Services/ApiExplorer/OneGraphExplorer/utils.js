@@ -1,4 +1,4 @@
-import { programmaticallyTraceError } from '@/features/Analytics';
+import { programmaticallyTraceError } from '../../../../features/Analytics';
 import GraphiQLExplorer from 'graphiql-explorer';
 import { getLSItem, setLSItem, LS_KEYS } from '../../../../utils/localStorage';
 import { setForceIntrospectAt, setGraphiQLQuery } from '../Actions';

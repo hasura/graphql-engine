@@ -5,7 +5,7 @@ import * as React from 'react';
 
 import { z } from 'zod';
 import { expect } from '@storybook/jest';
-import { SimpleForm } from '@/new-components/Form';
+import { SimpleForm } from '../../../../../../new-components/Form';
 import { userEvent, within } from '@storybook/testing-library';
 
 import { Toggle } from './Toggle';

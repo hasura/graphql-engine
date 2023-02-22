@@ -2,7 +2,7 @@ import { action } from '@storybook/addon-actions';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import React from 'react';
 
-import { SimpleForm, InputField, useConsoleForm } from '@/new-components/Form';
+import { SimpleForm, InputField, useConsoleForm } from '.';
 import { FiSearch } from 'react-icons/fi';
 import { z } from 'zod';
 

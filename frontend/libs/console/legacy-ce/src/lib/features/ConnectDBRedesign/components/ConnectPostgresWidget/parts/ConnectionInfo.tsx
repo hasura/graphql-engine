@@ -1,6 +1,6 @@
-import { Collapsible } from '@/new-components/Collapsible';
-import { InputField, Radio, Select } from '@/new-components/Form';
-import { isProConsole } from '@/utils';
+import { Collapsible } from '../../../../../new-components/Collapsible';
+import { InputField, Radio, Select } from '../../../../../new-components/Form';
+import { isProConsole } from '../../../../../utils';
 import { useFormContext } from 'react-hook-form';
 import { ConnectionInfoSchema } from '../schema';
 import { BooleanInput } from './BooleanInput';

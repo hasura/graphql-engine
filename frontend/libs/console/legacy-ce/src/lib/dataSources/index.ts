@@ -1,7 +1,7 @@
 /* eslint-disable import/no-mutable-exports */
 import { useState, useEffect } from 'react';
 import { DeepRequired } from 'ts-essentials';
-import { TriggerOperation } from '@/components/Common/FilterQuery/state';
+import { TriggerOperation } from '../components/Common/FilterQuery/state';
 import { Path, get } from '../components/Common/utils/tsUtils';
 import { services } from './services';
 

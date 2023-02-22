@@ -1,4 +1,4 @@
-import { ServerHeader } from '@/metadata/types';
+import { ServerHeader } from '../../../../../metadata/types';
 import { Schema } from '../schema';
 
 export const serverHeadersToKeyValueArray = (

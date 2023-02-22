@@ -1,6 +1,6 @@
 import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 import { ManageAgents } from '../components/ManageAgents';
 import { handlers } from '../mocks/handler.mock';
 

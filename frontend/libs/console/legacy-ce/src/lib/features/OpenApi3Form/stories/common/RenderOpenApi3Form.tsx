@@ -1,5 +1,5 @@
-import { useConsoleForm } from '@/new-components/Form';
-import { Button } from '@/new-components/Button';
+import { useConsoleForm } from '../../../../new-components/Form';
+import { Button } from '../../../../new-components/Button';
 import { OpenApiSchema } from '@hasura/dc-api-types';
 import React, { useState } from 'react';
 import ReactJson from 'react-json-view';

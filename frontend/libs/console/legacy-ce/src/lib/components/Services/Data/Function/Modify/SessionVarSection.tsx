@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { IconTooltip } from '@/new-components/Tooltip';
-import { Button } from '@/new-components/Button';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { IconTooltip } from '../../../../../new-components/Tooltip';
+import { Button } from '../../../../../new-components/Button';
+import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 import styles from './ModifyCustomFunction.module.scss';
 import EditorInput from './EditorInput';
 

@@ -1,4 +1,4 @@
-import { isPostgres } from '@/metadata/dataSource.utils';
+import { isPostgres } from '../../../../metadata/dataSource.utils';
 import { currentDriver } from '../../../../dataSources';
 import { services } from '../../../../dataSources/services';
 

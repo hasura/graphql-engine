@@ -1,9 +1,9 @@
 import React from 'react';
-import { handlers } from '@/mocks/metadata.mock';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
+import { handlers } from '../../../../mocks/metadata.mock';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { ReduxDecorator } from '../../../../storybook/decorators/redux-decorator';
 import ReactJson from 'react-json-view';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import { Meta, Story } from '@storybook/react';
 
 import { useAddOperationsToQueryCollection } from '.';

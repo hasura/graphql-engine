@@ -1,14 +1,11 @@
 import { useQueryClient } from 'react-query';
 import { push } from 'react-router-redux';
-import { SupportedDrivers } from '@/features/hasura-metadata-types';
-import {
-  allowedMetadataTypes,
-  useMetadataMigration,
-} from '@/features/MetadataAPI';
-import { APIError } from '@/hooks/error';
-import { useFireNotification } from '@/new-components/Notifications';
-import { getDriverPrefix } from '@/features/DataSource';
-import { exportMetadata } from '@/metadata/actions';
+import { SupportedDrivers } from '../../hasura-metadata-types';
+import { allowedMetadataTypes, useMetadataMigration } from '../../MetadataAPI';
+import { APIError } from '../../../hooks/error';
+import { useFireNotification } from '../../../new-components/Notifications';
+import { getDriverPrefix } from '../../DataSource';
+import { exportMetadata } from '../../../metadata/actions';
 import { useAvailableDrivers } from './useAvailableDrivers';
 import { useDispatch } from 'react-redux';
 

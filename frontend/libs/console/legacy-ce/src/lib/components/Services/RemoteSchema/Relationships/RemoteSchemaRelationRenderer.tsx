@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
 import { RiAddCircleFill } from 'react-icons/ri';
-import { FeatureFlagFloatingButton } from '@/features/FeatureFlags';
+import { FeatureFlagFloatingButton } from '../../../../features/FeatureFlags';
 import {
   allowedMetadataTypes,
   useGetAllRemoteSchemaRelationships,
   useMetadataMigration,
   useInconsistentObject,
-} from '@/features/MetadataAPI';
+} from '../../../../features/MetadataAPI';
 import {
   RemoteSchemaRelationshipTable,
   ExistingRelationshipMeta,
-} from '@/features/RelationshipsTable';
-import { Button } from '@/new-components/Button';
+} from '../../../../features/RelationshipsTable';
+import { Button } from '../../../../new-components/Button';
 import {
   RemoteRelOption,
   RemoteSchemaToDbForm,
   RemoteSchemaToRemoteSchemaForm,
-} from '@/features/RemoteRelationships';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
-import { useFireNotification } from '@/new-components/Notifications';
-import { getConfirmation } from '@/components/Common/utils/jsUtils';
+} from '../../../../features/RemoteRelationships';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
+import { useFireNotification } from '../../../../new-components/Notifications';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 import { InconsistentBadge } from '../Common/GraphQLCustomization/InconsistentBadge';
 
 type RemoteSchemaRelationRendererProp = {

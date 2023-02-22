@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { NamingConventionOptions } from '@/metadata/types';
-import { IconTooltip } from '@/new-components/Tooltip';
-import { useServerConfig } from '@/hooks';
-import { getSupportedDrivers } from '@/dataSources';
-import { CardRadioGroup } from '@/new-components/CardRadioGroup';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { NamingConventionOptions } from '../../../../../metadata/types';
+import { IconTooltip } from '../../../../../new-components/Tooltip';
+import { useServerConfig } from '../../../../../hooks';
+import { getSupportedDrivers } from '../../../../../dataSources';
+import { CardRadioGroup } from '../../../../../new-components/CardRadioGroup';
+import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 import { GraphQLFieldCustomizationProps } from './types';
 
 const namingConventionRadioGroupItems: {

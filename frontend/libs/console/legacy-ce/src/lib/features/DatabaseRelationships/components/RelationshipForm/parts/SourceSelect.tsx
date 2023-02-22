@@ -1,8 +1,8 @@
-import { RemoteSchema, Table } from '@/features/hasura-metadata-types';
+import { RemoteSchema, Table } from '../../../../hasura-metadata-types';
 import {
   FieldWrapper,
   FieldWrapperPassThroughProps,
-} from '@/new-components/Form';
+} from '../../../../../new-components/Form';
 import isEqual from 'lodash.isequal';
 import get from 'lodash.get';
 import React from 'react';

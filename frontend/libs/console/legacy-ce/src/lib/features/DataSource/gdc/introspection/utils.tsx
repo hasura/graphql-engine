@@ -1,4 +1,4 @@
-import { getEntries } from '@/components/Services/Data/Common/tsUtils';
+import { getEntries } from '../../../../components/Services/Data/Common/tsUtils';
 import { DataNode } from 'antd/lib/tree';
 import React from 'react';
 import { FaTable, FaFolder } from 'react-icons/fa';

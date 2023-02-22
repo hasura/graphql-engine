@@ -1,5 +1,5 @@
 import React from 'react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../storybook/decorators/react-query';
 
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { Connect } from './Connect';

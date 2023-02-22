@@ -1,9 +1,9 @@
 import { useQueryClient } from 'react-query';
-import { useMetadataMigration } from '@/features/MetadataAPI';
-import { exportMetadata } from '@/features/DataSource';
-import { useFireNotification } from '@/new-components/Notifications';
+import { useMetadataMigration } from '../../../../MetadataAPI';
+import { exportMetadata } from '../../../../DataSource';
+import { useFireNotification } from '../../../../../new-components/Notifications';
 
-import { useHttpClient } from '@/features/Network';
+import { useHttpClient } from '../../../../Network';
 
 import { QueryType } from '../../../types';
 import { api } from '../../api';

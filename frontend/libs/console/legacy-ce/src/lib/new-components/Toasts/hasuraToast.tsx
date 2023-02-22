@@ -3,7 +3,7 @@ import { Toast, toast, ToastOptions } from 'react-hot-toast/headless';
 import { deepmerge } from 'deepmerge-ts';
 import clsx from 'clsx';
 import { FaTimesCircle } from 'react-icons/fa';
-import { HtmlAnalyticsAttributes } from '@/features/Analytics';
+import { HtmlAnalyticsAttributes } from '../../features/Analytics';
 
 export type ToastType = 'error' | 'success' | 'info' | 'warning';
 

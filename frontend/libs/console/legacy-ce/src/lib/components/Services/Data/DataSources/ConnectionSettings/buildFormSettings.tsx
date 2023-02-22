@@ -1,5 +1,5 @@
-import { getSupportedDrivers } from '@/dataSources';
-import { DbConnectionSettings } from '@/dataSources/types';
+import { getSupportedDrivers } from '../../../../../dataSources';
+import { DbConnectionSettings } from '../../../../../dataSources/types';
 import { ConnectDBState } from '../state';
 
 export const buildFormSettings = (

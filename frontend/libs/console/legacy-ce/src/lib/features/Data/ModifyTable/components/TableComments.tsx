@@ -1,9 +1,9 @@
-import { MetadataUtils, useMetadata } from '@/features/hasura-metadata-api';
-import { Table } from '@/features/hasura-metadata-types';
-import useUpdateEffect from '@/hooks/useUpdateEffect';
-import { Button } from '@/new-components/Button';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
-import { Nullable } from '@/types';
+import { MetadataUtils, useMetadata } from '../../../hasura-metadata-api';
+import { Table } from '../../../hasura-metadata-types';
+import useUpdateEffect from '../../../../hooks/useUpdateEffect';
+import { Button } from '../../../../new-components/Button';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
+import { Nullable } from '../../../../types';
 import clsx from 'clsx';
 import React from 'react';
 import TextareaAutosize from 'react-autosize-textarea';

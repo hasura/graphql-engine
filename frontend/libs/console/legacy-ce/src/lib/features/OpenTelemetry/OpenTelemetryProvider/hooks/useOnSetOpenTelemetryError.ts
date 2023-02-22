@@ -1,14 +1,14 @@
 import {
   trackCustomEvent,
   programmaticallyTraceError,
-} from '@/features/Analytics';
+} from '../../../Analytics';
 
 import {
   parseUnexistingEnvVarSchemaError,
   parseHasuraEnvVarsNotAllowedError,
-} from '@/features/hasura-metadata-types';
+} from '../../../hasura-metadata-types';
 
-import { useFireNotification } from '@/new-components/Notifications';
+import { useFireNotification } from '../../../../new-components/Notifications';
 
 export function useOnSetOpenTelemetryError(
   fireNotification: ReturnType<typeof useFireNotification>['fireNotification']

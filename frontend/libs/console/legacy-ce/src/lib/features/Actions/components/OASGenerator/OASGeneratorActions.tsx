@@ -1,5 +1,5 @@
-import { Button } from '@/new-components/Button';
-import { Analytics } from '@/features/Analytics';
+import { Button } from '../../../../new-components/Button';
+import { Analytics } from '../../../Analytics';
 import clsx from 'clsx';
 import React from 'react';
 import { FaChevronDown, FaExternalLinkAlt } from 'react-icons/fa';

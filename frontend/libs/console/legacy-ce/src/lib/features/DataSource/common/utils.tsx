@@ -1,6 +1,6 @@
 import { FaFolder, FaTable } from 'react-icons/fa';
 import React from 'react';
-import { MetadataTable, Source, Table } from '@/features/hasura-metadata-types';
+import { MetadataTable, Source, Table } from '../../hasura-metadata-types';
 import { IntrospectedTable, TableFkRelationships, TableRow } from '../types';
 import { RunSQLResponse } from '../api';
 

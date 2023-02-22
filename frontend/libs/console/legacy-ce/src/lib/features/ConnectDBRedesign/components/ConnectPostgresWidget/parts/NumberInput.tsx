@@ -1,7 +1,7 @@
 import {
   FieldWrapper,
   FieldWrapperPassThroughProps,
-} from '@/new-components/Form';
+} from '../../../../../new-components/Form';
 import { OpenApiSchema } from '@hasura/dc-api-types';
 import clsx from 'clsx';
 import get from 'lodash.get';

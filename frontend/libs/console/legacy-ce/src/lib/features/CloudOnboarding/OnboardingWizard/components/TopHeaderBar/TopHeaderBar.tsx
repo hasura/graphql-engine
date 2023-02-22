@@ -1,5 +1,5 @@
 import React from 'react';
-import { HasuraLogoFull } from '@/new-components/HasuraLogo';
+import { HasuraLogoFull } from '../../../../../new-components/HasuraLogo';
 
 export function TopHeaderBar() {
   return (

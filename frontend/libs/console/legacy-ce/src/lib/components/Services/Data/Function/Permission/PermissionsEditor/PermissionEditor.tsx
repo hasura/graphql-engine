@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../../../new-components/Button';
 
 import styles from '../../../../../Common/Permissions/PermissionStyles.module.scss';
 

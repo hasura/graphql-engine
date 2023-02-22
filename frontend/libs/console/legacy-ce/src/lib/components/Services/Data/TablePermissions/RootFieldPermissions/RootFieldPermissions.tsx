@@ -1,7 +1,7 @@
 import React from 'react';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { FaQuestionCircle } from 'react-icons/fa';
-import { Switch } from '@/new-components/Switch';
+import { Switch } from '../../../../../new-components/Switch';
 import clsx from 'clsx';
 
 import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';

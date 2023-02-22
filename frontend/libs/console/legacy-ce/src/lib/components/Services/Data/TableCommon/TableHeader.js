@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
-import { useGetAnalyticsAttributes } from '@/features/Analytics';
+import { useGetAnalyticsAttributes } from '../../../../features/Analytics';
 import { changeTableName } from '../TableModify/ModifyActions';
 import { capitalize, exists } from '../../../Common/utils/jsUtils';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';

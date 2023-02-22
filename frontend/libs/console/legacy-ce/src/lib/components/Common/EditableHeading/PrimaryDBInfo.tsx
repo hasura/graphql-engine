@@ -1,7 +1,7 @@
 import React from 'react';
-import { IconTooltip } from '@/new-components/Tooltip';
-import { useMetadataSource } from '@/features/MetadataAPI';
-import { MetadataDataSource } from '@/metadata/types';
+import { IconTooltip } from '../../../new-components/Tooltip';
+import { useMetadataSource } from '../../../features/MetadataAPI';
+import { MetadataDataSource } from '../../../metadata/types';
 import { FaLink } from 'react-icons/fa';
 
 type Props = {

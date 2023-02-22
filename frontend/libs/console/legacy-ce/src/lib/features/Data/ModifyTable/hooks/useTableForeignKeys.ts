@@ -1,6 +1,6 @@
-import { DataSource, Feature } from '@/features/DataSource';
-import { Table } from '@/features/hasura-metadata-types';
-import { useHttpClient } from '@/features/Network';
+import { DataSource, Feature } from '../../../DataSource';
+import { Table } from '../../../hasura-metadata-types';
+import { useHttpClient } from '../../../Network';
 import { useQuery } from 'react-query';
 
 export const useTableForeignKeys = ({

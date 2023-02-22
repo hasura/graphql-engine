@@ -1,4 +1,4 @@
-import { useMetadata } from '@/features/hasura-metadata-api';
+import { useMetadata } from '../../hasura-metadata-api';
 import { SourceOption } from '../components/RelationshipForm/parts/SourceSelect';
 import { getTableLabel } from '../components/RelationshipForm/utils';
 

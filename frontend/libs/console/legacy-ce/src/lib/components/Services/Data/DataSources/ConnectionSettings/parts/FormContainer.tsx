@@ -1,4 +1,4 @@
-import { Collapse } from '@/new-components/deprecated';
+import { Collapse } from '../../../../../../new-components/deprecated';
 import React from 'react';
 import styles from '../../DataSources.module.scss';
 

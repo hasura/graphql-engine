@@ -1,6 +1,6 @@
-import { TableColumn } from '@/features/DataSource';
-import { Table } from '@/features/hasura-metadata-types';
-import { getLSItem, setLSItem } from '@/utils';
+import { TableColumn } from '../../../../DataSource';
+import { Table } from '../../../../hasura-metadata-types';
+import { getLSItem, setLSItem } from '../../../../../utils';
 import { useEffect, useState } from 'react';
 import { DataGridOptions } from '../../DataGrid/DataGrid';
 import { convertUrlToDataGridOptions } from '../../DataGrid/DataGrid.utils';

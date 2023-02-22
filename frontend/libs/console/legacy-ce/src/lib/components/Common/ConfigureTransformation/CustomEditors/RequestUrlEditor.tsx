@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { QueryParams } from '@/metadata/types';
+import { QueryParams } from '../../../../metadata/types';
 import KeyValueInput from './KeyValueInput';
 import { Nullable } from '../../utils/tsUtils';
 import {

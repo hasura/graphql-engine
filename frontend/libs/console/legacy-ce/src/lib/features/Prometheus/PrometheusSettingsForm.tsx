@@ -3,11 +3,15 @@ import { z } from 'zod';
 import Skeleton from 'react-loading-skeleton';
 import 'ace-builds/src-noconflict/mode-yaml';
 
-import { CodeEditorField, InputField, SimpleForm } from '@/new-components/Form';
-import { Button } from '@/new-components/Button';
-import { Badge } from '@/new-components/Badge';
-import { Card } from '@/new-components/Card';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import {
+  CodeEditorField,
+  InputField,
+  SimpleForm,
+} from '../../new-components/Form';
+import { Button } from '../../new-components/Button';
+import { Badge } from '../../new-components/Badge';
+import { Card } from '../../new-components/Card';
+import { LearnMoreLink } from '../../new-components/LearnMoreLink';
 import {
   FaCheckCircle,
   FaExclamationTriangle,

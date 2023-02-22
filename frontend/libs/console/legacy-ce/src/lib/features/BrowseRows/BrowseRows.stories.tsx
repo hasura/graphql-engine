@@ -1,5 +1,5 @@
 import React from 'react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../storybook/decorators/react-query';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { userEvent, waitFor, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';

@@ -1,4 +1,4 @@
-import { RemoteDBRelationship } from '@/metadata/types';
+import { RemoteDBRelationship } from '../../../../../metadata/types';
 import React from 'react';
 import { parseDbToDbRemoteRel } from './utils';
 

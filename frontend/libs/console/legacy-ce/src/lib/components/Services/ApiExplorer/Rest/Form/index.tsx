@@ -1,19 +1,28 @@
 import React from 'react';
 import { RouteComponentProps } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { AllowedRESTMethods, RestEndpointEntry } from '@/metadata/types';
-import { useIsUnmounted } from '@/components/Services/Data/Common/tsUtils';
-import { Dispatch, ReduxState } from '@/types';
-import { addRESTEndpoint, editRESTEndpoint } from '@/metadata/actions';
-import { allowedQueriesCollection } from '@/metadata/utils';
-import { showErrorNotification } from '@/components/Services/Common/Notification';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+} from '../../../../../features/Analytics';
+import {
+  AllowedRESTMethods,
+  RestEndpointEntry,
+} from '../../../../../metadata/types';
+import { useIsUnmounted } from '../../../Data/Common/tsUtils';
+import { Dispatch, ReduxState } from '../../../../../types';
+import {
+  addRESTEndpoint,
+  editRESTEndpoint,
+} from '../../../../../metadata/actions';
+import { allowedQueriesCollection } from '../../../../../metadata/utils';
+import { showErrorNotification } from '../../../Common/Notification';
 import {
   RestEndpointForm,
   RestEndpointFormState,
   RestEndpointFormData,
-} from '@/components/Services/ApiExplorer/Rest/Form/RestEndpointForm';
-import { getLSItem, LS_KEYS } from '@/utils/localStorage';
+} from './RestEndpointForm';
+import { getLSItem, LS_KEYS } from '../../../../../utils/localStorage';
 import _push from '../../../Data/push';
 
 const forgeFormEndpointObject = (

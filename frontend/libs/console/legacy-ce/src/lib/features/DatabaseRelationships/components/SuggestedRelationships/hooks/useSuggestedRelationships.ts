@@ -1,22 +1,19 @@
 import inflection from 'inflection';
-import { isEqual } from '@/components/Common/utils/jsUtils';
-import {
-  LocalRelationship,
-  SuggestedRelationship,
-} from '@/features/DatabaseRelationships/types';
-import { getTableDisplayName } from '@/features/DatabaseRelationships/utils/helpers';
-import { getDriverPrefix, runMetadataQuery } from '@/features/DataSource';
+import { isEqual } from '../../../../../components/Common/utils/jsUtils';
+import { LocalRelationship, SuggestedRelationship } from '../../../types';
+import { getTableDisplayName } from '../../../utils/helpers';
+import { getDriverPrefix, runMetadataQuery } from '../../../../DataSource';
 import {
   areTablesEqual,
   MetadataSelectors,
-} from '@/features/hasura-metadata-api';
-import { useMetadata } from '@/features/hasura-metadata-api/useMetadata';
-import { Table } from '@/features/hasura-metadata-types';
-import { useHttpClient } from '@/features/Network';
+} from '../../../../hasura-metadata-api';
+import { useMetadata } from '../../../../hasura-metadata-api/useMetadata';
+import { Table } from '../../../../hasura-metadata-types';
+import { useHttpClient } from '../../../../Network';
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
-import { generateQueryKeys } from '@/features/DatabaseRelationships/utils/queryClientUtils';
-import { useMetadataMigration } from '@/features/MetadataAPI';
+import { generateQueryKeys } from '../../../utils/queryClientUtils';
+import { useMetadataMigration } from '../../../../MetadataAPI';
 
 type UseSuggestedRelationshipsArgs = {
   dataSourceName: string;

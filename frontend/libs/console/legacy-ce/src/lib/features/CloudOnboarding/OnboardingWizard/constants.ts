@@ -1,5 +1,5 @@
-import globals from '@/Globals';
-import { BASE_URL_TEMPLATE } from '@/components/Services/Data/Schema/TemplateGallery/templateGalleryConfig';
+import globals from '../../../Globals';
+import { BASE_URL_TEMPLATE } from '../../../components/Services/Data/Schema/TemplateGallery/templateGalleryConfig';
 
 // This config is stored in root level index.js, and there is a config file in each directory which stores which
 // stores the directory structure.

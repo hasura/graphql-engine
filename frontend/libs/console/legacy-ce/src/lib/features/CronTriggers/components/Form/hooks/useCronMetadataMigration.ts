@@ -1,7 +1,7 @@
-import { useMetadataMigration } from '@/features/MetadataAPI';
-import { useFireNotification } from '@/new-components/Notifications';
-import { APIError } from '@/hooks/error';
-import { CRON_TRIGGERS_QUERY_KEY } from '@/components/Services/Events/CronTriggers/Hooks/useGetCronTriggers';
+import { useMetadataMigration } from '../../../../MetadataAPI';
+import { useFireNotification } from '../../../../../new-components/Notifications';
+import { APIError } from '../../../../../hooks/error';
+import { CRON_TRIGGERS_QUERY_KEY } from '../../../../../components/Services/Events/CronTriggers/Hooks/useGetCronTriggers';
 import { useQueryClient } from 'react-query';
 import { ALL_CRON_TRIGGERS_QUERY_KEY } from './useGetAllCronTriggers';
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { OrderBy, WhereClause } from '@/features/DataSource';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { OrderBy, WhereClause } from '../../../../DataSource';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { userEvent, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { ComponentStory, ComponentMeta } from '@storybook/react';

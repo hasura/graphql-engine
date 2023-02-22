@@ -1,6 +1,6 @@
-import type { HasuraMetadataV3 } from '@/metadata/types';
-import type { MetadataQueryType } from '@/metadata/queryUtils';
-import type { OpenTelemetryQueries } from '@/features/hasura-metadata-types';
+import type { HasuraMetadataV3 } from '../../metadata/types';
+import type { MetadataQueryType } from '../../metadata/queryUtils';
+import type { OpenTelemetryQueries } from '../hasura-metadata-types';
 import type { IntrospectionQuery } from 'graphql';
 import type { RemoteField } from '../RemoteRelationships/RemoteSchemaRelationships/types';
 

@@ -3,13 +3,13 @@ import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import { Link } from 'react-router';
 
-import { PrimaryDBInfo } from '@/components/Common/EditableHeading/PrimaryDBInfo';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { CustomFieldNames } from '@/features/Data';
-import { Button } from '@/new-components/Button';
-import { TableTrackingCustomizationModalKey } from '@/store/modal/modal.constants';
+import { PrimaryDBInfo } from '../../../Common/EditableHeading/PrimaryDBInfo';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
+import { CustomFieldNames } from '../../../../features/Data';
+import { Button } from '../../../../new-components/Button';
+import { TableTrackingCustomizationModalKey } from '../../../../store/modal/modal.constants';
 import { BsBoxArrowUpRight } from 'react-icons/bs';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 import { FaCog, FaDatabase, FaFolder, FaPlusCircle } from 'react-icons/fa';
 import {
   currentDriver,

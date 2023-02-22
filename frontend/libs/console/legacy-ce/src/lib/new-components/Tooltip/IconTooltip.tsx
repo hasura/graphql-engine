@@ -1,5 +1,5 @@
 import React, { ReactElement, ReactNode } from 'react';
-import { Tooltip, TooltipProps } from '@/new-components/Tooltip';
+import { Tooltip, TooltipProps } from '.';
 import { FaQuestionCircle } from 'react-icons/fa';
 
 export type IconTooltipProps = {

@@ -1,5 +1,5 @@
-import { TableRow } from '@/features/DataSource';
-import { CardedTable } from '@/new-components/CardedTable';
+import { TableRow } from '../../../../DataSource';
+import { CardedTable } from '../../../../../new-components/CardedTable';
 import {
   FaCaretDown,
   FaCaretUp,
@@ -16,7 +16,7 @@ import {
 } from '@tanstack/react-table';
 import React, { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
-import { Relationship } from '@/features/DatabaseRelationships';
+import { Relationship } from '../../../../DatabaseRelationships';
 import { CheckboxItem } from './CheckboxItem';
 import { RowOptionsButton } from './RowOptionsButton';
 import { RowDialog } from './RowDialog';

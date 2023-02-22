@@ -1,4 +1,4 @@
-import { allowedMetadataTypes } from '@/features/MetadataAPI';
+import { allowedMetadataTypes } from '../../MetadataAPI';
 import { generateLhsFields } from '../components/RelationshipForm/parts/MapRemoteSchemaFields/utils';
 import {
   LocalRelationship,

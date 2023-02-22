@@ -2,7 +2,7 @@ import {
   getFullQueryNameBase,
   getGraphQLQueryBase,
   QueryBody,
-} from '@/dataSources/common';
+} from '../../common';
 import Endpoints from '../../../Endpoints';
 import { TableConfig } from '../../../metadata/types';
 import { ReduxState } from '../../../types';

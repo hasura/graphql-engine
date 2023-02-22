@@ -1,5 +1,5 @@
-import Endpoints from '@/Endpoints';
-import { Api } from '@/hooks/apiUtils';
+import Endpoints from '../../../Endpoints';
+import { Api } from '../../../hooks/apiUtils';
 import { useQuery, UseQueryOptions, UseQueryResult } from 'react-query';
 import { useSelector } from 'react-redux';
 import type { MetadataResponse } from '../types';

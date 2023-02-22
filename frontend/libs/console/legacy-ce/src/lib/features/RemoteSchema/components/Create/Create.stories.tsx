@@ -1,8 +1,8 @@
 import React, { useReducer } from 'react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { ComponentMeta, Story } from '@storybook/react';
-import { RemoteSchema } from '@/features/RemoteSchema';
-import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
+import { RemoteSchema } from '../..';
+import { ReduxDecorator } from '../../../../storybook/decorators/redux-decorator';
 import { within, userEvent } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { handlers } from './mocks/handlers.mock';

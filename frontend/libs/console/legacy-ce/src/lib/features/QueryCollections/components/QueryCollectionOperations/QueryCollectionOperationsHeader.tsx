@@ -1,11 +1,11 @@
 import React from 'react';
 import { FaRegCopy, FaRegFolder, FaRegTrashAlt } from 'react-icons/fa';
 
-import { Button } from '@/new-components/Button';
-import { DropdownMenu } from '@/new-components/DropdownMenu';
-import { QueryCollection } from '@/metadata/types';
-import { getConfirmation } from '@/components/Common/utils/jsUtils';
-import { useFireNotification } from '@/new-components/Notifications';
+import { Button } from '../../../../new-components/Button';
+import { DropdownMenu } from '../../../../new-components/DropdownMenu';
+import { QueryCollection } from '../../../../metadata/types';
+import { getConfirmation } from '../../../../components/Common/utils/jsUtils';
+import { useFireNotification } from '../../../../new-components/Notifications';
 
 import { QueryCollectionsOperationsSearchForm } from './QueryCollectionOperationsSearchForm';
 import { useQueryCollections } from '../../hooks/useQueryCollections';

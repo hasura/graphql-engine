@@ -1,8 +1,8 @@
 import React, { MouseEvent } from 'react';
 import AceEditor from 'react-ace';
 import { toast, ToastOptions } from 'react-hot-toast/headless';
-import { showModal } from '@/store/modal/modal.actions';
-import { TableTrackingCustomizationModalKey } from '@/store/modal/modal.constants';
+import { showModal } from '../../store/modal/modal.actions';
+import { TableTrackingCustomizationModalKey } from '../../store/modal/modal.constants';
 import { hasuraToast, ToastProps } from './hasuraToast';
 import { Json } from '../../components/Common/utils/tsUtils';
 

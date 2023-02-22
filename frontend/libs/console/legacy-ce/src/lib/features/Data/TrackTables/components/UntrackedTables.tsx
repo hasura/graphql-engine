@@ -1,11 +1,11 @@
 import React from 'react';
 
-import { Button } from '@/new-components/Button';
-import { CardedTable } from '@/new-components/CardedTable';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { Button } from '../../../../new-components/Button';
+import { CardedTable } from '../../../../new-components/CardedTable';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 // import { useTables } from '../hooks/useTables';
 
-import { useTrackTable } from '@/features/Data';
+import { useTrackTable } from '../..';
 import { useCheckRows } from '../hooks/useCheckRows';
 import { TrackableTable } from '../types';
 import { TableRow } from './TableRow';

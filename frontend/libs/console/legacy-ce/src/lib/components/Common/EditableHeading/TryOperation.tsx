@@ -3,13 +3,13 @@ import clsx from 'clsx';
 import { Dispatch } from 'redux';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { isEmpty } from 'lodash';
-import { Badge } from '@/new-components/Badge';
-import { DropdownButton } from '@/new-components/DropdownButton';
+import { Badge } from '../../../new-components/Badge';
+import { DropdownButton } from '../../../new-components/DropdownButton';
 import { FaArrowRight, FaFlask } from 'react-icons/fa';
-import { LS_KEYS, setLSItem } from '@/utils/localStorage';
-import { Tooltip } from '@/new-components/Tooltip';
-import { Analytics } from '@/features/Analytics';
-import { useMetadataSource } from '@/features/MetadataAPI';
+import { LS_KEYS, setLSItem } from '../../../utils/localStorage';
+import { Tooltip } from '../../../new-components/Tooltip';
+import { Analytics } from '../../../features/Analytics';
+import { useMetadataSource } from '../../../features/MetadataAPI';
 import {
   getInitialValueField,
   generateGqlQueryFromTable,

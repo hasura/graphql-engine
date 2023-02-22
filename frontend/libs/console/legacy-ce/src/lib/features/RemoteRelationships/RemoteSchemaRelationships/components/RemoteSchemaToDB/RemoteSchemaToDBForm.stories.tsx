@@ -1,10 +1,10 @@
 import React from 'react';
 
 import { Meta, Story } from '@storybook/react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { within, userEvent } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
-import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
+import { ReduxDecorator } from '../../../../../storybook/decorators/redux-decorator';
 
 import {
   RemoteSchemaToDbForm,

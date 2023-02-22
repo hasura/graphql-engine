@@ -1,5 +1,5 @@
-import type { GlobalWindowHeap } from '@/features/Analytics';
-import { parseSentryDsn } from '@/features/Analytics';
+import type { GlobalWindowHeap } from './features/Analytics';
+import { parseSentryDsn } from './features/Analytics';
 
 /* eslint no-underscore-dangle: 0 */
 import { getFeaturesCompatibility } from './helpers/versionUtils';

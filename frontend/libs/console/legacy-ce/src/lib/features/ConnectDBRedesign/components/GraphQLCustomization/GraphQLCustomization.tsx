@@ -1,6 +1,9 @@
-import { useServerConfig } from '@/hooks';
-import { GraphQLSanitizedInputField, Select } from '@/new-components/Form';
-import { IconTooltip } from '@/new-components/Tooltip';
+import { useServerConfig } from '../../../../hooks';
+import {
+  GraphQLSanitizedInputField,
+  Select,
+} from '../../../../new-components/Form';
+import { IconTooltip } from '../../../../new-components/Tooltip';
 
 export const GraphQLCustomization = ({ name }: { name: string }) => {
   const { data: configData } = useServerConfig();

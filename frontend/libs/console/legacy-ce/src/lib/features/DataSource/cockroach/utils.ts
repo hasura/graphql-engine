@@ -1,4 +1,4 @@
-import { getEntries } from '@/components/Services/Data/Common/tsUtils';
+import { getEntries } from '../../../components/Services/Data/Common/tsUtils';
 import { TableColumn } from '../types';
 
 export function adaptSQLDataType(

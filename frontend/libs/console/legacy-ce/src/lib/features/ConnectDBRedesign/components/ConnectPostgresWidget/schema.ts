@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { graphQLCustomizationSchema } from '../GraphQLCustomization/schema';
-import { Source } from '@/features/hasura-metadata-types';
+import { Source } from '../../../hasura-metadata-types';
 import { adaptPostgresConnection } from './utils/adaptResponse';
 
 const numberSchema = z.preprocess(

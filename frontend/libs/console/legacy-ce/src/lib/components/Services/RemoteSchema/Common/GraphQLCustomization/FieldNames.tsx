@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { IconTooltip } from '@/new-components/Tooltip';
-import { Button } from '@/new-components/Button';
+import { IconTooltip } from '../../../../../new-components/Tooltip';
+import { Button } from '../../../../../new-components/Button';
 import TypeMapping from './TypeMapping';
 import { inputStyles } from '../../constants';
 

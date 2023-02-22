@@ -19,14 +19,14 @@ import {
   getDatabaseTableTypeInfoForAllSources,
 } from './DataActions';
 import _push from './push';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../new-components/Button';
 import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
 import Spinner from '../../Common/Spinner/Spinner';
 import { useGDCTreeItemClick } from './GDCTree/hooks/useGDCTreeItemClick';
 import {
   availableFeatureFlagIds,
   useIsFeatureFlagEnabled,
-} from '@/features/FeatureFlags';
+} from '../../../features/FeatureFlags';
 
 const DATA_SIDEBAR_SET_LOADING = 'dataSidebar/DATA_SIDEBAR_SET_LOADING';
 

@@ -1,7 +1,7 @@
 import React from 'react';
-import { LabeledInput } from '@/components/Common/LabeledInput';
-import { ConnectionSettingsFormProps } from '@/components/Services/Data/DataSources/ConnectionSettings/ConnectionSettingsForm';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { LabeledInput } from '../../../../../Common/LabeledInput';
+import { ConnectionSettingsFormProps } from '../ConnectionSettingsForm';
+import { IndicatorCard } from '../../../../../../new-components/IndicatorCard';
 import { FaExclamationTriangle } from 'react-icons/fa';
 import styles from '../../DataSources.module.scss';
 

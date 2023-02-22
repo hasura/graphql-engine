@@ -2,7 +2,7 @@ import React from 'react';
 import {
   TableFkRelationships,
   generateForeignKeyLabel,
-} from '@/features/DataSource';
+} from '../../../DataSource';
 
 export function ForeignKeyDescription({
   foreignKey,

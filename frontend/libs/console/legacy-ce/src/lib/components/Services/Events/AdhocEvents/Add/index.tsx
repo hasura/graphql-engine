@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
-import { getAdhocPendingEventsRoute } from '@/components/Common/utils/routesUtils';
+import { getAdhocPendingEventsRoute } from '../../../../Common/utils/routesUtils';
 import { Form } from '../../../../../features/AdhocEvents/components/Form';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { MapStateToProps } from '../../../../../types';

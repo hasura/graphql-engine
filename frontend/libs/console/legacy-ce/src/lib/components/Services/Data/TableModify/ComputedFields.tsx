@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import ComputedFieldsEditor from './ComputedFieldsEditor';

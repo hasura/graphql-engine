@@ -1,8 +1,8 @@
-import { CLI_CONSOLE_MODE } from '@/constants';
-import Endpoints from '@/Endpoints';
-import { Api } from '@/hooks/apiUtils';
-import { RunSQLResponse } from '@/hooks/types';
-import { useConsoleConfig } from '@/hooks/useEnvVars';
+import { CLI_CONSOLE_MODE } from '../../../constants';
+import Endpoints from '../../../Endpoints';
+import { Api } from '../../../hooks/apiUtils';
+import { RunSQLResponse } from '../../../hooks/types';
+import { useConsoleConfig } from '../../../hooks/useEnvVars';
 import { useMutation, UseMutationOptions, useQueryClient } from 'react-query';
 import { useSelector } from 'react-redux';
 import { allowedMetadataTypes, MetadataResponse } from '../types';

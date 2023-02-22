@@ -1,8 +1,8 @@
-import { useRemoteSchema } from '@/features/MetadataAPI';
+import { useRemoteSchema } from '../../../MetadataAPI';
 import {
   RelationshipFields,
   RemoteSchemaTree,
-} from '@/features/RemoteRelationships';
+} from '../../../RemoteRelationships';
 import React, { useEffect, useState } from 'react';
 
 export const SchemaPreview = (props: { name: string }) => {

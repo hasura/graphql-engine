@@ -1,7 +1,7 @@
 import React from 'react';
-import { AppDispatch } from '@/store';
-import { Button } from '@/new-components/Button';
-import { RightContainer } from '@/components/Common/Layout/RightContainer';
+import { AppDispatch } from '../../../../store';
+import { Button } from '../../../../new-components/Button';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { ordinalColSort } from '../utils';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { findTable, generateTableDef, Table } from '../../../../dataSources';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dispatch } from '@/types';
+import { Dispatch } from '../../../../../types';
 
 import { OnboardingAnimation } from './components/OnboardingAnimation';
 import { NeonOnboarding } from './components/NeonOnboarding';

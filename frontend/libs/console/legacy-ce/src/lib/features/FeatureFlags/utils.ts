@@ -1,4 +1,4 @@
-import { LS_KEYS, setLSItem } from '@/utils/localStorage';
+import { LS_KEYS, setLSItem } from '../../utils/localStorage';
 import { FeatureFlagType, FeatureFlagState } from './types';
 
 export const extractStateFromFeatureFlags = (

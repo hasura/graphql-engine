@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Dispatch } from '@/types';
+import { Dispatch } from '../../../../../../types';
 import { useNeonOAuth } from './useNeonOAuth';
 import { useNeonDatabase } from './useNeonDatabase';
 import { useCreateHasuraCloudDatasource } from './useCreateHasuraCloudDatasource';

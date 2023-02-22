@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { useDebouncedEffect } from '../../../../../hooks/useDebounceEffect';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+} from '../../../../../features/Analytics';
 import { inputStyles } from '../../constants';
 import { FaShieldAlt } from 'react-icons/fa';
-import { IconTooltip } from '@/new-components/Tooltip';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { IconTooltip } from '../../../../../new-components/Tooltip';
+import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 
 const editorLabel = 'Webhook (HTTP/S) Handler';
 

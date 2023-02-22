@@ -1,15 +1,18 @@
 /* eslint-disable no-underscore-dangle */
 import React from 'react';
 import { GraphQLError } from 'graphql';
-import { IconTooltip } from '@/new-components/Tooltip';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { IconTooltip } from '../../../../../new-components/Tooltip';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+} from '../../../../../features/Analytics';
 import {
   availableFeatureFlagIds,
   useIsFeatureFlagEnabled,
-} from '@/features/FeatureFlags';
+} from '../../../../../features/FeatureFlags';
 import { FaFileCode, FaMagic, FaTable } from 'react-icons/fa';
-import { DropdownButton } from '@/new-components/DropdownButton';
-import { Badge } from '@/new-components/Badge';
+import { DropdownButton } from '../../../../../new-components/DropdownButton';
+import { Badge } from '../../../../../new-components/Badge';
 import HandlerEditor from './HandlerEditor';
 import ExecutionEditor from './ExecutionEditor';
 import HeaderConfEditor from './HeaderConfEditor';

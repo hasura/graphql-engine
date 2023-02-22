@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../../new-components/Button';
 import Editor from '../../../../Common/Layout/ExpandableEditor/Editor';
 import {
   EventTrigger,

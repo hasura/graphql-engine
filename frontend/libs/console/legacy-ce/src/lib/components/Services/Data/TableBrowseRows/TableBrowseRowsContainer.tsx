@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '@/store';
-import { getManualEventsTriggers } from '@/metadata/selector';
+import { useAppDispatch, useAppSelector } from '../../../../store';
+import { getManualEventsTriggers } from '../../../../metadata/selector';
 import {
   adaptFormValuesToQuery,
   getFiltersAndSortFromUrlQueryParams,
   runFilterQuery,
   UserQuery,
-} from '@/features/BrowseRows';
-import useIsFirstRender from '@/hooks/useIsFirstRender';
-import { TableColumn } from '@/features/DataSource';
+} from '../../../../features/BrowseRows';
+import useIsFirstRender from '../../../../hooks/useIsFirstRender';
+import { TableColumn } from '../../../../features/DataSource';
 import { vSetDefaults } from './ViewActions';
 import { setTable } from '../DataActions';
 import ViewRows from './ViewRows';

@@ -1,14 +1,14 @@
 import { ReactNode } from 'react';
 import { FaPlug, FaTable } from 'react-icons/fa';
-import { Table } from '@/features/hasura-metadata-types';
-import { MultiSelectItem } from '@/new-components/Form';
+import { Table } from '../../../../hasura-metadata-types';
+import { MultiSelectItem } from '../../../../../new-components/Form';
 import { getTableDisplayName } from '../../../utils/helpers';
 import { SourceSelectorItem } from './SourcePicker.types';
 import {
   isSchemaTable,
   isDatasetTable,
   isGDCTable,
-} from '@/features/DataSource/utils';
+} from '../../../../DataSource/utils';
 
 type SourcePickerLabelProps = {
   prefix: ReactNode;

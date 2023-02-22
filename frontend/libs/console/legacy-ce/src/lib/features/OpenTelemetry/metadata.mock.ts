@@ -1,11 +1,8 @@
 import produce from 'immer';
 
-import type { MetadataReducer } from '@/mocks/actions';
-import type { allowedMetadataTypes } from '@/features/MetadataAPI';
-import type {
-  Metadata,
-  SetOpenTelemetryQuery,
-} from '@/features/hasura-metadata-types';
+import type { MetadataReducer } from '../../mocks/actions';
+import type { allowedMetadataTypes } from '../MetadataAPI';
+import type { Metadata, SetOpenTelemetryQuery } from '../hasura-metadata-types';
 
 export const openTelemetryInitialData: Partial<Metadata['metadata']> = {
   opentelemetry: undefined,

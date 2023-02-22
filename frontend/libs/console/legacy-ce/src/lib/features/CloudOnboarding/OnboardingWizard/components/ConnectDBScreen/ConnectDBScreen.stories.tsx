@@ -1,6 +1,6 @@
 import React from 'react';
 import { ComponentMeta, Story } from '@storybook/react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { ConnectDBScreen } from './ConnectDBScreen';

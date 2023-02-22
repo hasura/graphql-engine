@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '@/store';
-import { useReadOnlyMode } from '@/hooks';
-import { useMetadata } from '@/features/MetadataAPI';
-import { HasuraMetadataV3 } from '@/metadata/types';
-import Spinner from '@/components/Common/Spinner/Spinner';
+import { useAppDispatch, useAppSelector } from '../../../../store';
+import { useReadOnlyMode } from '../../../../hooks';
+import { useMetadata } from '../../../../features/MetadataAPI';
+import { HasuraMetadataV3 } from '../../../../metadata/types';
+import Spinner from '../../../Common/Spinner/Spinner';
 import isObject from 'lodash.isobject';
 
 import { fetchEnumOptions, insertItem } from './InsertActions';

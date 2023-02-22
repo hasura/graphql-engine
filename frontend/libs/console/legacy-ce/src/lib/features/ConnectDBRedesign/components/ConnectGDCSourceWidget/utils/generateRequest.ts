@@ -1,4 +1,4 @@
-import { DatabaseConnection } from '@/features/ConnectDBRedesign/types';
+import { DatabaseConnection } from '../../../types';
 import { cleanEmpty } from '../../ConnectPostgresWidget/utils/helpers';
 import { generateGraphQLCustomizationInfo } from '../../GraphQLCustomization';
 

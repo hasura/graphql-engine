@@ -3,7 +3,7 @@ import {
   forceGraphiQLIntrospection,
   forceChangeGraphiqlQuery,
 } from '../../components/Services/ApiExplorer/OneGraphExplorer/utils';
-import { Dispatch } from '@/types';
+import { Dispatch } from '../../types';
 
 export const runQueryInGraphiQL = () => {
   clickRunQueryButton();

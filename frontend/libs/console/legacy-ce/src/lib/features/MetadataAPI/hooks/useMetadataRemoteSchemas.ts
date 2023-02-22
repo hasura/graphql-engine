@@ -1,9 +1,9 @@
 import React from 'react';
 import { useQueryClient } from 'react-query';
 import { buildClientSchema, GraphQLSchema } from 'graphql';
-import Endpoints from '@/Endpoints';
-import { Api } from '@/hooks/apiUtils';
-import { APIError } from '@/hooks/error';
+import Endpoints from '../../../Endpoints';
+import { Api } from '../../../hooks/apiUtils';
+import { APIError } from '../../../hooks/error';
 import { useSelector } from 'react-redux';
 
 import { MetadataSelector } from './metadataSelectors';

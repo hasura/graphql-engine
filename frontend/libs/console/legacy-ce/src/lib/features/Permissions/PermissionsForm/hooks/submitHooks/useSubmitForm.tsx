@@ -1,15 +1,15 @@
 import { useQueryClient } from 'react-query';
 import { AxiosInstance } from 'axios';
 
-import { useMetadataMigration } from '@/features/MetadataAPI';
-import { exportMetadata } from '@/features/DataSource';
-import { useHttpClient } from '@/features/Network';
-import { useFireNotification } from '@/new-components/Notifications';
+import { useMetadataMigration } from '../../../../MetadataAPI';
+import { exportMetadata } from '../../../../DataSource';
+import { useHttpClient } from '../../../../Network';
+import { useFireNotification } from '../../../../../new-components/Notifications';
 import { AccessType, QueryType } from '../../../types';
 import { api } from '../../api';
 import { isPermission, keyToPermission } from '../../../utils';
 import { PermissionsSchema } from '../../../schema';
-import { Table } from '@/features/hasura-metadata-types';
+import { Table } from '../../../../hasura-metadata-types';
 
 export interface UseSubmitFormArgs {
   dataSourceName: string;

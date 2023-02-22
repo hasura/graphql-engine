@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { Dispatch } from '@/types';
-import { reactQueryClient } from '@/lib/reactQuery';
+import { Dispatch } from '../../../../../../types';
+import { reactQueryClient } from '../../../../../../lib/reactQuery';
 import { NeonBanner } from './components/Neon/NeonBanner';
 import {
   getNeonDBName,

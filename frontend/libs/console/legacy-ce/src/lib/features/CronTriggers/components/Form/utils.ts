@@ -1,5 +1,5 @@
-import { isJsonString } from '@/components/Common/utils/jsUtils';
-import { CronTrigger, RequestTransform } from '@/metadata/types';
+import { isJsonString } from '../../../../components/Common/utils/jsUtils';
+import { CronTrigger, RequestTransform } from '../../../../metadata/types';
 import { Schema } from './schema';
 
 /**

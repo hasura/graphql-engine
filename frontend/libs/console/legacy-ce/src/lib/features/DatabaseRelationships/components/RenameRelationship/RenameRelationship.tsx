@@ -1,6 +1,6 @@
-import { Dialog } from '@/new-components/Dialog';
-import { InputField, SimpleForm } from '@/new-components/Form';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { Dialog } from '../../../../new-components/Dialog';
+import { InputField, SimpleForm } from '../../../../new-components/Form';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import React from 'react';
 import { z } from 'zod';
 import { useManageLocalRelationship } from '../../hooks/useManageLocalRelationship';

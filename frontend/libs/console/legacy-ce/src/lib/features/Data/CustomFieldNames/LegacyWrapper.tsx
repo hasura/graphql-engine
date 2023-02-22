@@ -1,14 +1,11 @@
 import {
   getTableBrowseRoute,
   getTableModifyRoute,
-} from '@/components/Common/utils/routesUtils';
-import { Driver } from '@/dataSources';
-import {
-  allowedMetadataTypes,
-  useMetadataMigration,
-} from '@/features/MetadataAPI';
-import { useFireNotification } from '@/new-components/Notifications';
-import { ReduxState } from '@/types';
+} from '../../../components/Common/utils/routesUtils';
+import { Driver } from '../../../dataSources';
+import { allowedMetadataTypes, useMetadataMigration } from '../../MetadataAPI';
+import { useFireNotification } from '../../../new-components/Notifications';
+import { ReduxState } from '../../../types';
 import React from 'react';
 import { useDispatch } from 'react-redux';
 import { AnyAction } from 'redux';

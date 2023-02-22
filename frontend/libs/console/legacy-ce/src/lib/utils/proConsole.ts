@@ -1,4 +1,4 @@
-import type { CloudCliEnv, EnvVars } from '@/Globals';
+import type { CloudCliEnv, EnvVars } from '../Globals';
 
 export type ProConsoleEnv = {
   consoleMode: EnvVars['consoleMode'];

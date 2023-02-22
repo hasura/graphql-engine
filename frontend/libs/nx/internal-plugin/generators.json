@@ -2,5 +2,11 @@
   "$schema": "http://json-schema.org/schema",
   "name": "nx-internal-plugin",
   "version": "0.0.1",
-  "generators": {}
+  "generators": {
+    "migrate-path-to-relative": {
+      "factory": "./src/generators/migrate-path-to-relative/generator",
+      "schema": "./src/generators/migrate-path-to-relative/schema.json",
+      "description": "migrate-path-to-relative generator"
+    }
+  }
 }

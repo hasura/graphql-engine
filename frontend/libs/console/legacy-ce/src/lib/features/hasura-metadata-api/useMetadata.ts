@@ -1,6 +1,6 @@
-import { exportMetadata } from '@/features/DataSource';
-import { Metadata } from '@/features/hasura-metadata-types';
-import { useHttpClient } from '@/features/Network';
+import { exportMetadata } from '../DataSource';
+import { Metadata } from '../hasura-metadata-types';
+import { useHttpClient } from '../Network';
 import { useCallback } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
 

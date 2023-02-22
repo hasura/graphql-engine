@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Table } from '@/features/hasura-metadata-types';
-import { useHttpClient } from '@/features/Network';
-import { useIsUnmounted } from '@/components/Services/Data/DataSources/CreateDataSource/Neon/useIsUnmounted';
+import { Table } from '../../hasura-metadata-types';
+import { useHttpClient } from '../../Network';
+import { useIsUnmounted } from '../../../components/Services/Data/DataSources/CreateDataSource/Neon/useIsUnmounted';
 import { DataSource } from '../../DataSource';
 
 export function useDefaultQueryRoot({

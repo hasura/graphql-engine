@@ -1,4 +1,4 @@
-import { UserQuery } from '@/features/BrowseRows';
+import { UserQuery } from '../../../../features/BrowseRows';
 
 type NestedColumn = {
   columns: (string | NestedColumn)[];

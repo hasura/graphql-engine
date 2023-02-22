@@ -1,6 +1,6 @@
-import { getTableDisplayName } from '@/features/DatabaseRelationships';
-import { useHttpClient } from '@/features/Network';
-import { TableRow } from '@/features/DataSource';
+import { getTableDisplayName } from '../../../DatabaseRelationships';
+import { useHttpClient } from '../../../Network';
+import { TableRow } from '../../../DataSource';
 import { fetchRows, UseRowsPropType } from '../useRows';
 import { getFileName } from './useExportRows.utils';
 import {

@@ -1,7 +1,7 @@
-import { CustomFieldNames } from '@/features/Data';
-import { MetadataTable } from '@/features/hasura-metadata-types';
-import { Button } from '@/new-components/Button';
-import { CardedTable } from '@/new-components/CardedTable';
+import { CustomFieldNames } from '../..';
+import { MetadataTable } from '../../../hasura-metadata-types';
+import { Button } from '../../../../new-components/Button';
+import { CardedTable } from '../../../../new-components/CardedTable';
 import React from 'react';
 import { FaTable } from 'react-icons/fa';
 import { FiSettings } from 'react-icons/fi';

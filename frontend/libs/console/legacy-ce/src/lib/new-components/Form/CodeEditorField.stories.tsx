@@ -4,11 +4,7 @@ import { action } from '@storybook/addon-actions';
 import { act } from 'react-dom/test-utils';
 
 import { z } from 'zod';
-import {
-  SimpleForm,
-  CodeEditorField,
-  useConsoleForm,
-} from '@/new-components/Form';
+import { SimpleForm, CodeEditorField, useConsoleForm } from '.';
 
 export default {
   title: 'components/Forms 📁/CodeEditorField 🧬',

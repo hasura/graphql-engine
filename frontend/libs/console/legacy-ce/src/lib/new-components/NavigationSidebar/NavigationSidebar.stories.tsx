@@ -1,7 +1,7 @@
 import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 
-import { NavigationSidebar } from '@/new-components/NavigationSidebar';
+import { NavigationSidebar } from '.';
 
 export default {
   title: 'components/NavigationSidebar ⚛️',

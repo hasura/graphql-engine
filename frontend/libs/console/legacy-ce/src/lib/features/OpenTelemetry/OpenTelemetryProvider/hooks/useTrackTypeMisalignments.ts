@@ -1,10 +1,10 @@
-import type { Metadata } from '@/features/hasura-metadata-types';
+import type { Metadata } from '../../../hasura-metadata-types';
 
-import { parseOpenTelemetry } from '@/features/hasura-metadata-types';
+import { parseOpenTelemetry } from '../../../hasura-metadata-types';
 import {
   programmaticallyTraceError,
   trackCustomEvent,
-} from '@/features/Analytics';
+} from '../../../Analytics';
 
 /**
  * Parse the OpenTelemetry config stored in metadata. There are two possibilities where server's

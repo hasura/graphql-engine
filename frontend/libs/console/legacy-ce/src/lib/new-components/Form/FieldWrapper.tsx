@@ -4,9 +4,9 @@ import clsx from 'clsx';
 import Skeleton from 'react-loading-skeleton';
 import { FaExclamationCircle } from 'react-icons/fa';
 
-import type { DiscriminatedTypes } from '@/types';
+import type { DiscriminatedTypes } from '../../types';
 
-import { IconTooltip } from '@/new-components/Tooltip';
+import { IconTooltip } from '../Tooltip';
 import { LearnMoreLink } from '../LearnMoreLink';
 
 export type FieldWrapperPassThroughProps = {

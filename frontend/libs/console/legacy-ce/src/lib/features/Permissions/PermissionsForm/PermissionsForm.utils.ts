@@ -1,7 +1,7 @@
-import { TableColumn } from '@/features/DataSource';
+import { TableColumn } from '../../DataSource';
 import { RelationshipType } from '../../RelationshipsTable/types';
 import { MetadataDataSource } from '../../../metadata/types';
-import { ManualObjectRelationship } from '@/features/hasura-metadata-types';
+import { ManualObjectRelationship } from '../../hasura-metadata-types';
 
 const boolOperators = ['_and', '_or', '_not'];
 export const getBoolOperators = () => {

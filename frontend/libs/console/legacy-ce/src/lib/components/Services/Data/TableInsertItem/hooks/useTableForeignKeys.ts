@@ -1,6 +1,6 @@
 import { useQuery, UseQueryResult } from 'react-query';
-import { DataSource } from '@/features/DataSource';
-import { useHttpClient } from '@/features/Network';
+import { DataSource } from '../../../../../features/DataSource';
+import { useHttpClient } from '../../../../../features/Network';
 
 import { TableObject, ForeignKeyMapping } from '../types';
 

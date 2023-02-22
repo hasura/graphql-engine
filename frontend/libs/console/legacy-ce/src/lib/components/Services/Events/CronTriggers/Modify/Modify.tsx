@@ -1,6 +1,9 @@
 import React from 'react';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { CronTriggers } from '@/features/CronTriggers';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+} from '../../../../../features/Analytics';
+import { CronTriggers } from '../../../../../features/CronTriggers';
 import { browserHistory } from 'react-router';
 import { ScheduledTrigger } from '../../types';
 

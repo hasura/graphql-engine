@@ -1,13 +1,10 @@
-import { Table } from '@/features/hasura-metadata-types';
+import { Table } from '../../../../hasura-metadata-types';
 import {
   addConstraintName,
   filterTableRelationships,
   removeExistingRelationships,
 } from './useSuggestedRelationships';
-import {
-  LocalRelationship,
-  SuggestedRelationship,
-} from '@/features/DatabaseRelationships/types';
+import { LocalRelationship, SuggestedRelationship } from '../../../types';
 
 describe('filterTableRelationships', () => {
   it('filters relationships', () => {

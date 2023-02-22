@@ -1,10 +1,14 @@
 import React, { ReactNode, ReactText } from 'react';
 import AceEditor from 'react-ace';
 import { toast } from 'react-hot-toast/headless';
-import { hasuraToast, ToastProps, ToastType } from '@/new-components/Toasts';
-import { showModal } from '@/store/modal/modal.actions';
-import { TableTrackingCustomizationModalKey } from '@/store/modal/modal.constants';
-import { Button } from '@/new-components/Button';
+import {
+  hasuraToast,
+  ToastProps,
+  ToastType,
+} from '../../../new-components/Toasts';
+import { showModal } from '../../../store/modal/modal.actions';
+import { TableTrackingCustomizationModalKey } from '../../../store/modal/modal.constants';
+import { Button } from '../../../new-components/Button';
 import { Thunk } from '../../../types';
 import { Json } from '../../Common/utils/tsUtils';
 

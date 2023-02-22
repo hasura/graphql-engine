@@ -6,11 +6,11 @@ import {
   currentDriver,
   getTableCustomColumnNames,
   Table,
-} from '@/dataSources';
-import { AppDispatch } from '@/store';
-import { IconTooltip } from '@/new-components/Tooltip';
-import { NotSupportedNote } from '@/components/Common/NotSupportedNote';
-import { Button } from '@/new-components/Button';
+} from '../../../../dataSources';
+import { AppDispatch } from '../../../../store';
+import { IconTooltip } from '../../../../new-components/Tooltip';
+import { NotSupportedNote } from '../../../Common/NotSupportedNote';
+import { Button } from '../../../../new-components/Button';
 import {
   primaryKeyDescription,
   foreignKeyDescription,

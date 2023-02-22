@@ -1,4 +1,4 @@
-import { InputField, Select } from '@/new-components/Form';
+import { InputField, Select } from '../../../../../new-components/Form';
 
 export const SslSettings = ({ name }: { name: string }) => {
   return (

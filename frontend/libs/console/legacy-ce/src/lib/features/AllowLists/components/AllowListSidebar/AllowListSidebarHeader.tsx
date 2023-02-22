@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 import React from 'react';
-import { Button } from '@/new-components/Button';
-import { isProConsole } from '@/utils/proConsole';
+import { Button } from '../../../../new-components/Button';
+import { isProConsole } from '../../../../utils/proConsole';
 import { FaFolderPlus } from 'react-icons/fa';
 import { QueryCollectionCreateDialog } from './QueryCollectionCreateDialog';
 import { AllowListStatus } from './AllowListStatus';

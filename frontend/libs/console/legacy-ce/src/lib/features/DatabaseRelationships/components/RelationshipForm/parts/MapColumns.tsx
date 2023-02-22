@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import { FieldError, useFieldArray, useFormContext } from 'react-hook-form';
-import { Select } from '@/new-components/Form';
+import { Select } from '../../../../../new-components/Form';
 import {
   FaArrowAltCircleLeft,
   FaArrowAltCircleRight,
@@ -9,10 +9,10 @@ import {
   FaExclamationCircle,
   FaTimesCircle,
 } from 'react-icons/fa';
-import { Button } from '@/new-components/Button';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { Button } from '../../../../../new-components/Button';
+import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
 import { useTableColumns } from '../../../hooks/useTableColumns';
-import { TableColumn } from '@/features/DataSource';
+import { TableColumn } from '../../../../DataSource';
 import { get } from 'lodash';
 
 type Schema = Record<

@@ -1,16 +1,16 @@
 import React from 'react';
 import { z } from 'zod';
 
-import { AllowedRESTMethods } from '@/metadata/types';
-import { isQueryValid } from '@/components/Services/ApiExplorer/Rest/utils';
+import { AllowedRESTMethods } from '../../../../../metadata/types';
+import { isQueryValid } from '../utils';
 import {
   CheckboxesField,
   CodeEditorField,
   InputField,
   Textarea,
   useConsoleForm,
-} from '@/new-components/Form';
-import { Button } from '@/new-components/Button';
+} from '../../../../../new-components/Form';
+import { Button } from '../../../../../new-components/Button';
 
 type RestEndpointFormProps = {
   /**

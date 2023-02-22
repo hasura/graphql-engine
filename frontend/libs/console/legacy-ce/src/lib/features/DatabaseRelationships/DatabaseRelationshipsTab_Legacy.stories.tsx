@@ -1,7 +1,7 @@
 import React from 'react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../storybook/decorators/react-query';
 import { ComponentMeta } from '@storybook/react';
-import { NormalizedTable } from '@/dataSources/types';
+import { NormalizedTable } from '../../dataSources/types';
 import { DatabaseRelationshipsTab } from './DatabaseRelationshipsTab_Legacy';
 
 export default {

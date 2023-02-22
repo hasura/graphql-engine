@@ -1,8 +1,8 @@
 import React from 'react';
 import { FaPlayCircle } from 'react-icons/fa';
-import { Dialog } from '@/new-components/Dialog';
-import { Button } from '@/new-components/Button';
-import { Analytics } from '@/features/Analytics';
+import { Dialog } from '../../../../../new-components/Dialog';
+import { Button } from '../../../../../new-components/Button';
+import { Analytics } from '../../../../Analytics';
 
 export interface Props {
   title: string;

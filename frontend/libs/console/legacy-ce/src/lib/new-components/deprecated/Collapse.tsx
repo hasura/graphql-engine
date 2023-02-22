@@ -2,7 +2,7 @@ import React from 'react';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import { FaChevronRight } from 'react-icons/fa';
 
-import { IconTooltip } from '@/new-components/Tooltip';
+import { IconTooltip } from '../Tooltip';
 
 export interface CollapseHeaderProps extends React.HTMLAttributes<HTMLElement> {
   /**

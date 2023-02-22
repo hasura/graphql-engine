@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import TextInput from '../../../Common/TextInput/TextInput';
 import { InheritedRole } from '../../../../metadata/types';
 import { focusYellowRing, inputStyles } from '../constants';

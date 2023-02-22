@@ -2,9 +2,9 @@ import {
   createActionMigration,
   deleteAction,
   executeActionCreation,
-} from '@/components/Services/Actions/ServerIO';
+} from '../../../../components/Services/Actions/ServerIO';
 import { Link } from 'react-router';
-import { useMetadata } from '@/features/MetadataAPI';
+import { useMetadata } from '../../../MetadataAPI';
 import { useDispatch, useStore } from 'react-redux';
 import { GeneratedAction } from './types';
 import { parseCustomTypes } from '../../../../shared/utils/hasuraCustomTypeUtils';
@@ -13,12 +13,12 @@ import { generatedActionToHasuraAction } from '../OASGenerator/utils';
 import { FaAngleRight, FaFileImport, FaHome } from 'react-icons/fa';
 import { z } from 'zod';
 import { useQueryClient } from 'react-query';
-import { isImportFromOpenAPIEnabled } from '@/utils';
+import { isImportFromOpenAPIEnabled } from '../../../../utils';
 import { browserHistory } from 'react-router';
-import { SimpleForm } from '@/new-components/Form';
+import { SimpleForm } from '../../../../new-components/Form';
 import { OasGeneratorForm } from './OASGeneratorForm';
 import React from 'react';
-import { useLocalStorage } from '@/hooks';
+import { useLocalStorage } from '../../../../hooks';
 
 export const formSchema = z.object({
   oas: z.string(),

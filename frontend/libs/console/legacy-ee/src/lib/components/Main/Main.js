@@ -40,6 +40,8 @@ import {
   updateRequestHeaders,
   showErrorNotification,
   isMonitoringTabSupportedEnvironment,
+  isCloudConsole,
+  ControlPlane,
 } from '@hasura/console-legacy-ce';
 import { versionGT, FT_JWT_ANALYZER } from '../../helpers/versionUtils';
 import {
@@ -76,9 +78,8 @@ import logo from './images/white-logo.svg';
 import logoutIcon from './images/log-out.svg';
 import projectImg from './images/project.svg';
 import EELogo from './images/hasura-ee-mono-light.svg';
-import { Plan, Project_Entitlement_Types_Enum } from '@/features/ControlPlane';
-import { isCloudConsole } from '@/utils';
 
+const { Plan, Project_Entitlement_Types_Enum } = ControlPlane;
 class Main extends React.Component {
   constructor(props) {
     super(props);

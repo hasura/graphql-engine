@@ -3,7 +3,7 @@ import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { rest, DelayMode } from 'msw';
 import { QueryClient, QueryClientProvider } from 'react-query';
 
-import { PrometheusSettings } from '@/features/Prometheus';
+import { PrometheusSettings } from '.';
 
 const queryClient = new QueryClient({
   defaultOptions: {

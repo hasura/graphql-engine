@@ -1,4 +1,4 @@
-import { One_Click_Deployment_States_Enum } from '@/features/ControlPlane';
+import { One_Click_Deployment_States_Enum } from '../../ControlPlane';
 
 export type UserOnboarding = {
   activity: Record<string, any>;

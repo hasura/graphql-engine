@@ -1,8 +1,8 @@
 import React, { ChangeEvent, Dispatch } from 'react';
 import { FaCheckCircle, FaInfoCircle } from 'react-icons/fa';
-import { IconTooltip } from '@/new-components/Tooltip';
-import globals from '@/Globals';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { IconTooltip } from '../../../../new-components/Tooltip';
+import globals from '../../../../Globals';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 
 import { ConnectDBActions, ConnectDBState, connectionTypes } from './state';
 import { LabeledInput } from '../../../Common/LabeledInput';

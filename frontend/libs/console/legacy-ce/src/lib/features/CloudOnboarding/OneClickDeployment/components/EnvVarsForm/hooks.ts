@@ -5,9 +5,9 @@ import {
   controlPlaneClient,
   GET_TENANT_ENV,
   UPDATE_TENANT_ENV,
-} from '@/features/ControlPlane';
-import { getTenantId } from '@/utils/cloudConsole';
-import globals from '@/Globals';
+} from '../../../../ControlPlane';
+import { getTenantId } from '../../../../../utils/cloudConsole';
+import globals from '../../../../../Globals';
 import { useNeonOAuth } from '../../../../../components/Services/Data/DataSources/CreateDataSource/Neon/useNeonOAuth';
 import { useNeonDatabase } from '../../../../../components/Services/Data/DataSources/CreateDataSource/Neon/useNeonDatabase';
 import { NeonIntegrationStatus } from '../../../../../components/Services/Data/DataSources/CreateDataSource/Neon/useNeonIntegration';

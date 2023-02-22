@@ -1,9 +1,9 @@
-import type { EnvVars } from '@/Globals';
+import type { EnvVars } from '../../../../Globals';
 
 import * as Sentry from '@sentry/react';
 import { BrowserTracing } from '@sentry/tracing';
 
-import globals from '@/Globals';
+import globals from '../../../../Globals';
 import { getSentryTags } from './getSentryTags';
 import { errorMustBeBlocked } from './errorMustBeBlocked';
 import { getSentryEnvironment } from './getSentryEnvironment';

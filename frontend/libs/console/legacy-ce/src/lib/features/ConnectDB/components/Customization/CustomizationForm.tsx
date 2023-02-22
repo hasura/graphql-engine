@@ -1,5 +1,5 @@
-import { Collapsible } from '@/new-components/Collapsible';
-import { InputField } from '@/new-components/Form';
+import { Collapsible } from '../../../../new-components/Collapsible';
+import { InputField } from '../../../../new-components/Form';
 import React from 'react';
 import { SectionHeader } from './parts';
 

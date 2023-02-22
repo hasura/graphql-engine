@@ -1,4 +1,4 @@
-import { SourceCustomization } from '@/features/hasura-metadata-types';
+import { SourceCustomization } from '../../../../hasura-metadata-types';
 import { GraphQLCustomization } from '../schema';
 
 export const adaptGraphQLCustomization = (

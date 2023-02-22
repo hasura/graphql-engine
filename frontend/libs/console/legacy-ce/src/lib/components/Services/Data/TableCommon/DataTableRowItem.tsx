@@ -1,5 +1,5 @@
 import React from 'react';
-import { TableColumn } from '@/dataSources';
+import { TableColumn } from '../../../../dataSources';
 import { TableRow } from '../Common/Components/TableRow';
 
 export type DataTableRowItemProps = {

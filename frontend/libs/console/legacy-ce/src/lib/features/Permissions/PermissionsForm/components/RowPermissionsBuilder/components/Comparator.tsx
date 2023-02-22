@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { allOperators } from '@/components/Common/FilterQuery/utils';
+import { allOperators } from '../../../../../../components/Common/FilterQuery/utils';
 import { rowPermissionsContext } from './RowPermissionsProvider';
 import { tableContext } from './TableProvider';
 

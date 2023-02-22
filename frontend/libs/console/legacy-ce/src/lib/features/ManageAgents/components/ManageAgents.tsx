@@ -1,4 +1,4 @@
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../new-components/Button';
 import React, { useState } from 'react';
 import { AddAgentForm } from './AddAgentForm';
 import { ManageAgentsTable } from './ManageAgentsTable';

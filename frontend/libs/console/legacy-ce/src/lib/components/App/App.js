@@ -16,7 +16,7 @@ import styles from './App.module.scss';
 import { ToastsHub } from '../../new-components/Toasts';
 
 import { theme } from '../UIKit/theme';
-import { trackCustomEvent } from '@/features/Analytics';
+import { trackCustomEvent } from '../../features/Analytics';
 
 export const GlobalContext = React.createContext(globals);
 

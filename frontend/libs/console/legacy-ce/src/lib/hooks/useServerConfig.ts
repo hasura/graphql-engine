@@ -1,5 +1,5 @@
-import Endpoints from '@/Endpoints';
-import { useAppSelector } from '@/store';
+import Endpoints from '../Endpoints';
+import { useAppSelector } from '../store';
 import React from 'react';
 import { useQuery, UseQueryOptions } from 'react-query';
 import { APIError } from './error';

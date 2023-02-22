@@ -3,7 +3,7 @@ import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 
 import { z } from 'zod';
-import { SimpleForm, Textarea, useConsoleForm } from '@/new-components/Form';
+import { SimpleForm, Textarea, useConsoleForm } from '.';
 
 export default {
   title: 'components/Forms 📁/Textarea 🧬',

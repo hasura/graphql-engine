@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { Button } from '@/new-components/Button';
-import { Analytics } from '@/features/Analytics';
+import { Button } from '../../../../../new-components/Button';
+import { Analytics } from '../../../../Analytics';
 
 type Props = {
   redirect: VoidFunction;

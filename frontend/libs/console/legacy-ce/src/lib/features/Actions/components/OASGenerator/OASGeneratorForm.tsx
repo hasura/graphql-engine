@@ -1,17 +1,17 @@
 import React, { ReactNode } from 'react';
 import YAML from 'js-yaml';
-import { CardedTable } from '@/new-components/CardedTable';
-import { DropdownButton } from '@/new-components/DropdownButton';
-import { CodeEditorField, InputField } from '@/new-components/Form';
+import { CardedTable } from '../../../../new-components/CardedTable';
+import { DropdownButton } from '../../../../new-components/DropdownButton';
+import { CodeEditorField, InputField } from '../../../../new-components/Form';
 import { FaExclamationTriangle, FaFilter, FaSearch } from 'react-icons/fa';
-import { trackCustomEvent } from '@/features/Analytics';
-import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
-import { Badge, BadgeColor } from '@/new-components/Badge';
+import { trackCustomEvent } from '../../../Analytics';
+import { useDebouncedEffect } from '../../../../hooks/useDebounceEffect';
+import { Badge, BadgeColor } from '../../../../new-components/Badge';
 import { Oas3 } from 'openapi-to-graphql';
-import { useIsUnmounted } from '@/components/Services/Data/Common/tsUtils';
+import { useIsUnmounted } from '../../../../components/Services/Data/Common/tsUtils';
 import { useFormContext } from 'react-hook-form';
-import { useMetadata } from '@/features/MetadataAPI';
-import { hasuraToast } from '@/new-components/Toasts';
+import { useMetadata } from '../../../MetadataAPI';
+import { hasuraToast } from '../../../../new-components/Toasts';
 import { OasGeneratorActions } from './OASGeneratorActions';
 import { GeneratedAction, Operation } from '../OASGenerator/types';
 

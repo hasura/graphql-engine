@@ -1,4 +1,4 @@
-import { Button } from '@/new-components/Button';
+import { Button } from '../../new-components/Button';
 import { useState } from 'react';
 import { ListAllTableColumnsReturn } from '../Data/hooks/useListAllTableColumns';
 import { InsertRowArgs } from '../DataSource';

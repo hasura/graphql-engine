@@ -1,6 +1,6 @@
 import React from 'react';
 import Toggle from 'react-toggle';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 
 const enumCompatibilityDocsUrl =

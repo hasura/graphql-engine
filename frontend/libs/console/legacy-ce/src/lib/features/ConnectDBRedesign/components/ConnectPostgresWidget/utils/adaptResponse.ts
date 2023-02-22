@@ -1,7 +1,7 @@
 import {
   PostgresConfiguration,
   Source,
-} from '@/features/hasura-metadata-types';
+} from '../../../../hasura-metadata-types';
 import { adaptGraphQLCustomization } from '../../GraphQLCustomization/utils/adaptResponse';
 import {
   PostgresConnectionInfoSchema,

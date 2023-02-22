@@ -1,5 +1,5 @@
 import React from 'react';
-import { getSupportedDrivers } from '@/dataSources';
+import { getSupportedDrivers } from '../../../../../dataSources';
 import styles from '../../../../Common/TableCommon/Table.module.scss';
 import {
   relSetDriver,
@@ -9,9 +9,12 @@ import {
   relSetType,
   relSetColumns,
 } from './state';
-import { useTableColumns } from '@/features/SqlQueries';
+import { useTableColumns } from '../../../../../features/SqlQueries';
 import { getColumnNameArrayFromHookData } from './utils';
-import { MetadataSelector, useMetadata } from '@/features/MetadataAPI';
+import {
+  MetadataSelector,
+  useMetadata,
+} from '../../../../../features/MetadataAPI';
 import { FaTimes } from 'react-icons/fa';
 
 const ColumnSelect = ({ orderedColumns, state, dispatch }) => {

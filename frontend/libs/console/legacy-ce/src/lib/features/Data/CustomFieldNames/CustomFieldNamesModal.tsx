@@ -1,5 +1,5 @@
-import { MetadataTableConfig } from '@/features/hasura-metadata-types';
-import { Dialog } from '@/new-components/Dialog';
+import { MetadataTableConfig } from '../../hasura-metadata-types';
+import { Dialog } from '../../../new-components/Dialog';
 import React from 'react';
 import { CustomFieldNamesForm } from './CustomFieldNamesForm';
 import { CustomFieldNamesFormVals } from './types';

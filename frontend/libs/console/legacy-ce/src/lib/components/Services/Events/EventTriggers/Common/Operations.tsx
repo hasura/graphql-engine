@@ -1,7 +1,7 @@
 import React from 'react';
-import { IconTooltip } from '@/new-components/Tooltip';
+import { IconTooltip } from '../../../../../new-components/Tooltip';
 import * as tooltip from './Tooltips';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 import { capitalize } from '../../../../Common/utils/jsUtils';
 import { EVENT_TRIGGER_OPERATIONS } from '../../constants';
 import { EventTriggerOperation } from '../../types';

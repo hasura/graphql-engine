@@ -1,11 +1,11 @@
 import React from 'react';
 import { RouteComponentProps } from 'react-router';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
-import globals from '@/Globals';
+import globals from '../../../Globals';
 import { rest, DelayMode } from 'msw';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import Sidebar, { Metadata } from './Sidebar';
-import { HasuraMetadataV3 } from '@/metadata/types';
+import { HasuraMetadataV3 } from '../../../metadata/types';
 
 const queryClient = new QueryClient({
   defaultOptions: {

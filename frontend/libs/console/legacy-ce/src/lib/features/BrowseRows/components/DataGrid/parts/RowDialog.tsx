@@ -1,8 +1,12 @@
 import React from 'react';
 import { z } from 'zod';
 
-import { Dialog } from '@/new-components/Dialog';
-import { Textarea, InputField, SimpleForm } from '@/new-components/Form';
+import { Dialog } from '../../../../../new-components/Dialog';
+import {
+  Textarea,
+  InputField,
+  SimpleForm,
+} from '../../../../../new-components/Form';
 
 interface RowDialogProps {
   row: Record<string, any>;

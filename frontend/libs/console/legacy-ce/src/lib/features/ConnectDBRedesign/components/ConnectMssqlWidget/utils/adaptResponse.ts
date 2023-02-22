@@ -1,4 +1,4 @@
-import { MssqlConfiguration, Source } from '@/features/hasura-metadata-types';
+import { MssqlConfiguration, Source } from '../../../../hasura-metadata-types';
 import { adaptGraphQLCustomization } from '../../GraphQLCustomization/utils/adaptResponse';
 import { MssqlConnectionInfoSchema, MssqlConnectionSchema } from '../schema';
 

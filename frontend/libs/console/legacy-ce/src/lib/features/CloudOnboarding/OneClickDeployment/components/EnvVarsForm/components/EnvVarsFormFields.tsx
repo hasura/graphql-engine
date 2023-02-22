@@ -1,7 +1,7 @@
 import React from 'react';
-import globals from '@/Globals';
-import { InputField } from '@/new-components/Form';
-import { Collapsible } from '@/new-components/Collapsible';
+import globals from '../../../../../../Globals';
+import { InputField } from '../../../../../../new-components/Form';
+import { Collapsible } from '../../../../../../new-components/Collapsible';
 import { RequiredEnvVar } from '../../../types';
 import { NeonIcon } from './PgDatabaseField';
 import { getEnvVarFormSegments } from '../utils';

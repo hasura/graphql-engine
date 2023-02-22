@@ -1,5 +1,5 @@
 import { z, ZodString } from 'zod';
-import { isJsonString } from '@/components/Common/utils/export.utils';
+import { isJsonString } from '../../../../../components/Common/utils/export.utils';
 import { NeonButtonProps } from './types';
 import { RequiredEnvVar } from '../../types';
 import { NeonIntegrationStatus } from '../../../../../components/Services/Data/DataSources/CreateDataSource/Neon/useNeonIntegration';

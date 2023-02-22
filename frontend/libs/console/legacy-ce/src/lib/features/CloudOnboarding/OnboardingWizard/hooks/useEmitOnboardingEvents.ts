@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { NeonIntegrationStatus } from '@/components/Services/Data/DataSources/CreateDataSource/Neon/useNeonIntegration';
+import { NeonIntegrationStatus } from '../../../../components/Services/Data/DataSources/CreateDataSource/Neon/useNeonIntegration';
 import {
   neonOAuthStartVariables,
   // neonOAuthCompleteVariables,

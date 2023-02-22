@@ -1,14 +1,14 @@
 import React from 'react';
 import { useFormContext, useFieldArray } from 'react-hook-form';
 
-import { Button } from '@/new-components/Button';
-import { Collapse } from '@/new-components/deprecated';
+import { Button } from '../../../../new-components/Button';
+import { Collapse } from '../../../../new-components/deprecated';
 import { useIsDisabled } from '../hooks/useIsDisabled';
 import { QueryType } from '../../types';
 import { Permission } from '../../schema';
-import { Feature } from '@/features/DataSource';
-import { Table } from '@/features/hasura-metadata-types';
-import { getTableDisplayName } from '@/features/DatabaseRelationships';
+import { Feature } from '../../../DataSource';
+import { Table } from '../../../hasura-metadata-types';
+import { getTableDisplayName } from '../../../DatabaseRelationships';
 
 interface ClonePermissionsRowProps {
   id: number;

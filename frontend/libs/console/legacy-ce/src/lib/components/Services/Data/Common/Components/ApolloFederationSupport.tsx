@@ -1,7 +1,7 @@
 import React from 'react';
 import Toggle from 'react-toggle';
-import { useServerConfig } from '@/hooks';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { useServerConfig } from '../../../../../hooks';
+import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 
 export type ApolloFederationSupportProps = {

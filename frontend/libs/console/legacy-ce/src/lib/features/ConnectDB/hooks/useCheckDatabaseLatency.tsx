@@ -4,9 +4,9 @@ import {
   fetchDatabaseLatencyJobId,
   fetchInfoFromJobId,
   insertInfoIntoDBLatencyQuery,
-} from '@/features/ControlPlane';
-import globals from '@/Globals';
-import { getProjectId } from '@/utils/cloudConsole';
+} from '../../ControlPlane';
+import globals from '../../../Globals';
+import { getProjectId } from '../../../utils/cloudConsole';
 
 type LatencyActionResponse = {
   data: {

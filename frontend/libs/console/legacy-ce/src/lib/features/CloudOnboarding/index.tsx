@@ -1,6 +1,6 @@
 import * as React from 'react';
-import globals from '@/Globals';
-import { isCloudConsole } from '@/utils/cloudConsole';
+import globals from '../../Globals';
+import { isCloudConsole } from '../../utils/cloudConsole';
 import { OneClickDeployment } from './OneClickDeployment';
 import { OnboardingWizard } from './OnboardingWizard';
 import { useOnboardingKind } from './hooks/useOnboardingKind';

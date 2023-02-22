@@ -1,7 +1,7 @@
-import { getGraphQLQueryPayload } from '@/components/Common/utils/graphqlUtils';
-import Endpoints from '@/Endpoints';
-import { Api } from '@/hooks/apiUtils';
-import { useAppSelector } from '@/store';
+import { getGraphQLQueryPayload } from '../../../../../Common/utils/graphqlUtils';
+import Endpoints from '../../../../../../Endpoints';
+import { Api } from '../../../../../../hooks/apiUtils';
+import { useAppSelector } from '../../../../../../store';
 import { getIntrospectionQuery, IntrospectionQuery } from 'graphql';
 import { useQuery, UseQueryOptions, UseQueryResult } from 'react-query';
 

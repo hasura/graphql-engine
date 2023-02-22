@@ -1,4 +1,4 @@
-import { TableColumn } from '@/features/DataSource';
+import { TableColumn } from '../../../../DataSource';
 import {
   queryRootPermissionFields,
   subscriptionRootPermissionFields,

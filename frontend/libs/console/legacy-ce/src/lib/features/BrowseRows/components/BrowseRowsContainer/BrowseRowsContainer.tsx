@@ -1,4 +1,4 @@
-import { Table } from '@/features/hasura-metadata-types';
+import { Table } from '../../../hasura-metadata-types';
 import React from 'react';
 import { BrowseRows } from '../../BrowseRows';
 import { useTableColumns } from '../../hooks';

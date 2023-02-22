@@ -1,5 +1,5 @@
-import { Button } from '@/new-components/Button';
-import { InputField } from '@/new-components/Form';
+import { Button } from '../../../../../new-components/Button';
+import { InputField } from '../../../../../new-components/Form';
 import clsx from 'clsx';
 import React from 'react';
 import { useFormContext } from 'react-hook-form';

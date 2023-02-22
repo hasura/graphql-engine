@@ -1,7 +1,7 @@
 /* eslint no-loop-func: 0 */ // --> OFF
 
-import Globals from '@/Globals';
-import Endpoints from '@/Endpoints';
+import Globals from '../../../../../Globals';
+import Endpoints from '../../../../../Endpoints';
 
 export const generateRandomString = (stringLength = 16) => {
   const allChars =

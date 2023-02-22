@@ -1,8 +1,8 @@
 import React, { useReducer } from 'react';
 import { useQueryClient } from 'react-query';
-import { RemoteDBRelationship } from '@/metadata/types';
-import { NormalizedTable } from '@/dataSources/types';
-import { Dispatch } from '@/types';
+import { RemoteDBRelationship } from '../../../../../metadata/types';
+import { NormalizedTable } from '../../../../../dataSources/types';
+import { Dispatch } from '../../../../../types';
 import { ordinalColSort } from '../../utils';
 import { addDbToDbRelationship, dropDbToDbRelationship } from '../Actions';
 import {

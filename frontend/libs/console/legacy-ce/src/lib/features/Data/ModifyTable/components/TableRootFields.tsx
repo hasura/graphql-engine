@@ -1,7 +1,7 @@
-import { CustomFieldNames } from '@/features/Data';
-import { MetadataSelectors, useMetadata } from '@/features/hasura-metadata-api';
-import { Button } from '@/new-components/Button';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { CustomFieldNames } from '../..';
+import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
+import { Button } from '../../../../new-components/Button';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 import { useUpdateTableConfiguration } from '../hooks';

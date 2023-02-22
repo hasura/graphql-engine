@@ -1,6 +1,6 @@
-import { NeonBanner } from '@/features/CloudOnboarding/OnboardingWizard/components/NeonConnectBanner/NeonBanner';
-import { DatabaseKind } from '@/features/ConnectDBRedesign/types';
-import { Button } from '@/new-components/Button';
+import { NeonBanner } from '../CloudOnboarding/OnboardingWizard/components/NeonConnectBanner/NeonBanner';
+import { DatabaseKind } from './types';
+import { Button } from '../../new-components/Button';
 import React from 'react';
 import DbConnectSVG from '../../graphics/database-connect.svg';
 import { FancyRadioCards } from './components/FancyRadioCards';

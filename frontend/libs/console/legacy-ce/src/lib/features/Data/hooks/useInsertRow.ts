@@ -1,8 +1,8 @@
-import { DataSource } from '@/features/DataSource';
-import { generateGraphQLInsertMutation } from '@/features/GraphQLUtils';
-import { areTablesEqual, useMetadata } from '@/features/hasura-metadata-api';
-import { Table } from '@/features/hasura-metadata-types';
-import { useHttpClient } from '@/features/Network';
+import { DataSource } from '../../DataSource';
+import { generateGraphQLInsertMutation } from '../../GraphQLUtils';
+import { areTablesEqual, useMetadata } from '../../hasura-metadata-api';
+import { Table } from '../../hasura-metadata-types';
+import { useHttpClient } from '../../Network';
 import { useGraphQLMutation } from './useGraphQLMutation';
 
 export type FormData = Record<

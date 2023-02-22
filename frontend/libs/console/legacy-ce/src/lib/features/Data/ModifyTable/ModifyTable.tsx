@@ -1,7 +1,7 @@
-import { useMetadata } from '@/features/hasura-metadata-api';
-import { MetadataSelectors } from '@/features/hasura-metadata-api/';
-import { getSupportsForeignKeys } from '@/features/hasura-metadata-api/utils';
-import { Table } from '@/features/hasura-metadata-types';
+import { useMetadata } from '../../hasura-metadata-api';
+import { MetadataSelectors } from '../../hasura-metadata-api';
+import { getSupportsForeignKeys } from '../../hasura-metadata-api/utils';
+import { Table } from '../../hasura-metadata-types';
 import React from 'react';
 import {
   TableColumns,

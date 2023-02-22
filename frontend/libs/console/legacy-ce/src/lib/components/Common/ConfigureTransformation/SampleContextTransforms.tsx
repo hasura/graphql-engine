@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
+import { useDebouncedEffect } from '../../../hooks/useDebounceEffect';
 import { KeyValuePair, TransformationType } from './stateDefaults';
 import KeyValueInput from './CustomEditors/KeyValueInput';
 import NumberedSidebar from './CustomEditors/NumberedSidebar';

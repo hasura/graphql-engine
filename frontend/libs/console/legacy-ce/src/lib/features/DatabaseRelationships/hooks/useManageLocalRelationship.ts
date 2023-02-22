@@ -1,7 +1,7 @@
-import { useMetadataMigration } from '@/features/MetadataAPI';
+import { useMetadataMigration } from '../../MetadataAPI';
 import { useCallback, useMemo } from 'react';
 import { useQueryClient } from 'react-query';
-import { useMetadata } from '@/features/hasura-metadata-api';
+import { useMetadata } from '../../hasura-metadata-api';
 import { LocalRelationship } from '../types';
 import {
   generateCreateLocalRelationshipWithManualConfigurationRequest,
@@ -9,7 +9,7 @@ import {
   generateRenameLocalRelationshipRequest,
 } from '../utils/generateRequest';
 import { generateQueryKeys } from '../utils/queryClientUtils';
-import { Table } from '@/features/hasura-metadata-types';
+import { Table } from '../../hasura-metadata-types';
 
 export const useManageLocalRelationship = ({
   dataSourceName,

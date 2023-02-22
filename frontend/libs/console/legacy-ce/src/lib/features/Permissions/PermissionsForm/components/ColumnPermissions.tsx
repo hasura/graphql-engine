@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { Button } from '@/new-components/Button';
-import { Collapse } from '@/new-components/deprecated';
-import { TableColumn } from '@/features/DataSource';
-import { useListAllTableColumns } from '@/features/Data';
+import { Button } from '../../../../new-components/Button';
+import { Collapse } from '../../../../new-components/deprecated';
+import { TableColumn } from '../../../DataSource';
+import { useListAllTableColumns } from '../../../Data';
 import { PermissionsConfirmationModal } from './RootFieldPermissions/PermissionsConfirmationModal';
 import { getEdForm } from '../../../../components/Services/Data/utils';
 import { useIsDisabled } from '../hooks/useIsDisabled';

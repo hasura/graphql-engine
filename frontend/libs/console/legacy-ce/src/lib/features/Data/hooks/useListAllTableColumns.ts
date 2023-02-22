@@ -1,7 +1,7 @@
-import { useTableColumns } from '@/features/BrowseRows';
-import { TableColumn } from '@/features/DataSource';
-import { MetadataSelectors, useMetadata } from '@/features/hasura-metadata-api';
-import { MetadataTableColumnConfig } from '@/features/hasura-metadata-types';
+import { useTableColumns } from '../../BrowseRows';
+import { TableColumn } from '../../DataSource';
+import { MetadataSelectors, useMetadata } from '../../hasura-metadata-api';
+import { MetadataTableColumnConfig } from '../../hasura-metadata-types';
 import { UseQueryResult } from 'react-query';
 
 export type ListAllTableColumnsReturn = {

@@ -1,7 +1,7 @@
 // Button.stories.ts|tsx
 
 import React from 'react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import { ModifyTable } from './ModifyTable';
 

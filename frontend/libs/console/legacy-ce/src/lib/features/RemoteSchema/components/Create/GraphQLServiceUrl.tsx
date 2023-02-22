@@ -1,8 +1,8 @@
 import React from 'react';
-import { IconTooltip } from '@/new-components/Tooltip';
+import { IconTooltip } from '../../../../new-components/Tooltip';
 import { useFormContext } from 'react-hook-form';
 import { FaShieldAlt } from 'react-icons/fa';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 
 export const GraphQLServiceUrl = () => {
   const { watch, register } = useFormContext();

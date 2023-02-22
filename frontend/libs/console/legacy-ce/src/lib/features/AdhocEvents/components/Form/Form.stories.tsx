@@ -1,10 +1,10 @@
 import React from 'react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { ComponentMeta, Story } from '@storybook/react';
 import { within, userEvent, waitFor } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { waitForElementToBeRemoved } from '@testing-library/react';
-import { handlers } from '@/mocks/metadata.mock';
+import { handlers } from '../../../../mocks/metadata.mock';
 import { AdhocEvents } from '../..';
 
 export default {

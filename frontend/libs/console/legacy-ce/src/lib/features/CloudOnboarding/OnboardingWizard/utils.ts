@@ -1,9 +1,9 @@
 import { parse, print } from 'graphql';
-import { cloudDataServiceApiClient } from '@/hooks/cloudDataServiceApiClient';
-import { Api } from '@/hooks/apiUtils';
-import { HasuraMetadataV3 } from '@/metadata/types';
-import { reactQueryClient } from '@/lib/reactQuery';
-import { programmaticallyTraceError } from '@/features/Analytics';
+import { cloudDataServiceApiClient } from '../../../hooks/cloudDataServiceApiClient';
+import { Api } from '../../../hooks/apiUtils';
+import { HasuraMetadataV3 } from '../../../metadata/types';
+import { reactQueryClient } from '../../../lib/reactQuery';
+import { programmaticallyTraceError } from '../../Analytics';
 import {
   skippedOnboardingVariables,
   onboardingCompleteVariables,

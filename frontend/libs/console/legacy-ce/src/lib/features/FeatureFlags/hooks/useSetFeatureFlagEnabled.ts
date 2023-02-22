@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from 'react-query';
-import { FeatureFlagId, useFeatureFlags } from '@/features/FeatureFlags';
+import { FeatureFlagId, useFeatureFlags } from '..';
 import { saveFeatureFlagsStateToLocalStorage } from '../utils';
-import { sendTelemetryEvent, SetFeatureFlagEvent } from '@/telemetry';
-import { availableFeatureFlags } from '@/features/FeatureFlags/availableFeatureFlags';
+import { sendTelemetryEvent, SetFeatureFlagEvent } from '../../../telemetry';
+import { availableFeatureFlags } from '../availableFeatureFlags';
 
 export function useSetFeatureFlagEnabled() {
   const queryClient = useQueryClient();

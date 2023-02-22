@@ -1,5 +1,5 @@
-import { isSchemaTable } from '@/features/DataSource/utils';
-import { Table } from '@/features/hasura-metadata-types';
+import { isSchemaTable } from '../../DataSource/utils';
+import { Table } from '../../hasura-metadata-types';
 import isObject from 'lodash.isobject';
 
 /*

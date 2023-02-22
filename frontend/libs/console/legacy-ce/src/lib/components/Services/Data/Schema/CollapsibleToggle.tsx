@@ -1,7 +1,7 @@
-import ToolTip from '@/components/Common/Tooltip/Tooltip';
-import { isNumber, isFloat } from '@/components/Common/utils/jsUtils';
-import { TaskEvent } from '@/features/ConnectDB';
-import { Badge } from '@/new-components/Badge';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
+import { isNumber, isFloat } from '../../../Common/utils/jsUtils';
+import { TaskEvent } from '../../../../features/ConnectDB';
+import { Badge } from '../../../../new-components/Badge';
 import React, { useState } from 'react';
 import {
   FaCheck,

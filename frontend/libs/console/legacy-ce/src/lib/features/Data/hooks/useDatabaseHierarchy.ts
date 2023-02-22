@@ -1,5 +1,5 @@
-import { DataSource } from '@/features/DataSource';
-import { useHttpClient } from '@/features/Network';
+import { DataSource } from '../../DataSource';
+import { useHttpClient } from '../../Network';
 import { AxiosError } from 'axios';
 import { useQuery } from 'react-query';
 

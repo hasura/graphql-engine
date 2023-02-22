@@ -1,4 +1,4 @@
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import React, { useRef } from 'react';
 import { FaUpload } from 'react-icons/fa';
 

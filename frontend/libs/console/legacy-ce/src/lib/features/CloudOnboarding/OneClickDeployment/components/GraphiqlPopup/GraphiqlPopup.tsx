@@ -1,6 +1,6 @@
 import React from 'react';
-import { Analytics } from '@/features/Analytics';
-import { Button } from '@/new-components/Button';
+import { Analytics } from '../../../../Analytics';
+import { Button } from '../../../../../new-components/Button';
 import { FaCheckCircle, FaGithub, FaTimesCircle } from 'react-icons/fa';
 import { MdRefresh } from 'react-icons/md';
 

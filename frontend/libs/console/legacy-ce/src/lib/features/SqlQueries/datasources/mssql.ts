@@ -1,5 +1,5 @@
-import type { TableORSchemaArg } from '@/dataSources/types';
-import { QualifiedTable } from '@/metadata/types';
+import type { TableORSchemaArg } from '../../../dataSources/types';
+import { QualifiedTable } from '../../../metadata/types';
 import { getSchemasWhereClause, getTablesWhereClause } from './common';
 import type { DatasourceSqlQueries } from '.';
 

@@ -1,12 +1,12 @@
 import { useCallback } from 'react';
-import { Table } from '@/features/hasura-metadata-types';
+import { Table } from '../../hasura-metadata-types';
 import {
   generateGraphQLDeleteByPrimaryKeyMutation,
   generateGraphQLDeleteMutation,
-} from '@/features/GraphQLUtils';
-import { useTableColumns } from '@/features/BrowseRows';
-import { useGraphQLMutation, useDefaultQueryRoot } from '@/features/Data';
-import { MetadataSelectors, useMetadata } from '@/features/hasura-metadata-api';
+} from '../../GraphQLUtils';
+import { useTableColumns } from '../../BrowseRows';
+import { useGraphQLMutation, useDefaultQueryRoot } from '../../Data';
+import { MetadataSelectors, useMetadata } from '../../hasura-metadata-api';
 import { TableRow } from '../../DataSource';
 import { useSelector } from 'react-redux';
 

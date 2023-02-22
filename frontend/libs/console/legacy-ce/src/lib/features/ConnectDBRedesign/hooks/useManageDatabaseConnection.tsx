@@ -1,5 +1,5 @@
-import { generateQueryKeys } from '@/features/DatabaseRelationships/utils/queryClientUtils';
-import { useMetadataMigration } from '@/features/MetadataAPI';
+import { generateQueryKeys } from '../../DatabaseRelationships/utils/queryClientUtils';
+import { useMetadataMigration } from '../../MetadataAPI';
 import { useCallback, useMemo } from 'react';
 import { useQueryClient } from 'react-query';
 import { DatabaseConnection } from '../types';

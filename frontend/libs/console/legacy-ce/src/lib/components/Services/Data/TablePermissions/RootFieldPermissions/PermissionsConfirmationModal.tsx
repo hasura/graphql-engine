@@ -1,7 +1,10 @@
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { Button } from '@/new-components/Button';
-import { Dialog } from '@/new-components/Dialog';
-import { CheckboxesField } from '@/new-components/Form';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+} from '../../../../../features/Analytics';
+import { Button } from '../../../../../new-components/Button';
+import { Dialog } from '../../../../../new-components/Dialog';
+import { CheckboxesField } from '../../../../../new-components/Form';
 import React from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { FaExclamationTriangle } from 'react-icons/fa';

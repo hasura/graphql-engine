@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { Dispatch } from '@/types';
-import { useNeonIntegration } from '@/components/Services/Data/DataSources/CreateDataSource/Neon/useNeonIntegration';
-import { transformNeonIntegrationStatusToNeonBannerProps } from '@/components/Services/Data/DataSources/CreateDataSource/Neon/utils';
-import { reactQueryClient } from '@/lib/reactQuery';
-import { Analytics } from '@/features/Analytics';
-import { FETCH_NEON_PROJECTS_BY_PROJECTID_QUERYKEY } from '@/components/Services/Data/DataSources/CreateDataSource/Neon/components/NeonDashboardLink';
+import { Dispatch } from '../../../../../../types';
+import { useNeonIntegration } from '../../../../../../components/Services/Data/DataSources/CreateDataSource/Neon/useNeonIntegration';
+import { transformNeonIntegrationStatusToNeonBannerProps } from '../../../../../../components/Services/Data/DataSources/CreateDataSource/Neon/utils';
+import { reactQueryClient } from '../../../../../../lib/reactQuery';
+import { Analytics } from '../../../../../Analytics';
+import { FETCH_NEON_PROJECTS_BY_PROJECTID_QUERYKEY } from '../../../../../../components/Services/Data/DataSources/CreateDataSource/Neon/components/NeonDashboardLink';
 import _push from '../../../../../../components/Services/Data/push';
 import { NeonBanner } from '../../NeonConnectBanner/NeonBanner';
 import {

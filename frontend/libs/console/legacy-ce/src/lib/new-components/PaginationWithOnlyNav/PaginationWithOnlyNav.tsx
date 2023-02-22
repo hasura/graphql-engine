@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@/new-components/Button';
+import { Button } from '../Button';
 import { inputStyles } from '../../components/Services/Events/constants';
 
 export type PaginationWithOnlyNavProps = {

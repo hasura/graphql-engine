@@ -1,5 +1,5 @@
-import { Operator } from '@/features/DataSource';
-import { MetadataTable } from '@/features/hasura-metadata-types';
+import { Operator } from '../../../../../DataSource';
+import { MetadataTable } from '../../../../../hasura-metadata-types';
 import {
   GraphQLFieldMap,
   GraphQLInputFieldMap,

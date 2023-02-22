@@ -1,4 +1,4 @@
-import { MetadataTable, Source } from '@/features/hasura-metadata-types';
+import { MetadataTable, Source } from '../../hasura-metadata-types';
 import { formatSdl } from 'format-graphql';
 import { getMutationRoot } from './getMutationRoot';
 

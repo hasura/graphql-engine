@@ -1,7 +1,7 @@
 import {
   sanitizeGraphQLFieldNames,
   SanitizeTipsMessages,
-} from '@/utils/sanitizeGraphQLFieldNames';
+} from '../../utils/sanitizeGraphQLFieldNames';
 import React from 'react';
 import { z } from 'zod';
 import { InputField, InputFieldProps, Schema } from './InputField';

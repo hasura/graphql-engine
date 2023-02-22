@@ -1,5 +1,5 @@
-import { Table } from '@/features/hasura-metadata-types';
-import { Dialog } from '@/new-components/Dialog';
+import { Table } from '../../../hasura-metadata-types';
+import { Dialog } from '../../../../new-components/Dialog';
 import { MODE, Relationship } from '../../types';
 import { RelationshipForm } from '../RelationshipForm';
 import { RenameRelationship } from '../RenameRelationship/RenameRelationship';

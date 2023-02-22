@@ -1,13 +1,13 @@
 import React from 'react';
-import { useAppDispatch } from '@/store';
-import { programmaticallyTraceError } from '@/features/Analytics';
+import { useAppDispatch } from '../../../../../store';
+import { programmaticallyTraceError } from '../../../../Analytics';
 import {
   FetchOneClickDeploymentStateLogSubscriptionSubscription,
   FetchOneClickDeploymentStateLogSubscriptionSubscriptionVariables,
   FETCH_ONE_CLICK_DEPLOYMENT_STATE_LOG_SUBSCRIPTION,
   controlPlaneClient,
-} from '@/features/ControlPlane';
-import { reactQueryClient } from '@/lib/reactQuery';
+} from '../../../../ControlPlane';
+import { reactQueryClient } from '../../../../../lib/reactQuery';
 import {
   forceChangeGraphiqlQuery,
   forceGraphiQLIntrospection,

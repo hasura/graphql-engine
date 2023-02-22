@@ -1,5 +1,5 @@
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
+import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
+import { ReduxDecorator } from '../../../storybook/decorators/redux-decorator';
 import ReactJson from 'react-json-view';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import React from 'react';

@@ -1,11 +1,11 @@
-import { areTablesEqual } from '@/features/hasura-metadata-api';
+import { areTablesEqual } from '../../../../../hasura-metadata-api';
 import { useContext, useEffect } from 'react';
 import { rowPermissionsContext } from './RowPermissionsProvider';
 import { tableContext } from './TableProvider';
-import { Table } from '@/features/hasura-metadata-types';
-import { getTableDisplayName } from '@/features/DatabaseRelationships';
+import { Table } from '../../../../../hasura-metadata-types';
+import { getTableDisplayName } from '../../../../../DatabaseRelationships';
 import { isEmpty } from 'lodash';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../../../new-components/Button';
 import { graphQLTypeToJsType, isComparator } from './utils';
 import { ValueInputType } from './ValueInputType';
 

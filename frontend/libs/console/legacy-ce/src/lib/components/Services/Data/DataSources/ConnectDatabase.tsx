@@ -7,8 +7,8 @@ import React, {
   useEffect,
 } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
-import { canAccessReadReplica } from '@/utils/permissions';
-import { isPostgres } from '@/metadata/dataSource.utils';
+import { canAccessReadReplica } from '../../../../utils/permissions';
+import { isPostgres } from '../../../../metadata/dataSource.utils';
 
 import Tabbed from './TabbedDataSourceConnection';
 import { ReduxState } from '../../../../types';

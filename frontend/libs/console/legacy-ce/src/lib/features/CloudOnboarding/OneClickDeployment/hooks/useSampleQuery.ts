@@ -1,5 +1,5 @@
 import { useQuery } from 'react-query';
-import { Api } from '@/hooks/apiUtils';
+import { Api } from '../../../../hooks/apiUtils';
 
 export function fetchSampleQuery(dataUrl: string) {
   return Api.get({

@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { requestHeadersSelectorSchema } from '@/new-components/RequestHeadersSelector';
-import { isJsonString } from '@/components/Common/utils/jsUtils';
+import { requestHeadersSelectorSchema } from '../../../../new-components/RequestHeadersSelector';
+import { isJsonString } from '../../../../components/Common/utils/jsUtils';
 
 export const schema = z.object({
   webhook: z.string().min(1, 'Webhook url is a required field!'),

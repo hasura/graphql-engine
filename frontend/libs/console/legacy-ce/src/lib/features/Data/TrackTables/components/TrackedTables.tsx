@@ -1,7 +1,7 @@
-import { useTrackTable } from '@/features/Data';
-import { Button } from '@/new-components/Button';
-import { CardedTable } from '@/new-components/CardedTable';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { useTrackTable } from '../..';
+import { Button } from '../../../../new-components/Button';
+import { CardedTable } from '../../../../new-components/CardedTable';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import React from 'react';
 import { useCheckRows } from '../hooks/useCheckRows';
 import { TrackableTable } from '../types';

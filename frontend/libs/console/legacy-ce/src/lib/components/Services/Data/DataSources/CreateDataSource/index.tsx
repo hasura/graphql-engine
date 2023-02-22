@@ -1,7 +1,10 @@
 import * as React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { isCloudConsole } from '@/utils/cloudConsole';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+} from '../../../../../features/Analytics';
+import { isCloudConsole } from '../../../../../utils/cloudConsole';
 import Globals from '../../../../../Globals';
 import { ReduxState } from '../../../../../types';
 import styles from './styles.module.scss';

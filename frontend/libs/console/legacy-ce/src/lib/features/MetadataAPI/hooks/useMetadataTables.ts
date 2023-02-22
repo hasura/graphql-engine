@@ -1,9 +1,9 @@
-import { DataSource, Feature } from '@/features/DataSource';
-import { DataTarget } from '@/features/Datasources';
-import { Table } from '@/features/hasura-metadata-types';
-import { useHttpClient } from '@/features/Network';
+import { DataSource, Feature } from '../../DataSource';
+import { DataTarget } from '../../Datasources';
+import { Table } from '../../hasura-metadata-types';
+import { useHttpClient } from '../../Network';
 
-import type { QualifiedTable } from '@/metadata/types';
+import type { QualifiedTable } from '../../../metadata/types';
 import { useQuery } from 'react-query';
 import { MetadataSelector } from './metadataSelectors';
 import { useMetadata } from './useMetadata';

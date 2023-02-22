@@ -5,7 +5,7 @@ import {
   Analytics,
   REDACT_EVERYTHING,
   useGetAnalyticsAttributes,
-} from '@/features/Analytics';
+} from '../../../../../features/Analytics';
 import { getReactHelmetTitle } from '../../../../Common/utils/reactUtils';
 import BreadCrumb from '../../../../Common/Layout/BreadCrumb/BreadCrumb';
 import {

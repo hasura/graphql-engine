@@ -1,4 +1,4 @@
-import globals from '@/Globals';
+import globals from '../../../../../../../../Globals';
 import React from 'react';
 import { NeonIcon } from './NeonIconSmall';
 import { useShowNeonDashboardLink } from './utils';

@@ -1,8 +1,8 @@
 import React from 'react';
-import { Dialog } from '@/new-components/Dialog';
-import { Button } from '@/new-components/Button';
+import { Dialog } from '../../../new-components/Dialog';
+import { Button } from '../../../new-components/Button';
 import { FaExternalLinkAlt, FaFileImport, FaRegEdit } from 'react-icons/fa';
-import { Badge } from '@/new-components/Badge';
+import { Badge } from '../../../new-components/Badge';
 
 type props = {
   handleActionForm: () => void;

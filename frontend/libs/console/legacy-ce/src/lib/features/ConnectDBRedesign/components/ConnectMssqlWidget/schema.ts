@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { graphQLCustomizationSchema } from '../GraphQLCustomization/schema';
-import { Source } from '@/features/hasura-metadata-types';
+import { Source } from '../../../hasura-metadata-types';
 import { adaptMssqlConnection } from './utils/adaptResponse';
 
 export const connectionInfoSchema = z.object({

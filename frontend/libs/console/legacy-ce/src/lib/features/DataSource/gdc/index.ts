@@ -1,4 +1,4 @@
-import { Table } from '@/features/hasura-metadata-types';
+import { Table } from '../../hasura-metadata-types';
 import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 import { Database, Feature } from '../index';
 import {

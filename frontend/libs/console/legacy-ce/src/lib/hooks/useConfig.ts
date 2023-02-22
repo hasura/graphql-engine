@@ -1,5 +1,5 @@
-import { SERVER_CONSOLE_MODE } from '@/constants';
-import Endpoints from '@/Endpoints';
+import { SERVER_CONSOLE_MODE } from '../constants';
+import Endpoints from '../Endpoints';
 import { useQuery, UseQueryOptions, UseQueryResult } from 'react-query';
 import { useAppSelector } from '../store';
 import { Api } from './apiUtils';

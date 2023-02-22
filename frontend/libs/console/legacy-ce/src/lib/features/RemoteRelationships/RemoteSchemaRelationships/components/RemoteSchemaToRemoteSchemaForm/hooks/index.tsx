@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { useGetRemoteSchemaRelationship } from '@/features/MetadataAPI';
-import { rsToRsRelDef } from '@/metadata/types';
+import { useGetRemoteSchemaRelationship } from '../../../../../MetadataAPI';
+import { rsToRsRelDef } from '../../../../../../metadata/types';
 import { RsToRsSchema } from '../../../types';
 
 interface UseDefaultValuesProps {

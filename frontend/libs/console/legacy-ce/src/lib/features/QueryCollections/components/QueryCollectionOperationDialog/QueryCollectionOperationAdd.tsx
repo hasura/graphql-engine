@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFireNotification } from '@/new-components/Notifications';
+import { useFireNotification } from '../../../../new-components/Notifications';
 
 import { useAddOperationsToQueryCollection } from '../../hooks';
 import { QueryCollectionOperationDialog } from './QueryCollectionOperationDialog';

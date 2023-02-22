@@ -4,8 +4,8 @@ import {
   NativeDrivers,
   Source,
   SupportedDrivers,
-} from '@/features/hasura-metadata-types';
-import { isPostgres } from '@/metadata/dataSource.utils';
+} from '../hasura-metadata-types';
+import { isPostgres } from '../../metadata/dataSource.utils';
 
 export interface NetworkArgs {
   httpClient: AxiosInstance;

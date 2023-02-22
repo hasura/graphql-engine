@@ -2,7 +2,7 @@ import React from 'react';
 import * as z from 'zod';
 import { Meta, Story } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
-import { SimpleForm } from '@/new-components/Form';
+import { SimpleForm } from '../../../../../new-components/Form';
 import {
   refRemoteSchemaSelectorKey,
   RefRsSelector,

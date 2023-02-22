@@ -1,5 +1,5 @@
 import z from 'zod';
-import { InputField, SimpleForm } from '@/new-components/Form';
+import { InputField, SimpleForm } from '../../../../../../new-components/Form';
 import React, { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FaSearch } from 'react-icons/fa';

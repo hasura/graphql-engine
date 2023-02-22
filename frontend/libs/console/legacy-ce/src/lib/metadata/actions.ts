@@ -1,13 +1,13 @@
-import { MetadataResponse } from '@/features/MetadataAPI';
-import { Api } from '@/hooks/apiUtils';
-import { getRunSqlQuery } from '@/components/Common/utils/v1QueryUtils';
-import dataHeaders from '@/components/Services/Data/Common/Headers';
+import { MetadataResponse } from '../features/MetadataAPI';
+import { Api } from '../hooks/apiUtils';
+import { getRunSqlQuery } from '../components/Common/utils/v1QueryUtils';
+import dataHeaders from '../components/Services/Data/Common/Headers';
 import {
   ConnectDBEvent,
   sendTelemetryEvent,
   trackRuntimeError,
-} from '@/telemetry';
-import { RunSQLSelectResponse } from '@/features/DataSource';
+} from '../telemetry';
+import { RunSQLSelectResponse } from '../features/DataSource';
 import requestAction from '../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
 
@@ -75,7 +75,7 @@ import {
 import _push from '../components/Services/Data/push';
 import { dataSourceIsEqual } from '../components/Services/Data/DataSources/utils';
 import { getSourceDriver } from '../components/Services/Data/utils';
-import ExportMetadata from '@/components/Services/Settings/MetadataOptions/ExportMetadata';
+import ExportMetadata from '../components/Services/Settings/MetadataOptions/ExportMetadata';
 
 export interface ExportMetadataSuccess {
   type: 'Metadata/EXPORT_METADATA_SUCCESS';

@@ -1,6 +1,6 @@
-import { makeConnectionStringFromConnectionParams } from '@/components/Services/Data/DataSources/ManageDBUtils';
-import { Driver } from '@/dataSources';
-import { isEmpty } from '@/components/Common/utils/jsUtils';
+import { makeConnectionStringFromConnectionParams } from '../components/Services/Data/DataSources/ManageDBUtils';
+import { Driver } from '../dataSources';
+import { isEmpty } from '../components/Common/utils/jsUtils';
 import { Nullable } from './../components/Common/utils/tsUtils';
 import {
   inconsistentObjectsQuery,

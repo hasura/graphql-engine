@@ -1,4 +1,4 @@
-import { isArray, isObject } from '@/components/Common/utils/jsUtils';
+import { isArray, isObject } from '../../components/Common/utils/jsUtils';
 import { Table } from '../hasura-metadata-types';
 import { GDCTable } from './gdc';
 

@@ -1,11 +1,11 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
-import { Button } from '@/new-components/Button';
-import { CardedTable } from '@/new-components/CardedTable';
+import { Button } from '../../../../../new-components/Button';
+import { CardedTable } from '../../../../../new-components/CardedTable';
 import { ConnectionInfo } from './ConnectionInfo';
 import { useState } from 'react';
 import { ConnectionInfoSchema } from '../schema';
 import { FaPlus, FaTrash } from 'react-icons/fa';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
 import { getDatabaseConnectionDisplayName } from '../utils/helpers';
 
 export const ReadReplicas = ({

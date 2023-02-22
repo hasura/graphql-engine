@@ -1,14 +1,14 @@
-import { Button } from '@/new-components/Button';
-import { SimpleForm } from '@/new-components/Form';
+import { Button } from '../../../../new-components/Button';
+import { SimpleForm } from '../../../../new-components/Form';
 import { userEvent, within } from '@storybook/testing-library';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { ComponentMeta, Story } from '@storybook/react';
 import React from 'react';
 import { expect } from '@storybook/jest';
 import { Controller, useFormContext } from 'react-hook-form';
 import { z } from 'zod';
 import { action } from '@storybook/addon-actions';
-import { DatabaseSelector } from '@/features/Data';
+import { DatabaseSelector } from '../..';
 import { handlers } from './mocks/handlers.mock';
 
 export default {

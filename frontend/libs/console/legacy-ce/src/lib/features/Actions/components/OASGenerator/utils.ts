@@ -2,7 +2,7 @@ import {
   RequestTransform,
   RequestTransformMethod,
   ResponseTranform,
-} from '@/metadata/types';
+} from '../../../../metadata/types';
 import {
   buildClientSchema,
   getIntrospectionQuery,

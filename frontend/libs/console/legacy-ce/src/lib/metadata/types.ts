@@ -1,7 +1,7 @@
 import type { Moment } from 'moment';
 
-import type { OpenTelemetry } from '@/features/hasura-metadata-types';
-import type { KeyValuePair } from '@/components/Common/ConfigureTransformation/stateDefaults';
+import type { OpenTelemetry } from '../features/hasura-metadata-types';
+import type { KeyValuePair } from '../components/Common/ConfigureTransformation/stateDefaults';
 
 import type { Driver } from '../dataSources';
 import type { Nullable } from './../components/Common/utils/tsUtils';

@@ -1,5 +1,5 @@
 import { createOperatorsObject } from '../../../PermissionsForm.utils';
-import { TableColumn } from '@/features/DataSource';
+import { TableColumn } from '../../../../../DataSource';
 import { MetadataDataSource } from '../../../../../../metadata/types';
 
 export interface CreateOperatorsArgs {

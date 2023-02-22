@@ -1,12 +1,12 @@
 import produce from 'immer';
 
-import { allowedMetadataTypes } from '@/features/MetadataAPI';
+import { allowedMetadataTypes } from '../../../MetadataAPI';
 
 import { AccessType } from '../../types';
 import { PermissionsSchema } from '../../schema';
-import { areTablesEqual } from '@/features/hasura-metadata-api';
-import { Table } from '@/features/hasura-metadata-types';
-import { getTableDisplayName } from '@/features/DatabaseRelationships';
+import { areTablesEqual } from '../../../hasura-metadata-api';
+import { Table } from '../../../hasura-metadata-types';
+import { getTableDisplayName } from '../../../DatabaseRelationships';
 
 type SelectPermissionMetadata = {
   columns: string[];

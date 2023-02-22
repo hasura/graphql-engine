@@ -1,12 +1,16 @@
-import { useAvailableDrivers } from '@/features/ConnectDB/hooks/useAvailableDrivers';
-import { DEFAULT_STALE_TIME } from '@/features/DatabaseRelationships';
-import { DataSource, nativeDrivers, ReleaseType } from '@/features/DataSource';
+import { useAvailableDrivers } from '../../../../../features/ConnectDB/hooks/useAvailableDrivers';
+import { DEFAULT_STALE_TIME } from '../../../../../features/DatabaseRelationships';
+import {
+  DataSource,
+  nativeDrivers,
+  ReleaseType,
+} from '../../../../../features/DataSource';
 import {
   availableFeatureFlagIds,
   useIsFeatureFlagEnabled,
-} from '@/features/FeatureFlags';
-import { useMetadata } from '@/features/hasura-metadata-api';
-import { useHttpClient } from '@/features/Network';
+} from '../../../../../features/FeatureFlags';
+import { useMetadata } from '../../../../../features/hasura-metadata-api';
+import { useHttpClient } from '../../../../../features/Network';
 import { DataNode } from 'antd/lib/tree';
 import { useQuery } from 'react-query';
 

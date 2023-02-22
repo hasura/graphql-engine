@@ -1,4 +1,4 @@
-import Migration from '@/utils/migration/Migration';
+import Migration from '../../../../utils/migration/Migration';
 import { dataSource } from '../../../../dataSources';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import { exportMetadata } from '../../../../metadata/actions';

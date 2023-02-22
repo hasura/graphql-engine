@@ -1,10 +1,10 @@
 import React from 'react';
 import { MdRefresh } from 'react-icons/md';
-import { Analytics } from '@/features/Analytics';
+import { Analytics } from '../../../../../../Analytics';
 import { FaExclamationCircle, FaPlusCircle, FaSpinner } from 'react-icons/fa';
 import { useFormContext } from 'react-hook-form';
-import { ErrorComponentTemplate } from '@/new-components/Form';
-import { Button } from '@/new-components/Button';
+import { ErrorComponentTemplate } from '../../../../../../../new-components/Form';
+import { Button } from '../../../../../../../new-components/Button';
 import { NeonButtonIcons, NeonButtonProps } from '../../types';
 import { RequiredEnvVar } from '../../../../types';
 

@@ -1,10 +1,10 @@
-import { DataSource, Feature } from '@/features/DataSource';
-import { useHttpClient } from '@/features/Network';
-import { OpenApi3Form } from '@/features/OpenApi3Form';
-import { Button } from '@/new-components/Button';
-import { transformSchemaToZodObject } from '@/features/OpenApi3Form/utils';
-import { InputField, useConsoleForm } from '@/new-components/Form';
-import { Tabs } from '@/new-components/Tabs';
+import { DataSource, Feature } from '../../../DataSource';
+import { useHttpClient } from '../../../Network';
+import { OpenApi3Form } from '../../../OpenApi3Form';
+import { Button } from '../../../../new-components/Button';
+import { transformSchemaToZodObject } from '../../../OpenApi3Form/utils';
+import { InputField, useConsoleForm } from '../../../../new-components/Form';
+import { Tabs } from '../../../../new-components/Tabs';
 import { get } from 'lodash';
 import { useEffect, useState } from 'react';
 import { FaExclamationTriangle } from 'react-icons/fa';
@@ -12,12 +12,12 @@ import { useQuery } from 'react-query';
 import { z, ZodSchema } from 'zod';
 import { graphQLCustomizationSchema } from '../GraphQLCustomization/schema';
 import { GraphQLCustomization } from '../GraphQLCustomization/GraphQLCustomization';
-import { useMetadata } from '@/features/hasura-metadata-api';
+import { useMetadata } from '../../../hasura-metadata-api';
 import { adaptGraphQLCustomization } from '../GraphQLCustomization/utils/adaptResponse';
 import { generateGDCRequestPayload } from './utils/generateRequest';
-import { hasuraToast } from '@/new-components/Toasts';
+import { hasuraToast } from '../../../../new-components/Toasts';
 import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
-import { capitaliseFirstLetter } from '@/components/Common/ConfigureTransformation/utils';
+import { capitaliseFirstLetter } from '../../../../components/Common/ConfigureTransformation/utils';
 
 interface ConnectGDCSourceWidgetProps {
   driver: string;

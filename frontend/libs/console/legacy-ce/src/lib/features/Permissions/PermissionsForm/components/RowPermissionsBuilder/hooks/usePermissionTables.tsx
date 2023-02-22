@@ -1,8 +1,11 @@
-import { MetadataSelectors, useMetadata } from '@/features/hasura-metadata-api';
+import {
+  MetadataSelectors,
+  useMetadata,
+} from '../../../../../hasura-metadata-api';
 import { Tables } from '../components';
-import { MetadataTable } from '@/features/hasura-metadata-types';
+import { MetadataTable } from '../../../../../hasura-metadata-types';
 import { columnsFromSchema } from '../components/utils/columnsFromSchema';
-import { getTableDisplayName } from '@/features/DatabaseRelationships';
+import { getTableDisplayName } from '../../../../../DatabaseRelationships';
 import { useIntrospectSchema } from '.';
 
 const getTableName = (table: MetadataTable) => {

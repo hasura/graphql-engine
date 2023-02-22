@@ -1,7 +1,7 @@
-import type { QualifiedTable } from '@/metadata/types';
-import { dataSourceSqlQueries } from '@/features/SqlQueries';
-import { Driver } from '@/dataSources';
-import { MSSqlConstraint } from '@/components/Services/Data/mergeData';
+import type { QualifiedTable } from '../metadata/types';
+import { dataSourceSqlQueries } from '../features/SqlQueries';
+import { Driver } from '../dataSources';
+import { MSSqlConstraint } from '../components/Services/Data/mergeData';
 import type { UniqueKey } from './../dataSources/types';
 import type { QualifiedDataSource, RunSQLResponse } from './types';
 import {

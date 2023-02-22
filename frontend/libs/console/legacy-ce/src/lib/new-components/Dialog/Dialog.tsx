@@ -1,5 +1,5 @@
-import { useGetAnalyticsAttributes } from '@/features/Analytics';
-import { IconTooltip } from '@/new-components/Tooltip';
+import { useGetAnalyticsAttributes } from '../../features/Analytics';
+import { IconTooltip } from '../Tooltip';
 import * as RadixDialog from '@radix-ui/react-dialog';
 import clsx from 'clsx';
 import React from 'react';

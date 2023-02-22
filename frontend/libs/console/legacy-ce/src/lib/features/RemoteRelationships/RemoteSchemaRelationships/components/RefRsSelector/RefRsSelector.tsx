@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaPlug } from 'react-icons/fa';
-import { Select } from '@/new-components/Form';
+import { Select } from '../../../../../new-components/Form';
 
 export interface RefRsSelectorProps {
   allRemoteSchemas: string[];

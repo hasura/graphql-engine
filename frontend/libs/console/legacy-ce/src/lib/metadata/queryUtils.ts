@@ -1,4 +1,4 @@
-import defaultState from '@/components/Services/Events/EventTriggers/state';
+import defaultState from '../components/Services/Events/EventTriggers/state';
 import {
   ColumnConfig,
   CustomRootFields,

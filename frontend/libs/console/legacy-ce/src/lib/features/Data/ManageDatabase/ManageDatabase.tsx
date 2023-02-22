@@ -1,6 +1,6 @@
 import React from 'react';
-import { Tooltip } from '@/new-components/Tooltip';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Tooltip } from '../../../new-components/Tooltip';
+import { Analytics, REDACT_EVERYTHING } from '../../Analytics';
 import { FaAngleRight, FaDatabase } from 'react-icons/fa';
 import { RiInformationFill } from 'react-icons/ri';
 import { TrackTables } from '../TrackTables/TrackTables';

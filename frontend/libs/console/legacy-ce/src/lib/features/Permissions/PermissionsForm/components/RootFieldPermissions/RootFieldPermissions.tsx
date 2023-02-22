@@ -1,10 +1,10 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import clsx from 'clsx';
-import { Collapse } from '@/new-components/deprecated';
-import { Switch } from '@/new-components/Switch';
-import { Table } from '@/features/hasura-metadata-types';
-import { useListAllTableColumns } from '@/features/Data';
+import { Collapse } from '../../../../../new-components/deprecated';
+import { Switch } from '../../../../../new-components/Switch';
+import { Table } from '../../../../hasura-metadata-types';
+import { useListAllTableColumns } from '../../../../Data';
 import {
   getSectionStatusLabel,
   hasSelectedPrimaryKey as hasSelectedPrimaryKeyFinder,

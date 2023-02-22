@@ -1,5 +1,5 @@
-import { TableColumn } from '@/features/DataSource';
-import { Metadata } from '@/features/hasura-metadata-types';
+import { TableColumn } from '../../../../../../DataSource';
+import { Metadata } from '../../../../../../hasura-metadata-types';
 import { isPermission } from '../../../../../utils';
 import {
   MetadataDataSource,

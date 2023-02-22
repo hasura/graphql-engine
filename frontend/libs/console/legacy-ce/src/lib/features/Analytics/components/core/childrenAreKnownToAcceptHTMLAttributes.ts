@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 
 /**
  * Detects if the children are one of the Console's components that accepts HTML attributes.

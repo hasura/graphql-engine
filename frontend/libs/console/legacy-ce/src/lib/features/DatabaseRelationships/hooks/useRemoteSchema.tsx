@@ -1,9 +1,9 @@
-import { SchemaResponse } from '@/features/MetadataAPI';
+import { SchemaResponse } from '../../MetadataAPI';
 import { buildClientSchema } from 'graphql';
 import { useQuery } from 'react-query';
-import { RemoteSchema } from '@/features/hasura-metadata-types';
-import { runMetadataQuery } from '@/features/DataSource';
-import { useHttpClient } from '@/features/Network';
+import { RemoteSchema } from '../../hasura-metadata-types';
+import { runMetadataQuery } from '../../DataSource';
+import { useHttpClient } from '../../Network';
 
 export const useRemoteSchemaIntrospection = ({
   remoteSchemaName,

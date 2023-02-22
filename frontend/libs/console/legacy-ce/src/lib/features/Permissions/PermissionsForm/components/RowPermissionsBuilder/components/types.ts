@@ -1,4 +1,4 @@
-import { Table } from '@/features/hasura-metadata-types';
+import { Table } from '../../../../../hasura-metadata-types';
 import { GraphQLType } from 'graphql';
 
 export type Operators = Record<

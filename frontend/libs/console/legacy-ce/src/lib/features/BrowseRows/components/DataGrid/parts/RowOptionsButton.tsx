@@ -1,5 +1,5 @@
 import React from 'react';
-import { DropdownMenu } from '@/new-components/DropdownMenu';
+import { DropdownMenu } from '../../../../../new-components/DropdownMenu';
 import { RiMore2Fill } from 'react-icons/ri';
 
 export const RowOptionsButton: React.VFC<{

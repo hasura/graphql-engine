@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconTooltip } from '@/new-components/Tooltip';
+import { IconTooltip } from '../../../../../new-components/Tooltip';
 import { RetryConf } from '../../types';
 import { inputStyles } from '../../constants';
 

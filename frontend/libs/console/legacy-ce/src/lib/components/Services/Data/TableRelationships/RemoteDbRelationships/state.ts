@@ -1,4 +1,4 @@
-import { QualifiedTable } from '@/metadata/types';
+import { QualifiedTable } from '../../../../../metadata/types';
 
 export const REL_SET_NAME = 'Relationships/REL_SET_NAME';
 export const REL_SET_TYPE = 'Relationships/REL_SET_TYPE';

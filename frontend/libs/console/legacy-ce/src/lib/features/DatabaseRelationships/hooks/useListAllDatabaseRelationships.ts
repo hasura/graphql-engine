@@ -4,11 +4,11 @@ import {
   isManualArrayRelationship,
   isManualObjectRelationship,
   isRemoteSchemaRelationship,
-} from '@/features/DataSource';
-import { Table } from '@/features/hasura-metadata-types';
-import { useHttpClient } from '@/features/Network';
+} from '../../DataSource';
+import { Table } from '../../hasura-metadata-types';
+import { useHttpClient } from '../../Network';
 import { useQuery } from 'react-query';
-import { useMetadata, MetadataSelectors } from '@/features/hasura-metadata-api';
+import { useMetadata, MetadataSelectors } from '../../hasura-metadata-api';
 import {
   LocalRelationship,
   Relationship,

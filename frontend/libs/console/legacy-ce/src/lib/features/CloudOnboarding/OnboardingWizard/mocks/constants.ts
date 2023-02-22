@@ -1,4 +1,4 @@
-import { SurveysResponseData } from '@/features/Surveys';
+import { SurveysResponseData } from '../../../Surveys';
 import {
   getMetadataUrl,
   getMigrationUrl,

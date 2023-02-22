@@ -1,9 +1,9 @@
-import { Table } from '@/features/hasura-metadata-types';
+import { Table } from '../../../hasura-metadata-types';
 import React, { useEffect } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { FaArrowAltCircleLeft, FaArrowAltCircleRight } from 'react-icons/fa';
 import Skeleton from 'react-loading-skeleton';
-import { useMetadata, MetadataSelectors } from '@/features/hasura-metadata-api';
+import { useMetadata, MetadataSelectors } from '../../../hasura-metadata-api';
 import { SourcePicker } from './SourcePicker/SourcePicker';
 import { SourceSelectorItem } from './SourcePicker/SourcePicker.types';
 import { mapItemsToSourceOptions } from './SourcePicker/SourcePicker.utils';

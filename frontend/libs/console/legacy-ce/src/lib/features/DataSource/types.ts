@@ -10,7 +10,7 @@ import {
   SourceToSourceRelationship,
   SupportedDrivers,
   Table,
-} from '@/features/hasura-metadata-types';
+} from '../hasura-metadata-types';
 
 import { NetworkArgs } from './api';
 import { SchemaTable } from './utils';

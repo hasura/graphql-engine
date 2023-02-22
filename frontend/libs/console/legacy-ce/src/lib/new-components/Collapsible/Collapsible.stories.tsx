@@ -4,7 +4,7 @@ import { userEvent, waitFor, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { screen } from '@testing-library/dom';
 
-import { Collapsible } from '@/new-components/Collapsible';
+import { Collapsible } from '.';
 
 export default {
   title: 'Components/Collapsible ⚛️',

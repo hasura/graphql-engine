@@ -1,4 +1,4 @@
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import React from 'react';
 import { screen } from '@testing-library/dom';

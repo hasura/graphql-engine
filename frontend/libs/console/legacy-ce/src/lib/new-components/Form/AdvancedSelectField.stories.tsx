@@ -2,11 +2,7 @@ import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 import { z } from 'zod';
-import {
-  AdvancedSelectField,
-  SimpleForm,
-  useConsoleForm,
-} from '@/new-components/Form';
+import { AdvancedSelectField, SimpleForm, useConsoleForm } from '.';
 import { screen, userEvent, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 

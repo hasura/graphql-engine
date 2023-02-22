@@ -2,8 +2,8 @@ import {
   InputArgumentsType,
   InputArgumentValueType,
   RemoteField,
-} from '@/features/hasura-metadata-types';
-import { isEmpty } from '@/components/Common/utils/jsUtils';
+} from '../../../../../hasura-metadata-types';
+import { isEmpty } from '../../../../../../components/Common/utils/jsUtils';
 import { RemoteSchemaRelationship } from '../../../../types';
 import { parseArgValue } from './parts/RemoteSchemaTree/utils';
 import { RelationshipFields } from './types';

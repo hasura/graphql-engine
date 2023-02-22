@@ -1,9 +1,9 @@
 import React, { useState, Dispatch, ChangeEvent } from 'react';
 import { FaEye, FaTimes } from 'react-icons/fa';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { Button } from '@/new-components/Button';
-import { Tooltip } from '@/new-components/Tooltip';
-import { Collapse } from '@/new-components/deprecated';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
+import { Button } from '../../../../new-components/Button';
+import { Tooltip } from '../../../../new-components/Tooltip';
+import { Collapse } from '../../../../new-components/deprecated';
 import {
   ReadReplicaState,
   ReadReplicaActions,
@@ -19,7 +19,7 @@ import {
 } from './ManageDBUtils';
 
 import styles from './DataSources.module.scss';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 
 const checkIfFieldsAreEmpty = (
   currentReadReplicaConnectionType: string,

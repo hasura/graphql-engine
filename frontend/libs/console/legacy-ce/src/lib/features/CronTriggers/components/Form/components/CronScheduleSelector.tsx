@@ -1,9 +1,9 @@
 import React from 'react';
-import { IconTooltip } from '@/new-components/Tooltip';
-import { InputField } from '@/new-components/Form';
-import FrequentlyUsedCrons from '@/components/Services/Events/Common/Components/FrequentlyUsedCrons';
+import { IconTooltip } from '../../../../../new-components/Tooltip';
+import { InputField } from '../../../../../new-components/Form';
+import FrequentlyUsedCrons from '../../../../../components/Services/Events/Common/Components/FrequentlyUsedCrons';
 import { useFormContext } from 'react-hook-form';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 
 const defaultCronExpr = '* * * * *';
 

@@ -12,21 +12,21 @@ import {
 } from 'react-icons/fa';
 import { browserHistory } from 'react-router';
 import produce from 'immer';
-import { ManageAgents } from '@/features/ManageAgents';
-import { Button } from '@/new-components/Button';
-import { useMetadataSource } from '@/features/MetadataAPI';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { nativeDrivers } from '@/features/DataSource';
-import { getProjectId } from '@/utils/cloudConsole';
+import { ManageAgents } from '../../../../features/ManageAgents';
+import { Button } from '../../../../new-components/Button';
+import { useMetadataSource } from '../../../../features/MetadataAPI';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
+import { nativeDrivers } from '../../../../features/DataSource';
+import { getProjectId } from '../../../../utils/cloudConsole';
 import {
   CheckDatabaseLatencyResponse,
   useCheckDatabaseLatency,
   useUpdateProjectRegionChangeStat,
-} from '@/features/ConnectDB';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
-import { isCloudConsole } from '@/utils';
-import globals from '@/Globals';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+} from '../../../../features/ConnectDB';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
+import { isCloudConsole } from '../../../../utils';
+import globals from '../../../../Globals';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 
 import styles from './styles.module.scss';
 import { Dispatch, ReduxState } from '../../../../types';

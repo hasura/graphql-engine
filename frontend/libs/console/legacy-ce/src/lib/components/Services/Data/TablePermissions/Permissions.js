@@ -1,14 +1,14 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import JSONEditor from './JSONEditor';
-import { IconTooltip } from '@/new-components/Tooltip';
+import { IconTooltip } from '../../../../new-components/Tooltip';
 import InputGroup from 'react-bootstrap/lib/InputGroup';
 import 'brace/mode/json';
 import 'brace/theme/github';
-import { LS_KEYS, setLSItem, getLSItem } from '@/utils/localStorage';
-import { Button } from '@/new-components/Button';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { LS_KEYS, setLSItem, getLSItem } from '../../../../utils/localStorage';
+import { Button } from '../../../../new-components/Button';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 import { getPrimaryKeysFromTable } from './utils';
 import { RESET } from '../TableModify/ModifyActions';
 import {

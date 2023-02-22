@@ -1,7 +1,7 @@
 import React from 'react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
-import { Relationship } from '@/features/DatabaseRelationships';
+import { Relationship } from '../../../../DatabaseRelationships';
 import { expect } from '@storybook/jest';
 import { waitFor, within } from '@storybook/testing-library';
 import { action } from '@storybook/addon-actions';

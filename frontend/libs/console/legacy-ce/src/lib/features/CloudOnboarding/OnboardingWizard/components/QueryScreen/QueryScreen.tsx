@@ -1,7 +1,7 @@
 import React from 'react';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../../new-components/Button';
 import { FaPlayCircle } from 'react-icons/fa';
-import { Analytics } from '@/features/Analytics';
+import { Analytics } from '../../../../Analytics';
 
 export interface Props {
   schemaImage: string;

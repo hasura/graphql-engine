@@ -1,6 +1,6 @@
 import React from 'react';
-import { IconTooltip } from '@/new-components/Tooltip';
-import { LearnMoreLink } from '@/new-components/LearnMoreLink';
+import { IconTooltip } from '../../../../../new-components/Tooltip';
+import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 
 type FormLabelProps = {
   title: string;
