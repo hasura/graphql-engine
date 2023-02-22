@@ -1,6 +1,6 @@
-This note is in [Hasura.Metadata.Class](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Metadata/Class.hs#L34).
+This note is in [Hasura.Metadata.Class](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Metadata/Class.hs#L32).
 It is referenced at:
-  - line 111 of [Hasura.Metadata.Class](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Metadata/Class.hs#L111)
+  - line 109 of [Hasura.Metadata.Class](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Metadata/Class.hs#L109)
 
 # Todo: Common interface for eventing sub-system
 
