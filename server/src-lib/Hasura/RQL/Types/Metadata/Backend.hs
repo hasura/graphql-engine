@@ -11,7 +11,7 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
-import Hasura.LogicalModel.Metadata (NativeQueryInfo)
+import Hasura.LogicalModel.Metadata (LogicalModelInfo)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -191,7 +191,7 @@ class
     (MonadIO m, MonadError QErr m) =>
     Env.Environment ->
     SourceConnConfiguration b ->
-    NativeQueryInfo b ->
+    LogicalModelInfo b ->
     m ()
   validateLogicalModel _ _ _ =
-    throw500 "validateNativeQuery: not implemented for this backend."
+    throw500 "validateLogicalModel: not implemented for this backend."

@@ -643,7 +643,7 @@
                 ],
                 "type": "object"
             },
-            "BigqueryNativeQueryInfo": {
+            "BigqueryLogicalModelInfo": {
                 "description": "A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.",
                 "properties": {
                     "arguments": {
@@ -659,14 +659,14 @@
                         "type": "string"
                     },
                     "description": {
-                        "description": "A description of the query which appears in the graphql schema",
+                        "description": "A description of the logical model which appears in the graphql schema",
                         "type": "string"
                     },
                     "returns": {
                         "$ref": "#/components/schemas/BigqueryCustomReturnType"
                     },
                     "root_field_name": {
-                        "description": "Root field name for the native query",
+                        "description": "Root field name for the logical model",
                         "type": "string"
                     }
                 },
@@ -859,16 +859,16 @@
                         ],
                         "type": "string"
                     },
-                    "name": {
-                        "type": "string"
-                    },
-                    "native_queries": {
+                    "logical_models": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/BigqueryNativeQueryInfo"
+                            "$ref": "#/components/schemas/BigqueryLogicalModelInfo"
                         },
                         "nullable": true,
                         "type": "array"
+                    },
+                    "name": {
+                        "type": "string"
                     },
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
@@ -1431,7 +1431,7 @@
                 ],
                 "type": "object"
             },
-            "CitusNativeQueryInfo": {
+            "CitusLogicalModelInfo": {
                 "description": "A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.",
                 "properties": {
                     "arguments": {
@@ -1448,14 +1448,14 @@
                         "type": "string"
                     },
                     "description": {
-                        "description": "A description of the query which appears in the graphql schema",
+                        "description": "A description of the logical model which appears in the graphql schema",
                         "type": "string"
                     },
                     "returns": {
                         "$ref": "#/components/schemas/CitusCustomReturnType"
                     },
                     "root_field_name": {
-                        "description": "Root field name for the native query",
+                        "description": "Root field name for the logical model",
                         "type": "string"
                     }
                 },
@@ -1675,16 +1675,16 @@
                         ],
                         "type": "string"
                     },
-                    "name": {
-                        "type": "string"
-                    },
-                    "native_queries": {
+                    "logical_models": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/CitusNativeQueryInfo"
+                            "$ref": "#/components/schemas/CitusLogicalModelInfo"
                         },
                         "nullable": true,
                         "type": "array"
+                    },
+                    "name": {
+                        "type": "string"
                     },
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
@@ -2254,7 +2254,7 @@
                 ],
                 "type": "object"
             },
-            "CockroachNativeQueryInfo": {
+            "CockroachLogicalModelInfo": {
                 "description": "A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.",
                 "properties": {
                     "arguments": {
@@ -2271,14 +2271,14 @@
                         "type": "string"
                     },
                     "description": {
-                        "description": "A description of the query which appears in the graphql schema",
+                        "description": "A description of the logical model which appears in the graphql schema",
                         "type": "string"
                     },
                     "returns": {
                         "$ref": "#/components/schemas/CockroachCustomReturnType"
                     },
                     "root_field_name": {
-                        "description": "Root field name for the native query",
+                        "description": "Root field name for the logical model",
                         "type": "string"
                     }
                 },
@@ -2498,16 +2498,16 @@
                         ],
                         "type": "string"
                     },
-                    "name": {
-                        "type": "string"
-                    },
-                    "native_queries": {
+                    "logical_models": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/CockroachNativeQueryInfo"
+                            "$ref": "#/components/schemas/CockroachLogicalModelInfo"
                         },
                         "nullable": true,
                         "type": "array"
+                    },
+                    "name": {
+                        "type": "string"
                     },
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
@@ -3152,7 +3152,7 @@
                 ],
                 "type": "object"
             },
-            "DataconnectorNativeQueryInfo": {
+            "DataconnectorLogicalModelInfo": {
                 "description": "A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.",
                 "properties": {
                     "arguments": {
@@ -3168,14 +3168,14 @@
                         "type": "string"
                     },
                     "description": {
-                        "description": "A description of the query which appears in the graphql schema",
+                        "description": "A description of the logical model which appears in the graphql schema",
                         "type": "string"
                     },
                     "returns": {
                         "$ref": "#/components/schemas/DataconnectorCustomReturnType"
                     },
                     "root_field_name": {
-                        "description": "Root field name for the native query",
+                        "description": "Root field name for the logical model",
                         "type": "string"
                     }
                 },
@@ -3374,16 +3374,16 @@
                     "kind": {
                         "$ref": "#/components/schemas/GraphQLName"
                     },
-                    "name": {
-                        "type": "string"
-                    },
-                    "native_queries": {
+                    "logical_models": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/DataconnectorNativeQueryInfo"
+                            "$ref": "#/components/schemas/DataconnectorLogicalModelInfo"
                         },
                         "nullable": true,
                         "type": "array"
+                    },
+                    "name": {
+                        "type": "string"
                     },
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
@@ -4470,7 +4470,7 @@
                 ],
                 "type": "object"
             },
-            "MssqlNativeQueryInfo": {
+            "MssqlLogicalModelInfo": {
                 "description": "A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.",
                 "properties": {
                     "arguments": {
@@ -4486,14 +4486,14 @@
                         "type": "string"
                     },
                     "description": {
-                        "description": "A description of the query which appears in the graphql schema",
+                        "description": "A description of the logical model which appears in the graphql schema",
                         "type": "string"
                     },
                     "returns": {
                         "$ref": "#/components/schemas/MssqlCustomReturnType"
                     },
                     "root_field_name": {
-                        "description": "Root field name for the native query",
+                        "description": "Root field name for the logical model",
                         "type": "string"
                     }
                 },
@@ -4713,16 +4713,16 @@
                         ],
                         "type": "string"
                     },
-                    "name": {
-                        "type": "string"
-                    },
-                    "native_queries": {
+                    "logical_models": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/MssqlNativeQueryInfo"
+                            "$ref": "#/components/schemas/MssqlLogicalModelInfo"
                         },
                         "nullable": true,
                         "type": "array"
+                    },
+                    "name": {
+                        "type": "string"
                     },
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
@@ -5286,7 +5286,7 @@
                 ],
                 "type": "object"
             },
-            "MysqlNativeQueryInfo": {
+            "MysqlLogicalModelInfo": {
                 "description": "A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.",
                 "properties": {
                     "arguments": {
@@ -5333,14 +5333,14 @@
                         "type": "string"
                     },
                     "description": {
-                        "description": "A description of the query which appears in the graphql schema",
+                        "description": "A description of the logical model which appears in the graphql schema",
                         "type": "string"
                     },
                     "returns": {
                         "$ref": "#/components/schemas/MysqlCustomReturnType"
                     },
                     "root_field_name": {
-                        "description": "Root field name for the native query",
+                        "description": "Root field name for the logical model",
                         "type": "string"
                     }
                 },
@@ -5557,16 +5557,16 @@
                         ],
                         "type": "string"
                     },
-                    "name": {
-                        "type": "string"
-                    },
-                    "native_queries": {
+                    "logical_models": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/MysqlNativeQueryInfo"
+                            "$ref": "#/components/schemas/MysqlLogicalModelInfo"
                         },
                         "nullable": true,
                         "type": "array"
+                    },
+                    "name": {
+                        "type": "string"
                     },
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
@@ -6213,7 +6213,7 @@
                 ],
                 "type": "object"
             },
-            "PostgresNativeQueryInfo": {
+            "PostgresLogicalModelInfo": {
                 "description": "A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.",
                 "properties": {
                     "arguments": {
@@ -6230,14 +6230,14 @@
                         "type": "string"
                     },
                     "description": {
-                        "description": "A description of the query which appears in the graphql schema",
+                        "description": "A description of the logical model which appears in the graphql schema",
                         "type": "string"
                     },
                     "returns": {
                         "$ref": "#/components/schemas/PostgresCustomReturnType"
                     },
                     "root_field_name": {
-                        "description": "Root field name for the native query",
+                        "description": "Root field name for the logical model",
                         "type": "string"
                     }
                 },
@@ -6571,16 +6571,16 @@
                         ],
                         "type": "string"
                     },
-                    "name": {
-                        "type": "string"
-                    },
-                    "native_queries": {
+                    "logical_models": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/PostgresNativeQueryInfo"
+                            "$ref": "#/components/schemas/PostgresLogicalModelInfo"
                         },
                         "nullable": true,
                         "type": "array"
+                    },
+                    "name": {
+                        "type": "string"
                     },
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"

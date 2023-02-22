@@ -523,8 +523,8 @@ customTypeSelectionList ::
   G.Name ->
   CustomReturnType b ->
   SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
-customTypeSelectionList name nativeQuery =
-  fmap nonNullableObjectList <$> customTypeSelectionSet name nativeQuery
+customTypeSelectionList name logicalModel =
+  fmap nonNullableObjectList <$> customTypeSelectionSet name logicalModel
 
 -- | Converts an output type parser from object_type to [object_type!]!
 nonNullableObjectList :: Parser 'Output m a -> Parser 'Output m a

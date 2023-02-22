@@ -20,7 +20,7 @@ spec = do
 
     it "Parses only a variable" $ do
       let rawSQL = "{{dogs}}"
-      parseInterpolatedQuery rawSQL `shouldBe` Right (InterpolatedQuery [IIVariable (NativeQueryArgumentName "dogs")])
+      parseInterpolatedQuery rawSQL `shouldBe` Right (InterpolatedQuery [IIVariable (LogicalModelArgumentName "dogs")])
 
     it "Parses SQL with one parameter in it" $ do
       let rawSQL = "SELECT * FROM dogs WHERE name = {{name}}"
@@ -28,7 +28,7 @@ spec = do
         `shouldBe` Right
           ( InterpolatedQuery
               [ IIText "SELECT * FROM dogs WHERE name = ",
-                IIVariable (NativeQueryArgumentName "name")
+                IIVariable (LogicalModelArgumentName "name")
               ]
           )
 
@@ -38,7 +38,7 @@ spec = do
         `shouldBe` Right
           ( InterpolatedQuery
               [ IIText "SELECT * FROM dogs WHERE ",
-                IIVariable (NativeQueryArgumentName "name"),
+                IIVariable (LogicalModelArgumentName "name"),
                 IIText " = name"
               ]
           )
@@ -49,7 +49,7 @@ spec = do
         `shouldBe` Right
           ( InterpolatedQuery
               [ IIText "SELECT * FROM dogs WHERE ",
-                IIVariable (NativeQueryArgumentName "name"),
+                IIVariable (LogicalModelArgumentName "name"),
                 IIText " = '{doggy friend}'"
               ]
           )

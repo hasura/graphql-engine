@@ -20,13 +20,13 @@ validateLogicalModel ::
   (MonadIO m, MonadError QErr m) =>
   Env.Environment ->
   PG.PostgresConnConfiguration ->
-  NativeQueryInfo ('Postgres pgKind) ->
+  LogicalModelInfo ('Postgres pgKind) ->
   m ()
 validateLogicalModel env connConf model = do
-  let name = getLogicalModelName $ nqiRootFieldName model
+  let name = getLogicalModelName $ lmiRootFieldName model
   let code :: Text
       code = fold $ flip evalState (1 :: Int) do
-        for (getInterpolatedQuery $ nqiCode model) \case
+        for (getInterpolatedQuery $ lmiCode model) \case
           IIText t -> pure t
           IIVariable _v -> do
             i <- get

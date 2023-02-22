@@ -52,7 +52,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Function
-import Hasura.RQL.Types.Metadata.Common (NativeQueries)
+import Hasura.RQL.Types.Metadata.Common (LogicalModels)
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryTags
@@ -684,7 +684,7 @@ buildLogicalModelFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   SourceInfo b ->
-  NativeQueries b ->
+  LogicalModels b ->
   SchemaT r m [P.FieldParser n (QueryRootField UnpreparedValue)]
 buildLogicalModelFields sourceInfo logicalModels = runMaybeTmempty $ do
   roleName <- retrieve scRole

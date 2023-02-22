@@ -25,7 +25,7 @@ import Data.Aeson.Ordered qualified as AO
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Text.Extended qualified as T
 import Data.Vector qualified as Vector
-import Hasura.LogicalModel.Metadata (NativeQueryInfo (..))
+import Hasura.LogicalModel.Metadata (LogicalModelInfo (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
   ( ActionDefinition (..),
@@ -115,12 +115,12 @@ sourcesToOrdJSONList sources =
   where
     sourceMetaToOrdJSON :: BackendSourceMetadata -> AO.Value
     sourceMetaToOrdJSON (BackendSourceMetadata exists) =
-      AB.dispatchAnyBackend @Backend exists $ \(SourceMetadata _smName _smKind _smTables _smFunctions _smNativeQueries _smConfiguration _smQueryTags _smCustomization _smHealthCheckConfig :: SourceMetadata b) ->
+      AB.dispatchAnyBackend @Backend exists $ \(SourceMetadata _smName _smKind _smTables _smFunctions _smLogicalModels _smConfiguration _smQueryTags _smCustomization _smHealthCheckConfig :: SourceMetadata b) ->
         let sourceNamePair = ("name", AO.toOrdered _smName)
             sourceKindPair = ("kind", AO.toOrdered _smKind)
             tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems _smTables)
             functionsPair = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction _smFunctions
-            nativeQueriesPair = listToMaybeOrdPairSort "native_queries" AO.toOrdered nqiRootFieldName (OM.elems _smNativeQueries)
+            logicalModelsPair = listToMaybeOrdPairSort "logical_models" AO.toOrdered lmiRootFieldName (OM.elems _smLogicalModels)
             configurationPair = [("configuration", AO.toOrdered _smConfiguration)]
             queryTagsConfigPair = maybe [] (\queryTagsConfig -> [("query_tags", AO.toOrdered queryTagsConfig)]) _smQueryTags
 
@@ -131,7 +131,7 @@ sourcesToOrdJSONList sources =
          in AO.object $
               [sourceNamePair, sourceKindPair, tablesPair]
                 <> maybeToList functionsPair
-                <> maybeToList nativeQueriesPair
+                <> maybeToList logicalModelsPair
                 <> configurationPair
                 <> queryTagsConfigPair
                 <> customizationPair

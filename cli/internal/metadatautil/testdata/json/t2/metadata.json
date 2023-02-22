@@ -25012,7 +25012,7 @@
           ]
         }
       ],
-      "native_queries": null,
+      "logical_models": null,
       "functions": [
         {
           "function": {

@@ -41,7 +41,7 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
 import Hasura.Backends.Postgres.Translate.Types (CustomSQLCTEs (..))
 import Hasura.Backends.Postgres.Types.Function
-import Hasura.LogicalModel.IR (NativeQuery (..))
+import Hasura.LogicalModel.IR (LogicalModel (..))
 import Hasura.LogicalModel.Metadata (LogicalModelName (..))
 import Hasura.Prelude
 import Hasura.RQL.IR
@@ -128,12 +128,12 @@ selectFromToFromItem prefix = \case
           S.mkFunctionAlias
             qf
             (fmap (fmap (first S.toColumnAlias)) defListM)
-  FromNativeQuery nq ->
-    S.FIIdentifier (S.tableAliasToIdentifier $ logicalModelNameToAlias (nqRootFieldName nq))
+  FromLogicalModel lm ->
+    S.FIIdentifier (S.tableAliasToIdentifier $ logicalModelNameToAlias (lmRootFieldName lm))
 
 -- | Given a @LogicalModelName@, what should we call the CTE generated for it?
 logicalModelNameToAlias :: LogicalModelName -> S.TableAlias
-logicalModelNameToAlias nqName = S.mkTableAlias ("cte_" <> toTxt (getLogicalModelName nqName))
+logicalModelNameToAlias lmName = S.mkTableAlias ("cte_" <> toTxt (getLogicalModelName lmName))
 
 -- | Converts a function name to an 'Identifier'.
 --

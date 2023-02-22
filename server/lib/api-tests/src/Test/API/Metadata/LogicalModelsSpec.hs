@@ -20,7 +20,7 @@ import Test.Hspec (SpecWith, describe, it)
 -- stanza.
 
 featureFlagForLogicalModels :: String
-featureFlagForLogicalModels = "HASURA_FF_NATIVE_QUERY_INTERFACE"
+featureFlagForLogicalModels = "HASURA_FF_LOGICAL_MODEL_INTERFACE"
 
 spec :: SpecWith GlobalTestEnvironment
 spec =

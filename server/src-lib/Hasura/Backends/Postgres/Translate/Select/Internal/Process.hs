@@ -81,7 +81,7 @@ import Hasura.Backends.Postgres.Translate.Types
 import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Node (currentNodeIdVersion, nodeIdVersionInt)
 import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.LogicalModel.IR (NativeQuery (..))
+import Hasura.LogicalModel.IR (LogicalModel (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy (OrderByItemG (OrderByItemG, obiColumn))
@@ -168,15 +168,15 @@ processSelectParams
         FromTable table -> pure $ S.QualTable table
         FromIdentifier i -> pure $ S.QualifiedIdentifier (TableIdentifier $ unFIIdentifier i) Nothing
         FromFunction qf _ _ -> pure $ S.QualifiedIdentifier (TableIdentifier $ qualifiedObjectToText qf) Nothing
-        FromNativeQuery nq -> do
+        FromLogicalModel lm -> do
           -- we are going to cram our SQL in a CTE, and this is what we will call it
-          let cteName = logicalModelNameToAlias (nqRootFieldName nq)
+          let cteName = logicalModelNameToAlias (lmRootFieldName lm)
 
           -- emit the query itself to the Writer
           tell $
             mempty
               { _swCustomSQLCTEs =
-                  CustomSQLCTEs (HM.singleton cteName (nqInterpolatedQuery nq))
+                  CustomSQLCTEs (HM.singleton cteName (lmInterpolatedQuery lm))
               }
 
           pure $ S.QualifiedIdentifier (S.tableAliasToIdentifier cteName) Nothing

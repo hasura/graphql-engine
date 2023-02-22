@@ -1,7 +1,6 @@
--- | This module contains the default types and functions that model Native
--- Queries.
+-- | The RQL IR representation of an invocation of a logical model.
 module Hasura.LogicalModel.IR
-  ( NativeQuery (..),
+  ( LogicalModel (..),
   )
 where
 
@@ -10,17 +9,17 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column (ColumnValue)
 
--- | The default implementation of an invocation of a native query.
-data NativeQuery b field = NativeQuery
-  { -- | The defined name of the native query.
-    nqRootFieldName :: LogicalModelName,
+-- | The RQL IR representation of an invocation of a logical model.
+data LogicalModel b field = LogicalModel
+  { -- | The graphql name of the logical model.
+    lmRootFieldName :: LogicalModelName,
     -- | The raw sql to use in the query
-    nqInterpolatedQuery :: InterpolatedQuery field,
-    -- | The arguments passed to the native query, if any.
-    nqArgs :: HashMap NativeQueryArgumentName (ColumnValue b)
+    lmInterpolatedQuery :: InterpolatedQuery field,
+    -- | The arguments passed to the query, if any.
+    lmArgs :: HashMap LogicalModelArgumentName (ColumnValue b)
   }
   deriving (Functor, Foldable, Traversable)
 
-deriving instance (Backend b, Eq field) => Eq (NativeQuery b field)
+deriving instance (Backend b, Eq field) => Eq (LogicalModel b field)
 
-deriving instance (Backend b, Show field) => Show (NativeQuery b field)
+deriving instance (Backend b, Show field) => Show (LogicalModel b field)

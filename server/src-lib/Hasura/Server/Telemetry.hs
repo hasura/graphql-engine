@@ -40,7 +40,7 @@ import Data.Text qualified as T
 import Data.Text.Conversions (UTF8 (..), decodeText)
 import Hasura.HTTP
 import Hasura.Logging
-import Hasura.LogicalModel.Metadata (NativeQueryInfo, nqiArguments)
+import Hasura.LogicalModel.Metadata (LogicalModelInfo, lmiArguments)
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Common
@@ -259,7 +259,7 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
       _mtRemoteSchemas = Map.size <$> remoteSchemaMap
       _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . _fiSystemDefined) sourceFunctionCache
       _mtActions = computeActionsMetrics <$> actionCache
-      _mtLogicalModels = countLogicalModels (OMap.elems $ _siNativeQueries sourceInfo)
+      _mtLogicalModels = countLogicalModels (OMap.elems $ _siLogicalModels sourceInfo)
    in Metrics {..}
   where
     sourceTableCache = _siTables sourceInfo
@@ -272,11 +272,11 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
     permsOfTbl :: TableInfo b -> [(RoleName, RolePermInfo b)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap
 
-    countLogicalModels :: [NativeQueryInfo b] -> LogicalModelsMetrics
+    countLogicalModels :: [LogicalModelInfo b] -> LogicalModelsMetrics
     countLogicalModels =
       foldMap
         ( \logimo ->
-            if null (nqiArguments logimo)
+            if null (lmiArguments logimo)
               then mempty {_lmmWithoutParameters = 1}
               else mempty {_lmmWithParameters = 1}
         )

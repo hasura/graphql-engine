@@ -45,7 +45,7 @@ import Hasura.GraphQL.ApolloFederation (ApolloFederationParserFunction)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser hiding (Type)
-import Hasura.LogicalModel.Metadata (NativeQueryInfo)
+import Hasura.LogicalModel.Metadata (LogicalModelInfo)
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Insert qualified as IR
@@ -185,7 +185,7 @@ class
 
   buildLogicalModelRootFields ::
     MonadBuildSchema b r m n =>
-    NativeQueryInfo b ->
+    LogicalModelInfo b ->
     SchemaT
       r
       m
