@@ -2051,6 +2051,25 @@ module Hasura.GC
 ourIdleGC :: Logger Hasura -> DiffTime -> DiffTime -> DiffTime -> IO void
 
 
+-- | A name for a logical model as it is recognized by the graphql schema.
+module Hasura.LogicalModel.Types
+newtype LogicalModelName
+LogicalModelName :: Name -> LogicalModelName
+[getLogicalModelName] :: LogicalModelName -> Name
+instance GHC.Generics.Generic Hasura.LogicalModel.Types.LogicalModelName
+instance Data.Text.Extended.ToTxt Hasura.LogicalModel.Types.LogicalModelName
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.LogicalModel.Types.LogicalModelName
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.LogicalModel.Types.LogicalModelName
+instance Control.DeepSeq.NFData Hasura.LogicalModel.Types.LogicalModelName
+instance Data.Hashable.Class.Hashable Hasura.LogicalModel.Types.LogicalModelName
+instance GHC.Show.Show Hasura.LogicalModel.Types.LogicalModelName
+instance GHC.Classes.Ord Hasura.LogicalModel.Types.LogicalModelName
+instance GHC.Classes.Eq Hasura.LogicalModel.Types.LogicalModelName
+instance Autodocodec.Class.HasCodec Hasura.LogicalModel.Types.LogicalModelName
+instance Data.Aeson.Types.FromJSON.FromJSONKey Hasura.LogicalModel.Types.LogicalModelName
+instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.LogicalModel.Types.LogicalModelName
+
+
 -- | We are in the process of building DTO types incrementally. We use
 --   placeholder types in positions in data structures that are not
 --   fully-defined yet. For example <a>PlaceholderObject</a> represents
@@ -2631,25 +2650,6 @@ instance Control.Monad.Reader.Class.MonadReader (Hasura.GraphQL.Analyse.Path, La
 instance GHC.Base.Monad Hasura.GraphQL.Analyse.Analysis
 instance GHC.Base.Applicative Hasura.GraphQL.Analyse.Analysis
 instance GHC.Base.Functor Hasura.GraphQL.Analyse.Analysis
-
-
--- | A name for a logical model as it is recognized by the graphql schema.
-module Hasura.NativeQuery.Types
-newtype LogicalModelName
-LogicalModelName :: Name -> LogicalModelName
-[getLogicalModelName] :: LogicalModelName -> Name
-instance GHC.Generics.Generic Hasura.NativeQuery.Types.LogicalModelName
-instance Data.Text.Extended.ToTxt Hasura.NativeQuery.Types.LogicalModelName
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.NativeQuery.Types.LogicalModelName
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.NativeQuery.Types.LogicalModelName
-instance Control.DeepSeq.NFData Hasura.NativeQuery.Types.LogicalModelName
-instance Data.Hashable.Class.Hashable Hasura.NativeQuery.Types.LogicalModelName
-instance GHC.Show.Show Hasura.NativeQuery.Types.LogicalModelName
-instance GHC.Classes.Ord Hasura.NativeQuery.Types.LogicalModelName
-instance GHC.Classes.Eq Hasura.NativeQuery.Types.LogicalModelName
-instance Autodocodec.Class.HasCodec Hasura.NativeQuery.Types.LogicalModelName
-instance Data.Aeson.Types.FromJSON.FromJSONKey Hasura.NativeQuery.Types.LogicalModelName
-instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.NativeQuery.Types.LogicalModelName
 
 module Hasura.RQL.DDL.Headers
 data HeaderConf
@@ -5728,7 +5728,7 @@ instance Hasura.RQL.Types.Backend.Backend b => Autodocodec.Class.HasCodec (Hasur
 
 -- | This module houses the types and functions associated with the default
 --   implementation of the metadata of native queries.
-module Hasura.NativeQuery.Metadata
+module Hasura.LogicalModel.Metadata
 
 -- | A component of an interpolated query
 data InterpolatedItem variable
@@ -5759,50 +5759,50 @@ NativeQueryInfo :: LogicalModelName -> InterpolatedQuery NativeQueryArgumentName
 
 -- | extract all of the `{{ variable }}` inside our query string
 parseInterpolatedQuery :: Text -> Either Text (InterpolatedQuery NativeQueryArgumentName)
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.NativeQuery.Metadata.RawQuery
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.NativeQuery.Metadata.RawQuery
-instance GHC.Show.Show Hasura.NativeQuery.Metadata.RawQuery
-instance GHC.Classes.Ord Hasura.NativeQuery.Metadata.RawQuery
-instance GHC.Classes.Eq Hasura.NativeQuery.Metadata.RawQuery
-instance Data.Traversable.Traversable Hasura.NativeQuery.Metadata.InterpolatedItem
-instance GHC.Generics.Generic (Hasura.NativeQuery.Metadata.InterpolatedItem variable)
-instance Data.Foldable.Foldable Hasura.NativeQuery.Metadata.InterpolatedItem
-instance GHC.Base.Functor Hasura.NativeQuery.Metadata.InterpolatedItem
-instance GHC.Show.Show variable => GHC.Show.Show (Hasura.NativeQuery.Metadata.InterpolatedItem variable)
-instance GHC.Classes.Ord variable => GHC.Classes.Ord (Hasura.NativeQuery.Metadata.InterpolatedItem variable)
-instance GHC.Classes.Eq variable => GHC.Classes.Eq (Hasura.NativeQuery.Metadata.InterpolatedItem variable)
-instance Data.Traversable.Traversable Hasura.NativeQuery.Metadata.InterpolatedQuery
-instance Data.Foldable.Foldable Hasura.NativeQuery.Metadata.InterpolatedQuery
-instance GHC.Base.Functor Hasura.NativeQuery.Metadata.InterpolatedQuery
-instance GHC.Generics.Generic (Hasura.NativeQuery.Metadata.InterpolatedQuery variable)
-instance GHC.Show.Show variable => GHC.Show.Show (Hasura.NativeQuery.Metadata.InterpolatedQuery variable)
-instance GHC.Classes.Ord variable => GHC.Classes.Ord (Hasura.NativeQuery.Metadata.InterpolatedQuery variable)
-instance GHC.Classes.Eq variable => GHC.Classes.Eq (Hasura.NativeQuery.Metadata.InterpolatedQuery variable)
-instance GHC.Generics.Generic Hasura.NativeQuery.Metadata.NativeQueryArgumentName
-instance Data.Hashable.Class.Hashable Hasura.NativeQuery.Metadata.NativeQueryArgumentName
-instance GHC.Show.Show Hasura.NativeQuery.Metadata.NativeQueryArgumentName
-instance GHC.Classes.Ord Hasura.NativeQuery.Metadata.NativeQueryArgumentName
-instance GHC.Classes.Eq Hasura.NativeQuery.Metadata.NativeQueryArgumentName
-instance GHC.Generics.Generic (Hasura.NativeQuery.Metadata.NativeQueryInfo b)
-instance Data.Hashable.Class.Hashable variable => Data.Hashable.Class.Hashable (Hasura.NativeQuery.Metadata.InterpolatedItem variable)
-instance Control.DeepSeq.NFData variable => Control.DeepSeq.NFData (Hasura.NativeQuery.Metadata.InterpolatedItem variable)
-instance Data.Hashable.Class.Hashable variable => Data.Hashable.Class.Hashable (Hasura.NativeQuery.Metadata.InterpolatedQuery variable)
-instance Control.DeepSeq.NFData variable => Control.DeepSeq.NFData (Hasura.NativeQuery.Metadata.InterpolatedQuery variable)
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.NativeQuery.Metadata.NativeQueryArgumentName
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.NativeQuery.Metadata.NativeQueryArgumentName
-instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.NativeQuery.Metadata.NativeQueryArgumentName
-instance Data.Aeson.Types.FromJSON.FromJSONKey Hasura.NativeQuery.Metadata.NativeQueryArgumentName
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.NativeQuery.Metadata.NativeQueryInfo b)
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.NativeQuery.Metadata.NativeQueryInfo b)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.NativeQuery.Metadata.NativeQueryInfo b)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.NativeQuery.Metadata.NativeQueryInfo b)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Hashable.Class.Hashable (Hasura.NativeQuery.Metadata.NativeQueryInfo b)
-instance Hasura.RQL.Types.Backend.Backend b => Control.DeepSeq.NFData (Hasura.NativeQuery.Metadata.NativeQueryInfo b)
-instance Hasura.RQL.Types.Backend.Backend b => Autodocodec.Class.HasCodec (Hasura.NativeQuery.Metadata.NativeQueryInfo b)
-instance Autodocodec.Class.HasCodec (Hasura.NativeQuery.Metadata.InterpolatedQuery Hasura.NativeQuery.Metadata.NativeQueryArgumentName)
-instance Autodocodec.Class.HasCodec Hasura.NativeQuery.Metadata.NativeQueryArgumentName
-instance Control.DeepSeq.NFData Hasura.NativeQuery.Metadata.NativeQueryArgumentName
-instance Autodocodec.Class.HasCodec Hasura.NativeQuery.Metadata.RawQuery
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.LogicalModel.Metadata.RawQuery
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.LogicalModel.Metadata.RawQuery
+instance GHC.Show.Show Hasura.LogicalModel.Metadata.RawQuery
+instance GHC.Classes.Ord Hasura.LogicalModel.Metadata.RawQuery
+instance GHC.Classes.Eq Hasura.LogicalModel.Metadata.RawQuery
+instance Data.Traversable.Traversable Hasura.LogicalModel.Metadata.InterpolatedItem
+instance GHC.Generics.Generic (Hasura.LogicalModel.Metadata.InterpolatedItem variable)
+instance Data.Foldable.Foldable Hasura.LogicalModel.Metadata.InterpolatedItem
+instance GHC.Base.Functor Hasura.LogicalModel.Metadata.InterpolatedItem
+instance GHC.Show.Show variable => GHC.Show.Show (Hasura.LogicalModel.Metadata.InterpolatedItem variable)
+instance GHC.Classes.Ord variable => GHC.Classes.Ord (Hasura.LogicalModel.Metadata.InterpolatedItem variable)
+instance GHC.Classes.Eq variable => GHC.Classes.Eq (Hasura.LogicalModel.Metadata.InterpolatedItem variable)
+instance Data.Traversable.Traversable Hasura.LogicalModel.Metadata.InterpolatedQuery
+instance Data.Foldable.Foldable Hasura.LogicalModel.Metadata.InterpolatedQuery
+instance GHC.Base.Functor Hasura.LogicalModel.Metadata.InterpolatedQuery
+instance GHC.Generics.Generic (Hasura.LogicalModel.Metadata.InterpolatedQuery variable)
+instance GHC.Show.Show variable => GHC.Show.Show (Hasura.LogicalModel.Metadata.InterpolatedQuery variable)
+instance GHC.Classes.Ord variable => GHC.Classes.Ord (Hasura.LogicalModel.Metadata.InterpolatedQuery variable)
+instance GHC.Classes.Eq variable => GHC.Classes.Eq (Hasura.LogicalModel.Metadata.InterpolatedQuery variable)
+instance GHC.Generics.Generic Hasura.LogicalModel.Metadata.NativeQueryArgumentName
+instance Data.Hashable.Class.Hashable Hasura.LogicalModel.Metadata.NativeQueryArgumentName
+instance GHC.Show.Show Hasura.LogicalModel.Metadata.NativeQueryArgumentName
+instance GHC.Classes.Ord Hasura.LogicalModel.Metadata.NativeQueryArgumentName
+instance GHC.Classes.Eq Hasura.LogicalModel.Metadata.NativeQueryArgumentName
+instance GHC.Generics.Generic (Hasura.LogicalModel.Metadata.NativeQueryInfo b)
+instance Data.Hashable.Class.Hashable variable => Data.Hashable.Class.Hashable (Hasura.LogicalModel.Metadata.InterpolatedItem variable)
+instance Control.DeepSeq.NFData variable => Control.DeepSeq.NFData (Hasura.LogicalModel.Metadata.InterpolatedItem variable)
+instance Data.Hashable.Class.Hashable variable => Data.Hashable.Class.Hashable (Hasura.LogicalModel.Metadata.InterpolatedQuery variable)
+instance Control.DeepSeq.NFData variable => Control.DeepSeq.NFData (Hasura.LogicalModel.Metadata.InterpolatedQuery variable)
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.LogicalModel.Metadata.NativeQueryArgumentName
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.LogicalModel.Metadata.NativeQueryArgumentName
+instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.LogicalModel.Metadata.NativeQueryArgumentName
+instance Data.Aeson.Types.FromJSON.FromJSONKey Hasura.LogicalModel.Metadata.NativeQueryArgumentName
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.LogicalModel.Metadata.NativeQueryInfo b)
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.LogicalModel.Metadata.NativeQueryInfo b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.Metadata.NativeQueryInfo b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.Metadata.NativeQueryInfo b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Hashable.Class.Hashable (Hasura.LogicalModel.Metadata.NativeQueryInfo b)
+instance Hasura.RQL.Types.Backend.Backend b => Control.DeepSeq.NFData (Hasura.LogicalModel.Metadata.NativeQueryInfo b)
+instance Hasura.RQL.Types.Backend.Backend b => Autodocodec.Class.HasCodec (Hasura.LogicalModel.Metadata.NativeQueryInfo b)
+instance Autodocodec.Class.HasCodec (Hasura.LogicalModel.Metadata.InterpolatedQuery Hasura.LogicalModel.Metadata.NativeQueryArgumentName)
+instance Autodocodec.Class.HasCodec Hasura.LogicalModel.Metadata.NativeQueryArgumentName
+instance Control.DeepSeq.NFData Hasura.LogicalModel.Metadata.NativeQueryArgumentName
+instance Autodocodec.Class.HasCodec Hasura.LogicalModel.Metadata.RawQuery
 
 module Hasura.Backends.MySQL.Instances.Types
 instance Hasura.RQL.Types.Backend.Backend 'Hasura.SQL.Backend.MySQL
@@ -9407,7 +9407,7 @@ instance GHC.Show.Show Hasura.RQL.Types.Column.EnumValueInfo
 
 -- | This module contains the default types and functions that model Native
 --   Queries.
-module Hasura.NativeQuery.IR
+module Hasura.LogicalModel.IR
 
 -- | The default implementation of an invocation of a native query.
 data NativeQuery b field
@@ -9421,11 +9421,11 @@ NativeQuery :: LogicalModelName -> InterpolatedQuery field -> HashMap NativeQuer
 
 -- | The arguments passed to the native query, if any.
 [nqArgs] :: NativeQuery b field -> HashMap NativeQueryArgumentName (ColumnValue b)
-instance Data.Traversable.Traversable (Hasura.NativeQuery.IR.NativeQuery b)
-instance Data.Foldable.Foldable (Hasura.NativeQuery.IR.NativeQuery b)
-instance GHC.Base.Functor (Hasura.NativeQuery.IR.NativeQuery b)
-instance (Hasura.RQL.Types.Backend.Backend b, GHC.Classes.Eq field) => GHC.Classes.Eq (Hasura.NativeQuery.IR.NativeQuery b field)
-instance (Hasura.RQL.Types.Backend.Backend b, GHC.Show.Show field) => GHC.Show.Show (Hasura.NativeQuery.IR.NativeQuery b field)
+instance Data.Traversable.Traversable (Hasura.LogicalModel.IR.NativeQuery b)
+instance Data.Foldable.Foldable (Hasura.LogicalModel.IR.NativeQuery b)
+instance GHC.Base.Functor (Hasura.LogicalModel.IR.NativeQuery b)
+instance (Hasura.RQL.Types.Backend.Backend b, GHC.Classes.Eq field) => GHC.Classes.Eq (Hasura.LogicalModel.IR.NativeQuery b field)
+instance (Hasura.RQL.Types.Backend.Backend b, GHC.Show.Show field) => GHC.Show.Show (Hasura.LogicalModel.IR.NativeQuery b field)
 
 
 -- | Postgres Types Functions
@@ -14988,8 +14988,8 @@ instance (Hasura.RQL.Types.Backend.Backend b, GHC.Show.Show v, GHC.Show.Show (Ha
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Base.Functor (Hasura.RQL.IR.Select.SelectFromG b)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Foldable.Foldable (Hasura.RQL.IR.Select.SelectFromG b)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Traversable.Traversable (Hasura.RQL.IR.Select.SelectFromG b)
-instance (Hasura.RQL.Types.Backend.Backend b, GHC.Classes.Eq v, GHC.Classes.Eq (Hasura.RQL.Types.Backend.FunctionArgumentExp b v), GHC.Classes.Eq (Hasura.NativeQuery.IR.NativeQuery b v)) => GHC.Classes.Eq (Hasura.RQL.IR.Select.SelectFromG b v)
-instance (Hasura.RQL.Types.Backend.Backend b, GHC.Show.Show v, GHC.Show.Show (Hasura.RQL.Types.Backend.FunctionArgumentExp b v), GHC.Show.Show (Hasura.NativeQuery.IR.NativeQuery b v)) => GHC.Show.Show (Hasura.RQL.IR.Select.SelectFromG b v)
+instance (Hasura.RQL.Types.Backend.Backend b, GHC.Classes.Eq v, GHC.Classes.Eq (Hasura.RQL.Types.Backend.FunctionArgumentExp b v), GHC.Classes.Eq (Hasura.LogicalModel.IR.NativeQuery b v)) => GHC.Classes.Eq (Hasura.RQL.IR.Select.SelectFromG b v)
+instance (Hasura.RQL.Types.Backend.Backend b, GHC.Show.Show v, GHC.Show.Show (Hasura.RQL.Types.Backend.FunctionArgumentExp b v), GHC.Show.Show (Hasura.LogicalModel.IR.NativeQuery b v)) => GHC.Show.Show (Hasura.RQL.IR.Select.SelectFromG b v)
 instance (Hasura.RQL.Types.Backend.Backend b, GHC.Classes.Eq (Hasura.RQL.IR.BoolExp.AnnBoolExp b v), GHC.Classes.Eq v) => GHC.Classes.Eq (Hasura.RQL.IR.Select.SelectStreamArgsG b v)
 instance (Hasura.RQL.Types.Backend.Backend b, GHC.Show.Show (Hasura.RQL.IR.BoolExp.AnnBoolExp b v), GHC.Show.Show v) => GHC.Show.Show (Hasura.RQL.IR.Select.SelectStreamArgsG b v)
 instance (Hasura.RQL.Types.Backend.Backend b, GHC.Classes.Eq (Hasura.RQL.IR.BoolExp.AnnBoolExp b v), GHC.Classes.Eq (Hasura.RQL.IR.Select.AnnotatedOrderByItemG b v)) => GHC.Classes.Eq (Hasura.RQL.IR.Select.SelectArgsG b v)
@@ -15054,7 +15054,7 @@ instance (Hasura.RQL.Types.Backend.Backend b, Data.Hashable.Class.Hashable (Hasu
 instance (Hasura.RQL.Types.Backend.Backend b, Data.Hashable.Class.Hashable (Hasura.RQL.IR.Select.ComputedFieldOrderByElement b v), Data.Hashable.Class.Hashable (Hasura.RQL.Types.Function.FunctionArgsExp b v)) => Data.Hashable.Class.Hashable (Hasura.RQL.IR.Select.ComputedFieldOrderBy b v)
 instance (Hasura.RQL.Types.Backend.Backend b, Data.Hashable.Class.Hashable (Hasura.RQL.IR.BoolExp.AnnBoolExp b v), Data.Hashable.Class.Hashable (Hasura.RQL.IR.Select.AnnotatedAggregateOrderBy b)) => Data.Hashable.Class.Hashable (Hasura.RQL.IR.Select.ComputedFieldOrderByElement b v)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Hashable.Class.Hashable (Hasura.RQL.IR.Select.AnnotatedAggregateOrderBy b)
-instance (Hasura.RQL.Types.Backend.Backend b, Data.Hashable.Class.Hashable v, Data.Hashable.Class.Hashable (Hasura.RQL.Types.Backend.FunctionArgumentExp b v), Data.Hashable.Class.Hashable (Hasura.NativeQuery.IR.NativeQuery b v)) => Data.Hashable.Class.Hashable (Hasura.RQL.IR.Select.SelectFromG b v)
+instance (Hasura.RQL.Types.Backend.Backend b, Data.Hashable.Class.Hashable v, Data.Hashable.Class.Hashable (Hasura.RQL.Types.Backend.FunctionArgumentExp b v), Data.Hashable.Class.Hashable (Hasura.LogicalModel.IR.NativeQuery b v)) => Data.Hashable.Class.Hashable (Hasura.RQL.IR.Select.SelectFromG b v)
 instance Hasura.Backends.Postgres.SQL.Types.IsIdentifier Hasura.RQL.IR.Select.FIIdentifier
 
 module Hasura.RQL.IR.Returning
@@ -20343,7 +20343,7 @@ tablePermissionsInfo :: Backend b => SelPermInfo b -> TablePerms b
 
 
 -- | Schema parsers for logical models.
-module Hasura.NativeQuery.Schema
+module Hasura.LogicalModel.Schema
 defaultBuildLogicalModelRootFields :: forall b r m n. (MonadBuildSchema b r m n, BackendCustomTypeSelectSchema b) => NativeQueryInfo b -> SchemaT r m (Maybe (FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 
 
@@ -22046,7 +22046,7 @@ instance Hasura.RQL.Types.Backend.Backend b => Autodocodec.Class.HasCodec (Hasur
 
 -- | Define and handle v1/metadata API operations to track, untrack, and
 --   get logical models.
-module Hasura.NativeQuery.API
+module Hasura.LogicalModel.API
 
 -- | Default implementation of the <tt>track_logical_model</tt> request
 --   payload.
@@ -22082,17 +22082,17 @@ UntrackLogicalModel :: SourceName -> LogicalModelName -> UntrackLogicalModel (b 
 -- | Handler for the <tt>untrack_logical_model</tt> endpoint.
 runUntrackLogicalModel :: forall b m. (BackendMetadata b, MonadError QErr m, CacheRWM m, MetadataM m, HasServerConfigCtx m, MonadIO m) => UntrackLogicalModel b -> m EncJSON
 dropLogicalModelInMetadata :: forall b. BackendMetadata b => SourceName -> LogicalModelName -> MetadataModifier
-instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.NativeQuery.API.TrackLogicalModel b)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.NativeQuery.API.TrackLogicalModel b)
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.NativeQuery.API.GetLogicalModel b)
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.NativeQuery.API.GetLogicalModel b)
-instance GHC.Show.Show (Hasura.NativeQuery.API.UntrackLogicalModel b)
-instance GHC.Classes.Eq (Hasura.NativeQuery.API.UntrackLogicalModel b)
-instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.NativeQuery.API.UntrackLogicalModel b)
-instance Data.Aeson.Types.ToJSON.ToJSON (Hasura.NativeQuery.API.UntrackLogicalModel b)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.NativeQuery.API.GetLogicalModel b)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.NativeQuery.API.GetLogicalModel b)
-instance Hasura.RQL.Types.Backend.Backend b => Autodocodec.Class.HasCodec (Hasura.NativeQuery.API.TrackLogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.API.TrackLogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.API.TrackLogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.LogicalModel.API.GetLogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.LogicalModel.API.GetLogicalModel b)
+instance GHC.Show.Show (Hasura.LogicalModel.API.UntrackLogicalModel b)
+instance GHC.Classes.Eq (Hasura.LogicalModel.API.UntrackLogicalModel b)
+instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.API.UntrackLogicalModel b)
+instance Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.API.UntrackLogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.API.GetLogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.API.GetLogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => Autodocodec.Class.HasCodec (Hasura.LogicalModel.API.TrackLogicalModel b)
 
 
 -- | Postgres Translate BoolExp
