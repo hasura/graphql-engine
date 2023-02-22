@@ -41,6 +41,7 @@ import { isEmpty } from '../../Common/utils/jsUtils';
 import { currentDriver, dataSource } from '../../../dataSources';
 import { exportMetadata } from '../../../metadata/actions';
 import {
+  getCurrentSourceNamingConvention,
   getTablesFromAllSources,
   getTablesInfoSelector,
 } from '../../../metadata/selector';
@@ -133,7 +134,8 @@ const setUntrackedRelations = () => (dispatch, getState) => {
   const untrackedRelations = getAllUnTrackedRelations(
     getState().tables.allSchemas,
     getState().tables.currentSchema,
-    getState().tables.currentDataSource
+    getState().tables.currentDataSource,
+    getCurrentSourceNamingConvention(getState())
   ).bulkRelTrack;
 
   dispatch({

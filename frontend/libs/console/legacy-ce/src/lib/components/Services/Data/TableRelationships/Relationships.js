@@ -40,7 +40,10 @@ import {
   findAllFromRel,
   isFeatureSupported,
 } from '../../../../dataSources';
-import { getRemoteSchemasSelector } from '../../../../metadata/selector';
+import {
+  getCurrentSourceNamingConvention,
+  getRemoteSchemasSelector,
+} from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import FeatureDisabled from '../FeatureDisabled';
 import { RemoteDbRelationships } from './RemoteDbRelationships/RemoteDbRelationships';
@@ -51,13 +54,16 @@ const addRelationshipCellView = (
   selectedRelationship,
   selectedRelationshipName,
   relMetaData,
-  tableSchema
+  tableSchema,
+  namingConvention
 ) => {
   const onAdd = e => {
     e.preventDefault();
     dispatch(relSelectionChanged(rel));
     dispatch(
-      relNameChanged(formRelName(rel, getExistingFieldsMap(tableSchema)))
+      relNameChanged(
+        formRelName(rel, getExistingFieldsMap(tableSchema), namingConvention)
+      )
     );
   };
 
@@ -142,6 +148,7 @@ const AddRelationship = ({
   allSchemas,
   cachedRelationshipData,
   dispatch,
+  namingConvention,
 }) => {
   const cTable = allSchemas.find(
     t => t.table_name === tableName && t.table_schema === currentSchema
@@ -223,7 +230,8 @@ const AddRelationship = ({
           selectedRelationship,
           relName,
           ['object', i],
-          cTable
+          cTable,
+          namingConvention
         )
       ) : (
         <td />
@@ -242,7 +250,8 @@ const AddRelationship = ({
           selectedRelationship,
           relName,
           ['array', i],
-          cTable
+          cTable,
+          namingConvention
         )
       )
     );
@@ -325,6 +334,7 @@ const Relationships = ({
   readOnlyMode,
   currentSource,
   source,
+  namingConvention,
 }) => {
   useEffect(() => {
     dispatch(resetRelationshipForm());
@@ -481,6 +491,7 @@ const Relationships = ({
               allSchemas={allSchemas}
               cachedRelationshipData={relAdd}
               dispatch={dispatch}
+              namingConvention={namingConvention}
             />
           )}
           <AddManualRelationship
@@ -624,6 +635,7 @@ const mapStateToProps = (state, ownProps) => {
       s => s.name === state.tables.currentDataSource
     ),
     ...state.tables.modify,
+    namingConvention: getCurrentSourceNamingConvention(state),
   };
 };
 

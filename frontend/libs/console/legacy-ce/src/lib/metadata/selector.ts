@@ -374,6 +374,19 @@ export const getAllowedQueries = (state: ReduxState) =>
 export const getInheritedRoles = (state: ReduxState) =>
   state.metadata.inheritedRoles || [];
 
+export const getCurrentSourceNamingConvention = (state: ReduxState) => {
+  const allSources = state?.metadata?.metadataObject?.sources;
+  const currentSourceName = state.tables.currentDataSource;
+  const currentSource = allSources?.find(
+    ({ name }) => name === currentSourceName
+  );
+  const namingConvention =
+    currentSource?.customization?.naming_convention ||
+    state?.main?.serverConfig?.data?.default_naming_convention ||
+    'hasura-default';
+  return namingConvention;
+};
+
 export const getSourcesFromMetadata = createSelector(getMetadata, metadata => {
   return metadata?.sources.filter(s =>
     s.kind ? drivers.includes(s.kind) : true
