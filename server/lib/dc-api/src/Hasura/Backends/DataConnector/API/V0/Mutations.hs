@@ -39,6 +39,9 @@ module Hasura.Backends.DataConnector.API.V0.Mutations
     RowUpdate (..),
     RowColumnOperatorValue (..),
     DeleteMutationOperation (..),
+    dmoTable,
+    dmoWhere,
+    dmoReturningFields,
     MutationResponse (..),
     mrOperationResults,
     MutationOperationResults (..),
@@ -512,5 +515,6 @@ instance HasCodec MutationOperationResults where
 $(makeLenses ''MutationRequest)
 $(makeLenses ''InsertMutationOperation)
 $(makeLenses ''UpdateMutationOperation)
+$(makeLenses ''DeleteMutationOperation)
 $(makeLenses ''MutationResponse)
 $(makeLenses ''MutationOperationResults)

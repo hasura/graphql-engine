@@ -161,6 +161,7 @@ test-suite tests-dc-api
     Test.Specs.HealthSpec
     Test.Specs.MetricsSpec
     Test.Specs.MutationSpec
+    Test.Specs.MutationSpec.DeleteSpec
     Test.Specs.MutationSpec.InsertSpec
     Test.Specs.MutationSpec.UpdateSpec
     Test.Specs.QuerySpec

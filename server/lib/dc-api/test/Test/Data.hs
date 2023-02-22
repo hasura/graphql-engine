@@ -276,13 +276,15 @@ tracksTableRelationships =
       mediaTypeJoinFieldMapping = HashMap.fromList [(API.ColumnName "MediaTypeId", API.ColumnName "MediaTypeId")]
       albumJoinFieldMapping = HashMap.fromList [(API.ColumnName "AlbumId", API.ColumnName "AlbumId")]
       genreJoinFieldMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
+      playlistTracksJoinFieldMapping = HashMap.fromList [(API.ColumnName "TrackId", API.ColumnName "TrackId")]
    in API.TableRelationships
         tracksTableName
         ( HashMap.fromList
             [ (invoiceLinesRelationshipName, API.Relationship invoiceLinesTableName API.ArrayRelationship invoiceLinesJoinFieldMapping),
               (mediaTypeRelationshipName, API.Relationship mediaTypesTableName API.ObjectRelationship mediaTypeJoinFieldMapping),
               (albumRelationshipName, API.Relationship albumsTableName API.ObjectRelationship albumJoinFieldMapping),
-              (genreRelationshipName, API.Relationship genresTableName API.ObjectRelationship genreJoinFieldMapping)
+              (genreRelationshipName, API.Relationship genresTableName API.ObjectRelationship genreJoinFieldMapping),
+              (playlistTracksRelationshipName, API.Relationship playlistTracksTableName API.ArrayRelationship playlistTracksJoinFieldMapping)
             ]
         )
 
@@ -297,6 +299,9 @@ albumRelationshipName = API.RelationshipName "Album"
 
 genreRelationshipName :: API.RelationshipName
 genreRelationshipName = API.RelationshipName "Genre"
+
+playlistTracksRelationshipName :: API.RelationshipName
+playlistTracksRelationshipName = API.RelationshipName "PlaylistTracks"
 
 genresTableName :: API.TableName
 genresTableName = mkTableName "Genre"
@@ -393,6 +398,10 @@ data TestData = TestData
     _tdMediaTypeRelationshipName :: API.RelationshipName,
     _tdAlbumRelationshipName :: API.RelationshipName,
     _tdGenreRelationshipName :: API.RelationshipName,
+    _tdPlaylistTracksRelationshipName :: API.RelationshipName,
+    -- = PlaylistTracks table
+    _tdPlaylistTracksTableName :: API.TableName,
+    _tdPlaylistTracksRows :: [HashMap API.FieldName API.FieldValue],
     -- = Genres table
     _tdGenresTableName :: API.TableName,
     _tdGenresRows :: [HashMap API.FieldName API.FieldValue],
@@ -454,6 +463,9 @@ mkTestData schemaResponse testConfig =
       _tdMediaTypeRelationshipName = mediaTypeRelationshipName,
       _tdAlbumRelationshipName = albumRelationshipName,
       _tdGenreRelationshipName = genreRelationshipName,
+      _tdPlaylistTracksRelationshipName = playlistTracksRelationshipName,
+      _tdPlaylistTracksTableName = formatTableName testConfig playlistTracksTableName,
+      _tdPlaylistTracksRows = playlistTracksRows,
       _tdGenresTableName = formatTableName testConfig genresTableName,
       _tdGenresRows = genresRows,
       _tdGenresTableRelationships = formatTableRelationships genresTableRelationships,
