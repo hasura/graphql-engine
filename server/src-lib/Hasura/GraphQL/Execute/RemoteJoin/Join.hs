@@ -34,10 +34,10 @@ import Hasura.RQL.Types.Common
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (RequestId)
+import Hasura.Services.Network
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
-import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 
 -------------------------------------------------------------------------------
@@ -58,19 +58,19 @@ processRemoteJoins ::
     MonadBaseControl IO m,
     EB.MonadQueryTags m,
     MonadQueryLog m,
-    Tracing.MonadTrace m
+    Tracing.MonadTrace m,
+    ProvidesNetwork m
   ) =>
   RequestId ->
   L.Logger L.Hasura ->
   Env.Environment ->
-  HTTP.Manager ->
   [HTTP.Header] ->
   UserInfo ->
   EncJSON ->
   Maybe RemoteJoins ->
   GQLReqUnparsed ->
   m EncJSON
-processRemoteJoins requestId logger env manager requestHeaders userInfo lhs maybeJoinTree gqlreq =
+processRemoteJoins requestId logger env requestHeaders userInfo lhs maybeJoinTree gqlreq =
   forRemoteJoins maybeJoinTree lhs \joinTree -> do
     lhsParsed <-
       JO.eitherDecode (encJToLBS lhs)
@@ -117,7 +117,7 @@ processRemoteJoins requestId logger env manager requestHeaders userInfo lhs mayb
       m BL.ByteString
     callRemoteServer remoteSchemaInfo request =
       fmap (view _3) $
-        execRemoteGQ env manager userInfo requestHeaders remoteSchemaInfo request
+        execRemoteGQ env userInfo requestHeaders remoteSchemaInfo request
 
 -- | Fold the join tree.
 --

@@ -79,6 +79,7 @@ import Hasura.Server.Utils
   ( mkClientHeadersForward,
     mkSetCookieHeaders,
   )
+import Hasura.Services.Network
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -137,6 +138,7 @@ asSingleRowJsonResp query args =
 
 -- | Synchronously execute webhook handler and resolve response to action "output"
 resolveActionExecution ::
+  HTTP.Manager ->
   Env.Environment ->
   L.Logger L.Hasura ->
   PrometheusMetrics ->
@@ -145,7 +147,7 @@ resolveActionExecution ::
   ActionExecContext ->
   Maybe GQLQueryText ->
   ActionExecution
-resolveActionExecution env logger prometheusMetrics _userInfo IR.AnnActionExecution {..} ActionExecContext {..} gqlQueryText =
+resolveActionExecution httpManager env logger prometheusMetrics _userInfo IR.AnnActionExecution {..} ActionExecContext {..} gqlQueryText =
   ActionExecution $ first (encJFromOrderedValue . makeActionResponseNoRelations _aaeFields _aaeOutputType _aaeOutputFields True) <$> runWebhook
   where
     handlerPayload = ActionWebhookPayload (ActionContext _aaeName) _aecSessionVariables _aaePayload gqlQueryText
@@ -154,10 +156,11 @@ resolveActionExecution env logger prometheusMetrics _userInfo IR.AnnActionExecut
       (MonadIO m, MonadError QErr m, Tracing.MonadTrace m) =>
       m (ActionWebhookResponse, HTTP.ResponseHeaders)
     runWebhook =
+      -- TODO: do we need to add the logger as a reader? can't we just give it as an argument?
       flip runReaderT logger $
         callWebhook
           env
-          _aecManager
+          httpManager
           prometheusMetrics
           _aaeOutputType
           _aaeOutputFields
@@ -430,18 +433,18 @@ asyncActionsProcessor ::
     MonadBaseControl IO m,
     LA.Forall (LA.Pure m),
     Tracing.HasReporter m,
-    MonadMetadataStorage m
+    MonadMetadataStorage m,
+    ProvidesNetwork m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
   IO SchemaCache ->
   STM.TVar (Set LockedActionEventId) ->
-  HTTP.Manager ->
   PrometheusMetrics ->
   Milliseconds ->
   Maybe GH.GQLQueryText ->
   m (Forever m)
-asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager prometheusMetrics sleepTime gqlQueryText =
+asyncActionsProcessor env logger getSCFromRef' lockedActionEvents prometheusMetrics sleepTime gqlQueryText =
   return $
     Forever () $
       const $ do
@@ -467,6 +470,7 @@ asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager pr
   where
     callHandler :: ActionCache -> ActionLogItem -> m ()
     callHandler actionCache actionLogItem = Tracing.runTraceT Tracing.sampleAlways "async actions processor" do
+      httpManager <- askHTTPManager
       let ActionLogItem
             actionId
             actionName
@@ -488,6 +492,7 @@ asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager pr
               metadataResponseTransform = _adResponseTransform definition
           eitherRes <-
             runExceptT $
+              -- TODO: do we need to add the logger as a reader? can't we just give it as an argument?
               flip runReaderT logger $
                 callWebhook
                   env

@@ -56,10 +56,9 @@ import Hasura.RemoteSchema.MetadataAPI
 import Hasura.SQL.Backend
 import Hasura.Server.Types
 import Hasura.Server.Utils
+import Hasura.Services
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Client qualified as HTTP
-import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 
 data RQLQueryV1
   = RQAddExistingTableOrView !(TrackTable ('Postgres 'Vanilla))
@@ -182,18 +181,18 @@ runQuery ::
     MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     MonadQueryTags m,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    ProvidesHasuraServices m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
   InstanceId ->
   UserInfo ->
   RebuildableSchemaCache ->
-  HTTP.Manager ->
   ServerConfigCtx ->
   RQLQuery ->
   m (EncJSON, RebuildableSchemaCache)
-runQuery env logger instanceId userInfo sc hMgr serverConfigCtx query = do
+runQuery env logger instanceId userInfo sc serverConfigCtx query = do
   when ((_sccReadOnlyMode serverConfigCtx == ReadOnlyModeEnabled) && queryModifiesUserDB query) $
     throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
@@ -216,7 +215,7 @@ runQuery env logger instanceId userInfo sc hMgr serverConfigCtx query = do
       pure (js, rsc, ci, meta)
   withReload currentResourceVersion result
   where
-    runCtx = RunCtx userInfo hMgr serverConfigCtx
+    runCtx = RunCtx userInfo serverConfigCtx
 
     withReload currentResourceVersion (result, updatedCache, invalidations, updatedMetadata) = do
       when (queryModifiesSchemaCache query) $ do
@@ -394,7 +393,6 @@ runQueryM ::
     UserInfoM m,
     MonadBaseControl IO m,
     MonadIO m,
-    HasHttpManagerM m,
     HasServerConfigCtx m,
     Tracing.MonadTrace m,
     MetadataM m,
@@ -403,7 +401,8 @@ runQueryM ::
     MonadReader r m,
     MonadError QErr m,
     Has (L.Logger L.Hasura) r,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    ProvidesHasuraServices m
   ) =>
   Env.Environment ->
   RQLQuery ->

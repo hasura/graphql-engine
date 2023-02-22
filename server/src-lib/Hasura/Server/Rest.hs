@@ -32,6 +32,7 @@ import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Name qualified as Name
 import Hasura.Server.Types
+import Hasura.Services.Network
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -100,7 +101,8 @@ runCustomEndpoint ::
     GH.MonadExecuteQuery m,
     MonadMetadataStorage m,
     EB.MonadQueryTags m,
-    HasResourceLimits m
+    HasResourceLimits m,
+    ProvidesNetwork m
   ) =>
   Env.Environment ->
   E.ExecutionCtx ->

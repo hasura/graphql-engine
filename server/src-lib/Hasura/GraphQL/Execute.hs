@@ -59,19 +59,21 @@ import Hasura.SQL.Backend
 import Hasura.Server.Init qualified as Init
 import Hasura.Server.Prometheus (PrometheusMetrics)
 import Hasura.Server.Types (ReadOnlyMode (..), RequestId (..))
+import Hasura.Services
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
-import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 
 -- | Execution context
+--
+-- TODO: can this be deduplicated with Run? is there anything in here that isn't
+-- already in the stack?
 data ExecutionCtx = ExecutionCtx
   { _ecxLogger :: L.Logger L.Hasura,
     _ecxSqlGenCtx :: SQLGenCtx,
     _ecxSchemaCache :: SchemaCache,
     _ecxSchemaCacheVer :: SchemaCacheVer,
-    _ecxHttpManager :: HTTP.Manager,
     _ecxEnableAllowList :: Init.AllowListStatus,
     _ecxReadOnlyMode :: ReadOnlyMode,
     _ecxPrometheusMetrics :: PrometheusMetrics
@@ -310,6 +312,8 @@ checkQueryInAllowlist allowListStatus allowlistMode userInfo req schemaCache =
 
 -- | Construct a 'ResolvedExecutionPlan' from a 'GQLReqParsed' and a
 -- bunch of metadata.
+--
+-- Labelling it as inlineable fixed a performance regression on GHC 8.10.7.
 {-# INLINEABLE getResolvedExecPlan #-}
 getResolvedExecPlan ::
   forall m.
@@ -319,7 +323,8 @@ getResolvedExecPlan ::
     MonadBaseControl IO m,
     Tracing.MonadTrace m,
     EC.MonadGQLExecutionCheck m,
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    ProvidesNetwork m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
@@ -330,7 +335,6 @@ getResolvedExecPlan ::
   SchemaCache ->
   SchemaCacheVer ->
   ET.GraphQLQueryType ->
-  HTTP.Manager ->
   [HTTP.Header] ->
   GQLReqUnparsed ->
   SingleOperation -> -- the first step of the execution plan
@@ -347,7 +351,6 @@ getResolvedExecPlan
   sc
   _scVer
   queryType
-  httpManager
   reqHeaders
   reqUnparsed
   queryParts -- the first step of the execution plan
@@ -366,7 +369,6 @@ getResolvedExecPlan
               prometheusMetrics
               gCtx
               userInfo
-              httpManager
               reqHeaders
               directives
               inlinedSelSet
@@ -387,7 +389,6 @@ getResolvedExecPlan
               gCtx
               sqlGenCtx
               userInfo
-              httpManager
               reqHeaders
               directives
               inlinedSelSet

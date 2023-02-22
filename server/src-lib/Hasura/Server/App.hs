@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Server.App
   ( APIResp (JSONResp, RawResp),
@@ -100,6 +101,7 @@ import Hasura.Server.SchemaCacheRef
 import Hasura.Server.Types
 import Hasura.Server.Utils
 import Hasura.Server.Version
+import Hasura.Services
 import Hasura.Session
 import Hasura.ShutdownLatch
 import Hasura.Tracing (MonadTrace)
@@ -165,7 +167,40 @@ data HandlerCtx = HandlerCtx
     hcSourceIpAddress :: !Wai.IpAddress
   }
 
-type Handler m = ReaderT HandlerCtx (ExceptT QErr m)
+newtype Handler m a = Handler (ReaderT HandlerCtx (ExceptT QErr m) a)
+  deriving
+    ( Functor,
+      Applicative,
+      Monad,
+      MonadIO,
+      MonadFix,
+      MonadBase b,
+      MonadBaseControl b,
+      MonadReader HandlerCtx,
+      MonadError QErr,
+      -- Tracing.HasReporter,
+      Tracing.MonadTrace,
+      HasResourceLimits,
+      MonadResolveSource,
+      HasServerConfigCtx,
+      E.MonadGQLExecutionCheck,
+      MonadEventLogCleanup,
+      MonadQueryLog,
+      EB.MonadQueryTags,
+      GH.MonadExecuteQuery,
+      MonadMetadataApiAuthorization,
+      MonadMetadataStorage,
+      MonadMetadataStorageQueryAPI,
+      ProvidesNetwork
+    )
+
+instance MonadTrans Handler where
+  lift = Handler . lift . lift
+
+runHandler :: (HasResourceLimits m, MonadBaseControl IO m) => HandlerCtx -> Handler m a -> m (Either QErr a)
+runHandler ctx (Handler r) = do
+  handlerLimit <- askHTTPHandlerLimit
+  runExceptT $ flip runReaderT ctx $ runResourceLimits handlerLimit r
 
 data APIResp
   = JSONResp !(HttpResponse EncJSON)
@@ -311,7 +346,6 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
 
   (requestId, headers) <- getRequestId origHeaders
   tracingCtx <- liftIO $ Tracing.extractB3HttpContext headers
-  handlerLimit <- lift askHTTPHandlerLimit
 
   let runTraceT ::
         forall m1 a1.
@@ -322,14 +356,6 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
         (maybe Tracing.runTraceT Tracing.runTraceTInContext tracingCtx)
           scTraceSamplingPolicy
           (fromString (B8.unpack pathInfo))
-
-      runHandler ::
-        MonadBaseControl IO m2 =>
-        HandlerCtx ->
-        ReaderT HandlerCtx (ExceptT QErr m2) a2 ->
-        m2 (Either QErr a2)
-      runHandler handlerCtx handler =
-        runExceptT $ flip runReaderT handlerCtx $ runResourceLimits handlerLimit $ handler
 
       getInfo parsedRequest = do
         authenticationResp <- lift (resolveUserInfo (_lsLogger scLoggers) scManager headers scAuthMode parsedRequest)
@@ -430,7 +456,8 @@ v1QueryHandler ::
     MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     EB.MonadQueryTags m,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    ProvidesNetwork m
   ) =>
   RQLQuery ->
   m (HttpResponse EncJSON)
@@ -446,7 +473,6 @@ v1QueryHandler query = do
       scRef <- asks (scCacheRef . hcServerCtx)
       metadataDefaults <- asks (scMetadataDefaults . hcServerCtx)
       schemaCache <- liftIO $ fst <$> readSchemaCacheRef scRef
-      httpMgr <- asks (scManager . hcServerCtx)
       sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
       instanceId <- asks (scInstanceId . hcServerCtx)
       env <- asks (scEnvironment . hcServerCtx)
@@ -476,7 +502,6 @@ v1QueryHandler query = do
         instanceId
         userInfo
         schemaCache
-        httpMgr
         serverConfigCtx
         query
 
@@ -489,7 +514,8 @@ v1MetadataHandler ::
     MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     MonadMetadataApiAuthorization m,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    ProvidesNetwork m
   ) =>
   RQLMetadata ->
   m (HttpResponse EncJSON)
@@ -497,7 +523,6 @@ v1MetadataHandler query = Tracing.trace "Metadata" $ do
   (liftEitherM . authorizeV1MetadataApi query) =<< ask
   userInfo <- asks hcUser
   scRef <- asks (scCacheRef . hcServerCtx)
-  httpMgr <- asks (scManager . hcServerCtx)
   _sccSQLGenCtx <- asks (scSQLGenCtx . hcServerCtx)
   env <- asks (scEnvironment . hcServerCtx)
   instanceId <- asks (scInstanceId . hcServerCtx)
@@ -522,7 +547,6 @@ v1MetadataHandler query = Tracing.trace "Metadata" $ do
         logger
         instanceId
         userInfo
-        httpMgr
         serverConfigCtx
         scRef
         query
@@ -537,7 +561,8 @@ v2QueryHandler ::
     MonadReader HandlerCtx m,
     MonadMetadataStorage m,
     MonadResolveSource m,
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    ProvidesNetwork m
   ) =>
   V2Q.RQLQuery ->
   m (HttpResponse EncJSON)
@@ -555,7 +580,6 @@ v2QueryHandler query = Tracing.trace "v2 Query" $ do
       userInfo <- asks hcUser
       scRef <- asks (scCacheRef . hcServerCtx)
       schemaCache <- liftIO $ fst <$> readSchemaCacheRef scRef
-      httpMgr <- asks (scManager . hcServerCtx)
       sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
       instanceId <- asks (scInstanceId . hcServerCtx)
       env <- asks (scEnvironment . hcServerCtx)
@@ -581,7 +605,7 @@ v2QueryHandler query = Tracing.trace "v2 Query" $ do
               defaultMetadata
               checkFeatureFlag
 
-      V2Q.runQuery env instanceId userInfo schemaCache httpMgr serverConfigCtx query
+      V2Q.runQuery env instanceId userInfo schemaCache serverConfigCtx query
 
 v1Alpha1GQHandler ::
   ( MonadIO m,
@@ -594,7 +618,8 @@ v1Alpha1GQHandler ::
     MonadReader HandlerCtx m,
     MonadMetadataStorage m,
     EB.MonadQueryTags m,
-    HasResourceLimits m
+    HasResourceLimits m,
+    ProvidesNetwork m
   ) =>
   E.GraphQLQueryType ->
   GH.GQLBatchedReqs (GH.GQLReq GH.GQLQueryText) ->
@@ -619,7 +644,6 @@ mkExecutionContext ::
   ) =>
   m E.ExecutionCtx
 mkExecutionContext = do
-  manager <- asks (scManager . hcServerCtx)
   scRef <- asks (scCacheRef . hcServerCtx)
   (sc, scVer) <- liftIO $ readSchemaCacheRef scRef
   sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
@@ -627,7 +651,7 @@ mkExecutionContext = do
   logger <- asks (_lsLogger . scLoggers . hcServerCtx)
   readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
   prometheusMetrics <- asks (scPrometheusMetrics . hcServerCtx)
-  pure $ E.ExecutionCtx logger sqlGenCtx (lastBuiltSchemaCache sc) scVer manager enableAL readOnlyMode prometheusMetrics
+  pure $ E.ExecutionCtx logger sqlGenCtx (lastBuiltSchemaCache sc) scVer enableAL readOnlyMode prometheusMetrics
 
 v1GQHandler ::
   ( MonadIO m,
@@ -640,7 +664,8 @@ v1GQHandler ::
     MonadReader HandlerCtx m,
     MonadMetadataStorage m,
     EB.MonadQueryTags m,
-    HasResourceLimits m
+    HasResourceLimits m,
+    ProvidesNetwork m
   ) =>
   GH.GQLBatchedReqs (GH.GQLReq GH.GQLQueryText) ->
   m (HttpLogGraphQLInfo, HttpResponse EncJSON)
@@ -657,7 +682,8 @@ v1GQRelayHandler ::
     MonadReader HandlerCtx m,
     MonadMetadataStorage m,
     EB.MonadQueryTags m,
-    HasResourceLimits m
+    HasResourceLimits m,
+    ProvidesNetwork m
   ) =>
   GH.GQLBatchedReqs (GH.GQLReq GH.GQLQueryText) ->
   m (HttpLogGraphQLInfo, HttpResponse EncJSON)
@@ -749,7 +775,13 @@ renderHtmlTemplate template jVal =
 -- | Default implementation of the 'MonadConfigApiHandler'
 configApiGetHandler ::
   forall m.
-  (MonadIO m, MonadBaseControl IO m, UserAuthentication (Tracing.TraceT m), HttpLog m, Tracing.HasReporter m, HasResourceLimits m) =>
+  ( MonadIO m,
+    MonadBaseControl IO m,
+    UserAuthentication (Tracing.TraceT m),
+    HttpLog m,
+    Tracing.HasReporter m,
+    HasResourceLimits m
+  ) =>
   ServerCtx ->
   Maybe Text ->
   Spock.SpockCtxT () m ()
@@ -802,7 +834,8 @@ mkWaiApp ::
     MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     EB.MonadQueryTags m,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    ProvidesNetwork m
   ) =>
   (ServerCtx -> Spock.SpockT m ()) ->
   -- | Set of environment variables for reference in UIs
@@ -840,15 +873,14 @@ mkWaiApp
   wsConnInitTimeout
   ekgStore = do
     let getSchemaCache' = first lastBuiltSchemaCache <$> readSchemaCacheRef schemaCacheRef
-
-    let corsPolicy = mkDefaultCorsPolicy corsCfg
-
+        corsPolicy = mkDefaultCorsPolicy corsCfg
+    httpManager <- askHTTPManager
     wsServerEnv <-
       WS.createWSServerEnv
         (_lsLogger scLoggers)
         scSubscriptionState
         getSchemaCache'
-        scManager
+        httpManager
         corsPolicy
         scSQLGenCtx
         scEnableReadOnlyMode
@@ -890,7 +922,8 @@ httpApp ::
     HasResourceLimits m,
     MonadResolveSource m,
     EB.MonadQueryTags m,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    ProvidesNetwork m
   ) =>
   (ServerCtx -> Spock.SpockT m ()) ->
   CorsConfig ->
@@ -970,7 +1003,8 @@ httpApp setupHook corsCfg serverCtx consoleStatus consoleAssetsDir consoleSentry
           GH.MonadExecuteQuery n,
           MonadMetadataStorage n,
           EB.MonadQueryTags n,
-          HasResourceLimits n
+          HasResourceLimits n,
+          ProvidesNetwork n
         ) =>
         RestRequest Spock.SpockMethod ->
         Handler (Tracing.TraceT n) (HttpLogGraphQLInfo, APIResp)
@@ -1138,7 +1172,14 @@ httpApp setupHook corsCfg serverCtx consoleStatus consoleAssetsDir consoleSentry
 
     spockAction ::
       forall a n.
-      (FromJSON a, MonadIO n, MonadBaseControl IO n, UserAuthentication (Tracing.TraceT n), HttpLog n, Tracing.HasReporter n, HasResourceLimits n) =>
+      ( FromJSON a,
+        MonadIO n,
+        MonadBaseControl IO n,
+        UserAuthentication (Tracing.TraceT n),
+        HttpLog n,
+        Tracing.HasReporter n,
+        HasResourceLimits n
+      ) =>
       (Bool -> QErr -> Value) ->
       (QErr -> QErr) ->
       APIHandler (Tracing.TraceT n) a ->

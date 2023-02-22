@@ -36,8 +36,8 @@ import Hasura.RQL.Types.Metadata qualified as Metadata
 import Hasura.RQL.Types.SchemaCache.Build qualified as SC.Build
 import Hasura.SQL.Backend qualified as Backend
 import Hasura.SQL.BackendMap qualified as BackendMap
+import Hasura.Services.Network
 import Hasura.Tracing (ignoreTraceT)
-import Network.HTTP.Client.Manager qualified as HTTP
 import Servant.Client qualified as Servant
 import Servant.Client.Core.HasClient ((//))
 import Servant.Client.Generic (genericClient)
@@ -81,13 +81,13 @@ instance ToJSON DCAddAgent where
 -- | Insert a new Data Connector Agent into Metadata.
 runAddDataConnectorAgent ::
   ( Metadata.MetadataM m,
+    ProvidesNetwork m,
     SC.Build.CacheRWM m,
     Has (L.Logger L.Hasura) r,
     MonadReader r m,
     MonadBaseControl IO m,
     MonadError Error.QErr m,
-    MonadIO m,
-    HTTP.HasHttpManagerM m
+    MonadIO m
   ) =>
   DCAddAgent ->
   m EncJSON
@@ -123,16 +123,16 @@ data Availability = Available | NotAvailable Error.QErr
 
 -- | Check DC Agent availability by checking its Capabilities endpoint.
 checkAgentAvailability ::
-  ( Has (L.Logger L.Hasura) r,
+  ( ProvidesNetwork m,
+    Has (L.Logger L.Hasura) r,
     MonadReader r m,
     MonadIO m,
-    MonadBaseControl IO m,
-    HTTP.HasHttpManagerM m
+    MonadBaseControl IO m
   ) =>
   Servant.BaseUrl ->
   m Availability
 checkAgentAvailability url = do
-  manager <- HTTP.askHttpManager
+  manager <- askHTTPManager
   logger <- asks getter
   res <- runExceptT $ do
     capabilitiesU <- (ignoreTraceT . flip runAgentClientT (AgentClientContext logger url manager Nothing) $ genericClient @API.Routes // API._capabilities)

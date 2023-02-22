@@ -317,24 +317,29 @@ runApp serveOptions = do
   env <- Env.getEnvironment
   initTime <- liftIO getCurrentTime
   globalCtx <- App.initGlobalCtx env metadataDbUrl rci
-  (ekgStore, serverMetrics) <- liftIO do
-    store <- EKG.newStore @TestMetricsSpec
-    serverMetrics <- liftIO . createServerMetrics $ EKG.subset ServerSubset store
-    pure (EKG.subset EKG.emptyOf store, serverMetrics)
+  (ekgStore, serverMetrics) <-
+    liftIO $ do
+      store <- EKG.newStore @TestMetricsSpec
+      serverMetrics <-
+        liftIO $ createServerMetrics $ EKG.subset ServerSubset store
+      pure (EKG.subset EKG.emptyOf store, serverMetrics)
   prometheusMetrics <- makeDummyPrometheusMetrics
-  let managedServerCtx = App.initialiseServerCtx env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways (FeatureFlag.checkFeatureFlag env)
+  let featureFlag = FeatureFlag.checkFeatureFlag env
+      managedServerCtx = App.initialiseServerCtx env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways featureFlag
   runManagedT managedServerCtx \serverCtx@ServerCtx {..} -> do
     let Loggers _ _ pgLogger = scLoggers
-    flip App.runPGMetadataStorageAppT (scMetadataDbPool, pgLogger) . lowerManagedT $
-      App.runHGEServer
-        (const $ pure ())
-        env
-        serveOptions
-        serverCtx
-        initTime
-        Nothing
-        ekgStore
-        (FeatureFlag.checkFeatureFlag env)
+        appContext = App.AppContext scManager pgLogger scMetadataDbPool
+    flip App.runPGMetadataStorageAppT appContext $
+      lowerManagedT $
+        App.runHGEServer
+          (const $ pure ())
+          env
+          serveOptions
+          serverCtx
+          initTime
+          Nothing
+          ekgStore
+          featureFlag
 
 -- | Used only for 'runApp' above.
 data TestMetricsSpec name metricType tags

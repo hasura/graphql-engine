@@ -78,8 +78,8 @@ import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.Types
+import Hasura.Services
 import Hasura.Session
-import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 newtype BackendInvalidationKeysWrapper (b :: BackendType) = BackendInvalidationKeysWrapper
@@ -272,8 +272,8 @@ newtype CacheBuild a = CacheBuild (ReaderT CacheBuildParams (ExceptT QErr IO) a)
       MonadBaseControl IO
     )
 
-instance HasHttpManagerM CacheBuild where
-  askHttpManager = asks _cbpManager
+instance ProvidesNetwork CacheBuild where
+  askHTTPManager = asks _cbpManager
 
 instance HasServerConfigCtx CacheBuild where
   askServerConfigCtx = asks _cbpServerConfigCtx
@@ -295,16 +295,16 @@ runCacheBuild params (CacheBuild m) = do
 runCacheBuildM ::
   ( MonadIO m,
     MonadError QErr m,
-    HasHttpManagerM m,
     HasServerConfigCtx m,
-    MonadResolveSource m
+    MonadResolveSource m,
+    ProvidesNetwork m
   ) =>
   CacheBuild a ->
   m a
 runCacheBuildM m = do
   params <-
     CacheBuildParams
-      <$> askHttpManager
+      <$> askHTTPManager
       <*> getPGSourceResolver
       <*> getMSSQLSourceResolver
       <*> askServerConfigCtx

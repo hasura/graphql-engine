@@ -756,6 +756,8 @@ library
                      , Hasura.Server.Migrate.Internal
                      , Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging
+                     , Hasura.Services
+                     , Hasura.Services.Network
                      , Hasura.RemoteSchema.Metadata.Base
                      , Hasura.RemoteSchema.Metadata.Customization
                      , Hasura.RemoteSchema.Metadata.Permission
@@ -987,7 +989,6 @@ library
                      , Hasura.Tracing.TraceId
                      , Hasura.QueryTags
                      , Network.HTTP.Client.Transformable
-                     , Network.HTTP.Client.Manager
                      , Network.HTTP.Client.DynamicTlsPermissions
                      , Network.HTTP.Client.Restricted
                      , Network.HTTP.Client.Blocklisting

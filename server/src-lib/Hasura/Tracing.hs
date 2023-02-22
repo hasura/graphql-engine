@@ -46,7 +46,6 @@ import Hasura.Tracing.TraceId
     traceIdFromHex,
     traceIdToHex,
   )
-import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Refined (Positive, Refined, unrefine)
 import System.Random.Stateful qualified as Random
@@ -190,7 +189,18 @@ sampleOneInN denominator
 -- | The 'TraceT' monad transformer adds the ability to keep track of
 -- the current trace context.
 newtype TraceT m a = TraceT {unTraceT :: ReaderT TraceTEnv m a}
-  deriving (Functor, Applicative, Monad, MonadIO, MonadFix, MonadMask, MonadCatch, MonadThrow, MonadBase b, MonadBaseControl b)
+  deriving
+    ( Functor,
+      Applicative,
+      Monad,
+      MonadIO,
+      MonadFix,
+      MonadMask,
+      MonadCatch,
+      MonadThrow,
+      MonadBase b,
+      MonadBaseControl b
+    )
 
 instance MonadTrans TraceT where
   lift = TraceT . lift
@@ -205,9 +215,6 @@ instance MonadError e m => MonadError e (TraceT m) where
 instance MonadReader r m => MonadReader r (TraceT m) where
   ask = TraceT $ lift ask
   local f m = TraceT $ mapReaderT (local f) (unTraceT m)
-
-instance (HasHttpManagerM m) => HasHttpManagerM (TraceT m) where
-  askHttpManager = lift askHttpManager
 
 -- | Run an action in the 'TraceT' monad transformer.
 -- 'runTraceT' delimits a new trace with its root span, and the arguments

@@ -31,8 +31,8 @@ import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Server.Migrate.Version
+import Hasura.Services.Network
 import Network.HTTP.Client qualified as HTTP
-import Network.HTTP.Client.Manager (HasHttpManagerM)
 
 class
   ( Backend b,
@@ -76,7 +76,7 @@ class
       ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
       MonadIO m,
       MonadBaseControl IO m,
-      HasHttpManagerM m
+      ProvidesNetwork m
     ) =>
     Logger Hasura ->
     (Inc.Dependency (Maybe (BackendInvalidationKeys b)), BackendConfig b) `arr` BackendInfo b

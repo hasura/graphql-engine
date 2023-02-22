@@ -30,8 +30,8 @@ import Hasura.Server.API.PGDump
 import Hasura.Server.Init (DowngradeOptions (..))
 import Hasura.Server.Migrate
 import Hasura.Server.Types
+import Hasura.Services.Network
 import Hasura.Session
-import Network.HTTP.Client.Manager qualified as HTTP
 import Test.Hspec.Core.Spec
 import Test.Hspec.Expectations.Lifted
 
@@ -48,10 +48,10 @@ newtype CacheRefT m a = CacheRefT {runCacheRefT :: MVar RebuildableSchemaCache -
       MonadBaseControl b,
       MonadTx,
       UserInfoM,
-      HTTP.HasHttpManagerM,
       HasServerConfigCtx,
       MonadMetadataStorage,
-      MonadMetadataStorageQueryAPI
+      MonadMetadataStorageQueryAPI,
+      ProvidesNetwork
     )
     via (ReaderT (MVar RebuildableSchemaCache) m)
 
@@ -74,9 +74,9 @@ instance
   ( MonadIO m,
     MonadBaseControl IO m,
     MonadError QErr m,
-    HTTP.HasHttpManagerM m,
     MonadResolveSource m,
-    HasServerConfigCtx m
+    HasServerConfigCtx m,
+    ProvidesNetwork m
   ) =>
   CacheRWM (CacheRefT m)
   where
@@ -104,11 +104,11 @@ suite ::
   ( MonadIO m,
     MonadError QErr m,
     MonadBaseControl IO m,
-    HTTP.HasHttpManagerM m,
     HasServerConfigCtx m,
     MonadResolveSource m,
     MonadMetadataStorageQueryAPI m,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    ProvidesNetwork m
   ) =>
   PostgresConnConfiguration ->
   PGExecCtx ->

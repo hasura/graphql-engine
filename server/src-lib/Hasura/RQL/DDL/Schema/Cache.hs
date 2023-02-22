@@ -90,10 +90,10 @@ import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.SQL.Tag
 import Hasura.Server.Migrate.Version
 import Hasura.Server.Types
+import Hasura.Services
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
-import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 
 {- Note [Roles Inheritance]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -167,13 +167,13 @@ newtype CacheRWT m a
       MonadReader r,
       MonadError e,
       UserInfoM,
-      HasHttpManagerM,
       MonadMetadataStorage,
       MonadMetadataStorageQueryAPI,
       Tracing.MonadTrace,
       HasServerConfigCtx,
       MonadBase b,
-      MonadBaseControl b
+      MonadBaseControl b,
+      ProvidesNetwork
     )
 
 instance (MonadEventLogCleanup m) => MonadEventLogCleanup (CacheRWT m) where
@@ -198,7 +198,7 @@ instance (Monad m) => CacheRM (CacheRWT m) where
 instance
   ( MonadIO m,
     MonadError QErr m,
-    HasHttpManagerM m,
+    ProvidesNetwork m,
     MonadResolveSource m,
     HasServerConfigCtx m
   ) =>
@@ -306,7 +306,7 @@ buildSchemaCacheRule ::
     MonadBaseControl IO m,
     MonadError QErr m,
     MonadReader BuildReason m,
-    HasHttpManagerM m,
+    ProvidesNetwork m,
     MonadResolveSource m,
     HasServerConfigCtx m
   ) =>
@@ -440,7 +440,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys, st
         ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadIO m,
         MonadBaseControl IO m,
-        HasHttpManagerM m
+        ProvidesNetwork m
       ) =>
       (BackendConfigWrapper b, Inc.Dependency (BackendMap BackendInvalidationKeysWrapper)) `arr` BackendCache
     resolveBackendInfo' = proc (backendConfigWrapper, backendInvalidationMap) -> do
@@ -458,7 +458,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys, st
         ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadIO m,
         MonadBaseControl IO m,
-        HasHttpManagerM m
+        ProvidesNetwork m
       ) =>
       (Inc.Dependency (BackendMap BackendInvalidationKeysWrapper), [AB.AnyBackend BackendConfigWrapper]) `arr` BackendCache
     resolveBackendCache = proc (backendInvalidationMap, backendConfigs) -> do
@@ -478,7 +478,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys, st
         MonadIO m,
         MonadBaseControl IO m,
         MonadResolveSource m,
-        HasHttpManagerM m,
+        ProvidesNetwork m,
         BackendMetadata b
       ) =>
       ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey),
@@ -490,7 +490,11 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys, st
         `arr` Maybe (SourceConfig b)
     tryGetSourceConfig = Inc.cache proc (invalidationKeys, sourceName, sourceConfig, backendKind, backendInfo) -> do
       let metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
-      httpMgr <- bindA -< askHttpManager
+      -- TODO: if we make all of 'resolveSourceConfig' a Service, we could
+      -- delegate to it the responsibility of extracting the HTTP manager, and
+      -- avoid having to thread 'ProvidesNetwork' throughout the cache building
+      -- code.
+      httpMgr <- bindA -< askHTTPManager
       Inc.dependOn -< Inc.selectKeyD sourceName invalidationKeys
       (|
         withRecordInconsistency
@@ -506,7 +510,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys, st
         MonadIO m,
         MonadBaseControl IO m,
         MonadResolveSource m,
-        HasHttpManagerM m,
+        ProvidesNetwork m,
         BackendMetadata b
       ) =>
       ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey),
@@ -711,7 +715,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys, st
         MonadError QErr m,
         MonadReader BuildReason m,
         MonadBaseControl IO m,
-        HasHttpManagerM m,
+        ProvidesNetwork m,
         HasServerConfigCtx m,
         MonadResolveSource m
       ) =>

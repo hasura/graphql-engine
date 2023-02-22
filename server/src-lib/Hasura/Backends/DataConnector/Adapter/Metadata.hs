@@ -46,11 +46,11 @@ import Hasura.SQL.Backend (BackendSourceKind (..), BackendType (..))
 import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Server.Migrate.Version (SourceCatalogMigrationState (..))
 import Hasura.Server.Utils qualified as HSU
+import Hasura.Services.Network
 import Hasura.Session (SessionVariable, mkSessionVariable)
 import Hasura.Tracing (ignoreTraceT)
 import Language.GraphQL.Draft.Syntax qualified as GQL
 import Network.HTTP.Client qualified as HTTP
-import Network.HTTP.Client.Manager
 import Servant.Client.Core.HasClient ((//))
 import Servant.Client.Generic (genericClient)
 import Witch qualified
@@ -82,7 +82,7 @@ resolveBackendInfo' ::
     ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     MonadIO m,
     MonadBaseControl IO m,
-    HasHttpManagerM m
+    ProvidesNetwork m
   ) =>
   Logger Hasura ->
   (Inc.Dependency (Maybe (HashMap DC.DataConnectorName Inc.InvalidationKey)), InsOrdHashMap DC.DataConnectorName DC.DataConnectorOptions) `arr` HashMap DC.DataConnectorName DC.DataConnectorInfo
@@ -103,12 +103,12 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
         ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadIO m,
         MonadBaseControl IO m,
-        HasHttpManagerM m
+        ProvidesNetwork m
       ) =>
       (Inc.Dependency (Maybe (HashMap DC.DataConnectorName Inc.InvalidationKey)), DC.DataConnectorName, DC.DataConnectorOptions) `arr` Maybe DC.DataConnectorInfo
     getDataConnectorCapabilitiesIfNeeded = Inc.cache proc (invalidationKeys, dataConnectorName, dataConnectorOptions) -> do
       let metadataObj = MetadataObject (MODataConnectorAgent dataConnectorName) $ J.toJSON dataConnectorName
-      httpMgr <- bindA -< askHttpManager
+      httpMgr <- bindA -< askHTTPManager
       Inc.dependOn -< Inc.selectMaybeD (Inc.ConstS dataConnectorName) invalidationKeys
       (|
         withRecordInconsistency

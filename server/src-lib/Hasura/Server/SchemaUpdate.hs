@@ -39,8 +39,8 @@ import Hasura.Server.SchemaCacheRef
     withSchemaCacheUpdate,
   )
 import Hasura.Server.Types
+import Hasura.Services
 import Hasura.Session
-import Network.HTTP.Client qualified as HTTP
 import Refined (NonNegative, Refined, unrefine)
 
 data ThreadError
@@ -138,10 +138,10 @@ startSchemaSyncListenerThread logger pool instanceId interval metaVersionRef = d
 startSchemaSyncProcessorThread ::
   ( C.ForkableMonadIO m,
     MonadMetadataStorage m,
-    MonadResolveSource m
+    MonadResolveSource m,
+    ProvidesHasuraServices m
   ) =>
   Logger Hasura ->
-  HTTP.Manager ->
   STM.TMVar MetadataResourceVersion ->
   SchemaCacheRef ->
   InstanceId ->
@@ -150,7 +150,6 @@ startSchemaSyncProcessorThread ::
   ManagedT m Immortal.Thread
 startSchemaSyncProcessorThread
   logger
-  httpMgr
   schemaSyncEventRef
   cacheRef
   instanceId
@@ -159,7 +158,7 @@ startSchemaSyncProcessorThread
     -- Start processor thread
     processorThread <-
       C.forkManagedT "SchemeUpdate.processor" logger $
-        processor logger httpMgr schemaSyncEventRef cacheRef instanceId serverConfigCtx logTVar
+        processor logger schemaSyncEventRef cacheRef instanceId serverConfigCtx logTVar
     logThreadStarted logger instanceId TTProcessor processorThread
     pure processorThread
 
@@ -251,10 +250,10 @@ processor ::
   forall m void.
   ( C.ForkableMonadIO m,
     MonadMetadataStorage m,
-    MonadResolveSource m
+    MonadResolveSource m,
+    ProvidesHasuraServices m
   ) =>
   Logger Hasura ->
-  HTTP.Manager ->
   STM.TMVar MetadataResourceVersion ->
   SchemaCacheRef ->
   InstanceId ->
@@ -263,28 +262,24 @@ processor ::
   m void
 processor
   logger
-  httpMgr
   metaVersionRef
   cacheRef
   instanceId
   serverConfigCtx
   logTVar = forever $ do
     metaVersion <- liftIO $ STM.atomically $ STM.takeTMVar metaVersionRef
-    respErr <-
-      runExceptT $
-        refreshSchemaCache metaVersion instanceId logger httpMgr cacheRef TTProcessor serverConfigCtx logTVar
-    onLeft respErr (logError logger TTProcessor . TEQueryError)
+    refreshSchemaCache metaVersion instanceId logger cacheRef TTProcessor serverConfigCtx logTVar
 
 refreshSchemaCache ::
   ( MonadIO m,
     MonadBaseControl IO m,
     MonadMetadataStorage m,
-    MonadResolveSource m
+    MonadResolveSource m,
+    ProvidesNetwork m
   ) =>
   MetadataResourceVersion ->
   InstanceId ->
   Logger Hasura ->
-  HTTP.Manager ->
   SchemaCacheRef ->
   SchemaSyncThreadType ->
   ServerConfigCtx ->
@@ -294,7 +289,6 @@ refreshSchemaCache
   resourceVersion
   instanceId
   logger
-  httpManager
   cacheRef
   threadType
   serverConfigCtx
@@ -368,7 +362,7 @@ refreshSchemaCache
         pure (msg, cache)
     onLeft respErr (logError logger threadType . TEQueryError)
     where
-      runCtx = RunCtx adminUserInfo httpManager serverConfigCtx
+      runCtx = RunCtx adminUserInfo serverConfigCtx
 
 logInfo :: (MonadIO m) => Logger Hasura -> SchemaSyncThreadType -> Value -> m ()
 logInfo logger threadType val =

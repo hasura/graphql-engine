@@ -28,9 +28,9 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Permission (resolveRoleBasedRemoteSchema)
 import Hasura.RemoteSchema.SchemaCache.Types
+import Hasura.Services
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 
 -- Resolves a user specified `RemoteSchemaMetadata` into information rich `RemoteSchemaCtx`
 -- However, given the nature of remote relationships, we cannot fully 'resolve' them, so
@@ -42,10 +42,10 @@ buildRemoteSchemas ::
     Inc.ArrowCache m arr,
     MonadIO m,
     MonadBaseControl IO m,
-    HasHttpManagerM m,
     Eq remoteRelationshipDefinition,
     ToJSON remoteRelationshipDefinition,
-    MonadError QErr m
+    MonadError QErr m,
+    ProvidesNetwork m
   ) =>
   Env.Environment ->
   ( (Inc.Dependency (HashMap RemoteSchemaName Inc.InvalidationKey), OrderedRoles, Maybe (HashMap RemoteSchemaName BL.ByteString)),
@@ -170,12 +170,11 @@ buildRemoteSchemaPermissions = proc ((remoteSchemaName, originalIntrospection, o
        in MetadataObject objectId $ toJSON defn
 
 addRemoteSchemaP2Setup ::
-  (QErrM m, MonadIO m, HasHttpManagerM m, Tracing.MonadTrace m) =>
+  (QErrM m, MonadIO m, ProvidesNetwork m, Tracing.MonadTrace m) =>
   Env.Environment ->
   RemoteSchemaName ->
   RemoteSchemaDef ->
   m (IntrospectionResult, BL.ByteString, RemoteSchemaInfo)
 addRemoteSchemaP2Setup env name def = do
   rsi <- validateRemoteSchemaDef env def
-  httpMgr <- askHttpManager
-  fetchRemoteSchema env httpMgr name rsi
+  fetchRemoteSchema env name rsi

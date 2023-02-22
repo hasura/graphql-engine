@@ -34,34 +34,36 @@ import Hasura.RQL.Types.QueryTags
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (RequestId (..))
+import Hasura.Services
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
-import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 
 convertMutationAction ::
   ( MonadIO m,
     MonadError QErr m,
-    MonadMetadataStorage m
+    MonadMetadataStorage m,
+    ProvidesNetwork m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
   PrometheusMetrics ->
   UserInfo ->
-  HTTP.Manager ->
   HTTP.RequestHeaders ->
   Maybe GH.GQLQueryText ->
   ActionMutation Void ->
   m ActionExecutionPlan
-convertMutationAction env logger prometheusMetrics userInfo manager reqHeaders gqlQueryText = \case
-  AMSync s ->
-    pure $ AEPSync $ resolveActionExecution env logger prometheusMetrics userInfo s actionExecContext gqlQueryText
-  AMAsync s ->
-    AEPAsyncMutation <$> resolveActionMutationAsync s reqHeaders userSession
+convertMutationAction env logger prometheusMetrics userInfo reqHeaders gqlQueryText action = do
+  httpManager <- askHTTPManager
+  case action of
+    AMSync s ->
+      pure $ AEPSync $ resolveActionExecution httpManager env logger prometheusMetrics userInfo s actionExecContext gqlQueryText
+    AMAsync s ->
+      AEPAsyncMutation <$> resolveActionMutationAsync s reqHeaders userSession
   where
     userSession = _uiSession userInfo
-    actionExecContext = ActionExecContext manager reqHeaders $ _uiSession userInfo
+    actionExecContext = ActionExecContext reqHeaders (_uiSession userInfo)
 
 convertMutationSelectionSet ::
   forall m.
@@ -70,7 +72,8 @@ convertMutationSelectionSet ::
     MonadError QErr m,
     MonadMetadataStorage m,
     MonadGQLExecutionCheck m,
-    MonadQueryTags m
+    MonadQueryTags m,
+    ProvidesNetwork m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
@@ -78,7 +81,6 @@ convertMutationSelectionSet ::
   GQLContext ->
   SQLGenCtx ->
   UserInfo ->
-  HTTP.Manager ->
   HTTP.RequestHeaders ->
   [G.Directive G.Name] ->
   G.SelectionSet G.NoFragments G.Name ->
@@ -96,7 +98,6 @@ convertMutationSelectionSet
   gqlContext
   SQLGenCtx {stringifyNum}
   userInfo
-  manager
   reqHeaders
   directives
   fields
@@ -146,7 +147,7 @@ convertMutationSelectionSet
               (actionName, _fch) <- pure $ case noRelsDBAST of
                 AMSync s -> (_aaeName s, _aaeForwardClientHeaders s)
                 AMAsync s -> (_aamaName s, _aamaForwardClientHeaders s)
-              plan <- convertMutationAction env logger prometheusMetrics userInfo manager reqHeaders (Just (GH._grQuery gqlUnparsed)) noRelsDBAST
+              plan <- convertMutationAction env logger prometheusMetrics userInfo reqHeaders (Just (GH._grQuery gqlUnparsed)) noRelsDBAST
               pure $ ExecStepAction plan (ActionsInfo actionName _fch) remoteJoins -- `_fch` represents the `forward_client_headers` option from the action
               -- definition which is currently being ignored for actions that are mutations
             RFRaw customFieldVal -> flip onLeft throwError =<< executeIntrospection userInfo customFieldVal introspectionDisabledRoles

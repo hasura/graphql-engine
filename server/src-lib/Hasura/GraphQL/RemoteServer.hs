@@ -36,6 +36,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.Server.Utils
+import Hasura.Services.Network
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Parser qualified as G
@@ -53,15 +54,14 @@ import Network.Wreq qualified as Wreq
 -- and also is called by schema cache rebuilding code in "Hasura.RQL.DDL.Schema.Cache".
 fetchRemoteSchema ::
   forall m.
-  (MonadIO m, MonadError QErr m, Tracing.MonadTrace m) =>
+  (MonadIO m, MonadError QErr m, Tracing.MonadTrace m, ProvidesNetwork m) =>
   Env.Environment ->
-  HTTP.Manager ->
   RemoteSchemaName ->
   ValidatedRemoteSchemaDef ->
   m (IntrospectionResult, BL.ByteString, RemoteSchemaInfo)
-fetchRemoteSchema env manager _rscName rsDef = do
+fetchRemoteSchema env _rscName rsDef = do
   (_, _, rawIntrospectionResult) <-
-    execRemoteGQ env manager adminUserInfo [] rsDef introspectionQuery
+    execRemoteGQ env adminUserInfo [] rsDef introspectionQuery
   (ir, rsi) <- stitchRemoteSchema rawIntrospectionResult _rscName rsDef
   -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
   -- the introspection result of the remote server. We store this in the
@@ -128,10 +128,10 @@ stitchRemoteSchema rawIntrospectionResult _rscName rsDef@ValidatedRemoteSchemaDe
 execRemoteGQ ::
   ( MonadIO m,
     MonadError QErr m,
-    Tracing.MonadTrace m
+    Tracing.MonadTrace m,
+    ProvidesNetwork m
   ) =>
   Env.Environment ->
-  HTTP.Manager ->
   UserInfo ->
   [HTTP.Header] ->
   ValidatedRemoteSchemaDef ->
@@ -139,7 +139,7 @@ execRemoteGQ ::
   -- | Returns the response body and headers, along with the time taken for the
   -- HTTP request to complete
   m (DiffTime, [HTTP.Header], BL.ByteString)
-execRemoteGQ env manager userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
+execRemoteGQ env userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
   let gqlReqUnparsed = renderGQLReqOutgoing gqlReq
 
   when (G._todType _grQuery == G.OperationTypeSubscription) $
@@ -163,6 +163,7 @@ execRemoteGQ env manager userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
           & set HTTP.body (Just $ J.encode gqlReqUnparsed)
           & set HTTP.timeout (HTTP.responseTimeoutMicro (timeout * 1000000))
 
+  manager <- askHTTPManager
   Tracing.tracedHttpRequest req \req' -> do
     (time, res) <- withElapsedTime $ liftIO $ try $ HTTP.performRequest req' manager
     resp <- onLeft res (throwRemoteSchemaHttp webhookEnvRecord)

@@ -3,11 +3,16 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
 
--- | Imported by 'server/src-exec/Main.hs'.
+-- | Defines the CE version of the engine.
+--
+-- This module contains everything that is required to run the community edition
+-- of the engine: the base application monad and the implementation of all its
+-- behaviour classes.
 module Hasura.App
   ( ExitCode (AuthConfigurationError, DatabaseMigrationError, DowngradeProcessError, MetadataCleanError, MetadataExportError, SchemaCacheInitError),
     ExitException (ExitException),
     GlobalCtx (..),
+    AppContext (..),
     PGMetadataStorageAppT (runPGMetadataStorageAppT),
     accessDeniedErrMsg,
     flushLogger,
@@ -140,13 +145,13 @@ import Hasura.Server.SchemaUpdate
 import Hasura.Server.Telemetry
 import Hasura.Server.Types
 import Hasura.Server.Version
+import Hasura.Services
 import Hasura.Session
 import Hasura.ShutdownLatch
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.Blocklisting (Blocklist)
 import Network.HTTP.Client.CreateManager (mkHttpManager)
-import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp qualified as Warp
 import Options.Applicative
@@ -267,8 +272,17 @@ initGlobalCtx env metadataDbUrl defaultPgConnInfo = do
       let mdConnInfo = mkConnInfoFromMDb mdUrl
       mkGlobalCtx mdConnInfo (Just (dbUrl, srcConnInfo))
 
+-- | Base application context.
+--
+-- This defines all base information required to run the engine.
+data AppContext = AppContext
+  { _acHTTPManager :: HTTP.Manager,
+    _acPGLogger :: PG.PGLogger,
+    _acPGPool :: PG.PGPool
+  }
+
 -- | An application with Postgres database as a metadata storage
-newtype PGMetadataStorageAppT m a = PGMetadataStorageAppT {runPGMetadataStorageAppT :: (PG.PGPool, PG.PGLogger) -> m a}
+newtype PGMetadataStorageAppT m a = PGMetadataStorageAppT {runPGMetadataStorageAppT :: AppContext -> m a}
   deriving
     ( Functor,
       Applicative,
@@ -278,17 +292,19 @@ newtype PGMetadataStorageAppT m a = PGMetadataStorageAppT {runPGMetadataStorageA
       MonadCatch,
       MonadThrow,
       MonadMask,
-      HasHttpManagerM,
       HasServerConfigCtx,
-      MonadReader (PG.PGPool, PG.PGLogger),
+      MonadReader AppContext,
       MonadBase b,
       MonadBaseControl b
     )
-    via (ReaderT (PG.PGPool, PG.PGLogger) m)
+    via (ReaderT AppContext m)
   deriving
     ( MonadTrans
     )
-    via (ReaderT (PG.PGPool, PG.PGLogger))
+    via (ReaderT AppContext)
+
+instance Monad m => ProvidesNetwork (PGMetadataStorageAppT m) where
+  askHTTPManager = asks _acHTTPManager
 
 resolvePostgresConnInfo ::
   (MonadIO m) => Env.Environment -> UrlConf -> Maybe Int -> m PG.ConnInfo
@@ -596,7 +612,8 @@ runHGEServer ::
     MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     EB.MonadQueryTags m,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    ProvidesHasuraServices m
   ) =>
   (ServerCtx -> Spock.SpockT m ()) ->
   Env.Environment ->
@@ -687,7 +704,8 @@ mkHGEServer ::
     MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     EB.MonadQueryTags m,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    ProvidesHasuraServices m
   ) =>
   (ServerCtx -> Spock.SpockT m ()) ->
   Env.Environment ->
@@ -765,7 +783,6 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore ch
   _ <-
     startSchemaSyncProcessorThread
       logger
-      scManager
       scMetaVersionRef
       cacheRef
       scInstanceId
@@ -1006,7 +1023,6 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore ch
               logger
               (getSchemaCache cacheRef)
               (leActionEvents lockedEventsCtx)
-              scManager
               scPrometheusMetrics
               sleepTime
               Nothing
@@ -1137,7 +1153,7 @@ instance (MonadIO m) => WS.MonadWSLog (PGMetadataStorageAppT m) where
   logWSLog logger = unLogger logger
 
 instance (Monad m) => MonadResolveSource (PGMetadataStorageAppT m) where
-  getPGSourceResolver = mkPgSourceResolver <$> asks snd
+  getPGSourceResolver = mkPgSourceResolver <$> asks _acPGLogger
   getMSSQLSourceResolver = return mkMSSQLSourceResolver
 
 instance (Monad m) => EB.MonadQueryTags (PGMetadataStorageAppT m) where
@@ -1153,7 +1169,7 @@ runInSeparateTx ::
   PG.TxE QErr a ->
   PGMetadataStorageAppT m (Either QErr a)
 runInSeparateTx tx = do
-  pool <- asks fst
+  pool <- asks _acPGPool
   liftIO $ runExceptT $ PG.runTx pool (PG.RepeatableRead, Nothing) tx
 
 notifySchemaCacheSyncTx :: MetadataResourceVersion -> InstanceId -> CacheInvalidations -> PG.TxE QErr ()

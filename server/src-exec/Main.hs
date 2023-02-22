@@ -97,7 +97,10 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
           C.forkImmortal "ourIdleGC" logger $
             GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 
-        flip runPGMetadataStorageAppT (scMetadataDbPool, pgLogger) . lowerManagedT $ do
+        -- TODO: why don't we just run a reader with ServerCtx from here?
+        -- the AppContext doesn't add any new information
+        let appContext = AppContext scManager pgLogger scMetadataDbPool
+        flip runPGMetadataStorageAppT appContext . lowerManagedT $ do
           runHGEServer (const $ pure ()) env serveOptions serverCtx initTime Nothing ekgStore (FeatureFlag.checkFeatureFlag env)
     HCExport -> do
       GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci

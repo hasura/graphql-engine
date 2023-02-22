@@ -77,8 +77,9 @@ import Hasura.SQL.Backend
 import Hasura.SQL.Backend qualified as Backend
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.Logging (MetadataLog (..))
+import Hasura.Services
 import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Client.Manager qualified as HTTP.Manager
+import Network.HTTP.Client qualified as HTTP
 import Servant.API (Union)
 import Servant.Client (BaseUrl, (//))
 import Servant.Client.Generic qualified as Servant.Client
@@ -356,12 +357,12 @@ instance FromJSON GetSourceTables where
 runGetSourceTables ::
   ( CacheRM m,
     Has (L.Logger L.Hasura) r,
-    HTTP.Manager.HasHttpManagerM m,
     MonadReader r m,
     MonadError Error.QErr m,
     Metadata.MetadataM m,
     MonadIO m,
-    MonadBaseControl IO m
+    MonadBaseControl IO m,
+    ProvidesNetwork m
   ) =>
   Env.Environment ->
   GetSourceTables ->
@@ -378,7 +379,7 @@ runGetSourceTables env GetSourceTables {..} = do
     case _smKind of
       Backend.DataConnectorKind dcName -> do
         logger :: L.Logger L.Hasura <- asks getter
-        manager <- HTTP.Manager.askHttpManager
+        manager <- askHTTPManager
         let timeout = DC.Types.timeout _smConfiguration
 
         DC.Types.DataConnectorOptions {..} <- lookupDataConnectorOptions dcName bmap
@@ -408,7 +409,7 @@ instance FromJSON GetTableInfo where
 runGetTableInfo ::
   ( CacheRM m,
     Has (L.Logger L.Hasura) r,
-    HTTP.Manager.HasHttpManagerM m,
+    ProvidesNetwork m,
     MonadReader r m,
     MonadError Error.QErr m,
     Metadata.MetadataM m,
@@ -430,7 +431,7 @@ runGetTableInfo env GetTableInfo {..} = do
     case _smKind of
       Backend.DataConnectorKind dcName -> do
         logger :: L.Logger L.Hasura <- asks getter
-        manager <- HTTP.Manager.askHttpManager
+        manager <- askHTTPManager
         let timeout = DC.Types.timeout _smConfiguration
 
         DC.Types.DataConnectorOptions {..} <- lookupDataConnectorOptions dcName bmap
@@ -459,7 +460,7 @@ lookupDataConnectorOptions dcName bmap =
 querySourceSchema ::
   (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
   L.Logger L.Hasura ->
-  HTTP.Manager.Manager ->
+  HTTP.Manager ->
   Maybe DC.Types.SourceTimeout ->
   BaseUrl ->
   SourceName ->

@@ -46,10 +46,10 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.SQL.Backend
 import Hasura.Server.Types
+import Hasura.Services
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as GQL
-import Network.HTTP.Client qualified as HTTP
 
 data RQLQuery
   = RQInsert !InsertQuery
@@ -108,17 +108,17 @@ runQuery ::
     Tracing.MonadTrace m,
     MonadMetadataStorage m,
     MonadResolveSource m,
-    MonadQueryTags m
+    MonadQueryTags m,
+    ProvidesHasuraServices m
   ) =>
   Env.Environment ->
   InstanceId ->
   UserInfo ->
   RebuildableSchemaCache ->
-  HTTP.Manager ->
   ServerConfigCtx ->
   RQLQuery ->
   m (EncJSON, RebuildableSchemaCache)
-runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuery = do
+runQuery env instanceId userInfo schemaCache serverConfigCtx rqlQuery = do
   when ((_sccReadOnlyMode serverConfigCtx == ReadOnlyModeEnabled) && queryModifiesUserDB rqlQuery) $
     throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
@@ -134,7 +134,7 @@ runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuer
       pure (js, rsc, ci, meta)
   withReload currentResourceVersion result
   where
-    runCtx = RunCtx userInfo httpManager serverConfigCtx
+    runCtx = RunCtx userInfo serverConfigCtx
 
     withReload currentResourceVersion (result, updatedCache, invalidations, updatedMetadata) = do
       when (queryModifiesSchema rqlQuery) $ do

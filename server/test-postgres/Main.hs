@@ -12,7 +12,8 @@ import Data.Time.Clock (getCurrentTime)
 import Data.URL.Template
 import Database.PG.Query qualified as PG
 import Hasura.App
-  ( PGMetadataStorageAppT (..),
+  ( AppContext (..),
+    PGMetadataStorageAppT (..),
     mkMSSQLSourceResolver,
     mkPgSourceResolver,
   )
@@ -91,12 +92,12 @@ main = do
                 emptyMetadataDefaults
                 (FF.checkFeatureFlag mempty)
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver serverConfigCtx
-            pgLogger = print
+            appContext = AppContext httpManager print pgPool
 
             run :: ExceptT QErr (PGMetadataStorageAppT CacheBuild) a -> IO a
             run =
               runExceptT
-                >>> flip runPGMetadataStorageAppT (pgPool, pgLogger)
+                >>> flip runPGMetadataStorageAppT appContext
                 >>> runCacheBuild cacheBuildParams
                 >>> runExceptT
                 >=> flip onLeft printErrJExit

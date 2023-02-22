@@ -88,6 +88,7 @@ import Hasura.Server.Prometheus
   )
 import Hasura.Server.Telemetry.Counters qualified as Telem
 import Hasura.Server.Types (RequestId, getRequestId)
+import Hasura.Services.Network
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax (Name (..))
@@ -408,7 +409,8 @@ onStart ::
     MC.MonadBaseControl IO m,
     MonadMetadataStorage m,
     EB.MonadQueryTags m,
-    HasResourceLimits m
+    HasResourceLimits m,
+    ProvidesNetwork m
   ) =>
   Env.Environment ->
   HashSet (L.EngineLogType L.Hasura) ->
@@ -467,7 +469,6 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
         sc
         scVer
         queryType
-        httpMgr
         reqHdrs
         q
         queryParts
@@ -526,7 +527,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
                                 genSql
                                 resolvedConnectionTemplate
                         finalResponse <-
-                          RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
+                          RJ.processRemoteJoins requestId logger env reqHdrs userInfo resp remoteJoins q
                         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
                       E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
                         logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
@@ -536,7 +537,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
                         (time, (resp, _)) <- doQErr $ do
                           (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                           finalResponse <-
-                            RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
+                            RJ.processRemoteJoins requestId logger env reqHdrs userInfo resp remoteJoins q
                           pure (time, (finalResponse, hdrs))
                         pure $ AnnotatedResponsePart time Telem.Empty resp []
                       E.ExecStepRaw json -> do
@@ -604,14 +605,14 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
                                 genSql
                                 resolvedConnectionTemplate
                         finalResponse <-
-                          RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
+                          RJ.processRemoteJoins requestId logger env reqHdrs userInfo resp remoteJoins q
                         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
                       E.ExecStepAction actionExecPlan _ remoteJoins -> do
                         logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
                         (time, (resp, hdrs)) <- doQErr $ do
                           (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                           finalResponse <-
-                            RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
+                            RJ.processRemoteJoins requestId logger env reqHdrs userInfo resp remoteJoins q
                           pure (time, (finalResponse, hdrs))
                         pure $ AnnotatedResponsePart time Telem.Empty resp $ fromMaybe [] hdrs
                       E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
@@ -768,7 +769,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
     runRemoteGQ requestId reqUnparsed fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins = do
       (telemTimeIO_DT, _respHdrs, resp) <-
         doQErr $
-          E.execRemoteGQ env httpMgr userInfo reqHdrs (rsDef rsi) gqlReq
+          E.execRemoteGQ env userInfo reqHdrs (rsDef rsi) gqlReq
       value <- mapExceptT lift $ extractFieldFromResponse fieldName resultCustomizer resp
       finalResponse <-
         doQErr $
@@ -776,7 +777,6 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
             requestId
             logger
             env
-            httpMgr
             reqHdrs
             userInfo
             -- TODO: avoid encode and decode here
@@ -789,7 +789,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
       logger
       subscriptionsState
       getSchemaCache
-      httpMgr
+      _
       _
       sqlGenCtx
       readOnlyMode
@@ -1004,7 +1004,8 @@ onMessage ::
     MC.MonadBaseControl IO m,
     MonadMetadataStorage m,
     EB.MonadQueryTags m,
-    HasResourceLimits m
+    HasResourceLimits m,
+    ProvidesNetwork m
   ) =>
   Env.Environment ->
   HashSet (L.EngineLogType L.Hasura) ->

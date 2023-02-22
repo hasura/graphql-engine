@@ -80,9 +80,9 @@ import Hasura.Server.Logging (SchemaSyncLog (..), SchemaSyncThreadType (TTMetada
 import Hasura.Server.SchemaCacheRef
 import Hasura.Server.Types
 import Hasura.Server.Utils (APIVersion (..))
+import Hasura.Services
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Client.Manager qualified as HTTP
 
 data RQLMetadataV1
   = -- Sources
@@ -383,18 +383,18 @@ runMetadataQuery ::
     Tracing.MonadTrace m,
     MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    ProvidesHasuraServices m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
   InstanceId ->
   UserInfo ->
-  HTTP.Manager ->
   ServerConfigCtx ->
   SchemaCacheRef ->
   RQLMetadata ->
   m (EncJSON, RebuildableSchemaCache)
-runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx schemaCacheRef RQLMetadata {..} = do
+runMetadataQuery env logger instanceId userInfo serverConfigCtx schemaCacheRef RQLMetadata {..} = do
   schemaCache <- liftIO $ fst <$> readSchemaCacheRef schemaCacheRef
   (metadata, currentResourceVersion) <- Tracing.trace "fetchMetadata" $ liftEitherM fetchMetadata
   let exportsMetadata = \case
@@ -425,7 +425,7 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
       & flip runReaderT logger
       & runMetadataT metadata metadataDefaults
       & runCacheRWT schemaCache
-      & peelRun (RunCtx userInfo httpManager serverConfigCtx)
+      & peelRun (RunCtx userInfo serverConfigCtx)
   -- set modified metadata in storage
   if queryModifiesMetadata _rqlMetadata
     then case (_sccMaintenanceMode serverConfigCtx, _sccReadOnlyMode serverConfigCtx) of
@@ -457,7 +457,7 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
           Tracing.trace "setMetadataResourceVersionInSchemaCache" $
             setMetadataResourceVersionInSchemaCache newResourceVersion
               & runCacheRWT modSchemaCache
-              & peelRun (RunCtx userInfo httpManager serverConfigCtx)
+              & peelRun (RunCtx userInfo serverConfigCtx)
 
         pure (r, modSchemaCache')
       (MaintenanceModeEnabled (), ReadOnlyModeDisabled) ->
@@ -593,14 +593,14 @@ runMetadataQueryM ::
     CacheRWM m,
     Tracing.MonadTrace m,
     UserInfoM m,
-    HTTP.HasHttpManagerM m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
     HasServerConfigCtx m,
     MonadReader r m,
     Has (L.Logger L.Hasura) r,
     MonadError QErr m,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    ProvidesHasuraServices m
   ) =>
   Env.Environment ->
   MetadataResourceVersion ->
@@ -624,14 +624,14 @@ runMetadataQueryV1M ::
     CacheRWM m,
     Tracing.MonadTrace m,
     UserInfoM m,
-    HTTP.HasHttpManagerM m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
     HasServerConfigCtx m,
     MonadReader r m,
     Has (L.Logger L.Hasura) r,
     MonadError QErr m,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    ProvidesHasuraServices m
   ) =>
   Env.Environment ->
   MetadataResourceVersion ->

@@ -7,19 +7,19 @@ module Hasura.RQL.Types.Run
   )
 where
 
+import Control.Monad.Trans
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..))
 import Hasura.RQL.Types.Source
 import Hasura.Server.Types
+import Hasura.Services
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Client.Manager qualified as HTTP
 
 data RunCtx = RunCtx
   { _rcUserInfo :: UserInfo,
-    _rcHttpMgr :: HTTP.Manager,
     _rcServerConfigCtx :: ServerConfigCtx
   }
 
@@ -35,7 +35,8 @@ newtype RunT m a = RunT {unRunT :: ReaderT RunCtx m a}
       MonadBase b,
       MonadBaseControl b,
       MonadMetadataStorage,
-      MonadMetadataStorageQueryAPI
+      MonadMetadataStorageQueryAPI,
+      ProvidesNetwork
     )
 
 instance MonadTrans RunT where
@@ -43,9 +44,6 @@ instance MonadTrans RunT where
 
 instance (Monad m) => UserInfoM (RunT m) where
   askUserInfo = asks _rcUserInfo
-
-instance (Monad m) => HTTP.HasHttpManagerM (RunT m) where
-  askHttpManager = asks _rcHttpMgr
 
 instance (Monad m) => HasServerConfigCtx (RunT m) where
   askServerConfigCtx = asks _rcServerConfigCtx

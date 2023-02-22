@@ -1,5 +1,3 @@
-{-# LANGUAGE UndecidableInstances #-}
-
 -- | This module has type class and types which implements the Metadata Storage Abstraction
 module Hasura.Metadata.Class
   ( SchemaSyncEventProcessResult (..),

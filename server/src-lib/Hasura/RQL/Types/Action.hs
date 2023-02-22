@@ -79,7 +79,6 @@ import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Eventing (EventId (..))
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
-import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import PostgreSQL.Binary.Encoding qualified as PE
 
@@ -289,8 +288,7 @@ newtype ActionPermissionInfo = ActionPermissionInfo
 -- GraphQL.Execute.
 
 data ActionExecContext = ActionExecContext
-  { _aecManager :: HTTP.Manager,
-    _aecHeaders :: HTTP.RequestHeaders,
+  { _aecHeaders :: HTTP.RequestHeaders,
     _aecSessionVariables :: SessionVariables
   }
 

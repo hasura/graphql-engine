@@ -43,6 +43,7 @@ import Hasura.Server.Prometheus
     incWebsocketConnections,
   )
 import Hasura.Server.Types (ReadOnlyMode)
+import Hasura.Services.Network
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as HTTP
 import Network.WebSockets qualified as WS
@@ -60,7 +61,8 @@ createWSServerApp ::
     MonadExecuteQuery m,
     MonadMetadataStorage m,
     EB.MonadQueryTags m,
-    HasResourceLimits m
+    HasResourceLimits m,
+    ProvidesNetwork m
   ) =>
   Env.Environment ->
   HashSet (L.EngineLogType L.Hasura) ->
