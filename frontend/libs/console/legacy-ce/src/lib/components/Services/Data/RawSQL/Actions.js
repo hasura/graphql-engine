@@ -37,6 +37,7 @@ import { exportMetadata } from '../../../../metadata/actions';
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
 const SET_CASCADE_CHECKED = 'RawSQL/SET_CASCADE_CHECKED';
+const SET_READ_ONLY_CHECKED = 'RawSQL/SET_READ_ONLY_CHECKED';
 const SET_MIGRATION_CHECKED = 'RawSQL/SET_MIGRATION_CHECKED';
 const SET_TRACK_TABLE_CHECKED = 'RawSQL/SET_TRACK_TABLE_CHECKED';
 const REQUEST_SUCCESS = 'RawSQL/REQUEST_SUCCESS';
@@ -124,8 +125,8 @@ const executeSQL =
   (dispatch, getState) => {
     dispatch({ type: MAKING_REQUEST });
     dispatch(showSuccessNotification('Executing the Query...'));
-
-    const { isTableTrackChecked, isCascadeChecked, sql } = getState().rawSQL;
+    const { isTableTrackChecked, isCascadeChecked, isReadOnlyChecked, sql } =
+      getState().rawSQL;
     const { migrationMode, readOnlyMode } = getState().main;
 
     const isStatementTimeout = statementTimeout && !isMigration;
@@ -139,14 +140,20 @@ const executeSQL =
           dataSource.getStatementTimeoutSql(statementTimeout),
           source,
           false,
-          readOnlyMode,
+          isReadOnlyChecked || readOnlyMode,
           driver
         )
       );
     }
 
     schemaChangesUp.push(
-      getRunSqlQuery(sql, source, isCascadeChecked, readOnlyMode, driver)
+      getRunSqlQuery(
+        sql,
+        source,
+        isCascadeChecked,
+        isReadOnlyChecked || readOnlyMode,
+        driver
+      )
     );
 
     const schemaChangesDown = getDownQueryComments(schemaChangesUp, source);
@@ -238,6 +245,8 @@ const rawSQLReducer = (state = defaultState, action) => {
       return { ...state, isMigrationChecked: action.data };
     case SET_CASCADE_CHECKED:
       return { ...state, isCascadeChecked: action.data };
+    case SET_READ_ONLY_CHECKED:
+      return { ...state, isReadOnlyChecked: action.data };
     case SET_TRACK_TABLE_CHECKED:
       return {
         ...state,
@@ -293,6 +302,7 @@ export {
   executeSQL,
   SET_SQL,
   SET_CASCADE_CHECKED,
+  SET_READ_ONLY_CHECKED,
   SET_MIGRATION_CHECKED,
   SET_TRACK_TABLE_CHECKED,
   modalOpen,

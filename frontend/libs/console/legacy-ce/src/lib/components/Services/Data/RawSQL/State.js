@@ -8,6 +8,7 @@ const defaultState = {
   resultHeaders: [],
   isModalOpen: false,
   isCascadeChecked: false,
+  isReadOnlyChecked: false,
   isMigrationChecked: false,
   isTableTrackChecked: false,
   showTrackTable: false,

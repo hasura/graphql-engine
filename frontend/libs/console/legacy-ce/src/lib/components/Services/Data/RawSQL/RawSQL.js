@@ -18,6 +18,7 @@ import {
   executeSQL,
   SET_SQL,
   SET_CASCADE_CHECKED,
+  SET_READ_ONLY_CHECKED,
   SET_MIGRATION_CHECKED,
   SET_TRACK_TABLE_CHECKED,
 } from './Actions';
@@ -67,6 +68,7 @@ const checkChangeLang = (sql, selectedDriver) => {
  * @property {boolean} lastSuccess
  * @property {boolean} isModalOpen
  * @property {boolean} isCascadeChecked
+ * @property {boolean} isReadOnlyChecked
  * @property {boolean} isMigrationChecked
  * @property {boolean} isTableTrackChecked
  * @property {boolean} migrationMode
@@ -85,6 +87,7 @@ const RawSQL = ({
   lastSuccess,
   isModalOpen,
   isCascadeChecked,
+  isReadOnlyChecked,
   isMigrationChecked,
   isTableTrackChecked,
   migrationMode,
@@ -351,6 +354,33 @@ const RawSQL = ({
     );
   };
 
+  const getReadOnlySection = () => {
+    return (
+      <div className={styles.add_mar_top_small}>
+        <label>
+          <input
+            checked={isReadOnlyChecked}
+            className={`${styles.add_mar_right_small} ${styles.cursorPointer} legacy-input-fix`}
+            id="read-only-checkbox"
+            type="checkbox"
+            onChange={() => {
+              dispatch({
+                type: SET_READ_ONLY_CHECKED,
+                data: !isReadOnlyChecked,
+              });
+            }}
+          />
+          Read only
+        </label>
+        <Tooltip
+          message={
+            'When set to true, the request will be run in READ ONLY transaction access mode which means only select queries will be successful. This flag ensures that the GraphQL schema is not modified and is hence highly performant.'
+          }
+        />
+      </div>
+    );
+  };
+
   const getTrackThisSection = () => {
     const dispatchTrackThis = () => {
       dispatch({
@@ -515,6 +545,7 @@ const RawSQL = ({
                   ? getTrackThisSection()
                   : null}
                 {getMetadataCascadeSection()}
+                {getReadOnlySection()}
                 {getMigrationSection()}
               </>
             )}
