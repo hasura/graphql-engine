@@ -501,9 +501,6 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
             </div>
           </div>
 
-          <div className="mt-lg">
-            <ManageAgents />
-          </div>
           {showCheckLatencyButton ? (
             <Button
               size="md"
@@ -588,6 +585,10 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
             </div>
           ) : null}
           <NeonDashboardLink className="mt-lg" />
+
+          <div className="mt-lg">
+            <ManageAgents />
+          </div>
         </div>
       </Analytics>
     </RightContainer>
