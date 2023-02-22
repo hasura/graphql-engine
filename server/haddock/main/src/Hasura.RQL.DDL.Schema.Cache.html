@@ -2455,7 +2455,7 @@ arr
 </span><a href="#local-6989586621690756503"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621690756502"><span class="annot"><span class="annottext">BackendSourceKind b
 </span><a href="#local-6989586621690756502"><span class="hs-identifier hs-var">_backendKind</span></a></span></span><span> </span><span id="local-6989586621690756501"><span class="annot"><span class="annottext">Tables b
 </span><a href="#local-6989586621690756501"><span class="hs-identifier hs-var">tables</span></a></span></span><span> </span><span id="local-6989586621690756500"><span class="annot"><span class="annottext">Functions b
-</span><a href="#local-6989586621690756500"><span class="hs-identifier hs-var">functions</span></a></span></span><span> </span><span id="local-6989586621690756499"><span class="annot"><span class="annottext">NativeQueries b
+</span><a href="#local-6989586621690756500"><span class="hs-identifier hs-var">functions</span></a></span></span><span> </span><span id="local-6989586621690756499"><span class="annot"><span class="annottext">LogicalModels b
 </span><a href="#local-6989586621690756499"><span class="hs-identifier hs-var">customSQL</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConnConfiguration b
 </span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621690756498"><span class="annot"><span class="annottext">Maybe QueryTagsConfig
 </span><a href="#local-6989586621690756498"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span></span><span> </span><span id="local-6989586621690756497"><span class="annot"><span class="annottext">SourceCustomization
@@ -2840,7 +2840,7 @@ MetadataObject -&gt; SchemaObjId -&gt; Seq SchemaDependency -&gt; m ()
 SourceName
 -&gt; TableCache b
 -&gt; FunctionCache b
--&gt; NativeQueries b
+-&gt; LogicalModels b
 -&gt; SourceConfig b
 -&gt; Maybe QueryTagsConfig
 -&gt; ResolvedSourceCustomization
@@ -2848,7 +2848,7 @@ SourceName
 </span><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-var">SourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621690756503"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (TableName b) (TableInfo b)
 </span><a href="#local-6989586621690756464"><span class="hs-identifier hs-var">tableCache</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (FunctionName b) (FunctionInfo b)
-</span><a href="#local-6989586621690756413"><span class="hs-identifier hs-var">functionCache</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueries b
+</span><a href="#local-6989586621690756413"><span class="hs-identifier hs-var">functionCache</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModels b
 </span><a href="#local-6989586621690756499"><span class="hs-identifier hs-var">customSQL</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig b
 </span><a href="#local-6989586621690756511"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QueryTagsConfig
 </span><a href="#local-6989586621690756498"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span><span> </span><span class="annot"><span class="annottext">ResolvedSourceCustomization
@@ -2984,7 +2984,7 @@ AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">BackendSourceKind b
 </span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621690756142"><span class="annot"><span class="annottext">Tables b
 </span><a href="#local-6989586621690756142"><span class="hs-identifier hs-var">tables</span></a></span></span><span> </span><span id="local-6989586621690756141"><span class="annot"><span class="annottext">Functions b
-</span><a href="#local-6989586621690756141"><span class="hs-identifier hs-var">_functions</span></a></span></span><span> </span><span id="local-6989586621690756140"><span class="annot"><span class="annottext">NativeQueries b
+</span><a href="#local-6989586621690756141"><span class="hs-identifier hs-var">_functions</span></a></span></span><span> </span><span id="local-6989586621690756140"><span class="annot"><span class="annottext">LogicalModels b
 </span><a href="#local-6989586621690756140"><span class="hs-identifier hs-var">_customSQL</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConnConfiguration b
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe QueryTagsConfig
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceCustomization

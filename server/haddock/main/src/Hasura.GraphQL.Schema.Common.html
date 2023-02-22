@@ -571,7 +571,7 @@ TableName b -&gt; m (TableInfo b)
 </span><span id="line-334"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690645600"><span id="local-6989586621690645601"><span id="local-6989586621690645602"><span id="local-6989586621690645603"><span id="local-6989586621690645604"><span id="local-6989586621690645605"><span id="local-6989586621690645606"><span class="annot"><span class="annottext">Maybe QueryTagsConfig
 TableCache b
 FunctionCache b
-NativeQueries b
+LogicalModels b
 SourceConfig b
 SourceName
 ResolvedSourceCustomization
@@ -579,13 +579,13 @@ _siCustomization :: forall (b :: BackendType).
 SourceInfo b -&gt; ResolvedSourceCustomization
 _siQueryTagsConfig :: forall (b :: BackendType). SourceInfo b -&gt; Maybe QueryTagsConfig
 _siConfiguration :: forall (b :: BackendType). SourceInfo b -&gt; SourceConfig b
-_siNativeQueries :: forall (b :: BackendType). SourceInfo b -&gt; NativeQueries b
+_siLogicalModels :: forall (b :: BackendType). SourceInfo b -&gt; LogicalModels b
 _siFunctions :: forall (b :: BackendType). SourceInfo b -&gt; FunctionCache b
 _siName :: forall (b :: BackendType). SourceInfo b -&gt; SourceName
 _siCustomization :: ResolvedSourceCustomization
 _siQueryTagsConfig :: Maybe QueryTagsConfig
 _siConfiguration :: SourceConfig b
-_siNativeQueries :: NativeQueries b
+_siLogicalModels :: LogicalModels b
 _siFunctions :: FunctionCache b
 _siTables :: TableCache b
 _siName :: SourceName

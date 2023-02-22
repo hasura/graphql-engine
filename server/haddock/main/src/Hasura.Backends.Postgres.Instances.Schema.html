@@ -1200,7 +1200,7 @@ MkRootFieldName
 </span><a href="Hasura.Backends.Postgres.Schema.Select.html#buildFunctionMutationFieldsPG"><span class="hs-identifier hs-var">buildFunctionMutationFieldsPG</span></a></span><span>
 </span><span id="line-310"></span><span>  </span><span id="local-6989586621690672994"><span class="annot"><span class="annottext">buildLogicalModelRootFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema ('Postgres pgKind) r m n =&gt;
-NativeQueryInfo ('Postgres pgKind)
+LogicalModelInfo ('Postgres pgKind)
 -&gt; SchemaT
      r
      m
@@ -1213,7 +1213,7 @@ NativeQueryInfo ('Postgres pgKind)
               (UnpreparedValue ('Postgres pgKind)))))
 </span><a href="Hasura.GraphQL.Schema.Backend.html#buildLogicalModelRootFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildLogicalModelRootFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 (MonadBuildSchema b r m n, BackendCustomTypeSelectSchema b) =&gt;
-NativeQueryInfo b
+LogicalModelInfo b
 -&gt; SchemaT
      r
      m

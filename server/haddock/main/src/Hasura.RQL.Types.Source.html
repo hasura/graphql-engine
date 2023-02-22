@@ -13,7 +13,7 @@
 </span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#unsafeSourceName"><span class="hs-identifier">unsafeSourceName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#unsafeSourceTables"><span class="hs-identifier">unsafeSourceTables</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#siConfiguration"><span class="hs-identifier">siConfiguration</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#siNativeQueries"><span class="hs-identifier">siNativeQueries</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#siLogicalModels"><span class="hs-identifier">siLogicalModels</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-17"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#siFunctions"><span class="hs-identifier">siFunctions</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-18"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#siName"><span class="hs-identifier">siName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-19"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#siQueryTagsConfig"><span class="hs-identifier">siQueryTagsConfig</span></a></span><span class="hs-special">,</span><span>
@@ -54,7 +54,7 @@
 </span><span id="line-54"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html"><span class="hs-identifier">Hasura.RQL.Types.Function</span></a></span><span>
 </span><span id="line-55"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.HealthCheck.html"><span class="hs-identifier">Hasura.RQL.Types.HealthCheck</span></a></span><span>
 </span><span id="line-56"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Instances.html"><span class="hs-identifier">Hasura.RQL.Types.Instances</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-57"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata.Common</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#NativeQueries"><span class="hs-identifier">NativeQueries</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata.Common</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#LogicalModels"><span class="hs-identifier">LogicalModels</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-58"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html"><span class="hs-identifier">Hasura.RQL.Types.QueryTags</span></a></span><span>
 </span><span id="line-59"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html"><span class="hs-identifier">Hasura.RQL.Types.SourceCustomization</span></a></span><span>
 </span><span id="line-60"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html"><span class="hs-identifier">Hasura.RQL.Types.Table</span></a></span><span>
@@ -74,8 +74,8 @@
 </span><a href="Hasura.RQL.Types.Source.html#_siTables"><span class="hs-identifier hs-var hs-var">_siTables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableCache"><span class="hs-identifier hs-type">TableCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690619340"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-73"></span><span>    </span><span id="_siFunctions"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceInfo b -&gt; FunctionCache b
 </span><a href="Hasura.RQL.Types.Source.html#_siFunctions"><span class="hs-identifier hs-var hs-var">_siFunctions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionCache"><span class="hs-identifier hs-type">FunctionCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690619340"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-74"></span><span>    </span><span id="_siNativeQueries"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceInfo b -&gt; NativeQueries b
-</span><a href="Hasura.RQL.Types.Source.html#_siNativeQueries"><span class="hs-identifier hs-var hs-var">_siNativeQueries</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#NativeQueries"><span class="hs-identifier hs-type">NativeQueries</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690619340"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>    </span><span id="_siLogicalModels"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceInfo b -&gt; LogicalModels b
+</span><a href="Hasura.RQL.Types.Source.html#_siLogicalModels"><span class="hs-identifier hs-var hs-var">_siLogicalModels</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#LogicalModels"><span class="hs-identifier hs-type">LogicalModels</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690619340"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-75"></span><span>    </span><span id="_siConfiguration"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceInfo b -&gt; SourceConfig b
 </span><a href="Hasura.RQL.Types.Source.html#_siConfiguration"><span class="hs-identifier hs-var hs-var">_siConfiguration</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">~</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690619340"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-76"></span><span>    </span><span id="_siQueryTagsConfig"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceInfo b -&gt; Maybe QueryTagsConfig
@@ -85,7 +85,7 @@ SourceInfo b -&gt; ResolvedSourceCustomization
 </span><a href="Hasura.RQL.Types.Source.html#_siCustomization"><span class="hs-identifier hs-var hs-var">_siCustomization</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#ResolvedSourceCustomization"><span class="hs-identifier hs-type">ResolvedSourceCustomization</span></a></span><span>
 </span><span id="line-78"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-79"></span><span>
-</span><span id="line-80"></span><span class="hs-special">$</span><span id="siCustomization"><span id="siTables"><span id="siQueryTagsConfig"><span id="siName"><span id="siFunctions"><span id="siNativeQueries"><span id="siConfiguration"><span id="local-6989586621690619340"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SourceInfo</span><span class="hs-special">)</span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-80"></span><span class="hs-special">$</span><span id="siCustomization"><span id="siTables"><span id="siQueryTagsConfig"><span id="siName"><span id="siFunctions"><span id="siLogicalModels"><span id="siConfiguration"><span id="local-6989586621690619340"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SourceInfo</span><span class="hs-special">)</span></span></span></span></span></span></span></span></span><span>
 </span><span id="line-81"></span><span>
 </span><span id="line-82"></span><span class="hs-keyword">instance</span><span>
 </span><span id="line-83"></span><span>  </span><span id="local-6989586621690618960"><span id="local-6989586621690618962"><span id="local-6989586621690618964"><span id="local-6989586621690619308"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690619308"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
@@ -100,14 +100,14 @@ SourceInfo b -&gt; ResolvedSourceCustomization
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690618929"><span id="local-6989586621690618930"><span id="local-6989586621690618931"><span id="local-6989586621690618932"><span id="local-6989586621690618933"><span id="local-6989586621690618934"><span id="local-6989586621690618935"><span class="annot"><span class="annottext">Maybe QueryTagsConfig
 TableCache b
 FunctionCache b
-NativeQueries b
+LogicalModels b
 SourceConfig b
 SourceName
 ResolvedSourceCustomization
 _siCustomization :: ResolvedSourceCustomization
 _siQueryTagsConfig :: Maybe QueryTagsConfig
 _siConfiguration :: SourceConfig b
-_siNativeQueries :: NativeQueries b
+_siLogicalModels :: LogicalModels b
 _siFunctions :: FunctionCache b
 _siTables :: TableCache b
 _siName :: SourceName
@@ -115,7 +115,7 @@ _siCustomization :: forall (b :: BackendType).
 SourceInfo b -&gt; ResolvedSourceCustomization
 _siQueryTagsConfig :: forall (b :: BackendType). SourceInfo b -&gt; Maybe QueryTagsConfig
 _siConfiguration :: forall (b :: BackendType). SourceInfo b -&gt; SourceConfig b
-_siNativeQueries :: forall (b :: BackendType). SourceInfo b -&gt; NativeQueries b
+_siLogicalModels :: forall (b :: BackendType). SourceInfo b -&gt; LogicalModels b
 _siFunctions :: forall (b :: BackendType). SourceInfo b -&gt; FunctionCache b
 _siTables :: forall (b :: BackendType). SourceInfo b -&gt; TableCache b
 _siName :: forall (b :: BackendType). SourceInfo b -&gt; SourceName
@@ -178,7 +178,7 @@ AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 </span><a href="#local-6989586621690618921"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span id="local-6989586621690618919"><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621690618919"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="annot"><span class="annottext">TableCache b
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">FunctionCache b
-</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">NativeQueries b
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">LogicalModels b
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceConfig b
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe QueryTagsConfig
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ResolvedSourceCustomization

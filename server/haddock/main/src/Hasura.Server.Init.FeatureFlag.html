@@ -7,7 +7,7 @@
 </span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#Identifier"><span class="hs-identifier">Identifier</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlags"><span class="hs-identifier">FeatureFlags</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#featureFlags"><span class="hs-identifier">featureFlags</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#nativeQueryInterface"><span class="hs-identifier">nativeQueryInterface</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#logicalModelInterface"><span class="hs-identifier">logicalModelInterface</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-11"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-12"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-13"></span><span>
@@ -177,7 +177,7 @@ $ctoJSON :: FeatureFlag -&gt; Value
 </span><a href="Hasura.Server.Init.FeatureFlag.html#testFlag"><span class="hs-identifier hs-var">testFlag</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-54"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;native-query-interface&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FeatureFlag
-</span><a href="Hasura.Server.Init.FeatureFlag.html#nativeQueryInterface"><span class="hs-identifier hs-var">nativeQueryInterface</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.Server.Init.FeatureFlag.html#logicalModelInterface"><span class="hs-identifier hs-var">logicalModelInterface</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-55"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-56"></span><span>
 </span><span id="line-57"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
@@ -201,9 +201,9 @@ $ctoJSON :: FeatureFlag -&gt; Value
 </span><span class="hs-string">&quot;HASURA_FF_TEST_FLAG&quot;</span></span><span>
 </span><span id="line-66"></span><span>    </span><span class="hs-special">}</span><span>
 </span><span id="line-67"></span><span>
-</span><span id="line-68"></span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#nativeQueryInterface"><span class="hs-identifier hs-type">nativeQueryInterface</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span>
-</span><span id="line-69"></span><span id="nativeQueryInterface"><span class="annot"><span class="annottext">nativeQueryInterface :: FeatureFlag
-</span><a href="Hasura.Server.Init.FeatureFlag.html#nativeQueryInterface"><span class="hs-identifier hs-var hs-var">nativeQueryInterface</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-68"></span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#logicalModelInterface"><span class="hs-identifier hs-type">logicalModelInterface</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span>
+</span><span id="line-69"></span><span id="logicalModelInterface"><span class="annot"><span class="annottext">logicalModelInterface :: FeatureFlag
+</span><a href="Hasura.Server.Init.FeatureFlag.html#logicalModelInterface"><span class="hs-identifier hs-var hs-var">logicalModelInterface</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-70"></span><span>  </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span>
 </span><span id="line-71"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">ffIdentifier :: Identifier
 </span><a href="Hasura.Server.Init.FeatureFlag.html#ffIdentifier"><span class="hs-identifier hs-var">ffIdentifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Identifier
@@ -217,6 +217,6 @@ $ctoJSON :: FeatureFlag -&gt; Value
 </span><span class="hs-string">&quot;Expose custom views, permissions and advanced SQL functionality via custom queries&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-74"></span><span>      </span><span class="annot"><span class="annottext">ffEnvVar :: String
 </span><a href="Hasura.Server.Init.FeatureFlag.html#ffEnvVar"><span class="hs-identifier hs-var">ffEnvVar</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;HASURA_FF_NATIVE_QUERY_INTERFACE&quot;</span></span><span>
+</span><span class="hs-string">&quot;HASURA_FF_LOGICAL_MODEL_INTERFACE&quot;</span></span><span>
 </span><span id="line-75"></span><span>    </span><span class="hs-special">}</span><span>
 </span><span id="line-76"></span></pre></body></html>

@@ -15,7 +15,7 @@
 </span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#ComputedFields"><span class="hs-identifier">ComputedFields</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#CronTriggers"><span class="hs-identifier">CronTriggers</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-17"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#Endpoints"><span class="hs-identifier">Endpoints</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#NativeQueries"><span class="hs-identifier">NativeQueries</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#LogicalModels"><span class="hs-identifier">LogicalModels</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-19"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#EventTriggers"><span class="hs-identifier">EventTriggers</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-20"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#FunctionMetadata"><span class="hs-identifier">FunctionMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-21"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#Functions"><span class="hs-identifier">Functions</span></a></span><span class="hs-special">,</span><span>
@@ -47,7 +47,7 @@
 </span><span id="line-47"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#smQueryTags"><span class="hs-identifier">smQueryTags</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-48"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#smTables"><span class="hs-identifier">smTables</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-49"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#smCustomization"><span class="hs-identifier">smCustomization</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-50"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#smNativeQueries"><span class="hs-identifier">smNativeQueries</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#smLogicalModels"><span class="hs-identifier">smLogicalModels</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-51"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#smHealthCheckConfig"><span class="hs-identifier">smHealthCheckConfig</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-52"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#sourcesCodec"><span class="hs-identifier">sourcesCodec</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-53"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#tmArrayRelationships"><span class="hs-identifier">tmArrayRelationships</span></a></span><span class="hs-special">,</span><span>
@@ -81,7 +81,7 @@
 </span><span id="line-81"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">fromJust</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-82"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
 </span><span id="line-83"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
-</span><span id="line-84"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html"><span class="hs-identifier">Hasura.LogicalModel.Metadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier">LogicalModelName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html#NativeQueryInfo"><span class="hs-identifier">NativeQueryInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-84"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html"><span class="hs-identifier">Hasura.LogicalModel.Metadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html#LogicalModelInfo"><span class="hs-identifier">LogicalModelInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier">LogicalModelName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-85"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html"><span class="hs-identifier">Hasura.Metadata.DTO.Placeholder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#placeholderCodecViaJSON"><span class="hs-identifier">placeholderCodecViaJSON</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-86"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Utils.html"><span class="hs-identifier">Hasura.Metadata.DTO.Utils</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.Utils.html#codecNamePrefix"><span class="hs-identifier">codecNamePrefix</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-87"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
@@ -1129,7 +1129,7 @@ ObjectCodec oldInput output
 </span><span id="line-405"></span><span>
 </span><span id="line-406"></span><span class="hs-keyword">type</span><span> </span><span id="Functions"><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#Functions"><span class="hs-identifier hs-var">Functions</span></a></span></span><span> </span><span id="local-6989586621690616236"><span class="annot"><a href="#local-6989586621690616236"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690616236"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#FunctionMetadata"><span class="hs-identifier hs-type">FunctionMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690616236"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-407"></span><span>
-</span><span id="line-408"></span><span class="hs-keyword">type</span><span> </span><span id="NativeQueries"><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#NativeQueries"><span class="hs-identifier hs-var">NativeQueries</span></a></span></span><span> </span><span id="local-6989586621690616235"><span class="annot"><a href="#local-6989586621690616235"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html#NativeQueryInfo"><span class="hs-identifier hs-type">NativeQueryInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690616235"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-408"></span><span class="hs-keyword">type</span><span> </span><span id="LogicalModels"><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#LogicalModels"><span class="hs-identifier hs-var">LogicalModels</span></a></span></span><span> </span><span id="local-6989586621690616235"><span class="annot"><a href="#local-6989586621690616235"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html#LogicalModelInfo"><span class="hs-identifier hs-type">LogicalModelInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690616235"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-409"></span><span>
 </span><span id="line-410"></span><span class="hs-keyword">type</span><span> </span><span id="Endpoints"><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#Endpoints"><span class="hs-identifier hs-var">Endpoints</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointName"><span class="hs-identifier hs-type">EndpointName</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#CreateEndpoint"><span class="hs-identifier hs-type">CreateEndpoint</span></a></span><span>
 </span><span id="line-411"></span><span>
@@ -1149,8 +1149,8 @@ ObjectCodec oldInput output
 </span><a href="Hasura.RQL.Types.Metadata.Common.html#_smTables"><span class="hs-identifier hs-var hs-var">_smTables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#Tables"><span class="hs-identifier hs-type">Tables</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690618163"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-423"></span><span>    </span><span id="_smFunctions"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceMetadata b -&gt; Functions b
 </span><a href="Hasura.RQL.Types.Metadata.Common.html#_smFunctions"><span class="hs-identifier hs-var hs-var">_smFunctions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#Functions"><span class="hs-identifier hs-type">Functions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690618163"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-424"></span><span>    </span><span id="_smNativeQueries"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceMetadata b -&gt; NativeQueries b
-</span><a href="Hasura.RQL.Types.Metadata.Common.html#_smNativeQueries"><span class="hs-identifier hs-var hs-var">_smNativeQueries</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#NativeQueries"><span class="hs-identifier hs-type">NativeQueries</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690618163"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-424"></span><span>    </span><span id="_smLogicalModels"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceMetadata b -&gt; LogicalModels b
+</span><a href="Hasura.RQL.Types.Metadata.Common.html#_smLogicalModels"><span class="hs-identifier hs-var hs-var">_smLogicalModels</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#LogicalModels"><span class="hs-identifier hs-type">LogicalModels</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690618163"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-425"></span><span>    </span><span id="_smConfiguration"><span class="annot"><span class="annottext">forall (b :: BackendType).
 SourceMetadata b -&gt; SourceConnConfiguration b
 </span><a href="Hasura.RQL.Types.Metadata.Common.html#_smConfiguration"><span class="hs-identifier hs-var hs-var">_smConfiguration</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConnConfiguration"><span class="hs-identifier hs-type">SourceConnConfiguration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690618163"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
@@ -1175,7 +1175,7 @@ $cfrom :: forall (b :: BackendType) x.
 SourceMetadata b -&gt; Rep (SourceMetadata b) x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-431"></span><span>
-</span><span id="line-432"></span><span class="hs-special">$</span><span id="smHealthCheckConfig"><span id="smNativeQueries"><span id="smCustomization"><span id="smTables"><span id="smQueryTags"><span id="smName"><span id="smKind"><span id="smFunctions"><span id="smConfiguration"><span id="local-6989586621690618163"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SourceMetadata</span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-432"></span><span class="hs-special">$</span><span id="smHealthCheckConfig"><span id="smLogicalModels"><span id="smCustomization"><span id="smTables"><span id="smQueryTags"><span id="smName"><span id="smKind"><span id="smFunctions"><span id="smConfiguration"><span id="local-6989586621690618163"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SourceMetadata</span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span><span>
 </span><span id="line-433"></span><span>
 </span><span id="line-434"></span><span id="local-6989586621690616075"><span id="local-6989586621690616077"><span id="local-6989586621690616098"><span id="local-6989586621690618124"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690618124"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690618124"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-435"></span><span>
@@ -1211,14 +1211,14 @@ SourceMetadata b -&gt; Rep (SourceMetadata b) x
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;functions&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-443"></span><span>    </span><span id="local-6989586621690615986"><span class="annot"><span class="annottext">InsOrdHashMap LogicalModelName (NativeQueryInfo b)
-</span><a href="#local-6989586621690615986"><span class="hs-identifier hs-var">_smNativeQueries</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall k a. Hashable k =&gt; (a -&gt; k) -&gt; [a] -&gt; InsOrdHashMap k a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">oMapFromL</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryInfo b -&gt; LogicalModelName
-</span><a href="Hasura.LogicalModel.Metadata.html#nqiRootFieldName"><span class="hs-identifier hs-var">nqiRootFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-443"></span><span>    </span><span id="local-6989586621690615986"><span class="annot"><span class="annottext">InsOrdHashMap LogicalModelName (LogicalModelInfo b)
+</span><a href="#local-6989586621690615986"><span class="hs-identifier hs-var">_smLogicalModels</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall k a. Hashable k =&gt; (a -&gt; k) -&gt; [a] -&gt; InsOrdHashMap k a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">oMapFromL</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). LogicalModelInfo b -&gt; LogicalModelName
+</span><a href="Hasura.LogicalModel.Metadata.html#lmiRootFieldName"><span class="hs-identifier hs-var">lmiRootFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690615990"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
-</span><span class="hs-string">&quot;native_queries&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
+</span><span class="hs-string">&quot;logical_models&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-444"></span><span>    </span><span id="local-6989586621690615984"><span class="annot"><span class="annottext">SourceConnConfiguration b
 </span><a href="#local-6989586621690615984"><span class="hs-identifier hs-var">_smConfiguration</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
@@ -1245,7 +1245,7 @@ SourceMetadata b -&gt; Rep (SourceMetadata b) x
 </span><span id="line-448"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Maybe QueryTagsConfig
 Maybe (HealthCheckConfig b)
-InsOrdHashMap LogicalModelName (NativeQueryInfo b)
+InsOrdHashMap LogicalModelName (LogicalModelInfo b)
 InsOrdHashMap (TableName b) (TableMetadata b)
 InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 BackendSourceKind b
@@ -1256,7 +1256,7 @@ _smHealthCheckConfig :: Maybe (HealthCheckConfig b)
 _smCustomization :: SourceCustomization
 _smQueryTags :: Maybe QueryTagsConfig
 _smConfiguration :: SourceConnConfiguration b
-_smNativeQueries :: InsOrdHashMap LogicalModelName (NativeQueryInfo b)
+_smLogicalModels :: InsOrdHashMap LogicalModelName (LogicalModelInfo b)
 _smFunctions :: InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 _smTables :: InsOrdHashMap (TableName b) (TableMetadata b)
 _smName :: SourceName
@@ -1265,7 +1265,7 @@ _smHealthCheckConfig :: Maybe (HealthCheckConfig b)
 _smCustomization :: SourceCustomization
 _smQueryTags :: Maybe QueryTagsConfig
 _smConfiguration :: SourceConnConfiguration b
-_smNativeQueries :: InsOrdHashMap LogicalModelName (NativeQueryInfo b)
+_smLogicalModels :: InsOrdHashMap LogicalModelName (LogicalModelInfo b)
 _smFunctions :: InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 _smTables :: InsOrdHashMap (TableName b) (TableMetadata b)
 _smKind :: BackendSourceKind b
@@ -1424,7 +1424,7 @@ SourceName
 -&gt; BackendSourceKind b
 -&gt; Tables b
 -&gt; Functions b
--&gt; NativeQueries b
+-&gt; LogicalModels b
 -&gt; SourceConnConfiguration b
 -&gt; Maybe QueryTagsConfig
 -&gt; SourceCustomization
@@ -1484,17 +1484,17 @@ ObjectCodec oldInput output
 Eq output =&gt;
 Text -&gt; JSONCodec output -&gt; output -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">optionalFieldOrNullWithOmittedDefaultWith'</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;native_queries&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a k.
+</span><span class="hs-string">&quot;logical_models&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a k.
 (HasCodec a, Hashable k, Ord k, ToTxt k) =&gt;
 (a -&gt; k) -&gt; JSONCodec (InsOrdHashMap k a)
-</span><a href="Data.HashMap.Strict.InsOrd.Autodocodec.html#sortedElemsCodec"><span class="hs-identifier hs-var">sortedElemsCodec</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryInfo b -&gt; LogicalModelName
-</span><a href="Hasura.LogicalModel.Metadata.html#nqiRootFieldName"><span class="hs-identifier hs-var">nqiRootFieldName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
+</span><a href="Data.HashMap.Strict.InsOrd.Autodocodec.html#sortedElemsCodec"><span class="hs-identifier hs-var">sortedElemsCodec</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). LogicalModelInfo b -&gt; LogicalModelName
+</span><a href="Hasura.LogicalModel.Metadata.html#lmiRootFieldName"><span class="hs-identifier hs-var">lmiRootFieldName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span>
 </span><span id="line-503"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="#local-6989586621690615877"><span class="hs-operator hs-var">.==</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceMetadata b -&gt; NativeQueries b
-</span><a href="Hasura.RQL.Types.Metadata.Common.html#_smNativeQueries"><span class="hs-identifier hs-var">_smNativeQueries</span></a></span><span>
+</span><a href="#local-6989586621690615877"><span class="hs-operator hs-var">.==</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceMetadata b -&gt; LogicalModels b
+</span><a href="Hasura.RQL.Types.Metadata.Common.html#_smLogicalModels"><span class="hs-identifier hs-var">_smLogicalModels</span></a></span><span>
 </span><span id="line-504"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">requiredField'</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -1606,7 +1606,7 @@ SourceName
 -&gt; BackendSourceKind b
 -&gt; Tables b
 -&gt; Functions b
--&gt; NativeQueries b
+-&gt; LogicalModels b
 -&gt; SourceConnConfiguration b
 -&gt; Maybe QueryTagsConfig
 -&gt; SourceCustomization

@@ -749,7 +749,7 @@ _trdName :: TypeRelationshipDefinition -&gt; RelationshipName
 </span><span id="line-269"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690640926"><span id="local-6989586621690640927"><span id="local-6989586621690640928"><span id="local-6989586621690640929"><span id="local-6989586621690640930"><span id="local-6989586621690640931"><span id="local-6989586621690640932"><span class="annot"><span class="annottext">Maybe QueryTagsConfig
 TableCache ('Postgres 'Vanilla)
 FunctionCache ('Postgres 'Vanilla)
-NativeQueries ('Postgres 'Vanilla)
+LogicalModels ('Postgres 'Vanilla)
 SourceConfig ('Postgres 'Vanilla)
 SourceName
 ResolvedSourceCustomization
@@ -757,14 +757,14 @@ _siCustomization :: forall (b :: BackendType).
 SourceInfo b -&gt; ResolvedSourceCustomization
 _siQueryTagsConfig :: forall (b :: BackendType). SourceInfo b -&gt; Maybe QueryTagsConfig
 _siConfiguration :: forall (b :: BackendType). SourceInfo b -&gt; SourceConfig b
-_siNativeQueries :: forall (b :: BackendType). SourceInfo b -&gt; NativeQueries b
+_siLogicalModels :: forall (b :: BackendType). SourceInfo b -&gt; LogicalModels b
 _siFunctions :: forall (b :: BackendType). SourceInfo b -&gt; FunctionCache b
 _siTables :: forall (b :: BackendType). SourceInfo b -&gt; TableCache b
 _siName :: forall (b :: BackendType). SourceInfo b -&gt; SourceName
 _siCustomization :: ResolvedSourceCustomization
 _siQueryTagsConfig :: Maybe QueryTagsConfig
 _siConfiguration :: SourceConfig ('Postgres 'Vanilla)
-_siNativeQueries :: NativeQueries ('Postgres 'Vanilla)
+_siLogicalModels :: LogicalModels ('Postgres 'Vanilla)
 _siFunctions :: FunctionCache ('Postgres 'Vanilla)
 _siTables :: TableCache ('Postgres 'Vanilla)
 _siName :: SourceName

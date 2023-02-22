@@ -322,7 +322,7 @@ SourceName
 -&gt; BackendSourceKind b
 -&gt; Tables b
 -&gt; Functions b
--&gt; NativeQueries b
+-&gt; LogicalModels b
 -&gt; SourceConnConfiguration b
 -&gt; Maybe QueryTagsConfig
 -&gt; SourceCustomization
@@ -843,7 +843,7 @@ SourceName
 -&gt; BackendSourceKind b
 -&gt; Tables b
 -&gt; Functions b
--&gt; NativeQueries b
+-&gt; LogicalModels b
 -&gt; SourceConnConfiguration b
 -&gt; Maybe QueryTagsConfig
 -&gt; SourceCustomization
@@ -1021,7 +1021,7 @@ AnyBackend i -&gt; Maybe (i b)
 </span><a href="#local-6989586621690784252"><span class="hs-identifier hs-var">emptyMetadataNoSources</span></a></span><span>
 </span><span id="line-371"></span><span>                </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690784238"><span id="local-6989586621690784239"><span id="local-6989586621690784240"><span id="local-6989586621690784241"><span id="local-6989586621690784242"><span id="local-6989586621690784243"><span id="local-6989586621690784244"><span id="local-6989586621690784245"><span id="local-6989586621690784246"><span class="annot"><span class="annottext">Maybe QueryTagsConfig
 Maybe (HealthCheckConfig ('Postgres 'Vanilla))
-NativeQueries ('Postgres 'Vanilla)
+LogicalModels ('Postgres 'Vanilla)
 Tables ('Postgres 'Vanilla)
 Functions ('Postgres 'Vanilla)
 BackendSourceKind ('Postgres 'Vanilla)
@@ -1035,7 +1035,7 @@ _smQueryTags :: forall (b :: BackendType).
 SourceMetadata b -&gt; Maybe QueryTagsConfig
 _smConfiguration :: forall (b :: BackendType).
 SourceMetadata b -&gt; SourceConnConfiguration b
-_smNativeQueries :: forall (b :: BackendType). SourceMetadata b -&gt; NativeQueries b
+_smLogicalModels :: forall (b :: BackendType). SourceMetadata b -&gt; LogicalModels b
 _smFunctions :: forall (b :: BackendType). SourceMetadata b -&gt; Functions b
 _smTables :: forall (b :: BackendType). SourceMetadata b -&gt; Tables b
 _smKind :: forall (b :: BackendType). SourceMetadata b -&gt; BackendSourceKind b
@@ -1044,7 +1044,7 @@ _smHealthCheckConfig :: Maybe (HealthCheckConfig ('Postgres 'Vanilla))
 _smCustomization :: SourceCustomization
 _smQueryTags :: Maybe QueryTagsConfig
 _smConfiguration :: SourceConnConfiguration ('Postgres 'Vanilla)
-_smNativeQueries :: NativeQueries ('Postgres 'Vanilla)
+_smLogicalModels :: LogicalModels ('Postgres 'Vanilla)
 _smFunctions :: Functions ('Postgres 'Vanilla)
 _smTables :: Tables ('Postgres 'Vanilla)
 _smKind :: BackendSourceKind ('Postgres 'Vanilla)

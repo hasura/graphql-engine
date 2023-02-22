@@ -510,13 +510,13 @@ BoolExpResolver ('Postgres pgKind) m v
 (MonadIO m, MonadError QErr m) =&gt;
 Environment
 -&gt; SourceConnConfiguration ('Postgres pgKind)
--&gt; NativeQueryInfo ('Postgres pgKind)
+-&gt; LogicalModelInfo ('Postgres pgKind)
 -&gt; m ()
 </span><a href="Hasura.RQL.Types.Metadata.Backend.html#validateLogicalModel"><span class="hs-identifier hs-var hs-var hs-var hs-var">validateLogicalModel</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 (MonadIO m, MonadError QErr m) =&gt;
 Environment
 -&gt; PostgresConnConfiguration
--&gt; NativeQueryInfo ('Postgres pgKind)
+-&gt; LogicalModelInfo ('Postgres pgKind)
 -&gt; m ()
 </span><a href="Hasura.Backends.Postgres.Instances.LogicalModels.html#validateLogicalModel"><span class="hs-identifier hs-var">Postgres.validateLogicalModel</span></a></span><span>
 </span><span id="line-141"></span></pre></body></html>
