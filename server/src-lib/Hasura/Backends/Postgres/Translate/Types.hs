@@ -34,7 +34,7 @@ import Data.HashMap.Strict qualified as HM
 import Data.Int (Int64)
 import Hasura.Backends.Postgres.SQL.DML qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
-import Hasura.NativeQuery.Metadata (InterpolatedQuery)
+import Hasura.LogicalModel.Metadata (InterpolatedQuery)
 import Hasura.Prelude
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types.Common

@@ -3,7 +3,7 @@ module Hasura.Server.API.Metadata
   )
 where
 
-import Hasura.NativeQuery.API qualified as LogicalModels
+import Hasura.LogicalModel.API qualified as LogicalModels
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.ConnectionTemplate

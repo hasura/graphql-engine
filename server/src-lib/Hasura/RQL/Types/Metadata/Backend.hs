@@ -11,7 +11,7 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
-import Hasura.NativeQuery.Metadata (NativeQueryInfo)
+import Hasura.LogicalModel.Metadata (NativeQueryInfo)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend

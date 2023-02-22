@@ -155,7 +155,7 @@ import Data.Sequence qualified as Seq
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Options (StringifyNumbers)
-import Hasura.NativeQuery.IR (NativeQuery)
+import Hasura.LogicalModel.IR (NativeQuery)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy

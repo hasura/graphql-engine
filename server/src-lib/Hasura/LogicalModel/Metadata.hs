@@ -3,14 +3,14 @@
 
 -- | This module houses the types and functions associated with the default
 -- implementation of the metadata of native queries.
-module Hasura.NativeQuery.Metadata
+module Hasura.LogicalModel.Metadata
   ( LogicalModelName (..),
     NativeQueryInfo (..),
     NativeQueryArgumentName (..),
     InterpolatedItem (..),
     InterpolatedQuery (..),
     parseInterpolatedQuery,
-    module Hasura.NativeQuery.Types,
+    module Hasura.LogicalModel.Types,
   )
 where
 
@@ -20,8 +20,8 @@ import Data.Aeson
 import Data.Bifunctor (first)
 import Data.Text qualified as T
 import Hasura.CustomReturnType (CustomReturnType)
+import Hasura.LogicalModel.Types
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
-import Hasura.NativeQuery.Types
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend
 import Hasura.SQL.Backend

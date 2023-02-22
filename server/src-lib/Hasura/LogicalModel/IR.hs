@@ -1,11 +1,11 @@
 -- | This module contains the default types and functions that model Native
 -- Queries.
-module Hasura.NativeQuery.IR
+module Hasura.LogicalModel.IR
   ( NativeQuery (..),
   )
 where
 
-import Hasura.NativeQuery.Metadata
+import Hasura.LogicalModel.Metadata
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column (ColumnValue)

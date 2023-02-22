@@ -11,7 +11,7 @@ import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection qualified as PG
 import Hasura.Backends.Postgres.Connection.Connect (withPostgresDB)
 import Hasura.Base.Error
-import Hasura.NativeQuery.Metadata
+import Hasura.LogicalModel.Metadata
 import Hasura.Prelude
 import Hasura.SQL.Backend
 

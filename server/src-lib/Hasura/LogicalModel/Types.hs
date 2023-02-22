@@ -1,5 +1,5 @@
 -- | A name for a logical model as it is recognized by the graphql schema.
-module Hasura.NativeQuery.Types
+module Hasura.LogicalModel.Types
   ( LogicalModelName (..),
   )
 where

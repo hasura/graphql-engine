@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Schema parsers for logical models.
-module Hasura.NativeQuery.Schema (defaultBuildLogicalModelRootFields) where
+module Hasura.LogicalModel.Schema (defaultBuildLogicalModelRootFields) where
 
 import Data.Has (Has (getter))
 import Data.HashMap.Strict qualified as HM
@@ -20,8 +20,8 @@ import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
   ( customTypeSelectionList,
   )
-import Hasura.NativeQuery.IR (NativeQuery (..))
-import Hasura.NativeQuery.Metadata
+import Hasura.LogicalModel.IR (NativeQuery (..))
+import Hasura.LogicalModel.Metadata
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (gBoolExpTrue)
 import Hasura.RQL.IR.Root (RemoteRelationshipField)

@@ -7,7 +7,7 @@ module Hasura.Backends.Postgres.LogicalModels.LogicalModelsSpec
 where
 
 import Hasura.Base.Error.TestInstances ()
-import Hasura.NativeQuery.Metadata
+import Hasura.LogicalModel.Metadata
 import Test.Hspec (Spec, describe, it, shouldBe)
 import Prelude
 

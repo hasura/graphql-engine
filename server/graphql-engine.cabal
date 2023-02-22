@@ -739,11 +739,11 @@ library
                      , Hasura.Server.Auth.JWT
                      , Hasura.GC
 
-                     , Hasura.NativeQuery.IR
-                     , Hasura.NativeQuery.Metadata
-                     , Hasura.NativeQuery.API
-                     , Hasura.NativeQuery.Schema
-                     , Hasura.NativeQuery.Types
+                     , Hasura.LogicalModel.IR
+                     , Hasura.LogicalModel.Metadata
+                     , Hasura.LogicalModel.API
+                     , Hasura.LogicalModel.Schema
+                     , Hasura.LogicalModel.Types
 
                      , Hasura.Server.Auth.WebHook
                      , Hasura.Server.Middleware

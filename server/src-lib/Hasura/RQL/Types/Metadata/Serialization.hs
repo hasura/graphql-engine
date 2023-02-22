@@ -25,7 +25,7 @@ import Data.Aeson.Ordered qualified as AO
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Text.Extended qualified as T
 import Data.Vector qualified as Vector
-import Hasura.NativeQuery.Metadata (NativeQueryInfo (..))
+import Hasura.LogicalModel.Metadata (NativeQueryInfo (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
   ( ActionDefinition (..),

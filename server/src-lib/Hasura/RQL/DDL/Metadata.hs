@@ -40,8 +40,8 @@ import Data.Text.Extended (dquote, dquoteList, (<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Logging qualified as HL
+import Hasura.LogicalModel.API
 import Hasura.Metadata.Class
-import Hasura.NativeQuery.API
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField

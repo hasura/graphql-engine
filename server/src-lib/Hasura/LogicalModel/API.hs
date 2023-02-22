@@ -1,7 +1,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Define and handle v1/metadata API operations to track, untrack, and get logical models.
-module Hasura.NativeQuery.API
+module Hasura.LogicalModel.API
   ( GetLogicalModel (..),
     TrackLogicalModel (..),
     UntrackLogicalModel (..),
@@ -9,7 +9,7 @@ module Hasura.NativeQuery.API
     runTrackLogicalModel,
     runUntrackLogicalModel,
     dropLogicalModelInMetadata,
-    module Hasura.NativeQuery.Types,
+    module Hasura.LogicalModel.Types,
   )
 where
 
@@ -22,9 +22,9 @@ import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Hasura.Base.Error
 import Hasura.CustomReturnType (CustomReturnType)
 import Hasura.EncJSON
+import Hasura.LogicalModel.Metadata (NativeQueryArgumentName, NativeQueryInfo (..), parseInterpolatedQuery)
+import Hasura.LogicalModel.Types
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
-import Hasura.NativeQuery.Metadata (NativeQueryArgumentName, NativeQueryInfo (..), parseInterpolatedQuery)
-import Hasura.NativeQuery.Types
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend, ScalarType, SourceConnConfiguration)
 import Hasura.RQL.Types.Common (SourceName, sourceNameToText, successMsg)

@@ -40,7 +40,7 @@ import Data.Text qualified as T
 import Data.Text.Conversions (UTF8 (..), decodeText)
 import Hasura.HTTP
 import Hasura.Logging
-import Hasura.NativeQuery.Metadata (NativeQueryInfo, nqiArguments)
+import Hasura.LogicalModel.Metadata (NativeQueryInfo, nqiArguments)
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Common

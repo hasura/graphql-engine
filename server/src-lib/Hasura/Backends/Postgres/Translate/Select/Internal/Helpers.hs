@@ -41,8 +41,8 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
 import Hasura.Backends.Postgres.Translate.Types (CustomSQLCTEs (..))
 import Hasura.Backends.Postgres.Types.Function
-import Hasura.NativeQuery.IR (NativeQuery (..))
-import Hasura.NativeQuery.Metadata (LogicalModelName (..))
+import Hasura.LogicalModel.IR (NativeQuery (..))
+import Hasura.LogicalModel.Metadata (LogicalModelName (..))
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Common (FieldName)

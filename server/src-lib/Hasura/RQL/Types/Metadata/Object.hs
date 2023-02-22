@@ -43,7 +43,7 @@ import Data.Text.Extended
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
-import Hasura.NativeQuery.Types
+import Hasura.LogicalModel.Types
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend

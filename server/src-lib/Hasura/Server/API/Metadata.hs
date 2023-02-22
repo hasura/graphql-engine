@@ -21,8 +21,8 @@ import GHC.Generics.Extended (constrName)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Logging qualified as L
+import Hasura.LogicalModel.API qualified as LogicalModels
 import Hasura.Metadata.Class
-import Hasura.NativeQuery.API qualified as LogicalModels
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ApiLimit
