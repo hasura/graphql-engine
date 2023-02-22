@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import AceEditor from 'react-ace';
 import { useFormContext } from 'react-hook-form';
 import { Table } from '@/features/hasura-metadata-types';
@@ -11,21 +11,13 @@ import { InputField } from '@/new-components/Form';
 import { IconTooltip } from '@/new-components/Tooltip';
 import { Collapse } from '@/new-components/deprecated';
 import { getIngForm } from '../../../../components/Services/Data/utils';
-
 import { RowPermissionBuilder } from './RowPermissionsBuilder';
-
 import { QueryType } from '../../types';
 import { ReturnValue } from '../hooks';
+import { getAllowedFilterKeys } from '../../PermissionsTable/hooks';
 
 const NoChecksLabel = () => (
-  <span data-test="without-checks">
-    Without any checks&nbsp;
-    {/* {filterQueries['{}'] && (
-              <i className={styles.add_mar_left_small}>
-                (Same as <b>{filterQueries['{}'].join(', ')}</b>)
-              </i>
-            )} */}
-  </span>
+  <span data-test="without-checks">Without any checks&nbsp;</span>
 );
 
 const CustomLabel = () => (
@@ -256,7 +248,7 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
           <div className="pt-4">
             {!isLoading && tableName ? (
               <RowPermissionBuilder
-                nesting={['filter']}
+                nesting={getAllowedFilterKeys(queryType)}
                 table={table}
                 dataSourceName={dataSourceName}
               />

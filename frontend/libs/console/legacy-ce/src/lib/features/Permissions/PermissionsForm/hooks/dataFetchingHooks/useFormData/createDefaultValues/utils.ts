@@ -66,13 +66,15 @@ export const getPresets = ({ currentQueryPermissions }: GetPresetArgs) => {
     [string, string]
   >;
 
-  return set.map(([columnName, value]) => {
+  return set.map(([columnName, columnValue]) => {
     return {
       columnName,
-      presetType: value.startsWith('x-hasura')
-        ? 'from session variable'
-        : 'static',
-      value,
+      presetType:
+        typeof columnValue === 'string' &&
+        columnValue.toLowerCase().startsWith('x-hasura')
+          ? 'from session variable'
+          : 'static',
+      columnValue,
     };
   });
 };
@@ -147,7 +149,7 @@ export const createPermission = {
     permission: InsertPermissionDefinition,
     tableColumns: TableColumn[]
   ) => {
-    const check = JSON.stringify(permission.check) || '';
+    const check = permission.check || {};
     const checkType = getCheckType(permission.check);
     const presets = getPresets({
       currentQueryPermissions: permission,

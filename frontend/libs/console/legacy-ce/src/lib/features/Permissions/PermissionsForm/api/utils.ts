@@ -3,14 +3,14 @@ import produce from 'immer';
 import { allowedMetadataTypes } from '@/features/MetadataAPI';
 
 import { AccessType } from '../../types';
-import { PermissionsSchema, Presets } from '../../schema';
+import { PermissionsSchema } from '../../schema';
 import { areTablesEqual } from '@/features/hasura-metadata-api';
 import { Table } from '@/features/hasura-metadata-types';
 import { getTableDisplayName } from '@/features/DatabaseRelationships';
 
 type SelectPermissionMetadata = {
   columns: string[];
-  presets: Presets;
+  set: Record<string, any>;
   filter: Record<string, any>;
   allow_aggregations?: boolean;
   limit?: number;
@@ -46,7 +46,7 @@ const createSelectObject = (input: PermissionsSchema) => {
     const permissionObject: SelectPermissionMetadata = {
       columns,
       filter,
-      presets: [],
+      set: [],
       allow_aggregations: input.aggregationEnabled,
     };
 
@@ -68,6 +68,40 @@ const createSelectObject = (input: PermissionsSchema) => {
   throw new Error('Case not handled');
 };
 
+type InsertPermissionMetadata = {
+  columns: string[];
+  check: Record<string, any>;
+  allow_upsert: boolean;
+  backend_only?: boolean;
+  set: Record<string, any>;
+};
+
+const createInsertObject = (input: PermissionsSchema) => {
+  if (input.queryType === 'insert') {
+    const columns = Object.entries(input.columns)
+      .filter(({ 1: value }) => value)
+      .map(([key]) => key);
+
+    const set =
+      input?.presets?.reduce((acc, preset) => {
+        if (preset.columnName === 'default') return acc;
+        return { ...acc, [preset.columnName]: preset.columnValue };
+      }, {}) ?? {};
+
+    const permissionObject: InsertPermissionMetadata = {
+      columns,
+      check: input.check,
+      allow_upsert: true,
+      set,
+      backend_only: input.backendOnly,
+    };
+
+    return permissionObject;
+  }
+
+  throw new Error('Case not handled');
+};
+
 /**
  * creates the permissions object for the server
  */
@@ -76,7 +110,7 @@ const createPermission = (formData: PermissionsSchema) => {
     case 'select':
       return createSelectObject(formData);
     case 'insert':
-      throw new Error('Case not handled');
+      return createInsertObject(formData);
     case 'update':
       throw new Error('Case not handled');
     case 'delete':
@@ -169,7 +203,7 @@ export const createInsertArgs = ({
           d => {
             if (!areTablesEqual(clonedPermissionTable, table)) {
               d.columns = [];
-              d.presets = [];
+              d.set = {};
             }
 
             return d;

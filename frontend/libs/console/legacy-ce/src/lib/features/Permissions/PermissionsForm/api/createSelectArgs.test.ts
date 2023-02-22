@@ -47,7 +47,6 @@ const selectArgs: CreateInsertArgs = {
 
 test('create select args object from form data', () => {
   const result = createInsertArgs(selectArgs);
-
   expect(result).toEqual([
     {
       args: {
@@ -63,7 +62,7 @@ test('create select args object from form data', () => {
           allow_aggregations: false,
           columns: ['email', 'type'],
           filter: {},
-          presets: [],
+          set: [],
         },
         role: 'user',
         source: 'default',

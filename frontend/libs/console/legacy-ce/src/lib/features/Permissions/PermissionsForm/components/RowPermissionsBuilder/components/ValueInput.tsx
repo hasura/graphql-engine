@@ -67,6 +67,8 @@ export const ValueInput = ({
     o => o.operator === comparatorName
   );
   const jsType = typeof graphQLTypeToJsType(value, comparator?.type);
+  const inputType =
+    jsType === 'boolean' ? 'checkbox' : jsType === 'string' ? 'text' : 'number';
 
   return (
     <>
@@ -79,16 +81,15 @@ export const ValueInput = ({
         value={value}
         comparatorType={comparator?.type}
       />
-      {jsType === 'boolean' ||
-        (isComparator(comparatorName) && (
-          <Button
-            disabled={comparatorName === '_where' && isEmpty(table)}
-            onClick={() => setValue(path, 'X-Hasura-User-Id')}
-            mode="default"
-          >
-            [x-hasura-user-id]
-          </Button>
-        ))}
+      {inputType === 'text' && isComparator(comparatorName) && (
+        <Button
+          disabled={comparatorName === '_where' && isEmpty(table)}
+          onClick={() => setValue(path, 'X-Hasura-User-Id')}
+          mode="default"
+        >
+          [x-hasura-user-id]
+        </Button>
+      )}
     </>
   );
 };

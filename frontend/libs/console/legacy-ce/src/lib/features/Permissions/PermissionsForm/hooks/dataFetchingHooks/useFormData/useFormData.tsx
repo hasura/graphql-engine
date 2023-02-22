@@ -4,17 +4,13 @@ import {
   DataSource,
   exportMetadata,
   Operator,
-  runIntrospectionQuery,
   TableColumn,
 } from '@/features/DataSource';
 import { useHttpClient } from '@/features/Network';
 
 import { createDefaultValues } from './createDefaultValues';
 import { createFormData } from './createFormData';
-import { Table } from '@/dataSources';
-import { Source } from '@/features/hasura-metadata-types';
 import { MetadataDataSource } from '@/metadata/types';
-import { Feature } from '../../../../../DataSource/index';
 
 export type Args = {
   dataSourceName: string;

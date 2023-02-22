@@ -78,12 +78,12 @@ const PresetsRow: React.FC<PresetsRowProps> = ({
 
       <div>
         <input
-          id="value"
+          id="columnValue"
           type="text"
           className={className}
           placeholder="Column value"
           disabled={disabled}
-          {...register(`presets.${id}.value`)}
+          {...register(`presets.${id}.columnValue`)}
         />
       </div>
 

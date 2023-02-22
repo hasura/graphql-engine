@@ -199,7 +199,6 @@ const Component = (props: ComponentProps) => {
           tables={tables}
           roles={roles}
         />
-
         <div className="pt-2 flex gap-2">
           <Button
             type="submit"

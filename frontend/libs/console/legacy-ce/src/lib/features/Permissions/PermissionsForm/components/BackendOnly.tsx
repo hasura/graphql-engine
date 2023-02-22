@@ -3,6 +3,7 @@ import { useFormContext } from 'react-hook-form';
 
 import { Collapse } from '@/new-components/deprecated';
 import { QueryType } from '../../types';
+import { Switch } from '../../../../new-components/Switch/Switch';
 
 export interface BackEndOnlySectionProps {
   queryType: QueryType;
@@ -13,7 +14,7 @@ export const BackendOnlySection: React.FC<BackEndOnlySectionProps> = ({
   queryType,
   defaultOpen,
 }) => {
-  const { register, watch } = useFormContext();
+  const { setValue, watch } = useFormContext();
 
   const enabled = watch('backendOnly');
 
@@ -29,12 +30,10 @@ export const BackendOnlySection: React.FC<BackEndOnlySectionProps> = ({
       />
       <Collapse.Content>
         <label className="flex items-center gap-4">
-          <input
-            type="checkbox"
-            className="rounded shadow-sm border border-gray-300 hover:border-gray-400 focus:ring-yellow-400 m-0"
-            {...register('backendOnly')}
+          <Switch
+            checked={enabled}
+            onCheckedChange={switched => setValue('backendOnly', switched)}
           />
-
           <span>Allow from backends only</span>
         </label>
       </Collapse.Content>
