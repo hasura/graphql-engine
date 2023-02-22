@@ -2,6 +2,7 @@
 import React from 'react';
 import { Collapsible } from '@/new-components/Collapsible';
 import { isProConsole } from '@/utils/proConsole';
+import { useSchemas } from '@/components/Services/Data/TableInsertItem/hooks/useSchemas';
 import { LocalEventTriggerState } from '../state';
 import Headers, { Header } from '../../../../Common/Headers/Headers';
 import RetryConfEditor from '../../Common/Components/RetryConfEditor';
@@ -73,6 +74,18 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
 
   const supportedDrivers = getSupportedDrivers('events.triggers.add');
 
+  const { data: schemas } = useSchemas({
+    dataSourceName: source,
+    schemaName: table.schema,
+  });
+
+  // filter out VIEW from select table dropdown (as we don't support event trigger for VIEW)
+  const filterSchemas =
+    schemas &&
+    schemas.filter((i: { table_type: string }) => {
+      return i.table_type !== 'VIEW';
+    });
+
   return (
     <>
       <FormLabel
@@ -133,16 +146,14 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
           value={table.name}
         >
           <option value="">Select table</option>
-          {databaseInfo[table.schema] &&
-            Object.keys(databaseInfo[table.schema])
-              .sort()
-              .map(t => {
-                return (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                );
-              })}
+          {filterSchemas &&
+            filterSchemas.sort().map((t: { table_name: string }) => {
+              return (
+                <option key={t.table_name} value={t.table_name}>
+                  {t.table_name}
+                </option>
+              );
+            })}
         </select>
       </div>
       <hr className="my-md" />

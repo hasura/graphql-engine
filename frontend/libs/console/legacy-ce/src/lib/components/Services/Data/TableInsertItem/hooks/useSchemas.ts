@@ -16,6 +16,7 @@ export const useSchemas = ({
   const httpClient = useHttpClient();
 
   return useQuery({
+    enabled: !!dataSourceName && !!schemaName,
     queryKey: ['tables-schema', schemaName, dataSourceName],
     queryFn: async () => {
       try {
