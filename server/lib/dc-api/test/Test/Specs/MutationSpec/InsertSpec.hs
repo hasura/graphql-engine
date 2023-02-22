@@ -3,9 +3,6 @@ module Test.Specs.MutationSpec.InsertSpec (spec) where
 import Control.Arrow ((>>>))
 import Control.Lens (ix, (&), (.~), (?~), (^?), _Just)
 import Control.Monad (when)
-import Control.Monad.Catch (MonadThrow)
-import Control.Monad.Free (Free)
-import Control.Monad.IO.Class (MonadIO)
 import Data.Aeson qualified as J
 import Data.Foldable (for_)
 import Data.Functor ((<&>))
@@ -15,19 +12,15 @@ import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Maybe (fromMaybe, isJust, maybeToList)
 import Data.Scientific (Scientific)
-import Data.Text qualified as Text
-import GHC.Stack (HasCallStack)
 import Hasura.Backends.DataConnector.API
 import Test.AgentAPI (mutationExpectError, mutationGuarded)
-import Test.AgentClient (AgentClientT, HasAgentClient)
-import Test.AgentDatasets (HasDatasetContext, chinookTemplate, testingEdgeCasesTemplate, usesDataset)
-import Test.AgentTestContext
+import Test.AgentDatasets (chinookTemplate, usesDataset)
 import Test.Data (EdgeCasesTestData (..), TestData (..))
 import Test.Data qualified as Data
 import Test.Expectations (mutationResponseShouldBe)
-import Test.Sandwich (ExampleT, HasBaseContext, describe, pendingWith, shouldBe)
-import Test.Sandwich.Internal (SpecCommand)
+import Test.Sandwich (describe, shouldBe)
 import Test.TestHelpers (AgentTestSpec, it)
+import Test.TestHelpers qualified as Test
 import Prelude
 
 spec :: TestData -> Maybe EdgeCasesTestData -> Capabilities -> AgentTestSpec
@@ -522,21 +515,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
 
       response `mutationResponseShouldBe` MutationResponse [expectedResult]
   where
-    edgeCaseTest ::
-      (HasCallStack, HasAgentClient context, HasAgentTestContext context, HasBaseContext context, MonadThrow m, MonadIO m) =>
-      (EdgeCasesTestData -> TableName) ->
-      String ->
-      (forall testContext. (HasBaseContext testContext, HasAgentClient testContext, HasAgentTestContext testContext, HasDatasetContext testContext) => EdgeCasesTestData -> AgentClientT (ExampleT testContext m) ()) ->
-      Free (SpecCommand context m) ()
-    edgeCaseTest expectedTable name test = do
-      case edgeCasesTestData of
-        Nothing -> it name $ pendingWith (testingEdgeCasesTemplateName <> " dataset template does not exist")
-        Just edgeCasesTestData'@EdgeCasesTestData {..} ->
-          if _ectdTableExists (expectedTable edgeCasesTestData')
-            then usesDataset testingEdgeCasesTemplate $ it name $ test edgeCasesTestData'
-            else it name $ pendingWith (Text.unpack (tableNameToText (expectedTable edgeCasesTestData')) <> " table does not exist within the " <> testingEdgeCasesTemplateName <> " dataset")
-      where
-        testingEdgeCasesTemplateName = Text.unpack (_unDatasetTemplateName testingEdgeCasesTemplate)
+    edgeCaseTest = Test.edgeCaseTest edgeCasesTestData
 
     mkSubqueryResponse :: [HashMap FieldName FieldValue] -> FieldValue
     mkSubqueryResponse rows =

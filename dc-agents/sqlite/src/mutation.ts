@@ -147,7 +147,7 @@ function insertString(relationships: Array<TableRelationships>, op: InsertMutati
 
 function deleteString(relationships: Array<TableRelationships>, op: DeleteMutationOperation): string {
   return `
-    DELETE FROM ${op.table}
+    DELETE FROM ${escapeTableName(op.table)}
     WHERE ${whereString(relationships, op.where || EMPTY_AND, op.table)}
     RETURNING
       ${returningString(relationships, op.returning_fields || {}, op.table)} as row,
@@ -157,7 +157,7 @@ function deleteString(relationships: Array<TableRelationships>, op: DeleteMutati
 
 function updateString(relationships: Array<TableRelationships>, op: UpdateMutationOperation, info: Array<UpdateInfo>): string {
   const result = `
-    UPDATE ${op.table}
+    UPDATE ${escapeTableName(op.table)}
     SET ${setString(info)}
     WHERE ${whereString(relationships, op.where || EMPTY_AND, op.table)}
     RETURNING

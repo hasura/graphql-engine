@@ -55,6 +55,7 @@ export async function withConnection<Result>(config: Config, mode: number, sqlLo
        *   $name: "bar"
        * });
        */
+      sqlLogger(query);
       db_.all(query, params || {}, (err, data) => {
         if (err) {
           return reject(err);
@@ -67,6 +68,7 @@ export async function withConnection<Result>(config: Config, mode: number, sqlLo
 
   const exec = (sql: string): Promise<void> => {
     return new Promise((resolve, reject) => {
+      sqlLogger(sql);
       db_.exec(sql, err => {
         if (err) {
           reject(err);

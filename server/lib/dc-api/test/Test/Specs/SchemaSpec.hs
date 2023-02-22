@@ -119,7 +119,7 @@ spec TestData {..} API.Capabilities {..} = describe "schema API" $ do
       -- We compare only the constraints and ignore the constraint names since some agents will have
       -- different constraint names
       let extractConstraintsForComparison table =
-            sort . HashMap.elems . API.unForeignKeys $ API._tiForeignKeys table
+            sort . HashMap.elems . API._unForeignKeys $ API._tiForeignKeys table
       let actualConstraints = extractConstraintsForComparison <$> tables
       let expectedConstraints = Just $ extractConstraintsForComparison expectedTable
 

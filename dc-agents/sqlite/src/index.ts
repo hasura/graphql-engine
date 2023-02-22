@@ -196,14 +196,11 @@ if(DATASETS) {
     return cloneDataset(sqlLogger, request.params.clone_name, request.body);
   });
 
-  // Only allow deletion if this is explicitly supported by ENV configuration
-  if(DATASET_DELETE) {
-    // TODO: The name param here should be a DatasetCloneName, but this isn't being code-generated.
-    server.delete<{ Params: { clone_name: string, }, Reply: DatasetDeleteCloneResponse }>("/datasets/clones/:clone_name", async (request, _response) => {
-      server.log.info({ headers: request.headers, query: request.body, }, "datasets.clones.delete");
-      return deleteDataset(request.params.clone_name);
-    });
-  }
+  // TODO: The name param here should be a DatasetCloneName, but this isn't being code-generated.
+  server.delete<{ Params: { clone_name: string, }, Reply: DatasetDeleteCloneResponse }>("/datasets/clones/:clone_name", async (request, _response) => {
+    server.log.info({ headers: request.headers, query: request.body, }, "datasets.clones.delete");
+    return deleteDataset(request.params.clone_name);
+  });
 }
 
 server.get("/", async (request, response) => {

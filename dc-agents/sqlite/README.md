@@ -110,19 +110,24 @@ Datasets support is enabled via the ENV variables:
 * `DATASET_TEMPLATES`
 * `DATASET_CLONES`
 
-Templates will be looked up at `${DATASET_TEMPLATES}/${template_name}.db`.
+Templates will be looked up at `${DATASET_TEMPLATES}/${template_name}.sqlite` or `${DATASET_TEMPLATES}/${template_name}.sql`. The `.sqlite` templates are just SQLite database files that will be copied as a clone. The `.sql` templates are SQL script files that will be run against a blank SQLite database in order to create a clone.
 
-Clones will be copied to `${DATASET_CLONES}/${clone_name}.db`.
+Clones will be copied to `${DATASET_CLONES}/${clone_name}.sqlite`.
 
 ## Testing Changes to the Agent
 
-Run:
+Ensure you run the agent with `DATASETS=1 DATASET_DELETE=1 MUTATIONS=1` in order to enable testing of mutations.
+
+Then run:
 
 ```sh
-cabal run dc-api:test:tests-dc-api -- test --agent-base-url http://localhost:8100 --agent-config '{"db": "db.chinook2.sqlite"}'
+cabal run dc-api:test:tests-dc-api -- test --agent-base-url http://localhost:8100 sandwich --tui
 ```
 
 From the HGE repo.
+
+## Known Issues
+* Using "returning" in update mutations where you join across relationships that are affected by the update mutation itself may return inconsistent results. This is because of this issue with SQLite: https://sqlite.org/forum/forumpost/9470611066
 
 ## TODO
 

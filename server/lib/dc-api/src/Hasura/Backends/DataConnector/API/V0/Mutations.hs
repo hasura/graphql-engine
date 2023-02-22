@@ -31,6 +31,11 @@ module Hasura.Backends.DataConnector.API.V0.Mutations
     _ObjectRelationInsertFieldValue,
     _ArrayRelationInsertFieldValue,
     UpdateMutationOperation (..),
+    umoTable,
+    umoWhere,
+    umoUpdates,
+    umoPostUpdateCheck,
+    umoReturningFields,
     RowUpdate (..),
     RowColumnOperatorValue (..),
     DeleteMutationOperation (..),
@@ -506,5 +511,6 @@ instance HasCodec MutationOperationResults where
 
 $(makeLenses ''MutationRequest)
 $(makeLenses ''InsertMutationOperation)
+$(makeLenses ''UpdateMutationOperation)
 $(makeLenses ''MutationResponse)
 $(makeLenses ''MutationOperationResults)

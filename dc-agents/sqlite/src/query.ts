@@ -66,7 +66,7 @@ function validateTableName(tableName: TableName): TableName {
 }
 
 /**
- * @param ts 
+ * @param ts
  * @returns last section of a qualified table array. E.g. [a,b] -> [b]
  */
 export function getTableNameSansSchema(ts: Array<string>): Array<string> {
@@ -83,9 +83,9 @@ export function escapeTableName(tableName: TableName): string {
 }
 
 /**
- * @param tableName 
+ * @param tableName
  * @returns escaped tableName string with schema qualification removed
- * 
+ *
  * This is useful in where clauses in returning statements where a qualified table name is invalid SQLite SQL.
  */
 export function escapeTableNameSansSchema(tableName: TableName): string {
@@ -253,18 +253,18 @@ function generateIdentifierAlias(identifier: string): string {
 
 /**
  *
- * @param ts Array of Table Relationships
- * @param t Table Name
+ * @param allTableRelationships Array of Table Relationships
+ * @param tableName Table Name
  * @returns Relationships matching table-name
  */
-function find_table_relationship(ts: TableRelationships[], t: TableName): TableRelationships {
-  for(var i = 0; i < ts.length; i++) {
-    const r = ts[i];
-    if(tableNameEquals(r.source_table)(t)) {
+function find_table_relationship(allTableRelationships: TableRelationships[], tableName: TableName): TableRelationships {
+  for(var i = 0; i < allTableRelationships.length; i++) {
+    const r = allTableRelationships[i];
+    if(tableNameEquals(r.source_table)(tableName)) {
       return r;
     }
   }
-  throw new Error(`Couldn't find relationship ${ts}, ${t.join(".")} - This shouldn't happen.`);
+  throw new Error(`Couldn't find table relationships for table ${tableName} - This shouldn't happen.`);
 }
 
 function cast_aggregate_function(f: string): string {
