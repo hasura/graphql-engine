@@ -6,14 +6,14 @@
 - [Introduction](#introduction)
 - [Motivation](#motivation)
 - [Solution Design](#solution-design)
-  * [1. Directly use type names](#1-directly-use-type-names)
+  * [1. Directly Use Typenames](#1-directly-use-typenames)
     + [Action Definition](#action-definition)
     + [Pros and Cons](#pros-and-cons)
   * [2. Extend Custom Types](#2-extend-custom-types)
     + [Custom Types](#custom-types)
     + [Action Definition](#action-definition-1)
     + [Pros and Cons](#pros-and-cons-1)
-  * [2.1 Without `refer_by`](#21-without--refer-by-)
+  * [3. Extending Custom Types and Using Typenames](#3-extending-custom-types-and-using-typenames)
     + [Additional explanation](#additional-explanation)
 - [Dependencies](#dependencies)
 - [Future Enhancements](#future-enhancements)
@@ -41,7 +41,7 @@ Allowing actions to reuse existing table enum types provides an opportunity to i
 
 We will discuss a couple of approaches to solve the problem.
 
-### 1. Directly use type names
+### 1. Directly Use Typenames
 
 Directly use generated type names of table enums in arguments and output type of [action definition](https://hasura.io/docs/latest/api-reference/syntax-defs/#actiondefinition).
 Server infers the type info from existing table enums.
@@ -174,9 +174,7 @@ Cons:-
   * User has to update custom types by adding reusable table enums with referrable `refer_by` name
   * Using table enums in action definitions is achieved by `reuse` field referring to the table enum's `refer_by`
 
-### 2.1 Without `refer_by`
-
-From https://github.com/hasura/graphql-engine-mono/pull/7974#issuecomment-1433034894.
+### 3. Extending Custom Types and Using Typenames
 
 Extend custom types (as outlined in approach 2):
 
