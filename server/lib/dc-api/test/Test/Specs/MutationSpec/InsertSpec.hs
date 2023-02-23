@@ -10,14 +10,14 @@ import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty (..))
-import Data.Maybe (fromMaybe, isJust, maybeToList)
+import Data.Maybe (fromMaybe, listToMaybe, maybeToList)
 import Data.Scientific (Scientific)
 import Hasura.Backends.DataConnector.API
-import Test.AgentAPI (mutationExpectError, mutationGuarded)
+import Test.AgentAPI (mutationExpectError, mutationGuarded, queryGuarded)
 import Test.AgentDatasets (chinookTemplate, usesDataset)
 import Test.Data (EdgeCasesTestData (..), TestData (..))
 import Test.Data qualified as Data
-import Test.Expectations (mutationResponseShouldBe)
+import Test.Expectations (mutationResponseShouldBe, rowsShouldBe)
 import Test.Sandwich (describe, shouldBe)
 import Test.TestHelpers (AgentTestSpec, it)
 import Test.TestHelpers qualified as Test
@@ -26,7 +26,7 @@ import Prelude
 spec :: TestData -> Maybe EdgeCasesTestData -> Capabilities -> AgentTestSpec
 spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutations" $ do
   usesDataset chinookTemplate $ it "can insert a single row" $ do
-    let insertOperation = artistsInsertOperation & imoRows .~ take 1 newArtists
+    let insertOperation = mkInsertOperation _tdArtistsTableName & imoRows .~ take 1 newArtists
     let mutationRequest =
           Data.emptyMutationRequest
             & mrOperations .~ [InsertOperation insertOperation]
@@ -35,15 +35,17 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
     response <- mutationGuarded mutationRequest
 
     let expectedResult = MutationOperationResults 1 Nothing
-
     response `mutationResponseShouldBe` MutationResponse [expectedResult]
+
+    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded (artistsQueryRequest [artistsStartingId])
+    Data.responseRows receivedArtists `rowsShouldBe` take 1 (expectedInsertedArtists artistsStartingId)
 
   usesDataset chinookTemplate $ it "can insert when the field names do not match the column names" $ do
     let row =
           RowObject . Data.mkFieldsMap $
             [ ("artist_name", mkColumnInsertFieldValue $ J.String "Taylor Swift")
             ]
-    let insertOperation = artistsInsertOperation & imoRows .~ [row]
+    let insertOperation = mkInsertOperation _tdArtistsTableName & imoRows .~ [row]
     let insertSchema =
           TableInsertSchema _tdArtistsTableName $
             Data.mkFieldsMap
@@ -57,11 +59,13 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
     response <- mutationGuarded mutationRequest
 
     let expectedResult = MutationOperationResults 1 Nothing
-
     response `mutationResponseShouldBe` MutationResponse [expectedResult]
 
+    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded (artistsQueryRequest [artistsStartingId])
+    Data.responseRows receivedArtists `rowsShouldBe` take 1 (expectedInsertedArtists artistsStartingId)
+
   usesDataset chinookTemplate $ it "can insert multiple rows" $ do
-    let insertOperation = artistsInsertOperation & imoRows .~ newArtists
+    let insertOperation = mkInsertOperation _tdArtistsTableName & imoRows .~ newArtists
     let mutationRequest =
           Data.emptyMutationRequest
             & mrOperations .~ [InsertOperation insertOperation]
@@ -70,13 +74,16 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
     response <- mutationGuarded mutationRequest
 
     let expectedResult = MutationOperationResults 4 Nothing
-
     response `mutationResponseShouldBe` MutationResponse [expectedResult]
 
+    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded (artistsQueryRequest $ Data.autoIncPks artistsStartingId newArtists)
+    Data.responseRows receivedArtists `rowsShouldBe` expectedInsertedArtists artistsStartingId
+
   usesDataset chinookTemplate $ it "can insert using multiple operations" $ do
-    let insertOperation1 = artistsInsertOperation & imoRows .~ take 1 newArtists
-    let insertOperation2 = artistsInsertOperation & imoRows .~ drop 1 newArtists
-    let insertOperation3 = albumsInsertOperation & imoRows .~ take 2 newAcdcAlbums
+    let newAlbumRows = take 2 newAcdcAlbums
+    let insertOperation1 = mkInsertOperation _tdArtistsTableName & imoRows .~ take 1 newArtists
+    let insertOperation2 = mkInsertOperation _tdArtistsTableName & imoRows .~ drop 1 newArtists
+    let insertOperation3 = mkInsertOperation _tdAlbumsTableName & imoRows .~ newAlbumRows
     let mutationRequest =
           Data.emptyMutationRequest
             & mrOperations .~ [InsertOperation insertOperation1, InsertOperation insertOperation2, InsertOperation insertOperation3]
@@ -90,8 +97,14 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
 
     response `mutationResponseShouldBe` MutationResponse [expectedResult1, expectedResult2, expectedResult3]
 
+    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded (artistsQueryRequest $ Data.autoIncPks artistsStartingId newArtists)
+    Data.responseRows receivedArtists `rowsShouldBe` expectedInsertedArtists artistsStartingId
+
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded (albumsQueryRequest $ Data.autoIncPks albumsStartingId newAlbumRows)
+    Data.responseRows receivedAlbums `rowsShouldBe` take 2 (expectedInsertedAcdcAlbums albumsStartingId)
+
   usesDataset chinookTemplate $ it "can insert multiple rows with differing column sets" $ do
-    let insertOperation = employeesInsertOperation & imoRows .~ newEmployees
+    let insertOperation = mkInsertOperation _tdEmployeesTableName & imoRows .~ newEmployees
     let mutationRequest =
           Data.emptyMutationRequest
             & mrOperations .~ [InsertOperation insertOperation]
@@ -100,14 +113,16 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
     response <- mutationGuarded mutationRequest
 
     let expectedResult = MutationOperationResults 2 Nothing
-
     response `mutationResponseShouldBe` MutationResponse [expectedResult]
+
+    receivedEmployees <- Data.sortResponseRowsBy "EmployeeId" <$> queryGuarded (employeesQueryRequest $ Data.autoIncPks employeesStartingId newEmployees)
+    Data.responseRows receivedEmployees `rowsShouldBe` expectedInsertedEmployees employeesStartingId
 
   describe "post-insert checks" $ do
     usesDataset chinookTemplate $ it "can insert when post insert check passes" $ do
       let rows = take 1 newAcdcAlbums ++ take 1 newApocalypticaAlbums
       let insertOperation =
-            albumsInsertOperation
+            mkInsertOperation _tdAlbumsTableName
               & imoRows .~ rows
               & imoPostInsertCheck
                 ?~ Or
@@ -125,10 +140,18 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
 
       response `mutationResponseShouldBe` MutationResponse [expectedResult]
 
+      let expectedAlbums =
+            ( take 1 (expectedInsertedAcdcAlbums albumsStartingId)
+                ++ take 1 (expectedInsertedApocalypticaAlbums (albumsStartingId + 1))
+            )
+
+      receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded (albumsQueryRequest $ Data.autoIncPks albumsStartingId rows)
+      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+
     usesDataset chinookTemplate $ it "fails to insert when post insert check fails" $ do
       let rows = take 1 newAcdcAlbums ++ take 1 newApocalypticaAlbums
       let insertOperation =
-            albumsInsertOperation
+            mkInsertOperation _tdAlbumsTableName
               & imoRows .~ rows
               & imoPostInsertCheck ?~ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (ScalarValue (J.Number acdcArtistId) artistIdScalarType)
       let mutationRequest =
@@ -137,15 +160,17 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
               & mrInsertSchema .~ [albumsInsertSchema]
 
       response <- mutationExpectError mutationRequest
-
       _crType response `shouldBe` MutationPermissionCheckFailure
 
-    when (isJust $ _cComparisons >>= _ccSubqueryComparisonCapabilities) $ do
+      receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded (albumsQueryRequest $ Data.autoIncPks albumsStartingId rows)
+      Data.responseRows receivedAlbums `rowsShouldBe` []
+
+    for_ (_cComparisons >>= _ccSubqueryComparisonCapabilities) $ \_subqueryComparisonCapabilities -> do
       usesDataset chinookTemplate $ it "can insert when post insert check against unrelated table passes" $ do
         let rows = take 1 newAcdcAlbums ++ take 1 newApocalypticaAlbums
         let someEmployeeIdThatExists = 1
         let insertOperation =
-              albumsInsertOperation
+              mkInsertOperation _tdAlbumsTableName
                 & imoRows .~ rows
                 & imoPostInsertCheck
                   ?~ Exists
@@ -160,14 +185,21 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
         response <- mutationGuarded mutationRequest
 
         let expectedResult = MutationOperationResults 2 Nothing
-
         response `mutationResponseShouldBe` MutationResponse [expectedResult]
+
+        let expectedAlbums =
+              ( take 1 (expectedInsertedAcdcAlbums albumsStartingId)
+                  ++ take 1 (expectedInsertedApocalypticaAlbums (albumsStartingId + 1))
+              )
+
+        receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded (albumsQueryRequest $ Data.autoIncPks albumsStartingId rows)
+        Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
 
       usesDataset chinookTemplate $ it "fails to insert when post insert check against unrelated table fails" $ do
         let rows = take 1 newAcdcAlbums ++ take 1 newApocalypticaAlbums
         let someEmployeeIdThatDoesNotExist = 50
         let insertOperation =
-              albumsInsertOperation
+              mkInsertOperation _tdAlbumsTableName
                 & imoRows .~ rows
                 & imoPostInsertCheck
                   ?~ Exists
@@ -180,14 +212,16 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
                 & mrTableRelationships .~ [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
 
         response <- mutationExpectError mutationRequest
-
         _crType response `shouldBe` MutationPermissionCheckFailure
+
+        receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded (albumsQueryRequest $ Data.autoIncPks albumsStartingId rows)
+        Data.responseRows receivedAlbums `rowsShouldBe` []
 
     when ((_cComparisons >>= _ccSubqueryComparisonCapabilities <&> _ctccSupportsRelations) == Just True) $ do
       usesDataset chinookTemplate $ it "can insert when post insert check against related table passes" $ do
         let rows = take 1 newAcdcAlbums ++ take 1 newApocalypticaAlbums
         let insertOperation =
-              albumsInsertOperation
+              mkInsertOperation _tdAlbumsTableName
                 & imoRows .~ rows
                 & imoPostInsertCheck
                   ?~ Exists
@@ -206,13 +240,20 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
         response <- mutationGuarded mutationRequest
 
         let expectedResult = MutationOperationResults 2 Nothing
-
         response `mutationResponseShouldBe` MutationResponse [expectedResult]
+
+        let expectedAlbums =
+              ( take 1 (expectedInsertedAcdcAlbums albumsStartingId)
+                  ++ take 1 (expectedInsertedApocalypticaAlbums (albumsStartingId + 1))
+              )
+
+        receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded (albumsQueryRequest $ Data.autoIncPks albumsStartingId rows)
+        Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
 
       usesDataset chinookTemplate $ it "fails to insert when post insert check against related table fails" $ do
         let rows = take 1 newAcdcAlbums ++ take 1 newApocalypticaAlbums
         let insertOperation =
-              albumsInsertOperation
+              mkInsertOperation _tdAlbumsTableName
                 & imoRows .~ rows
                 & imoPostInsertCheck
                   ?~ Exists
@@ -225,10 +266,12 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
                 & mrTableRelationships .~ [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
 
         response <- mutationExpectError mutationRequest
-
         _crType response `shouldBe` MutationPermissionCheckFailure
 
-  describe "returning" $ do
+        receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded (albumsQueryRequest $ Data.autoIncPks albumsStartingId rows)
+        Data.responseRows receivedAlbums `rowsShouldBe` []
+
+  for_ (_cMutations >>= _mcReturningCapabilities) $ \_returningCapabilities -> describe "returning" $ do
     usesDataset chinookTemplate $ it "can return all inserted columns including the auto-generated primary key" $ do
       let returning =
             Data.mkFieldsMap
@@ -237,7 +280,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
                 ("Title", _tdColumnField _tdAlbumsTableName "Title")
               ]
       let insertOperation =
-            albumsInsertOperation
+            mkInsertOperation _tdAlbumsTableName
               & imoRows .~ newAcdcAlbums
               & imoReturningFields .~ returning
       let mutationRequest =
@@ -257,7 +300,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
               & fmap (\column -> (column, _tdColumnField _tdEmployeesTableName column))
               & Data.mkFieldsMap
       let insertOperation =
-            employeesInsertOperation
+            mkInsertOperation _tdEmployeesTableName
               & imoRows .~ newEmployees
               & imoReturningFields .~ returning
       let mutationRequest =
@@ -294,7 +337,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
                 ]
 
         let insertOperation =
-              albumsInsertOperation
+              mkInsertOperation _tdAlbumsTableName
                 & imoRows .~ rows
                 & imoReturningFields .~ returning
 
@@ -309,7 +352,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
         let joinInArtist (album :: HashMap FieldName FieldValue) =
               let artist = (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>= \artistId -> _tdArtistsRowsById ^? ix artistId
                   artistPropVal = maybeToList artist
-               in Data.insertField "Artist" (mkSubqueryResponse artistPropVal) album
+               in Data.insertField "Artist" (Data.mkSubqueryRowsFieldValue artistPropVal) album
 
         let removeArtistId = Data.deleteField "ArtistId"
 
@@ -324,7 +367,144 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
         response `mutationResponseShouldBe` MutationResponse [expectedResult]
 
       usesDataset chinookTemplate $ it "can return rows from an array relationship" $ do
-        let rows = take 1 newApocalypticaAlbums
+        let returning =
+              Data.mkFieldsMap
+                [ ("EmployeeId", _tdColumnField _tdEmployeesTableName "EmployeeId"),
+                  ("FirstName", _tdColumnField _tdEmployeesTableName "FirstName"),
+                  ("LastName", _tdColumnField _tdEmployeesTableName "LastName"),
+                  ( "ReportsToEmployee",
+                    ( RelField
+                        ( RelationshipField _tdReportsToEmployeeRelationshipName $
+                            Data.emptyQuery
+                              & qFields
+                                ?~ Data.mkFieldsMap
+                                  [ ("EmployeeId", _tdColumnField _tdEmployeesTableName "EmployeeId"),
+                                    ("FirstName", _tdColumnField _tdEmployeesTableName "FirstName"),
+                                    ("LastName", _tdColumnField _tdEmployeesTableName "LastName"),
+                                    ( "SupportRepForCustomers",
+                                      ( RelField
+                                          ( RelationshipField _tdSupportRepForCustomersRelationshipName $
+                                              Data.emptyQuery
+                                                & qFields
+                                                  ?~ Data.mkFieldsMap
+                                                    [ ("CustomerId", _tdColumnField _tdCustomersTableName "CustomerId"),
+                                                      ("FirstName", _tdColumnField _tdCustomersTableName "FirstName"),
+                                                      ("LastName", _tdColumnField _tdCustomersTableName "LastName")
+                                                    ]
+                                                & qOrderBy ?~ OrderBy mempty (_tdOrderByColumn [] "CustomerId" Ascending :| [])
+                                          )
+                                      )
+                                    )
+                                  ]
+                        )
+                    )
+                  )
+                ]
+        let insertOperation =
+              mkInsertOperation _tdEmployeesTableName
+                & imoRows .~ newEmployees
+                & imoReturningFields .~ returning
+        let mutationRequest =
+              Data.emptyMutationRequest
+                & mrOperations .~ [InsertOperation insertOperation]
+                & mrInsertSchema .~ [employeesInsertSchema]
+                & mrTableRelationships
+                  .~ [ Data.onlyKeepRelationships [_tdReportsToEmployeeRelationshipName, _tdSupportRepForCustomersRelationshipName] _tdEmployeesTableRelationships
+                     ]
+
+        response <- mutationGuarded mutationRequest
+
+        let joinInSupportRepForCustomers (employee :: HashMap FieldName FieldValue) =
+              let customers = fromMaybe [] $ do
+                    employeeId <- employee ^? Data.field "EmployeeId" . Data._ColumnFieldNumber
+                    _tdCustomersRows
+                      & filter (\customer -> customer ^? Data.field "SupportRepId" . Data._ColumnFieldNumber == Just employeeId)
+                      & sortOn (^? Data.field "CustomerId")
+                      & pure
+                  shapedCustomers = Data.filterColumns ["CustomerId", "FirstName", "LastName"] customers
+               in Data.insertField "SupportRepForCustomers" (Data.mkSubqueryRowsFieldValue shapedCustomers) employee
+
+        let joinInReportsToEmployee (employee :: HashMap FieldName FieldValue) =
+              let reportsToEmployee = (employee ^? Data.field "ReportsTo" . Data._ColumnFieldNumber) >>= \employeeId -> _tdEmployeesRowsById ^? ix employeeId
+                  reportsToEmployeeWithSupportRepForCustomers = joinInSupportRepForCustomers <$> reportsToEmployee
+                  trimEmployeeFields = Data.filterColumns ["EmployeeId", "FirstName", "LastName", "SupportRepForCustomers"]
+               in Data.insertField "ReportsToEmployee" (Data.mkSubqueryRowsFieldValue (trimEmployeeFields $ maybeToList reportsToEmployeeWithSupportRepForCustomers)) employee
+
+        let expectedRows =
+              expectedInsertedEmployees employeesStartingId
+                & fmap joinInReportsToEmployee
+                & Data.filterColumns ["EmployeeId", "FirstName", "LastName", "ReportsToEmployee"]
+
+        let expectedResult = MutationOperationResults 2 (Just expectedRows)
+
+        response `mutationResponseShouldBe` MutationResponse [expectedResult]
+
+      usesDataset chinookTemplate $ it "can aggregate rows across an array relationship" $ do
+        let returning =
+              Data.mkFieldsMap
+                [ ("EmployeeId", _tdColumnField _tdEmployeesTableName "EmployeeId"),
+                  ("FirstName", _tdColumnField _tdEmployeesTableName "FirstName"),
+                  ("LastName", _tdColumnField _tdEmployeesTableName "LastName"),
+                  ( "ReportsToEmployee",
+                    ( RelField
+                        ( RelationshipField _tdReportsToEmployeeRelationshipName $
+                            Data.emptyQuery
+                              & qFields
+                                ?~ Data.mkFieldsMap
+                                  [ ("EmployeeId", _tdColumnField _tdEmployeesTableName "EmployeeId"),
+                                    ("FirstName", _tdColumnField _tdEmployeesTableName "FirstName"),
+                                    ("LastName", _tdColumnField _tdEmployeesTableName "LastName"),
+                                    ( "SupportRepForCustomers",
+                                      ( RelField
+                                          ( RelationshipField _tdSupportRepForCustomersRelationshipName $
+                                              Data.emptyQuery & qAggregates ?~ Data.mkFieldsMap [("CustomerCount", StarCount)]
+                                          )
+                                      )
+                                    )
+                                  ]
+                        )
+                    )
+                  )
+                ]
+        let insertOperation =
+              mkInsertOperation _tdEmployeesTableName
+                & imoRows .~ newEmployees
+                & imoReturningFields .~ returning
+        let mutationRequest =
+              Data.emptyMutationRequest
+                & mrOperations .~ [InsertOperation insertOperation]
+                & mrInsertSchema .~ [employeesInsertSchema]
+                & mrTableRelationships
+                  .~ [ Data.onlyKeepRelationships [_tdReportsToEmployeeRelationshipName, _tdSupportRepForCustomersRelationshipName] _tdEmployeesTableRelationships
+                     ]
+
+        response <- mutationGuarded mutationRequest
+
+        let joinInSupportRepForCustomers (employee :: HashMap FieldName FieldValue) =
+              let employeeId = employee ^? Data.field "EmployeeId" . Data._ColumnFieldNumber
+                  customerCount = _tdCustomersRows & filter (\customer -> customer ^? Data.field "SupportRepId" . Data._ColumnFieldNumber == employeeId) & length
+                  aggregates = Data.mkFieldsMap [("CustomerCount", J.Number $ fromIntegral customerCount)]
+               in Data.insertField "SupportRepForCustomers" (Data.mkSubqueryAggregatesFieldValue aggregates) employee
+
+        let joinInReportsToEmployee (employee :: HashMap FieldName FieldValue) =
+              let reportsToEmployee = (employee ^? Data.field "ReportsTo" . Data._ColumnFieldNumber) >>= \employeeId -> _tdEmployeesRowsById ^? ix employeeId
+                  reportsToEmployeeWithSupportRepForCustomers = joinInSupportRepForCustomers <$> reportsToEmployee
+                  trimEmployeeFields = Data.filterColumns ["EmployeeId", "FirstName", "LastName", "SupportRepForCustomers"]
+               in Data.insertField "ReportsToEmployee" (Data.mkSubqueryRowsFieldValue (trimEmployeeFields $ maybeToList reportsToEmployeeWithSupportRepForCustomers)) employee
+
+        let expectedRows =
+              expectedInsertedEmployees employeesStartingId
+                & fmap joinInReportsToEmployee
+                & Data.filterColumns ["EmployeeId", "FirstName", "LastName", "ReportsToEmployee"]
+
+        let expectedResult = MutationOperationResults 2 (Just expectedRows)
+
+        response `mutationResponseShouldBe` MutationResponse [expectedResult]
+
+      usesDataset chinookTemplate $ it "inserted rows are returned even when returned again from across a relationship" $ do
+        -- This scenario inserts some albums onto an artist, then returns them,
+        -- joined to their artist and also returns all albums on that artist.
+        -- We expect to see the new albums included in the artists list of albums.
         let returning =
               Data.mkFieldsMap
                 [ ("AlbumId", _tdColumnField _tdAlbumsTableName "AlbumId"),
@@ -356,8 +536,8 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
                   )
                 ]
         let insertOperation =
-              albumsInsertOperation
-                & imoRows .~ rows
+              mkInsertOperation _tdAlbumsTableName
+                & imoRows .~ newAcdcAlbums
                 & imoReturningFields .~ returning
         let mutationRequest =
               Data.emptyMutationRequest
@@ -370,7 +550,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
 
         response <- mutationGuarded mutationRequest
 
-        let expectedNewAlbums = expectedInsertedApocalypticaAlbums albumsStartingId
+        let expectedNewAlbums = expectedInsertedAcdcAlbums albumsStartingId
 
         let joinInAlbums (artist :: HashMap FieldName FieldValue) =
               let albums = fromMaybe [] $ do
@@ -380,23 +560,23 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
                       & sortOn (^? Data.field "AlbumId")
                       & pure
                   shapedAlbums = Data.deleteField "ArtistId" <$> albums
-               in Data.insertField "Albums" (mkSubqueryResponse shapedAlbums) artist
+               in Data.insertField "Albums" (Data.mkSubqueryRowsFieldValue shapedAlbums) artist
 
         let joinInArtist (album :: HashMap FieldName FieldValue) =
               let artist = (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>= \artistId -> _tdArtistsRowsById ^? ix artistId
                   artistWithAlbums = joinInAlbums <$> artist
-               in Data.insertField "Artist" (mkSubqueryResponse (maybeToList artistWithAlbums)) album
+               in Data.insertField "Artist" (Data.mkSubqueryRowsFieldValue (maybeToList artistWithAlbums)) album
         let removeArtistId = Data.deleteField "ArtistId"
 
         let expectedRows =
               expectedNewAlbums
                 & fmap (joinInArtist >>> removeArtistId)
 
-        let expectedResult = MutationOperationResults 1 (Just expectedRows)
+        let expectedResult = MutationOperationResults 3 (Just expectedRows)
 
         response `mutationResponseShouldBe` MutationResponse [expectedResult]
 
-  describe "edge cases" $ do
+  for_ (_cMutations >>= _mcReturningCapabilities) $ \_returningCapabilities -> describe "edge cases" $ do
     edgeCaseTest _ectdNoPrimaryKeyTableName "can insert into a table with no primary key" $ \EdgeCasesTestData {..} -> do
       let rows =
             [ RowObject . Data.mkFieldsMap $
@@ -517,21 +697,38 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
   where
     edgeCaseTest = Test.edgeCaseTest edgeCasesTestData
 
-    mkSubqueryResponse :: [HashMap FieldName FieldValue] -> FieldValue
-    mkSubqueryResponse rows =
-      mkRelationshipFieldValue $ QueryResponse (Just rows) Nothing
-
     mkInsertOperation :: TableName -> InsertMutationOperation
     mkInsertOperation tableName = InsertMutationOperation tableName [] Nothing mempty
 
-    artistsInsertOperation :: InsertMutationOperation
-    artistsInsertOperation = InsertMutationOperation _tdArtistsTableName [] Nothing mempty
+    mkFieldsFromExpectedData :: TableName -> [HashMap FieldName FieldValue] -> HashMap FieldName Field
+    mkFieldsFromExpectedData tableName expectedRows =
+      expectedRows
+        & listToMaybe
+        & maybe mempty (HashMap.mapWithKey (\fieldName _fieldValue -> _tdColumnField tableName (unFieldName fieldName)))
 
-    albumsInsertOperation :: InsertMutationOperation
-    albumsInsertOperation = InsertMutationOperation _tdAlbumsTableName [] Nothing mempty
+    artistsQueryRequest :: [Integer] -> QueryRequest
+    artistsQueryRequest artistIds =
+      let query =
+            Data.emptyQuery
+              & qFields ?~ mkFieldsFromExpectedData _tdArtistsTableName (expectedInsertedArtists artistsStartingId)
+              & qWhere ?~ ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (J.Number . fromInteger <$> artistIds) artistIdScalarType
+       in QueryRequest _tdArtistsTableName [] query
 
-    employeesInsertOperation :: InsertMutationOperation
-    employeesInsertOperation = InsertMutationOperation _tdEmployeesTableName [] Nothing mempty
+    albumsQueryRequest :: [Integer] -> QueryRequest
+    albumsQueryRequest albumIds =
+      let query =
+            Data.emptyQuery
+              & qFields ?~ mkFieldsFromExpectedData _tdAlbumsTableName (expectedInsertedAcdcAlbums albumsStartingId)
+              & qWhere ?~ ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (J.Number . fromInteger <$> albumIds) albumIdScalarType
+       in QueryRequest _tdAlbumsTableName [] query
+
+    employeesQueryRequest :: [Integer] -> QueryRequest
+    employeesQueryRequest employeeIds =
+      let query =
+            Data.emptyQuery
+              & qFields ?~ mkFieldsFromExpectedData _tdEmployeesTableName (expectedInsertedEmployees employeesStartingId)
+              & qWhere ?~ ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "EmployeeId" albumIdScalarType) (J.Number . fromInteger <$> employeeIds) employeeIdScalarType
+       in QueryRequest _tdEmployeesTableName [] query
 
     artistsInsertSchema :: TableInsertSchema
     artistsInsertSchema =
@@ -557,8 +754,12 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             (FieldName "Title", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "Title")),
             (FieldName "Email", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "Email")),
             (FieldName "City", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "City")),
-            (FieldName "Country", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "Country"))
+            (FieldName "Country", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "Country")),
+            (FieldName "ReportsTo", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "ReportsTo"))
           ]
+
+    artistsStartingId :: Integer
+    artistsStartingId = 276
 
     albumsStartingId :: Integer
     albumsStartingId = 348
@@ -581,6 +782,19 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
           [ ("Name", mkColumnInsertFieldValue $ J.String "Gareth Emery")
           ]
       ]
+
+    expectedInsertedArtists :: Integer -> [HashMap FieldName FieldValue]
+    expectedInsertedArtists startingId =
+      Data.insertAutoIncPk "ArtistId" startingId $
+        [ Data.mkFieldsMap
+            [("Name", mkColumnFieldValue $ J.String "Taylor Swift")],
+          Data.mkFieldsMap
+            [("Name", mkColumnFieldValue $ J.String "John Williams")],
+          Data.mkFieldsMap
+            [("Name", mkColumnFieldValue $ J.String "Nightwish")],
+          Data.mkFieldsMap
+            [("Name", mkColumnFieldValue $ J.String "Gareth Emery")]
+        ]
 
     acdcArtistId :: Scientific
     acdcArtistId = 1
@@ -645,7 +859,8 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             ("LastName", mkColumnInsertFieldValue $ J.String "Skywalker"),
             ("Email", mkColumnInsertFieldValue $ J.String "luke@rebelalliance.com"),
             ("City", mkColumnInsertFieldValue $ J.String "Mos Eisley"),
-            ("Country", mkColumnInsertFieldValue $ J.String "Tatooine")
+            ("Country", mkColumnInsertFieldValue $ J.String "Tatooine"),
+            ("ReportsTo", mkColumnInsertFieldValue $ J.Number 3)
           ],
         RowObject . Data.mkFieldsMap $
           [ ("FirstName", mkColumnInsertFieldValue $ J.String "Han"),
@@ -661,7 +876,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             [ ("FirstName", mkColumnFieldValue $ J.String "Luke"),
               ("LastName", mkColumnFieldValue $ J.String "Skywalker"),
               ("Title", mkColumnFieldValue $ J.Null),
-              ("ReportsTo", mkColumnFieldValue $ J.Null),
+              ("ReportsTo", mkColumnFieldValue $ J.Number 3),
               ("BirthDate", mkColumnFieldValue $ J.Null),
               ("HireDate", mkColumnFieldValue $ J.Null),
               ("Address", mkColumnFieldValue $ J.Null),
@@ -693,4 +908,5 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
 
     artistIdScalarType = _tdFindColumnScalarType _tdArtistsTableName "ArtistId"
     artistNameScalarType = _tdFindColumnScalarType _tdArtistsTableName "Name"
+    albumIdScalarType = _tdFindColumnScalarType _tdAlbumsTableName "AlbumId"
     employeeIdScalarType = _tdFindColumnScalarType _tdEmployeesTableName "EmployeeId"

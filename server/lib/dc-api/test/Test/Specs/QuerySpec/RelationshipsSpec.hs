@@ -27,7 +27,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
     let joinInArtist (album :: HashMap FieldName FieldValue) =
           let artist = (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>= \artistId -> _tdArtistsRowsById ^? ix artistId
               artistPropVal = maybeToList artist
-           in Data.insertField "Artist" (mkSubqueryResponse artistPropVal) album
+           in Data.insertField "Artist" (Data.mkSubqueryRowsFieldValue artistPropVal) album
     let removeArtistId = Data.deleteField "ArtistId"
 
     let expectedAlbums = (removeArtistId . joinInArtist) <$> _tdAlbumsRows
@@ -43,7 +43,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
               albumFilter artistId' album = album ^? Data.field "ArtistId" . Data._ColumnFieldNumber == Just artistId'
               albums = maybe [] (\artistId' -> filter (albumFilter artistId') _tdAlbumsRows) artistId
               albums' = Data.deleteField "ArtistId" <$> albums
-           in Data.insertField "Albums" (mkSubqueryResponse albums') artist
+           in Data.insertField "Albums" (Data.mkSubqueryRowsFieldValue albums') artist
 
     let expectedAlbums = joinInAlbums <$> _tdArtistsRows
     Data.responseRows receivedArtists `rowsShouldBe` expectedAlbums
@@ -60,7 +60,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
               albums = maybe [] (\artistId' -> filter (albumFilter artistId') _tdAlbumsRows) artistId
               paginatedAlbums = albums & sortOn (^? Data.field "ArtistId") & drop 1 & take 2
               paginatedAlbums' = Data.deleteField "ArtistId" <$> paginatedAlbums
-           in Data.insertField "Albums" (mkSubqueryResponse paginatedAlbums') artist
+           in Data.insertField "Albums" (Data.mkSubqueryRowsFieldValue paginatedAlbums') artist
 
     let expectedAlbums = joinInAlbums <$> _tdArtistsRows
     Data.responseRows receivedArtists `rowsShouldBe` expectedAlbums
@@ -77,7 +77,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                 artist' <- _tdArtistsRowsById ^? ix artistId
                 if (artist' ^? Data.field "Name" . Data._ColumnFieldString) >= Just "H" then Just artist' else Nothing
               artistPropVal = maybeToList artist
-           in Data.insertField "Artist" (mkSubqueryResponse artistPropVal) album
+           in Data.insertField "Artist" (Data.mkSubqueryRowsFieldValue artistPropVal) album
     let removeArtistId = Data.deleteField "ArtistId"
 
     let expectedAlbums = (removeArtistId . joinInArtist) <$> _tdAlbumsRows
@@ -97,7 +97,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                   & fmap (Data.deleteField "ArtistId")
                   & sortOn (^? Data.field "ArtistId")
                   & pure
-           in Data.insertField "Albums" (mkSubqueryResponse albums) artist
+           in Data.insertField "Albums" (Data.mkSubqueryRowsFieldValue albums) artist
 
     let expectedAlbums = joinInAlbums <$> _tdArtistsRows
     Data.responseRows receivedArtists `rowsShouldBe` expectedAlbums
@@ -122,7 +122,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
         let joinInSupportRep (customer :: HashMap FieldName FieldValue) =
               let supportRep = (customer ^? Data.field "SupportRepId" . Data._ColumnFieldNumber) >>= \employeeId -> _tdEmployeesRowsById ^? ix employeeId
                   supportRepPropVal = maybeToList $ Data.filterColumnsByQueryFields employeesQuery <$> supportRep
-               in Data.insertField "SupportRep" (mkSubqueryResponse supportRepPropVal) customer
+               in Data.insertField "SupportRep" (Data.mkSubqueryRowsFieldValue supportRepPropVal) customer
 
         let filterCustomersBySupportRepCountry (customer :: HashMap FieldName FieldValue) =
               let customerCountry = customer ^? Data.field "Country" . Data._ColumnFieldString
@@ -152,7 +152,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                   customerFilter employeeId' customer = customer ^? Data.field "SupportRepId" . Data._ColumnFieldNumber == Just employeeId'
                   customers = maybe [] (\employeeId' -> filter (customerFilter employeeId') _tdCustomersRows) employeeId
                   customers' = Data.filterColumnsByQueryFields customersQuery <$> customers
-               in Data.insertField "SupportRepForCustomers" (mkSubqueryResponse customers') employee
+               in Data.insertField "SupportRepForCustomers" (Data.mkSubqueryRowsFieldValue customers') employee
 
         let filterEmployeesByCustomerCountry (employee :: HashMap FieldName FieldValue) =
               let employeeCountry = employee ^? Data.field "Country" . Data._ColumnFieldString
@@ -196,7 +196,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                     lastName <- employee ^? Data.field "LastName"
                     if firstName > lastName then pure employee else Nothing
                   supportRepPropVal = maybeToList $ Data.filterColumnsByQueryFields employeesQuery <$> supportRep
-               in Data.insertField "SupportRep" (mkSubqueryResponse supportRepPropVal) customer
+               in Data.insertField "SupportRep" (Data.mkSubqueryRowsFieldValue supportRepPropVal) customer
 
         let filterCustomersBySupportRepExistence (customer :: HashMap FieldName FieldValue) =
               let supportRep = customer ^.. Data.field "SupportRep" . subqueryRows
@@ -287,10 +287,6 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                 ("Country", _tdColumnField _tdEmployeesTableName "Country")
               ]
        in Data.emptyQuery & qFields ?~ fields
-
-    mkSubqueryResponse :: [HashMap FieldName FieldValue] -> FieldValue
-    mkSubqueryResponse rows =
-      mkRelationshipFieldValue $ QueryResponse (Just rows) Nothing
 
     subqueryRows :: Traversal' FieldValue (HashMap FieldName FieldValue)
     subqueryRows = _RelationshipFieldValue . qrRows . _Just . traverse

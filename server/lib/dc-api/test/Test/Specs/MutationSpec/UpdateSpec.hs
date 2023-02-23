@@ -5,11 +5,12 @@ module Test.Specs.MutationSpec.UpdateSpec (spec) where
 import Control.Lens (ix, (%~), (&), (.~), (?~), (^?))
 import Control.Monad (when)
 import Data.Aeson qualified as J
+import Data.Foldable (for_)
 import Data.Functor ((<&>))
 import Data.HashMap.Strict (HashMap)
 import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty (..))
-import Data.Maybe (catMaybes, isJust, mapMaybe, maybeToList)
+import Data.Maybe (catMaybes, mapMaybe, maybeToList)
 import Hasura.Backends.DataConnector.API
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.AgentAPI (mutationExpectError, mutationGuarded, queryGuarded)
@@ -301,7 +302,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
       receivedInvoiceLines <- Data.sortResponseRowsBy "InvoiceLineId" <$> queryGuarded (invoiceLinesQueryRequest whereExp)
       Data.responseRows receivedInvoiceLines `rowsShouldBe` expectedUnchangedRows
 
-    when (isJust $ _cComparisons >>= _ccSubqueryComparisonCapabilities) $ do
+    for_ (_cComparisons >>= _ccSubqueryComparisonCapabilities) $ \_subqueryComparisonCapabilities -> do
       usesDataset chinookTemplate $ it "can update when post update check against unrelated table passes" $ do
         let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "InvoiceId" invoiceIdScalarType) (ScalarValue (J.Number 299) invoiceIdScalarType)
         let postUpdateExp =
@@ -412,7 +413,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
         receivedInvoiceLines <- Data.sortResponseRowsBy "InvoiceLineId" <$> queryGuarded (invoiceLinesQueryRequest whereExp)
         Data.responseRows receivedInvoiceLines `rowsShouldBe` expectedUnchangedRows
 
-  describe "returning" $ do
+  for_ (_cMutations >>= _mcReturningCapabilities) $ \_returningCapabilities -> describe "returning" $ do
     usesDataset chinookTemplate $ it "returns updated rows" $ do
       let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "InvoiceId" invoiceIdScalarType) (ScalarValue (J.Number 299) invoiceIdScalarType)
       let updateOperation =
@@ -442,222 +443,264 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
       let expectedResult = MutationOperationResults 14 (Just expectedModifiedRows)
       response `mutationResponseShouldBe` MutationResponse [expectedResult]
 
-    usesDataset chinookTemplate $ it "can return rows from an object relationship" $ do
-      let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "InvoiceId" invoiceIdScalarType) (ScalarValue (J.Number 299) invoiceIdScalarType)
-      let updateOperation =
-            mkUpdateOperation _tdInvoiceLinesTableName
-              & umoUpdates
-                .~ [ SetColumn $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "InvoiceId" (J.Number 298),
-                     CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "UnitPrice" (J.Number 1)
-                   ]
-              & umoWhere ?~ whereExp
-              & umoReturningFields
-                .~ invoiceLinesFields
-                  <> Data.mkFieldsMap
-                    [ ( "Track",
-                        ( RelField
-                            ( RelationshipField _tdTrackRelationshipName $
-                                Data.emptyQuery
-                                  & qFields
-                                    ?~ Data.mkFieldsMap
-                                      [ ("TrackId", _tdColumnField _tdTracksTableName "TrackId"),
-                                        ("Name", _tdColumnField _tdTracksTableName "Name")
-                                      ]
-                            )
+    for_ _cRelationships $ \_relationshipCapabilities -> do
+      usesDataset chinookTemplate $ it "can return rows from an object relationship" $ do
+        let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "InvoiceId" invoiceIdScalarType) (ScalarValue (J.Number 299) invoiceIdScalarType)
+        let updateOperation =
+              mkUpdateOperation _tdInvoiceLinesTableName
+                & umoUpdates
+                  .~ [ SetColumn $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "InvoiceId" (J.Number 298),
+                       CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "UnitPrice" (J.Number 1)
+                     ]
+                & umoWhere ?~ whereExp
+                & umoReturningFields
+                  .~ invoiceLinesFields
+                    <> Data.mkFieldsMap
+                      [ ( "Track",
+                          ( RelField
+                              ( RelationshipField _tdTrackRelationshipName $
+                                  Data.emptyQuery
+                                    & qFields
+                                      ?~ Data.mkFieldsMap
+                                        [ ("TrackId", _tdColumnField _tdTracksTableName "TrackId"),
+                                          ("Name", _tdColumnField _tdTracksTableName "Name")
+                                        ]
+                              )
+                          )
                         )
-                      )
-                    ]
-      let tableRelationships = [Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships]
-      let mutationRequest =
-            Data.emptyMutationRequest
-              & mrOperations .~ [UpdateOperation updateOperation]
-              & mrTableRelationships .~ tableRelationships
+                      ]
+        let tableRelationships = [Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships]
+        let mutationRequest =
+              Data.emptyMutationRequest
+                & mrOperations .~ [UpdateOperation updateOperation]
+                & mrTableRelationships .~ tableRelationships
 
-      response <- mutationGuarded mutationRequest
+        response <- mutationGuarded mutationRequest
 
-      let joinInTrack (invoiceLine :: HashMap FieldName FieldValue) =
-            let track = (invoiceLine ^? Data.field "TrackId" . Data._ColumnFieldNumber) >>= \trackId -> _tdTracksRowsById ^? ix trackId
-                trackTrimmed = Data.filterColumns ["TrackId", "Name"] $ maybeToList track
-             in Data.insertField "Track" (mkSubqueryResponse trackTrimmed) invoiceLine
+        let joinInTrack (invoiceLine :: HashMap FieldName FieldValue) =
+              let track = (invoiceLine ^? Data.field "TrackId" . Data._ColumnFieldNumber) >>= \trackId -> _tdTracksRowsById ^? ix trackId
+                  trackTrimmed = Data.filterColumns ["TrackId", "Name"] $ maybeToList track
+               in Data.insertField "Track" (Data.mkSubqueryRowsFieldValue trackTrimmed) invoiceLine
 
-      let expectedModifiedRows =
-            _tdInvoiceLinesRows
-              & filter (\invoiceLine -> invoiceLine ^? Data.field "InvoiceId" . Data._ColumnFieldNumber == Just 299)
-              & fmap
-                ( \invoiceLine ->
-                    invoiceLine
-                      & Data.field "InvoiceId" . Data._ColumnFieldNumber .~ 298
-                      & Data.field "UnitPrice" . Data._ColumnFieldNumber %~ (+ 1)
-                      & joinInTrack
-                )
+        let expectedModifiedRows =
+              _tdInvoiceLinesRows
+                & filter (\invoiceLine -> invoiceLine ^? Data.field "InvoiceId" . Data._ColumnFieldNumber == Just 299)
+                & fmap
+                  ( \invoiceLine ->
+                      invoiceLine
+                        & Data.field "InvoiceId" . Data._ColumnFieldNumber .~ 298
+                        & Data.field "UnitPrice" . Data._ColumnFieldNumber %~ (+ 1)
+                        & joinInTrack
+                  )
 
-      let expectedResult = MutationOperationResults 14 (Just expectedModifiedRows)
-      response `mutationResponseShouldBe` MutationResponse [expectedResult]
+        let expectedResult = MutationOperationResults 14 (Just expectedModifiedRows)
+        response `mutationResponseShouldBe` MutationResponse [expectedResult]
 
-    usesDataset chinookTemplate $ it "can return rows from an array relationship" $ do
-      let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (ScalarValue (J.Number 1) artistIdScalarType)
-      let updateOperation =
-            mkUpdateOperation _tdArtistsTableName
-              & umoUpdates .~ [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "AySeeDeeSee")]
-              & umoWhere ?~ whereExp
-              & umoReturningFields
-                .~ artistsFields
-                  <> Data.mkFieldsMap
-                    [ ( "Albums",
-                        ( RelField
-                            ( RelationshipField _tdAlbumsRelationshipName $
-                                Data.emptyQuery
-                                  & qFields
-                                    ?~ Data.mkFieldsMap
-                                      [ ("AlbumId", _tdColumnField _tdAlbumsTableName "AlbumId"),
-                                        ("ArtistId", _tdColumnField _tdAlbumsTableName "ArtistId"),
-                                        ("Title", _tdColumnField _tdAlbumsTableName "Title")
-                                      ]
-                                  & qOrderBy ?~ OrderBy mempty (_tdOrderByColumn [] "AlbumId" Ascending :| [])
-                            )
+      usesDataset chinookTemplate $ it "can return rows from an array relationship" $ do
+        let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (ScalarValue (J.Number 1) artistIdScalarType)
+        let updateOperation =
+              mkUpdateOperation _tdArtistsTableName
+                & umoUpdates .~ [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "AySeeDeeSee")]
+                & umoWhere ?~ whereExp
+                & umoReturningFields
+                  .~ artistsFields
+                    <> Data.mkFieldsMap
+                      [ ( "Albums",
+                          ( RelField
+                              ( RelationshipField _tdAlbumsRelationshipName $
+                                  Data.emptyQuery
+                                    & qFields
+                                      ?~ Data.mkFieldsMap
+                                        [ ("AlbumId", _tdColumnField _tdAlbumsTableName "AlbumId"),
+                                          ("ArtistId", _tdColumnField _tdAlbumsTableName "ArtistId"),
+                                          ("Title", _tdColumnField _tdAlbumsTableName "Title")
+                                        ]
+                                    & qOrderBy ?~ OrderBy mempty (_tdOrderByColumn [] "AlbumId" Ascending :| [])
+                              )
+                          )
                         )
-                      )
-                    ]
-      let tableRelationships = [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
-      let mutationRequest =
-            Data.emptyMutationRequest
-              & mrOperations .~ [UpdateOperation updateOperation]
-              & mrTableRelationships .~ tableRelationships
+                      ]
+        let tableRelationships = [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
+        let mutationRequest =
+              Data.emptyMutationRequest
+                & mrOperations .~ [UpdateOperation updateOperation]
+                & mrTableRelationships .~ tableRelationships
 
-      response <- mutationGuarded mutationRequest
+        response <- mutationGuarded mutationRequest
 
-      let joinInAlbums (artist :: HashMap FieldName FieldValue) =
-            let artistId = (artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber)
-                albums = _tdAlbumsRows & filter (\album -> album ^? Data.field "ArtistId" . Data._ColumnFieldNumber == artistId)
-             in Data.insertField "Albums" (mkSubqueryResponse albums) artist
+        let joinInAlbums (artist :: HashMap FieldName FieldValue) =
+              let artistId = (artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber)
+                  albums = _tdAlbumsRows & filter (\album -> album ^? Data.field "ArtistId" . Data._ColumnFieldNumber == artistId)
+               in Data.insertField "Albums" (Data.mkSubqueryRowsFieldValue albums) artist
 
-      let expectedModifiedRows =
-            _tdArtistsRowsById ^? ix 1
-              & fmap
-                ( \artist ->
-                    artist
-                      & Data.field "Name" . Data._ColumnFieldString .~ "AySeeDeeSee"
-                      & joinInAlbums
-                )
-              & maybeToList
+        let expectedModifiedRows =
+              _tdArtistsRowsById ^? ix 1
+                & fmap
+                  ( \artist ->
+                      artist
+                        & Data.field "Name" . Data._ColumnFieldString .~ "AySeeDeeSee"
+                        & joinInAlbums
+                  )
+                & maybeToList
 
-      let expectedResult = MutationOperationResults 1 (Just expectedModifiedRows)
-      response `mutationResponseShouldBe` MutationResponse [expectedResult]
+        let expectedResult = MutationOperationResults 1 (Just expectedModifiedRows)
+        response `mutationResponseShouldBe` MutationResponse [expectedResult]
 
-    usesDataset chinookTemplate $ it "updated rows are returned even when returned again from across a relationship" $ do
-      -- In this scenario we move a set of invoice lines from one invoice to another
-      -- and then return the invoice lines, joined to the invoice and then back to the invoice lines.
-      -- We expect to see both the existing invoice lines and the moved invoice lines on the invoice.
-      let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "InvoiceId" invoiceIdScalarType) (ScalarValue (J.Number 299) invoiceIdScalarType)
-      let updateOperation =
-            mkUpdateOperation _tdInvoiceLinesTableName
-              & umoUpdates
-                .~ [ SetColumn $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "InvoiceId" (J.Number 298),
-                     CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "UnitPrice" (J.Number 1)
-                   ]
-              & umoWhere ?~ whereExp
-              & umoReturningFields
-                .~ invoiceLinesFields
-                  <> Data.mkFieldsMap
-                    [ ( "Invoice",
-                        ( RelField
-                            ( RelationshipField _tdInvoiceRelationshipName $
-                                Data.emptyQuery
-                                  & qFields
-                                    ?~ Data.mkFieldsMap
-                                      [ ("InvoiceId", _tdColumnField _tdInvoicesTableName "InvoiceId"),
-                                        ("Total", _tdColumnField _tdInvoicesTableName "Total"),
-                                        ( "InvoiceLines",
-                                          ( RelField
-                                              ( RelationshipField _tdInvoiceLinesRelationshipName $
-                                                  Data.emptyQuery
-                                                    & qFields ?~ invoiceLinesFields
-                                                    & qOrderBy ?~ OrderBy mempty (_tdOrderByColumn [] "InvoiceLineId" Ascending :| [])
-                                              )
+      usesDataset chinookTemplate $ it "can aggregate rows from across an array relationship" $ do
+        let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (ScalarValue (J.Number 1) artistIdScalarType)
+        let updateOperation =
+              mkUpdateOperation _tdArtistsTableName
+                & umoUpdates .~ [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "AySeeDeeSee")]
+                & umoWhere ?~ whereExp
+                & umoReturningFields
+                  .~ artistsFields
+                    <> Data.mkFieldsMap
+                      [ ( "Albums",
+                          ( RelField
+                              ( RelationshipField _tdAlbumsRelationshipName $
+                                  Data.emptyQuery & qAggregates ?~ Data.mkFieldsMap [("AlbumsCount", StarCount)]
+                              )
+                          )
+                        )
+                      ]
+        let tableRelationships = [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
+        let mutationRequest =
+              Data.emptyMutationRequest
+                & mrOperations .~ [UpdateOperation updateOperation]
+                & mrTableRelationships .~ tableRelationships
+
+        response <- mutationGuarded mutationRequest
+
+        let joinInAlbums (artist :: HashMap FieldName FieldValue) =
+              let artistId = artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
+                  albumsCount = _tdAlbumsRows & filter (\album -> album ^? Data.field "ArtistId" . Data._ColumnFieldNumber == artistId) & length
+                  aggregates = Data.mkFieldsMap [("AlbumsCount", J.Number $ fromIntegral albumsCount)]
+               in Data.insertField "Albums" (Data.mkSubqueryAggregatesFieldValue aggregates) artist
+
+        let expectedModifiedRows =
+              _tdArtistsRowsById ^? ix 1
+                & fmap
+                  ( \artist ->
+                      artist
+                        & Data.field "Name" . Data._ColumnFieldString .~ "AySeeDeeSee"
+                        & joinInAlbums
+                  )
+                & maybeToList
+
+        let expectedResult = MutationOperationResults 1 (Just expectedModifiedRows)
+        response `mutationResponseShouldBe` MutationResponse [expectedResult]
+
+      usesDataset chinookTemplate $ it "updated rows are returned even when returned again from across a relationship" $ do
+        -- In this scenario we move a set of invoice lines from one invoice to another
+        -- and then return the invoice lines, joined to the invoice and then back to the invoice lines.
+        -- We expect to see both the existing invoice lines and the moved invoice lines on the invoice.
+        let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "InvoiceId" invoiceIdScalarType) (ScalarValue (J.Number 299) invoiceIdScalarType)
+        let updateOperation =
+              mkUpdateOperation _tdInvoiceLinesTableName
+                & umoUpdates
+                  .~ [ SetColumn $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "InvoiceId" (J.Number 298),
+                       CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "UnitPrice" (J.Number 1)
+                     ]
+                & umoWhere ?~ whereExp
+                & umoReturningFields
+                  .~ invoiceLinesFields
+                    <> Data.mkFieldsMap
+                      [ ( "Invoice",
+                          ( RelField
+                              ( RelationshipField _tdInvoiceRelationshipName $
+                                  Data.emptyQuery
+                                    & qFields
+                                      ?~ Data.mkFieldsMap
+                                        [ ("InvoiceId", _tdColumnField _tdInvoicesTableName "InvoiceId"),
+                                          ("Total", _tdColumnField _tdInvoicesTableName "Total"),
+                                          ( "InvoiceLines",
+                                            ( RelField
+                                                ( RelationshipField _tdInvoiceLinesRelationshipName $
+                                                    Data.emptyQuery
+                                                      & qFields ?~ invoiceLinesFields
+                                                      & qOrderBy ?~ OrderBy mempty (_tdOrderByColumn [] "InvoiceLineId" Ascending :| [])
+                                                )
+                                            )
                                           )
-                                        )
-                                      ]
-                            )
+                                        ]
+                              )
+                          )
                         )
-                      )
-                    ]
-      let tableRelationships =
-            [ Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships,
-              Data.onlyKeepRelationships [_tdInvoiceLinesRelationshipName] _tdInvoicesTableRelationships
-            ]
-      let mutationRequest =
-            Data.emptyMutationRequest
-              & mrOperations .~ [UpdateOperation updateOperation]
-              & mrTableRelationships .~ tableRelationships
-
-      response <- mutationGuarded mutationRequest
-
-      let modifiedInvoiceLines =
-            _tdInvoiceLinesRows
-              & filter (\invoiceLine -> invoiceLine ^? Data.field "InvoiceId" . Data._ColumnFieldNumber == Just 299)
-              & fmap
-                ( \invoiceLine ->
-                    invoiceLine
-                      & Data.field "InvoiceId" . Data._ColumnFieldNumber .~ 298
-                      & Data.field "UnitPrice" . Data._ColumnFieldNumber %~ (+ 1)
-                )
-
-      let joinInInvoiceLines (invoice :: HashMap FieldName FieldValue) =
-            let invoiceId = invoice ^? Data.field "InvoiceId" . Data._ColumnFieldNumber
-                invoiceLines = (_tdInvoiceLinesRows <> modifiedInvoiceLines) & filter (\invoiceLine -> invoiceLine ^? Data.field "InvoiceId" . Data._ColumnFieldNumber == invoiceId)
-             in Data.insertField "InvoiceLines" (mkSubqueryResponse invoiceLines) invoice
-
-      let joinInInvoice (invoiceLine :: HashMap FieldName FieldValue) =
-            let invoice = (invoiceLine ^? Data.field "InvoiceId" . Data._ColumnFieldNumber) >>= \invoiceId -> _tdInvoicesRowsById ^? ix invoiceId
-                invoiceTrimmed = Data.filterColumns ["InvoiceId", "Total"] $ maybeToList invoice
-             in Data.insertField "Invoice" (mkSubqueryResponse (joinInInvoiceLines <$> invoiceTrimmed)) invoiceLine
-
-      let expectedModifiedRows = joinInInvoice <$> modifiedInvoiceLines
-
-      let expectedResult = MutationOperationResults 14 (Just expectedModifiedRows)
-      response `mutationResponseShouldBe` MutationResponse [expectedResult]
-
-  describe "edge cases" $
-    edgeCaseTest _ectdNoPrimaryKeyTableName "can update rows in a table with no primary key" $ \EdgeCasesTestData {..} -> do
-      let firstNameScalarType = _ectdFindColumnScalarType _ectdNoPrimaryKeyTableName "FirstName"
-      let lastNameScalarType = _ectdFindColumnScalarType _ectdNoPrimaryKeyTableName "LastName"
-      let whereExp =
-            And
-              [ ApplyBinaryComparisonOperator Equal (_ectdCurrentComparisonColumn "FirstName" firstNameScalarType) (ScalarValue (J.String "Will") firstNameScalarType),
-                ApplyBinaryComparisonOperator Equal (_ectdCurrentComparisonColumn "LastName" lastNameScalarType) (ScalarValue (J.String "Riker") lastNameScalarType)
+                      ]
+        let tableRelationships =
+              [ Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships,
+                Data.onlyKeepRelationships [_tdInvoiceLinesRelationshipName] _tdInvoicesTableRelationships
               ]
-      let returning =
-            Data.mkFieldsMap
-              [ ("FirstName", _ectdColumnField _ectdNoPrimaryKeyTableName "FirstName"),
-                ("LastName", _ectdColumnField _ectdNoPrimaryKeyTableName "LastName")
-              ]
-      let updateOperation =
-            mkUpdateOperation _ectdNoPrimaryKeyTableName
-              & umoUpdates .~ [SetColumn $ _ectdRowColumnOperatorValue _ectdNoPrimaryKeyTableName "FirstName" (J.String "William")]
-              & umoWhere ?~ whereExp
-              & umoReturningFields .~ returning
-      let mutationRequest = Data.emptyMutationRequest & mrOperations .~ [UpdateOperation updateOperation]
+        let mutationRequest =
+              Data.emptyMutationRequest
+                & mrOperations .~ [UpdateOperation updateOperation]
+                & mrTableRelationships .~ tableRelationships
 
-      response <- mutationGuarded mutationRequest
+        response <- mutationGuarded mutationRequest
 
-      let expectedModifiedRows =
-            [ Data.mkFieldsMap $
-                [ ("FirstName", mkColumnFieldValue $ J.String "William"),
-                  ("LastName", mkColumnFieldValue $ J.String "Riker")
+        let modifiedInvoiceLines =
+              _tdInvoiceLinesRows
+                & filter (\invoiceLine -> invoiceLine ^? Data.field "InvoiceId" . Data._ColumnFieldNumber == Just 299)
+                & fmap
+                  ( \invoiceLine ->
+                      invoiceLine
+                        & Data.field "InvoiceId" . Data._ColumnFieldNumber .~ 298
+                        & Data.field "UnitPrice" . Data._ColumnFieldNumber %~ (+ 1)
+                  )
+
+        let joinInInvoiceLines (invoice :: HashMap FieldName FieldValue) =
+              let invoiceId = invoice ^? Data.field "InvoiceId" . Data._ColumnFieldNumber
+                  invoiceLines = (_tdInvoiceLinesRows <> modifiedInvoiceLines) & filter (\invoiceLine -> invoiceLine ^? Data.field "InvoiceId" . Data._ColumnFieldNumber == invoiceId)
+               in Data.insertField "InvoiceLines" (Data.mkSubqueryRowsFieldValue invoiceLines) invoice
+
+        let joinInInvoice (invoiceLine :: HashMap FieldName FieldValue) =
+              let invoice = (invoiceLine ^? Data.field "InvoiceId" . Data._ColumnFieldNumber) >>= \invoiceId -> _tdInvoicesRowsById ^? ix invoiceId
+                  invoiceTrimmed = Data.filterColumns ["InvoiceId", "Total"] $ maybeToList invoice
+               in Data.insertField "Invoice" (Data.mkSubqueryRowsFieldValue (joinInInvoiceLines <$> invoiceTrimmed)) invoiceLine
+
+        let expectedModifiedRows = joinInInvoice <$> modifiedInvoiceLines
+
+        let expectedResult = MutationOperationResults 14 (Just expectedModifiedRows)
+        response `mutationResponseShouldBe` MutationResponse [expectedResult]
+
+  for_ (_cMutations >>= _mcReturningCapabilities) $ \_returningCapabilities ->
+    describe "edge cases" $
+      edgeCaseTest _ectdNoPrimaryKeyTableName "can update rows in a table with no primary key" $ \EdgeCasesTestData {..} -> do
+        let firstNameScalarType = _ectdFindColumnScalarType _ectdNoPrimaryKeyTableName "FirstName"
+        let lastNameScalarType = _ectdFindColumnScalarType _ectdNoPrimaryKeyTableName "LastName"
+        let whereExp =
+              And
+                [ ApplyBinaryComparisonOperator Equal (_ectdCurrentComparisonColumn "FirstName" firstNameScalarType) (ScalarValue (J.String "Will") firstNameScalarType),
+                  ApplyBinaryComparisonOperator Equal (_ectdCurrentComparisonColumn "LastName" lastNameScalarType) (ScalarValue (J.String "Riker") lastNameScalarType)
                 ]
-            ]
+        let returning =
+              Data.mkFieldsMap
+                [ ("FirstName", _ectdColumnField _ectdNoPrimaryKeyTableName "FirstName"),
+                  ("LastName", _ectdColumnField _ectdNoPrimaryKeyTableName "LastName")
+                ]
+        let updateOperation =
+              mkUpdateOperation _ectdNoPrimaryKeyTableName
+                & umoUpdates .~ [SetColumn $ _ectdRowColumnOperatorValue _ectdNoPrimaryKeyTableName "FirstName" (J.String "William")]
+                & umoWhere ?~ whereExp
+                & umoReturningFields .~ returning
+        let mutationRequest = Data.emptyMutationRequest & mrOperations .~ [UpdateOperation updateOperation]
 
-      let expectedResult = MutationOperationResults 1 (Just expectedModifiedRows)
-      response `mutationResponseShouldBe` MutationResponse [expectedResult]
+        response <- mutationGuarded mutationRequest
+
+        let expectedModifiedRows =
+              [ Data.mkFieldsMap $
+                  [ ("FirstName", mkColumnFieldValue $ J.String "William"),
+                    ("LastName", mkColumnFieldValue $ J.String "Riker")
+                  ]
+              ]
+
+        let expectedResult = MutationOperationResults 1 (Just expectedModifiedRows)
+        response `mutationResponseShouldBe` MutationResponse [expectedResult]
   where
     edgeCaseTest = Test.edgeCaseTest edgeCasesTestData
 
     mkUpdateOperation :: TableName -> UpdateMutationOperation
     mkUpdateOperation tableName = UpdateMutationOperation tableName Nothing [] Nothing mempty
-
-    mkSubqueryResponse :: [HashMap FieldName FieldValue] -> FieldValue
-    mkSubqueryResponse rows =
-      mkRelationshipFieldValue $ QueryResponse (Just rows) Nothing
 
     artistsFields :: HashMap FieldName Field
     artistsFields =

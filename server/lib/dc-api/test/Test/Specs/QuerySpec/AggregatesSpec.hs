@@ -279,7 +279,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
                     _tdAlbumsRows
                       & filter ((^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>> (== Just artistId))
               let aggregates = Data.mkFieldsMap [("count", Number . fromIntegral $ length albums)]
-              pure $ Data.insertField "Albums" (mkSubqueryResponse Nothing (Just aggregates)) artist
+              pure $ Data.insertField "Albums" (Data.mkSubqueryFieldValue Nothing (Just aggregates)) artist
 
         let expectedArtists =
               _tdArtistsRows
@@ -306,7 +306,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
                       & filter ((^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>> (== Just artistId))
                       & Data.filterColumns ["AlbumId", "Title"]
               let aggregates = Data.mkFieldsMap [("count", Number . fromIntegral $ length albums)]
-              pure $ Data.insertField "Albums" (mkSubqueryResponse (Just albums) (Just aggregates)) artist
+              pure $ Data.insertField "Albums" (Data.mkSubqueryFieldValue (Just albums) (Just aggregates)) artist
 
         let sortAlbums (artistRows :: [HashMap FieldName FieldValue]) =
               artistRows & traverse . Data.field "Albums" . Data._RelationshipFieldRows %~ sortOn (^? Data.field "AlbumId")
@@ -332,7 +332,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
                     _tdMediaTypesRows
                       & filter ((^? Data.field "MediaTypeId" . Data._ColumnFieldNumber) >>> (== Just mediaTypeId))
                       & Data.filterColumns ["Name"]
-              pure $ Data.insertField "nodes_MediaType" (mkSubqueryResponse (Just mediaTypes) Nothing) track
+              pure $ Data.insertField "nodes_MediaType" (Data.mkSubqueryFieldValue (Just mediaTypes) Nothing) track
 
         let joinInInvoiceLines (track :: HashMap FieldName FieldValue) = fromMaybe track $ do
               trackId <- track ^? Data.field "TrackId" . Data._ColumnFieldNumber
@@ -341,7 +341,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
                       & filter ((^? Data.field "TrackId" . Data._ColumnFieldNumber) >>> (== Just trackId))
               let getQuantity invoiceLine = invoiceLine ^? Data.field "Quantity" . Data._ColumnFieldNumber
               let invoiceLinesAggregates = Data.mkFieldsMap [("aggregate_sum_Quantity", aggregate (Number . sum) $ mapMaybe getQuantity invoiceLines)]
-              pure $ Data.insertField "nodes_InvoiceLines_aggregate" (mkSubqueryResponse Nothing (Just invoiceLinesAggregates)) track
+              pure $ Data.insertField "nodes_InvoiceLines_aggregate" (Data.mkSubqueryFieldValue Nothing (Just invoiceLinesAggregates)) track
 
         let joinInTracks (album :: HashMap FieldName FieldValue) = fromMaybe album $ do
               albumId <- album ^? Data.field "AlbumId" . Data._ColumnFieldNumber
@@ -357,7 +357,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
                       & Data.renameColumns [("Name", "nodes_Name")]
                       & Data.filterColumns ["nodes_Name", "nodes_MediaType", "nodes_InvoiceLines_aggregate"]
               let tracksAggregates = Data.mkFieldsMap [("aggregate_count", Number . fromIntegral $ length tracks)]
-              pure $ Data.insertField "nodes_Tracks_aggregate" (mkSubqueryResponse (Just tracks) (Just tracksAggregates)) album
+              pure $ Data.insertField "nodes_Tracks_aggregate" (Data.mkSubqueryFieldValue (Just tracks) (Just tracksAggregates)) album
 
         let joinInAlbums (artist :: HashMap FieldName FieldValue) = fromMaybe artist $ do
               artistId <- artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
@@ -368,7 +368,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
                       & fmap joinInTracks
                       & Data.renameColumns [("Title", "nodes_Title")]
                       & Data.filterColumns ["nodes_Title", "nodes_Tracks_aggregate"]
-              pure $ Data.insertField "Albums_aggregate" (mkSubqueryResponse (Just albums) Nothing) artist
+              pure $ Data.insertField "Albums_aggregate" (Data.mkSubqueryFieldValue (Just albums) Nothing) artist
 
         let expectedArtists =
               _tdArtistsRows
@@ -590,10 +590,6 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
     albumsQueryRequest :: QueryRequest
     albumsQueryRequest =
       QueryRequest _tdAlbumsTableName [] Data.emptyQuery
-
-    mkSubqueryResponse :: Maybe [HashMap FieldName FieldValue] -> Maybe (HashMap FieldName Value) -> FieldValue
-    mkSubqueryResponse rows aggregates =
-      mkRelationshipFieldValue $ QueryResponse rows aggregates
 
     aggregate :: (NonEmpty a -> Value) -> [a] -> Value
     aggregate aggFn values =

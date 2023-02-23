@@ -33,6 +33,10 @@ module Test.Data
     _RelationshipFieldRows,
     orderByColumn,
     insertAutoIncPk,
+    autoIncPks,
+    mkSubqueryFieldValue,
+    mkSubqueryRowsFieldValue,
+    mkSubqueryAggregatesFieldValue,
   )
 where
 
@@ -194,16 +198,21 @@ employeesRowsById =
 
 employeesTableRelationships :: API.TableRelationships
 employeesTableRelationships =
-  let joinFieldMapping = HashMap.fromList [(API.ColumnName "EmployeeId", API.ColumnName "SupportRepId")]
+  let supportRepJoinFieldMapping = HashMap.fromList [(API.ColumnName "EmployeeId", API.ColumnName "SupportRepId")]
+      reportsToEmployeeJoinFieldMapping = HashMap.fromList [(API.ColumnName "ReportsTo", API.ColumnName "EmployeeId")]
    in API.TableRelationships
         employeesTableName
         ( HashMap.fromList
-            [ (supportRepForCustomersRelationshipName, API.Relationship customersTableName API.ArrayRelationship joinFieldMapping)
+            [ (supportRepForCustomersRelationshipName, API.Relationship customersTableName API.ArrayRelationship supportRepJoinFieldMapping),
+              (reportsToEmployeeRelationshipName, API.Relationship employeesTableName API.ObjectRelationship reportsToEmployeeJoinFieldMapping)
             ]
         )
 
 supportRepForCustomersRelationshipName :: API.RelationshipName
 supportRepForCustomersRelationshipName = API.RelationshipName "SupportRepForCustomers"
+
+reportsToEmployeeRelationshipName :: API.RelationshipName
+reportsToEmployeeRelationshipName = API.RelationshipName "ReportsToEmployee"
 
 invoicesTableName :: API.TableName
 invoicesTableName = mkTableName "Invoice"
@@ -374,6 +383,7 @@ data TestData = TestData
     _tdEmployeesRowsById :: HashMap Scientific (HashMap API.FieldName API.FieldValue),
     _tdEmployeesTableRelationships :: API.TableRelationships,
     _tdSupportRepForCustomersRelationshipName :: API.RelationshipName,
+    _tdReportsToEmployeeRelationshipName :: API.RelationshipName,
     -- = Invoices table
     _tdInvoicesTableName :: API.TableName,
     _tdInvoicesRows :: [HashMap API.FieldName API.FieldValue],
@@ -443,6 +453,7 @@ mkTestData schemaResponse testConfig =
       _tdEmployeesRowsById = employeesRowsById,
       _tdEmployeesTableRelationships = formatTableRelationships employeesTableRelationships,
       _tdSupportRepForCustomersRelationshipName = supportRepForCustomersRelationshipName,
+      _tdReportsToEmployeeRelationshipName = reportsToEmployeeRelationshipName,
       _tdInvoicesTableName = formatTableName testConfig invoicesTableName,
       _tdInvoicesRows = invoicesRows,
       _tdInvoicesRowsById = invoicesRowsById,
@@ -663,9 +674,24 @@ orderByColumn targetPath columnName orderDirection =
   API.OrderByElement targetPath (API.OrderByColumn columnName) orderDirection
 
 insertAutoIncPk :: Text -> Integer -> [HashMap API.FieldName API.FieldValue] -> [HashMap API.FieldName API.FieldValue]
-insertAutoIncPk pkFieldName startingPkId roows =
-  zip [startingPkId ..] roows
+insertAutoIncPk pkFieldName startingPkId rows =
+  zip [startingPkId ..] rows
     & fmap
       ( \(albumId, albumRow) ->
           albumRow & at (API.FieldName pkFieldName) ?~ API.mkColumnFieldValue (J.Number $ fromInteger albumId)
       )
+
+autoIncPks :: Integer -> [a] -> [Integer]
+autoIncPks startingPkId rows = fst <$> zip [startingPkId ..] rows
+
+mkSubqueryFieldValue :: Maybe [HashMap API.FieldName API.FieldValue] -> Maybe (HashMap API.FieldName J.Value) -> API.FieldValue
+mkSubqueryFieldValue rows aggregates =
+  API.mkRelationshipFieldValue $ API.QueryResponse rows aggregates
+
+mkSubqueryRowsFieldValue :: [HashMap API.FieldName API.FieldValue] -> API.FieldValue
+mkSubqueryRowsFieldValue rows =
+  API.mkRelationshipFieldValue $ API.QueryResponse (Just rows) Nothing
+
+mkSubqueryAggregatesFieldValue :: HashMap API.FieldName J.Value -> API.FieldValue
+mkSubqueryAggregatesFieldValue aggregates =
+  API.mkRelationshipFieldValue $ API.QueryResponse Nothing (Just aggregates)

@@ -127,7 +127,7 @@ cabal run dc-api:test:tests-dc-api -- test --agent-base-url http://localhost:810
 From the HGE repo.
 
 ## Known Issues
-* Using "returning" in update/delete mutations where you join across relationships that are affected by the update/delete mutation itself may return inconsistent results. This is because of this issue with SQLite: https://sqlite.org/forum/forumpost/9470611066
+* Using "returning" in insert/update/delete mutations where you join across relationships that are affected by the insert/update/delete mutation itself may return inconsistent results. This is because of this issue with SQLite: https://sqlite.org/forum/forumpost/9470611066
 
 ## TODO
 

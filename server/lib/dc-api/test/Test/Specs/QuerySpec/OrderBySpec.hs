@@ -237,7 +237,7 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
                     & sortOn ((^? Data.field "Name") >>> Down)
                     & take tracksLimit
                     & Data.filterColumns ["TrackId", "Name"]
-            pure $ Data.insertField "Tracks" (mkSubqueryResponse (Just albums) Nothing) album
+            pure $ Data.insertField "Tracks" (Data.mkSubqueryFieldValue (Just albums) Nothing) album
 
       let joinInAlbums (artist :: HashMap FieldName FieldValue) = fromMaybe artist $ do
             artistId <- artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
@@ -247,7 +247,7 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
                     & sortOn ((^? Data.field "Title") >>> Down)
                     & take albumsLimit
                     & fmap joinInTracks
-            pure $ Data.insertField "Albums" (mkSubqueryResponse (Just albums) Nothing) artist
+            pure $ Data.insertField "Albums" (Data.mkSubqueryFieldValue (Just albums) Nothing) artist
 
       let expectedArtists =
             _tdArtistsRows
@@ -449,7 +449,3 @@ data NullableOrdered a
 
 toNullsLastOrdering :: Maybe a -> NullableOrdered a
 toNullsLastOrdering = maybe NullLast Some
-
-mkSubqueryResponse :: Maybe [HashMap FieldName FieldValue] -> Maybe (HashMap FieldName Value) -> FieldValue
-mkSubqueryResponse rows aggregates =
-  mkRelationshipFieldValue $ QueryResponse rows aggregates
