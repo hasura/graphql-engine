@@ -1,6 +1,6 @@
 # DATE VERSION: 2023-01-31
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image
-FROM ubuntu:focal-20221130
+FROM ubuntu:focal-20230126
 
 ### NOTE! Shared libraries here need to be kept in sync with `server-builder.dockerfile`!
 
