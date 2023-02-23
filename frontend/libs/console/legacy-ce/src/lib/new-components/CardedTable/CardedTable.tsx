@@ -91,7 +91,7 @@ const TableBodyCell = ({ children, ...cellAttributes }: ChildrenProps) => {
 
 const TableBodyActionCell = ({ children }: ChildrenProps) => {
   return (
-    <td className="px-sm py-xs whitespace-nowrap text-right font-semibold opacity-0 group-hover:opacity-100">
+    <td className="px-sm py-xs whitespace-nowrap text-right font-semibold">
       {children}
     </td>
   );

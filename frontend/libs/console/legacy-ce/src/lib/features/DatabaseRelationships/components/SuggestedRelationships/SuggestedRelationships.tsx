@@ -3,7 +3,6 @@ import { capitaliseFirstLetter } from '../../../../components/Common/ConfigureTr
 import { Table } from '../../../hasura-metadata-types';
 import { Button } from '../../../../new-components/Button';
 import { CardedTable } from '../../../../new-components/CardedTable';
-import { hasuraToast } from '../../../../new-components/Toasts';
 import {
   FaArrowRight,
   FaColumns,
@@ -21,6 +20,7 @@ import {
 } from './hooks/useSuggestedRelationships';
 import type { LocalRelationship } from '../../types';
 import Skeleton from 'react-loading-skeleton';
+import { SuggestedRelationshipTrackModal } from '../SuggestedRelationshipTrackModal/SuggestedRelationshipTrackModal';
 
 type SuggestedRelationshipsProps = {
   dataSourceName: string;
@@ -48,84 +48,50 @@ export const SuggestedRelationships = ({
 
   const supportsForeignKeys = getSupportsForeignKeys(source);
 
-  const {
-    suggestedRelationships,
-    isLoadingSuggestedRelationships,
-    refetchSuggestedRelationships,
-    onAddSuggestedRelationship,
-    isAddingSuggestedRelationship,
-  } = useSuggestedRelationships({
-    dataSourceName,
-    table,
-    existingRelationships: localRelationships,
-    isEnabled: supportsForeignKeys,
-  });
+  const { suggestedRelationships, isLoadingSuggestedRelationships } =
+    useSuggestedRelationships({
+      dataSourceName,
+      table,
+      existingRelationships: localRelationships,
+      isEnabled: supportsForeignKeys,
+    });
 
-  const [updatedRelationship, setUpdatedRelationship] = useState<string | null>(
-    null
-  );
-  const onCreate = async (relationship: SuggestedRelationshipWithName) => {
-    setUpdatedRelationship(relationship.constraintName);
-    try {
-      const isObjectRelationship = !!relationship.from?.constraint_name;
-
-      await onAddSuggestedRelationship({
-        name: relationship.constraintName,
-        columnNames: isObjectRelationship
-          ? relationship.from.columns
-          : relationship.to.columns,
-        relationshipType: isObjectRelationship ? 'object' : 'array',
-        toTable: isObjectRelationship ? undefined : relationship.to.table,
-      });
-      hasuraToast({
-        title: 'Success',
-        message: 'Relationship tracked',
-        type: 'success',
-      });
-      refetchSuggestedRelationships();
-    } catch (err) {
-      hasuraToast({
-        title: 'Error',
-        message: 'An error occurred',
-        type: 'error',
-      });
-    }
-  };
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [selectedRelationship, setSelectedRelationship] =
+    useState<SuggestedRelationshipWithName | null>(null);
 
   if (isLoadingSuggestedRelationships)
     return <Skeleton count={4} height={30} />;
 
   return suggestedRelationships.length > 0 ? (
-    <CardedTable.Table>
-      <CardedTable.Header
-        columns={[
-          <div>
-            <FaMagic className="fill-muted" /> FOREIGN KEY RELATIONSHIPS
-          </div>,
-          'SOURCE',
-          'TYPE',
-          'RELATIONSHIP',
-        ]}
-      />
+    <>
+      <CardedTable.Table>
+        <CardedTable.Header
+          columns={[
+            <div>
+              <FaMagic className="fill-muted" /> SUGGESTED RELATIONSHIPS
+            </div>,
+            'SOURCE',
+            'TYPE',
+            'RELATIONSHIP',
+          ]}
+        />
 
-      <CardedTable.TableBody>
-        {suggestedRelationships.map(relationship => {
-          const relationshipName = relationship.constraintName;
-          return (
-            <CardedTable.TableBodyRow key={relationshipName}>
+        <CardedTable.TableBody>
+          {suggestedRelationships.map(relationship => (
+            <CardedTable.TableBodyRow key={relationship.constraintName}>
               <CardedTable.TableBodyCell>
                 <div className="flex flex-row items-center">
                   <Button
                     size="sm"
-                    onClick={() => onCreate(relationship)}
-                    isLoading={
-                      isAddingSuggestedRelationship &&
-                      updatedRelationship === relationship.constraintName
-                    }
+                    onClick={() => {
+                      setSelectedRelationship(relationship);
+                      setModalVisible(true);
+                    }}
                   >
                     Add
                   </Button>
-                  <div className="ml-2">{relationshipName}</div>
+                  <div className="ml-2">{relationship.constraintName}</div>
                 </div>
               </CardedTable.TableBodyCell>
 
@@ -155,9 +121,16 @@ export const SuggestedRelationships = ({
                 </div>
               </CardedTable.TableBodyCell>
             </CardedTable.TableBodyRow>
-          );
-        })}
-      </CardedTable.TableBody>
-    </CardedTable.Table>
+          ))}
+        </CardedTable.TableBody>
+      </CardedTable.Table>
+      {isModalVisible && selectedRelationship && (
+        <SuggestedRelationshipTrackModal
+          relationship={selectedRelationship}
+          dataSourceName={dataSourceName}
+          onClose={() => setModalVisible(false)}
+        />
+      )}
+    </>
   ) : null;
 };
