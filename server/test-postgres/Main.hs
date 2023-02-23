@@ -2,7 +2,9 @@
 
 module Main (main) where
 
+import Constants qualified as Constants
 import Control.Concurrent.MVar
+import Control.Monad.Trans.Managed (ManagedT (..))
 import Control.Natural ((:~>) (..))
 import Data.Aeson qualified as A
 import Data.ByteString.Lazy.Char8 qualified as BL
@@ -12,8 +14,9 @@ import Data.Time.Clock (getCurrentTime)
 import Data.URL.Template
 import Database.PG.Query qualified as PG
 import Hasura.App
-  ( AppContext (..),
-    PGMetadataStorageAppT (..),
+  ( PGMetadataStorageAppT (..),
+    initGlobalCtx,
+    initialiseContext,
     mkMSSQLSourceResolver,
     mkPgSourceResolver,
   )
@@ -31,12 +34,16 @@ import Hasura.RQL.Types.ResizePool
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.Server.Init
 import Hasura.Server.Init.FeatureFlag as FF
+import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Migrate
+import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
 import Hasura.Server.Types
+import Hasura.Tracing (sampleAlways)
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.TLS qualified as HTTP
 import System.Environment (getEnvironment)
 import System.Exit (exitFailure)
+import System.Metrics qualified as EKG
 import Test.Hasura.EventTriggerCleanupSuite qualified as EventTriggerCleanupSuite
 import Test.Hasura.Server.MigrateSuite qualified as MigrateSuite
 import Test.Hasura.StreamingSubscriptionSuite qualified as StreamingSubscriptionSuite
@@ -60,6 +67,13 @@ main = do
       sourceConnInfo =
         PostgresSourceConnInfo urlConf (Just setPostgresPoolSettings) True PG.ReadCommitted Nothing
       sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema Nothing mempty
+      rci =
+        PostgresConnInfo
+          { _pciDatabaseConn = Nothing,
+            _pciRetries = Nothing
+          }
+      serveOptions = Constants.serveOptions
+      metadataDbUrl = Just Constants.postgresqlMetadataConnectionString
 
   pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams {PG.cpConns = 1} print
   let pgContext = mkPGExecCtx PG.Serializable pgPool NeverResizePool
@@ -71,6 +85,14 @@ main = do
 
       setupCacheRef = do
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
+        globalCtx <- initGlobalCtx envMap metadataDbUrl rci
+        (_, serverMetrics) <-
+          liftIO $ do
+            store <- EKG.newStore @TestMetricsSpec
+            serverMetrics <-
+              liftIO $ createServerMetrics $ EKG.subset ServerSubset store
+            pure (EKG.subset EKG.emptyOf store, serverMetrics)
+        prometheusMetrics <- makeDummyPrometheusMetrics
         let sqlGenCtx =
               SQLGenCtx
                 Options.Don'tStringifyNumbers
@@ -92,12 +114,23 @@ main = do
                 emptyMetadataDefaults
                 (FF.checkFeatureFlag mempty)
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver serverConfigCtx
-            appContext = AppContext httpManager print pgPool
 
-            run :: ExceptT QErr (PGMetadataStorageAppT CacheBuild) a -> IO a
+        (appCtx, appEnv) <- runManagedT
+          ( initialiseContext
+              envMap
+              globalCtx
+              serveOptions
+              Nothing
+              serverMetrics
+              prometheusMetrics
+              sampleAlways
+          )
+          $ \(appCtx, appEnv) -> return (appCtx, appEnv)
+
+        let run :: ExceptT QErr (PGMetadataStorageAppT CacheBuild) a -> IO a
             run =
               runExceptT
-                >>> flip runPGMetadataStorageAppT appContext
+                >>> flip runPGMetadataStorageAppT (appCtx, appEnv)
                 >>> runCacheBuild cacheBuildParams
                 >>> runExceptT
                 >=> flip onLeft printErrJExit
@@ -130,3 +163,7 @@ printErrExit = (*> exitFailure) . putStrLn
 
 printErrJExit :: (A.ToJSON a) => a -> IO b
 printErrJExit = (*> exitFailure) . BL.putStrLn . A.encode
+
+-- | Used only for 'runApp' above.
+data TestMetricsSpec name metricType tags
+  = ServerSubset (ServerMetricsSpec name metricType tags)
