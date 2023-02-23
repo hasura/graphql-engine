@@ -49,135 +49,124 @@ _Sent with 💌 from the frontenders of the Hasura Platform team_.
     expect(result).toEqual(expected);
   });
 
-  it('When passed with an uncaught error from Chromatic, it should return the "uncaughtChromaticError" comment strategy', () => {
-    const params = produce(happyPathParams, draft => {
-      draft.uncaughtChromaticError = new Error('Something bad happened');
-    });
-
-    const result = generateCommentStrategy(params);
-
-    expect(result.status).toEqual('uncaughtChromaticError');
-    expect(result.comment).toEqual(
-      expect.stringContaining('### ❌ Chromatic Visual Regression Report')
-    );
-    expect(result.comment).toEqual(
-      expect.stringContaining('Something bad happened to the Chromatic build.')
-    );
-    expect(result.error).toEqual(new Error('Something bad happened'));
-  });
-
-  it('When passed with something strange from Chromatic, it should return the "uncaughtChromaticError" comment strategy', () => {
-    const params = produce(happyPathParams, draft => {
-      draft.uncaughtChromaticError = 'a Strange Chromatic CLI error';
-    });
-
-    const result = generateCommentStrategy(params);
-
-    expect(result.status).toEqual('uncaughtChromaticError');
-    expect(result.comment).toEqual(
-      expect.stringContaining('### ❌ Chromatic Visual Regression Report')
-    );
-    expect(result.comment).toEqual(
-      expect.stringContaining('Something bad happened to the Chromatic build.')
-    );
-    expect(result.error).toEqual(
-      new Error(
-        'Something bad happened to the Chromatic build with an unexpected error (a Strange Chromatic CLI error)'
-      )
-    );
-  });
-
-  it('When passed with something strange from Chromatic, it should return the "uncaughtChromaticError" comment strategy', () => {
-    const params = produce(happyPathParams, draft => {
-      draft.uncaughtChromaticError = 'a Strange Chromatic CLI error';
-    });
-
-    const result = generateCommentStrategy(params);
-
-    expect(result.status).toEqual('uncaughtChromaticError');
-    expect(result.comment).toEqual(
-      expect.stringContaining('### ❌ Chromatic Visual Regression Report')
-    );
-    expect(result.comment).toEqual(
-      expect.stringContaining('Something bad happened to the Chromatic build.')
-    );
-    expect(result.error).toEqual(
-      new Error(
-        'Something bad happened to the Chromatic build with an unexpected error (a Strange Chromatic CLI error)'
-      )
-    );
-  });
-
-  it('When passed without a diagnostic file, it should return the "noDiagnosticFile" comment strategy', () => {
-    const params = produce(happyPathParams, draft => {
-      draft.diagnosticFile = undefined;
-    });
-
-    const result = generateCommentStrategy(params);
-
-    expect(result.status).toEqual('noDiagnosticFile');
-    expect(result.comment).toEqual(
-      expect.stringContaining('### 🤔 Chromatic Visual Regression Report')
-    );
-    expect(result.comment).toEqual(
-      expect.stringContaining(
-        'CI job is over but the Chromatic diagnostic file cannot be found. There might be an issue with chromatic, feel free to share this run with the platform team for further diagnostics.'
-      )
-    );
-    expect(result.error).toEqual(
-      new Error(
-        'CI job is over but the Chromatic diagnostic file cannot be found'
-      )
-    );
-  });
-
-  it('When passed with an invalid diagnostic file, it should return the "wrongDiagnosticFile" comment strategy', () => {
-    const params = produce(happyPathParams, draft => {
-      draft.diagnosticFile = {};
-    });
-
-    const result = generateCommentStrategy(params);
-
-    expect(result.status).toEqual('wrongDiagnosticFile');
-    expect(result.comment).toEqual(
-      expect.stringContaining('### 🤔 Chromatic Visual Regression Report')
-    );
-    expect(result.comment).toEqual(
-      expect.stringContaining(
-        'CI job is over but we are not able to parse the Chromatic diagnostic file. There might be an issue with chromatic, feel free to share this run with the platform team for further diagnostics.'
-      )
-    );
-    expect(result.error).toEqual(
-      new Error(
-        'CI job is over but we are not able to parse the Chromatic diagnostic file. There might be an issue with chromatic, feel free to share this run with the platform team for further diagnostics.'
-      )
-    );
-  });
-
-  it('When passed with an unknown diagnostic file, it should return the "wrongDiagnosticFile" comment strategy', () => {
-    const params = produce(happyPathParams, paramsDraft => {
-      paramsDraft.diagnosticFile = produce(happyPathDiagnosticFile, draft => {
-        // @ts-expect-error Setting an unknown chromatic status on purpose
-        draft.build.status = 'UNMANAGED_CHROMATIC_STATUS';
+  describe('No diagnostic file', () => {
+    it('When passed without a diagnostic file, it should return the "noDiagnosticFile" comment strategy', () => {
+      const params = produce(happyPathParams, draft => {
+        draft.diagnosticFile = undefined;
       });
+
+      const result = generateCommentStrategy(params);
+
+      expect(result.status).toEqual('noDiagnosticFile');
+      expect(result.comment).toEqual(
+        expect.stringContaining('### 🤔 Chromatic Visual Regression Report')
+      );
+      expect(result.comment).toEqual(
+        expect.stringContaining(
+          'CI job is over but the Chromatic diagnostic file cannot be found. There might be an issue with chromatic, feel free to share this run with the platform team for further diagnostics.'
+        )
+      );
+      expect(result.error).toEqual(
+        new Error(
+          'CI job is over but the Chromatic diagnostic file cannot be found'
+        )
+      );
     });
 
-    const result = generateCommentStrategy(params);
+    it('When passed without a diagnostic file and an uncaught error from Chromatic, it should return the "uncaughtChromaticError" comment strategy', () => {
+      const params = produce(happyPathParams, draft => {
+        draft.diagnosticFile = undefined;
+        draft.uncaughtChromaticError = new Error('Something bad happened');
+      });
 
-    expect(result.status).toEqual('wrongDiagnosticFile');
-    expect(result.comment).toEqual(
-      expect.stringContaining('### 🤔 Chromatic Visual Regression Report')
-    );
-    expect(result.comment).toEqual(
-      expect.stringContaining(
-        'CI job is over but we are not able to parse the Chromatic diagnostic file. There might be an issue with chromatic, feel free to share this run with the platform team for further diagnostics.'
-      )
-    );
-    expect(result.error).toEqual(
-      new Error(
-        'CI job is over but we are not able to parse the Chromatic diagnostic file. There might be an issue with chromatic, feel free to share this run with the platform team for further diagnostics.'
-      )
-    );
+      const result = generateCommentStrategy(params);
+
+      expect(result.status).toEqual('uncaughtChromaticError');
+      expect(result.comment).toEqual(
+        expect.stringContaining('### ❌ Chromatic Visual Regression Report')
+      );
+      expect(result.comment).toEqual(
+        expect.stringContaining(
+          'Something bad happened to the Chromatic build.'
+        )
+      );
+      expect(result.error).toEqual(new Error('Something bad happened'));
+    });
+
+    it('When passed without a diagnostic file and something strange from Chromatic, it should return the "uncaughtChromaticError" comment strategy', () => {
+      const params = produce(happyPathParams, draft => {
+        draft.diagnosticFile = undefined;
+        draft.uncaughtChromaticError = 'a Strange Chromatic CLI error';
+      });
+
+      const result = generateCommentStrategy(params);
+
+      expect(result.status).toEqual('uncaughtChromaticError');
+      expect(result.comment).toEqual(
+        expect.stringContaining('### ❌ Chromatic Visual Regression Report')
+      );
+      expect(result.comment).toEqual(
+        expect.stringContaining(
+          'Something bad happened to the Chromatic build.'
+        )
+      );
+      expect(result.error).toEqual(
+        new Error(
+          'Something bad happened to the Chromatic build with an unexpected error (a Strange Chromatic CLI error)'
+        )
+      );
+    });
+  });
+
+  describe('Invalid diagnostic file', () => {
+    it('When passed with an invalid diagnostic file, it should return the "wrongDiagnosticFile" comment strategy', () => {
+      const params = produce(happyPathParams, draft => {
+        draft.diagnosticFile = {};
+      });
+
+      const result = generateCommentStrategy(params);
+
+      expect(result.status).toEqual('wrongDiagnosticFile');
+      expect(result.comment).toEqual(
+        expect.stringContaining('### 🤔 Chromatic Visual Regression Report')
+      );
+      expect(result.comment).toEqual(
+        expect.stringContaining(
+          'CI job is over but we are not able to parse the Chromatic diagnostic file. There might be an issue with chromatic, feel free to share this run with the platform team for further diagnostics.'
+        )
+      );
+      expect(result.error).toEqual(
+        new Error(
+          'CI job is over but we are not able to parse the Chromatic diagnostic file. There might be an issue with chromatic, feel free to share this run with the platform team for further diagnostics.'
+        )
+      );
+    });
+
+    it('When passed with an unknown diagnostic file, it should return the "wrongDiagnosticFile" comment strategy', () => {
+      const params = produce(happyPathParams, paramsDraft => {
+        paramsDraft.diagnosticFile = produce(happyPathDiagnosticFile, draft => {
+          // @ts-expect-error Setting an unknown chromatic status on purpose
+          draft.build.status = 'UNMANAGED_CHROMATIC_STATUS';
+        });
+      });
+
+      const result = generateCommentStrategy(params);
+
+      expect(result.status).toEqual('wrongDiagnosticFile');
+      expect(result.comment).toEqual(
+        expect.stringContaining('### 🤔 Chromatic Visual Regression Report')
+      );
+      expect(result.comment).toEqual(
+        expect.stringContaining(
+          'CI job is over but we are not able to parse the Chromatic diagnostic file. There might be an issue with chromatic, feel free to share this run with the platform team for further diagnostics.'
+        )
+      );
+      expect(result.error).toEqual(
+        new Error(
+          'CI job is over but we are not able to parse the Chromatic diagnostic file. There might be an issue with chromatic, feel free to share this run with the platform team for further diagnostics.'
+        )
+      );
+    });
   });
 
   it('When passed with a PENDING diagnostic file, it should return the "pending" comment strategy', () => {
@@ -275,6 +264,7 @@ _Sent with 💌 from the frontenders of the Hasura Platform team_.
     const params = produce(happyPathParams, paramsDraft => {
       paramsDraft.diagnosticFile = produce(happyPathDiagnosticFile, draft => {
         draft.build.status = 'BROKEN';
+        draft.build.errorCount = 3;
       });
     });
 
@@ -285,13 +275,11 @@ _Sent with 💌 from the frontenders of the Hasura Platform team_.
       expect.stringContaining('### ❌ Chromatic Visual Regression Report')
     );
     expect(result.comment).toEqual(
-      expect.stringContaining(
-        'Chromatic build is broken, maybe something is wrong with some stories.'
-      )
+      expect.stringContaining('Chromatic reported 3 errors with this PR')
     );
     expect(result.error).toEqual(
       new Error(
-        'Chromatic build is broken, maybe something is wrong with some stories. You can view them [here](https://www.chromatic.com/build?appId=614d7904644d03004addd43b&number=8192).'
+        'There are 3 errors reported by Chromatic with this PR. You can view them [here](https://www.chromatic.com/build?appId=614d7904644d03004addd43b&number=8192).'
       )
     );
   });
