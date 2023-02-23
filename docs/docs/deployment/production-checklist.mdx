@@ -156,6 +156,19 @@ Production APIs should be served over HTTPS to be secure over the network.
 
 See [Enable HTTPS](/deployment/enable-https.mdx) for details on achieving this.
 
+## Configure a load balancer
+
+If you're setting up a load-balancer in front of Hasura, ensure that it's configured appropriately.
+
+- Configure the load balancer health checks to use [Hasura's health endpoint](/api-reference/health.mdx).
+- Idle timeout will depend on the `max time` you want to allow an operation to run in Hasura. It should be configured to
+  a slightly higher number than the maximum time set in Hasura's API Limits.
+- Hasura doesn't require sticky sessions.
+- The default load-balancing method is usually round-robin and this works well with Hasura. However, you may choose a
+  different vendor specific algorithm if you find benefits with those. For example, if you have implemented many
+  subscriptions in your app, the `Least Outstanding Requests` algorithm offered by AWS could be useful in certain
+  scenarios.
+
 ## Configure logging
 
 The [logs guide](/deployment/logging.mdx) describes different log types and log levels Hasura GraphQL Engine uses. You
