@@ -49,6 +49,7 @@ import Test.Hasura.Server.MigrateSuite qualified as MigrateSuite
 import Test.Hasura.StreamingSubscriptionSuite qualified as StreamingSubscriptionSuite
 import Test.Hspec
 
+{-# ANN main ("HLINT: ignore Use env_from_function_argument" :: String) #-}
 main :: IO ()
 main = do
   env <- getEnvironment

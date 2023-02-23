@@ -31,14 +31,6 @@
 
 - functions:
 
-      - name: "System.Environment.getEnvironment"
-        within: ["Harness.**", "Main", "Spec.**", "SpecHook", "Test.**"]
-        message: "Instead of 'getEnvironment', use the environment from the server context"
-
-      - name: "Data.Environment.getEnvironment"
-        within: ["Harness.**", "Main", "Spec.**", "SpecHook", "Test.**"]
-        message: "Instead of 'getEnvironment', use the environment from the server context"
-
       - name: "Test.Hspec.focus"
         within: []
         message: "Specs with focusing should only be used during development"
@@ -246,6 +238,16 @@
       - error: {lhs: "Control.Concurrent.threadDelay", rhs: "Control.Concurrent.Extended.sleep", note: "Please use `sleep` instead (and read the docs!)"}
       - suggest: {lhs: "Control.Concurrent.Async.Lifted.Safe.async", rhs: "Control.Concurrent.Async.Lifted.Safe.withAsync", note: "Please use 'Control.Control.Concurrent.Async.Lifted.Safe.withAsync' or our 'forkImmortal' instead for more robust threading."}
       - suggest: {lhs: "Control.Concurrent.forkIO", rhs: "Control.Concurrent.Async.Lifted.Safe.withAsync", note: "Please use 'Control.Control.Concurrent.Async.Lifted.Safe.withAsync' or our 'forkImmortal' instead for more robust threading."}
+      - suggest: {
+          lhs: "System.Environment.getEnvironment",
+          rhs: "env_from_function_argument",
+          note: "Instead of 'getEnvironment', use the environment from the server context, typically accessible as a function argument"
+      }
+      - suggest: {
+          lhs: "Data.Environment.getEnvironment",
+          rhs:  "env_from_function_argument",
+          note: "Instead of 'getEnvironment', use the environment from the server context, typically accessible as a function argument"
+      }
 
 - ignore: {
     group: {name: "unsafe"},
