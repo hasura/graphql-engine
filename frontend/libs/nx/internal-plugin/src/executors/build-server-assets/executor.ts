@@ -2,7 +2,7 @@ import { BuildServerAssetsExecutorSchema } from './schema';
 import { ExecutorContext } from '@nrwl/devkit';
 import runCommands from 'nx/src/executors/run-commands/run-commands.impl';
 import { flushChanges, FsTree, printChanges } from 'nx/src/generators/tree';
-import * as DomParser from 'dom-parser';
+
 import {
   extractAssets,
   generateAssetLoaderFile,
@@ -78,9 +78,23 @@ export default async function runMyExecutor(
   context: ExecutorContext
 ) {
   const projectName = context.projectName;
+
+  if (!projectName || typeof projectName !== 'string') {
+    console.log(`Unexpected project name ${projectName}`);
+    return { success: false };
+  }
+
   const distTarget =
-    context.workspace.projects[projectName]?.targets?.build?.options
-      ?.outputPath ?? `dist/apps/${projectName}`;
+    context.workspace.projects[
+      projectName
+    ]?.targets?.build?.options?.outputPath.toString() ??
+    `dist/apps/${projectName}`;
+
+  if (typeof distTarget !== 'string') {
+    console.log(`Unexpected dist target ${distTarget}`);
+    return { success: false };
+  }
+
   const serverAssetBase = `dist/apps/server-assets-${projectName}`;
   await runCommands(
     {
@@ -100,7 +114,14 @@ export default async function runMyExecutor(
   );
   const tree = new FsTree(context.root, true);
 
-  const htmlString = tree.read(distTarget + '/index.html').toString();
+  const indexHtmlFile = tree.read(distTarget + '/index.html');
+
+  if (!indexHtmlFile) {
+    console.log(`${distTarget}/index.html file not found`);
+    return { success: false };
+  }
+
+  const htmlString = indexHtmlFile.toString();
 
   const extractedAssets = gzAssetNames(extractAssets(htmlString));
 

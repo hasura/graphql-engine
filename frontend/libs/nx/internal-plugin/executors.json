@@ -5,6 +5,11 @@
       "implementation": "./src/executors/build-server-assets/executor",
       "schema": "./src/executors/build-server-assets/schema.json",
       "description": "Used to build server complient assets from the existing build"
+    },
+    "chromatic": {
+      "implementation": "./src/executors/chromatic/executor",
+      "schema": "./src/executors/chromatic/schema.json",
+      "description": "chromatic executor"
     }
   }
 }

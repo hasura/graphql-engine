@@ -50,6 +50,11 @@
         }
       }
     },
+    "chromatic": {
+      "executor": "@hasura/internal-plugin:chromatic",
+      "dependsOn": ["build-storybook"],
+      "inputs": ["{workspaceRoot}/dist/storybook/console/legacy-ce"]
+    },
     "test-storybook": {
       "executor": "nx:run-commands",
       "options": {

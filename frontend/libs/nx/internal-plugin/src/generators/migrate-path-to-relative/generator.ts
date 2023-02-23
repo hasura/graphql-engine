@@ -34,7 +34,7 @@ export async function lookAtFiles(tree: Tree, sourceRoot: string) {
   visitNotIgnoredFiles(tree, sourceRoot, filePath => {
     let fileContent = tree.read(filePath, 'utf-8');
 
-    if (!fileContent.includes("'@/")) {
+    if (!fileContent?.includes("'@/")) {
       return;
     }
     const fileFolder = path.dirname(filePath);
@@ -60,6 +60,9 @@ export default async function (
   const project = readProjectConfiguration(tree, 'console-legacy-ce');
   if (!project) {
     throw new Error('Project not found.');
+  }
+  if (!project.sourceRoot) {
+    throw new Error('Source root not found.');
   }
   await lookAtFiles(tree, project.sourceRoot);
   await formatFiles(tree);
