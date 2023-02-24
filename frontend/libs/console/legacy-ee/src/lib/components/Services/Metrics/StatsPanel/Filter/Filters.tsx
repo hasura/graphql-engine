@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import GenerateFilters from './GenerateFilters';
 import { Button } from '@hasura/console-legacy-ce';
+import { FaChevronDown } from 'react-icons/fa';
 import FilterSection from './FilterSection';
 import FilterBadge from './FilterBadge';
 import filter from '../../images/filter.svg';
 
 import styles from '../../Metrics.module.scss';
+import clsx from 'clsx';
 
 const Filters = ({
   projectId,
@@ -19,7 +21,7 @@ const Filters = ({
   retrieveDefaultDropdownOptions,
   reset,
   selectAll,
-}) => {
+}: any) => {
   const [displayFilters, setFiltersDisplay] = useState(false);
   const renderSelectedFiltersCount = () => {
     return values.length > 0 ? `(${values.length})` : '';
@@ -28,7 +30,7 @@ const Filters = ({
     if (values.length > 0) {
       return (
         <Button mode="destructive" onClick={reset}>
-          Remove all filters
+          Reset all filters
         </Button>
       );
     }
@@ -36,8 +38,8 @@ const Filters = ({
   };
   const renderSelectedFilters = () => {
     if (values.length > 0) {
-      return values.map((f, i) => {
-        const composeFilterObj = o => {
+      return values.map((f: { value: any; type: any }, i: any) => {
+        const composeFilterObj = (o: { [x: string]: any }) => {
           const keyElements = Object.keys(o);
           if (keyElements.length > 0) {
             return keyElements.map(k => `${k}: ${o[k]}`).join(', ');
@@ -53,7 +55,7 @@ const Filters = ({
         return (
           <FilterBadge
             key={i}
-            text={`${getTitle(f.type)}: ${filterValue(f.value)}`}
+            text={`${getTitle(f.type)}: ${filterValue()}`}
             onClick={() => onChange(f.type, f.value)}
           />
         );
@@ -69,8 +71,19 @@ const Filters = ({
   return (
     <div className="filtersElementWrapper">
       <FilterSection>
-        <div className={styles.filterBtnWrapper}>
-          <div onClick={toggleFilters} className={styles.cursorPointer}>
+        <div className={styles['filterBtnWrapper']}>
+          <button
+            className={clsx('cursor-pointer group mr-2')}
+            onClick={toggleFilters}
+          >
+            <FaChevronDown
+              className={clsx(
+                'w-8 h-8 p-2 group-hover:bg-slate-200 transition-all duration-150 rounded-full',
+                displayFilters ? 'rotate-180' : 'rotate-0'
+              )}
+            />
+          </button>
+          <div onClick={toggleFilters} className={styles['cursorPointer']}>
             <img
               src={filter}
               alt="Filter"
@@ -81,7 +94,7 @@ const Filters = ({
                 height: '20px',
               }}
             />
-            <div className={styles.subHeader}>
+            <div className={styles['subHeader']}>
               Filters {renderSelectedFiltersCount()}
             </div>
           </div>
