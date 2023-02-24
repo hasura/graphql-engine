@@ -26646,15 +26646,17 @@ module Hasura.GraphQL.Execute.Subscription.State
 --   NOTE!: This must be kept consistent with a websocket connection's
 --   <tt>OperationMap</tt>, in <tt>onClose</tt> and <tt>onStart</tt>.
 data SubscriptionsState
-SubscriptionsState :: PollerMap () -> PollerMap (TVar CursorVariableValues) -> SubscriptionPostPollHook -> AsyncActionSubscriptionState -> SubscriptionsState
+SubscriptionsState :: LiveQueriesOptions -> StreamQueriesOptions -> PollerMap () -> PollerMap (TVar CursorVariableValues) -> SubscriptionPostPollHook -> AsyncActionSubscriptionState -> SubscriptionsState
+[_ssLiveQueryOptions] :: SubscriptionsState -> LiveQueriesOptions
+[_ssStreamQueryOptions] :: SubscriptionsState -> StreamQueriesOptions
 [_ssLiveQueryMap] :: SubscriptionsState -> PollerMap ()
 [_ssStreamQueryMap] :: SubscriptionsState -> PollerMap (TVar CursorVariableValues)
 
 -- | A hook function which is run after each fetch cycle
 [_ssPostPollHook] :: SubscriptionsState -> SubscriptionPostPollHook
 [_ssAsyncActions] :: SubscriptionsState -> AsyncActionSubscriptionState
-initSubscriptionsState :: SubscriptionPostPollHook -> IO SubscriptionsState
-dumpSubscriptionsState :: Bool -> LiveQueriesOptions -> StreamQueriesOptions -> SubscriptionsState -> IO Value
+initSubscriptionsState :: LiveQueriesOptions -> StreamQueriesOptions -> SubscriptionPostPollHook -> IO SubscriptionsState
+dumpSubscriptionsState :: Bool -> SubscriptionsState -> IO Value
 
 -- | SubscriberDetails contains the data required to locate a subscriber in
 --   the correct cohort within the correct poller in the operation map.
@@ -26670,10 +26672,10 @@ type LiveQuerySubscriberDetails = SubscriberDetails CohortKey
 type StreamingSubscriberDetails = SubscriberDetails (CohortKey, TVar CursorVariableValues)
 
 -- | Fork a thread handling a regular (live query) subscription
-addLiveQuery :: forall b. BackendTransport b => Logger Hasura -> ServerMetrics -> PrometheusMetrics -> SubscriberMetadata -> SubscriptionsState -> LiveQueriesOptions -> SourceName -> ParameterizedQueryHash -> Maybe OperationName -> RequestId -> SubscriptionQueryPlan b (MultiplexedQuery b) -> OnChange -> IO LiveQuerySubscriberDetails
+addLiveQuery :: forall b. BackendTransport b => Logger Hasura -> ServerMetrics -> PrometheusMetrics -> SubscriberMetadata -> SubscriptionsState -> SourceName -> ParameterizedQueryHash -> Maybe OperationName -> RequestId -> SubscriptionQueryPlan b (MultiplexedQuery b) -> OnChange -> IO LiveQuerySubscriberDetails
 
 -- | Fork a thread handling a streaming subscription
-addStreamSubscriptionQuery :: forall b. BackendTransport b => Logger Hasura -> ServerMetrics -> PrometheusMetrics -> SubscriberMetadata -> SubscriptionsState -> StreamQueriesOptions -> SourceName -> ParameterizedQueryHash -> Maybe OperationName -> RequestId -> Name -> SubscriptionQueryPlan b (MultiplexedQuery b) -> OnChange -> IO StreamingSubscriberDetails
+addStreamSubscriptionQuery :: forall b. BackendTransport b => Logger Hasura -> ServerMetrics -> PrometheusMetrics -> SubscriberMetadata -> SubscriptionsState -> SourceName -> ParameterizedQueryHash -> Maybe OperationName -> RequestId -> Name -> SubscriptionQueryPlan b (MultiplexedQuery b) -> OnChange -> IO StreamingSubscriberDetails
 removeLiveQuery :: Logger Hasura -> ServerMetrics -> PrometheusMetrics -> SubscriptionsState -> LiveQuerySubscriberDetails -> IO ()
 removeStreamingQuery :: Logger Hasura -> ServerMetrics -> PrometheusMetrics -> SubscriptionsState -> StreamingSubscriberDetails -> IO ()
 
@@ -26726,56 +26728,6 @@ module Hasura.GraphQL.Execute.Action.Subscription
 -- | A forever running thread which processes async action subscriptions.
 --   See Note [Async action subscriptions]
 asyncActionSubscriptionsProcessor :: (MonadIO m, MonadMetadataStorage m) => AsyncActionSubscriptionState -> m void
-
-module Hasura.App.State
-
--- | Represents the Read-Only Hasura State, these fields are immutable and
---   the state cannot be changed during runtime.
-data AppEnv
-AppEnv :: PGPool -> Manager -> Loggers -> TMVar MetadataResourceVersion -> InstanceId -> MaintenanceMode () -> LoggingSettings -> EventingMode -> ReadOnlyMode -> ServerMetrics -> ShutdownLatch -> TMVar MetadataResourceVersion -> PrometheusMetrics -> SamplingPolicy -> SubscriptionsState -> LockedEventsCtx -> (FeatureFlag -> IO Bool) -> AppEnv
-[appEnvMetadataDbPool] :: AppEnv -> PGPool
-[appEnvManager] :: AppEnv -> Manager
-[appEnvLoggers] :: AppEnv -> Loggers
-[appEnvMetadataVersionRef] :: AppEnv -> TMVar MetadataResourceVersion
-[appEnvInstanceId] :: AppEnv -> InstanceId
-[appEnvEnableMaintenanceMode] :: AppEnv -> MaintenanceMode ()
-[appEnvLoggingSettings] :: AppEnv -> LoggingSettings
-[appEnvEventingMode] :: AppEnv -> EventingMode
-[appEnvEnableReadOnlyMode] :: AppEnv -> ReadOnlyMode
-[appEnvServerMetrics] :: AppEnv -> ServerMetrics
-[appEnvShutdownLatch] :: AppEnv -> ShutdownLatch
-[appEnvMetaVersionRef] :: AppEnv -> TMVar MetadataResourceVersion
-[appEnvPrometheusMetrics] :: AppEnv -> PrometheusMetrics
-[appEnvTraceSamplingPolicy] :: AppEnv -> SamplingPolicy
-[appEnvSubscriptionState] :: AppEnv -> SubscriptionsState
-[appEnvLockedEventsCtx] :: AppEnv -> LockedEventsCtx
-[appEnvCheckFeatureFlag] :: AppEnv -> FeatureFlag -> IO Bool
-
--- | Represents the Dynamic Hasura State, these field are mutable and can
---   be changed during runtime.
-data AppContext
-AppContext :: SchemaCacheRef -> AuthMode -> SQLGenCtx -> HashSet API -> AllowListStatus -> ResponseInternalErrorsConfig -> Environment -> RemoteSchemaPermissions -> InferFunctionPermissions -> HashSet ExperimentalFeature -> NamingCase -> MetadataDefaults -> LiveQueriesOptions -> StreamQueriesOptions -> AppContext
-[acCacheRef] :: AppContext -> SchemaCacheRef
-[acAuthMode] :: AppContext -> AuthMode
-[acSQLGenCtx] :: AppContext -> SQLGenCtx
-[acEnabledAPIs] :: AppContext -> HashSet API
-[acEnableAllowlist] :: AppContext -> AllowListStatus
-[acResponseInternalErrorsConfig] :: AppContext -> ResponseInternalErrorsConfig
-[acEnvironment] :: AppContext -> Environment
-[acRemoteSchemaPermsCtx] :: AppContext -> RemoteSchemaPermissions
-[acFunctionPermsCtx] :: AppContext -> InferFunctionPermissions
-[acExperimentalFeatures] :: AppContext -> HashSet ExperimentalFeature
-[acDefaultNamingConvention] :: AppContext -> NamingCase
-[acMetadataDefaults] :: AppContext -> MetadataDefaults
-[acLiveQueryOptions] :: AppContext -> LiveQueriesOptions
-[acStreamQueryOptions] :: AppContext -> StreamQueriesOptions
-
--- | Collection of the LoggerCtx, the regular Logger and the PGLogger
-data Loggers
-Loggers :: LoggerCtx Hasura -> Logger Hasura -> PGLogger -> Loggers
-[_lsLoggerCtx] :: Loggers -> LoggerCtx Hasura
-[_lsLogger] :: Loggers -> Logger Hasura
-[_lsPgLogger] :: Loggers -> PGLogger
 
 module Hasura.GraphQL.Execute.Common
 
@@ -26894,11 +26846,9 @@ WsClientState :: !UserInfo -> !Maybe UTCTime -> ![Header] -> !IpAddress -> WsCli
 data WSConnData
 WSConnData :: !TVar WSConnState -> !OperationMap -> !ErrRespType -> !GraphQLQueryType -> WSConnData
 data WSServerEnv
-WSServerEnv :: !Logger Hasura -> !SubscriptionsState -> !LiveQueriesOptions -> !StreamQueriesOptions -> !IO (SchemaCache, SchemaCacheVer) -> !Manager -> !CorsPolicy -> !SQLGenCtx -> ReadOnlyMode -> !WSServer -> !AllowListStatus -> !KeepAliveDelay -> !ServerMetrics -> !PrometheusMetrics -> !SamplingPolicy -> WSServerEnv
+WSServerEnv :: !Logger Hasura -> !SubscriptionsState -> !IO (SchemaCache, SchemaCacheVer) -> !Manager -> !CorsPolicy -> !SQLGenCtx -> ReadOnlyMode -> !WSServer -> !AllowListStatus -> !KeepAliveDelay -> !ServerMetrics -> !PrometheusMetrics -> !SamplingPolicy -> WSServerEnv
 [_wseLogger] :: WSServerEnv -> !Logger Hasura
 [_wseSubscriptionState] :: WSServerEnv -> !SubscriptionsState
-[_wseLiveQueriesOption] :: WSServerEnv -> !LiveQueriesOptions
-[_wseStreamQueriesOptions] :: WSServerEnv -> !StreamQueriesOptions
 
 -- | an action that always returns the latest version of the schema cache.
 --   See <tt>SchemaCacheRef</tt>.
@@ -27063,7 +27013,7 @@ instance GHC.Classes.Eq Hasura.GraphQL.Transport.WebSocket.OpDetail
 module Hasura.GraphQL.Transport.WSServerApp
 createWSServerApp :: (MonadIO m, MonadBaseControl IO m, Forall (Pure m), UserAuthentication (TraceT m), MonadGQLExecutionCheck m, MonadWSLog m, MonadQueryLog m, HasReporter m, MonadExecuteQuery m, MonadMetadataStorage m, MonadQueryTags m, HasResourceLimits m, ProvidesNetwork m) => Environment -> HashSet (EngineLogType Hasura) -> AuthMode -> WSServerEnv -> WSConnectionInitTimeout -> HasuraServerApp m
 stopWSServerApp :: WSServerEnv -> IO ()
-createWSServerEnv :: MonadIO m => Logger Hasura -> SubscriptionsState -> LiveQueriesOptions -> StreamQueriesOptions -> IO (SchemaCache, SchemaCacheVer) -> Manager -> CorsPolicy -> SQLGenCtx -> ReadOnlyMode -> AllowListStatus -> KeepAliveDelay -> ServerMetrics -> PrometheusMetrics -> SamplingPolicy -> m WSServerEnv
+createWSServerEnv :: MonadIO m => Logger Hasura -> SubscriptionsState -> IO (SchemaCache, SchemaCacheVer) -> Manager -> CorsPolicy -> SQLGenCtx -> ReadOnlyMode -> AllowListStatus -> KeepAliveDelay -> ServerMetrics -> PrometheusMetrics -> SamplingPolicy -> m WSServerEnv
 
 module Hasura.GraphQL.Explain
 data GQLExplain
@@ -27124,6 +27074,44 @@ getRequestHead :: Request -> (RequestHead, IpAddress)
 runWebSockets :: ConnectionOptions -> RequestHead -> IpAddress -> (IpAddress -> PendingConnection -> IO a) -> IO ByteString -> (ByteString -> IO ()) -> IO a
 
 module Hasura.Server.App
+data ServerCtx
+ServerCtx :: !Loggers -> !SchemaCacheRef -> !AuthMode -> !Manager -> !SQLGenCtx -> !HashSet API -> !InstanceId -> !SubscriptionsState -> !AllowListStatus -> !ResponseInternalErrorsConfig -> !Environment -> !RemoteSchemaPermissions -> !InferFunctionPermissions -> !MaintenanceMode () -> !HashSet ExperimentalFeature -> !LoggingSettings -> !EventingMode -> !ReadOnlyMode -> !NamingCase -> !ServerMetrics -> !MetadataDefaults -> HashSet (EngineLogType Hasura) -> PGPool -> ShutdownLatch -> TMVar MetadataResourceVersion -> PrometheusMetrics -> SamplingPolicy -> !FeatureFlag -> IO Bool -> ServerCtx
+[scLoggers] :: ServerCtx -> !Loggers
+[scCacheRef] :: ServerCtx -> !SchemaCacheRef
+[scAuthMode] :: ServerCtx -> !AuthMode
+[scManager] :: ServerCtx -> !Manager
+[scSQLGenCtx] :: ServerCtx -> !SQLGenCtx
+[scEnabledAPIs] :: ServerCtx -> !HashSet API
+[scInstanceId] :: ServerCtx -> !InstanceId
+[scSubscriptionState] :: ServerCtx -> !SubscriptionsState
+[scEnableAllowList] :: ServerCtx -> !AllowListStatus
+[scResponseInternalErrorsConfig] :: ServerCtx -> !ResponseInternalErrorsConfig
+[scEnvironment] :: ServerCtx -> !Environment
+[scRemoteSchemaPermsCtx] :: ServerCtx -> !RemoteSchemaPermissions
+[scFunctionPermsCtx] :: ServerCtx -> !InferFunctionPermissions
+[scEnableMaintenanceMode] :: ServerCtx -> !MaintenanceMode ()
+[scExperimentalFeatures] :: ServerCtx -> !HashSet ExperimentalFeature
+[scLoggingSettings] :: ServerCtx -> !LoggingSettings
+[scEventingMode] :: ServerCtx -> !EventingMode
+[scEnableReadOnlyMode] :: ServerCtx -> !ReadOnlyMode
+[scDefaultNamingConvention] :: ServerCtx -> !NamingCase
+[scServerMetrics] :: ServerCtx -> !ServerMetrics
+[scMetadataDefaults] :: ServerCtx -> !MetadataDefaults
+[scEnabledLogTypes] :: ServerCtx -> HashSet (EngineLogType Hasura)
+[scMetadataDbPool] :: ServerCtx -> PGPool
+[scShutdownLatch] :: ServerCtx -> ShutdownLatch
+[scMetaVersionRef] :: ServerCtx -> TMVar MetadataResourceVersion
+[scPrometheusMetrics] :: ServerCtx -> PrometheusMetrics
+[scTraceSamplingPolicy] :: ServerCtx -> SamplingPolicy
+[scCheckFeatureFlag] :: ServerCtx -> !FeatureFlag -> IO Bool
+
+-- | Collection of the LoggerCtx, the regular Logger and the PGLogger TODO
+--   (from master): better naming?
+data Loggers
+Loggers :: !LoggerCtx Hasura -> !Logger Hasura -> !PGLogger -> Loggers
+[_lsLoggerCtx] :: Loggers -> !LoggerCtx Hasura
+[_lsLogger] :: Loggers -> !Logger Hasura
+[_lsPgLogger] :: Loggers -> !PGLogger
 data HandlerCtx
 data Handler m a
 data APIResp
@@ -27142,8 +27130,8 @@ authorizeV2QueryApi :: MonadMetadataApiAuthorization m => RQLQuery -> HandlerCtx
 
 -- | The config API (<i>v1alpha1</i>config) handler
 class Monad m => MonadConfigApiHandler m
-runConfigApiHandler :: MonadConfigApiHandler m => AppContext -> AppEnv -> Maybe Text -> SpockCtxT () m ()
-mkSpockAction :: forall m a. (MonadIO m, MonadBaseControl IO m, FromJSON a, UserAuthentication (TraceT m), HttpLog m, HasReporter m, HasResourceLimits m) => AppContext -> AppEnv -> (Bool -> QErr -> Value) -> (QErr -> QErr) -> APIHandler (TraceT m) a -> ActionT m ()
+runConfigApiHandler :: MonadConfigApiHandler m => ServerCtx -> Maybe Text -> SpockCtxT () m ()
+mkSpockAction :: forall m a. (MonadIO m, MonadBaseControl IO m, FromJSON a, UserAuthentication (TraceT m), HttpLog m, HasReporter m, HasResourceLimits m) => ServerCtx -> (Bool -> QErr -> Value) -> (QErr -> QErr) -> APIHandler (TraceT m) a -> ActionT m ()
 class (Monad m) => ConsoleRenderer m
 renderConsole :: ConsoleRenderer m => Text -> AuthMode -> TelemetryStatus -> Maybe Text -> Maybe Text -> m (Either String Text)
 class (Monad m) => MonadVersionAPIWithExtraData m
@@ -27151,10 +27139,10 @@ getExtraDataForVersionAPI :: MonadVersionAPIWithExtraData m => m [Pair]
 renderHtmlTemplate :: Template -> Value -> Either String Text
 
 -- | Default implementation of the <a>MonadConfigApiHandler</a>
-configApiGetHandler :: forall m. (MonadIO m, MonadBaseControl IO m, UserAuthentication (TraceT m), HttpLog m, HasReporter m, HasResourceLimits m) => AppContext -> AppEnv -> Maybe Text -> SpockCtxT () m ()
+configApiGetHandler :: forall m. (MonadIO m, MonadBaseControl IO m, UserAuthentication (TraceT m), HttpLog m, HasReporter m, HasResourceLimits m) => ServerCtx -> Maybe Text -> SpockCtxT () m ()
 data HasuraApp
 HasuraApp :: !Application -> !SchemaCacheRef -> !AsyncActionSubscriptionState -> !IO () -> HasuraApp
-mkWaiApp :: forall m. (MonadIO m, MonadFix m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, MonadVersionAPIWithExtraData m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, HasReporter m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesNetwork m) => (AppContext -> SpockT m ()) -> Environment -> CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> TelemetryStatus -> SchemaCacheRef -> ConnectionOptions -> KeepAliveDelay -> HashSet (EngineLogType Hasura) -> AppContext -> AppEnv -> WSConnectionInitTimeout -> Store EmptyMetrics -> m HasuraApp
+mkWaiApp :: forall m. (MonadIO m, MonadFix m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, MonadVersionAPIWithExtraData m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, HasReporter m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesNetwork m) => (ServerCtx -> SpockT m ()) -> Environment -> CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> TelemetryStatus -> SchemaCacheRef -> ConnectionOptions -> KeepAliveDelay -> HashSet (EngineLogType Hasura) -> ServerCtx -> WSConnectionInitTimeout -> Store EmptyMetrics -> m HasuraApp
 instance Hasura.Services.Network.ProvidesNetwork m => Hasura.Services.Network.ProvidesNetwork (Hasura.Server.App.Handler m)
 instance Hasura.Metadata.Class.MonadMetadataStorageQueryAPI m => Hasura.Metadata.Class.MonadMetadataStorageQueryAPI (Hasura.Server.App.Handler m)
 instance Hasura.Metadata.Class.MonadMetadataStorage m => Hasura.Metadata.Class.MonadMetadataStorage (Hasura.Server.App.Handler m)
@@ -27224,18 +27212,24 @@ GlobalCtx :: !ConnInfo -> !(Maybe (UrlConf, ConnInfo), Maybe Int) -> GlobalCtx
 readTlsAllowlist :: SchemaCacheRef -> IO [TlsAllow]
 initGlobalCtx :: MonadIO m => Environment -> Maybe String -> PostgresConnInfo (Maybe UrlConf) -> m GlobalCtx
 
+-- | Base application context.
+--   
+--   This defines all base information required to run the engine.
+data AppContext
+AppContext :: Manager -> PGLogger -> PGPool -> AppContext
+[_acHTTPManager] :: AppContext -> Manager
+[_acPGLogger] :: AppContext -> PGLogger
+[_acPGPool] :: AppContext -> PGPool
+
 -- | An application with Postgres database as a metadata storage
 data PGMetadataStorageAppT m a
 resolvePostgresConnInfo :: MonadIO m => Environment -> UrlConf -> Maybe Int -> m ConnInfo
 initAuthMode :: (ForkableMonadIO m, HasReporter m) => ServeOptions impl -> Manager -> Logger Hasura -> m AuthMode
-initSubscriptionsState :: Logger Hasura -> Maybe SubscriptionPostPollHook -> IO SubscriptionsState
-initLockedEventsCtx :: IO LockedEventsCtx
-initSQLGenCtx :: ServeOptions impl -> SQLGenCtx
-initialiseAppContext :: MonadIO m => Manager -> ServeOptions impl -> Environment -> SchemaCacheRef -> Logger Hasura -> SQLGenCtx -> m AppContext
+initSubscriptionsState :: ServeOptions impl -> Logger Hasura -> Maybe SubscriptionPostPollHook -> IO SubscriptionsState
 
 -- | Initializes or migrates the catalog and returns the context required
 --   to start the server.
-initialiseContext :: (ForkableMonadIO m, MonadCatch m) => Environment -> GlobalCtx -> ServeOptions Hasura -> Maybe SubscriptionPostPollHook -> ServerMetrics -> PrometheusMetrics -> SamplingPolicy -> ManagedT m (AppContext, AppEnv)
+initialiseServerCtx :: (ForkableMonadIO m, MonadCatch m) => Environment -> GlobalCtx -> ServeOptions Hasura -> Maybe SubscriptionPostPollHook -> ServerMetrics -> PrometheusMetrics -> SamplingPolicy -> (FeatureFlag -> IO Bool) -> ManagedT m ServerCtx
 mkLoggers :: (MonadIO m, MonadBaseControl IO m) => HashSet (EngineLogType Hasura) -> LogLevel -> ManagedT m Loggers
 
 -- | helper function to initialize or migrate the <tt>hdb_catalog</tt>
@@ -27268,12 +27262,12 @@ flushLogger :: MonadIO m => LoggerCtx impl -> m ()
 --   last, so that we retain as many "thread stopping" log messages as
 --   possible. The order in which the finalizers is run is determined by
 --   the order in which they are introduced in the code.
-runHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m) => (AppContext -> SpockT m ()) -> Environment -> ServeOptions impl -> AppContext -> AppEnv -> UTCTime -> Maybe (IO ()) -> Store EmptyMetrics -> ManagedT m ()
+runHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m) => (ServerCtx -> SpockT m ()) -> Environment -> ServeOptions impl -> ServerCtx -> UTCTime -> Maybe (IO ()) -> Store EmptyMetrics -> (FeatureFlag -> IO Bool) -> ManagedT m ()
 
 -- | Part of a factorization of <a>runHGEServer</a> to expose the
 --   constructed WAI application for testing purposes. See
 --   <a>runHGEServer</a> for documentation.
-mkHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m) => (AppContext -> SpockT m ()) -> Environment -> ServeOptions impl -> AppContext -> AppEnv -> Store EmptyMetrics -> ManagedT m Application
+mkHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m) => (ServerCtx -> SpockT m ()) -> Environment -> ServeOptions impl -> ServerCtx -> Store EmptyMetrics -> (FeatureFlag -> IO Bool) -> ManagedT m Application
 accessDeniedErrMsg :: Text
 notifySchemaCacheSyncTx :: MetadataResourceVersion -> InstanceId -> CacheInvalidations -> TxE QErr ()
 getCatalogStateTx :: TxE QErr CatalogState
@@ -27285,7 +27279,7 @@ instance GHC.Show.Show Hasura.App.ExitException
 instance Control.Monad.Trans.Class.MonadTrans Hasura.App.PGMetadataStorageAppT
 instance Control.Monad.Trans.Control.MonadBaseControl b m => Control.Monad.Trans.Control.MonadBaseControl b (Hasura.App.PGMetadataStorageAppT m)
 instance Control.Monad.Base.MonadBase b m => Control.Monad.Base.MonadBase b (Hasura.App.PGMetadataStorageAppT m)
-instance GHC.Base.Monad m => Control.Monad.Reader.Class.MonadReader (Hasura.App.State.AppContext, Hasura.App.State.AppEnv) (Hasura.App.PGMetadataStorageAppT m)
+instance GHC.Base.Monad m => Control.Monad.Reader.Class.MonadReader Hasura.App.AppContext (Hasura.App.PGMetadataStorageAppT m)
 instance Hasura.Server.Types.HasServerConfigCtx m => Hasura.Server.Types.HasServerConfigCtx (Hasura.App.PGMetadataStorageAppT m)
 instance Control.Monad.Catch.MonadMask m => Control.Monad.Catch.MonadMask (Hasura.App.PGMetadataStorageAppT m)
 instance Control.Monad.Catch.MonadThrow m => Control.Monad.Catch.MonadThrow (Hasura.App.PGMetadataStorageAppT m)

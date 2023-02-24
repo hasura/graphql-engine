@@ -2,7 +2,6 @@
 
   - [Tying the knot](tying-the-knot.md)
   - [MemoizeT requires MonadIO](memoizet-requires-monadio.md)
-  - [Hasura Application State](hasura-application-state.md)
   - [Update Event Trigger MSSQL Spec](update-event-trigger-mssql-spec.md)
   - [Checking metadata consistency in run_sql](checking-metadata-consistency-in-runsql.md)
   - [Postgres identifier length limitations](postgres-identifier-length-limitations.md)
