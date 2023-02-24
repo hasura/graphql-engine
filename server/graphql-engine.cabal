@@ -521,6 +521,7 @@ library
                      , Hasura.Base.Error
                      , Hasura.Base.Instances
 
+                     , Hasura.App.State
                      , Hasura.Backends.BigQuery.Connection
                      , Hasura.Backends.BigQuery.Execute
                      , Hasura.Backends.BigQuery.DDL
@@ -1251,6 +1252,7 @@ test-suite graphql-engine-test-postgres
   hs-source-dirs: test-postgres
   main-is: Main.hs
   other-modules:
+    Constants
     Test.Hasura.EventTriggerCleanupSuite
     Test.Hasura.StreamingSubscriptionSuite
     Test.Hasura.Server.MigrateSuite
