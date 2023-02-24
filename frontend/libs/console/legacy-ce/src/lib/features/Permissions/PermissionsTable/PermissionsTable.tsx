@@ -121,7 +121,8 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                     // only select is possible on GDC as mutations are not available yet
                     const isEditable =
                       (roleName !== 'admin' && permissionType === 'select') ||
-                      (roleName !== 'admin' && permissionType === 'insert');
+                      (roleName !== 'admin' && permissionType === 'insert') ||
+                      (roleName !== 'admin' && permissionType === 'delete');
 
                     if (isNewRole) {
                       return (

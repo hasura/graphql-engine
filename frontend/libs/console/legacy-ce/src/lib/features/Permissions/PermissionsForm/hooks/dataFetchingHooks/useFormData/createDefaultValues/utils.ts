@@ -237,7 +237,7 @@ export const createPermission = {
     };
   },
   delete: (permission: DeletePermissionDefinition) => {
-    const filter = JSON.stringify(permission?.filter) || '';
+    const filter = permission?.filter || {};
     const filterType = getCheckType(permission?.filter);
     const presets = getPresets({
       currentQueryPermissions: permission,

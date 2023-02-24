@@ -96,7 +96,7 @@ export const useSubmitForm = (args: UseSubmitFormArgs) => {
       driver: metadataSource.kind,
       table,
       tables,
-      roleName,
+      role: roleName,
       queryType,
       accessType,
       resourceVersion: resource_version,

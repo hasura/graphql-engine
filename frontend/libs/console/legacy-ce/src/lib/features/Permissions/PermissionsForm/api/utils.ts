@@ -3,10 +3,28 @@ import produce from 'immer';
 import { allowedMetadataTypes } from '../../../MetadataAPI';
 
 import { AccessType } from '../../types';
-import { PermissionsSchema } from '../../schema';
+import { PermissionsSchema, Presets } from '../../schema';
 import { areTablesEqual } from '../../../hasura-metadata-api';
 import { Table } from '../../../hasura-metadata-types';
 import { getTableDisplayName } from '../../../DatabaseRelationships';
+
+const formatFilterValues = (formFilter: Record<string, any>[]) => {
+  return Object.entries(formFilter).reduce<Record<string, any>>(
+    (acc, [operator, value]) => {
+      if (operator === '_and' || operator === '_or') {
+        const filteredEmptyObjects = (value as any[]).filter(
+          p => Object.keys(p).length !== 0
+        );
+        acc[operator] = filteredEmptyObjects;
+        return acc;
+      }
+
+      acc[operator] = value;
+      return acc;
+    },
+    {}
+  );
+};
 
 type SelectPermissionMetadata = {
   columns: string[];
@@ -24,24 +42,7 @@ const createSelectObject = (input: PermissionsSchema) => {
       .filter(({ 1: value }) => value)
       .map(([key]) => key);
 
-    // in row permissions builder an extra input is rendered automatically
-    // this will always be empty and needs to be removed
-
-    const filter = Object.entries(input.filter).reduce<Record<string, any>>(
-      (acc, [operator, value]) => {
-        if (operator === '_and' || operator === '_or') {
-          const filteredEmptyObjects = (value as any[]).filter(
-            p => Object.keys(p).length !== 0
-          );
-          acc[operator] = filteredEmptyObjects;
-          return acc;
-        }
-
-        acc[operator] = value;
-        return acc;
-      },
-      {}
-    );
+    const filter = formatFilterValues(input.filter);
 
     const permissionObject: SelectPermissionMetadata = {
       columns,
@@ -102,6 +103,28 @@ const createInsertObject = (input: PermissionsSchema) => {
   throw new Error('Case not handled');
 };
 
+export type DeletePermissionMetadata = {
+  columns?: string[];
+  set?: Record<string, any>;
+  backend_only: boolean;
+  filter: Record<string, any>;
+};
+
+const createDeleteObject = (input: PermissionsSchema) => {
+  if (input.queryType === 'delete') {
+    const filter = formatFilterValues(input.filter);
+
+    const permissionObject: DeletePermissionMetadata = {
+      backend_only: input.backendOnly || false,
+      filter,
+    };
+
+    return permissionObject;
+  }
+
+  throw new Error('Case not handled');
+};
+
 /**
  * creates the permissions object for the server
  */
@@ -114,7 +137,7 @@ const createPermission = (formData: PermissionsSchema) => {
     case 'update':
       throw new Error('Case not handled');
     case 'delete':
-      throw new Error('Case not handled');
+      return createDeleteObject(formData);
     default:
       throw new Error('Case not handled');
   }

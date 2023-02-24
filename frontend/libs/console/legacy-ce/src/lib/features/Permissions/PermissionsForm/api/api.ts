@@ -8,7 +8,7 @@ import { Table } from '../../../hasura-metadata-types';
 interface CreateBodyArgs {
   dataSourceName: string;
   table: Table;
-  roleName: string;
+  role: string;
   resourceVersion: number;
 }
 
@@ -21,7 +21,7 @@ const createDeleteBody = ({
   driver,
   dataSourceName,
   table,
-  roleName,
+  role,
   resourceVersion,
   queries,
 }: CreateDeleteBodyArgs): {
@@ -34,7 +34,7 @@ const createDeleteBody = ({
     type: `${driver}_drop_${queryType}_permission` as allowedMetadataTypes,
     args: {
       table,
-      role: roleName,
+      role,
       source: dataSourceName,
     },
   }));
@@ -107,6 +107,9 @@ interface CreateInsertBodyArgs extends CreateBodyArgs {
   existingPermissions: ExistingPermission[];
   driver: string;
   tables: Table[];
+  dataSourceName: string;
+  table: Table;
+  role: string;
 }
 
 export interface InsertBodyResult {
@@ -119,7 +122,7 @@ const createInsertBody = ({
   dataSourceName,
   table,
   queryType,
-  roleName,
+  role,
   formData,
   accessType,
   resourceVersion,
@@ -132,7 +135,7 @@ const createInsertBody = ({
     dataSourceName,
     table,
     queryType,
-    role: roleName,
+    role,
     formData,
     accessType,
     existingPermissions,
