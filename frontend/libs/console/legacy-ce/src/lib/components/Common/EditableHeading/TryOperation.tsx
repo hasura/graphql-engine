@@ -69,6 +69,7 @@ export const TryOperation = (props: Props) => {
   if (isTryitButtonAvailable) {
     return (
       <DropdownButton
+        className="ml-xs"
         items={[
           [
             <span className="py-xs text-xs font-semibold text-muted uppercase tracking-wider whitespace-nowrap">
@@ -127,7 +128,7 @@ export const TryOperation = (props: Props) => {
   }
   return (
     <Tooltip
-      className="ml-0"
+      className="ml-xs"
       tooltipContentChildren='"Try it" is disabled for this table because it has customizations. Head to API Explorer to try out a query.'
     >
       <DropdownButton
