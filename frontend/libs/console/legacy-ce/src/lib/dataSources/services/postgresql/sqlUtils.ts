@@ -85,7 +85,7 @@ export const getFetchTablesListQuery = (options: {
       COALESCE(json_agg(DISTINCT row_to_json(isc) :: jsonb || jsonb_build_object('comment', col_description(pga.attrelid, pga.attnum))) filter (WHERE isc.column_name IS NOT NULL), '[]' :: json) AS columns,
       COALESCE(json_agg(DISTINCT row_to_json(ist) :: jsonb || jsonb_build_object('comment', obj_description(pgt.oid))) filter (WHERE ist.trigger_name IS NOT NULL), '[]' :: json) AS triggers,
       row_to_json(isv) AS view_info
-      FROM partitions, pg_class as pgc  
+      FROM partitions, pg_class as pgc
       INNER JOIN pg_namespace as pgn
         ON pgc.relnamespace = pgn.oid
     /* columns */
@@ -129,7 +129,6 @@ export const getFetchTablesListQuery = (options: {
       ON  isc.table_schema = pgn.nspname
       AND isc.table_name   = pgc.relname
       AND isc.column_name  = pga.attname
-  
     /* triggers */
     LEFT OUTER JOIN pg_trigger AS pgt
       ON pgt.tgrelid = pgc.oid
@@ -137,7 +136,6 @@ export const getFetchTablesListQuery = (options: {
       ON  ist.event_object_schema = pgn.nspname
       AND ist.event_object_table  = pgc.relname
       AND ist.trigger_name        = pgt.tgname
-  
     /* This is a simplified version of how information_schema.views was
     ** implemented in postgres 9.5, but modified to support materialized
     ** views.
@@ -153,7 +151,6 @@ export const getFetchTablesListQuery = (options: {
         CASE WHEN EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = c.oid AND tgtype & 73 = 73) THEN 'YES' ELSE 'NO' END AS is_trigger_deletable,
         CASE WHEN EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = c.oid AND tgtype & 69 = 69) THEN 'YES' ELSE 'NO' END AS is_trigger_insertable_into
       FROM pg_namespace nc, pg_class c
-  
       WHERE c.relnamespace = nc.oid
         AND c.relkind in ('v', 'm')
         AND (NOT pg_is_other_temp_schema(nc.oid))
@@ -163,7 +160,6 @@ export const getFetchTablesListQuery = (options: {
     ) AS isv
       ON  isv.table_schema = pgn.nspname
       AND isv.table_name   = pgc.relname
-  
     WHERE
       pgc.relkind IN ('r', 'v', 'f', 'm', 'p')
       ${whereQuery}
@@ -1066,7 +1062,7 @@ export const tableIndexSql = (options: { schema: string; table: string }) => `
       SELECT
           t.relname as table_name,
           i.relname as index_name,
-          it.table_schema as table_schema,
+          n.nspname as table_schema,
           am.amname as index_type,
           array_agg(DISTINCT a.attname) as index_columns,
           pi.indexdef as index_definition_sql
@@ -1075,7 +1071,7 @@ export const tableIndexSql = (options: { schema: string; table: string }) => `
           pg_class i,
           pg_index ix,
           pg_attribute a,
-          information_schema.tables it,
+          pg_namespace n,
           pg_am am,
           pg_indexes pi
       WHERE
@@ -1085,14 +1081,18 @@ export const tableIndexSql = (options: { schema: string; table: string }) => `
           and a.attnum = ANY(ix.indkey)
           and t.relkind = 'r'
           and pi.indexname = i.relname
+          and pi.tablename = t.relname
+          and pi.schemaname = n.nspname
           and t.relname = '${options.table}'
-          and it.table_schema = '${options.schema}'
+          and n.nspname = '${options.schema}'
+          and n.oid = t.relnamespace
+          and n.oid = i.relnamespace
           and am.oid = i.relam
       GROUP BY
           t.relname,
           i.relname,
-          it.table_schema,
           am.amname,
+          n.nspname,
           pi.indexdef
       ORDER BY
           t.relname,
@@ -1181,7 +1181,7 @@ CREATE TRIGGER "set_${schemaName}_${tableName}_${columnName}"
 BEFORE UPDATE ON "${schemaName}"."${tableName}"
 FOR EACH ROW
 EXECUTE PROCEDURE "${schemaName}"."set_current_timestamp_${columnName}"();
-COMMENT ON TRIGGER "set_${schemaName}_${tableName}_${columnName}" ON "${schemaName}"."${tableName}" 
+COMMENT ON TRIGGER "set_${schemaName}_${tableName}_${columnName}" ON "${schemaName}"."${tableName}"
 IS 'trigger to set value of column "${columnName}" to current timestamp on row update';
 `;
 
@@ -1358,21 +1358,21 @@ export const getDataTriggerLogsQuery = (
     case triggerTypes.pending:
       sql = `SELECT *
       FROM ${eventRelTable} data_table
-      WHERE data_table.trigger_name = '${triggerName}'  
+      WHERE data_table.trigger_name = '${triggerName}'
       AND delivered=false AND error=false AND archived=false ORDER BY created_at DESC `;
       break;
 
     case triggerTypes.processed:
       sql = `SELECT *
-      FROM ${eventRelTable} data_table 
-      WHERE data_table.trigger_name = '${triggerName}' 
+      FROM ${eventRelTable} data_table
+      WHERE data_table.trigger_name = '${triggerName}'
       AND (delivered=true OR error=true) AND archived=false ORDER BY created_at DESC `;
       break;
 
     case triggerTypes.invocation:
       sql = `
       SELECT data_table.*
-      FROM ${eventInvTable} data_table 
+      FROM ${eventInvTable} data_table
       WHERE data_table.trigger_name = '${triggerName}'
       ORDER BY data_table.created_at DESC NULLS LAST`;
       break;
