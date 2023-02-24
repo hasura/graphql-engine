@@ -16730,8 +16730,8 @@ BoolExpRHSParser :: ValueParser b m v -> v -> BoolExpRHSParser (b :: BackendType
 
 -- | A function which resolves boolean expression from given table fields
 newtype BoolExpResolver b m v
-BoolExpResolver :: (BoolExpRHSParser b m v -> TableName b -> FieldInfoMap (FieldInfo b) -> GBoolExp b ColExp -> m (AnnBoolExp b v)) -> BoolExpResolver b m v
-[getBoolExpResolver] :: BoolExpResolver b m v -> BoolExpRHSParser b m v -> TableName b -> FieldInfoMap (FieldInfo b) -> GBoolExp b ColExp -> m (AnnBoolExp b v)
+BoolExpResolver :: (BoolExpRHSParser b m v -> FieldInfoMap (FieldInfo b) -> FieldInfoMap (FieldInfo b) -> GBoolExp b ColExp -> m (AnnBoolExp b v)) -> BoolExpResolver b m v
+[getBoolExpResolver] :: BoolExpResolver b m v -> BoolExpRHSParser b m v -> FieldInfoMap (FieldInfo b) -> FieldInfoMap (FieldInfo b) -> GBoolExp b ColExp -> m (AnnBoolExp b v)
 
 
 -- | Types and functions for interacting with and manipulating SQL enums
@@ -16779,6 +16779,31 @@ module Hasura.Backends.Postgres.Translate.Mutation
 --   order of columns; `SELECT ("row"::table).* VALUES (1, <tt>Robert</tt>,
 --   23) AS "row"`.
 mkSelectExpFromColumnValues :: forall pgKind m. MonadError QErr m => QualifiedTable -> [ColumnInfo ('Postgres pgKind)] -> [ColumnValues ('Postgres pgKind) TxtEncodedVal] -> m Select
+
+
+-- | Postgres Translate BoolExp
+--   
+--   Convert IR boolean expressions to Postgres-specific SQL expressions.
+module Hasura.Backends.Postgres.Translate.BoolExp
+
+-- | Translate an IR boolean expression to an SQL boolean expression.
+--   References to columns etc are relative to the given
+--   <a>rootReference</a>.
+toSQLBoolExp :: forall pgKind. Backend ('Postgres pgKind) => Qual -> AnnBoolExpSQL ('Postgres pgKind) -> BoolExp
+instance Control.Monad.State.Class.MonadState GHC.Word.Word64 Hasura.Backends.Postgres.Translate.BoolExp.BoolExpM
+instance Control.Monad.Reader.Class.MonadReader Hasura.Backends.Postgres.Translate.BoolExp.BoolExpCtx Hasura.Backends.Postgres.Translate.BoolExp.BoolExpM
+instance GHC.Base.Monad Hasura.Backends.Postgres.Translate.BoolExp.BoolExpM
+instance GHC.Base.Applicative Hasura.Backends.Postgres.Translate.BoolExp.BoolExpM
+instance GHC.Base.Functor Hasura.Backends.Postgres.Translate.BoolExp.BoolExpM
+
+
+-- | Postgres Translate Delete
+--   
+--   Tranlates an IR delete term to a Postgres SQL DELETE statement.
+--   
+--   See <a>execDeleteQuery</a>.
+module Hasura.Backends.Postgres.Translate.Delete
+mkDelete :: Backend ('Postgres pgKind) => AnnDel ('Postgres pgKind) -> SQLDelete
 
 
 -- | Postgres DDL Table
@@ -17195,15 +17220,15 @@ amPermissions :: Lens' ActionMetadata [ActionPermissionMetadata]
 amName :: Lens' ActionMetadata ActionName
 amDefinition :: Lens' ActionMetadata ActionDefinitionInput
 amComment :: Lens' ActionMetadata (Maybe Text)
-adType :: forall arg_arYhO webhook_arYhP. Lens' (ActionDefinition arg_arYhO webhook_arYhP) ActionType
-adTimeout :: forall arg_arYhO webhook_arYhP. Lens' (ActionDefinition arg_arYhO webhook_arYhP) Timeout
-adResponseTransform :: forall arg_arYhO webhook_arYhP. Lens' (ActionDefinition arg_arYhO webhook_arYhP) (Maybe MetadataResponseTransform)
-adRequestTransform :: forall arg_arYhO webhook_arYhP. Lens' (ActionDefinition arg_arYhO webhook_arYhP) (Maybe RequestTransform)
-adOutputType :: forall arg_arYhO webhook_arYhP. Lens' (ActionDefinition arg_arYhO webhook_arYhP) GraphQLType
-adHeaders :: forall arg_arYhO webhook_arYhP. Lens' (ActionDefinition arg_arYhO webhook_arYhP) [HeaderConf]
-adHandler :: forall arg_arYhO webhook_arYhP webhook_as0SV. Lens (ActionDefinition arg_arYhO webhook_arYhP) (ActionDefinition arg_arYhO webhook_as0SV) webhook_arYhP webhook_as0SV
-adForwardClientHeaders :: forall arg_arYhO webhook_arYhP. Lens' (ActionDefinition arg_arYhO webhook_arYhP) Bool
-adArguments :: forall arg_arYhO webhook_arYhP arg_as0SU. Lens (ActionDefinition arg_arYhO webhook_arYhP) (ActionDefinition arg_as0SU webhook_arYhP) [ArgumentDefinition arg_arYhO] [ArgumentDefinition arg_as0SU]
+adType :: forall arg_as43f webhook_as43g. Lens' (ActionDefinition arg_as43f webhook_as43g) ActionType
+adTimeout :: forall arg_as43f webhook_as43g. Lens' (ActionDefinition arg_as43f webhook_as43g) Timeout
+adResponseTransform :: forall arg_as43f webhook_as43g. Lens' (ActionDefinition arg_as43f webhook_as43g) (Maybe MetadataResponseTransform)
+adRequestTransform :: forall arg_as43f webhook_as43g. Lens' (ActionDefinition arg_as43f webhook_as43g) (Maybe RequestTransform)
+adOutputType :: forall arg_as43f webhook_as43g. Lens' (ActionDefinition arg_as43f webhook_as43g) GraphQLType
+adHeaders :: forall arg_as43f webhook_as43g. Lens' (ActionDefinition arg_as43f webhook_as43g) [HeaderConf]
+adHandler :: forall arg_as43f webhook_as43g webhook_as6Em. Lens (ActionDefinition arg_as43f webhook_as43g) (ActionDefinition arg_as43f webhook_as6Em) webhook_as43g webhook_as6Em
+adForwardClientHeaders :: forall arg_as43f webhook_as43g. Lens' (ActionDefinition arg_as43f webhook_as43g) Bool
+adArguments :: forall arg_as43f webhook_as43g arg_as6El. Lens (ActionDefinition arg_as43f webhook_as43g) (ActionDefinition arg_as6El webhook_as43g) [ArgumentDefinition arg_as43f] [ArgumentDefinition arg_as6El]
 aiPermissions :: Lens' ActionInfo (HashMap RoleName ActionPermissionInfo)
 aiOutputType :: Lens' ActionInfo (GType, AnnotatedOutputType)
 aiName :: Lens' ActionInfo ActionName
@@ -17595,19 +17620,19 @@ TableMetadata :: TableName b -> Bool -> TableConfig b -> Relationships (ObjRelDe
 [_tmDeletePermissions] :: TableMetadata b -> Permissions (DelPermDef b)
 [_tmEventTriggers] :: TableMetadata b -> EventTriggers b
 [_tmApolloFederationConfig] :: TableMetadata b -> Maybe ApolloFederationConfig
-tmUpdatePermissions :: forall b_asIIw. Lens' (TableMetadata b_asIIw) (Permissions (UpdPermDef b_asIIw))
-tmTable :: forall b_asIIw. Lens' (TableMetadata b_asIIw) (TableName b_asIIw)
-tmSelectPermissions :: forall b_asIIw. Lens' (TableMetadata b_asIIw) (Permissions (SelPermDef b_asIIw))
-tmRemoteRelationships :: forall b_asIIw. Lens' (TableMetadata b_asIIw) RemoteRelationships
-tmObjectRelationships :: forall b_asIIw. Lens' (TableMetadata b_asIIw) (Relationships (ObjRelDef b_asIIw))
-tmIsEnum :: forall b_asIIw. Lens' (TableMetadata b_asIIw) Bool
-tmInsertPermissions :: forall b_asIIw. Lens' (TableMetadata b_asIIw) (Permissions (InsPermDef b_asIIw))
-tmEventTriggers :: forall b_asIIw. Lens' (TableMetadata b_asIIw) (EventTriggers b_asIIw)
-tmDeletePermissions :: forall b_asIIw. Lens' (TableMetadata b_asIIw) (Permissions (DelPermDef b_asIIw))
-tmConfiguration :: forall b_asIIw. Lens' (TableMetadata b_asIIw) (TableConfig b_asIIw)
-tmComputedFields :: forall b_asIIw. Lens' (TableMetadata b_asIIw) (ComputedFields b_asIIw)
-tmArrayRelationships :: forall b_asIIw. Lens' (TableMetadata b_asIIw) (Relationships (ArrRelDef b_asIIw))
-tmApolloFederationConfig :: forall b_asIIw. Lens' (TableMetadata b_asIIw) (Maybe ApolloFederationConfig)
+tmUpdatePermissions :: forall b_asOtX. Lens' (TableMetadata b_asOtX) (Permissions (UpdPermDef b_asOtX))
+tmTable :: forall b_asOtX. Lens' (TableMetadata b_asOtX) (TableName b_asOtX)
+tmSelectPermissions :: forall b_asOtX. Lens' (TableMetadata b_asOtX) (Permissions (SelPermDef b_asOtX))
+tmRemoteRelationships :: forall b_asOtX. Lens' (TableMetadata b_asOtX) RemoteRelationships
+tmObjectRelationships :: forall b_asOtX. Lens' (TableMetadata b_asOtX) (Relationships (ObjRelDef b_asOtX))
+tmIsEnum :: forall b_asOtX. Lens' (TableMetadata b_asOtX) Bool
+tmInsertPermissions :: forall b_asOtX. Lens' (TableMetadata b_asOtX) (Permissions (InsPermDef b_asOtX))
+tmEventTriggers :: forall b_asOtX. Lens' (TableMetadata b_asOtX) (EventTriggers b_asOtX)
+tmDeletePermissions :: forall b_asOtX. Lens' (TableMetadata b_asOtX) (Permissions (DelPermDef b_asOtX))
+tmConfiguration :: forall b_asOtX. Lens' (TableMetadata b_asOtX) (TableConfig b_asOtX)
+tmComputedFields :: forall b_asOtX. Lens' (TableMetadata b_asOtX) (ComputedFields b_asOtX)
+tmArrayRelationships :: forall b_asOtX. Lens' (TableMetadata b_asOtX) (Relationships (ArrRelDef b_asOtX))
+tmApolloFederationConfig :: forall b_asOtX. Lens' (TableMetadata b_asOtX) (Maybe ApolloFederationConfig)
 mkTableMeta :: TableName b -> Bool -> TableConfig b -> TableMetadata b
 data FunctionMetadata b
 FunctionMetadata :: FunctionName b -> FunctionConfig -> [FunctionPermissionInfo] -> Maybe Text -> FunctionMetadata b
@@ -17615,10 +17640,10 @@ FunctionMetadata :: FunctionName b -> FunctionConfig -> [FunctionPermissionInfo]
 [_fmConfiguration] :: FunctionMetadata b -> FunctionConfig
 [_fmPermissions] :: FunctionMetadata b -> [FunctionPermissionInfo]
 [_fmComment] :: FunctionMetadata b -> Maybe Text
-fmPermissions :: forall b_asKlN. Lens' (FunctionMetadata b_asKlN) [FunctionPermissionInfo]
-fmFunction :: forall b_asKlN b_asLaf. Lens (FunctionMetadata b_asKlN) (FunctionMetadata b_asLaf) (FunctionName b_asKlN) (FunctionName b_asLaf)
-fmConfiguration :: forall b_asKlN. Lens' (FunctionMetadata b_asKlN) FunctionConfig
-fmComment :: forall b_asKlN. Lens' (FunctionMetadata b_asKlN) (Maybe Text)
+fmPermissions :: forall b_asQ7e. Lens' (FunctionMetadata b_asQ7e) [FunctionPermissionInfo]
+fmFunction :: forall b_asQ7e b_asQVG. Lens (FunctionMetadata b_asQ7e) (FunctionMetadata b_asQVG) (FunctionName b_asQ7e) (FunctionName b_asQVG)
+fmConfiguration :: forall b_asQ7e. Lens' (FunctionMetadata b_asQ7e) FunctionConfig
+fmComment :: forall b_asQ7e. Lens' (FunctionMetadata b_asQ7e) (Maybe Text)
 type RemoteSchemaMetadata = RemoteSchemaMetadataG RemoteRelationshipDefinition
 type RemoteSchemas = InsOrdHashMap RemoteSchemaName RemoteSchemaMetadata
 type Tables b = InsOrdHashMap (TableName b) (TableMetadata b)
@@ -17642,15 +17667,15 @@ SourceMetadata :: SourceName -> BackendSourceKind b -> Tables b -> Functions b -
 [_smQueryTags] :: SourceMetadata b -> Maybe QueryTagsConfig
 [_smCustomization] :: SourceMetadata b -> SourceCustomization
 [_smHealthCheckConfig] :: SourceMetadata b -> Maybe (HealthCheckConfig b)
-smTables :: forall b_asLb2. Lens' (SourceMetadata b_asLb2) (Tables b_asLb2)
-smQueryTags :: forall b_asLb2. Lens' (SourceMetadata b_asLb2) (Maybe QueryTagsConfig)
-smName :: forall b_asLb2. Lens' (SourceMetadata b_asLb2) SourceName
-smLogicalModels :: forall b_asLb2. Lens' (SourceMetadata b_asLb2) (LogicalModels b_asLb2)
-smKind :: forall b_asLb2. Lens' (SourceMetadata b_asLb2) (BackendSourceKind b_asLb2)
-smHealthCheckConfig :: forall b_asLb2. Lens' (SourceMetadata b_asLb2) (Maybe (HealthCheckConfig b_asLb2))
-smFunctions :: forall b_asLb2. Lens' (SourceMetadata b_asLb2) (Functions b_asLb2)
-smCustomization :: forall b_asLb2. Lens' (SourceMetadata b_asLb2) SourceCustomization
-smConfiguration :: forall b_asLb2. Lens' (SourceMetadata b_asLb2) (SourceConnConfiguration b_asLb2)
+smTables :: forall b_asQWt. Lens' (SourceMetadata b_asQWt) (Tables b_asQWt)
+smQueryTags :: forall b_asQWt. Lens' (SourceMetadata b_asQWt) (Maybe QueryTagsConfig)
+smName :: forall b_asQWt. Lens' (SourceMetadata b_asQWt) SourceName
+smLogicalModels :: forall b_asQWt. Lens' (SourceMetadata b_asQWt) (LogicalModels b_asQWt)
+smKind :: forall b_asQWt. Lens' (SourceMetadata b_asQWt) (BackendSourceKind b_asQWt)
+smHealthCheckConfig :: forall b_asQWt. Lens' (SourceMetadata b_asQWt) (Maybe (HealthCheckConfig b_asQWt))
+smFunctions :: forall b_asQWt. Lens' (SourceMetadata b_asQWt) (Functions b_asQWt)
+smCustomization :: forall b_asQWt. Lens' (SourceMetadata b_asQWt) SourceCustomization
+smConfiguration :: forall b_asQWt. Lens' (SourceMetadata b_asQWt) (SourceConnConfiguration b_asQWt)
 backendSourceMetadataCodec :: JSONCodec BackendSourceMetadata
 mkSourceMetadata :: forall (b :: BackendType). Backend b => SourceName -> BackendSourceKind b -> SourceConnConfiguration b -> SourceCustomization -> Maybe (HealthCheckConfig b) -> BackendSourceMetadata
 
@@ -17742,13 +17767,13 @@ SourceInfo :: SourceName -> TableCache b -> FunctionCache b -> LogicalModels b -
 [_siConfiguration] :: SourceInfo b -> ~SourceConfig b
 [_siQueryTagsConfig] :: SourceInfo b -> Maybe QueryTagsConfig
 [_siCustomization] :: SourceInfo b -> ResolvedSourceCustomization
-siTables :: forall b_at69V. Lens' (SourceInfo b_at69V) (TableCache b_at69V)
-siQueryTagsConfig :: forall b_at69V. Lens' (SourceInfo b_at69V) (Maybe QueryTagsConfig)
-siName :: forall b_at69V. Lens' (SourceInfo b_at69V) SourceName
-siLogicalModels :: forall b_at69V. Lens' (SourceInfo b_at69V) (LogicalModels b_at69V)
-siFunctions :: forall b_at69V. Lens' (SourceInfo b_at69V) (FunctionCache b_at69V)
-siCustomization :: forall b_at69V. Lens' (SourceInfo b_at69V) ResolvedSourceCustomization
-siConfiguration :: forall b_at69V. Lens' (SourceInfo b_at69V) (SourceConfig b_at69V)
+siTables :: forall b_atbVm. Lens' (SourceInfo b_atbVm) (TableCache b_atbVm)
+siQueryTagsConfig :: forall b_atbVm. Lens' (SourceInfo b_atbVm) (Maybe QueryTagsConfig)
+siName :: forall b_atbVm. Lens' (SourceInfo b_atbVm) SourceName
+siLogicalModels :: forall b_atbVm. Lens' (SourceInfo b_atbVm) (LogicalModels b_atbVm)
+siFunctions :: forall b_atbVm. Lens' (SourceInfo b_atbVm) (FunctionCache b_atbVm)
+siCustomization :: forall b_atbVm. Lens' (SourceInfo b_atbVm) ResolvedSourceCustomization
+siConfiguration :: forall b_atbVm. Lens' (SourceInfo b_atbVm) (SourceConfig b_atbVm)
 type BackendSourceInfo = AnyBackend SourceInfo
 type SourceCache = HashMap SourceName BackendSourceInfo
 unsafeSourceInfo :: forall b. HasTag b => BackendSourceInfo -> Maybe (SourceInfo b)
@@ -18645,10 +18670,10 @@ ActionRemoteRelationshipSelect :: HashMap FieldName Name -> r -> ActionRemoteRel
 --   an execution tree is constructed so that a backend is absolved of
 --   dealing with remote relationships.
 [_arrsRelationship] :: ActionRemoteRelationshipSelect r -> r
-_ACFNestedObject :: forall r_audoc. Prism' (ActionFieldG r_audoc) (Name, ActionFieldsG r_audoc)
-_ACFExpression :: forall r_audoc. Prism' (ActionFieldG r_audoc) Text
-_ACFRemote :: forall r_audoc. Prism' (ActionFieldG r_audoc) (ActionRemoteRelationshipSelect r_audoc)
-_ACFScalar :: forall r_audoc. Prism' (ActionFieldG r_audoc) Name
+_ACFNestedObject :: forall r_auj9i. Prism' (ActionFieldG r_auj9i) (Name, ActionFieldsG r_auj9i)
+_ACFExpression :: forall r_auj9i. Prism' (ActionFieldG r_auj9i) Text
+_ACFRemote :: forall r_auj9i. Prism' (ActionFieldG r_auj9i) (ActionRemoteRelationshipSelect r_auj9i)
+_ACFScalar :: forall r_auj9i. Prism' (ActionFieldG r_auj9i) Name
 data AnnActionExecution (r :: Type)
 AnnActionExecution :: ActionName -> GraphQLType -> ActionFieldsG r -> Value -> ActionOutputFields -> EnvRecord ResolvedWebhook -> [HeaderConf] -> Bool -> Timeout -> Maybe RequestTransform -> Maybe MetadataResponseTransform -> AnnActionExecution (r :: Type)
 [_aaeName] :: AnnActionExecution (r :: Type) -> ActionName
@@ -18702,30 +18727,30 @@ ASINoSource :: ActionSourceInfo b
 
 -- | All relationships refer to tables in one source
 ASISource :: SourceName -> SourceConfig b -> ActionSourceInfo b
-aaaqStringifyNum :: forall b_audLJ r_audLK. Lens' (AnnActionAsyncQuery b_audLJ r_audLK) StringifyNumbers
-aaaqSource :: forall b_audLJ r_audLK. Lens' (AnnActionAsyncQuery b_audLJ r_audLK) (ActionSourceInfo b_audLJ)
-aaaqOutputType :: forall b_audLJ r_audLK. Lens' (AnnActionAsyncQuery b_audLJ r_audLK) GraphQLType
-aaaqName :: forall b_audLJ r_audLK. Lens' (AnnActionAsyncQuery b_audLJ r_audLK) ActionName
-aaaqForwardClientHeaders :: forall b_audLJ r_audLK. Lens' (AnnActionAsyncQuery b_audLJ r_audLK) Bool
-aaaqFields :: forall b_audLJ r_audLK r_auekP. Lens (AnnActionAsyncQuery b_audLJ r_audLK) (AnnActionAsyncQuery b_audLJ r_auekP) (AsyncActionQueryFieldsG r_audLK) (AsyncActionQueryFieldsG r_auekP)
-aaaqDefinitionList :: forall b_audLJ r_audLK. Lens' (AnnActionAsyncQuery b_audLJ r_audLK) [(Column b_audLJ, ScalarType b_audLJ)]
-aaaqActionId :: forall b_audLJ r_audLK. Lens' (AnnActionAsyncQuery b_audLJ r_audLK) ActionId
-aaeWebhook :: forall r_audLN. Lens' (AnnActionExecution r_audLN) (EnvRecord ResolvedWebhook)
-aaeTimeOut :: forall r_audLN. Lens' (AnnActionExecution r_audLN) Timeout
-aaeResponseTransform :: forall r_audLN. Lens' (AnnActionExecution r_audLN) (Maybe MetadataResponseTransform)
-aaeRequestTransform :: forall r_audLN. Lens' (AnnActionExecution r_audLN) (Maybe RequestTransform)
-aaePayload :: forall r_audLN. Lens' (AnnActionExecution r_audLN) Value
-aaeOutputType :: forall r_audLN. Lens' (AnnActionExecution r_audLN) GraphQLType
-aaeOutputFields :: forall r_audLN. Lens' (AnnActionExecution r_audLN) ActionOutputFields
-aaeName :: forall r_audLN. Lens' (AnnActionExecution r_audLN) ActionName
-aaeHeaders :: forall r_audLN. Lens' (AnnActionExecution r_audLN) [HeaderConf]
-aaeForwardClientHeaders :: forall r_audLN. Lens' (AnnActionExecution r_audLN) Bool
-aaeFields :: forall r_audLN r_auerA. Lens (AnnActionExecution r_audLN) (AnnActionExecution r_auerA) (ActionFieldsG r_audLN) (ActionFieldsG r_auerA)
-_AsyncErrors :: forall r_audLM. Prism' (AsyncActionQueryFieldG r_audLM) ()
-_AsyncCreatedAt :: forall r_audLM. Prism' (AsyncActionQueryFieldG r_audLM) ()
-_AsyncId :: forall r_audLM. Prism' (AsyncActionQueryFieldG r_audLM) ()
-_AsyncOutput :: forall r_aueAD r_audLM. Prism (AsyncActionQueryFieldG r_aueAD) (AsyncActionQueryFieldG r_audLM) (ActionFieldsG r_aueAD) (ActionFieldsG r_audLM)
-_AsyncTypename :: forall r_audLM. Prism' (AsyncActionQueryFieldG r_audLM) Text
+aaaqStringifyNum :: forall b_aujwP r_aujwQ. Lens' (AnnActionAsyncQuery b_aujwP r_aujwQ) StringifyNumbers
+aaaqSource :: forall b_aujwP r_aujwQ. Lens' (AnnActionAsyncQuery b_aujwP r_aujwQ) (ActionSourceInfo b_aujwP)
+aaaqOutputType :: forall b_aujwP r_aujwQ. Lens' (AnnActionAsyncQuery b_aujwP r_aujwQ) GraphQLType
+aaaqName :: forall b_aujwP r_aujwQ. Lens' (AnnActionAsyncQuery b_aujwP r_aujwQ) ActionName
+aaaqForwardClientHeaders :: forall b_aujwP r_aujwQ. Lens' (AnnActionAsyncQuery b_aujwP r_aujwQ) Bool
+aaaqFields :: forall b_aujwP r_aujwQ r_auk5V. Lens (AnnActionAsyncQuery b_aujwP r_aujwQ) (AnnActionAsyncQuery b_aujwP r_auk5V) (AsyncActionQueryFieldsG r_aujwQ) (AsyncActionQueryFieldsG r_auk5V)
+aaaqDefinitionList :: forall b_aujwP r_aujwQ. Lens' (AnnActionAsyncQuery b_aujwP r_aujwQ) [(Column b_aujwP, ScalarType b_aujwP)]
+aaaqActionId :: forall b_aujwP r_aujwQ. Lens' (AnnActionAsyncQuery b_aujwP r_aujwQ) ActionId
+aaeWebhook :: forall r_aujwT. Lens' (AnnActionExecution r_aujwT) (EnvRecord ResolvedWebhook)
+aaeTimeOut :: forall r_aujwT. Lens' (AnnActionExecution r_aujwT) Timeout
+aaeResponseTransform :: forall r_aujwT. Lens' (AnnActionExecution r_aujwT) (Maybe MetadataResponseTransform)
+aaeRequestTransform :: forall r_aujwT. Lens' (AnnActionExecution r_aujwT) (Maybe RequestTransform)
+aaePayload :: forall r_aujwT. Lens' (AnnActionExecution r_aujwT) Value
+aaeOutputType :: forall r_aujwT. Lens' (AnnActionExecution r_aujwT) GraphQLType
+aaeOutputFields :: forall r_aujwT. Lens' (AnnActionExecution r_aujwT) ActionOutputFields
+aaeName :: forall r_aujwT. Lens' (AnnActionExecution r_aujwT) ActionName
+aaeHeaders :: forall r_aujwT. Lens' (AnnActionExecution r_aujwT) [HeaderConf]
+aaeForwardClientHeaders :: forall r_aujwT. Lens' (AnnActionExecution r_aujwT) Bool
+aaeFields :: forall r_aujwT r_aukcG. Lens (AnnActionExecution r_aujwT) (AnnActionExecution r_aukcG) (ActionFieldsG r_aujwT) (ActionFieldsG r_aukcG)
+_AsyncErrors :: forall r_aujwS. Prism' (AsyncActionQueryFieldG r_aujwS) ()
+_AsyncCreatedAt :: forall r_aujwS. Prism' (AsyncActionQueryFieldG r_aujwS) ()
+_AsyncId :: forall r_aujwS. Prism' (AsyncActionQueryFieldG r_aujwS) ()
+_AsyncOutput :: forall r_auklJ r_aujwS. Prism (AsyncActionQueryFieldG r_auklJ) (AsyncActionQueryFieldG r_aujwS) (ActionFieldsG r_auklJ) (ActionFieldsG r_aujwS)
+_AsyncTypename :: forall r_aujwS. Prism' (AsyncActionQueryFieldG r_aujwS) Text
 instance Data.Traversable.Traversable Hasura.RQL.IR.Action.AnnActionExecution
 instance Data.Foldable.Foldable Hasura.RQL.IR.Action.AnnActionExecution
 instance GHC.Base.Functor Hasura.RQL.IR.Action.AnnActionExecution
@@ -19758,8 +19783,8 @@ instance GHC.Show.Show Hasura.Backends.Postgres.DDL.ComputedField.ComputedFieldV
 --   
 --   See <a>Cache</a> and <a>Backend</a>.
 module Hasura.Backends.Postgres.DDL.BoolExp
-parseBoolExpOperations :: forall pgKind m v. (Backend ('Postgres pgKind), MonadError QErr m, TableCoreInfoRM ('Postgres pgKind) m) => ValueParser ('Postgres pgKind) m v -> QualifiedTable -> FieldInfoMap (FieldInfo ('Postgres pgKind)) -> ColumnReference ('Postgres pgKind) -> Value -> m [OpExpG ('Postgres pgKind) v]
-buildComputedFieldBooleanExp :: forall pgKind m v. (MonadError QErr m, Backend ('Postgres pgKind), TableCoreInfoRM ('Postgres pgKind) m) => BoolExpResolver ('Postgres pgKind) m v -> BoolExpRHSParser ('Postgres pgKind) m v -> TableName ('Postgres pgKind) -> FieldInfoMap (FieldInfo ('Postgres pgKind)) -> ComputedFieldInfo ('Postgres pgKind) -> Value -> m (AnnComputedFieldBoolExp ('Postgres pgKind) v)
+parseBoolExpOperations :: forall pgKind m v. (Backend ('Postgres pgKind), MonadError QErr m) => ValueParser ('Postgres pgKind) m v -> FieldInfoMap (FieldInfo ('Postgres pgKind)) -> FieldInfoMap (FieldInfo ('Postgres pgKind)) -> ColumnReference ('Postgres pgKind) -> Value -> m [OpExpG ('Postgres pgKind) v]
+buildComputedFieldBooleanExp :: forall pgKind m v. (MonadError QErr m, Backend ('Postgres pgKind), TableCoreInfoRM ('Postgres pgKind) m) => BoolExpResolver ('Postgres pgKind) m v -> BoolExpRHSParser ('Postgres pgKind) m v -> FieldInfoMap (FieldInfo ('Postgres pgKind)) -> FieldInfoMap (FieldInfo ('Postgres pgKind)) -> ComputedFieldInfo ('Postgres pgKind) -> Value -> m (AnnComputedFieldBoolExp ('Postgres pgKind) v)
 
 
 -- | MSSQL DDL BoolExp
@@ -19767,7 +19792,7 @@ buildComputedFieldBooleanExp :: forall pgKind m v. (MonadError QErr m, Backend (
 --   How to parse the boolean expressions and operations relevant for
 --   MSSQL.
 module Hasura.Backends.MSSQL.DDL.BoolExp
-parseBoolExpOperations :: forall m v. MonadError QErr m => ValueParser 'MSSQL m v -> TableName -> FieldInfoMap (FieldInfo 'MSSQL) -> ColumnReference 'MSSQL -> Value -> m [OpExpG 'MSSQL v]
+parseBoolExpOperations :: forall m v. MonadError QErr m => ValueParser 'MSSQL m v -> FieldInfoMap (FieldInfo 'MSSQL) -> FieldInfoMap (FieldInfo 'MSSQL) -> ColumnReference 'MSSQL -> Value -> m [OpExpG 'MSSQL v]
 
 module Hasura.Backends.DataConnector.Adapter.ConfigTransform
 transformSourceConfig :: MonadError QErr m => SourceConfig -> [(Text, Value)] -> Environment -> m SourceConfig
@@ -19787,7 +19812,7 @@ getConfigSchemaResponse :: (CacheRM m, MonadError QErr m) => DataConnectorName -
 validateConfiguration :: MonadError QErr m => SourceName -> DataConnectorName -> ConfigSchemaResponse -> Config -> m ()
 
 module Hasura.Backends.BigQuery.DDL.BoolExp
-parseBoolExpOperations :: forall m v. MonadError QErr m => ValueParser 'BigQuery m v -> TableName -> FieldInfoMap (FieldInfo 'BigQuery) -> ColumnReference 'BigQuery -> Value -> m [OpExpG 'BigQuery v]
+parseBoolExpOperations :: forall m v. MonadError QErr m => ValueParser 'BigQuery m v -> FieldInfoMap (FieldInfo 'BigQuery) -> FieldInfoMap (FieldInfo 'BigQuery) -> ColumnReference 'BigQuery -> Value -> m [OpExpG 'BigQuery v]
 
 module Hasura.Backends.BigQuery.DDL
 fetchAndValidateEnumValues :: Monad m => SourceConfig 'BigQuery -> TableName 'BigQuery -> Maybe (PrimaryKey 'BigQuery (RawColumnInfo 'BigQuery)) -> [RawColumnInfo 'BigQuery] -> m (Either QErr EnumValues)
@@ -20639,6 +20664,11 @@ customSQLToTopLevelCTEs :: CustomSQLCTEs -> [(TableAlias, TopLevelCTE)]
 toQuery :: SelectWithG TopLevelCTE -> Query
 
 
+-- | This module relates to the processing of Order-By clauses.
+module Hasura.Backends.Postgres.Translate.Select.Internal.OrderBy
+processOrderByItems :: forall pgKind m. (MonadReader StringifyNumbers m, MonadWriter SelectWriter m, Backend ('Postgres pgKind)) => TableIdentifier -> FieldName -> SimilarArrayFields -> Maybe (NonEmpty PGCol) -> Maybe (NonEmpty (AnnotatedOrderByItem ('Postgres pgKind))) -> m ([(ColumnAlias, SQLExp)], SelectSorting, Maybe SQLExp)
+
+
 -- | This module contains worker definitions pertaining to generating
 --   <tt>Select</tt> AST nodes.
 --   
@@ -20660,6 +20690,228 @@ annRowToJson :: PostgresAnnotatedFieldJSON pgKind => FieldName -> [(FieldName, S
 instance Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.PostgresAnnotatedFieldJSON 'Hasura.SQL.Backend.Vanilla
 instance Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.PostgresAnnotatedFieldJSON 'Hasura.SQL.Backend.Citus
 instance Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.PostgresAnnotatedFieldJSON 'Hasura.SQL.Backend.Cockroach
+
+
+-- | This module defines functions that translate from the Postgres IR into
+--   Postgres SQL AST.
+--   
+--   NOTE: These functions <a>processAnnAggregateSelect</a>,
+--   <a>processAnnSimpleSelect</a>, <a>processConnectionSelect</a>, are all
+--   mutually recursive.
+--   
+--   These functions are generally called from the top level functions in
+--   Translate.Select, and the call stack looks like:
+--   
+--   <ul>
+--   <li><tt>selectQuerySQL</tt> -&gt; <tt>mkSQLSelect</tt> -&gt;
+--   <a>processAnnSimpleSelect</a> -&gt;
+--   <a>processSelectParams</a>/<a>processAnnFields</a></li>
+--   <li><tt>selectAggregateQuerySQL</tt> -&gt; <tt>mkAggregateSelect</tt>
+--   -&gt; <a>processAnnAggregateSelect</a> -&gt;
+--   <a>processSelectParams</a>/<a>processAnnFields</a></li>
+--   <li><tt>connetionSelectQuerySQL</tt> -&gt; <tt>mkConnectionSelect</tt>
+--   -&gt; <tt>processConnectionSelection</tt> -&gt;
+--   <a>processSelectParams</a></li>
+--   </ul>
+--   
+--   <a>SelectSource</a> consists of a prefix, a source, a boolean
+--   conditional expression, and info on whether sorting or slicing is done
+--   (needed to handle the LIMIT optimisation)
+module Hasura.Backends.Postgres.Translate.Select.Internal.Process
+processAnnAggregateSelect :: forall pgKind m. (MonadReader StringifyNumbers m, MonadWriter SelectWriter m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => SourcePrefixes -> FieldName -> AnnAggregateSelect ('Postgres pgKind) -> m (SelectSource, HashMap ColumnAlias SQLExp, Extractor)
+processAnnSimpleSelect :: forall pgKind m. (MonadReader StringifyNumbers m, MonadWriter SelectWriter m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => SourcePrefixes -> FieldName -> PermissionLimitSubQuery -> AnnSimpleSelect ('Postgres pgKind) -> m (SelectSource, HashMap ColumnAlias SQLExp)
+processConnectionSelect :: forall pgKind m. (MonadReader StringifyNumbers m, MonadWriter SelectWriter m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => SourcePrefixes -> FieldName -> TableAlias -> HashMap PGCol PGCol -> ConnectionSelect ('Postgres pgKind) Void SQLExp -> m (ArrayConnectionSource, Extractor, HashMap ColumnAlias SQLExp)
+
+
+-- | This module defines the top-level translation functions pertaining to
+--   streaming selects into Postgres AST.
+--   
+--   Streaming subscriptions are subscriptions based on a user-provided
+--   cursor column. Unlike live queries, streaming subscriptions can be
+--   used to only get the part that has changed in the query's response,
+--   although this will be dependent on the user's choice of the cursor
+--   column. The streaming starts from the initial value provided by the
+--   user.
+module Hasura.Backends.Postgres.Translate.Select.Streaming
+selectStreamQuerySQL :: forall pgKind. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => AnnSimpleStreamSelect ('Postgres pgKind) -> Query
+mkStreamSQLSelect :: forall pgKind m. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadWriter CustomSQLCTEs m) => AnnSimpleStreamSelect ('Postgres pgKind) -> m Select
+
+
+-- | This module defines the top-level translation functions pertaining to
+--   queries that are not aggregation queries, i.e. so-called "simple"
+--   selects into Postgres AST.
+module Hasura.Backends.Postgres.Translate.Select.Simple
+
+-- | Translates IR to Postgres queries for simple SELECTs (select queries
+--   that are not aggregations, including subscriptions).
+--   
+--   See <a>mkSQLSelect</a> for the Postgres AST.
+selectQuerySQL :: forall pgKind. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => JsonAggSelect -> AnnSimpleSelect ('Postgres pgKind) -> Query
+mkSQLSelect :: forall pgKind m. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadWriter CustomSQLCTEs m) => JsonAggSelect -> AnnSimpleSelect ('Postgres pgKind) -> m Select
+
+
+-- | This module defines the top-level translation functions pertaining to
+--   translating Connection (i.e. Relay) queries into Postgres AST.
+module Hasura.Backends.Postgres.Translate.Select.Connection
+
+-- | Translates IR to Postgres queries for "connection" queries (used for
+--   Relay).
+--   
+--   See <a>mkConnectionSelect</a> for the Postgres AST.
+connectionSelectQuerySQL :: forall pgKind. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => ConnectionSelect ('Postgres pgKind) Void SQLExp -> Query
+mkConnectionSelect :: forall pgKind m. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadWriter CustomSQLCTEs m) => ConnectionSelect ('Postgres pgKind) Void SQLExp -> m (SelectWithG Select)
+
+
+-- | This module defines the top-level translation functions pertaining to
+--   queries that use aggregation (i.e., <i>not</i> so-called "simple"
+--   selects) into Postgres AST.
+module Hasura.Backends.Postgres.Translate.Select.Aggregate
+
+-- | Translates IR to Postgres queries for aggregated SELECTs.
+--   
+--   See <a>mkAggregateSelect</a> for the Postgres AST.
+selectAggregateQuerySQL :: forall pgKind. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => AnnAggregateSelect ('Postgres pgKind) -> Query
+
+-- | We process aggregate queries differently because the types of
+--   aggregate queries are different. In the <tt>_asnFields</tt> field of
+--   an <a>AnnSelectG</a>, we will have a <tt>TableAggregateFieldG</tt>
+--   instead of an <tt>AnnFieldG</tt>.
+mkAggregateSelect :: forall pgKind m. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadWriter CustomSQLCTEs m) => AnnAggregateSelect ('Postgres pgKind) -> m Select
+
+
+-- | Postgres Translate Select
+--   
+--   This module is a translation layer between IR and postgres-specific
+--   select queries.
+--   
+--   There are four main types of selects (as distinguished from the IR):
+--   
+--   <ul>
+--   <li>"simple" selects</li>
+--   <li>aggregate selects</li>
+--   <li>connection selects (used for relay)</li>
+--   <li>streaming selects (see
+--   Hasura.Backends.Postgres.Translate.Select.Streaming for details)</li>
+--   </ul>
+module Hasura.Backends.Postgres.Translate.Select
+
+
+-- | Postgres Translate Returning
+--   
+--   Combinators and helpers for dealing with GraphQL returning statements.
+module Hasura.Backends.Postgres.Translate.Returning
+
+-- | The postgres common table expression (CTE) for mutation queries. This
+--   CTE expression is used to generate mutation field output expression,
+--   see Note [Mutation output expression].
+data MutationCTE
+
+-- | A Mutation with check constraint validation (Insert or Update)
+MCCheckConstraint :: TopLevelCTE -> MutationCTE
+
+-- | A Select statement which emits mutated table rows
+MCSelectValues :: Select -> MutationCTE
+
+-- | A Delete statement
+MCDelete :: SQLDelete -> MutationCTE
+getMutationCTE :: MutationCTE -> TopLevelCTE
+checkPermissionRequired :: MutationCTE -> Bool
+mkDefaultMutFlds :: Backend ('Postgres pgKind) => Maybe [ColumnInfo ('Postgres pgKind)] -> MutationOutput ('Postgres pgKind)
+mkMutFldExp :: (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadWriter CustomSQLCTEs m) => TableIdentifier -> Maybe Int -> StringifyNumbers -> Maybe NamingCase -> MutFld ('Postgres pgKind) -> m SQLExp
+
+-- | Generate mutation output expression with given mutation CTE statement.
+--   See Note [Mutation output expression].
+mkMutationOutputExp :: (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => QualifiedTable -> [ColumnInfo ('Postgres pgKind)] -> Maybe Int -> MutationCTE -> MutationOutput ('Postgres pgKind) -> StringifyNumbers -> Maybe NamingCase -> SelectWith
+mkCheckErrorExp :: TableIdentifier -> SQLExp
+checkConstraintIdentifier :: Identifier
+asCheckErrorExtractor :: SQLExp -> Extractor
+instance GHC.Classes.Eq Hasura.Backends.Postgres.Translate.Returning.MutationCTE
+instance GHC.Show.Show Hasura.Backends.Postgres.Translate.Returning.MutationCTE
+
+
+-- | Postgres Translate Insert
+--   
+--   Translates IR inserts to Postgres-specific SQL INSERT statements.
+module Hasura.Backends.Postgres.Translate.Insert
+mkInsertCTE :: Backend ('Postgres pgKind) => InsertQueryP1 ('Postgres pgKind) -> TopLevelCTE
+toSQLConflict :: Backend ('Postgres pgKind) => QualifiedTable -> OnConflictClause ('Postgres pgKind) SQLExp -> SQLConflict
+
+-- | Annotates the check constraint expression with <tt>boolean</tt>
+--   (<a>check-condition</a>)::boolean
+insertCheckConstraint :: BoolExp -> SQLExp
+
+-- | When inserting data, we might need to also enforce the update check
+--   condition, because we might fall back to an update via an <tt>ON
+--   CONFLICT</tt> clause.
+--   
+--   We generate something which looks like
+--   
+--   <pre>
+--   INSERT INTO
+--     ...
+--   ON CONFLICT DO UPDATE SET
+--     ...
+--   RETURNING
+--     *,
+--     CASE WHEN xmax = 0
+--       THEN {insert_cond}
+--       ELSE {update_cond}
+--     END
+--       AS "check__constraint"
+--   </pre>
+--   
+--   See <tt><a>https://stackoverflow.com/q/34762732</a></tt> for more
+--   information on the use of the <tt>xmax</tt> system column.
+insertOrUpdateCheckExpr :: QualifiedTable -> Maybe (OnConflictClause ('Postgres pgKind) SQLExp) -> BoolExp -> Maybe BoolExp -> Extractor
+
+
+-- | Postgres Translate Update
+--   
+--   Translates IR update to Postgres-specific SQL UPDATE statements.
+module Hasura.Backends.Postgres.Translate.Update
+data UpdateCTE
+
+-- | Used for <i>update_table</i> and <i>update_table_by_pk</i>.
+Update :: TopLevelCTE -> UpdateCTE
+
+-- | Used for <i>update_table_many</i>.
+MultiUpdate :: [TopLevelCTE] -> UpdateCTE
+
+-- | Create the update CTE.
+mkUpdateCTE :: forall pgKind. Backend ('Postgres pgKind) => AnnotatedUpdate ('Postgres pgKind) -> UpdateCTE
+instance GHC.Show.Show Hasura.Backends.Postgres.Translate.Update.UpdateCTE
+
+
+-- | Postgres Execute Mutation
+--   
+--   Generic combinators for translating and excecuting IR mutation
+--   statements. Used by the specific mutation modules, e.g. <a>Insert</a>.
+--   
+--   See <a>Execute</a>.
+module Hasura.Backends.Postgres.Execute.Mutation
+data MutateResp (b :: BackendType) a
+MutateResp :: Int -> [ColumnValues b a] -> MutateResp (b :: BackendType) a
+[_mrAffectedRows] :: MutateResp (b :: BackendType) a -> Int
+[_mrReturningColumns] :: MutateResp (b :: BackendType) a -> [ColumnValues b a]
+execUpdateQuery :: forall pgKind m. (MonadTx m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => StringifyNumbers -> Maybe NamingCase -> UserInfo -> (AnnotatedUpdate ('Postgres pgKind), Seq PrepArg) -> m EncJSON
+execDeleteQuery :: forall pgKind m. (MonadTx m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => StringifyNumbers -> Maybe NamingCase -> UserInfo -> (AnnDel ('Postgres pgKind), Seq PrepArg) -> m EncJSON
+execInsertQuery :: (MonadTx m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => StringifyNumbers -> Maybe NamingCase -> UserInfo -> (InsertQueryP1 ('Postgres pgKind), Seq PrepArg) -> m EncJSON
+executeMutationOutputQuery :: forall pgKind m. (MonadTx m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => QualifiedTable -> [ColumnInfo ('Postgres pgKind)] -> Maybe Int -> MutationCTE -> MutationOutput ('Postgres pgKind) -> StringifyNumbers -> Maybe NamingCase -> [PrepArg] -> m EncJSON
+mutateAndFetchCols :: forall pgKind. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => QualifiedTable -> [ColumnInfo ('Postgres pgKind)] -> (MutationCTE, Seq PrepArg) -> StringifyNumbers -> Maybe NamingCase -> TxE QErr (MutateResp ('Postgres pgKind) TxtEncodedVal)
+instance GHC.Generics.Generic (Hasura.Backends.Postgres.Execute.Mutation.MutateResp b a)
+instance (Hasura.RQL.Types.Backend.Backend b, GHC.Show.Show a) => GHC.Show.Show (Hasura.Backends.Postgres.Execute.Mutation.MutateResp b a)
+instance (Hasura.RQL.Types.Backend.Backend b, GHC.Classes.Eq a) => GHC.Classes.Eq (Hasura.Backends.Postgres.Execute.Mutation.MutateResp b a)
+instance (Hasura.RQL.Types.Backend.Backend b, Data.Aeson.Types.ToJSON.ToJSON a) => Data.Aeson.Types.ToJSON.ToJSON (Hasura.Backends.Postgres.Execute.Mutation.MutateResp b a)
+instance (Hasura.RQL.Types.Backend.Backend b, Data.Aeson.Types.FromJSON.FromJSON a) => Data.Aeson.Types.FromJSON.FromJSON (Hasura.Backends.Postgres.Execute.Mutation.MutateResp b a)
+
+
+-- | Postgres Execute Insert
+--   
+--   Translates and executes IR to Postgres-specific SQL.
+--   
+--   See <a>Execute</a>.
+module Hasura.Backends.Postgres.Execute.Insert
+convertToSQLTransaction :: forall pgKind m. (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => AnnotatedInsert ('Postgres pgKind) Void SQLExp -> UserInfo -> Seq PrepArg -> StringifyNumbers -> Maybe NamingCase -> m EncJSON
 
 module Hasura.Backends.Postgres.Schema.Select
 
@@ -20686,6 +20938,58 @@ instance (Hasura.Backends.Postgres.Instances.Schema.PostgresSchema pgKind, Hasur
 instance (Hasura.RQL.Types.Backend.Backend ('Hasura.SQL.Backend.Postgres pgKind), Hasura.Backends.Postgres.Instances.Schema.PostgresSchema pgKind) => Hasura.GraphQL.Schema.Backend.BackendSchema ('Hasura.SQL.Backend.Postgres pgKind)
 instance Hasura.GraphQL.Schema.Backend.BackendSchema ('Hasura.SQL.Backend.Postgres pgKind) => Hasura.GraphQL.Schema.BoolExp.AggregationPredicatesSchema ('Hasura.SQL.Backend.Postgres pgKind)
 instance Hasura.RQL.Types.Backend.Backend ('Hasura.SQL.Backend.Postgres pgKind) => Hasura.GraphQL.Schema.Backend.BackendUpdateOperatorsSchema ('Hasura.SQL.Backend.Postgres pgKind)
+
+
+-- | Postgres Execute subscription
+--   
+--   Multiplex is an optimization which allows us to group similar queries
+--   into a single query, and routing the response rows afterwards. See
+--   <a>https://hasura.io/docs/latest/graphql/core/databases/postgres/subscriptions/execution-and-performance.html</a>
+--   for more details
+--   
+--   See <a>Execute</a>.
+module Hasura.Backends.Postgres.Execute.Subscription
+
+-- | Internal: Used to collect information about various parameters of a
+--   subscription field's AST as we resolve them to SQL expressions.
+data QueryParametersInfo (b :: BackendType)
+QueryParametersInfo :: HashMap Name (ColumnValue b) -> Seq (ColumnValue b) -> HashSet SessionVariable -> QueryParametersInfo (b :: BackendType)
+[_qpiReusableVariableValues] :: QueryParametersInfo (b :: BackendType) -> HashMap Name (ColumnValue b)
+[_qpiSyntheticVariableValues] :: QueryParametersInfo (b :: BackendType) -> Seq (ColumnValue b)
+
+-- | The session variables that are referenced in the query root fld's AST.
+--   This information is used to determine a cohort's required session
+--   variables
+[_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> HashSet SessionVariable
+
+-- | Checks if the provided arguments are valid values for their
+--   corresponding types. | Generates SQL of the format "select
+--   <tt>v1</tt>::t1, <tt>v2</tt>::t2 ..."
+validateVariablesTx :: forall pgKind f m. (Traversable f, MonadTx m, MonadIO m) => f (ColumnValue ('Postgres pgKind)) -> m (ValidatedVariables f)
+newtype MultiplexedQuery
+MultiplexedQuery :: Query -> MultiplexedQuery
+[unMultiplexedQuery] :: MultiplexedQuery -> Query
+mkMultiplexedQuery :: (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => InsOrdHashMap Name (QueryDB ('Postgres pgKind) Void SQLExp) -> MultiplexedQuery
+mkStreamingMultiplexedQuery :: (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => (Name, QueryDB ('Postgres pgKind) Void SQLExp) -> MultiplexedQuery
+
+-- | Resolves an <a>UnresolvedVal</a> by converting <a>UVPG</a> values to
+--   SQL expressions that refer to the <tt>result_vars</tt> input object,
+--   collecting information about various parameters of the query along the
+--   way.
+resolveMultiplexedValue :: (MonadState (QueryParametersInfo ('Postgres pgKind)) m, MonadError QErr m) => SessionVariables -> UnpreparedValue ('Postgres pgKind) -> m SQLExp
+executeMultiplexedQuery :: MonadTx m => MultiplexedQuery -> [(CohortId, CohortVariables)] -> m [(CohortId, ByteString)]
+executeStreamingMultiplexedQuery :: MonadTx m => MultiplexedQuery -> [(CohortId, CohortVariables)] -> m [(CohortId, ByteString, ViaJSON CursorVariableValues)]
+
+-- | Internal; used by both <a>executeMultiplexedQuery</a>,
+--   <a>executeStreamingMultiplexedQuery</a> and
+--   <tt>pgDBSubscriptionExplain</tt>.
+executeQuery :: (MonadTx m, FromRes a) => Query -> [(CohortId, CohortVariables)] -> m a
+instance Data.Hashable.Class.Hashable Hasura.Backends.Postgres.Execute.Subscription.MultiplexedQuery
+instance GHC.Classes.Eq Hasura.Backends.Postgres.Execute.Subscription.MultiplexedQuery
+instance Data.Text.Extended.ToTxt Hasura.Backends.Postgres.Execute.Subscription.MultiplexedQuery
+instance GHC.Base.Monoid (Hasura.Backends.Postgres.Execute.Subscription.QueryParametersInfo b)
+instance GHC.Base.Semigroup (Hasura.Backends.Postgres.Execute.Subscription.QueryParametersInfo b)
+instance GHC.Generics.Generic (Hasura.Backends.Postgres.Execute.Subscription.QueryParametersInfo b)
 
 module Hasura.Backends.MySQL.Instances.Schema
 instance Hasura.GraphQL.Schema.Backend.BackendSchema 'Hasura.SQL.Backend.MySQL
@@ -21984,7 +22288,7 @@ resolveSourceConfig :: (BackendMetadata b, MonadIO m, MonadBaseControl IO m, Mon
 -- | Function that introspects a database for tables, columns, functions
 --   etc.
 resolveDatabaseMetadata :: (BackendMetadata b, MonadIO m, MonadBaseControl IO m, MonadResolveSource m) => SourceMetadata b -> SourceConfig b -> m (Either QErr (DBObjectsIntrospection b))
-parseBoolExpOperations :: (BackendMetadata b, MonadError QErr m, TableCoreInfoRM b m) => ValueParser b m v -> TableName b -> FieldInfoMap (FieldInfo b) -> ColumnReference b -> Value -> m [OpExpG b v]
+parseBoolExpOperations :: (BackendMetadata b, MonadError QErr m) => ValueParser b m v -> FieldInfoMap (FieldInfo b) -> FieldInfoMap (FieldInfo b) -> ColumnReference b -> Value -> m [OpExpG b v]
 buildFunctionInfo :: (BackendMetadata b, MonadError QErr m) => SourceName -> FunctionName b -> SystemDefined -> FunctionConfig -> FunctionPermissionsMap -> RawFunctionInfo b -> Maybe Text -> NamingCase -> m (FunctionInfo b, SchemaDependency)
 updateColumnInEventTrigger :: BackendMetadata b => TableName b -> Column b -> Column b -> TableName b -> EventTriggerConf b -> EventTriggerConf b
 parseCollectableType :: (BackendMetadata b, MonadError QErr m) => CollectableType (ColumnType b) -> Value -> m (PartialSQLExp b)
@@ -21994,7 +22298,7 @@ validateRelationship :: (BackendMetadata b, MonadError QErr m) => TableCache b -
 
 -- | Function that that builds a boolean expression field out of a computed
 --   field
-buildComputedFieldBooleanExp :: (BackendMetadata b, MonadError QErr m, TableCoreInfoRM b m) => BoolExpResolver b m v -> BoolExpRHSParser b m v -> TableName b -> FieldInfoMap (FieldInfo b) -> ComputedFieldInfo b -> Value -> m (AnnComputedFieldBoolExp b v)
+buildComputedFieldBooleanExp :: (BackendMetadata b, MonadError QErr m, TableCoreInfoRM b m) => BoolExpResolver b m v -> BoolExpRHSParser b m v -> FieldInfoMap (FieldInfo b) -> FieldInfoMap (FieldInfo b) -> ComputedFieldInfo b -> Value -> m (AnnComputedFieldBoolExp b v)
 
 -- | Run all operations required to create, update, or migrate the internal
 --   catalog used by the backend for internal bookkeeping, if any. The
@@ -22056,74 +22360,6 @@ instance Hasura.RQL.Types.Backend.Backend b => Autodocodec.Class.HasCodec (Hasur
 instance Hasura.RQL.Types.Backend.Backend b => Autodocodec.Class.HasCodec (Hasura.RQL.DDL.Relationship.Suggest.Mapping b)
 instance Hasura.RQL.Types.Backend.Backend b => Autodocodec.Class.HasCodec (Hasura.RQL.DDL.Relationship.Suggest.SuggestRels b)
 
-
--- | Define and handle v1/metadata API operations to track, untrack, and
---   get logical models.
-module Hasura.LogicalModel.API
-
--- | Default implementation of the <tt>track_logical_model</tt> request
---   payload.
-data TrackLogicalModel (b :: BackendType)
-TrackLogicalModel :: SourceName -> LogicalModelName -> Text -> HashMap LogicalModelArgumentName (ScalarType b) -> Maybe Text -> CustomReturnType b -> TrackLogicalModel (b :: BackendType)
-[tlmSource] :: TrackLogicalModel (b :: BackendType) -> SourceName
-[tlmRootFieldName] :: TrackLogicalModel (b :: BackendType) -> LogicalModelName
-[tlmCode] :: TrackLogicalModel (b :: BackendType) -> Text
-[tlmArguments] :: TrackLogicalModel (b :: BackendType) -> HashMap LogicalModelArgumentName (ScalarType b)
-[tlmDescription] :: TrackLogicalModel (b :: BackendType) -> Maybe Text
-[tlmReturns] :: TrackLogicalModel (b :: BackendType) -> CustomReturnType b
-
--- | API payload for the <tt>get_logical_model</tt> endpoint.
-data GetLogicalModel (b :: BackendType)
-GetLogicalModel :: SourceName -> GetLogicalModel (b :: BackendType)
-[glmSource] :: GetLogicalModel (b :: BackendType) -> SourceName
-
--- | Handler for the <tt>get_logical_model</tt> endpoint.
-runGetLogicalModel :: forall b m. (BackendMetadata b, MetadataM m, HasServerConfigCtx m, MonadIO m, MonadError QErr m) => GetLogicalModel b -> m EncJSON
-
--- | Handler for the <tt>track_logical_model</tt> endpoint. The type
---   'TrackLogicalModel b' (appearing here in wrapped as
---   'BackendTrackLogicalModel b' for <tt>AnyBackend</tt> compatibility) is
---   defined in 'class LogicalModelMetadata'.
-runTrackLogicalModel :: forall b m. (BackendMetadata b, CacheRWM m, MetadataM m, MonadError QErr m, HasServerConfigCtx m, MonadIO m) => Environment -> TrackLogicalModel b -> m EncJSON
-
--- | API payload for the <tt>untrack_logical_model</tt> endpoint.
-data UntrackLogicalModel (b :: BackendType)
-UntrackLogicalModel :: SourceName -> LogicalModelName -> UntrackLogicalModel (b :: BackendType)
-[utlmSource] :: UntrackLogicalModel (b :: BackendType) -> SourceName
-[utlmRootFieldName] :: UntrackLogicalModel (b :: BackendType) -> LogicalModelName
-
--- | Handler for the <tt>untrack_logical_model</tt> endpoint.
-runUntrackLogicalModel :: forall b m. (BackendMetadata b, MonadError QErr m, CacheRWM m, MetadataM m, HasServerConfigCtx m, MonadIO m) => UntrackLogicalModel b -> m EncJSON
-dropLogicalModelInMetadata :: forall b. BackendMetadata b => SourceName -> LogicalModelName -> MetadataModifier
-instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.API.TrackLogicalModel b)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.API.TrackLogicalModel b)
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.LogicalModel.API.GetLogicalModel b)
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.LogicalModel.API.GetLogicalModel b)
-instance GHC.Show.Show (Hasura.LogicalModel.API.UntrackLogicalModel b)
-instance GHC.Classes.Eq (Hasura.LogicalModel.API.UntrackLogicalModel b)
-instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.API.UntrackLogicalModel b)
-instance Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.API.UntrackLogicalModel b)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.API.GetLogicalModel b)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.API.GetLogicalModel b)
-instance Hasura.RQL.Types.Backend.Backend b => Autodocodec.Class.HasCodec (Hasura.LogicalModel.API.TrackLogicalModel b)
-
-
--- | Postgres Translate BoolExp
---   
---   Convert IR boolean expressions to Postgres-specific SQL expressions.
-module Hasura.Backends.Postgres.Translate.BoolExp
-annBoolExp :: (QErrM m, TableCoreInfoRM b m, BackendMetadata b) => BoolExpRHSParser b m v -> TableName b -> FieldInfoMap (FieldInfo b) -> GBoolExp b ColExp -> m (AnnBoolExp b v)
-
--- | Translate an IR boolean expression to an SQL boolean expression.
---   References to columns etc are relative to the given
---   <a>rootReference</a>.
-toSQLBoolExp :: forall pgKind. Backend ('Postgres pgKind) => Qual -> AnnBoolExpSQL ('Postgres pgKind) -> BoolExp
-instance Control.Monad.State.Class.MonadState GHC.Word.Word64 Hasura.Backends.Postgres.Translate.BoolExp.BoolExpM
-instance Control.Monad.Reader.Class.MonadReader Hasura.Backends.Postgres.Translate.BoolExp.BoolExpCtx Hasura.Backends.Postgres.Translate.BoolExp.BoolExpM
-instance GHC.Base.Monad Hasura.Backends.Postgres.Translate.BoolExp.BoolExpM
-instance GHC.Base.Applicative Hasura.Backends.Postgres.Translate.BoolExp.BoolExpM
-instance GHC.Base.Functor Hasura.Backends.Postgres.Translate.BoolExp.BoolExpM
-
 module Hasura.RQL.DDL.Permission.Internal
 
 -- | Intrepet a <a>PermColSpec</a> column specification, which can either
@@ -22134,6 +22370,7 @@ assertPermDefined :: (Backend backend, MonadError QErr m) => RoleName -> PermTyp
 newtype CreatePerm a b
 CreatePerm :: WithTable b (PermDef b a) -> CreatePerm a b
 procBoolExp :: (QErrM m, TableCoreInfoRM b m, BackendMetadata b, GetAggregationPredicatesDeps b) => SourceName -> TableName b -> FieldInfoMap (FieldInfo b) -> BoolExp b -> m (AnnBoolExpPartialSQL b, Seq SchemaDependency)
+annBoolExp :: (QErrM m, TableCoreInfoRM b m, BackendMetadata b) => BoolExpRHSParser b m v -> FieldInfoMap (FieldInfo b) -> FieldInfoMap (FieldInfo b) -> GBoolExp b ColExp -> m (AnnBoolExp b v)
 getDepHeadersFromVal :: Value -> [Text]
 getDependentHeaders :: BoolExp b -> HashSet Text
 data DropPerm b
@@ -22248,292 +22485,55 @@ instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (H
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.ComputedField.AddComputedField b)
 
 
--- | This module relates to the processing of Order-By clauses.
-module Hasura.Backends.Postgres.Translate.Select.Internal.OrderBy
-processOrderByItems :: forall pgKind m. (MonadReader StringifyNumbers m, MonadWriter SelectWriter m, Backend ('Postgres pgKind)) => TableIdentifier -> FieldName -> SimilarArrayFields -> Maybe (NonEmpty PGCol) -> Maybe (NonEmpty (AnnotatedOrderByItem ('Postgres pgKind))) -> m ([(ColumnAlias, SQLExp)], SelectSorting, Maybe SQLExp)
+-- | Define and handle v1/metadata API operations to track, untrack, and
+--   get logical models.
+module Hasura.LogicalModel.API
 
+-- | Default implementation of the <tt>track_logical_model</tt> request
+--   payload.
+data TrackLogicalModel (b :: BackendType)
+TrackLogicalModel :: SourceName -> LogicalModelName -> Text -> HashMap LogicalModelArgumentName (ScalarType b) -> Maybe Text -> CustomReturnType b -> TrackLogicalModel (b :: BackendType)
+[tlmSource] :: TrackLogicalModel (b :: BackendType) -> SourceName
+[tlmRootFieldName] :: TrackLogicalModel (b :: BackendType) -> LogicalModelName
+[tlmCode] :: TrackLogicalModel (b :: BackendType) -> Text
+[tlmArguments] :: TrackLogicalModel (b :: BackendType) -> HashMap LogicalModelArgumentName (ScalarType b)
+[tlmDescription] :: TrackLogicalModel (b :: BackendType) -> Maybe Text
+[tlmReturns] :: TrackLogicalModel (b :: BackendType) -> CustomReturnType b
 
--- | This module defines functions that translate from the Postgres IR into
---   Postgres SQL AST.
---   
---   NOTE: These functions <a>processAnnAggregateSelect</a>,
---   <a>processAnnSimpleSelect</a>, <a>processConnectionSelect</a>, are all
---   mutually recursive.
---   
---   These functions are generally called from the top level functions in
---   Translate.Select, and the call stack looks like:
---   
---   <ul>
---   <li><tt>selectQuerySQL</tt> -&gt; <tt>mkSQLSelect</tt> -&gt;
---   <a>processAnnSimpleSelect</a> -&gt;
---   <a>processSelectParams</a>/<a>processAnnFields</a></li>
---   <li><tt>selectAggregateQuerySQL</tt> -&gt; <tt>mkAggregateSelect</tt>
---   -&gt; <a>processAnnAggregateSelect</a> -&gt;
---   <a>processSelectParams</a>/<a>processAnnFields</a></li>
---   <li><tt>connetionSelectQuerySQL</tt> -&gt; <tt>mkConnectionSelect</tt>
---   -&gt; <tt>processConnectionSelection</tt> -&gt;
---   <a>processSelectParams</a></li>
---   </ul>
---   
---   <a>SelectSource</a> consists of a prefix, a source, a boolean
---   conditional expression, and info on whether sorting or slicing is done
---   (needed to handle the LIMIT optimisation)
-module Hasura.Backends.Postgres.Translate.Select.Internal.Process
-processAnnAggregateSelect :: forall pgKind m. (MonadReader StringifyNumbers m, MonadWriter SelectWriter m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => SourcePrefixes -> FieldName -> AnnAggregateSelect ('Postgres pgKind) -> m (SelectSource, HashMap ColumnAlias SQLExp, Extractor)
-processAnnSimpleSelect :: forall pgKind m. (MonadReader StringifyNumbers m, MonadWriter SelectWriter m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => SourcePrefixes -> FieldName -> PermissionLimitSubQuery -> AnnSimpleSelect ('Postgres pgKind) -> m (SelectSource, HashMap ColumnAlias SQLExp)
-processConnectionSelect :: forall pgKind m. (MonadReader StringifyNumbers m, MonadWriter SelectWriter m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => SourcePrefixes -> FieldName -> TableAlias -> HashMap PGCol PGCol -> ConnectionSelect ('Postgres pgKind) Void SQLExp -> m (ArrayConnectionSource, Extractor, HashMap ColumnAlias SQLExp)
+-- | API payload for the <tt>get_logical_model</tt> endpoint.
+data GetLogicalModel (b :: BackendType)
+GetLogicalModel :: SourceName -> GetLogicalModel (b :: BackendType)
+[glmSource] :: GetLogicalModel (b :: BackendType) -> SourceName
 
+-- | Handler for the <tt>get_logical_model</tt> endpoint.
+runGetLogicalModel :: forall b m. (BackendMetadata b, MetadataM m, HasServerConfigCtx m, MonadIO m, MonadError QErr m) => GetLogicalModel b -> m EncJSON
 
--- | This module defines the top-level translation functions pertaining to
---   streaming selects into Postgres AST.
---   
---   Streaming subscriptions are subscriptions based on a user-provided
---   cursor column. Unlike live queries, streaming subscriptions can be
---   used to only get the part that has changed in the query's response,
---   although this will be dependent on the user's choice of the cursor
---   column. The streaming starts from the initial value provided by the
---   user.
-module Hasura.Backends.Postgres.Translate.Select.Streaming
-selectStreamQuerySQL :: forall pgKind. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => AnnSimpleStreamSelect ('Postgres pgKind) -> Query
-mkStreamSQLSelect :: forall pgKind m. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadWriter CustomSQLCTEs m) => AnnSimpleStreamSelect ('Postgres pgKind) -> m Select
+-- | Handler for the <tt>track_logical_model</tt> endpoint. The type
+--   'TrackLogicalModel b' (appearing here in wrapped as
+--   'BackendTrackLogicalModel b' for <tt>AnyBackend</tt> compatibility) is
+--   defined in 'class LogicalModelMetadata'.
+runTrackLogicalModel :: forall b m. (BackendMetadata b, CacheRWM m, MetadataM m, MonadError QErr m, HasServerConfigCtx m, MonadIO m) => Environment -> TrackLogicalModel b -> m EncJSON
 
+-- | API payload for the <tt>untrack_logical_model</tt> endpoint.
+data UntrackLogicalModel (b :: BackendType)
+UntrackLogicalModel :: SourceName -> LogicalModelName -> UntrackLogicalModel (b :: BackendType)
+[utlmSource] :: UntrackLogicalModel (b :: BackendType) -> SourceName
+[utlmRootFieldName] :: UntrackLogicalModel (b :: BackendType) -> LogicalModelName
 
--- | This module defines the top-level translation functions pertaining to
---   queries that are not aggregation queries, i.e. so-called "simple"
---   selects into Postgres AST.
-module Hasura.Backends.Postgres.Translate.Select.Simple
-
--- | Translates IR to Postgres queries for simple SELECTs (select queries
---   that are not aggregations, including subscriptions).
---   
---   See <a>mkSQLSelect</a> for the Postgres AST.
-selectQuerySQL :: forall pgKind. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => JsonAggSelect -> AnnSimpleSelect ('Postgres pgKind) -> Query
-mkSQLSelect :: forall pgKind m. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadWriter CustomSQLCTEs m) => JsonAggSelect -> AnnSimpleSelect ('Postgres pgKind) -> m Select
-
-
--- | This module defines the top-level translation functions pertaining to
---   translating Connection (i.e. Relay) queries into Postgres AST.
-module Hasura.Backends.Postgres.Translate.Select.Connection
-
--- | Translates IR to Postgres queries for "connection" queries (used for
---   Relay).
---   
---   See <a>mkConnectionSelect</a> for the Postgres AST.
-connectionSelectQuerySQL :: forall pgKind. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => ConnectionSelect ('Postgres pgKind) Void SQLExp -> Query
-mkConnectionSelect :: forall pgKind m. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadWriter CustomSQLCTEs m) => ConnectionSelect ('Postgres pgKind) Void SQLExp -> m (SelectWithG Select)
-
-
--- | This module defines the top-level translation functions pertaining to
---   queries that use aggregation (i.e., <i>not</i> so-called "simple"
---   selects) into Postgres AST.
-module Hasura.Backends.Postgres.Translate.Select.Aggregate
-
--- | Translates IR to Postgres queries for aggregated SELECTs.
---   
---   See <a>mkAggregateSelect</a> for the Postgres AST.
-selectAggregateQuerySQL :: forall pgKind. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => AnnAggregateSelect ('Postgres pgKind) -> Query
-
--- | We process aggregate queries differently because the types of
---   aggregate queries are different. In the <tt>_asnFields</tt> field of
---   an <a>AnnSelectG</a>, we will have a <tt>TableAggregateFieldG</tt>
---   instead of an <tt>AnnFieldG</tt>.
-mkAggregateSelect :: forall pgKind m. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadWriter CustomSQLCTEs m) => AnnAggregateSelect ('Postgres pgKind) -> m Select
-
-
--- | Postgres Translate Select
---   
---   This module is a translation layer between IR and postgres-specific
---   select queries.
---   
---   There are four main types of selects (as distinguished from the IR):
---   
---   <ul>
---   <li>"simple" selects</li>
---   <li>aggregate selects</li>
---   <li>connection selects (used for relay)</li>
---   <li>streaming selects (see
---   Hasura.Backends.Postgres.Translate.Select.Streaming for details)</li>
---   </ul>
-module Hasura.Backends.Postgres.Translate.Select
-
-
--- | Postgres Translate Returning
---   
---   Combinators and helpers for dealing with GraphQL returning statements.
-module Hasura.Backends.Postgres.Translate.Returning
-
--- | The postgres common table expression (CTE) for mutation queries. This
---   CTE expression is used to generate mutation field output expression,
---   see Note [Mutation output expression].
-data MutationCTE
-
--- | A Mutation with check constraint validation (Insert or Update)
-MCCheckConstraint :: TopLevelCTE -> MutationCTE
-
--- | A Select statement which emits mutated table rows
-MCSelectValues :: Select -> MutationCTE
-
--- | A Delete statement
-MCDelete :: SQLDelete -> MutationCTE
-getMutationCTE :: MutationCTE -> TopLevelCTE
-checkPermissionRequired :: MutationCTE -> Bool
-mkDefaultMutFlds :: Backend ('Postgres pgKind) => Maybe [ColumnInfo ('Postgres pgKind)] -> MutationOutput ('Postgres pgKind)
-mkMutFldExp :: (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadWriter CustomSQLCTEs m) => TableIdentifier -> Maybe Int -> StringifyNumbers -> Maybe NamingCase -> MutFld ('Postgres pgKind) -> m SQLExp
-
--- | Generate mutation output expression with given mutation CTE statement.
---   See Note [Mutation output expression].
-mkMutationOutputExp :: (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => QualifiedTable -> [ColumnInfo ('Postgres pgKind)] -> Maybe Int -> MutationCTE -> MutationOutput ('Postgres pgKind) -> StringifyNumbers -> Maybe NamingCase -> SelectWith
-mkCheckErrorExp :: TableIdentifier -> SQLExp
-checkConstraintIdentifier :: Identifier
-asCheckErrorExtractor :: SQLExp -> Extractor
-instance GHC.Classes.Eq Hasura.Backends.Postgres.Translate.Returning.MutationCTE
-instance GHC.Show.Show Hasura.Backends.Postgres.Translate.Returning.MutationCTE
-
-
--- | Postgres Execute subscription
---   
---   Multiplex is an optimization which allows us to group similar queries
---   into a single query, and routing the response rows afterwards. See
---   <a>https://hasura.io/docs/latest/graphql/core/databases/postgres/subscriptions/execution-and-performance.html</a>
---   for more details
---   
---   See <a>Execute</a>.
-module Hasura.Backends.Postgres.Execute.Subscription
-
--- | Internal: Used to collect information about various parameters of a
---   subscription field's AST as we resolve them to SQL expressions.
-data QueryParametersInfo (b :: BackendType)
-QueryParametersInfo :: HashMap Name (ColumnValue b) -> Seq (ColumnValue b) -> HashSet SessionVariable -> QueryParametersInfo (b :: BackendType)
-[_qpiReusableVariableValues] :: QueryParametersInfo (b :: BackendType) -> HashMap Name (ColumnValue b)
-[_qpiSyntheticVariableValues] :: QueryParametersInfo (b :: BackendType) -> Seq (ColumnValue b)
-
--- | The session variables that are referenced in the query root fld's AST.
---   This information is used to determine a cohort's required session
---   variables
-[_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> HashSet SessionVariable
-
--- | Checks if the provided arguments are valid values for their
---   corresponding types. | Generates SQL of the format "select
---   <tt>v1</tt>::t1, <tt>v2</tt>::t2 ..."
-validateVariablesTx :: forall pgKind f m. (Traversable f, MonadTx m, MonadIO m) => f (ColumnValue ('Postgres pgKind)) -> m (ValidatedVariables f)
-newtype MultiplexedQuery
-MultiplexedQuery :: Query -> MultiplexedQuery
-[unMultiplexedQuery] :: MultiplexedQuery -> Query
-mkMultiplexedQuery :: (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => InsOrdHashMap Name (QueryDB ('Postgres pgKind) Void SQLExp) -> MultiplexedQuery
-mkStreamingMultiplexedQuery :: (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => (Name, QueryDB ('Postgres pgKind) Void SQLExp) -> MultiplexedQuery
-
--- | Resolves an <a>UnresolvedVal</a> by converting <a>UVPG</a> values to
---   SQL expressions that refer to the <tt>result_vars</tt> input object,
---   collecting information about various parameters of the query along the
---   way.
-resolveMultiplexedValue :: (MonadState (QueryParametersInfo ('Postgres pgKind)) m, MonadError QErr m) => SessionVariables -> UnpreparedValue ('Postgres pgKind) -> m SQLExp
-executeMultiplexedQuery :: MonadTx m => MultiplexedQuery -> [(CohortId, CohortVariables)] -> m [(CohortId, ByteString)]
-executeStreamingMultiplexedQuery :: MonadTx m => MultiplexedQuery -> [(CohortId, CohortVariables)] -> m [(CohortId, ByteString, ViaJSON CursorVariableValues)]
-
--- | Internal; used by both <a>executeMultiplexedQuery</a>,
---   <a>executeStreamingMultiplexedQuery</a> and
---   <tt>pgDBSubscriptionExplain</tt>.
-executeQuery :: (MonadTx m, FromRes a) => Query -> [(CohortId, CohortVariables)] -> m a
-instance Data.Hashable.Class.Hashable Hasura.Backends.Postgres.Execute.Subscription.MultiplexedQuery
-instance GHC.Classes.Eq Hasura.Backends.Postgres.Execute.Subscription.MultiplexedQuery
-instance Data.Text.Extended.ToTxt Hasura.Backends.Postgres.Execute.Subscription.MultiplexedQuery
-instance GHC.Base.Monoid (Hasura.Backends.Postgres.Execute.Subscription.QueryParametersInfo b)
-instance GHC.Base.Semigroup (Hasura.Backends.Postgres.Execute.Subscription.QueryParametersInfo b)
-instance GHC.Generics.Generic (Hasura.Backends.Postgres.Execute.Subscription.QueryParametersInfo b)
-
-
--- | Postgres Translate Insert
---   
---   Translates IR inserts to Postgres-specific SQL INSERT statements.
-module Hasura.Backends.Postgres.Translate.Insert
-mkInsertCTE :: Backend ('Postgres pgKind) => InsertQueryP1 ('Postgres pgKind) -> TopLevelCTE
-toSQLConflict :: Backend ('Postgres pgKind) => QualifiedTable -> OnConflictClause ('Postgres pgKind) SQLExp -> SQLConflict
-
--- | Annotates the check constraint expression with <tt>boolean</tt>
---   (<a>check-condition</a>)::boolean
-insertCheckConstraint :: BoolExp -> SQLExp
-
--- | When inserting data, we might need to also enforce the update check
---   condition, because we might fall back to an update via an <tt>ON
---   CONFLICT</tt> clause.
---   
---   We generate something which looks like
---   
---   <pre>
---   INSERT INTO
---     ...
---   ON CONFLICT DO UPDATE SET
---     ...
---   RETURNING
---     *,
---     CASE WHEN xmax = 0
---       THEN {insert_cond}
---       ELSE {update_cond}
---     END
---       AS "check__constraint"
---   </pre>
---   
---   See <tt><a>https://stackoverflow.com/q/34762732</a></tt> for more
---   information on the use of the <tt>xmax</tt> system column.
-insertOrUpdateCheckExpr :: QualifiedTable -> Maybe (OnConflictClause ('Postgres pgKind) SQLExp) -> BoolExp -> Maybe BoolExp -> Extractor
-
-
--- | Postgres Translate Update
---   
---   Translates IR update to Postgres-specific SQL UPDATE statements.
-module Hasura.Backends.Postgres.Translate.Update
-data UpdateCTE
-
--- | Used for <i>update_table</i> and <i>update_table_by_pk</i>.
-Update :: TopLevelCTE -> UpdateCTE
-
--- | Used for <i>update_table_many</i>.
-MultiUpdate :: [TopLevelCTE] -> UpdateCTE
-
--- | Create the update CTE.
-mkUpdateCTE :: forall pgKind. Backend ('Postgres pgKind) => AnnotatedUpdate ('Postgres pgKind) -> UpdateCTE
-instance GHC.Show.Show Hasura.Backends.Postgres.Translate.Update.UpdateCTE
-
-
--- | Postgres Translate Delete
---   
---   Tranlates an IR delete term to a Postgres SQL DELETE statement.
---   
---   See <a>execDeleteQuery</a>.
-module Hasura.Backends.Postgres.Translate.Delete
-mkDelete :: Backend ('Postgres pgKind) => AnnDel ('Postgres pgKind) -> SQLDelete
-
-
--- | Postgres Execute Mutation
---   
---   Generic combinators for translating and excecuting IR mutation
---   statements. Used by the specific mutation modules, e.g. <a>Insert</a>.
---   
---   See <a>Execute</a>.
-module Hasura.Backends.Postgres.Execute.Mutation
-data MutateResp (b :: BackendType) a
-MutateResp :: Int -> [ColumnValues b a] -> MutateResp (b :: BackendType) a
-[_mrAffectedRows] :: MutateResp (b :: BackendType) a -> Int
-[_mrReturningColumns] :: MutateResp (b :: BackendType) a -> [ColumnValues b a]
-execUpdateQuery :: forall pgKind m. (MonadTx m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => StringifyNumbers -> Maybe NamingCase -> UserInfo -> (AnnotatedUpdate ('Postgres pgKind), Seq PrepArg) -> m EncJSON
-execDeleteQuery :: forall pgKind m. (MonadTx m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => StringifyNumbers -> Maybe NamingCase -> UserInfo -> (AnnDel ('Postgres pgKind), Seq PrepArg) -> m EncJSON
-execInsertQuery :: (MonadTx m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => StringifyNumbers -> Maybe NamingCase -> UserInfo -> (InsertQueryP1 ('Postgres pgKind), Seq PrepArg) -> m EncJSON
-executeMutationOutputQuery :: forall pgKind m. (MonadTx m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => QualifiedTable -> [ColumnInfo ('Postgres pgKind)] -> Maybe Int -> MutationCTE -> MutationOutput ('Postgres pgKind) -> StringifyNumbers -> Maybe NamingCase -> [PrepArg] -> m EncJSON
-mutateAndFetchCols :: forall pgKind. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => QualifiedTable -> [ColumnInfo ('Postgres pgKind)] -> (MutationCTE, Seq PrepArg) -> StringifyNumbers -> Maybe NamingCase -> TxE QErr (MutateResp ('Postgres pgKind) TxtEncodedVal)
-instance GHC.Generics.Generic (Hasura.Backends.Postgres.Execute.Mutation.MutateResp b a)
-instance (Hasura.RQL.Types.Backend.Backend b, GHC.Show.Show a) => GHC.Show.Show (Hasura.Backends.Postgres.Execute.Mutation.MutateResp b a)
-instance (Hasura.RQL.Types.Backend.Backend b, GHC.Classes.Eq a) => GHC.Classes.Eq (Hasura.Backends.Postgres.Execute.Mutation.MutateResp b a)
-instance (Hasura.RQL.Types.Backend.Backend b, Data.Aeson.Types.ToJSON.ToJSON a) => Data.Aeson.Types.ToJSON.ToJSON (Hasura.Backends.Postgres.Execute.Mutation.MutateResp b a)
-instance (Hasura.RQL.Types.Backend.Backend b, Data.Aeson.Types.FromJSON.FromJSON a) => Data.Aeson.Types.FromJSON.FromJSON (Hasura.Backends.Postgres.Execute.Mutation.MutateResp b a)
-
-
--- | Postgres Execute Insert
---   
---   Translates and executes IR to Postgres-specific SQL.
---   
---   See <a>Execute</a>.
-module Hasura.Backends.Postgres.Execute.Insert
-convertToSQLTransaction :: forall pgKind m. (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => AnnotatedInsert ('Postgres pgKind) Void SQLExp -> UserInfo -> Seq PrepArg -> StringifyNumbers -> Maybe NamingCase -> m EncJSON
+-- | Handler for the <tt>untrack_logical_model</tt> endpoint.
+runUntrackLogicalModel :: forall b m. (BackendMetadata b, MonadError QErr m, CacheRWM m, MetadataM m, HasServerConfigCtx m, MonadIO m) => UntrackLogicalModel b -> m EncJSON
+dropLogicalModelInMetadata :: forall b. BackendMetadata b => SourceName -> LogicalModelName -> MetadataModifier
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.API.TrackLogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.API.TrackLogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.LogicalModel.API.GetLogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.LogicalModel.API.GetLogicalModel b)
+instance GHC.Show.Show (Hasura.LogicalModel.API.UntrackLogicalModel b)
+instance GHC.Classes.Eq (Hasura.LogicalModel.API.UntrackLogicalModel b)
+instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.API.UntrackLogicalModel b)
+instance Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.API.UntrackLogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.API.GetLogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.API.GetLogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => Autodocodec.Class.HasCodec (Hasura.LogicalModel.API.TrackLogicalModel b)
 
 
 -- | Postgres DDL Source Version
@@ -22733,7 +22733,7 @@ convAnnBoolExpPartialSQL :: Applicative f => SessionVariableBuilder f -> AnnBool
 convAnnColumnCaseBoolExpPartialSQL :: Applicative f => SessionVariableBuilder f -> AnnColumnCaseBoolExpPartialSQL ('Postgres 'Vanilla) -> f (AnnColumnCaseBoolExp ('Postgres 'Vanilla) (SQLExpression ('Postgres 'Vanilla)))
 convPartialSQLExp :: Applicative f => SessionVariableBuilder f -> PartialSQLExp ('Postgres 'Vanilla) -> f (SQLExpression ('Postgres 'Vanilla))
 sessVarFromCurrentSetting :: Applicative f => SessionVariableBuilder f
-convBoolExp :: (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) => FieldInfoMap (FieldInfo ('Postgres 'Vanilla)) -> SelPermInfo ('Postgres 'Vanilla) -> BoolExp ('Postgres 'Vanilla) -> SessionVariableBuilder m -> TableName ('Postgres 'Vanilla) -> ValueParser ('Postgres 'Vanilla) m (SQLExpression ('Postgres 'Vanilla)) -> m (AnnBoolExpSQL ('Postgres 'Vanilla))
+convBoolExp :: (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) => FieldInfoMap (FieldInfo ('Postgres 'Vanilla)) -> SelPermInfo ('Postgres 'Vanilla) -> BoolExp ('Postgres 'Vanilla) -> SessionVariableBuilder m -> FieldInfoMap (FieldInfo ('Postgres 'Vanilla)) -> ValueParser ('Postgres 'Vanilla) m (SQLExpression ('Postgres 'Vanilla)) -> m (AnnBoolExpSQL ('Postgres 'Vanilla))
 validateHeaders :: (UserInfoM m, QErrM m) => HashSet Text -> m ()
 onlyPositiveInt :: MonadError QErr m => Int -> m ()
 instance Hasura.Server.Types.HasServerConfigCtx m => Hasura.Server.Types.HasServerConfigCtx (Hasura.RQL.DML.Internal.DMLP1T m)
@@ -23137,22 +23137,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aD9L8. Lens' (CreateEventTriggerQuery b_aD9L8) TriggerOnReplication
-cteqCleanupConfig :: forall b_aD9L8. Lens' (CreateEventTriggerQuery b_aD9L8) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aD9L8. Lens' (CreateEventTriggerQuery b_aD9L8) (Maybe Text)
-cetqWebhook :: forall b_aD9L8. Lens' (CreateEventTriggerQuery b_aD9L8) (Maybe InputWebhook)
-cetqUpdate :: forall b_aD9L8. Lens' (CreateEventTriggerQuery b_aD9L8) (Maybe (SubscribeOpSpec b_aD9L8))
-cetqTable :: forall b_aD9L8. Lens' (CreateEventTriggerQuery b_aD9L8) (TableName b_aD9L8)
-cetqSource :: forall b_aD9L8. Lens' (CreateEventTriggerQuery b_aD9L8) SourceName
-cetqRetryConf :: forall b_aD9L8. Lens' (CreateEventTriggerQuery b_aD9L8) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aD9L8. Lens' (CreateEventTriggerQuery b_aD9L8) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aD9L8. Lens' (CreateEventTriggerQuery b_aD9L8) (Maybe RequestTransform)
-cetqReplace :: forall b_aD9L8. Lens' (CreateEventTriggerQuery b_aD9L8) Bool
-cetqName :: forall b_aD9L8. Lens' (CreateEventTriggerQuery b_aD9L8) TriggerName
-cetqInsert :: forall b_aD9L8. Lens' (CreateEventTriggerQuery b_aD9L8) (Maybe (SubscribeOpSpec b_aD9L8))
-cetqHeaders :: forall b_aD9L8. Lens' (CreateEventTriggerQuery b_aD9L8) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aD9L8. Lens' (CreateEventTriggerQuery b_aD9L8) (Maybe Bool)
-cetqDelete :: forall b_aD9L8. Lens' (CreateEventTriggerQuery b_aD9L8) (Maybe (SubscribeOpSpec b_aD9L8))
+cteqTriggerOnReplication :: forall b_aD9Md. Lens' (CreateEventTriggerQuery b_aD9Md) TriggerOnReplication
+cteqCleanupConfig :: forall b_aD9Md. Lens' (CreateEventTriggerQuery b_aD9Md) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aD9Md. Lens' (CreateEventTriggerQuery b_aD9Md) (Maybe Text)
+cetqWebhook :: forall b_aD9Md. Lens' (CreateEventTriggerQuery b_aD9Md) (Maybe InputWebhook)
+cetqUpdate :: forall b_aD9Md. Lens' (CreateEventTriggerQuery b_aD9Md) (Maybe (SubscribeOpSpec b_aD9Md))
+cetqTable :: forall b_aD9Md. Lens' (CreateEventTriggerQuery b_aD9Md) (TableName b_aD9Md)
+cetqSource :: forall b_aD9Md. Lens' (CreateEventTriggerQuery b_aD9Md) SourceName
+cetqRetryConf :: forall b_aD9Md. Lens' (CreateEventTriggerQuery b_aD9Md) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aD9Md. Lens' (CreateEventTriggerQuery b_aD9Md) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aD9Md. Lens' (CreateEventTriggerQuery b_aD9Md) (Maybe RequestTransform)
+cetqReplace :: forall b_aD9Md. Lens' (CreateEventTriggerQuery b_aD9Md) Bool
+cetqName :: forall b_aD9Md. Lens' (CreateEventTriggerQuery b_aD9Md) TriggerName
+cetqInsert :: forall b_aD9Md. Lens' (CreateEventTriggerQuery b_aD9Md) (Maybe (SubscribeOpSpec b_aD9Md))
+cetqHeaders :: forall b_aD9Md. Lens' (CreateEventTriggerQuery b_aD9Md) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aD9Md. Lens' (CreateEventTriggerQuery b_aD9Md) (Maybe Bool)
+cetqDelete :: forall b_aD9Md. Lens' (CreateEventTriggerQuery b_aD9Md) (Maybe (SubscribeOpSpec b_aD9Md))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
