@@ -177,7 +177,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   -- convert the where clause
   annSQLBoolExp <-
     withPathK "where" $
-      convBoolExp fieldInfoMap selPerm (uqWhere uq) sessVarBldr tableName prepValBldr
+      convBoolExp fieldInfoMap selPerm (uqWhere uq) sessVarBldr fieldInfoMap prepValBldr
 
   resolvedUpdFltr <-
     convAnnBoolExpPartialSQL sessVarBldr $

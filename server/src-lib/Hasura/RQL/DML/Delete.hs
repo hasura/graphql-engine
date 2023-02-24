@@ -74,7 +74,7 @@ validateDeleteQWith
     -- convert the where clause
     annSQLBoolExp <-
       withPathK "where" $
-        convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr tableName (valueParserWithCollectableType prepValBldr)
+        convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr fieldInfoMap (valueParserWithCollectableType prepValBldr)
 
     resolvedDelFltr <-
       convAnnBoolExpPartialSQL sessVarBldr $

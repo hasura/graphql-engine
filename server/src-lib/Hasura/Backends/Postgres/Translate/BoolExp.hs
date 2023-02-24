@@ -5,7 +5,6 @@
 -- Convert IR boolean expressions to Postgres-specific SQL expressions.
 module Hasura.Backends.Postgres.Translate.BoolExp
   ( toSQLBoolExp,
-    annBoolExp,
   )
 where
 
@@ -15,19 +14,15 @@ import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Backends.Postgres.Types.BoolExp
 import Hasura.Backends.Postgres.Types.Function (onArgumentExp)
-import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.BoolExp.AggregationPredicates (AggregationPredicate (..), AggregationPredicateArguments (..), AggregationPredicatesImplementation (..))
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.BoolExp
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
-import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Relationships.Local
-import Hasura.RQL.Types.SchemaCache hiding (BoolExpCtx (..), BoolExpM (..))
-import Hasura.RQL.Types.Table
+import Hasura.RQL.Types.Table ()
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
 
@@ -54,49 +49,6 @@ notEqualsBoolExpBuilder qualColExp rhsExp =
         (S.BENotNull qualColExp)
         (S.BENull rhsExp)
     )
-
-annBoolExp ::
-  (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
-  BoolExpRHSParser b m v ->
-  TableName b ->
-  FieldInfoMap (FieldInfo b) ->
-  GBoolExp b ColExp ->
-  m (AnnBoolExp b v)
-annBoolExp rhsParser rootTable fim boolExp =
-  case boolExp of
-    BoolAnd exps -> BoolAnd <$> procExps exps
-    BoolOr exps -> BoolOr <$> procExps exps
-    BoolNot e -> BoolNot <$> annBoolExp rhsParser rootTable fim e
-    BoolExists (GExists refqt whereExp) ->
-      withPathK "_exists" $ do
-        refFields <- withPathK "_table" $ askFieldInfoMapSource refqt
-        annWhereExp <- withPathK "_where" $ annBoolExp rhsParser rootTable refFields whereExp
-        return $ BoolExists $ GExists refqt annWhereExp
-    BoolField fld -> BoolField <$> annColExp rhsParser rootTable fim fld
-  where
-    procExps = mapM (annBoolExp rhsParser rootTable fim)
-
-annColExp ::
-  (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
-  BoolExpRHSParser b m v ->
-  TableName b ->
-  FieldInfoMap (FieldInfo b) ->
-  ColExp ->
-  m (AnnBoolExpFld b v)
-annColExp rhsParser rootTable colInfoMap (ColExp fieldName colVal) = do
-  colInfo <- askFieldInfo colInfoMap fieldName
-  case colInfo of
-    FIColumn pgi -> AVColumn pgi <$> parseBoolExpOperations (_berpValueParser rhsParser) rootTable colInfoMap (ColumnReferenceColumn pgi) colVal
-    FIRelationship relInfo -> do
-      relBoolExp <- decodeValue colVal
-      relFieldInfoMap <- askFieldInfoMapSource $ riRTable relInfo
-      annRelBoolExp <- annBoolExp rhsParser rootTable relFieldInfoMap $ unBoolExp relBoolExp
-      return $ AVRelationship relInfo annRelBoolExp
-    FIComputedField computedFieldInfo ->
-      AVComputedField <$> buildComputedFieldBooleanExp (BoolExpResolver annBoolExp) rhsParser rootTable colInfoMap computedFieldInfo colVal
-    -- Using remote fields in the boolean expression is not supported.
-    FIRemoteRelationship {} ->
-      throw400 UnexpectedPayload "remote field unsupported"
 
 -- | Translate an IR boolean expression to an SQL boolean expression. References
 -- to columns etc are relative to the given 'rootReference'.

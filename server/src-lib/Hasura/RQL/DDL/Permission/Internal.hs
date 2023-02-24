@@ -8,6 +8,7 @@ module Hasura.RQL.DDL.Permission.Internal
     interpColSpec,
     getDepHeadersFromVal,
     getDependentHeaders,
+    annBoolExp,
     procBoolExp,
   )
 where
@@ -20,12 +21,12 @@ import Data.HashSet qualified as Set
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
-import Hasura.Backends.Postgres.Translate.BoolExp
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BoolExp
+import Hasura.RQL.Types.Column (ColumnReference (ColumnReferenceColumn))
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Permission
@@ -94,9 +95,58 @@ procBoolExp ::
   m (AnnBoolExpPartialSQL b, Seq SchemaDependency)
 procBoolExp source tn fieldInfoMap be = do
   let rhsParser = BoolExpRHSParser parseCollectableType PSESession
-  abe <- annBoolExp rhsParser tn fieldInfoMap $ unBoolExp be
+
+  rootFieldInfoMap <-
+    fmap _tciFieldInfoMap $
+      lookupTableCoreInfo tn
+        `onNothingM` throw500 ("unexpected: " <> tn <<> " doesn't exist")
+
+  abe <- annBoolExp rhsParser rootFieldInfoMap fieldInfoMap $ unBoolExp be
   let deps = getBoolExpDeps source tn abe
   return (abe, Seq.fromList deps)
+
+annBoolExp ::
+  (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
+  BoolExpRHSParser b m v ->
+  FieldInfoMap (FieldInfo b) ->
+  FieldInfoMap (FieldInfo b) ->
+  GBoolExp b ColExp ->
+  m (AnnBoolExp b v)
+annBoolExp rhsParser rootFieldInfoMap fim boolExp =
+  case boolExp of
+    BoolAnd exps -> BoolAnd <$> procExps exps
+    BoolOr exps -> BoolOr <$> procExps exps
+    BoolNot e -> BoolNot <$> annBoolExp rhsParser rootFieldInfoMap fim e
+    BoolExists (GExists refqt whereExp) ->
+      withPathK "_exists" $ do
+        refFields <- withPathK "_table" $ askFieldInfoMapSource refqt
+        annWhereExp <- withPathK "_where" $ annBoolExp rhsParser rootFieldInfoMap refFields whereExp
+        return $ BoolExists $ GExists refqt annWhereExp
+    BoolField fld -> BoolField <$> annColExp rhsParser rootFieldInfoMap fim fld
+  where
+    procExps = mapM (annBoolExp rhsParser rootFieldInfoMap fim)
+
+annColExp ::
+  (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
+  BoolExpRHSParser b m v ->
+  FieldInfoMap (FieldInfo b) ->
+  FieldInfoMap (FieldInfo b) ->
+  ColExp ->
+  m (AnnBoolExpFld b v)
+annColExp rhsParser rootFieldInfoMap colInfoMap (ColExp fieldName colVal) = do
+  colInfo <- askFieldInfo colInfoMap fieldName
+  case colInfo of
+    FIColumn pgi -> AVColumn pgi <$> parseBoolExpOperations (_berpValueParser rhsParser) rootFieldInfoMap colInfoMap (ColumnReferenceColumn pgi) colVal
+    FIRelationship relInfo -> do
+      relBoolExp <- decodeValue colVal
+      relFieldInfoMap <- askFieldInfoMapSource $ riRTable relInfo
+      annRelBoolExp <- annBoolExp rhsParser rootFieldInfoMap relFieldInfoMap $ unBoolExp relBoolExp
+      return $ AVRelationship relInfo annRelBoolExp
+    FIComputedField computedFieldInfo ->
+      AVComputedField <$> buildComputedFieldBooleanExp (BoolExpResolver annBoolExp) rhsParser rootFieldInfoMap colInfoMap computedFieldInfo colVal
+    -- Using remote fields in the boolean expression is not supported.
+    FIRemoteRelationship {} ->
+      throw400 UnexpectedPayload "remote field unsupported"
 
 getDepHeadersFromVal :: Value -> [Text]
 getDepHeadersFromVal val = case val of

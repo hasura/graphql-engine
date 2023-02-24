@@ -25,6 +25,7 @@ module Hasura.RQL.DDL.Permission
     PermInfo,
     buildPermInfo,
     addPermissionToMetadata,
+    annBoolExp,
   )
 where
 

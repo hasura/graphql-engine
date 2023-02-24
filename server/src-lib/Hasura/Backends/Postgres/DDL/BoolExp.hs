@@ -34,16 +34,15 @@ import Hasura.SQL.Types
 parseBoolExpOperations ::
   forall pgKind m v.
   ( Backend ('Postgres pgKind),
-    MonadError QErr m,
-    TableCoreInfoRM ('Postgres pgKind) m
+    MonadError QErr m
   ) =>
   ValueParser ('Postgres pgKind) m v ->
-  QualifiedTable ->
+  FieldInfoMap (FieldInfo ('Postgres pgKind)) ->
   FieldInfoMap (FieldInfo ('Postgres pgKind)) ->
   ColumnReference ('Postgres pgKind) ->
   Value ->
   m [OpExpG ('Postgres pgKind) v]
-parseBoolExpOperations rhsParser rootTable fim columnRef value = do
+parseBoolExpOperations rhsParser rootFieldInfoMap fim columnRef value = do
   restrictJSONColumn
   withPathK (toTxt columnRef) $ parseOperations columnRef value
   where
@@ -247,10 +246,7 @@ parseBoolExpOperations rhsParser rootTable fim columnRef value = do
             [] -> throw400 Unexpected "path cannot be empty"
             [col] -> go IsCurrent fim col
             [String "$", col] -> do
-              rootTableInfo <-
-                lookupTableCoreInfo rootTable
-                  >>= flip onNothing (throw500 $ "unexpected: " <> rootTable <<> " doesn't exist")
-              go IsRoot (_tciFieldInfoMap rootTableInfo) col
+              go IsRoot rootFieldInfoMap col
             _ -> throw400 NotSupported "Relationship references are not supported in column comparison RHS"
           _ -> throw400 Unexpected "a boolean expression JSON must be either a string or an array"
           where
@@ -306,12 +302,12 @@ buildComputedFieldBooleanExp ::
   ) =>
   BoolExpResolver ('Postgres pgKind) m v ->
   BoolExpRHSParser ('Postgres pgKind) m v ->
-  TableName ('Postgres pgKind) ->
+  FieldInfoMap (FieldInfo ('Postgres pgKind)) ->
   FieldInfoMap (FieldInfo ('Postgres pgKind)) ->
   ComputedFieldInfo ('Postgres pgKind) ->
   Value ->
   m (AnnComputedFieldBoolExp ('Postgres pgKind) v)
-buildComputedFieldBooleanExp boolExpResolver rhsParser rootTable colInfoMap ComputedFieldInfo {..} colVal = do
+buildComputedFieldBooleanExp boolExpResolver rhsParser rootFieldInfoMap colInfoMap ComputedFieldInfo {..} colVal = do
   let ComputedFieldFunction {..} = _cfiFunction
   case toList _cffInputArgs of
     [] -> do
@@ -321,11 +317,11 @@ buildComputedFieldBooleanExp boolExpResolver rhsParser rootTable colInfoMap Comp
         <$> case _cfiReturnType of
           CFRScalar scalarType ->
             CFBEScalar
-              <$> parseBoolExpOperations (_berpValueParser rhsParser) rootTable colInfoMap (ColumnReferenceComputedField _cfiName scalarType) colVal
+              <$> parseBoolExpOperations (_berpValueParser rhsParser) rootFieldInfoMap colInfoMap (ColumnReferenceComputedField _cfiName scalarType) colVal
           CFRSetofTable table -> do
             tableBoolExp <- decodeValue colVal
             tableFieldInfoMap <- askFieldInfoMapSource table
-            annTableBoolExp <- (getBoolExpResolver boolExpResolver) rhsParser table tableFieldInfoMap $ unBoolExp tableBoolExp
+            annTableBoolExp <- (getBoolExpResolver boolExpResolver) rhsParser tableFieldInfoMap tableFieldInfoMap $ unBoolExp tableBoolExp
             pure $ CFBETable table annTableBoolExp
     _ ->
       throw400

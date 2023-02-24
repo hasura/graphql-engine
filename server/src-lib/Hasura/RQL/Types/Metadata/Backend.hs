@@ -109,10 +109,10 @@ class
     m (Either QErr (DBObjectsIntrospection b))
 
   parseBoolExpOperations ::
-    (MonadError QErr m, TableCoreInfoRM b m) =>
+    (MonadError QErr m) =>
     ValueParser b m v ->
-    TableName b ->
-    FieldInfoMap (FieldInfo b) ->
+    FieldInfoMap (FieldInfo b) -> -- The root table's FieldInfoMap
+    FieldInfoMap (FieldInfo b) -> -- The FieldInfoMap of the table currently "in focus"
     ColumnReference b ->
     Value ->
     m [OpExpG b v]
@@ -172,8 +172,8 @@ class
     ) =>
     BoolExpResolver b m v ->
     BoolExpRHSParser b m v ->
-    TableName b ->
-    FieldInfoMap (FieldInfo b) ->
+    FieldInfoMap (FieldInfo b) -> -- The root table's FieldInfoMap
+    FieldInfoMap (FieldInfo b) -> -- The FieldInfoMap of the table currently "in focus"
     ComputedFieldInfo b ->
     Value ->
     m (AnnComputedFieldBoolExp b v)

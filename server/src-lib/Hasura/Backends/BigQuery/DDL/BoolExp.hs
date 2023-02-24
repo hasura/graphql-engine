@@ -7,7 +7,6 @@ import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Text.Extended
-import Hasura.Backends.BigQuery.Types
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -20,12 +19,12 @@ parseBoolExpOperations ::
   forall m v.
   (MonadError QErr m) =>
   ValueParser 'BigQuery m v ->
-  TableName ->
+  FieldInfoMap (FieldInfo 'BigQuery) ->
   FieldInfoMap (FieldInfo 'BigQuery) ->
   ColumnReference 'BigQuery ->
   J.Value ->
   m [OpExpG 'BigQuery v]
-parseBoolExpOperations rhsParser _table _fields columnRef value =
+parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value =
   withPathK (toTxt columnRef) $ parseOperations (columnReferenceType columnRef) value
   where
     parseWithTy ty = rhsParser (CollectableTypeScalar ty)
