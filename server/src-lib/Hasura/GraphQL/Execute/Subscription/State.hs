@@ -64,20 +64,23 @@ import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
 -- NOTE!: This must be kept consistent with a websocket connection's
 -- 'OperationMap', in 'onClose' and 'onStart'.
 data SubscriptionsState = SubscriptionsState
-  { _ssLiveQueryMap :: PollerMap (),
+  { _ssLiveQueryOptions :: LiveQueriesOptions,
+    _ssStreamQueryOptions :: StreamQueriesOptions,
+    _ssLiveQueryMap :: PollerMap (),
     _ssStreamQueryMap :: PollerMap (STM.TVar CursorVariableValues),
     -- | A hook function which is run after each fetch cycle
     _ssPostPollHook :: SubscriptionPostPollHook,
     _ssAsyncActions :: AsyncActionSubscriptionState
   }
 
-initSubscriptionsState :: SubscriptionPostPollHook -> IO SubscriptionsState
-initSubscriptionsState pollHook =
+initSubscriptionsState ::
+  LiveQueriesOptions -> StreamQueriesOptions -> SubscriptionPostPollHook -> IO SubscriptionsState
+initSubscriptionsState liveQOptions streamQOptions pollHook =
   STM.atomically $
-    SubscriptionsState <$> STMMap.new <*> STMMap.new <*> pure pollHook <*> TMap.new
+    SubscriptionsState liveQOptions <$> pure streamQOptions <*> STMMap.new <*> STMMap.new <*> pure pollHook <*> TMap.new
 
-dumpSubscriptionsState :: Bool -> LiveQueriesOptions -> StreamQueriesOptions -> SubscriptionsState -> IO J.Value
-dumpSubscriptionsState extended liveQOpts streamQOpts (SubscriptionsState lqMap streamMap _ _) = do
+dumpSubscriptionsState :: Bool -> SubscriptionsState -> IO J.Value
+dumpSubscriptionsState extended (SubscriptionsState liveQOpts streamQOpts lqMap streamMap _ _) = do
   lqMapJ <- dumpPollerMap extended lqMap
   streamMapJ <- dumpPollerMap extended streamMap
   return $
@@ -147,7 +150,6 @@ addLiveQuery ::
   PrometheusMetrics ->
   SubscriberMetadata ->
   SubscriptionsState ->
-  LiveQueriesOptions ->
   SourceName ->
   ParameterizedQueryHash ->
   -- | operation name of the query
@@ -163,7 +165,6 @@ addLiveQuery
   prometheusMetrics
   subscriberMetadata
   subscriptionState
-  lqOpts
   source
   parameterizedQueryHash
   operationName
@@ -205,7 +206,7 @@ addLiveQuery
 
     pure $ SubscriberDetails handlerId cohortKey subscriberId
     where
-      SubscriptionsState lqMap _ postPollHook _ = subscriptionState
+      SubscriptionsState lqOpts _ lqMap _ postPollHook _ = subscriptionState
       SubscriptionsOptions _ refetchInterval = lqOpts
       SubscriptionQueryPlan (ParameterizedSubscriptionQueryPlan role query) sourceConfig cohortId resolvedConnectionTemplate cohortKey _ = plan
 
@@ -233,7 +234,6 @@ addStreamSubscriptionQuery ::
   PrometheusMetrics ->
   SubscriberMetadata ->
   SubscriptionsState ->
-  StreamQueriesOptions ->
   SourceName ->
   ParameterizedQueryHash ->
   -- | operation name of the query
@@ -251,7 +251,6 @@ addStreamSubscriptionQuery
   prometheusMetrics
   subscriberMetadata
   subscriptionState
-  streamQOpts
   source
   parameterizedQueryHash
   operationName
@@ -295,7 +294,7 @@ addStreamSubscriptionQuery
 
     pure $ SubscriberDetails handlerId (cohortKey, cohortCursorTVar) subscriberId
     where
-      SubscriptionsState _ streamQueryMap postPollHook _ = subscriptionState
+      SubscriptionsState _ streamQOpts _ streamQueryMap postPollHook _ = subscriptionState
       SubscriptionsOptions _ refetchInterval = streamQOpts
       SubscriptionQueryPlan (ParameterizedSubscriptionQueryPlan role query) sourceConfig cohortId resolvedConnectionTemplate cohortKey _ = plan
 

@@ -340,7 +340,8 @@ streamingSubscriptionPollingSpec srcConfig = do
       dummyPromMetrics <- runIO makeDummyPrometheusMetrics
 
       subscriptionState <- do
-        runIO $ initSubscriptionsState (const (pure ()))
+        let subOptions = mkSubscriptionsOptions Nothing Nothing
+        runIO $ initSubscriptionsState subOptions subOptions (const (pure ()))
 
       let requestId1 = RequestId "request-id1"
           requestId2 = RequestId "request-id2"
@@ -369,7 +370,6 @@ streamingSubscriptionPollingSpec srcConfig = do
             t <- liftIO $ getFormattedTime Nothing
             liftIO $ putStrLn $ LBS.toString $ A.encode $ EngineLog t logLevel logType logDetail
 
-          subOptions = mkSubscriptionsOptions Nothing Nothing
           addStreamSubQuery subscriberMetadata reqId =
             addStreamSubscriptionQuery
               @('Postgres 'Vanilla)
@@ -378,7 +378,6 @@ streamingSubscriptionPollingSpec srcConfig = do
               dummyPromMetrics
               subscriberMetadata
               subscriptionState
-              subOptions
               SNDefault
               dummyParamQueryHash
               Nothing

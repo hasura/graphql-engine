@@ -15,7 +15,6 @@ import Data.Environment qualified as Env
 import Data.Text (pack)
 import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Execute.Backend qualified as EB
-import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Execute.Subscription.State qualified as ES
 import Hasura.GraphQL.Logging
 import Hasura.GraphQL.Transport.HTTP (MonadExecuteQuery)
@@ -111,8 +110,6 @@ createWSServerEnv ::
   (MonadIO m) =>
   L.Logger L.Hasura ->
   ES.SubscriptionsState ->
-  ES.LiveQueriesOptions ->
-  ES.StreamQueriesOptions ->
   IO (SchemaCache, SchemaCacheVer) ->
   HTTP.Manager ->
   CorsPolicy ->
@@ -127,8 +124,6 @@ createWSServerEnv ::
 createWSServerEnv
   logger
   lqState
-  lqOpts
-  streamQOpts
   getSchemaCache
   httpManager
   corsPolicy
@@ -144,8 +139,6 @@ createWSServerEnv
       WSServerEnv
         logger
         lqState
-        lqOpts
-        streamQOpts
         getSchemaCache
         httpManager
         corsPolicy

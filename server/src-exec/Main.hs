@@ -17,14 +17,15 @@ import Database.PG.Query qualified as PG
 import GHC.Debug.Stub
 import GHC.TypeLits (Symbol)
 import Hasura.App
-import Hasura.App.State
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Connection.Settings
 import Hasura.GC qualified as GC
 import Hasura.Logging (Hasura, LogLevel (..), defaultEnabledEngineLogTypes)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema
+import Hasura.Server.App (Loggers (..), ServerCtx (..))
 import Hasura.Server.Init
+import Hasura.Server.Init.FeatureFlag qualified as FeatureFlag
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Migrate (downgradeCatalog)
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
@@ -78,8 +79,8 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
 
       -- It'd be nice if we didn't have to call runManagedT twice here, but
       -- there is a data dependency problem since the call to runPGMetadataStorageApp
-      -- below depends on appCtx.
-      runManagedT (initialiseContext env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways) $ \(appCtx, appEnv) -> do
+      -- below depends on serverCtx.
+      runManagedT (initialiseServerCtx env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways (FeatureFlag.checkFeatureFlag env)) $ \serverCtx@ServerCtx {..} -> do
         -- Catches the SIGTERM signal and initiates a graceful shutdown.
         -- Graceful shutdown for regular HTTP requests is already implemented in
         -- Warp, and is triggered by invoking the 'closeSocket' callback.
@@ -87,17 +88,20 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
         -- once again, we terminate the process immediately.
 
         liftIO $ do
-          void $ Signals.installHandler Signals.sigTERM (Signals.CatchOnce (shutdownGracefully $ appEnvShutdownLatch appEnv)) Nothing
-          void $ Signals.installHandler Signals.sigINT (Signals.CatchOnce (shutdownGracefully $ appEnvShutdownLatch appEnv)) Nothing
+          void $ Signals.installHandler Signals.sigTERM (Signals.CatchOnce (shutdownGracefully scShutdownLatch)) Nothing
+          void $ Signals.installHandler Signals.sigINT (Signals.CatchOnce (shutdownGracefully scShutdownLatch)) Nothing
 
-        let Loggers _ logger _ = appEnvLoggers appEnv
+        let Loggers _ logger pgLogger = scLoggers
 
         _idleGCThread <-
           C.forkImmortal "ourIdleGC" logger $
             GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 
-        flip runPGMetadataStorageAppT (appCtx, appEnv) . lowerManagedT $ do
-          runHGEServer (const $ pure ()) env serveOptions appCtx appEnv initTime Nothing ekgStore
+        -- TODO: why don't we just run a reader with ServerCtx from here?
+        -- the AppContext doesn't add any new information
+        let appContext = AppContext scManager pgLogger scMetadataDbPool
+        flip runPGMetadataStorageAppT appContext . lowerManagedT $ do
+          runHGEServer (const $ pure ()) env serveOptions serverCtx initTime Nothing ekgStore (FeatureFlag.checkFeatureFlag env)
     HCExport -> do
       GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo fetchMetadataFromCatalog

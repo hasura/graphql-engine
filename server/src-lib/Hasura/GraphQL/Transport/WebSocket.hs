@@ -788,8 +788,6 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
     WSServerEnv
       logger
       subscriptionsState
-      lqOpts
-      streamQOpts
       getSchemaCache
       _
       _
@@ -906,7 +904,6 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
               (_wsePrometheusMetrics serverEnv)
               subscriberMetadata
               subscriptionsState
-              lqOpts
               sourceName
               parameterizedQueryHash
               opName
@@ -933,7 +930,6 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
             (_wsePrometheusMetrics serverEnv)
             subscriberMetadata
             subscriptionsState
-            streamQOpts
             sourceName
             parameterizedQueryHash
             opName
