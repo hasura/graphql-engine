@@ -711,50 +711,48 @@
   vertical-align: middle;
 }
 .selectBox {
+  background-color: #ffffff;
   font-family: 'Gudea';
   font-size: 15px;
   font-weight: bold;
   color: #505050;
-  padding: 16px 16px;
-  display: inline-block;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: row;
   align-items: center;
+  gap: 12px;
   .selectBoxRow {
     display: inline-block;
   }
   span {
-    min-width: 100px;
-    padding-right: 12px;
+    display: block;
+    flex-shrink: 1;
+    white-space: nowrap;
   }
 }
 .dropDownBtn {
   min-width: 180px;
-  button {
-    width: 100%;
-    border-radius: 2px;
-    border: solid 1px #dddddd;
+  width: 100%;
+  border-radius: 2px;
+  border: solid 1px #dddddd;
+  background-color: #ffffff;
+  font-family: 'Gudea';
+  font-size: 15px;
+  font-weight: bold;
+  color: #505050;
+  padding: 7px 12px;
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  &:focus {
+    outline: none;
+    border: solid 1px #f8c533;
+  }
+  &:hover {
+    border: solid 1px #f8c533;
     background-color: #ffffff;
-    font-family: 'Gudea';
-    font-size: 15px;
-    font-weight: bold;
-    color: #505050;
-    padding: 7px 12px;
-    min-width: 140px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    position: relative;
-    img {
-      position: absolute;
-      right: 12px;
-    }
-    &:focus {
-      outline: none;
-      border: solid 1px #f8c533;
-    }
-    &:hover {
-      border: solid 1px #f8c533;
-      background-color: #ffffff;
-    }
   }
   span {
     padding-right: 0;
@@ -787,6 +785,8 @@
 /* common checkbox */
 .commonCheckBox,
 .defaultCheckBox {
+  min-width: 110px;
+
   input[type='checkbox'] {
     position: absolute; // take it out of document flow
     opacity: 0; // hide it
@@ -836,7 +836,7 @@
       content: '';
       position: absolute;
       left: 7px;
-      top: 3px;
+      top: 5px;
       width: 5px;
       height: 10px;
       border: solid white;
