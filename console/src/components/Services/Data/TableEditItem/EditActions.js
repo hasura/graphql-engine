@@ -61,13 +61,33 @@ const editItem = (tableName, colValues) => {
         _defaultArray.push(colName);
       } else {
         if (Integers.indexOf(colType) > 0) {
-          _setObject[colName] = parseInt(colValue, 10);
+          /*
+            Hasura GraphQL Engine server will accept integers sent as string, and will interpret them correctly.
+            Better solution would probably be to check if the server flag(HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES) is turned on through example: "/v1alpha1/config",
+            and only then enforce sending string value instead of number. 
+          */
+          _setObject[colName] = colValue;
+          // _setObject[colName] = parseInt(colValue, 10); // Do not use this because of the issue: https://github.com/hasura/graphql-engine/issues/9386
         } else if (Reals.indexOf(colType) > 0) {
-          _setObject[colName] = parseFloat(colValue);
-        } else if (colType === 'boolean') {
-          if (colValue === 'true' || colValue === true) {
+          /*
+            Hasura GraphQL Engine server will accept floats sent as string, and will interpret them correctly.
+            Better solution would probably be to check if the server flag(HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES) is turned on through example: "/v1alpha1/config",
+            and only then enforce sending string value instead of number. 
+          */
+          _setObject[colName] = colValue;
+          // _setObject[colName] = parseFloat(colValue, 10) || colValue;  // Do not use this because of the issue: https://github.com/hasura/graphql-engine/issues/9386
+        } else if (colType === dataSource.columnDataTypes.BOOLEAN) {
+          if (
+            `${colValue}`.toLowerCase() === 'true' ||
+            `${colValue}` === '1' ||
+            colValue === true
+          ) {
             _setObject[colName] = true;
-          } else if (colValue === 'false' || colValue === false) {
+          } else if (
+            `${colValue}`.toLowerCase() === 'false' ||
+            `${colValue}` === '0' ||
+            colValue === false
+          ) {
             _setObject[colName] = false;
           } else {
             _setObject[colName] = null;

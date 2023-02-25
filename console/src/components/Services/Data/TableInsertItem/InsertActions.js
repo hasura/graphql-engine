@@ -1,6 +1,6 @@
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from '../../../../utils/requestAction';
-import { Reals } from '../constants';
+import { Integers, Reals } from '../constants';
 
 import {
   showErrorNotification,
@@ -97,17 +97,40 @@ const insertItem = (tableName, colValues, isMigration = false) => {
     const columns = currentTableInfo.columns;
     let error = false;
     let errorMessage = '';
+
     Object.keys(colValues).map(colName => {
       const colSchema = columns.find(x => x.column_name === colName);
       const colType = colSchema.data_type;
       const colValue = colValues[colName];
 
-      if (Reals.indexOf(colType) > 0) {
-        insertObject[colName] = parseFloat(colValue, 10) || colValue;
+      if (Integers.indexOf(colType) > 0) {
+        /*
+          Hasura GraphQL Engine server will accept integers sent as string, and will interpret them correctly.
+          Better solution would probably be to check if the server flag(HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES) is turned on through example: "/v1alpha1/config",
+          and only then enforce sending string value instead of number. 
+        */
+        insertObject[colName] = colValue;
+        // insertObject[colName] = parseInt(colValue, 10); // Do not use this because of the issue: https://github.com/hasura/graphql-engine/issues/9386
+      } else if (Reals.indexOf(colType) > 0) {
+        /*
+          Hasura GraphQL Engine server will accept floats sent as string, and will interpret them correctly.
+          Better solution would probably be to check if the server flag(HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES) is turned on through example: "/v1alpha1/config",
+          and only then enforce sending string value instead of number. 
+        */
+        insertObject[colName] = colValue;
+        // insertObject[colName] = parseFloat(colValue, 10) || colValue;  // Do not use this because of the issue: https://github.com/hasura/graphql-engine/issues/9386
       } else if (colType === dataSource.columnDataTypes.BOOLEAN) {
-        if (colValue === 'true' || colValue === true) {
+        if (
+          `${colValue}`.toLowerCase() === 'true' ||
+          `${colValue}` === '1' ||
+          colValue === true
+        ) {
           insertObject[colName] = true;
-        } else if (colValue === 'false' || colValue === false) {
+        } else if (
+          `${colValue}`.toLowerCase() === 'false' ||
+          `${colValue}` === '0' ||
+          colValue === false
+        ) {
           insertObject[colName] = false;
         } else {
           insertObject[colName] = null;
