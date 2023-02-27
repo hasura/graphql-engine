@@ -14,6 +14,7 @@ import FilterTypeInput from './FilterTypeInput';
 import TimeRangeFilter from './TimeRangeFilter';
 import FilterTypeCheckbox from './FilterTypeCheckbox';
 import ComposeDropdownFilter from './ComposeDropdownFilter';
+import { DocumentNode } from 'graphql';
 
 /*
  * Dropdown filters are not rendered. The pattern ensures that data for
@@ -40,7 +41,7 @@ const GenerateFilters = ({
   filters,
   values,
   selectAll,
-}) => {
+}: any) => {
   const filtersHtml = [];
   const [dropdownFilters, nonDropdownFilters] = splitByType(
     filters,
@@ -50,47 +51,49 @@ const GenerateFilters = ({
     return null;
   }
   const hOrderFn = compose(onChange);
-  nonDropdownFilters.forEach((filter, i) => {
-    const { type, value } = filter;
-    const onFilterChange = hOrderFn(value);
-    switch (type) {
-      case FILTER_TYPE_INPUT:
-        filtersHtml.push(
-          <FilterTypeInput
-            key={i}
-            id={value}
-            title={getTitle(value)}
-            onChange={onFilterChange}
-          />
-        );
-        break;
-      case FILTER_TYPE_DROPDOWN_DEFAULT:
-        filtersHtml.push(
-          <TimeRangeFilter
-            key={i}
-            id={value}
-            title={getTitle(value)}
-            onChange={onFilterChange}
-            filters={values}
-            options={retrieveDefaultDropdownOptions(value)}
-          />
-        );
-        break;
-      case FILTER_TYPE_CHECKBOX:
-        filtersHtml.push(
-          <FilterTypeCheckbox
-            key={i}
-            id={value}
-            title={getTitle(value)}
-            onChange={onFilterChange}
-            filters={values}
-          />
-        );
-        break;
-      default:
-        console.error('Unsupported type');
+  nonDropdownFilters.forEach(
+    (filter: { type: any; value: any }, i: React.Key | null | undefined) => {
+      const { type, value } = filter;
+      const onFilterChange = hOrderFn(value);
+      switch (type) {
+        case FILTER_TYPE_INPUT:
+          filtersHtml.push(
+            <FilterTypeInput
+              key={i}
+              id={value}
+              title={getTitle(value)}
+              onChange={onFilterChange}
+            />
+          );
+          break;
+        case FILTER_TYPE_DROPDOWN_DEFAULT:
+          filtersHtml.push(
+            <TimeRangeFilter
+              key={i}
+              id={value}
+              title={getTitle(value)}
+              onChange={onFilterChange}
+              filters={values}
+              options={retrieveDefaultDropdownOptions(value)}
+            />
+          );
+          break;
+        case FILTER_TYPE_CHECKBOX:
+          filtersHtml.push(
+            <FilterTypeCheckbox
+              key={i}
+              id={value}
+              title={getTitle(value)}
+              onChange={onFilterChange}
+              filters={values}
+            />
+          );
+          break;
+        default:
+          console.error('Unsupported type');
+      }
     }
-  });
+  );
 
   if (dropdownFilters.length > 0) {
     filtersHtml.push(
@@ -109,7 +112,18 @@ const GenerateFilters = ({
     );
   }
 
-  return filtersHtml;
+  return (
+    <div
+      className="grid"
+      style={{
+        backgroundColor: '#f5f5f5',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gridGap: '2px',
+      }}
+    >
+      {filtersHtml}
+    </div>
+  );
 };
 
 export default GenerateFilters;
