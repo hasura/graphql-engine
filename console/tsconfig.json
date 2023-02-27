@@ -18,7 +18,8 @@
     "noImplicitReturns": true,
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "skipLibCheck": true
   },
   "exclude": [
     "node_modules",

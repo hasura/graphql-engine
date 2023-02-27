@@ -50,7 +50,7 @@ export const createControlPlaneClient = (
 
     const request = subscriptionsClient.request({
       query: queryDoc,
-      variables,
+      variables: variables || {},
     });
     const { unsubscribe } = request.subscribe({
       next: (data: any) => {
