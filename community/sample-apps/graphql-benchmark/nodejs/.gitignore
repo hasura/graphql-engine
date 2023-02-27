@@ -1,0 +1,4 @@
+node_modules/
+dist/
+report.hasura.json
+report.node.json
