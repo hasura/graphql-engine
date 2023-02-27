@@ -362,7 +362,9 @@ export const getCurrTimeForFileName = () => {
 };
 
 export const convertDateTimeToLocale = (dateTime: string | Date | number) => {
-  return moment(dateTime, moment.ISO_8601).format('ddd, MMM Do HH:mm:ss Z');
+  return moment(dateTime, moment.ISO_8601).format(
+    'ddd, MMM, yyyy, Do HH:mm:ss Z'
+  );
 };
 
 export const isConsoleError = (x: any): x is Error => {
