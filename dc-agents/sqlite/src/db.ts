@@ -1,5 +1,4 @@
 import { Config } from "./config";
-import { Sequelize } from 'sequelize';
 import { DB_ALLOW_LIST, DB_CREATE, DB_PRIVATECACHE, DB_READONLY } from "./environment";
 import SQLite from 'sqlite3';
 
@@ -13,23 +12,6 @@ const createMode = DB_CREATE       ? SQLite.OPEN_CREATE       : 0; // Flag style
 const cacheMode  = DB_PRIVATECACHE ? SQLite.OPEN_PRIVATECACHE : SQLite.OPEN_SHAREDCACHE;
 export const defaultMode = readMode | createMode | cacheMode;
 export const createDbMode = SQLite.OPEN_CREATE | readMode | cacheMode;
-
-export function connect(config: Config, sqlLogger: SqlLogger): Sequelize {
-  if(DB_ALLOW_LIST != null) {
-    if(DB_ALLOW_LIST.includes(config.db)) {
-      throw new Error(`Database ${config.db} is not present in DB_ALLOW_LIST 😭`);
-    }
-  }
-
-  const db = new Sequelize({
-    dialect: 'sqlite',
-    storage: config.db,
-    dialectOptions: { mode: defaultMode },
-    logging: sqlLogger
-  });
-
-  return db;
-};
 
 export type Connection = {
   query: (query: string, params?: Record<string, unknown>) => Promise<Array<any>>,

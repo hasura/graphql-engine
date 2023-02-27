@@ -5,7 +5,7 @@ import { explain, queryData } from './query';
 import { getConfig, tryGetConfig } from './config';
 import { capabilitiesResponse } from './capabilities';
 import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse, ExplainResponse, RawRequest, RawResponse, ErrorResponse, MutationRequest, MutationResponse, DatasetTemplateName, DatasetGetTemplateResponse, DatasetCreateCloneRequest, DatasetCreateCloneResponse, DatasetDeleteCloneResponse } from '@hasura/dc-api-types';
-import { connect } from './db';
+import { defaultMode, withConnection } from './db';
 import metrics from 'fastify-metrics';
 import prometheus from 'prom-client';
 import { runRawOperation } from './raw';
@@ -170,14 +170,15 @@ server.get("/health", async (request, response) => {
     response.statusCode = 204;
   } else {
     server.log.info({ headers: request.headers, query: request.body, }, "health.db.request");
-    const db = connect(config, sqlLogger);
-    const [r, m] = await db.query('select 1 where 1 = 1');
-    if(r && JSON.stringify(r) == '[{"1":1}]') {
-      response.statusCode = 204;
-    } else {
-      response.statusCode = 500;
-      return { "error": "problem executing query", "query_result": r };
-    }
+    return await withConnection(config, defaultMode, sqlLogger, async db => {
+      const r = await db.query('select 1 where 1 = 1');
+      if (r && JSON.stringify(r) == '[{"1":1}]') {
+        response.statusCode = 204;
+      } else {
+        response.statusCode = 500;
+        return { "error": "problem executing query", "query_result": r };
+      }
+    });
   }
 });
 

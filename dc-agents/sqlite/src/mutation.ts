@@ -1,7 +1,7 @@
-import { ArrayRelationInsertFieldValue, ColumnInsertFieldValue, DeleteMutationOperation, Expression, Field, InsertFieldSchema, InsertMutationOperation, MutationOperation, MutationOperationResults, MutationRequest, MutationResponse, ObjectRelationInsertFieldValue, QueryRequest, RowObject, RowUpdate, TableInsertSchema, TableName, TableRelationships, UpdateMutationOperation } from "@hasura/dc-api-types";
+import { ArrayRelationInsertFieldValue, ColumnFieldValue, ColumnInsertFieldValue, DeleteMutationOperation, Expression, Field, InsertFieldSchema, InsertMutationOperation, MutationOperation, MutationOperationResults, MutationRequest, MutationResponse, NullColumnFieldValue, ObjectRelationInsertFieldValue, QueryRequest, QueryResponse, RowObject, RowUpdate, TableInsertSchema, TableName, TableRelationships, UpdateMutationOperation } from "@hasura/dc-api-types";
 import { Config } from "./config";
 import { Connection, defaultMode, SqlLogger, withConnection } from "./db";
-import { escapeIdentifier, escapeTableName, escapeTableNameSansSchema, json_object, where_clause, } from "./query";
+import { escapeIdentifier, escapeTableName, escapeTableNameSansSchema, json_object, parseRowFields, where_clause, } from "./query";
 import { asyncSequenceFromInputs, ErrorWithStatusCode, mapObjectToArray, tableNameEquals, unreachable, zip } from "./util";
 
 // Types
@@ -256,11 +256,11 @@ async function mutationOperation(db: Connection, relationships: Array<TableRelat
       const insertResultsSet = await asyncSequenceFromInputs(infos, (info) => insertRow(db, relationships, op, info));
       const insertResults = ([] as Array<Row>).concat(...insertResultsSet);
       let insertFailed: Array<Row> = [];
-      const mappedInsertResults = insertResults.map((e: Row) => {
-        if(! e.ok) {
-          insertFailed.push(e);
+      const mappedInsertResults = insertResults.map((row: Row) => {
+        if (!row.ok) {
+          insertFailed.push(row);
         }
-        return JSON.parse(e.row);
+        return parseMutationResultRow(row, op.returning_fields ?? {});
       });
       if(insertFailed.length > 0) {
         await db.query('ROLLBACK', {});
@@ -279,11 +279,11 @@ async function mutationOperation(db: Connection, relationships: Array<TableRelat
       const resultSet = await updateRow(db, relationships, op, updateInfo);
       const updateResults = ([] as Array<Row>).concat(...resultSet);
       let updateFailed: Array<Row> = [];
-      const mappedUpdateResults = updateResults.map((e: Row) => {
-        if(! e.ok) {
-          updateFailed.push(e);
+      const mappedUpdateResults = updateResults.map((row: Row) => {
+        if (!row.ok) {
+          updateFailed.push(row);
         }
-        return JSON.parse(e.row);
+        return parseMutationResultRow(row, op.returning_fields ?? {});
       });
       if(updateFailed.length > 0) {
         await db.query('ROLLBACK', {});
@@ -299,7 +299,7 @@ async function mutationOperation(db: Connection, relationships: Array<TableRelat
     case 'delete':
       await db.query('BEGIN',{});
       const deleteResults = await deleteRows(db, relationships, op);
-      const mappedDeleteResults = deleteResults.map((r: Row) => JSON.parse(r.row));
+      const mappedDeleteResults = deleteResults.map(row => parseMutationResultRow(row, op.returning_fields ?? {}));
       await db.query('COMMIT',{});
       return {
         affected_rows: mappedDeleteResults.length,
@@ -309,6 +309,11 @@ async function mutationOperation(db: Connection, relationships: Array<TableRelat
     default:
       return unreachable(op['type']);
   }
+}
+
+function parseMutationResultRow(e: Row, returningFields: Record<string, Field>): Record<string, (ColumnFieldValue | QueryResponse | NullColumnFieldValue)> {
+  const parsedRow = JSON.parse(e.row);
+  return parseRowFields(parsedRow, returningFields);
 }
 
 /**

@@ -1,4 +1,4 @@
-import { connect, createDbMode, SqlLogger, withConnection } from './db';
+import { createDbMode, defaultMode, SqlLogger, withConnection } from './db';
 import { DatasetDeleteCloneResponse, DatasetGetTemplateResponse, DatasetCreateCloneRequest, DatasetCreateCloneResponse, } from '@hasura/dc-api-types';
 import { access, constants, promises, existsSync } from 'fs';
 import { DATASET_CLONES, DATASET_DELETE, DATASET_TEMPLATES } from "./environment";
@@ -20,12 +20,13 @@ export async function cloneDataset(logger: SqlLogger, clone_name: string, body: 
   }
 
   if (await fileIsReadable(templatePaths.dbFileTemplatePath)) {
-    const db = connect({ db: templatePaths.dbFileTemplatePath, explicit_main_schema: false, tables: [], meta: false }, logger);
-    if (db) {
-      db.close();
-    } else {
+    try {
+      await withConnection({ db: templatePaths.dbFileTemplatePath, explicit_main_schema: false, tables: [], meta: false }, defaultMode, logger, async db => {});
+    }
+    catch {
       throw new Error("Dataset template is not a valid SQLite database!");
     }
+
     await promises.cp(templatePaths.dbFileTemplatePath, toPath);
     return { config: { db: toPath } };
 

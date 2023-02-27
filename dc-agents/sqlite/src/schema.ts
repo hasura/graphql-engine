@@ -1,7 +1,7 @@
-import { SchemaResponse, ScalarType, ColumnInfo, TableInfo, Constraint } from "@hasura/dc-api-types"
+import { SchemaResponse, ColumnInfo, TableInfo, Constraint } from "@hasura/dc-api-types"
 import { ScalarTypeKey } from "./capabilities";
 import { Config } from "./config";
-import { connect, SqlLogger } from './db';
+import { defaultMode, SqlLogger, withConnection } from './db';
 import { MUTATIONS } from "./environment";
 
 var sqliteParser = require('sqlite-parser');
@@ -227,13 +227,14 @@ function getPrimaryKeyNames(ddl: any): string[] {
 }
 
 export async function getSchema(config: Config, sqlLogger: SqlLogger): Promise<SchemaResponse> {
-  const db                            = connect(config, sqlLogger);
-  const [results, metadata]           = await db.query("SELECT * from sqlite_schema");
-  const resultsT: TableInfoInternal[] = results as TableInfoInternal[];
-  const filtered: TableInfoInternal[] = resultsT.filter(table => includeTable(config,table));
-  const result:   TableInfo[]         = filtered.map(formatTableInfo(config));
+  return await withConnection(config, defaultMode, sqlLogger, async db => {
+    const results = await db.query("SELECT * from sqlite_schema");
+    const resultsT: TableInfoInternal[] = results as TableInfoInternal[];
+    const filtered: TableInfoInternal[] = resultsT.filter(table => includeTable(config,table));
+    const result:   TableInfo[]         = filtered.map(formatTableInfo(config));
 
-  return {
-    tables: result
-  };
+    return {
+      tables: result
+    };
+  });
 };

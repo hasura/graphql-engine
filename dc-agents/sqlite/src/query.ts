@@ -1,6 +1,6 @@
 import { Config }  from "./config";
-import { connect, SqlLogger } from "./db";
-import { coerceUndefinedToNull, coerceUndefinedOrNullToEmptyRecord, isEmptyObject, tableNameEquals, unreachable, stringArrayEquals, ErrorWithStatusCode } from "./util";
+import { defaultMode, SqlLogger, withConnection } from "./db";
+import { coerceUndefinedToNull, coerceUndefinedOrNullToEmptyRecord, isEmptyObject, tableNameEquals, unreachable, stringArrayEquals, ErrorWithStatusCode, mapObject } from "./util";
 import {
     Expression,
     BinaryComparisonOperator,
@@ -20,10 +20,12 @@ import {
     UnaryComparisonOperator,
     ExplainResponse,
     ExistsExpression,
-    ErrorResponse,
     OrderByRelation,
     OrderByElement,
     OrderByTarget,
+    Query,
+    ColumnFieldValue,
+    NullColumnFieldValue,
   } from "@hasura/dc-api-types";
 import { customAlphabet } from "nanoid";
 import { DEBUGGING_TAGS, QUERY_LENGTH_LIMIT } from "./environment";
@@ -665,8 +667,53 @@ function query(request: QueryRequest): string {
  *
  * Note: There should always be one result since 0 rows still generates an empty JSON array.
  */
-function output(rows: any): QueryResponse {
-  return JSON.parse(rows[0].data);
+function parseDbResult(rows: any, request: QueryRequest): QueryResponse {
+  const rawResponse = JSON.parse(rows[0].data);
+  return parseRawQueryResponse(request.query, rawResponse);
+}
+
+type RawQueryResponse = {
+  rows?: string[] | null,
+  aggregates?: Record<string, any> | null,
+}
+
+function parseRawQueryResponse(query: Query, rawQueryResponse: RawQueryResponse): QueryResponse {
+  const rows = query.fields
+    ? (rawQueryResponse.rows ?? []).map(rowJson => {
+      const row: Record<string, (ColumnFieldValue | RawQueryResponse | NullColumnFieldValue)> = JSON.parse(rowJson);
+      return parseRowFields(row, query.fields ?? {});
+    })
+    : null;
+  
+  return {
+    aggregates: rawQueryResponse.aggregates,
+    ... (rows ? { rows } : {}),
+  }
+}
+
+// It seems that since SQLite 3.39.0, the JSON_GROUP_ARRAY function that is used to create the arrays
+// for object/array relationships now string-encodes any JSON inside the array. This function works
+// around the problem by decoding the stringified-JSON back into JSON.
+// The issue has been raised here: https://sqlite.org/forum/forumpost/e3b101fb32
+export function parseRowFields(row: Record<string, (ColumnFieldValue | RawQueryResponse | NullColumnFieldValue)>, fields: Record<string, Field>): Record<string, (ColumnFieldValue | QueryResponse | NullColumnFieldValue)> {
+  return mapObject(row, ([fieldName, fieldValue]) => {
+    const queryField = fields[fieldName];
+    if (queryField === undefined)
+      throw new Error(`Unable to find response field ${fieldName} on amongst original query fields`);
+
+    switch (queryField.type) {
+      case "column": 
+        return [fieldName, fieldValue];
+
+      case "relationship":
+        if (fieldValue === null || (!("rows" in fieldValue) && !("aggregates" in fieldValue)))
+          throw new Error(`Did not find a query response in field ${fieldName} where one was expected`);
+        return [fieldName, parseRawQueryResponse(queryField.query, fieldValue)];
+
+      default:
+        return unreachable(queryField["type"]);
+    }
+  });
 }
 
 /** Function to add SQL comments to the generated SQL to tag which procedures generated what text.
@@ -728,20 +775,21 @@ function tag(t: string, s: string): string {
  *
  */
 export async function queryData(config: Config, sqlLogger: SqlLogger, queryRequest: QueryRequest): Promise<QueryResponse> {
-  const db = connect(config, sqlLogger); // TODO: Should this be cached?
-  const q = query(queryRequest);
+  return await withConnection(config, defaultMode, sqlLogger, async db => {
+    const q = query(queryRequest);
 
-  if(q.length > QUERY_LENGTH_LIMIT) {
-    const error = new ErrorWithStatusCode(
-      `Generated SQL Query was too long (${q.length} > ${QUERY_LENGTH_LIMIT})`,
-      500,
-      { "query.length": q.length, "limit": QUERY_LENGTH_LIMIT }
-    );
-    throw error;
-  }
+    if(q.length > QUERY_LENGTH_LIMIT) {
+      const error = new ErrorWithStatusCode(
+        `Generated SQL Query was too long (${q.length} > ${QUERY_LENGTH_LIMIT})`,
+        500,
+        { "query.length": q.length, "limit": QUERY_LENGTH_LIMIT }
+      );
+      throw error;
+    }
 
-  const [result, metadata] = await db.query(q);
-  return output(result);
+    const results = await db.query(q);
+    return parseDbResult(results, queryRequest);
+  });
 }
 
 /**
@@ -758,13 +806,14 @@ export async function queryData(config: Config, sqlLogger: SqlLogger, queryReque
  * @returns
  */
 export async function explain(config: Config, sqlLogger: SqlLogger, queryRequest: QueryRequest): Promise<ExplainResponse> {
-  const db = connect(config, sqlLogger);
-  const q = query(queryRequest);
-  const [result, metadata] = await db.query(`EXPLAIN QUERY PLAN ${q}`);
-  return {
-    query: q,
-    lines: [ "", ...formatExplainLines(result as AnalysisEntry[])]
-  }
+  return await withConnection(config, defaultMode, sqlLogger, async db => {
+    const q = query(queryRequest);
+    const result = await db.query(`EXPLAIN QUERY PLAN ${q}`);
+    return {
+      query: q,
+      lines: [ "", ...formatExplainLines(result as AnalysisEntry[])]
+    };
+  });
 }
 
 function formatExplainLines(items: AnalysisEntry[]): string[] {
