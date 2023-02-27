@@ -9,7 +9,7 @@ import { hasuraToast } from '.';
 import { Button } from '../Button';
 
 export default {
-  title: 'components/Toasts 🚧/Proposal',
+  title: 'components/Toasts 🧬/API',
   parameters: {
     docs: {
       description: {

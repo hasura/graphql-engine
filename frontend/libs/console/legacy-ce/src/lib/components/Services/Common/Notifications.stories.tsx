@@ -15,7 +15,7 @@ import { useAppDispatch } from '../../../store';
 import { useFireNotification } from '../../../new-components/Notifications';
 
 export default {
-  title: 'components/Toasts 🚧/Legacy',
+  title: 'components/Toasts 🧬/Legacy',
   parameters: {
     source: { type: 'code' },
     docs: {

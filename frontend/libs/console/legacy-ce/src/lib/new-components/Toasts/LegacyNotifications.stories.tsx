@@ -11,7 +11,7 @@ import { Button } from '../Button';
 import { HasuraLogoFull } from '../HasuraLogo';
 
 export default {
-  title: 'components/Toasts 🚧/Legacy with new API',
+  title: 'components/Toasts 🧬/Legacy with new API',
   parameters: {
     docs: {
       description: {
