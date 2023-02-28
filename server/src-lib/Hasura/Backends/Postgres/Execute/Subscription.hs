@@ -38,7 +38,7 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Translate.Column (toTxtValue)
 import Hasura.Backends.Postgres.Translate.Select qualified as DS
-import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (customSQLToTopLevelCTEs, toQuery)
+import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (customSQLToInnerCTEs, toQuery)
 import Hasura.Backends.Postgres.Translate.Types (CustomSQLCTEs (..))
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.Base.Error
@@ -159,7 +159,8 @@ mkMultiplexedQuery rootFields =
                 ]
         }
 
-    selectWith = S.SelectWith (customSQLToTopLevelCTEs customSQLCTEs) select
+    -- multiplexed queries may only contain read only raw queries
+    selectWith = S.SelectWith [] select
 
     -- FROM unnest($1::uuid[], $2::json[]) _subs (result_id, result_vars)
     subsInputFromItem =
@@ -181,6 +182,7 @@ mkMultiplexedQuery rootFields =
     selectRootFields =
       S.mkSelect
         { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just $ S.toColumnAlias $ Identifier "root")],
+          S.selCTEs = customSQLToInnerCTEs customSQLCTEs,
           S.selFrom =
             Just $ S.FromExp sqlFrom
         }
@@ -204,7 +206,7 @@ mkStreamingMultiplexedQuery ::
 mkStreamingMultiplexedQuery (fieldAlias, resolvedAST) =
   MultiplexedQuery . toQuery $ selectWith
   where
-    selectWith = S.SelectWith (customSQLToTopLevelCTEs customSQLCTEs) select
+    selectWith = S.SelectWith [] select
 
     select =
       S.mkSelect
@@ -237,6 +239,7 @@ mkStreamingMultiplexedQuery (fieldAlias, resolvedAST) =
     selectRootFields =
       S.mkSelect
         { S.selExtr = [(S.Extractor rootFieldJsonAggregate (Just $ S.toColumnAlias $ Identifier "root")), cursorExtractor],
+          S.selCTEs = customSQLToInnerCTEs customSQLCTEs,
           S.selFrom =
             Just $ S.FromExp [fromSQL]
         }

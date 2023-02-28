@@ -323,27 +323,26 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
       SourceInfo b ->
       MemoizeT
         m
-        ( [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))],
-          [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))],
-          [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))],
-          [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))],
-          [(G.Name, Parser 'Output P.Parse (ApolloFederationParserFunction P.Parse))]
+        ( [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))], -- query fields
+          [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))], -- mutation backend fields
+          [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))], -- mutation frontend fields
+          [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))], -- subscription fields
+          [(G.Name, Parser 'Output P.Parse (ApolloFederationParserFunction P.Parse))] -- apollo federation tables
         )
     buildSource schemaContext schemaOptions sourceInfo@(SourceInfo _ tables functions logicalModels _ _ sourceCustomization) =
       runSourceSchema schemaContext schemaOptions sourceInfo do
         let validFunctions = takeValidFunctions functions
+            validLogicalModels = takeValidLogicalModels logicalModels
             validTables = takeValidTables tables
             mkRootFieldName = _rscRootFields sourceCustomization
             makeTypename = SC._rscTypeNames sourceCustomization
         (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields, apolloFedTableParsers) <-
-          buildQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions
-        logicalModelRootFields <-
-          buildLogicalModelFields sourceInfo logicalModels
+          buildQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions validLogicalModels
         (,,,,apolloFedTableParsers)
           <$> customizeFields
             sourceCustomization
             (makeTypename <> MkTypename (<> Name.__query))
-            (pure (uncustomizedQueryRootFields <> logicalModelRootFields))
+            (pure uncustomizedQueryRootFields)
           <*> customizeFields
             sourceCustomization
             (makeTypename <> MkTypename (<> Name.__mutation_frontend))
@@ -642,8 +641,15 @@ buildQueryAndSubscriptionFields ::
   SourceInfo b ->
   TableCache b ->
   FunctionCache b ->
-  SchemaT r m ([P.FieldParser n (QueryRootField UnpreparedValue)], [P.FieldParser n (SubscriptionRootField UnpreparedValue)], [(G.Name, Parser 'Output n (ApolloFederationParserFunction n))])
-buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs FEAQuery -> functions) = do
+  LogicalModels b ->
+  SchemaT
+    r
+    m
+    ( [P.FieldParser n (QueryRootField UnpreparedValue)],
+      [P.FieldParser n (SubscriptionRootField UnpreparedValue)],
+      [(G.Name, Parser 'Output n (ApolloFederationParserFunction n))]
+    )
+buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs FEAQuery -> functions) logicalModels = do
   roleName <- retrieve scRole
   functionPermsCtx <- retrieve Options.soInferFunctionPermissions
   functionSelectExpParsers <-
@@ -655,6 +661,8 @@ buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs
             || functionPermsCtx == Options.InferFunctionPermissions
         let targetTableName = _fiReturnType functionInfo
         lift $ mkRFs $ buildFunctionQueryFields mkRootFieldName functionName functionInfo targetTableName
+  logicalModelRootFields <-
+    buildLogicalModelFields sourceInfo logicalModels
 
   (tableQueryFields, tableSubscriptionFields, apolloFedTableParsers) <-
     unzip3 . catMaybes
@@ -666,8 +674,8 @@ buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs
       tableSubscriptionRootFields = fmap mkRF $ concat tableSubscriptionFields
 
   pure
-    ( tableQueryRootFields <> functionSelectExpParsers,
-      tableSubscriptionRootFields <> functionSelectExpParsers,
+    ( tableQueryRootFields <> functionSelectExpParsers <> logicalModelRootFields,
+      tableSubscriptionRootFields <> functionSelectExpParsers <> logicalModelRootFields,
       catMaybes apolloFedTableParsers
     )
   where
@@ -694,7 +702,7 @@ buildLogicalModelFields sourceInfo logicalModels = runMaybeTmempty $ do
   guard $ roleName == adminRoleName
 
   map mkRF . catMaybes <$> for (OMap.elems logicalModels) \model -> do
-    lift $ (buildLogicalModelRootFields model)
+    lift (buildLogicalModelRootFields model)
   where
     mkRF ::
       FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)) ->

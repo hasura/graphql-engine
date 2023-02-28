@@ -7,6 +7,7 @@ module Hasura.Backends.Postgres.SQL.DML
     BinOp (AndOp, OrOp),
     BoolExp (..),
     TopLevelCTE (CTEDelete, CTEInsert, CTESelect, CTEUpdate, CTEUnsafeRawSQL),
+    InnerCTE (..),
     CompareOp (SContainedIn, SContains, SEQ, SGT, SGTE, SHasKey, SHasKeysAll, SHasKeysAny, SILIKE, SIREGEX, SLIKE, SLT, SLTE, SMatchesFulltext, SNE, SNILIKE, SNIREGEX, SNLIKE, SNREGEX, SNSIMILAR, SREGEX, SSIMILAR),
     CountType (CTDistinct, CTSimple, CTStar),
     DistinctExpr (DistinctOn, DistinctSimple),
@@ -124,7 +125,7 @@ import Text.Builder qualified as TB
 data Select = Select
   { -- | Unlike 'SelectWith', does not allow data-modifying statements (as those are only allowed at
     -- the top level of a query).
-    selCTEs :: [(TableAlias, Select)],
+    selCTEs :: [(TableAlias, InnerCTE)],
     selDistinct :: Maybe DistinctExpr,
     selExtr :: [Extractor],
     selFrom :: Maybe FromExp,
@@ -315,7 +316,7 @@ instance ToSQL Select where
         <~> toSQL (selLimit sel)
         <~> toSQL (selOffset sel)
     -- reuse SelectWith if there are any CTEs, since the generated SQL is the same
-    ctes -> toSQL $ SelectWith (map (CTESelect <$>) ctes) sel {selCTEs = []}
+    ctes -> toSQL $ SelectWith (map (toTopLevelCTE <$>) ctes) sel {selCTEs = []}
 
 mkSIdenExp :: (IsIdentifier a) => a -> SQLExp
 mkSIdenExp = SEIdentifier . toIdentifier
@@ -1188,6 +1189,21 @@ instance ToSQL TopLevelCTE where
         parts
         -- if the user has a comment on the last line, this will make sure it doesn't interrupt the rest of the query
         <> "\n"
+
+-- | Represents a common table expresion that can be used in nested selects.
+data InnerCTE
+  = ICTESelect Select
+  | ICTEUnsafeRawSQL (InterpolatedQuery SQLExp)
+  deriving (Show, Eq, Generic, Data)
+
+instance NFData InnerCTE
+
+instance Hashable InnerCTE
+
+toTopLevelCTE :: InnerCTE -> TopLevelCTE
+toTopLevelCTE = \case
+  ICTESelect select -> CTESelect select
+  ICTEUnsafeRawSQL query -> CTEUnsafeRawSQL query
 
 -- | A @SELECT@ statement with Common Table Expressions.
 --   <https://www.postgresql.org/docs/current/queries-with.html>

@@ -896,7 +896,7 @@ mkPaginationSelectExp ::
   S.Select
 mkPaginationSelectExp allRowsSelect ScheduledEventPagination {..} shouldIncludeRowsCount =
   S.mkSelect
-    { S.selCTEs = [(countCteAlias, allRowsSelect), (limitCteAlias, limitCteSelect)],
+    { S.selCTEs = [(countCteAlias, S.ICTESelect allRowsSelect), (limitCteAlias, limitCteSelect)],
       S.selExtr =
         case shouldIncludeRowsCount of
           IncludeRowsCount -> [countExtractor, rowsExtractor]
@@ -915,12 +915,13 @@ mkPaginationSelectExp allRowsSelect ScheduledEventPagination {..} shouldIncludeR
        in S.Extractor (S.SESelect selectExp) Nothing
 
     limitCteSelect =
-      S.mkSelect
-        { S.selExtr = [S.selectStar],
-          S.selFrom = Just $ S.mkIdenFromExp (S.tableAliasToIdentifier countCteAlias),
-          S.selLimit = (S.LimitExp . S.intToSQLExp) <$> _sepLimit,
-          S.selOffset = (S.OffsetExp . S.intToSQLExp) <$> _sepOffset
-        }
+      S.ICTESelect
+        S.mkSelect
+          { S.selExtr = [S.selectStar],
+            S.selFrom = Just $ S.mkIdenFromExp (S.tableAliasToIdentifier countCteAlias),
+            S.selLimit = (S.LimitExp . S.intToSQLExp) <$> _sepLimit,
+            S.selOffset = (S.OffsetExp . S.intToSQLExp) <$> _sepOffset
+          }
 
     rowsExtractor =
       let jsonAgg = S.SEUnsafe "json_agg(row_to_json(limit_cte.*))"

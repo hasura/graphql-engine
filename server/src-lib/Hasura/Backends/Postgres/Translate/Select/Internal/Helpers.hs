@@ -19,6 +19,7 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
     withForceAggregation,
     selectToSelectWith,
     customSQLToTopLevelCTEs,
+    customSQLToInnerCTEs,
     logicalModelNameToAlias,
     toQuery,
   )
@@ -167,6 +168,11 @@ selectToSelectWith action =
 customSQLToTopLevelCTEs :: CustomSQLCTEs -> [(S.TableAlias, S.TopLevelCTE)]
 customSQLToTopLevelCTEs =
   fmap (bimap S.toTableAlias S.CTEUnsafeRawSQL) . Map.toList . getCustomSQLCTEs
+
+-- | convert map of CustomSQL CTEs into named InnerCTEs
+customSQLToInnerCTEs :: CustomSQLCTEs -> [(S.TableAlias, S.InnerCTE)]
+customSQLToInnerCTEs =
+  fmap (bimap S.toTableAlias S.ICTEUnsafeRawSQL) . Map.toList . getCustomSQLCTEs
 
 toQuery :: S.SelectWithG S.TopLevelCTE -> Query
 toQuery = fromBuilder . toSQL . renameIdentifiersSelectWithTopLevelCTE

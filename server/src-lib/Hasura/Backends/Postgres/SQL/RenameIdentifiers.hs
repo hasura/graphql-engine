@@ -226,7 +226,9 @@ uSelect (S.Select ctes distinctM extrs fromM whereM groupByM havingM orderByM li
   newCTEs <- for ctes $ \(alias, cte) ->
     (,)
       <$> addAliasAndPrefixHash alias
-      <*> uSelect cte
+      <*> case cte of
+        S.ICTESelect select -> S.ICTESelect <$> uSelect select
+        S.ICTEUnsafeRawSQL q -> S.ICTEUnsafeRawSQL <$> traverse uSqlExp q
 
   -- Potentially introduces a new alias so it should go before the rest.
   newFromM <- mapM uFromExp fromM

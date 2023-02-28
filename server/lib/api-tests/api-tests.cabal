@@ -173,6 +173,7 @@ library
     Test.Queries.FilterSearch.AggregationPredicatesSpec
     Test.Queries.FilterSearch.FilterSearchSpec
     Test.Queries.LogicalModels.LogicalModelsQueriesSpec
+    Test.Queries.LogicalModels.SubscriptionsSpec
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
     Test.Queries.Paginate.OffsetSpec

@@ -40,7 +40,7 @@ data InterpolatedItem variable
     IIText Text
   | -- | a captured variable
     IIVariable variable
-  deriving stock (Eq, Ord, Show, Functor, Foldable, Generic, Traversable)
+  deriving stock (Eq, Ord, Show, Functor, Foldable, Data, Generic, Traversable)
 
 -- | Converting an interpolated query back to text.
 --   Should roundtrip with the 'parseInterpolatedQuery'.
@@ -60,7 +60,7 @@ newtype InterpolatedQuery variable = InterpolatedQuery
   { getInterpolatedQuery :: [InterpolatedItem variable]
   }
   deriving newtype (Eq, Ord, Show, Generic)
-  deriving stock (Functor, Foldable, Traversable)
+  deriving stock (Data, Functor, Foldable, Traversable)
 
 deriving newtype instance (Hashable variable) => Hashable (InterpolatedQuery variable)
 
