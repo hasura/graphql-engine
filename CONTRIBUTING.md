@@ -38,7 +38,7 @@ consisting of 3 components. Each has their own contributing guides:
 
 2. [CLI (Go)](cli/CONTRIBUTING.md)
 
-3. [Console (JavaScript)](console/README.md#contributing-to-hasura-console)
+3. [Console (JavaScript)](frontend/docs/generic-info.md#contributing-to-hasura-console)
 
 All of the three components have a single version, denoted by either the git tag or a combination of branch name and git commit SHA.
 

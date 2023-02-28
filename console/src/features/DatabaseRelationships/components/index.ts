@@ -1,1 +1,0 @@
-export { DatabaseRelationships } from './DatabaseRelationships';
