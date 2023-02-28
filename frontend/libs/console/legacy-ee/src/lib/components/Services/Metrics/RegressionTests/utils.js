@@ -14,7 +14,7 @@ import LoadingSpinner from '../Common/LoadingSpinner';
 import success from '../images/success.svg';
 import failure from '../images/failure.svg';
 import queue from '../images/queue.svg';
-import cancel from '../images/cancel.svg';
+import cancel from '../images/cancel-metrics.svg';
 
 export const getSchemeLuxUrl = () => {
   const { hasuraOAuthUrl } = Globals;

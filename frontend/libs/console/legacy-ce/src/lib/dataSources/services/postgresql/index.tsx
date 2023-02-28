@@ -1,7 +1,7 @@
 import React from 'react';
 import { isEnvironmentSupportMultiTenantConnectionPooling } from '../../../utils/proConsole';
 import { DeepRequired } from 'ts-essentials';
-import { ColumnsInfoResult, currentDriver, DataSourcesAPI } from '../..';
+import type { ColumnsInfoResult, DataSourcesAPI } from '../../';
 
 import {
   Table,
@@ -330,10 +330,6 @@ type ColumnsInfoPayload = {
 };
 
 const isColumnGenerated = (isGenerated: ColumnsInfoPayload['is_generated']) => {
-  if (currentDriver === 'cockroach') {
-    return isGenerated === 'YES';
-  }
-
   return isGenerated === 'ALWAYS';
 };
 

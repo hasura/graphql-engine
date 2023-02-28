@@ -5,7 +5,7 @@ import { QualifiedTable } from '../../../metadata/types';
 import { Nullable } from './tsUtils';
 import { ConsoleScope } from '../../Main/ConsoleNotification';
 import { BaseTableColumn } from '../../../dataSources/types';
-import { sqlEscapeText } from '../../../dataSources/services/postgresql/sqlUtils';
+import { sqlEscapeText } from '../../../dataSources/common/sqlEscapeText';
 import { FixMe } from '../../../types';
 
 export type OrderByType = 'asc' | 'desc';

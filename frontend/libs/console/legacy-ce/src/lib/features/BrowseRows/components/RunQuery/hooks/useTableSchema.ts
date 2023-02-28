@@ -1,6 +1,6 @@
 import { NormalizedTable } from '../../../../../dataSources/types';
 import { Table } from '../../../../hasura-metadata-types';
-import { useAppSelector } from '../../../../../store';
+import { useAppSelector } from '../../../../../storeHooks';
 import { getTableSchemaName } from './useTableSchema.utils';
 
 export const useTableSchema = (table: Table) => {

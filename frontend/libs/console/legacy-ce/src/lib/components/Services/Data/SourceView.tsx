@@ -18,7 +18,7 @@ import { isFeatureSupported } from '../../../dataSources';
 import { isTemplateGalleryEnabled } from './Schema/TemplateGallery/templateGalleryConfig';
 import BreadCrumb from '../../Common/Layout/BreadCrumb/BreadCrumb';
 import TemplateGallery from './Schema/TemplateGallery/TemplateGallery';
-import { useAppDispatch, useAppSelector } from '../../../store';
+import { useAppDispatch, useAppSelector } from '../../../storeHooks';
 
 interface Props {
   dispatch: Dispatch;

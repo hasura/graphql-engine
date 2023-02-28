@@ -1,5 +1,5 @@
 import { currentDriver } from '../../../../dataSources';
-import { useAppSelector } from '../../../../store';
+import { useAppSelector } from '../../../../storeHooks';
 import { NewDataSource } from './types';
 
 export const useDataSource = () => {

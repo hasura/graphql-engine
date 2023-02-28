@@ -69,12 +69,14 @@ namespace APIErrors {
 
 export class APIError extends Error {
   public override name = 'APIError';
-  constructor(
-    public override message: string,
-    public code?: string,
-    public description?: string
-  ) {
+  public override message: string;
+  public code?: string;
+  public description?: string;
+  constructor(message: string, code?: string, description?: string) {
     super(message);
+    this.message = message;
+    this.code = code;
+    this.description = description;
   }
 
   // TODO: write tests for this

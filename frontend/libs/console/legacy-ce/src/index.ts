@@ -65,6 +65,7 @@ export {
   startTracing,
   addUserProperties,
   programmaticallyTraceError,
+  REDACT_EVERYTHING,
 } from './lib/features/Analytics';
 export { CloudOnboarding } from './lib/features/CloudOnboarding';
 export { prefetchSurveysData } from './lib/features/Surveys';

@@ -3,16 +3,15 @@ import { merge } from 'webpack-merge';
 
 export default {
   core: {},
-  stories: [],
+
   addons: [
-    '@storybook/addon-essentials',
     '@storybook/addon-links',
     '@storybook/addon-interactions',
     'storybook-dark-mode/register',
     'storybook-addon-console-env',
   ],
   webpackFinal: async (config: any) => {
-    return merge(config, {
+    const finalCconfig = merge(config, {
       plugins: [
         new webpack.DefinePlugin({
           __CLIENT__: 'true',
@@ -35,5 +34,24 @@ export default {
         },
       },
     });
+
+    finalCconfig.module.rules = finalCconfig.module.rules.map((rule: any) => {
+      if (/source-map-loader/.test(rule.loader)) {
+        return {
+          ...rule,
+          exclude: /node_modules/, // we don't want source maps for vendors, because of graphiql
+        };
+      }
+
+      if (/file-loader/.test(rule.loader)) {
+        return {
+          ...rule,
+          type: 'javascript/auto', // This is fixing issue https://webpack.js.org/guides/asset-modules/
+        };
+      }
+
+      return rule;
+    });
+    return finalCconfig;
   },
 };

@@ -12,11 +12,11 @@ import {
   Table,
 } from '../hasura-metadata-types';
 
-import { NetworkArgs } from './api';
+import type { NetworkArgs } from './api';
 import { SchemaTable } from './utils';
 
 export type { BigQueryTable } from './bigquery';
-export { NetworkArgs };
+export type { NetworkArgs };
 
 export type AllowedTableRelationships =
   /**

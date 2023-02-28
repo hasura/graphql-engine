@@ -1,7 +1,7 @@
 import { defineConfig } from 'cypress';
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
-const nxConfig = nxE2EPreset(__dirname);
+const nxConfig = nxE2EPreset(__filename);
 
 export default defineConfig({
   viewportWidth: 1440,

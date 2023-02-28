@@ -1,7 +1,7 @@
 import {
   queryRootPermissionFields,
   subscriptionRootPermissionFields,
-} from './RootFieldPermissions';
+} from './constants';
 import {
   QueryRootPermissionTypes,
   SubscriptionRootPermissionTypes,

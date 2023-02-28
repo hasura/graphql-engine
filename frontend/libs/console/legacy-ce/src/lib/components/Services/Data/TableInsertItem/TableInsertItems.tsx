@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppDispatch } from '../../../../store';
+import type { AppDispatch } from '../../../../store';
 import { Button } from '../../../../new-components/Button';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { ordinalColSort } from '../utils';

@@ -9,7 +9,7 @@ import { citus } from './citus';
 import { cockroach } from './cockroach';
 import { gdc } from './gdc';
 import { mssql } from './mssql';
-import { postgres, PostgresTable } from './postgres';
+import { postgres } from './postgres';
 import { alloy, AlloyDbTable } from './alloydb';
 import type {
   DriverInfoResponse,
@@ -47,6 +47,7 @@ import { getTableName } from './common/getTableName';
 import { QueryType } from '../Permissions/types';
 import { ReleaseType } from './types';
 
+export type { PostgresTable } from './postgres';
 export enum Feature {
   NotImplemented = 'Not Implemented',
 }
@@ -454,20 +455,23 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   },
 });
 
-export { GDCTable } from './gdc';
+export type { GDCTable } from './gdc';
 export * from './guards';
 export * from './types';
 export * from './common/utils';
 export {
-  PostgresTable,
   exportMetadata,
   runGraphQL,
   getTableName,
-  RunSQLResponse,
-  RunSQLSelectResponse,
-  RunSQLCommandResponse,
   runMetadataQuery,
   getDriverPrefix,
   runIntrospectionQuery,
+};
+
+export type {
+  RunSQLResponse,
+  RunSQLSelectResponse,
+  RunSQLCommandResponse,
+  NetworkArgs,
   AlloyDbTable,
 };

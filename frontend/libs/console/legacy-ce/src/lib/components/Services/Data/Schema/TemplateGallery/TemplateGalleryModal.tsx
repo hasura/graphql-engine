@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { FaGithub, FaSpinner, FaUpload } from 'react-icons/fa';
-import { useAppDispatch, useAppSelector } from '../../../../../store';
+import { useAppDispatch, useAppSelector } from '../../../../../storeHooks';
 import {
   applyTemplate,
   fetchSchemaConfigurationByName,

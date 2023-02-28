@@ -41,7 +41,7 @@ export function executorPreFlightCheck(
   }
 
   const distTarget =
-    projectConfiguration?.targets?.['build-storybook']?.options?.outputPath ??
+    projectConfiguration?.targets?.['build-storybook']?.options?.outputDir ??
     `dist/storybook/console/${projectName}`;
 
   // CHECK PROJECT NAME

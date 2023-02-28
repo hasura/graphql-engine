@@ -18,6 +18,7 @@ import {
   MOCK_INITIAL_METADATA,
   serverDownErrorMessage,
 } from '../mocks/constants';
+import 'whatwg-fetch';
 
 const server = setupServer();
 

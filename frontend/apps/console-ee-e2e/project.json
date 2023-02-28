@@ -1,4 +1,5 @@
 {
+  "name": "console-ee-e2e",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/console-ee-e2e/src",
   "projectType": "application",

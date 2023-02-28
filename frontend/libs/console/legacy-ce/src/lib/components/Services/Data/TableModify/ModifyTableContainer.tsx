@@ -5,7 +5,7 @@ import {
   isFeatureSupported,
   Table,
 } from '../../../../dataSources';
-import { useAppDispatch, useAppSelector } from '../../../../store';
+import { useAppDispatch, useAppSelector } from '../../../../storeHooks';
 import React, { useEffect } from 'react';
 import { getAllDataTypeMap } from '../Common/utils';
 import {

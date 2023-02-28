@@ -37,7 +37,7 @@ export const createControlPlaneClient = (
 
   const subscribe = <
     ResponseType = Record<string, any>,
-    VariablesType = Record<string, any>
+    VariablesType extends Object = Record<string, any>
   >(
     queryDoc: DocumentNode,
     variables: VariablesType,

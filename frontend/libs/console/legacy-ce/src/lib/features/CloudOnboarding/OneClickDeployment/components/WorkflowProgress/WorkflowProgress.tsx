@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAppDispatch } from '../../../../../store';
+import { useAppDispatch } from '../../../../../storeHooks';
 import { programmaticallyTraceError } from '../../../../Analytics';
 import {
   FetchOneClickDeploymentStateLogSubscriptionSubscription,

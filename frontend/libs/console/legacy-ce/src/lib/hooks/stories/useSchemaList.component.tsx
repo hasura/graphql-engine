@@ -1,6 +1,6 @@
 import { currentDriver, Driver, setDriver } from '../../dataSources';
 
-import { useAppDispatch, useAppSelector } from '../../store';
+import { useAppDispatch, useAppSelector } from '../../storeHooks';
 import React from 'react';
 import { useSchemaList } from '..';
 

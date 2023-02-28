@@ -1,4 +1,4 @@
-import { getCurrTimeForFileName } from '../../../../components/Common/utils/jsUtils';
+import { getCurrTimeForFileName } from '../../../../components/Common/utils/export.utils';
 
 const replaceAllDotsWithUnderscore = (text: string) => text.replace(/\./g, '_');
 

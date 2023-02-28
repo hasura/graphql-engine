@@ -11,7 +11,7 @@ import {
   showSuccessNotification,
   showWarningNotification,
 } from './Notification';
-import { useAppDispatch } from '../../../store';
+import { useAppDispatch } from '../../../storeHooks';
 import { useFireNotification } from '../../../new-components/Notifications';
 
 export default {
@@ -93,8 +93,8 @@ DirectStoreAccess.parameters = {
     source: { state: 'open' },
     description: {
       story: `This story demonstrates direct store access to trigger a notification with direct store access thanks to \`useAppDispatch\` and helper function \`showSuccessNotification\`.
-      
-The \`showSuccessNotification\` helper function offers all presets and a curated list of props to display a success notification. 
+
+The \`showSuccessNotification\` helper function offers all presets and a curated list of props to display a success notification.
 
 \`showErrorNotification\`, \`showSuccessNotification\`, \`showInfoNotification\`, \`showWarningNotification,\` are also available.`,
     },
@@ -157,7 +157,7 @@ Hook.parameters = {
     source: { state: 'open' },
     description: {
       story: `This story demonstrates the use of the notification dedicated hook to trigger a notification thanks to \`useFireNotification\`.
-      
+
 The \`useFireNotification\` offers all presets and a curated list of options to display any type of notification. .
 
 👍 The store access is hidden behind the hook.`,
@@ -202,7 +202,7 @@ CustomCall.parameters = {
     source: { state: 'open' },
     description: {
       story: `This story demonstrates the use of the low level custom call a notification thanks to \`useAppDispatch\` and helper function \`showNotification\`.
-      
+
 The \`showNotification\` function allows to define all notification properties, including the button click handler.`,
     },
   },

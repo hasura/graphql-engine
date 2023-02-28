@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { Driver } from '../../../../../dataSources';
 import { ReduxState } from '../../../../../types';
 import requestAction from '../../../../../utils/requestAction';
-import { AsyncThunkConfig } from '../../../../../store';
+import type { AsyncThunkConfig } from '../../../../../store';
 import { makeMigrationCall } from '../../DataActions';
 import { getRunSqlQuery } from '../../../../Common/utils/v1QueryUtils';
 import Endpoints from '../../../../../Endpoints';

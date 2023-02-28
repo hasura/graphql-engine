@@ -1,4 +1,5 @@
 {
+  "name": "console-legacy-ee",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/console/legacy-ee/src",
   "projectType": "library",
@@ -13,9 +14,9 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/libs/console/legacy-ee"],
+      "outputs": ["{workspaceRoot}/coverage/libs/console/legacy-ee"],
       "options": {
-        "jestConfig": "libs/console/legacy-ee/jest.config.js",
+        "jestConfig": "libs/console/legacy-ee/jest.config.ts",
         "passWithNoTests": true
       }
     }

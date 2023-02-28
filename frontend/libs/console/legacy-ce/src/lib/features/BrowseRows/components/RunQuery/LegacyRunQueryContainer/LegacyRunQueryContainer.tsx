@@ -1,6 +1,6 @@
 import type { AppDispatch } from '../../../../../store';
 import React from 'react';
-import { getCurrTimeForFileName } from '../../../../../components/Common/utils/jsUtils';
+import { getCurrTimeForFileName } from '../../../../../components/Common/utils/export.utils';
 import {
   downloadObjectAsCsvFile,
   downloadObjectAsJsonFile,

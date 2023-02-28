@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 import { FaShareSquare, FaSpinner } from 'react-icons/fa';
-import { useAppDispatch, useAppSelector } from '../../../../../store';
+import { useAppDispatch, useAppSelector } from '../../../../../storeHooks';
 import {
   fetchGlobalSchemaSharingConfiguration,
   schemaSharingSelectors,

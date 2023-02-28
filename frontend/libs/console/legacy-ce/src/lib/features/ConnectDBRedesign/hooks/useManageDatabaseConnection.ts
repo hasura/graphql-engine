@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useQueryClient } from 'react-query';
 import { exportMetadata } from '../../../metadata/actions';
-import { useAppDispatch } from '../../../store';
+import { useAppDispatch } from '../../../storeHooks';
 import { generateQueryKeys } from '../../DatabaseRelationships/utils/queryClientUtils';
 import { useMetadataMigration } from '../../MetadataAPI';
 import { DatabaseConnection } from '../types';

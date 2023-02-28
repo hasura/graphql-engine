@@ -1,4 +1,5 @@
 {
+  "name": "console-ce",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/console-ce/src",
   "projectType": "application",
@@ -7,11 +8,11 @@
     "build-server-assets": {
       "executor": "@hasura/internal-plugin:build-server-assets",
       "inputs": ["{workspaceRoot}/dist/apps/console-ce/**"],
-      "outputs": ["dist/apps/server-assets-console-ce"],
+      "outputs": ["{workspaceRoot}/dist/apps/server-assets-console-ce"],
       "dependsOn": ["build"]
     },
     "build": {
-      "executor": "@nrwl/web:webpack",
+      "executor": "@nrwl/webpack:webpack",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
@@ -32,7 +33,8 @@
         "styles": ["apps/console-ce/src/css/tailwind.css"],
         "scripts": [],
         "webpackConfig": "custom-webpack.config.js",
-        "postcssConfig": "apps/console-ce/postcss.config.js"
+        "postcssConfig": "apps/console-ce/postcss.config.js",
+        "isolatedConfig": true
       },
       "configurations": {
         "development": {
@@ -51,7 +53,7 @@
             }
           ],
           "optimization": true,
-          "outputHashing": "none",
+          "outputHashing": "bundles",
           "extractCss": false,
           "sourceMap": true,
           "namedChunks": true,
@@ -62,7 +64,7 @@
       }
     },
     "serve": {
-      "executor": "@nrwl/web:dev-server",
+      "executor": "@nrwl/webpack:dev-server",
       "defaultConfiguration": "development",
       "options": {
         "buildTarget": "console-ce:build",
@@ -87,7 +89,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/apps/console-ce"],
+      "outputs": ["{workspaceRoot}/coverage/apps/console-ce"],
       "options": {
         "jestConfig": "apps/console-ce/jest.config.ts",
         "passWithNoTests": true

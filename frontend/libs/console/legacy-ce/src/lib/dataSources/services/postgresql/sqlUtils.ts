@@ -1,20 +1,11 @@
-import { DataSourcesAPI } from '../..';
+import type { DataSourcesAPI } from '../..';
 import { TriggerOperation } from '../../../components/Common/FilterQuery/state';
 import { FrequentlyUsedColumn, IndexType } from '../../types';
 import { isColTypeString } from '.';
 import { FunctionState } from './types';
 import { QualifiedTable } from '../../../metadata/types';
 import { quoteDefault } from '../../../components/Services/Data/utils';
-
-export const sqlEscapeText = (rawText: string) => {
-  let text = rawText;
-
-  if (text) {
-    text = text.replace(/'/g, "\\'");
-  }
-
-  return `E'${text}'`;
-};
+import { sqlEscapeText } from '../../common/sqlEscapeText';
 
 const generateWhereClause = (
   options: { schemas: string[]; tables?: QualifiedTable[] },

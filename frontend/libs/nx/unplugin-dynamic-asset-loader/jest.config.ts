@@ -9,8 +9,13 @@ const { exclude: _, ...swcJestConfig } = JSON.parse(
 export default {
   displayName: 'nx-unplugin-dynamic-asset-loader',
   preset: '../../../jest.preset.js',
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+    },
+  },
   transform: {
-    '^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
+    '^.+\\.[tj]s$': 'ts-jest',
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../../coverage/libs/nx/unplugin-dynamic-asset-loader',

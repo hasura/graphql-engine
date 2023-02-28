@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../../../store';
+import { useAppDispatch, useAppSelector } from '../../../../storeHooks';
 import { useReadOnlyMode } from '../../../../hooks';
 import { useMetadata } from '../../../../features/MetadataAPI';
 import { HasuraMetadataV3 } from '../../../../metadata/types';

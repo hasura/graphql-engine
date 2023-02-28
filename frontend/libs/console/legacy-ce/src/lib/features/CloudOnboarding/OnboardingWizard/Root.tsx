@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAppDispatch } from '../../../store';
+import { useAppDispatch } from '../../../storeHooks';
 import { HasuraFamiliaritySurvey } from '../../Surveys';
 import {
   ConnectDBScreen,

@@ -3,7 +3,7 @@ import { Button } from '../../../../new-components/Button';
 import { FaEdit, FaTrash, FaUndo } from 'react-icons/fa';
 import { useMetadata } from '../../../MetadataAPI';
 import _push from '../../../../components/Services/Data/push';
-import { useAppDispatch } from '../../../../store';
+import { useAppDispatch } from '../../../../storeHooks';
 import { useReloadSource } from '../../hooks/useReloadSource';
 import { useDropSource } from '../../hooks/useDropSource';
 

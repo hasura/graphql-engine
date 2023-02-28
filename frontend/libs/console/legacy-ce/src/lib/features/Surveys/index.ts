@@ -3,4 +3,4 @@ export {
   useFamiliaritySurveyData,
 } from './HasuraFamiliaritySurvey';
 export { prefetchSurveysData } from './utils';
-export { SurveysResponseData } from './types';
+export type { SurveysResponseData } from './types';

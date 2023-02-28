@@ -21,6 +21,7 @@ import {
 } from '../mocks/constants';
 import { useInstallTemplate } from './useInstallTemplate';
 import { NEON_TEMPLATE_BASE_PATH } from '../constants';
+import 'whatwg-fetch';
 
 const server = setupServer();
 

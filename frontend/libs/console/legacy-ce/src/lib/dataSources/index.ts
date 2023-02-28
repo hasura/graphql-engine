@@ -35,7 +35,7 @@ import { supportedFeatures as BigQuerySupportedFeatures } from './services/bigqu
 import { supportedFeatures as CitusQuerySupportedFeatures } from './services/citus';
 import { supportedFeatures as CockroachQuerySupportedFeatures } from './services/cockroach';
 
-export { Table, TableColumn } from './types';
+export type { Table, TableColumn } from './types';
 
 export const drivers = [
   'postgres',
@@ -478,8 +478,10 @@ export const isFeatureSupportedForDriver = (
 
 class DataSourceChangedEvent extends Event {
   static type = 'data-source-changed';
-  constructor(public driver: Driver) {
+  public driver: Driver;
+  constructor(driver: Driver) {
     super(DataSourceChangedEvent.type);
+    this.driver = driver;
   }
 }
 const eventTarget = new EventTarget();
