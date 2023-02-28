@@ -67,7 +67,7 @@ class Editor extends React.Component {
     const saveWithToggle = () => saveFunc(this.toggleEditor);
     return (
       <Button
-        type="submit"
+        type="button"
         mode="primary"
         isLoading={isProcessing}
         loadingText="Saving..."
@@ -87,7 +87,7 @@ class Editor extends React.Component {
     const removeWithToggle = () => removeFunc(this.toggleEditor);
     return (
       <Button
-        type="submit"
+        type="button"
         mode="destructive"
         isLoading={isProcessing}
         loadingText="Removing..."

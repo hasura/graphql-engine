@@ -307,9 +307,11 @@ const Add: React.FC<Props> = props => {
       delete newState?.cleanupConfig;
     }
 
-    /* if auto cleanup is paused while creating event trigger */
-    /* remove the cleanup_config from the state */
-    if (state.cleanupConfig?.paused) {
+    /* don't pass cleanup config if it's empty or just have only paused*/
+    if (
+      JSON.stringify(newState?.cleanupConfig) === '{}' ||
+      JSON.stringify(newState?.cleanupConfig) === '{"paused":true}'
+    ) {
       delete newState?.cleanupConfig;
     }
 

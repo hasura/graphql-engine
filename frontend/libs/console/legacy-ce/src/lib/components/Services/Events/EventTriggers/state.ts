@@ -56,14 +56,6 @@ export const defaultState: LocalEventTriggerState = {
   headers: [defaultHeader],
   source: '',
   isAllColumnChecked: true,
-  cleanupConfig: {
-    schedule: '0 0 * * *',
-    batch_size: 10000,
-    clear_older_than: 168,
-    timeout: 60,
-    clean_invocation_logs: false,
-    paused: true,
-  },
 };
 
 export const parseServerETDefinition = (
