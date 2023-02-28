@@ -25358,7 +25358,7 @@ _HCServe :: Prism' (HGECommand a) a
 --   NOTE: A <a>Nothing</a> value indicates the absence of a particular
 --   flag. Hence types such as 'Maybe (HashSet X)' or 'Maybe Bool'.
 data ServeOptionsRaw impl
-ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe TxIsolation -> Maybe AdminSecretHash -> AuthHookRaw -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> Maybe TelemetryStatus -> WsReadCookieStatus -> StringifyNumbers -> Maybe DangerouslyCollapseBooleans -> Maybe (HashSet API) -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> AllowListStatus -> Maybe (HashSet (EngineLogType impl)) -> Maybe LogLevel -> DevModeStatus -> Maybe Bool -> Maybe (Refined Positive Int) -> Maybe (Refined NonNegative Milliseconds) -> Maybe OptionalInterval -> RemoteSchemaPermissions -> CompressionOptions -> Maybe KeepAliveDelay -> Maybe InferFunctionPermissions -> MaintenanceMode () -> Maybe OptionalInterval -> Maybe (HashSet ExperimentalFeature) -> Maybe (Refined NonNegative Int) -> Maybe (Refined NonNegative Seconds) -> Maybe WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> Maybe ExtensionsSchema -> Maybe MetadataDefaults -> ServeOptionsRaw impl
+ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe TxIsolation -> Maybe AdminSecretHash -> AuthHookRaw -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> Maybe TelemetryStatus -> WsReadCookieStatus -> StringifyNumbers -> Maybe DangerouslyCollapseBooleans -> Maybe (HashSet API) -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> AllowListStatus -> Maybe (HashSet (EngineLogType impl)) -> Maybe LogLevel -> DevModeStatus -> Maybe AdminInternalErrorsStatus -> Maybe (Refined Positive Int) -> Maybe (Refined NonNegative Milliseconds) -> Maybe OptionalInterval -> RemoteSchemaPermissions -> CompressionOptions -> Maybe KeepAliveDelay -> Maybe InferFunctionPermissions -> MaintenanceMode () -> Maybe OptionalInterval -> Maybe (HashSet ExperimentalFeature) -> Maybe (Refined NonNegative Int) -> Maybe (Refined NonNegative Seconds) -> Maybe WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> Maybe ExtensionsSchema -> Maybe MetadataDefaults -> ServeOptionsRaw impl
 [rsoPort] :: ServeOptionsRaw impl -> Maybe Port
 [rsoHost] :: ServeOptionsRaw impl -> Maybe HostPreference
 [rsoConnParams] :: ServeOptionsRaw impl -> ConnParamsRaw
@@ -25384,7 +25384,7 @@ ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe 
 [rsoEnabledLogTypes] :: ServeOptionsRaw impl -> Maybe (HashSet (EngineLogType impl))
 [rsoLogLevel] :: ServeOptionsRaw impl -> Maybe LogLevel
 [rsoDevMode] :: ServeOptionsRaw impl -> DevModeStatus
-[rsoAdminInternalErrors] :: ServeOptionsRaw impl -> Maybe Bool
+[rsoAdminInternalErrors] :: ServeOptionsRaw impl -> Maybe AdminInternalErrorsStatus
 [rsoEventsHttpPoolSize] :: ServeOptionsRaw impl -> Maybe (Refined Positive Int)
 [rsoEventsFetchInterval] :: ServeOptionsRaw impl -> Maybe (Refined NonNegative Milliseconds)
 [rsoAsyncActionsFetchInterval] :: ServeOptionsRaw impl -> Maybe OptionalInterval
@@ -25412,6 +25412,12 @@ data ConsoleStatus
 ConsoleEnabled :: ConsoleStatus
 ConsoleDisabled :: ConsoleStatus
 isConsoleEnabled :: ConsoleStatus -> Bool
+
+-- | Whether or not internal errors will be sent in response to admin.
+data AdminInternalErrorsStatus
+AdminInternalErrorsEnabled :: AdminInternalErrorsStatus
+AdminInternalErrorsDisabled :: AdminInternalErrorsStatus
+isAdminInternalErrorsEnabled :: AdminInternalErrorsStatus -> Bool
 isWebSocketCompressionEnabled :: CompressionOptions -> Bool
 
 -- | A representation of whether or not to enable the GraphQL Query
@@ -25504,7 +25510,7 @@ WSConnectionInitTimeout :: Refined NonNegative Seconds -> WSConnectionInitTimeou
 --   the Environment, fully processed and ready to apply when running the
 --   server.
 data ServeOptions impl
-ServeOptions :: Port -> HostPreference -> ConnParams -> TxIsolation -> HashSet AdminSecretHash -> Maybe AuthHook -> [JWTConfig] -> Maybe RoleName -> CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> TelemetryStatus -> StringifyNumbers -> DangerouslyCollapseBooleans -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> AllowListStatus -> HashSet (EngineLogType impl) -> LogLevel -> ResponseInternalErrorsConfig -> Refined Positive Int -> Refined NonNegative Milliseconds -> OptionalInterval -> RemoteSchemaPermissions -> ConnectionOptions -> KeepAliveDelay -> InferFunctionPermissions -> MaintenanceMode () -> OptionalInterval -> HashSet ExperimentalFeature -> Refined NonNegative Int -> DevModeStatus -> Refined NonNegative Seconds -> WSConnectionInitTimeout -> EventingMode -> ReadOnlyMode -> MetadataQueryLoggingMode -> NamingCase -> ExtensionsSchema -> MetadataDefaults -> ServeOptions impl
+ServeOptions :: Port -> HostPreference -> ConnParams -> TxIsolation -> HashSet AdminSecretHash -> Maybe AuthHook -> [JWTConfig] -> Maybe RoleName -> CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> TelemetryStatus -> StringifyNumbers -> DangerouslyCollapseBooleans -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> AllowListStatus -> HashSet (EngineLogType impl) -> LogLevel -> Refined Positive Int -> Refined NonNegative Milliseconds -> OptionalInterval -> RemoteSchemaPermissions -> ConnectionOptions -> KeepAliveDelay -> InferFunctionPermissions -> MaintenanceMode () -> OptionalInterval -> HashSet ExperimentalFeature -> Refined NonNegative Int -> DevModeStatus -> AdminInternalErrorsStatus -> Refined NonNegative Seconds -> WSConnectionInitTimeout -> EventingMode -> ReadOnlyMode -> MetadataQueryLoggingMode -> NamingCase -> ExtensionsSchema -> MetadataDefaults -> ServeOptions impl
 [soPort] :: ServeOptions impl -> Port
 [soHost] :: ServeOptions impl -> HostPreference
 [soConnParams] :: ServeOptions impl -> ConnParams
@@ -25526,7 +25532,6 @@ ServeOptions :: Port -> HostPreference -> ConnParams -> TxIsolation -> HashSet A
 [soEnableAllowList] :: ServeOptions impl -> AllowListStatus
 [soEnabledLogTypes] :: ServeOptions impl -> HashSet (EngineLogType impl)
 [soLogLevel] :: ServeOptions impl -> LogLevel
-[soResponseInternalErrorsConfig] :: ServeOptions impl -> ResponseInternalErrorsConfig
 [soEventsHttpPoolSize] :: ServeOptions impl -> Refined Positive Int
 [soEventsFetchInterval] :: ServeOptions impl -> Refined NonNegative Milliseconds
 [soAsyncActionsFetchInterval] :: ServeOptions impl -> OptionalInterval
@@ -25541,6 +25546,7 @@ ServeOptions :: Port -> HostPreference -> ConnParams -> TxIsolation -> HashSet A
 [soExperimentalFeatures] :: ServeOptions impl -> HashSet ExperimentalFeature
 [soEventsFetchBatchSize] :: ServeOptions impl -> Refined NonNegative Int
 [soDevMode] :: ServeOptions impl -> DevModeStatus
+[soAdminInternalErrors] :: ServeOptions impl -> AdminInternalErrorsStatus
 [soGracefulShutdownTimeout] :: ServeOptions impl -> Refined NonNegative Seconds
 [soWebSocketConnectionInitTimeout] :: ServeOptions impl -> WSConnectionInitTimeout
 [soEventingMode] :: ServeOptions impl -> EventingMode
@@ -25584,6 +25590,10 @@ instance GHC.Generics.Generic Hasura.Server.Init.Config.ConsoleStatus
 instance GHC.Classes.Ord Hasura.Server.Init.Config.ConsoleStatus
 instance GHC.Classes.Eq Hasura.Server.Init.Config.ConsoleStatus
 instance GHC.Show.Show Hasura.Server.Init.Config.ConsoleStatus
+instance GHC.Generics.Generic Hasura.Server.Init.Config.AdminInternalErrorsStatus
+instance GHC.Classes.Ord Hasura.Server.Init.Config.AdminInternalErrorsStatus
+instance GHC.Classes.Eq Hasura.Server.Init.Config.AdminInternalErrorsStatus
+instance GHC.Show.Show Hasura.Server.Init.Config.AdminInternalErrorsStatus
 instance GHC.Generics.Generic Hasura.Server.Init.Config.AllowListStatus
 instance GHC.Classes.Ord Hasura.Server.Init.Config.AllowListStatus
 instance GHC.Classes.Eq Hasura.Server.Init.Config.AllowListStatus
@@ -25651,6 +25661,10 @@ instance Control.DeepSeq.NFData Hasura.Server.Init.Config.AllowListStatus
 instance Data.Hashable.Class.Hashable Hasura.Server.Init.Config.AllowListStatus
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.AllowListStatus
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.AllowListStatus
+instance Control.DeepSeq.NFData Hasura.Server.Init.Config.AdminInternalErrorsStatus
+instance Data.Hashable.Class.Hashable Hasura.Server.Init.Config.AdminInternalErrorsStatus
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.AdminInternalErrorsStatus
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.AdminInternalErrorsStatus
 instance Control.DeepSeq.NFData Hasura.Server.Init.Config.ConsoleStatus
 instance Data.Hashable.Class.Hashable Hasura.Server.Init.Config.ConsoleStatus
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.ConsoleStatus
@@ -25768,6 +25782,7 @@ instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Auth.AdminSecretHash
 instance Hasura.Server.Init.Env.FromEnv Hasura.Session.RoleName
 instance Hasura.Server.Init.Env.FromEnv GHC.Types.Bool
 instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Init.Config.TelemetryStatus
+instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Init.Config.AdminInternalErrorsStatus
 instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Init.Config.WsReadCookieStatus
 instance Hasura.Server.Init.Env.FromEnv Data.Aeson.Types.Internal.Value
 instance Hasura.Server.Init.Env.FromEnv Hasura.RQL.Types.Metadata.MetadataDefaults
@@ -25843,7 +25858,7 @@ enableAllowlistOption :: Option AllowListStatus
 enabledLogsOption :: EnabledLogTypes impl => Option (HashSet (EngineLogType impl))
 logLevelOption :: Option LogLevel
 graphqlDevModeOption :: Option DevModeStatus
-graphqlAdminInternalErrorsOption :: Option Bool
+graphqlAdminInternalErrorsOption :: Option AdminInternalErrorsStatus
 graphqlEventsHttpPoolSizeOption :: Option (Refined Positive Int)
 graphqlEventsFetchIntervalOption :: Option (Refined NonNegative Milliseconds)
 asyncActionsFetchIntervalOption :: Option OptionalInterval
@@ -26732,7 +26747,9 @@ module Hasura.App.State
 -- | Represents the Read-Only Hasura State, these fields are immutable and
 --   the state cannot be changed during runtime.
 data AppEnv
-AppEnv :: PGPool -> Manager -> Loggers -> TMVar MetadataResourceVersion -> InstanceId -> MaintenanceMode () -> LoggingSettings -> EventingMode -> ReadOnlyMode -> ServerMetrics -> ShutdownLatch -> TMVar MetadataResourceVersion -> PrometheusMetrics -> SamplingPolicy -> SubscriptionsState -> LockedEventsCtx -> (FeatureFlag -> IO Bool) -> AppEnv
+AppEnv :: Port -> HostPreference -> PGPool -> Manager -> Loggers -> TMVar MetadataResourceVersion -> InstanceId -> MaintenanceMode () -> LoggingSettings -> EventingMode -> ReadOnlyMode -> ServerMetrics -> ShutdownLatch -> TMVar MetadataResourceVersion -> PrometheusMetrics -> SamplingPolicy -> SubscriptionsState -> LockedEventsCtx -> ConnParams -> TxIsolation -> Maybe Text -> Maybe Text -> ConnectionOptions -> KeepAliveDelay -> WSConnectionInitTimeout -> Refined NonNegative Seconds -> (FeatureFlag -> IO Bool) -> AppEnv
+[appEnvPort] :: AppEnv -> Port
+[appEnvHost] :: AppEnv -> HostPreference
 [appEnvMetadataDbPool] :: AppEnv -> PGPool
 [appEnvManager] :: AppEnv -> Manager
 [appEnvLoggers] :: AppEnv -> Loggers
@@ -26749,12 +26766,20 @@ AppEnv :: PGPool -> Manager -> Loggers -> TMVar MetadataResourceVersion -> Insta
 [appEnvTraceSamplingPolicy] :: AppEnv -> SamplingPolicy
 [appEnvSubscriptionState] :: AppEnv -> SubscriptionsState
 [appEnvLockedEventsCtx] :: AppEnv -> LockedEventsCtx
+[appEnvConnParams] :: AppEnv -> ConnParams
+[appEnvTxIso] :: AppEnv -> TxIsolation
+[appEnvConsoleAssetsDir] :: AppEnv -> Maybe Text
+[appEnvConsoleSentryDsn] :: AppEnv -> Maybe Text
+[appEnvConnectionOptions] :: AppEnv -> ConnectionOptions
+[appEnvWebSocketKeepAlive] :: AppEnv -> KeepAliveDelay
+[appEnvWebSocketConnectionInitTimeout] :: AppEnv -> WSConnectionInitTimeout
+[appEnvGracefulShutdownTimeout] :: AppEnv -> Refined NonNegative Seconds
 [appEnvCheckFeatureFlag] :: AppEnv -> FeatureFlag -> IO Bool
 
 -- | Represents the Dynamic Hasura State, these field are mutable and can
 --   be changed during runtime.
 data AppContext
-AppContext :: SchemaCacheRef -> AuthMode -> SQLGenCtx -> HashSet API -> AllowListStatus -> ResponseInternalErrorsConfig -> Environment -> RemoteSchemaPermissions -> InferFunctionPermissions -> HashSet ExperimentalFeature -> NamingCase -> MetadataDefaults -> LiveQueriesOptions -> StreamQueriesOptions -> AppContext
+AppContext :: SchemaCacheRef -> AuthMode -> SQLGenCtx -> HashSet API -> AllowListStatus -> ResponseInternalErrorsConfig -> Environment -> RemoteSchemaPermissions -> InferFunctionPermissions -> HashSet ExperimentalFeature -> NamingCase -> MetadataDefaults -> LiveQueriesOptions -> StreamQueriesOptions -> CorsConfig -> ConsoleStatus -> TelemetryStatus -> Refined Positive Int -> Refined NonNegative Milliseconds -> Refined NonNegative Int -> OptionalInterval -> OptionalInterval -> AppContext
 [acCacheRef] :: AppContext -> SchemaCacheRef
 [acAuthMode] :: AppContext -> AuthMode
 [acSQLGenCtx] :: AppContext -> SQLGenCtx
@@ -26769,6 +26794,14 @@ AppContext :: SchemaCacheRef -> AuthMode -> SQLGenCtx -> HashSet API -> AllowLis
 [acMetadataDefaults] :: AppContext -> MetadataDefaults
 [acLiveQueryOptions] :: AppContext -> LiveQueriesOptions
 [acStreamQueryOptions] :: AppContext -> StreamQueriesOptions
+[acCorsConfig] :: AppContext -> CorsConfig
+[acConsoleStatus] :: AppContext -> ConsoleStatus
+[acEnableTelemetry] :: AppContext -> TelemetryStatus
+[acEventsHttpPoolSize] :: AppContext -> Refined Positive Int
+[acEventsFetchInterval] :: AppContext -> Refined NonNegative Milliseconds
+[acEventsFetchBatchSize] :: AppContext -> Refined NonNegative Int
+[acAsyncActionsFetchInterval] :: AppContext -> OptionalInterval
+[acSchemaPollInterval] :: AppContext -> OptionalInterval
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
 data Loggers
@@ -27142,7 +27175,7 @@ authorizeV2QueryApi :: MonadMetadataApiAuthorization m => RQLQuery -> HandlerCtx
 
 -- | The config API (<i>v1alpha1</i>config) handler
 class Monad m => MonadConfigApiHandler m
-runConfigApiHandler :: MonadConfigApiHandler m => AppContext -> AppEnv -> Maybe Text -> SpockCtxT () m ()
+runConfigApiHandler :: MonadConfigApiHandler m => AppContext -> AppEnv -> SpockCtxT () m ()
 mkSpockAction :: forall m a. (MonadIO m, MonadBaseControl IO m, FromJSON a, UserAuthentication (TraceT m), HttpLog m, HasReporter m, HasResourceLimits m) => AppContext -> AppEnv -> (Bool -> QErr -> Value) -> (QErr -> QErr) -> APIHandler (TraceT m) a -> ActionT m ()
 class (Monad m) => ConsoleRenderer m
 renderConsole :: ConsoleRenderer m => Text -> AuthMode -> TelemetryStatus -> Maybe Text -> Maybe Text -> m (Either String Text)
@@ -27151,10 +27184,10 @@ getExtraDataForVersionAPI :: MonadVersionAPIWithExtraData m => m [Pair]
 renderHtmlTemplate :: Template -> Value -> Either String Text
 
 -- | Default implementation of the <a>MonadConfigApiHandler</a>
-configApiGetHandler :: forall m. (MonadIO m, MonadBaseControl IO m, UserAuthentication (TraceT m), HttpLog m, HasReporter m, HasResourceLimits m) => AppContext -> AppEnv -> Maybe Text -> SpockCtxT () m ()
+configApiGetHandler :: forall m. (MonadIO m, MonadBaseControl IO m, UserAuthentication (TraceT m), HttpLog m, HasReporter m, HasResourceLimits m) => AppContext -> AppEnv -> SpockCtxT () m ()
 data HasuraApp
 HasuraApp :: !Application -> !SchemaCacheRef -> !AsyncActionSubscriptionState -> !IO () -> HasuraApp
-mkWaiApp :: forall m. (MonadIO m, MonadFix m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, MonadVersionAPIWithExtraData m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, HasReporter m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesNetwork m) => (AppContext -> SpockT m ()) -> Environment -> CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> TelemetryStatus -> SchemaCacheRef -> ConnectionOptions -> KeepAliveDelay -> HashSet (EngineLogType Hasura) -> AppContext -> AppEnv -> WSConnectionInitTimeout -> Store EmptyMetrics -> m HasuraApp
+mkWaiApp :: forall m. (MonadIO m, MonadFix m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, MonadVersionAPIWithExtraData m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, HasReporter m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesNetwork m) => (AppContext -> SpockT m ()) -> AppContext -> AppEnv -> Store EmptyMetrics -> m HasuraApp
 instance Hasura.Services.Network.ProvidesNetwork m => Hasura.Services.Network.ProvidesNetwork (Hasura.Server.App.Handler m)
 instance Hasura.Metadata.Class.MonadMetadataStorageQueryAPI m => Hasura.Metadata.Class.MonadMetadataStorageQueryAPI (Hasura.Server.App.Handler m)
 instance Hasura.Metadata.Class.MonadMetadataStorage m => Hasura.Metadata.Class.MonadMetadataStorage (Hasura.Server.App.Handler m)
@@ -27227,10 +27260,11 @@ initGlobalCtx :: MonadIO m => Environment -> Maybe String -> PostgresConnInfo (M
 -- | An application with Postgres database as a metadata storage
 data PGMetadataStorageAppT m a
 resolvePostgresConnInfo :: MonadIO m => Environment -> UrlConf -> Maybe Int -> m ConnInfo
-initAuthMode :: (ForkableMonadIO m, HasReporter m) => ServeOptions impl -> Manager -> Logger Hasura -> m AuthMode
+initAuthMode :: (ForkableMonadIO m, HasReporter m) => HashSet AdminSecretHash -> Maybe AuthHook -> [JWTConfig] -> Maybe RoleName -> Manager -> Logger Hasura -> m AuthMode
 initSubscriptionsState :: Logger Hasura -> Maybe SubscriptionPostPollHook -> IO SubscriptionsState
 initLockedEventsCtx :: IO LockedEventsCtx
-initSQLGenCtx :: ServeOptions impl -> SQLGenCtx
+mkResponseInternalErrorsConfig :: AdminInternalErrorsStatus -> DevModeStatus -> ResponseInternalErrorsConfig
+initSQLGenCtx :: StringifyNumbers -> DangerouslyCollapseBooleans -> HashSet ExperimentalFeature -> SQLGenCtx
 initialiseAppContext :: MonadIO m => Manager -> ServeOptions impl -> Environment -> SchemaCacheRef -> Logger Hasura -> SQLGenCtx -> m AppContext
 
 -- | Initializes or migrates the catalog and returns the context required
@@ -27268,12 +27302,12 @@ flushLogger :: MonadIO m => LoggerCtx impl -> m ()
 --   last, so that we retain as many "thread stopping" log messages as
 --   possible. The order in which the finalizers is run is determined by
 --   the order in which they are introduced in the code.
-runHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m) => (AppContext -> SpockT m ()) -> Environment -> ServeOptions impl -> AppContext -> AppEnv -> UTCTime -> Maybe (IO ()) -> Store EmptyMetrics -> ManagedT m ()
+runHGEServer :: forall m. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m) => (AppContext -> SpockT m ()) -> AppContext -> AppEnv -> UTCTime -> Maybe (IO ()) -> Store EmptyMetrics -> ManagedT m ()
 
 -- | Part of a factorization of <a>runHGEServer</a> to expose the
 --   constructed WAI application for testing purposes. See
 --   <a>runHGEServer</a> for documentation.
-mkHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m) => (AppContext -> SpockT m ()) -> Environment -> ServeOptions impl -> AppContext -> AppEnv -> Store EmptyMetrics -> ManagedT m Application
+mkHGEServer :: forall m. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m) => (AppContext -> SpockT m ()) -> AppContext -> AppEnv -> Store EmptyMetrics -> ManagedT m Application
 accessDeniedErrMsg :: Text
 notifySchemaCacheSyncTx :: MetadataResourceVersion -> InstanceId -> CacheInvalidations -> TxE QErr ()
 getCatalogStateTx :: TxE QErr CatalogState
