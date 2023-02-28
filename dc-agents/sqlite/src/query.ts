@@ -343,7 +343,10 @@ function table_query(
   ): string {
   const tableAlias      = generateTableAlias(tableName);
   const aggregateSelect = aggregates_query(ts, tableName, joinInfo, aggregates, wWhere, wLimit, wOffset, wOrder);
-  const fieldSelect     = isEmptyObject(fields) ? [] : [`'rows', JSON_GROUP_ARRAY(j)`];
+  // The use of the JSON function inside JSON_GROUP_ARRAY is necessary from SQLite 3.39.0 due to breaking changes in
+  // SQLite. See https://sqlite.org/forum/forumpost/e3b101fb3234272b for more details. This approach still works fine
+  // for older versions too.
+  const fieldSelect     = isEmptyObject(fields) ? [] : [`'rows', JSON_GROUP_ARRAY(JSON(j))`];
   const fieldFrom       = isEmptyObject(fields) ? '' : (() => {
     const whereClause = where(ts, wWhere, joinInfo, tableName, tableAlias);
     // NOTE: The reuse of the 'j' identifier should be safe due to scoping. This is confirmed in testing.
@@ -663,59 +666,6 @@ function query(request: QueryRequest): string {
   return tag('query', `SELECT ${result} as data`);
 }
 
-/** Format the DB response into a /query response.
- *
- * Note: There should always be one result since 0 rows still generates an empty JSON array.
- */
-function parseDbResult(rows: any, request: QueryRequest): QueryResponse {
-  const rawResponse = JSON.parse(rows[0].data);
-  return parseRawQueryResponse(request.query, rawResponse);
-}
-
-type RawQueryResponse = {
-  rows?: string[] | null,
-  aggregates?: Record<string, any> | null,
-}
-
-function parseRawQueryResponse(query: Query, rawQueryResponse: RawQueryResponse): QueryResponse {
-  const rows = query.fields
-    ? (rawQueryResponse.rows ?? []).map(rowJson => {
-      const row: Record<string, (ColumnFieldValue | RawQueryResponse | NullColumnFieldValue)> = JSON.parse(rowJson);
-      return parseRowFields(row, query.fields ?? {});
-    })
-    : null;
-  
-  return {
-    aggregates: rawQueryResponse.aggregates,
-    ... (rows ? { rows } : {}),
-  }
-}
-
-// It seems that since SQLite 3.39.0, the JSON_GROUP_ARRAY function that is used to create the arrays
-// for object/array relationships now string-encodes any JSON inside the array. This function works
-// around the problem by decoding the stringified-JSON back into JSON.
-// The issue has been raised here: https://sqlite.org/forum/forumpost/e3b101fb32
-export function parseRowFields(row: Record<string, (ColumnFieldValue | RawQueryResponse | NullColumnFieldValue)>, fields: Record<string, Field>): Record<string, (ColumnFieldValue | QueryResponse | NullColumnFieldValue)> {
-  return mapObject(row, ([fieldName, fieldValue]) => {
-    const queryField = fields[fieldName];
-    if (queryField === undefined)
-      throw new Error(`Unable to find response field ${fieldName} on amongst original query fields`);
-
-    switch (queryField.type) {
-      case "column": 
-        return [fieldName, fieldValue];
-
-      case "relationship":
-        if (fieldValue === null || (!("rows" in fieldValue) && !("aggregates" in fieldValue)))
-          throw new Error(`Did not find a query response in field ${fieldName} where one was expected`);
-        return [fieldName, parseRawQueryResponse(queryField.query, fieldValue)];
-
-      default:
-        return unreachable(queryField["type"]);
-    }
-  });
-}
-
 /** Function to add SQL comments to the generated SQL to tag which procedures generated what text.
  *
  * comment('a','b') => '/*\<a>\*\/ b /*\</a>*\/'
@@ -788,7 +738,7 @@ export async function queryData(config: Config, sqlLogger: SqlLogger, queryReque
     }
 
     const results = await db.query(q);
-    return parseDbResult(results, queryRequest);
+    return JSON.parse(results[0].data);
   });
 }
 
