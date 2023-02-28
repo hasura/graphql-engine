@@ -1,8 +1,11 @@
-import { generateQueryKeys } from '../../DatabaseRelationships/utils/queryClientUtils';
-import { useMetadataMigration } from '../../MetadataAPI';
 import { useCallback, useMemo } from 'react';
 import { useQueryClient } from 'react-query';
+import { exportMetadata } from '../../../metadata/actions';
+import { useAppDispatch } from '../../../store';
+import { generateQueryKeys } from '../../DatabaseRelationships/utils/queryClientUtils';
+import { useMetadataMigration } from '../../MetadataAPI';
 import { DatabaseConnection } from '../types';
+import { usePushRoute } from './usePushRoute';
 
 export const useManageDatabaseConnection = ({
   onSuccess,
@@ -13,11 +16,18 @@ export const useManageDatabaseConnection = ({
 }) => {
   const queryClient = useQueryClient();
   const { mutate, ...rest } = useMetadataMigration();
+  const push = usePushRoute();
+  const dispatch = useAppDispatch();
+
   const mutationOptions = useMemo(
     () => ({
       onSuccess: () => {
         queryClient.invalidateQueries(generateQueryKeys.metadata());
         onSuccess?.();
+
+        // this code is only for the demo
+        push('/data/manage');
+        dispatch(exportMetadata());
       },
       onError: (err: Error) => {
         onError?.(err);

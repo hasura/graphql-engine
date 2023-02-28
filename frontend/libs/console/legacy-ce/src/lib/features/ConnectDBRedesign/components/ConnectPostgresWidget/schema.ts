@@ -8,34 +8,38 @@ const numberSchema = z.preprocess(
   z.union([z.number(), z.nan()])
 );
 
+export const poolSettingsSchema = z
+  .object({
+    totalMaxConnections: numberSchema.optional(),
+    idleTimeout: numberSchema.optional(),
+    retries: numberSchema.optional(),
+    poolTimeout: numberSchema.optional(),
+    connectionLifetime: numberSchema.optional(),
+  })
+  .optional();
+
+export const databaseUrlSchema = z.discriminatedUnion('connectionType', [
+  z.object({
+    connectionType: z.literal('databaseUrl'),
+    url: z.string().min(1, 'URL cannot be empty'),
+  }),
+  z.object({
+    connectionType: z.literal('envVar'),
+    envVar: z.string().min(1, 'Env variable cannot be empty'),
+  }),
+  z.object({
+    connectionType: z.literal('connectionParams'),
+    username: z.string().min(1, 'Cannot be empty'),
+    password: z.string().optional(),
+    database: z.string().min(1, 'Cannot be empty'),
+    host: z.string().min(1, 'Cannot be empty'),
+    port: numberSchema,
+  }),
+]);
+
 export const connectionInfoSchema = z.object({
-  databaseUrl: z.discriminatedUnion('connectionType', [
-    z.object({
-      connectionType: z.literal('databaseUrl'),
-      url: z.string().min(1, 'URL cannot be empty'),
-    }),
-    z.object({
-      connectionType: z.literal('envVar'),
-      envVar: z.string().min(1, 'Env variable cannot be empty'),
-    }),
-    z.object({
-      connectionType: z.literal('connectionParams'),
-      username: z.string().min(1, 'Cannot be empty'),
-      password: z.string().optional(),
-      database: z.string().min(1, 'Cannot be empty'),
-      host: z.string().min(1, 'Cannot be empty'),
-      port: numberSchema,
-    }),
-  ]),
-  poolSettings: z
-    .object({
-      totalMaxConnections: numberSchema.optional(),
-      idleTimeout: numberSchema.optional(),
-      retries: numberSchema.optional(),
-      poolTimeout: numberSchema.optional(),
-      connectionLifetime: numberSchema.optional(),
-    })
-    .optional(),
+  databaseUrl: databaseUrlSchema,
+  poolSettings: poolSettingsSchema,
   usePreparedStatements: z.boolean().optional(),
   isolationLevel: z
     .union([

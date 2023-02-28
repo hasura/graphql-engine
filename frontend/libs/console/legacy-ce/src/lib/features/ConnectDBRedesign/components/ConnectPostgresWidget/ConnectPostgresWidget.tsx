@@ -1,18 +1,21 @@
 import { InputField, useConsoleForm } from '../../../../new-components/Form';
-import { Tabs } from '../../../../new-components/Tabs';
 import { Button } from '../../../../new-components/Button';
-import { useEffect, useState } from 'react';
 import { GraphQLCustomization } from '../GraphQLCustomization/GraphQLCustomization';
-import { Configuration } from './parts/Configuration';
 import { getDefaultValues, PostgresConnectionSchema, schema } from './schema';
 import { ReadReplicas } from './parts/ReadReplicas';
-import { get } from 'lodash';
-import { FaExclamationTriangle } from 'react-icons/fa';
 import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { useMetadata } from '../../../hasura-metadata-api';
 import { generatePostgresRequestPayload } from './utils/generateRequests';
-import { isProConsole } from '../../../../utils';
+import { DatabaseUrl } from './parts/DatabaseUrl';
+import { PoolSettings } from './parts/PoolSettings';
+import { IsolationLevel } from './parts/IsolationLevel';
+import { UsePreparedStatements } from './parts/UsePreparedStatements';
+import { SslSettings } from './parts/SslSettings';
+import { Collapsible } from '../../../../new-components/Collapsible';
+import { ExtensionSchema } from './parts/ExtensionSchema';
+import { areReadReplicasEnabled, areSSLSettingsEnabled } from './utils/helpers';
+import { useEffect } from 'react';
 
 interface ConnectPostgresWidgetProps {
   dataSourceName?: string;
@@ -63,10 +66,9 @@ export const ConnectPostgresWidget = (props: ConnectPostgresWidgetProps) => {
     }
   };
 
-  const [tab, setTab] = useState('connection_details');
   const {
     Form,
-    methods: { formState, watch, reset },
+    methods: { reset },
   } = useConsoleForm({
     schema,
   });
@@ -83,82 +85,95 @@ export const ConnectPostgresWidget = (props: ConnectPostgresWidgetProps) => {
     }
   }, [metadataSource, reset]);
 
-  const readReplicas = watch('configuration.readReplicas');
-
-  const connectionDetailsTabErrors = [
-    get(formState.errors, 'name'),
-    get(formState.errors, 'configuration.connectionInfo'),
-    get(formState.errors, 'configuration.extensionSchema'),
-  ].filter(Boolean);
-
-  const readReplicasError = [
-    get(formState.errors, 'configuration.readReplicas'),
-  ].filter(Boolean);
-
   const hiddenOptions =
     overrideDriver === 'cockroach' ? ['connectionParams'] : [];
-
-  const proConsoleTabs = isProConsole(window.__env)
-    ? [
-        {
-          value: 'read_replicas',
-          label: `Read Replicas ${
-            readReplicas?.length ? `(${readReplicas.length})` : ''
-          }`,
-          icon: readReplicasError.length ? (
-            <FaExclamationTriangle className="text-red-800" />
-          ) : undefined,
-          content: (
-            <ReadReplicas
-              name="configuration.readReplicas"
-              hideOptions={hiddenOptions}
-            />
-          ),
-        },
-      ]
-    : [];
 
   return (
     <div>
       <div className="text-xl text-gray-600 font-semibold">
         {isEditMode
           ? `Edit ${overrideDisplayName ?? 'Postgres'} Connection`
-          : `Connect New ${overrideDisplayName ?? 'Postgres'} Database`}
+          : `Connect ${overrideDisplayName ?? 'Postgres'} Database`}
       </div>
       <Form onSubmit={handleSubmit}>
-        <Tabs
-          value={tab}
-          onValueChange={value => setTab(value)}
-          items={[
-            {
-              value: 'connection_details',
-              label: 'Connection Details',
-              icon: connectionDetailsTabErrors.length ? (
-                <FaExclamationTriangle className="text-red-800" />
-              ) : undefined,
-              content: (
-                <div className="mt-sm">
-                  <InputField
-                    name="name"
-                    label="Database display name"
-                    placeholder="Database name"
-                  />
-                  <Configuration
-                    name="configuration"
-                    hideOptions={hiddenOptions}
-                  />
-                </div>
-              ),
-            },
-            ...proConsoleTabs,
-            {
-              value: 'customization',
-              label: 'GraphQL Customization',
-              content: <GraphQLCustomization name="customization" />,
-            },
-          ]}
+        <InputField
+          name="name"
+          label="Database name"
+          placeholder="Database name"
         />
-        <div className="flex justify-end">
+
+        <div className="bg-white border border-hasGray-300 rounded-md shadow-sm overflow-hidden p-4">
+          <DatabaseUrl
+            name="configuration.connectionInfo.databaseUrl"
+            hideOptions={hiddenOptions}
+          />
+        </div>
+
+        <div className="mt-sm">
+          <Collapsible
+            triggerChildren={
+              <div className="font-semibold text-muted">Advanced Settings</div>
+            }
+          >
+            <PoolSettings name={`configuration.connectionInfo.poolSettings`} />
+            <IsolationLevel
+              name={`configuration.connectionInfo.isolationLevel`}
+            />
+            <UsePreparedStatements
+              name={`configuration.connectionInfo.usePreparedStatements`}
+            />
+            <ExtensionSchema name="configuration.extensionSchema" />
+            {areSSLSettingsEnabled() && (
+              <Collapsible
+                triggerChildren={
+                  <div className="font-semibold text-muted">
+                    SSL Certificates Settings
+                    <span className="px-1.5 italic font-light">
+                      (Certificates will be loaded from{' '}
+                      <a href="https://hasura.io/docs/latest/graphql/cloud/projects/create.html#existing-database">
+                        environment variables
+                      </a>
+                      )
+                    </span>
+                  </div>
+                }
+              >
+                <SslSettings
+                  name={`configuration.connectionInfo.sslSettings`}
+                />
+              </Collapsible>
+            )}
+          </Collapsible>
+        </div>
+
+        {areReadReplicasEnabled() && (
+          <div className="mt-sm">
+            <Collapsible
+              triggerChildren={
+                <div className="font-semibold text-muted">Read Replicas</div>
+              }
+            >
+              <ReadReplicas
+                name="configuration.readReplicas"
+                hideOptions={hiddenOptions}
+              />
+            </Collapsible>
+          </div>
+        )}
+
+        <div className="mt-sm">
+          <Collapsible
+            triggerChildren={
+              <div className="font-semibold text-muted">
+                GraphQL Customization
+              </div>
+            }
+          >
+            <GraphQLCustomization name="customization" />
+          </Collapsible>
+        </div>
+
+        <div className="flex justify-end mt-sm">
           <Button
             type="submit"
             mode="primary"
