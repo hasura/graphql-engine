@@ -790,7 +790,7 @@ graphqlDevModeOption =
       Config._helpMessage = "Set dev mode for GraphQL requests; include 'internal' key in the errors extensions (if required) of the response"
     }
 
-parseGraphqlAdminInternalErrors :: Opt.Parser (Maybe Bool)
+parseGraphqlAdminInternalErrors :: Opt.Parser (Maybe Config.AdminInternalErrorsStatus)
 parseGraphqlAdminInternalErrors =
   Opt.optional $
     Opt.option
@@ -799,11 +799,11 @@ parseGraphqlAdminInternalErrors =
           <> Opt.help (Config._helpMessage graphqlAdminInternalErrorsOption)
       )
 
-graphqlAdminInternalErrorsOption :: Config.Option Bool
+graphqlAdminInternalErrorsOption :: Config.Option Config.AdminInternalErrorsStatus
 graphqlAdminInternalErrorsOption =
   Config.Option
     { -- Default to `true` to enable backwards compatibility
-      Config._default = True,
+      Config._default = Config.AdminInternalErrorsEnabled,
       Config._envVar = "HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS",
       Config._helpMessage = "Enables including 'internal' information in an error response for requests made by an 'admin' (default: true)"
     }

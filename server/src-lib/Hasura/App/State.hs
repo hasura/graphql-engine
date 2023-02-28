@@ -20,6 +20,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.SchemaCache (MetadataResourceVersion)
 import Hasura.Server.Auth (AuthMode)
+import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init
 import Hasura.Server.Logging
 import Hasura.Server.Metrics
@@ -29,6 +30,9 @@ import Hasura.Server.Types
 import Hasura.ShutdownLatch
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as HTTP
+import Network.Wai.Handler.Warp (HostPreference)
+import Network.WebSockets.Connection qualified as WebSockets
+import Refined (NonNegative, Positive, Refined)
 
 {- Note [Hasura Application State]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -64,12 +68,14 @@ Hasura Application State can be divided into two parts:
 -- | Represents the Read-Only Hasura State, these fields are immutable and the state
 -- cannot be changed during runtime.
 data AppEnv = AppEnv
-  { appEnvMetadataDbPool :: PG.PGPool,
+  { appEnvPort :: Port,
+    appEnvHost :: HostPreference,
+    appEnvMetadataDbPool :: PG.PGPool,
     appEnvManager :: HTTP.Manager,
     appEnvLoggers :: Loggers,
     appEnvMetadataVersionRef :: STM.TMVar MetadataResourceVersion,
     appEnvInstanceId :: InstanceId,
-    appEnvEnableMaintenanceMode :: (MaintenanceMode ()),
+    appEnvEnableMaintenanceMode :: MaintenanceMode (),
     appEnvLoggingSettings :: LoggingSettings,
     appEnvEventingMode :: EventingMode,
     appEnvEnableReadOnlyMode :: ReadOnlyMode,
@@ -80,6 +86,14 @@ data AppEnv = AppEnv
     appEnvTraceSamplingPolicy :: Tracing.SamplingPolicy,
     appEnvSubscriptionState :: ES.SubscriptionsState,
     appEnvLockedEventsCtx :: LockedEventsCtx,
+    appEnvConnParams :: PG.ConnParams,
+    appEnvTxIso :: PG.TxIsolation,
+    appEnvConsoleAssetsDir :: Maybe Text,
+    appEnvConsoleSentryDsn :: Maybe Text,
+    appEnvConnectionOptions :: WebSockets.ConnectionOptions,
+    appEnvWebSocketKeepAlive :: KeepAliveDelay,
+    appEnvWebSocketConnectionInitTimeout :: WSConnectionInitTimeout,
+    appEnvGracefulShutdownTimeout :: Refined NonNegative Seconds,
     appEnvCheckFeatureFlag :: (FeatureFlag -> IO Bool)
   }
 
@@ -89,17 +103,25 @@ data AppContext = AppContext
   { acCacheRef :: SchemaCacheRef,
     acAuthMode :: AuthMode,
     acSQLGenCtx :: SQLGenCtx,
-    acEnabledAPIs :: (S.HashSet API),
+    acEnabledAPIs :: S.HashSet API,
     acEnableAllowlist :: AllowListStatus,
     acResponseInternalErrorsConfig :: ResponseInternalErrorsConfig,
     acEnvironment :: Env.Environment,
     acRemoteSchemaPermsCtx :: Options.RemoteSchemaPermissions,
     acFunctionPermsCtx :: Options.InferFunctionPermissions,
-    acExperimentalFeatures :: (S.HashSet ExperimentalFeature),
-    acDefaultNamingConvention :: (NamingCase),
+    acExperimentalFeatures :: S.HashSet ExperimentalFeature,
+    acDefaultNamingConvention :: NamingCase,
     acMetadataDefaults :: MetadataDefaults,
     acLiveQueryOptions :: LiveQueriesOptions,
-    acStreamQueryOptions :: StreamQueriesOptions
+    acStreamQueryOptions :: StreamQueriesOptions,
+    acCorsConfig :: Cors.CorsConfig,
+    acConsoleStatus :: ConsoleStatus,
+    acEnableTelemetry :: TelemetryStatus,
+    acEventsHttpPoolSize :: Refined Positive Int,
+    acEventsFetchInterval :: Refined NonNegative Milliseconds,
+    acEventsFetchBatchSize :: Refined NonNegative Int,
+    acAsyncActionsFetchInterval :: OptionalInterval,
+    acSchemaPollInterval :: OptionalInterval
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger

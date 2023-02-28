@@ -24,6 +24,7 @@ module Hasura.App
     initSubscriptionsState,
     initLockedEventsCtx,
     initSQLGenCtx,
+    mkResponseInternalErrorsConfig,
     migrateCatalogSchema,
     mkLoggers,
     mkPGLogger,
@@ -313,18 +314,21 @@ resolvePostgresConnInfo env dbUrlConf maybeRetries = do
 
 initAuthMode ::
   (C.ForkableMonadIO m, Tracing.HasReporter m) =>
-  ServeOptions impl ->
+  HashSet AdminSecretHash ->
+  Maybe AuthHook ->
+  [JWTConfig] ->
+  Maybe RoleName ->
   HTTP.Manager ->
   Logger Hasura ->
   m AuthMode
-initAuthMode ServeOptions {..} httpManager logger = do
+initAuthMode adminSecret authHook jwtSecret unAuthRole httpManager logger = do
   authModeRes <-
     runExceptT $
       setupAuthMode
-        soAdminSecret
-        soAuthHook
-        soJwtSecret
-        soUnAuthRole
+        adminSecret
+        authHook
+        jwtSecret
+        unAuthRole
         logger
         httpManager
 
@@ -346,25 +350,32 @@ initSubscriptionsState logger liveQueryHook = ES.initSubscriptionsState postPoll
 initLockedEventsCtx :: IO LockedEventsCtx
 initLockedEventsCtx = LockedEventsCtx <$> STM.newTVarIO mempty <*> STM.newTVarIO mempty <*> STM.newTVarIO mempty <*> STM.newTVarIO mempty
 
-initSQLGenCtx :: ServeOptions impl -> SQLGenCtx
-initSQLGenCtx ServeOptions {..} =
+mkResponseInternalErrorsConfig :: AdminInternalErrorsStatus -> DevModeStatus -> ResponseInternalErrorsConfig
+mkResponseInternalErrorsConfig adminInternalErrors devMode = do
+  if
+      | isDevModeEnabled devMode -> InternalErrorsAllRequests
+      | isAdminInternalErrorsEnabled adminInternalErrors -> InternalErrorsAdminOnly
+      | otherwise -> InternalErrorsDisabled
+
+initSQLGenCtx :: Options.StringifyNumbers -> Options.DangerouslyCollapseBooleans -> HashSet ExperimentalFeature -> SQLGenCtx
+initSQLGenCtx strinfigyNum dangerousBooleanCollapse experimentalFeatures =
   SQLGenCtx
-    soStringifyNum
-    soDangerousBooleanCollapse
+    strinfigyNum
+    dangerousBooleanCollapse
     optimizePermissionFilters
     bigqueryStringNumericInput
   where
     optimizePermissionFilters
-      | EFOptimizePermissionFilters `elem` soExperimentalFeatures = Options.OptimizePermissionFilters
+      | EFOptimizePermissionFilters `elem` experimentalFeatures = Options.OptimizePermissionFilters
       | otherwise = Options.Don'tOptimizePermissionFilters
 
     bigqueryStringNumericInput
-      | EFBigQueryStringNumericInput `elem` soExperimentalFeatures = Options.EnableBigQueryStringNumericInput
+      | EFBigQueryStringNumericInput `elem` experimentalFeatures = Options.EnableBigQueryStringNumericInput
       | otherwise = Options.DisableBigQueryStringNumericInput
 
 initialiseAppContext :: (MonadIO m) => HTTP.Manager -> ServeOptions impl -> Env.Environment -> SchemaCacheRef -> Logger Hasura -> SQLGenCtx -> m AppContext
-initialiseAppContext httpManager serveOptions@ServeOptions {..} env schemaCacheRef logger sqlGenCtx = do
-  authMode <- liftIO $ initAuthMode serveOptions httpManager logger
+initialiseAppContext httpManager ServeOptions {..} env schemaCacheRef logger sqlGenCtx = do
+  authMode <- liftIO $ initAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole httpManager logger
 
   let appCtx =
         AppContext
@@ -373,7 +384,7 @@ initialiseAppContext httpManager serveOptions@ServeOptions {..} env schemaCacheR
             acSQLGenCtx = sqlGenCtx,
             acEnabledAPIs = soEnabledAPIs,
             acEnableAllowlist = soEnableAllowList,
-            acResponseInternalErrorsConfig = soResponseInternalErrorsConfig,
+            acResponseInternalErrorsConfig = mkResponseInternalErrorsConfig soAdminInternalErrors soDevMode,
             acEnvironment = env,
             acRemoteSchemaPermsCtx = soEnableRemoteSchemaPermissions,
             acFunctionPermsCtx = soInferFunctionPermissions,
@@ -381,9 +392,16 @@ initialiseAppContext httpManager serveOptions@ServeOptions {..} env schemaCacheR
             acDefaultNamingConvention = soDefaultNamingConvention,
             acMetadataDefaults = soMetadataDefaults,
             acLiveQueryOptions = soLiveQueryOpts,
-            acStreamQueryOptions = soStreamingQueryOpts
+            acStreamQueryOptions = soStreamingQueryOpts,
+            acCorsConfig = soCorsConfig,
+            acConsoleStatus = soConsoleStatus,
+            acEnableTelemetry = soEnableTelemetry,
+            acEventsHttpPoolSize = soEventsHttpPoolSize,
+            acEventsFetchInterval = soEventsFetchInterval,
+            acAsyncActionsFetchInterval = soAsyncActionsFetchInterval,
+            acSchemaPollInterval = soSchemaPollInterval,
+            acEventsFetchBatchSize = soEventsFetchBatchSize
           }
-
   return appCtx
 
 -- | Initializes or migrates the catalog and returns the context required to start the server.
@@ -434,7 +452,7 @@ initialiseContext env GlobalCtx {..} serveOptions@ServeOptions {..} liveQueryHoo
                   }
               sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings) (PG.cpAllowPrepare soConnParams) soTxIso Nothing
            in PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema Nothing mempty
-      sqlGenCtx = initSQLGenCtx serveOptions
+      sqlGenCtx = initSQLGenCtx soStringifyNum soDangerousBooleanCollapse soExperimentalFeatures
       checkFeatureFlag' = checkFeatureFlag env
       serverConfigCtx =
         ServerConfigCtx
@@ -484,7 +502,9 @@ initialiseContext env GlobalCtx {..} serveOptions@ServeOptions {..} liveQueryHoo
 
   let appEnv =
         AppEnv
-          { appEnvMetadataDbPool = metadataDbPool,
+          { appEnvPort = soPort,
+            appEnvHost = soHost,
+            appEnvMetadataDbPool = metadataDbPool,
             appEnvManager = srvMgr,
             appEnvLoggers = loggers,
             appEnvMetadataVersionRef = metaVersionRef,
@@ -500,9 +520,16 @@ initialiseContext env GlobalCtx {..} serveOptions@ServeOptions {..} liveQueryHoo
             appEnvTraceSamplingPolicy = traceSamplingPolicy,
             appEnvSubscriptionState = subscriptionsState,
             appEnvLockedEventsCtx = lockedEventsCtx,
+            appEnvConnParams = soConnParams,
+            appEnvTxIso = soTxIso,
+            appEnvConsoleAssetsDir = soConsoleAssetsDir,
+            appEnvConsoleSentryDsn = soConsoleSentryDsn,
+            appEnvConnectionOptions = soConnectionOptions,
+            appEnvWebSocketKeepAlive = soWebSocketKeepAlive,
+            appEnvWebSocketConnectionInitTimeout = soWebSocketConnectionInitTimeout,
+            appEnvGracefulShutdownTimeout = soGracefulShutdownTimeout,
             appEnvCheckFeatureFlag = checkFeatureFlag'
           }
-
   pure (appCtx, appEnv)
 
 mkLoggers ::
@@ -613,7 +640,7 @@ flushLogger = liftIO . FL.flushLogStr . _lcLoggerSet
 {- HLINT ignore runHGEServer "Avoid lambda" -}
 {- HLINT ignore runHGEServer "Use withAsync" -}
 runHGEServer ::
-  forall m impl.
+  forall m.
   ( MonadIO m,
     MonadFix m,
     MonadMask m,
@@ -638,8 +665,6 @@ runHGEServer ::
     ProvidesHasuraServices m
   ) =>
   (AppContext -> Spock.SpockT m ()) ->
-  Env.Environment ->
-  ServeOptions impl ->
   AppContext ->
   AppEnv ->
   -- | start time
@@ -648,17 +673,17 @@ runHGEServer ::
   Maybe (IO ()) ->
   EKG.Store EKG.EmptyMetrics ->
   ManagedT m ()
-runHGEServer setupHook env serveOptions appCtx appEnv@AppEnv {..} initTime startupStatusHook ekgStore = do
+runHGEServer setupHook appCtx appEnv@AppEnv {..} initTime startupStatusHook ekgStore = do
   waiApplication <-
-    mkHGEServer setupHook env serveOptions appCtx appEnv ekgStore
+    mkHGEServer setupHook appCtx appEnv ekgStore
 
   let logger = _lsLogger appEnvLoggers
   -- `startupStatusHook`: add `Service started successfully` message to config_status
   -- table when a tenant starts up in multitenant
   let warpSettings :: Warp.Settings
       warpSettings =
-        Warp.setPort (_getPort $ soPort serveOptions)
-          . Warp.setHost (soHost serveOptions)
+        Warp.setPort (_getPort appEnvPort)
+          . Warp.setHost appEnvHost
           . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
           . Warp.setInstallShutdownHandler shutdownHandler
           . Warp.setBeforeMainLoop (for_ startupStatusHook id)
@@ -705,7 +730,7 @@ runHGEServer setupHook env serveOptions appCtx appEnv@AppEnv {..} initTime start
 -- | Part of a factorization of 'runHGEServer' to expose the constructed WAI
 -- application for testing purposes. See 'runHGEServer' for documentation.
 mkHGEServer ::
-  forall m impl.
+  forall m.
   ( MonadIO m,
     MonadFix m,
     MonadMask m,
@@ -730,13 +755,11 @@ mkHGEServer ::
     ProvidesHasuraServices m
   ) =>
   (AppContext -> Spock.SpockT m ()) ->
-  Env.Environment ->
-  ServeOptions impl ->
   AppContext ->
   AppEnv ->
   EKG.Store EKG.EmptyMetrics ->
   ManagedT m Application
-mkHGEServer setupHook env ServeOptions {..} appCtx@AppContext {..} appEnv@AppEnv {..} ekgStore = do
+mkHGEServer setupHook appCtx@AppContext {..} appEnv@AppEnv {..} ekgStore = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -744,55 +767,34 @@ mkHGEServer setupHook env ServeOptions {..} appCtx@AppContext {..} appEnv@AppEnv
   --
   -- NOTE: be sure to compile WITHOUT code coverage, for this to work properly.
   liftIO disableAssertNF
-
-  let optimizePermissionFilters
-        | EFOptimizePermissionFilters `elem` soExperimentalFeatures = Options.OptimizePermissionFilters
-        | otherwise = Options.Don'tOptimizePermissionFilters
-
-      bigqueryStringNumericInput
-        | EFBigQueryStringNumericInput `elem` soExperimentalFeatures = Options.EnableBigQueryStringNumericInput
-        | otherwise = Options.DisableBigQueryStringNumericInput
-
-      sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse optimizePermissionFilters bigqueryStringNumericInput
-      Loggers loggerCtx logger _ = appEnvLoggers
+  let Loggers loggerCtx logger _ = appEnvLoggers
 
   HasuraApp app cacheRef actionSubState stopWsServer <-
     lift $
       flip onException (flushLogger loggerCtx) $
         mkWaiApp
           setupHook
-          env
-          soCorsConfig
-          soConsoleStatus
-          soConsoleAssetsDir
-          soConsoleSentryDsn
-          soEnableTelemetry
-          acCacheRef
-          soConnectionOptions
-          soWebSocketKeepAlive
-          (_lsEnabledLogTypes appEnvLoggingSettings)
           appCtx
           appEnv
-          soWebSocketConnectionInitTimeout
           ekgStore
 
   -- Init ServerConfigCtx
   let serverConfigCtx =
         ServerConfigCtx
-          soInferFunctionPermissions
-          soEnableRemoteSchemaPermissions
-          sqlGenCtx
-          soEnableMaintenanceMode
-          soExperimentalFeatures
-          soEventingMode
-          soReadOnlyMode
-          soDefaultNamingConvention
-          soMetadataDefaults
+          acFunctionPermsCtx
+          acRemoteSchemaPermsCtx
+          acSQLGenCtx
+          appEnvEnableMaintenanceMode
+          acExperimentalFeatures
+          appEnvEventingMode
+          appEnvEnableReadOnlyMode
+          acDefaultNamingConvention
+          acMetadataDefaults
           appEnvCheckFeatureFlag
 
   -- Log Warning if deprecated environment variables are used
   sources <- scSources <$> liftIO (getSchemaCache cacheRef)
-  liftIO $ logDeprecatedEnvVars logger env sources
+  liftIO $ logDeprecatedEnvVars logger acEnvironment sources
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSchemaCache cacheRef)
@@ -812,7 +814,7 @@ mkHGEServer setupHook env ServeOptions {..} appCtx@AppContext {..} appEnv@AppEnv
       serverConfigCtx
       newLogTVar
 
-  case soEventingMode of
+  case appEnvEventingMode of
     EventingEnabled -> do
       startEventTriggerPollerThread logger appEnvLockedEventsCtx cacheRef
       startAsyncActionsPollerThread logger appEnvLockedEventsCtx cacheRef actionSubState
@@ -845,14 +847,14 @@ mkHGEServer setupHook env ServeOptions {..} appCtx@AppContext {..} appEnv@AppEnv
             unLogger logger . mkGenericLog @String LevelInfo "sources-ping"
       liftIO
         ( runPingSources
-            env
+            acEnvironment
             pingLog
             (scSourcePingConfig <$> getSchemaCache cacheRef)
         )
 
   -- start a background thread for telemetry
   _telemetryThread <-
-    if isTelemetryEnabled soEnableTelemetry
+    if isTelemetryEnabled acEnableTelemetry
       then do
         lift . unLogger logger $ mkGenericLog @Text LevelInfo "telemetry" telemetryNotice
 
@@ -865,7 +867,7 @@ mkHGEServer setupHook env ServeOptions {..} appCtx@AppContext {..} appEnv@AppEnv
         telemetryThread <-
           C.forkManagedT "runTelemetry" logger $
             liftIO $
-              runTelemetry logger appEnvManager (getSchemaCache cacheRef) dbUid appEnvInstanceId pgVersion soExperimentalFeatures
+              runTelemetry logger appEnvManager (getSchemaCache cacheRef) dbUid appEnvInstanceId pgVersion acExperimentalFeatures
         return $ Just telemetryThread
       else return Nothing
 
@@ -972,21 +974,21 @@ mkHGEServer setupHook env ServeOptions {..} appCtx@AppContext {..} appEnv@AppEnv
 
     startEventTriggerPollerThread logger lockedEventsCtx cacheRef = do
       schemaCache <- liftIO $ getSchemaCache cacheRef
-      let maxEventThreads = unrefine soEventsHttpPoolSize
-          fetchInterval = milliseconds $ unrefine soEventsFetchInterval
+      let maxEventThreads = unrefine acEventsHttpPoolSize
+          fetchInterval = milliseconds $ unrefine acEventsFetchInterval
           allSources = HM.elems $ scSources schemaCache
 
-      unless (unrefine soEventsFetchBatchSize == 0 || fetchInterval == 0) $ do
+      unless (unrefine acEventsFetchBatchSize == 0 || fetchInterval == 0) $ do
         -- Don't start the events poller thread when fetchBatchSize or fetchInterval is 0
         -- prepare event triggers data
-        eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEventThreads fetchInterval soEventsFetchBatchSize
+        eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEventThreads fetchInterval acEventsFetchBatchSize
         let eventsGracefulShutdownAction =
               waitForProcessingAction
                 logger
                 "event_triggers"
                 (length <$> readTVarIO (leEvents lockedEventsCtx))
                 (EventTriggerShutdownAction (shutdownEventTriggerEvents allSources logger lockedEventsCtx))
-                (unrefine soGracefulShutdownTimeout)
+                (unrefine appEnvGracefulShutdownTimeout)
 
         -- Create logger for logging the statistics of events fetched
         fetchedEventsStatsLogger <-
@@ -1009,11 +1011,11 @@ mkHGEServer setupHook env ServeOptions {..} appCtx@AppContext {..} appEnv@AppEnv
             lockedEventsCtx
             appEnvServerMetrics
             (pmEventTriggerMetrics appEnvPrometheusMetrics)
-            soEnableMaintenanceMode
+            appEnvEnableMaintenanceMode
 
     startAsyncActionsPollerThread logger lockedEventsCtx cacheRef actionSubState = do
       -- start a background thread to handle async actions
-      case soAsyncActionsFetchInterval of
+      case acAsyncActionsFetchInterval of
         Skip -> pure () -- Don't start the poller thread
         Interval (unrefine -> sleepTime) -> do
           let label = "asyncActionsProcessor"
@@ -1024,7 +1026,7 @@ mkHGEServer setupHook env ServeOptions {..} appCtx@AppContext {..} appEnv@AppEnv
                         "async_actions"
                         (length <$> readTVarIO (leActionEvents lockedEventsCtx))
                         (MetadataDBShutdownAction (hoist lowerIO (shutdownAsyncActions lockedEventsCtx)))
-                        (unrefine soGracefulShutdownTimeout)
+                        (unrefine appEnvGracefulShutdownTimeout)
                     )
                 )
 
@@ -1034,7 +1036,7 @@ mkHGEServer setupHook env ServeOptions {..} appCtx@AppContext {..} appEnv@AppEnv
               logger
               (C.ThreadShutdown asyncActionGracefulShutdownAction)
             $ asyncActionsProcessor
-              env
+              acEnvironment
               logger
               (getSchemaCache cacheRef)
               (leActionEvents lockedEventsCtx)
@@ -1066,7 +1068,7 @@ mkHGEServer setupHook env ServeOptions {..} appCtx@AppContext {..} appEnv@AppEnv
                     "scheduled_events"
                     (getProcessingScheduledEventsCount lockedEventsCtx)
                     (MetadataDBShutdownAction (liftEitherM $ hoist lowerIO unlockAllLockedScheduledEvents))
-                    (unrefine soGracefulShutdownTimeout)
+                    (unrefine appEnvGracefulShutdownTimeout)
                 )
             )
 
@@ -1076,7 +1078,7 @@ mkHGEServer setupHook env ServeOptions {..} appCtx@AppContext {..} appEnv@AppEnv
           logger
           (C.ThreadShutdown scheduledEventsGracefulShutdownAction)
         $ processScheduledTriggers
-          env
+          acEnvironment
           logger
           scheduledEventsStatsLogger
           appEnvManager

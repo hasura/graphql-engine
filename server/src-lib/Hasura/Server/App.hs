@@ -37,7 +37,6 @@ import Data.ByteString.Builder qualified as BB
 import Data.ByteString.Char8 qualified as B8
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
-import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as S
 import Data.String (fromString)
@@ -101,7 +100,6 @@ import Network.HTTP.Types qualified as HTTP
 import Network.Mime (defaultMimeLookup)
 import Network.Wai.Extended qualified as Wai
 import Network.Wai.Handler.WebSockets.Custom qualified as WSC
-import Network.WebSockets qualified as WS
 import System.FilePath (joinPath, takeFileName)
 import System.Mem (performMajorGC)
 import System.Metrics qualified as EKG
@@ -195,19 +193,19 @@ mkGQLAPIRespHandler ::
 mkGQLAPIRespHandler = (fmap . fmap . fmap) JSONResp
 
 isMetadataEnabled :: AppContext -> Bool
-isMetadataEnabled sc = S.member METADATA $ acEnabledAPIs sc
+isMetadataEnabled ac = S.member METADATA $ acEnabledAPIs ac
 
 isGraphQLEnabled :: AppContext -> Bool
-isGraphQLEnabled sc = S.member GRAPHQL $ acEnabledAPIs sc
+isGraphQLEnabled ac = S.member GRAPHQL $ acEnabledAPIs ac
 
 isPGDumpEnabled :: AppContext -> Bool
-isPGDumpEnabled sc = S.member PGDUMP $ acEnabledAPIs sc
+isPGDumpEnabled ac = S.member PGDUMP $ acEnabledAPIs ac
 
 isConfigEnabled :: AppContext -> Bool
-isConfigEnabled sc = S.member CONFIG $ acEnabledAPIs sc
+isConfigEnabled ac = S.member CONFIG $ acEnabledAPIs ac
 
 isDeveloperAPIEnabled :: AppContext -> Bool
-isDeveloperAPIEnabled sc = S.member DEVELOPER $ acEnabledAPIs sc
+isDeveloperAPIEnabled ac = S.member DEVELOPER $ acEnabledAPIs ac
 
 -- {-# SCC parseBody #-}
 parseBody :: (FromJSON a, MonadError QErr m) => BL.ByteString -> m (Value, a)
@@ -257,12 +255,7 @@ class Monad m => MonadConfigApiHandler m where
   runConfigApiHandler ::
     AppContext ->
     AppEnv ->
-    -- | console assets directory
-    Maybe Text ->
     Spock.SpockCtxT () m ()
-
--- instance (MonadIO m, UserAuthentication m, HttpLog m, Tracing.HasReporter m) => MonadConfigApiHandler (Tracing.TraceT m) where
---   runConfigApiHandler = configApiGetHandler
 
 mapActionT ::
   (Monad m, Monad n) =>
@@ -718,9 +711,8 @@ configApiGetHandler ::
   (MonadIO m, MonadBaseControl IO m, UserAuthentication (Tracing.TraceT m), HttpLog m, Tracing.HasReporter m, HasResourceLimits m) =>
   AppContext ->
   AppEnv ->
-  Maybe Text ->
   Spock.SpockCtxT () m ()
-configApiGetHandler appCtx@AppContext {..} appEnv consoleAssetsDir =
+configApiGetHandler appCtx@AppContext {..} appEnv =
   Spock.get "v1alpha1/config" $
     mkSpockAction appCtx appEnv encodeQErr id $
       mkGetHandler $ do
@@ -733,7 +725,7 @@ configApiGetHandler appCtx@AppContext {..} appEnv consoleAssetsDir =
                 acEnableAllowlist
                 acLiveQueryOptions
                 acStreamQueryOptions
-                consoleAssetsDir
+                (appEnvConsoleAssetsDir appEnv)
                 acExperimentalFeatures
                 acEnabledAPIs
                 acDefaultNamingConvention
@@ -745,8 +737,6 @@ data HasuraApp = HasuraApp
     _hapAsyncActionSubscriptionState :: !ES.AsyncActionSubscriptionState,
     _hapShutdownWsServer :: !(IO ())
   }
-
--- TODO: Put Env into AppContext?
 
 mkWaiApp ::
   forall m.
@@ -773,44 +763,18 @@ mkWaiApp ::
     ProvidesNetwork m
   ) =>
   (AppContext -> Spock.SpockT m ()) ->
-  -- | Set of environment variables for reference in UIs
-  Env.Environment ->
-  CorsConfig ->
-  -- | Is console enabled
-  ConsoleStatus ->
-  -- | filepath to the console static assets directory - TODO: better type
-  Maybe Text ->
-  -- | DSN for console sentry integration
-  Maybe Text ->
-  -- | is telemetry enabled
-  TelemetryStatus ->
-  SchemaCacheRef ->
-  WS.ConnectionOptions ->
-  KeepAliveDelay ->
-  S.HashSet (L.EngineLogType L.Hasura) ->
   AppContext ->
   AppEnv ->
-  WSConnectionInitTimeout ->
   EKG.Store EKG.EmptyMetrics ->
   m HasuraApp
 mkWaiApp
   setupHook
-  env
-  corsCfg
-  enableConsole
-  consoleAssetsDir
-  consoleSentryDsn
-  enableTelemetry
-  schemaCacheRef
-  connectionOptions
-  keepAliveDelay
-  enabledLogTypes
   appCtx@AppContext {..}
   appEnv@AppEnv {..}
-  wsConnInitTimeout
   ekgStore = do
-    let getSchemaCache' = first lastBuiltSchemaCache <$> readSchemaCacheRef schemaCacheRef
-        corsPolicy = mkDefaultCorsPolicy corsCfg
+    let getSchemaCache' = first lastBuiltSchemaCache <$> readSchemaCacheRef acCacheRef
+    let corsPolicy = mkDefaultCorsPolicy acCorsConfig
+
     wsServerEnv <-
       WS.createWSServerEnv
         (_lsLogger appEnvLoggers)
@@ -823,7 +787,7 @@ mkWaiApp
         acSQLGenCtx
         appEnvEnableReadOnlyMode
         acEnableAllowlist
-        keepAliveDelay
+        appEnvWebSocketKeepAlive
         appEnvServerMetrics
         appEnvPrometheusMetrics
         appEnvTraceSamplingPolicy
@@ -831,15 +795,15 @@ mkWaiApp
     spockApp <- liftWithStateless $ \lowerIO ->
       Spock.spockAsApp $
         Spock.spockT lowerIO $
-          httpApp setupHook corsCfg appCtx appEnv enableConsole consoleAssetsDir consoleSentryDsn enableTelemetry ekgStore
+          httpApp setupHook appCtx appEnv ekgStore
 
-    let wsServerApp = WS.createWSServerApp env enabledLogTypes acAuthMode wsServerEnv wsConnInitTimeout -- TODO: Lyndon: Can we pass environment through wsServerEnv?
+    let wsServerApp = WS.createWSServerApp acEnvironment (_lsEnabledLogTypes appEnvLoggingSettings) acAuthMode wsServerEnv appEnvWebSocketConnectionInitTimeout -- TODO: Lyndon: Can we pass environment through wsServerEnv?
         stopWSServer = WS.stopWSServerApp wsServerEnv
 
     waiApp <- liftWithStateless $ \lowerIO ->
-      pure $ WSC.websocketsOr connectionOptions (\ip conn -> lowerIO $ wsServerApp ip conn) spockApp
+      pure $ WSC.websocketsOr appEnvConnectionOptions (\ip conn -> lowerIO $ wsServerApp ip conn) spockApp
 
-    return $ HasuraApp waiApp schemaCacheRef (ES._ssAsyncActions appEnvSubscriptionState) stopWSServer
+    return $ HasuraApp waiApp acCacheRef (ES._ssAsyncActions appEnvSubscriptionState) stopWSServer
 
 httpApp ::
   forall m.
@@ -864,26 +828,21 @@ httpApp ::
     ProvidesNetwork m
   ) =>
   (AppContext -> Spock.SpockT m ()) ->
-  CorsConfig ->
   AppContext ->
   AppEnv ->
-  ConsoleStatus ->
-  Maybe Text ->
-  Maybe Text ->
-  TelemetryStatus ->
   EKG.Store EKG.EmptyMetrics ->
   Spock.SpockT m ()
-httpApp setupHook corsCfg appCtx appEnv consoleStatus consoleAssetsDir consoleSentryDsn enableTelemetry ekgStore = do
+httpApp setupHook appCtx@AppContext {..} appEnv@AppEnv {..} ekgStore = do
   -- Additional spock action to run
   setupHook appCtx
 
   -- cors middleware
-  unless (isCorsDisabled corsCfg) $
+  unless (isCorsDisabled acCorsConfig) $
     Spock.middleware $
-      corsMiddleware (mkDefaultCorsPolicy corsCfg)
+      corsMiddleware (mkDefaultCorsPolicy acCorsConfig)
 
   -- API Console and Root Dir
-  when (isConsoleEnabled consoleStatus && enableMetadata) serveApiConsole
+  when (isConsoleEnabled acConsoleStatus && enableMetadata) serveApiConsole
 
   -- Local console assets for server and CLI consoles
   serveApiConsoleAssets
@@ -899,7 +858,7 @@ httpApp setupHook corsCfg appCtx appEnv consoleStatus consoleAssetsDir consoleSe
             Spock.setStatus HTTP.status500 >> Spock.text errorMsg
           Right _ -> do
             -- metadata storage is healthy
-            sc <- liftIO $ getSchemaCache $ acCacheRef appCtx
+            sc <- liftIO $ getSchemaCache acCacheRef
             let isInconsistent = not $ null $ scInconsistentObjs sc
                 inconsistenciesMessage = "inconsistent objects in schema"
             (status, responseText) <-
@@ -948,10 +907,8 @@ httpApp setupHook corsCfg appCtx appEnv consoleStatus consoleAssetsDir consoleSe
         RestRequest Spock.SpockMethod ->
         Handler (Tracing.TraceT n) (HttpLogGraphQLInfo, APIResp)
       customEndpointHandler restReq = do
-        scRef <- asks (acCacheRef . hcAppContext)
-        endpoints <- liftIO $ scEndpoints <$> getSchemaCache scRef
+        endpoints <- liftIO $ scEndpoints <$> getSchemaCache acCacheRef
         execCtx <- mkExecutionContext
-        env <- asks (acEnvironment . hcAppContext)
         requestId <- asks hcRequestId
         userInfo <- asks hcUser
         reqHeaders <- asks hcReqHeaders
@@ -967,7 +924,7 @@ httpApp setupHook corsCfg appCtx appEnv consoleStatus consoleAssetsDir consoleSe
               Spock.PATCH -> pure EP.PATCH
               other -> throw400 BadRequest $ "Method " <> tshow other <> " not supported."
             _ -> throw400 BadRequest $ "Nonstandard method not allowed for REST endpoints"
-        fmap JSONResp <$> runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress req endpoints
+        fmap JSONResp <$> runCustomEndpoint acEnvironment execCtx requestId userInfo reqHeaders ipAddress req endpoints
 
   -- See Issue #291 for discussion around restified feature
   Spock.hookRouteAll ("api" <//> "rest" <//> Spock.wildcard) $ \wildcard -> do
@@ -1012,7 +969,7 @@ httpApp setupHook corsCfg appCtx appEnv consoleStatus consoleAssetsDir consoleSe
         mkPostHandler $
           fmap (emptyHttpLogGraphQLInfo,) <$> v1Alpha1PGDumpHandler
 
-  when enableConfig $ runConfigApiHandler appCtx appEnv consoleAssetsDir
+  when enableConfig $ runConfigApiHandler appCtx appEnv
 
   when enableGraphQL $ do
     Spock.post "v1alpha1/graphql" $
@@ -1063,13 +1020,13 @@ httpApp setupHook corsCfg appCtx appEnv consoleStatus consoleAssetsDir consoleSe
       spockAction encodeQErr id $
         mkGetHandler $ do
           onlyAdmin
-          respJ <- liftIO $ ES.dumpSubscriptionsState False (acLiveQueryOptions appCtx) (acStreamQueryOptions appCtx) (appEnvSubscriptionState appEnv)
+          respJ <- liftIO $ ES.dumpSubscriptionsState False acLiveQueryOptions acStreamQueryOptions appEnvSubscriptionState
           return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue respJ) [])
     Spock.get "dev/subscriptions/extended" $
       spockAction encodeQErr id $
         mkGetHandler $ do
           onlyAdmin
-          respJ <- liftIO $ ES.dumpSubscriptionsState True (acLiveQueryOptions appCtx) (acStreamQueryOptions appCtx) (appEnvSubscriptionState appEnv)
+          respJ <- liftIO $ ES.dumpSubscriptionsState True acLiveQueryOptions acStreamQueryOptions appEnvSubscriptionState
           return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue respJ) [])
     Spock.get "dev/dataconnector/schema" $
       spockAction encodeQErr id $
@@ -1080,7 +1037,7 @@ httpApp setupHook corsCfg appCtx appEnv consoleStatus consoleAssetsDir consoleSe
     spockAction encodeQErr id $
       mkGetHandler $ do
         onlyAdmin
-        sc <- liftIO $ getSchemaCache $ acCacheRef appCtx
+        sc <- liftIO $ getSchemaCache acCacheRef
         json <- buildOpenAPI sc
         return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue json) [])
 
@@ -1088,9 +1045,9 @@ httpApp setupHook corsCfg appCtx appEnv consoleStatus consoleAssetsDir consoleSe
     req <- Spock.request
     let headers = Wai.requestHeaders req
         qErr = err404 NotFound "resource does not exist"
-    raiseGenericApiError logger (appEnvLoggingSettings appEnv) headers qErr
+    raiseGenericApiError logger appEnvLoggingSettings headers qErr
   where
-    logger = (_lsLogger . appEnvLoggers) appEnv
+    logger = _lsLogger appEnvLoggers
 
     logSuccess msg = do
       req <- Spock.request
@@ -1099,7 +1056,7 @@ httpApp setupHook corsCfg appCtx appEnv consoleStatus consoleAssetsDir consoleSe
           blMsg = TL.encodeUtf8 msg
       (reqId, _newHeaders) <- getRequestId headers
       lift $
-        logHttpSuccess logger (appEnvLoggingSettings appEnv) Nothing reqId req (reqBody, Nothing) blMsg blMsg Nothing Nothing headers (emptyHttpLogMetadata @m)
+        logHttpSuccess logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) blMsg blMsg Nothing Nothing headers (emptyHttpLogMetadata @m)
 
     logError err = do
       req <- Spock.request
@@ -1107,7 +1064,7 @@ httpApp setupHook corsCfg appCtx appEnv consoleStatus consoleAssetsDir consoleSe
       let headers = Wai.requestHeaders req
       (reqId, _newHeaders) <- getRequestId headers
       lift $
-        logHttpError logger (appEnvLoggingSettings appEnv) Nothing reqId req (reqBody, Nothing) err headers (emptyHttpLogMetadata @m)
+        logHttpError logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) err headers (emptyHttpLogMetadata @m)
 
     spockAction ::
       forall a n.
@@ -1144,15 +1101,14 @@ httpApp setupHook corsCfg appCtx appEnv consoleStatus consoleAssetsDir consoleSe
       Spock.get ("console" <//> Spock.wildcard) $ \path -> do
         req <- Spock.request
         let headers = Wai.requestHeaders req
-            authMode = acAuthMode appCtx
-        consoleHtml <- lift $ renderConsole path authMode enableTelemetry consoleAssetsDir consoleSentryDsn
-        either (raiseGenericApiError logger (appEnvLoggingSettings appEnv) headers . internalError . T.pack) Spock.html consoleHtml
+        consoleHtml <- lift $ renderConsole path acAuthMode acEnableTelemetry appEnvConsoleAssetsDir appEnvConsoleSentryDsn
+        either (raiseGenericApiError logger appEnvLoggingSettings headers . internalError . T.pack) Spock.html consoleHtml
 
     serveApiConsoleAssets = do
       -- serve static files if consoleAssetsDir is set
-      for_ consoleAssetsDir $ \dir ->
+      for_ appEnvConsoleAssetsDir $ \dir ->
         Spock.get ("console/assets" <//> Spock.wildcard) $ \path -> do
-          consoleAssetsHandler logger (appEnvLoggingSettings appEnv) dir (T.unpack path)
+          consoleAssetsHandler logger appEnvLoggingSettings dir (T.unpack path)
 
 raiseGenericApiError ::
   forall m.

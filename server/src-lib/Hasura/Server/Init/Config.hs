@@ -38,6 +38,8 @@ module Hasura.Server.Init.Config
     ServeOptionsRaw (..),
     ConsoleStatus (..),
     isConsoleEnabled,
+    AdminInternalErrorsStatus (..),
+    isAdminInternalErrorsEnabled,
     isWebSocketCompressionEnabled,
     AllowListStatus (..),
     isAllowListEnabled,
@@ -298,7 +300,7 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoEnabledLogTypes :: Maybe (HashSet (Logging.EngineLogType impl)),
     rsoLogLevel :: Maybe Logging.LogLevel,
     rsoDevMode :: DevModeStatus,
-    rsoAdminInternalErrors :: Maybe Bool,
+    rsoAdminInternalErrors :: Maybe AdminInternalErrorsStatus,
     rsoEventsHttpPoolSize :: Maybe (Refined Positive Int),
     rsoEventsFetchInterval :: Maybe (Refined NonNegative Milliseconds),
     rsoAsyncActionsFetchInterval :: Maybe OptionalInterval,
@@ -338,6 +340,25 @@ instance FromJSON ConsoleStatus where
 
 instance ToJSON ConsoleStatus where
   toJSON = Aeson.toJSON . isConsoleEnabled
+
+-- | Whether or not internal errors will be sent in response to admin.
+data AdminInternalErrorsStatus = AdminInternalErrorsEnabled | AdminInternalErrorsDisabled
+  deriving stock (Show, Eq, Ord, Generic)
+
+instance NFData AdminInternalErrorsStatus
+
+instance Hashable AdminInternalErrorsStatus
+
+isAdminInternalErrorsEnabled :: AdminInternalErrorsStatus -> Bool
+isAdminInternalErrorsEnabled = \case
+  AdminInternalErrorsEnabled -> True
+  AdminInternalErrorsDisabled -> False
+
+instance FromJSON AdminInternalErrorsStatus where
+  parseJSON = fmap (bool AdminInternalErrorsDisabled AdminInternalErrorsEnabled) . Aeson.parseJSON
+
+instance ToJSON AdminInternalErrorsStatus where
+  toJSON = Aeson.toJSON . isAdminInternalErrorsEnabled
 
 isWebSocketCompressionEnabled :: WebSockets.CompressionOptions -> Bool
 isWebSocketCompressionEnabled = \case
@@ -572,7 +593,6 @@ data ServeOptions impl = ServeOptions
     soEnableAllowList :: AllowListStatus,
     soEnabledLogTypes :: HashSet (Logging.EngineLogType impl),
     soLogLevel :: Logging.LogLevel,
-    soResponseInternalErrorsConfig :: ResponseInternalErrorsConfig,
     soEventsHttpPoolSize :: Refined Positive Int,
     soEventsFetchInterval :: Refined NonNegative Milliseconds,
     soAsyncActionsFetchInterval :: OptionalInterval,
@@ -586,6 +606,7 @@ data ServeOptions impl = ServeOptions
     soExperimentalFeatures :: HashSet Server.Types.ExperimentalFeature,
     soEventsFetchBatchSize :: Refined NonNegative Int,
     soDevMode :: DevModeStatus,
+    soAdminInternalErrors :: AdminInternalErrorsStatus,
     soGracefulShutdownTimeout :: Refined NonNegative Seconds,
     soWebSocketConnectionInitTimeout :: WSConnectionInitTimeout,
     soEventingMode :: Server.Types.EventingMode,

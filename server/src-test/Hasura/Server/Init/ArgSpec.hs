@@ -1397,7 +1397,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoAdminInternalErrors result `Hspec.shouldSatisfy` \case
-        Opt.Success adminInternalErrors -> adminInternalErrors == Just True
+        Opt.Success adminInternalErrors -> adminInternalErrors == Just UUT.AdminInternalErrorsEnabled
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 

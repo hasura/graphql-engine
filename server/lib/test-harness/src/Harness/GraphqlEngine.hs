@@ -329,8 +329,6 @@ runApp serveOptions = do
       $ do
         App.runHGEServer
           (const $ pure ())
-          env
-          serveOptions
           appCtx
           appEnv
           initTime

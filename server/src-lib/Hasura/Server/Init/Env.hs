@@ -219,6 +219,9 @@ instance FromEnv Bool where
 instance FromEnv Config.TelemetryStatus where
   fromEnv = fmap (bool Config.TelemetryDisabled Config.TelemetryEnabled) . fromEnv
 
+instance FromEnv Config.AdminInternalErrorsStatus where
+  fromEnv = fmap (bool Config.AdminInternalErrorsDisabled Config.AdminInternalErrorsEnabled) . fromEnv
+
 instance FromEnv Config.WsReadCookieStatus where
   fromEnv = fmap (bool Config.WsReadCookieDisabled Config.WsReadCookieEnabled) . fromEnv
 

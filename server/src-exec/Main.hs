@@ -97,7 +97,7 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
             GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 
         flip runPGMetadataStorageAppT (appCtx, appEnv) . lowerManagedT $ do
-          runHGEServer (const $ pure ()) env serveOptions appCtx appEnv initTime Nothing ekgStore
+          runHGEServer (const $ pure ()) appCtx appEnv initTime Nothing ekgStore
     HCExport -> do
       GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo fetchMetadataFromCatalog

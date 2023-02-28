@@ -8,7 +8,6 @@ where
 --------------------------------------------------------------------------------
 
 import Data.HashSet qualified as Set
-import Data.Monoid (All (..))
 import Data.Time (NominalDiffTime)
 import Database.PG.Query qualified as Query
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
@@ -861,10 +860,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap (UUT.soDevMode &&& UUT.soResponseInternalErrorsConfig) result `Hspec.shouldSatisfy` \case
-          Right (soDevMode, soResponseInternalErrorsConfig) ->
-            getAll $ foldMap All [soDevMode == UUT._default UUT.graphqlDevModeOption, soResponseInternalErrorsConfig == UUT.InternalErrorsAdminOnly]
-          Left _err -> False
+        fmap UUT.soDevMode result `Hspec.shouldBe` Right (UUT._default UUT.graphqlDevModeOption)
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -874,10 +870,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap (UUT.soDevMode &&& UUT.soResponseInternalErrorsConfig) result `Hspec.shouldSatisfy` \case
-          Right (soDevMode, soResponseInternalErrorsConfig) ->
-            getAll $ foldMap All [soDevMode == UUT.DevModeEnabled, soResponseInternalErrorsConfig == UUT.InternalErrorsAllRequests]
-          Left _err -> False
+        fmap UUT.soDevMode result `Hspec.shouldBe` Right UUT.DevModeEnabled
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -898,7 +891,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldBe` Right UUT.InternalErrorsAdminOnly
+        fmap UUT.soAdminInternalErrors result `Hspec.shouldBe` Right (UUT._default UUT.graphqlAdminInternalErrorsOption)
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -908,27 +901,17 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldBe` Right UUT.InternalErrorsDisabled
-
-      Hspec.it "Dev Mode supersedes rsoAdminInternalErrors" $ do
-        let -- Given
-            rawServeOptions = emptyServeOptionsRaw
-            -- When
-            env = [(UUT._envVar UUT.graphqlAdminInternalErrorsOption, "false"), (UUT._envVar UUT.graphqlDevModeOption, "true")]
-            -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
-
-        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldBe` Right UUT.InternalErrorsAllRequests
+        fmap UUT.soAdminInternalErrors result `Hspec.shouldBe` Right UUT.AdminInternalErrorsDisabled
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAdminInternalErrors = Just False}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAdminInternalErrors = Just UUT.AdminInternalErrorsDisabled}
             -- When
             env = [(UUT._envVar UUT.graphqlAdminInternalErrorsOption, "true")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldBe` Right UUT.InternalErrorsDisabled
+        fmap UUT.soAdminInternalErrors result `Hspec.shouldBe` Right UUT.AdminInternalErrorsDisabled
 
     Hspec.describe "soEventsHttpPoolSize" $ do
       Hspec.it "Default == 100" $ do

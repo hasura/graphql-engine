@@ -49,7 +49,6 @@ import Hasura.Server.Cors (CorsConfig (CCAllowAll))
 import Hasura.Server.Init
   ( API (CONFIG, DEVELOPER, GRAPHQL, METADATA),
     OptionalInterval (..),
-    ResponseInternalErrorsConfig (..),
     ServeOptions (..),
   )
 import Hasura.Server.Init qualified as Init
@@ -286,7 +285,6 @@ serveOptions =
       soEnableAllowList = Init.AllowListDisabled,
       soEnabledLogTypes = Set.fromList L.userAllowedLogTypes,
       soLogLevel = fromMaybe (L.LevelOther "test-suite") engineLogLevel,
-      soResponseInternalErrorsConfig = InternalErrorsAllRequests,
       soEventsHttpPoolSize = Init._default Init.graphqlEventsHttpPoolSizeOption,
       soEventsFetchInterval = Init._default Init.graphqlEventsFetchIntervalOption,
       soAsyncActionsFetchInterval = Skip,
@@ -300,6 +298,7 @@ serveOptions =
       soExperimentalFeatures = Set.fromList [EFStreamingSubscriptions, EFBigQueryStringNumericInput],
       soEventsFetchBatchSize = $$(refineTH 1),
       soDevMode = Init.DevModeEnabled,
+      soAdminInternalErrors = Init.AdminInternalErrorsEnabled,
       soGracefulShutdownTimeout = $$(refineTH 0), -- Don't wait to shutdown.
       soWebSocketConnectionInitTimeout = Init._default Init.webSocketConnectionInitTimeoutOption,
       soEventingMode = EventingEnabled,
