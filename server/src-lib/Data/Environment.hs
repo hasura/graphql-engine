@@ -43,4 +43,4 @@ toList :: Environment -> [(String, String)]
 toList (Environment e) = M.toList e
 
 redactEnv :: Environment -> Environment
-redactEnv (Environment e) = Environment $ fmap (const "******") e
+redactEnv (Environment e) = Environment $ fmap (const "<ENV REDACTED>") e
