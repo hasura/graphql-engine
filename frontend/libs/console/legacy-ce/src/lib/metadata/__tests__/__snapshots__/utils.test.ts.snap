@@ -1,24 +1,24 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Testing API limits node limit, batch limit and depth limit 1`] = `
-Object {
-  "args": Object {
-    "batch_limit": Object {
+{
+  "args": {
+    "batch_limit": {
       "global": 10,
-      "per_role": Object {
+      "per_role": {
         "role1": 3,
       },
     },
-    "depth_limit": Object {
+    "depth_limit": {
       "global": 10,
-      "per_role": Object {
+      "per_role": {
         "role1": 2,
       },
     },
     "disabled": false,
-    "node_limit": Object {
+    "node_limit": {
       "global": 10,
-      "per_role": Object {
+      "per_role": {
         "role1": 3,
       },
     },
@@ -28,9 +28,9 @@ Object {
 `;
 
 exports[`Testing API limits only batch limit 1`] = `
-Object {
-  "args": Object {
-    "batch_limit": Object {
+{
+  "args": {
+    "batch_limit": {
       "global": 10,
     },
     "disabled": false,
@@ -40,11 +40,11 @@ Object {
 `;
 
 exports[`Testing API limits only batch limit with per role 1`] = `
-Object {
-  "args": Object {
-    "batch_limit": Object {
+{
+  "args": {
+    "batch_limit": {
       "global": 10,
-      "per_role": Object {
+      "per_role": {
         "role1": 3,
       },
     },
@@ -55,9 +55,9 @@ Object {
 `;
 
 exports[`Testing API limits only depth limit 1`] = `
-Object {
-  "args": Object {
-    "depth_limit": Object {
+{
+  "args": {
+    "depth_limit": {
       "global": 10,
     },
     "disabled": false,
@@ -67,11 +67,11 @@ Object {
 `;
 
 exports[`Testing API limits only depth limit with per role 1`] = `
-Object {
-  "args": Object {
-    "depth_limit": Object {
+{
+  "args": {
+    "depth_limit": {
       "global": 10,
-      "per_role": Object {
+      "per_role": {
         "role1": 3,
       },
     },
@@ -82,10 +82,10 @@ Object {
 `;
 
 exports[`Testing API limits only node limit 1`] = `
-Object {
-  "args": Object {
+{
+  "args": {
     "disabled": false,
-    "node_limit": Object {
+    "node_limit": {
       "global": 10,
     },
   },
@@ -94,12 +94,12 @@ Object {
 `;
 
 exports[`Testing API limits only node limit with per role 1`] = `
-Object {
-  "args": Object {
+{
+  "args": {
     "disabled": false,
-    "node_limit": Object {
+    "node_limit": {
       "global": 10,
-      "per_role": Object {
+      "per_role": {
         "role1": 3,
       },
     },
@@ -109,25 +109,25 @@ Object {
 `;
 
 exports[`Testing Remove API Settings remains the same when role doesn't exist 1`] = `
-Object {
-  "args": Object {
-    "batch_limit": Object {
+{
+  "args": {
+    "batch_limit": {
       "global": 10,
       "state": "disabled",
     },
-    "depth_limit": Object {
+    "depth_limit": {
       "global": 10,
       "state": "enabled",
     },
     "disabled": false,
-    "node_limit": Object {
+    "node_limit": {
       "global": 10,
       "state": "disabled",
     },
-    "rate_limit": Object {
-      "global": Object {
+    "rate_limit": {
+      "global": {
         "max_reqs_per_min": 100,
-        "unique_params": Array [
+        "unique_params": [
           "x-hasura-id",
         ],
       },
@@ -139,28 +139,28 @@ Object {
 `;
 
 exports[`Testing Remove API Settings removes settings for a role 1`] = `
-Object {
-  "args": Object {
-    "batch_limit": Object {
+{
+  "args": {
+    "batch_limit": {
       "global": 10,
-      "per_role": Object {},
+      "per_role": {},
       "state": "enabled",
     },
-    "depth_limit": Object {
+    "depth_limit": {
       "global": 10,
-      "per_role": Object {},
+      "per_role": {},
       "state": "enabled",
     },
     "disabled": false,
-    "node_limit": Object {
+    "node_limit": {
       "global": 10,
-      "per_role": Object {},
+      "per_role": {},
       "state": "enabled",
     },
-    "rate_limit": Object {
-      "global": Object {
+    "rate_limit": {
+      "global": {
         "max_reqs_per_min": 100,
-        "unique_params": Array [
+        "unique_params": [
           "x-hasura-id",
         ],
       },

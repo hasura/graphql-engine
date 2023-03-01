@@ -51,28 +51,28 @@ describe('extractAssets', () => {
 
     expect(result.js).toHaveLength(4);
     expect(result.js).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "jsModule": true,
-          "tag": "<script src=\\"runtime.esm.js\\" type=\\"module\\"></script>",
+          "tag": "<script src="runtime.esm.js" type="module"></script>",
           "type": "js",
           "url": "runtime.esm.js",
         },
-        Object {
+        {
           "jsModule": true,
-          "tag": "<script src=\\"polyfills.esm.js\\" type=\\"module\\"></script>",
+          "tag": "<script src="polyfills.esm.js" type="module"></script>",
           "type": "js",
           "url": "polyfills.esm.js",
         },
-        Object {
+        {
           "jsModule": true,
-          "tag": "<script src=\\"vendor.esm.js\\" type=\\"module\\"></script>",
+          "tag": "<script src="vendor.esm.js" type="module"></script>",
           "type": "js",
           "url": "vendor.esm.js",
         },
-        Object {
+        {
           "jsModule": true,
-          "tag": "<script src=\\"main.esm.js\\" type=\\"module\\"></script>",
+          "tag": "<script src="main.esm.js" type="module"></script>",
           "type": "js",
           "url": "main.esm.js",
         },
@@ -267,15 +267,15 @@ describe('generateAssetLoaderFile', () => {
       "// THIS FILE IS GENERATED; DO NOT MODIFY BY HAND.
 
       const loadCss = (url) => {
-        const linkElem = document.createElement(\\"link\\");
-        linkElem.rel = \\"stylesheet\\";
-        linkElem.charset = \\"UTF-8\\";
+        const linkElem = document.createElement("link");
+        linkElem.rel = "stylesheet";
+        linkElem.charset = "UTF-8";
         linkElem.href = url;
         document.body.append(linkElem);
       };
       const loadJs = (url, type) => {
-        const scriptElem = document.createElement(\\"script\\");
-        scriptElem.charset = \\"UTF-8\\";
+        const scriptElem = document.createElement("script");
+        scriptElem.charset = "UTF-8";
         scriptElem.src = url;
         if (type) {
           scriptElem.type = type
@@ -285,9 +285,9 @@ describe('generateAssetLoaderFile', () => {
 
       window.__loadConsoleAssetsFromBasePath = (root) => {
       const basePath = root.endsWith('/') ? root : root + '/';
-      loadCss(basePath + \\"my.css\\");
-      loadJs(basePath + \\"todo.js\\", \\"module\\");
-      loadJs(basePath + \\"my.js\\");
+      loadCss(basePath + "my.css");
+      loadJs(basePath + "todo.js", "module");
+      loadJs(basePath + "my.js");
       }"
     `);
   });

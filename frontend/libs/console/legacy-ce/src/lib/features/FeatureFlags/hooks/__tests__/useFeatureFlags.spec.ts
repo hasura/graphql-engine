@@ -21,14 +21,14 @@ describe('mergeFlagWithState', () => {
     const result = mergeFlagWithState(inputFlags, inputState);
 
     expect(result).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "defaultValue": false,
           "description": "DESCR",
           "discussionUrl": "",
           "id": "AAA",
           "section": "api",
-          "state": Object {
+          "state": {
             "dismissed": false,
             "enabled": true,
             "id": "AAA",
@@ -59,14 +59,14 @@ describe('mergeFlagWithState', () => {
     const result = mergeFlagWithState(inputFlags, inputState);
 
     expect(result).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "defaultValue": false,
           "description": "DESCR",
           "discussionUrl": "",
           "id": "AAA",
           "section": "api",
-          "state": Object {
+          "state": {
             "dismissed": false,
             "enabled": false,
           },
@@ -103,27 +103,27 @@ describe('mergeFlagWithState', () => {
     const result = mergeFlagWithState(inputFlags, inputState);
 
     expect(result).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "defaultValue": true,
           "description": "DESCR",
           "discussionUrl": "",
           "id": "ON",
           "section": "api",
-          "state": Object {
+          "state": {
             "dismissed": false,
             "enabled": true,
           },
           "status": "beta",
           "title": "Hello world",
         },
-        Object {
+        {
           "defaultValue": false,
           "description": "DESCR",
           "discussionUrl": "",
           "id": "off",
           "section": "api",
-          "state": Object {
+          "state": {
             "dismissed": false,
             "enabled": false,
           },

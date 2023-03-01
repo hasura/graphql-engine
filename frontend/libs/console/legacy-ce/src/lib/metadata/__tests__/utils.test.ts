@@ -89,9 +89,9 @@ describe('Testing Introspection Utils', () => {
         introspection_options.enable_for_role.introspection_is_disabled,
     });
     expect(res).toMatchInlineSnapshot(`
-      Object {
-        "args": Object {
-          "disabled_for_roles": Array [],
+      {
+        "args": {
+          "disabled_for_roles": [],
         },
         "type": "set_graphql_schema_introspection_options",
       }
@@ -108,9 +108,9 @@ describe('Testing Introspection Utils', () => {
           .introspection_is_disabled,
     });
     expect(res).toMatchInlineSnapshot(`
-      Object {
-        "args": Object {
-          "disabled_for_roles": Array [
+      {
+        "args": {
+          "disabled_for_roles": [
             "existing_role",
           ],
         },
@@ -127,9 +127,9 @@ describe('Testing Introspection Utils', () => {
         introspection_options.disable_for_role.introspection_is_disabled,
     });
     expect(res).toMatchInlineSnapshot(`
-      Object {
-        "args": Object {
-          "disabled_for_roles": Array [
+      {
+        "args": {
+          "disabled_for_roles": [
             "test_role",
           ],
         },
@@ -149,9 +149,9 @@ describe('Testing Introspection Utils', () => {
           .introspection_is_disabled,
     });
     expect(res).toMatchInlineSnapshot(`
-      Object {
-        "args": Object {
-          "disabled_for_roles": Array [
+      {
+        "args": {
+          "disabled_for_roles": [
             "existing_role",
             "test_role_1",
           ],

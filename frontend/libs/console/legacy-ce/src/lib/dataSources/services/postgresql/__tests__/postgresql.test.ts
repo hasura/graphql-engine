@@ -110,8 +110,8 @@ describe('postgresql datasource tests', () => {
         });
         expect(query).toMatchInlineSnapshot(`
           "
-            CREATE  INDEX \\"test_index_name\\" on
-            \\"test_schema\\".\\"test_table\\" using btree (\\"firstname\\", \\"lastname\\");
+            CREATE  INDEX "test_index_name" on
+            "test_schema"."test_table" using btree ("firstname", "lastname");
           "
         `);
       }
@@ -128,8 +128,8 @@ describe('postgresql datasource tests', () => {
         });
         expect(query).toMatchInlineSnapshot(`
           "
-            CREATE  INDEX \\"test_index_name\\" on
-            \\"test_schema\\".\\"test_table\\" using btree (\\"firstName\\", \\"lastName\\");
+            CREATE  INDEX "test_index_name" on
+            "test_schema"."test_table" using btree ("firstName", "lastName");
           "
         `);
       }
@@ -146,8 +146,8 @@ describe('postgresql datasource tests', () => {
         });
         expect(query).toMatchInlineSnapshot(`
           "
-            CREATE  INDEX \\"test_index_name\\" on
-            \\"test_schema\\".\\"test_table\\" using btree (\\"first name\\", \\"last name\\");
+            CREATE  INDEX "test_index_name" on
+            "test_schema"."test_table" using btree ("first name", "last name");
           "
         `);
       }
@@ -164,8 +164,8 @@ describe('postgresql datasource tests', () => {
         });
         expect(query).toMatchInlineSnapshot(`
           "
-            CREATE UNIQUE INDEX \\"test_index_name\\" on
-            \\"test_schema\\".\\"test_table\\" using btree (\\"first name\\", \\"last_name\\", \\"fullName\\");
+            CREATE UNIQUE INDEX "test_index_name" on
+            "test_schema"."test_table" using btree ("first name", "last_name", "fullName");
           "
         `);
       }

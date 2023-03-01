@@ -126,18 +126,18 @@ describe('The useRemoteSchemaRelationships hook', () => {
 
     expect((result.all[1] as UseQueryResult<RemoteRelationship[], Error>).data)
       .toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "definition": Object {
-            "to_remote_schema": Object {
-              "lhs_fields": Array [
+      [
+        {
+          "definition": {
+            "to_remote_schema": {
+              "lhs_fields": [
                 "id",
               ],
-              "remote_field": Object {
-                "countries": Object {
-                  "arguments": Object {
-                    "filter": Object {
-                      "code": Object {
+              "remote_field": {
+                "countries": {
+                  "arguments": {
+                    "filter": {
+                      "code": {
                         "eq": "$id",
                       },
                     },

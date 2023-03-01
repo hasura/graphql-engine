@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`utils tests getColumnNameArrayFromHookData util function should return 1`] = `
-Array [
+[
   "id",
   "name",
   "firstname",
@@ -11,16 +11,16 @@ Array [
 `;
 
 exports[`utils tests getRelColumnsMapping util function should return 1`] = `
-Array [
-  Object {
+[
+  {
     "column": "id",
     "refColumn": "id",
   },
-  Object {
+  {
     "column": "name",
     "refColumn": "name",
   },
-  Object {
+  {
     "column": "",
     "refColumn": "",
   },
@@ -28,17 +28,17 @@ Array [
 `;
 
 exports[`utils tests parseDbToDbRemoteRel util function should return 1`] = `
-Object {
-  "relColumns": Array [
-    Object {
+{
+  "relColumns": [
+    {
       "column": "name",
       "refColumn": "name",
     },
-    Object {
+    {
       "column": "id",
       "refColumn": "weight",
     },
-    Object {
+    {
       "column": "",
       "refColumn": "",
     },
@@ -46,7 +46,7 @@ Object {
   "relDriver": "",
   "relName": "aaaaaaa",
   "relSource": "remote_db",
-  "relTable": Object {
+  "relTable": {
     "name": "testt",
     "schema": "public",
   },

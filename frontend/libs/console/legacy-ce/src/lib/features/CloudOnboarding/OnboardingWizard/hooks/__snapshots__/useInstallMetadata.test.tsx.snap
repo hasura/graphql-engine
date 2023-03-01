@@ -1,29 +1,29 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Check useInstallMetadata installs the correct metadata should install the correct metadata and call success callback 1`] = `
-Object {
-  "args": Object {
-    "sources": Array [
-      Object {
-        "configuration": Object {
-          "connection_info": Object {
+{
+  "args": {
+    "sources": [
+      {
+        "configuration": {
+          "connection_info": {
             "database_url": "postgres://postgres:postgrespassword@postgres:5432/postgres",
             "isolation_level": "read-committed",
             "use_prepared_statements": false,
           },
         },
-        "functions": Array [],
+        "functions": [],
         "kind": "postgres",
         "name": "default",
-        "tables": Array [
-          Object {
-            "array_relationships": Array [
-              Object {
+        "tables": [
+          {
+            "array_relationships": [
+              {
                 "name": "orders",
-                "using": Object {
-                  "foreign_key_constraint_on": Object {
+                "using": {
+                  "foreign_key_constraint_on": {
                     "column": "customer_id",
-                    "table": Object {
+                    "table": {
                       "name": "order",
                       "schema": "public",
                     },
@@ -31,49 +31,49 @@ Object {
                 },
               },
             ],
-            "table": Object {
+            "table": {
               "name": "customer",
               "schema": "public",
             },
           },
-          Object {
-            "object_relationships": Array [
-              Object {
+          {
+            "object_relationships": [
+              {
                 "name": "customer",
-                "using": Object {
+                "using": {
                   "foreign_key_constraint_on": "customer_id",
                 },
               },
             ],
-            "table": Object {
+            "table": {
               "name": "order",
               "schema": "public",
             },
           },
         ],
       },
-      Object {
-        "configuration": Object {
-          "connection_info": Object {
+      {
+        "configuration": {
+          "connection_info": {
             "database_url": "some_secret_db_url",
             "isolation_level": "read-committed",
             "use_prepared_statements": false,
           },
         },
-        "customization": Object {
+        "customization": {
           "naming_convention": "hasura-default",
         },
         "kind": "postgres",
         "name": "fragrant-firefly",
-        "tables": Array [
-          Object {
-            "array_relationships": Array [
-              Object {
+        "tables": [
+          {
+            "array_relationships": [
+              {
                 "name": "article_tags",
-                "using": Object {
-                  "foreign_key_constraint_on": Object {
+                "using": {
+                  "foreign_key_constraint_on": {
                     "column": "article_id",
-                    "table": Object {
+                    "table": {
                       "name": "article_tag",
                       "schema": "_manytomany",
                     },
@@ -81,39 +81,39 @@ Object {
                 },
               },
             ],
-            "table": Object {
+            "table": {
               "name": "article",
               "schema": "_manytomany",
             },
           },
-          Object {
-            "object_relationships": Array [
-              Object {
+          {
+            "object_relationships": [
+              {
                 "name": "article",
-                "using": Object {
+                "using": {
                   "foreign_key_constraint_on": "article_id",
                 },
               },
-              Object {
+              {
                 "name": "tag",
-                "using": Object {
+                "using": {
                   "foreign_key_constraint_on": "tag_id",
                 },
               },
             ],
-            "table": Object {
+            "table": {
               "name": "article_tag",
               "schema": "_manytomany",
             },
           },
-          Object {
-            "array_relationships": Array [
-              Object {
+          {
+            "array_relationships": [
+              {
                 "name": "article_tags",
-                "using": Object {
-                  "foreign_key_constraint_on": Object {
+                "using": {
+                  "foreign_key_constraint_on": {
                     "column": "tag_id",
-                    "table": Object {
+                    "table": {
                       "name": "article_tag",
                       "schema": "_manytomany",
                     },
@@ -121,13 +121,13 @@ Object {
                 },
               },
             ],
-            "table": Object {
+            "table": {
               "name": "tag",
               "schema": "_manytomany",
             },
           },
-          Object {
-            "table": Object {
+          {
+            "table": {
               "name": "sample_table",
               "schema": "public",
             },

@@ -17,6 +17,10 @@ export default async function runExecutor(
 ) {
   // PRE-FLIGHT CHECK
   const { projectName } = context;
+  if (!context.workspace) {
+    throw new Error('Worspace not found.');
+  }
+
   const preFlightCheckResult = executorPreFlightCheck({
     envVars: {
       BUILDKITE: process.env.BUILDKITE,
