@@ -38,7 +38,7 @@ spec TestData {..} = describe "Basic Queries" $ do
     it "can project columns into fields with different names" $ do
       let fields = Data.mkFieldsMap [("Artist_Id", _tdColumnField _tdArtistsTableName "ArtistId"), ("Artist_Name", _tdColumnField _tdArtistsTableName "Name")]
       let query = artistsQueryRequest & qrQuery . qFields ?~ fields
-      receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded query
+      receivedArtists <- Data.sortResponseRowsBy "Artist_Id" <$> queryGuarded query
 
       let renameProperties =
             HashMap.mapKeys
@@ -48,7 +48,7 @@ spec TestData {..} = describe "Basic Queries" $ do
                   other -> other
               )
 
-      let expectedArtists = Data.sortBy (FieldName "ArtistId") $ renameProperties <$> _tdArtistsRows
+      let expectedArtists = Data.sortBy (FieldName "Artist_Id") $ renameProperties <$> _tdArtistsRows
       Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
       _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
