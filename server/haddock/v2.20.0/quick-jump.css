@@ -1,0 +1,221 @@
+/* @group Fundamentals */
+
+.hidden {
+  display: none;
+}
+
+/* @end */
+
+/* @group Search box layout */
+
+#search {
+  position: fixed;
+  top: 3.2em;
+  bottom: 0;
+  left: calc(50% - 22em);
+  width: 44em;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+@media only screen and (max-width: 999px) {
+  #search {
+    top: 5.7em;
+  }
+}
+
+#search-form, #search-results {
+  box-shadow: 2px 2px 6px rgb(199, 204, 208);
+  pointer-events: all;
+}
+
+#search-form input {
+  font-size: 1.25em; line-height: 2.3em; height: 2.4em;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 0 0.75em;
+  border: 0.05em solid rgb(151, 179, 202);
+}
+
+#search input:focus {
+  outline: none;
+}
+
+#search p.error {
+  color: rgb(107, 24, 24);
+  font-weight: bold;
+}
+
+#search-results {
+  box-sizing: border-box;
+  border: 0.05em solid #b2d5fb;
+  background: #e8f3ff;
+  max-height: 80%;
+  overflow: scroll;
+}
+
+#search-form input + #search-results {
+  border-top: none;
+  top: 3em;
+  max-height: calc(100% - 3em);
+}
+
+/* @end */
+
+/* @group search results */
+
+#search-results > ul {
+  margin: 0;
+  list-style: none;
+}
+
+#search-results > ul > li,
+#search-results > p,
+#search-results > table {
+  padding: 0.5em 1em;
+  margin: 0;
+}
+
+#search-results > ul > li {
+  border-bottom: 1px solid #b2d5fb;
+}
+
+#search-results > ul > li > ul {
+  list-style: none;
+}
+
+.search-module h4 {
+  margin: 0;
+}
+
+.search-module > ul {
+  margin: 0.5em 0 0.5em 2em;
+}
+
+.search-module > ul > li > a[href] {
+  display: block;
+  color: inherit;
+  padding: 0.25em 0.5em;
+}
+
+.search-module > ul > li > a[href].active-link {
+  background: #faf9dc;
+}
+
+.search-module a[href]:hover {
+  text-decoration: none;
+}
+
+.search-result a a {
+  pointer-events: none;
+}
+
+.search-result ul.subs {
+  display: inline-block;
+  margin: 0; padding: 0;
+}
+
+.search-result ul.subs li {
+  display: none;
+}
+
+.search-result ul.subs::after {
+  display: inline-block;
+  content: "...";
+  color: rgb(78,98,114);
+  margin: 0 0.25em;
+}
+
+.more-results {
+  color: rgb(99, 141, 173);
+  position: relative;
+}
+
+.more-results::before {
+  content: "+";
+  display: inline-block;
+  color: #b2d5fb;
+  font-weight: bold;
+  font-size: 1.25em; line-height: inherit;
+  position: absolute;
+  left: -1em;
+}
+
+/* @end */
+
+/* @group Keyboard shortcuts table */
+
+.keyboard-shortcuts {
+  line-height: 1.6em;
+}
+
+.keyboard-shortcuts th {
+  color: rgb(78,98,114);
+}
+
+.keyboard-shortcuts td:first-child,
+.keyboard-shortcuts th:first-child {
+  text-align: right;
+  padding-right: 0.6em;
+}
+
+.key {
+  display: inline-block;
+  font-size: 0.9em;
+  min-width: 0.8em; line-height: 1.2em;
+  text-align: center;
+  background: #b2d5fb;
+  border: 1px solid #74a3d6;
+  padding: 0 0.2em;
+  margin: 0 0.1em;
+}
+
+/* @end */
+
+/* @group Dropdown menus */
+
+/* Based on #search styling above. */
+
+.dropdown-menu {
+  position: fixed;
+  /* Not robust to window size changes. */
+  top: 3.2em;
+  right: 0;
+  /* To display on top of synopsis menu on right side. */
+  z-index: 1000;
+  border: 0.05em solid #b2d5fb;
+  background: #e8f3ff;
+}
+
+@media only screen and (max-width: 999px) {
+  .dropdown-menu {
+    top: 5.7em;
+  }
+}
+
+.dropdown-menu * {
+  margin: 0.1em;
+}
+
+.dropdown-menu button {
+  border: 1px #5E5184 solid;
+  border-radius: 3px;
+  background: #5E5184;
+  padding: 3px;
+  color: #f4f4f4;
+  min-width: 6em;
+}
+
+.dropdown-menu button:hover {
+  color: #5E5184;
+  background: #f4f4f4;
+}
+
+.dropdown-menu button:active {
+  color: #f4f4f4;
+  background: #5E5184;
+}
+
+/* @end */
