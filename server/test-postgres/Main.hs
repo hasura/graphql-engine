@@ -2,7 +2,7 @@
 
 module Main (main) where
 
-import Constants qualified as Constants
+import Constants qualified
 import Control.Concurrent.MVar
 import Control.Monad.Trans.Managed (ManagedT (..))
 import Control.Natural ((:~>) (..))

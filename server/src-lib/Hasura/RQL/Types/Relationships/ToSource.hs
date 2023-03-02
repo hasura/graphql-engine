@@ -18,7 +18,6 @@ import Data.HashMap.Strict qualified as HM
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Instances ()
 
 --------------------------------------------------------------------------------
 -- metadata

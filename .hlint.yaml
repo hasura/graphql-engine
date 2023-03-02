@@ -253,3 +253,32 @@
     group: {name: "unsafe"},
     within: ["Harness.**", "Spec", "Spec.**", "SpecHook", "Test.**"]
     }
+
+
+
+
+# Glorious import restrictions
+
+# We limit the place where the module `Hasura.RQL.Types.Instances` can be
+# imported in order to make it easier to avoid module cycles.
+#
+# This check is initially quite limited, and will need to be extended to cover
+# other instance-defining modules as well:
+#
+#  * RQL.Types.Metadata.Instances
+#  * Hasura.GraphQL.Transport.Instances
+#  * Hasura.GraphQL.Execute.Instances
+#  * Hasura.GraphQL.Schema.Instances
+#  * Hasura.Server.API.Instances
+#  * Hasura.RQL.Types.SchemaCache.Instances
+
+- modules:
+    - name: Hasura.RQL.Types.Instances
+      within: [
+                Hasura.RQL.IR.Select,
+                Hasura.RQL.Types.Metadata.Object,
+                Hasura.RQL.Types.Relationships.Remote,
+                Hasura.RQL.Types.SchemaCacheTypes,
+                Hasura.RQL.Types.Source,
+                Hasura.GraphQL.Schema.Build.UpdateSpec
+              ]
