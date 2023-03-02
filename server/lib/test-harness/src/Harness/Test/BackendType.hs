@@ -4,6 +4,7 @@
 module Harness.Test.BackendType
   ( BackendType (..),
     BackendTypeConfig (..),
+    isDataConnector,
     parseCapabilities,
     pattern DataConnectorMock,
     pattern DataConnectorReference,
@@ -55,6 +56,12 @@ data BackendType
   | Cockroach
   | DataConnector String
   deriving (Eq, Ord, Show)
+
+-- | Check whether the 'BackendType' is a data connector.
+isDataConnector :: BackendType -> Bool
+isDataConnector = \case
+  DataConnector _ -> True
+  _ -> False
 
 pattern DataConnectorSqlite :: BackendType
 pattern DataConnectorSqlite = DataConnector "sqlite"

@@ -46,18 +46,23 @@ where
 
 import Control.Concurrent.Async qualified as Async
 import Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
-import Data.Aeson (Value, fromJSON, object, (.=))
+import Data.Aeson (Value (String), encode, fromJSON, object, (.=))
 import Data.Aeson.Encode.Pretty as AP
 import Data.Aeson.Types (Pair)
+import Data.ByteString (ByteString)
+import Data.CaseInsensitive (original)
 import Data.Environment qualified as Env
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as T
+import Data.Text.Encoding (decodeUtf8)
 import Data.Time (getCurrentTime)
 import Harness.Constants qualified as Constants
 import Harness.Exceptions (bracket, withFrozenCallStack)
 import Harness.Http qualified as Http
 import Harness.Logging
 import Harness.Quoter.Yaml (fromYaml, yaml)
-import Harness.TestEnvironment (Server (..), TestEnvironment (..), getServer, serverUrl, testLogMessage)
+import Harness.TestEnvironment (Protocol (..), Server (..), TestEnvironment (..), getServer, requestProtocol, serverUrl, testLogMessage)
+import Harness.WebSockets (responseListener)
 import Hasura.App qualified as App
 import Hasura.Logging (Hasura)
 import Hasura.Prelude
@@ -67,6 +72,7 @@ import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
 import Hasura.Tracing (sampleAlways)
 import Network.Socket qualified as Socket
 import Network.Wai.Handler.Warp qualified as Warp
+import Network.WebSockets qualified as WS
 import System.Metrics qualified as EKG
 import Test.Hspec
 
@@ -115,13 +121,47 @@ postWithHeadersStatus ::
 postWithHeadersStatus statusCode testEnv@(getServer -> Server {urlPrefix, port}) path headers requestBody = do
   testLogMessage testEnv $ LogHGERequest (T.pack path) requestBody
 
-  let headers' = case testingRole testEnv of
+  let headers' :: Http.RequestHeaders
+      headers' = case testingRole testEnv of
         Just role -> ("X-Hasura-Role", txtToBs role) : headers
         Nothing -> headers
 
-  responseBody <- withFrozenCallStack $ Http.postValueWithStatus statusCode (urlPrefix ++ ":" ++ show port ++ path) headers' requestBody
+  responseBody <- withFrozenCallStack case requestProtocol (globalEnvironment testEnv) of
+    WebSocket connection -> postWithHeadersStatusViaWebSocket connection headers' requestBody
+    HTTP -> Http.postValueWithStatus statusCode (urlPrefix ++ ":" ++ show port ++ path) headers' requestBody
+
   testLogMessage testEnv $ LogHGEResponse (T.pack path) responseBody
   pure responseBody
+
+-- | Post some JSON to graphql-engine, getting back more JSON, via websockets.
+--
+-- This will be used by 'postWithHeadersStatus' if the 'TestEnvironment' sets
+-- the 'requestProtocol' to 'WebSocket'.
+postWithHeadersStatusViaWebSocket :: WS.Connection -> Http.RequestHeaders -> Value -> IO Value
+postWithHeadersStatusViaWebSocket connection headers requestBody = do
+  let preparedHeaders :: HashMap Text ByteString
+      preparedHeaders =
+        HashMap.fromList
+          [ (decodeUtf8 (original key), value)
+            | (key, value) <- headers
+          ]
+
+  WS.sendTextDatas
+    connection
+    [ encode $
+        object
+          [ "type" .= String "connection_init",
+            "payload" .= object ["headers" .= preparedHeaders]
+          ],
+      encode $
+        object
+          [ "id" .= String "some-request-id",
+            "type" .= String "start",
+            "payload" .= requestBody
+          ]
+    ]
+
+  responseListener connection \_ _ payload -> pure payload
 
 -- | Post some JSON to graphql-engine, getting back more JSON.
 --
@@ -194,24 +234,35 @@ postExplain testEnvironment value =
             query: *value
         |]
 
+-- | Metadata requests don't work over websockets. This overrides the HGE
+-- request protocol.
+withHTTP :: TestEnvironment -> TestEnvironment
+withHTTP testEnvironment =
+  testEnvironment
+    { globalEnvironment =
+        (globalEnvironment testEnvironment)
+          { requestProtocol = HTTP
+          }
+    }
+
 -- | Same as 'post_', but defaults to the @"v1/metadata"@ endpoint.
 --
 -- @headers@ are mostly irrelevant for the admin endpoint @v1/metadata@.
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postMetadata_ :: HasCallStack => TestEnvironment -> Value -> IO ()
-postMetadata_ testEnvironment = withFrozenCallStack $ post_ testEnvironment "/v1/metadata"
+postMetadata_ testEnvironment = withFrozenCallStack $ post_ (withHTTP testEnvironment) "/v1/metadata"
 
 postMetadata :: HasCallStack => TestEnvironment -> Value -> IO Value
-postMetadata testEnvironment = withFrozenCallStack $ post testEnvironment "/v1/metadata"
+postMetadata testEnvironment = withFrozenCallStack $ post (withHTTP testEnvironment) "/v1/metadata"
 
 postMetadataWithStatus :: HasCallStack => Int -> TestEnvironment -> Value -> IO Value
 postMetadataWithStatus statusCode testEnvironment v =
-  withFrozenCallStack $ postWithHeadersStatus statusCode testEnvironment "/v1/metadata" mempty v
+  withFrozenCallStack $ postWithHeadersStatus statusCode (withHTTP testEnvironment) "/v1/metadata" mempty v
 
 postMetadataWithStatusAndHeaders :: HasCallStack => Int -> TestEnvironment -> Http.RequestHeaders -> Value -> IO Value
 postMetadataWithStatusAndHeaders statusCode testEnvironment =
-  withFrozenCallStack $ postWithHeadersStatus statusCode testEnvironment "/v1/metadata"
+  withFrozenCallStack $ postWithHeadersStatus statusCode (withHTTP testEnvironment) "/v1/metadata"
 
 -- | Resets metadata, removing all sources or remote schemas.
 --

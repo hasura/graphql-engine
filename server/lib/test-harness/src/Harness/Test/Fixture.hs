@@ -169,10 +169,7 @@ runWithLocalTestEnvironmentInternal aroundSomeWith fixtures tests =
             Postgres `elem` backendTypesForFixture fixtureName
           TestBackend (DataConnector _) ->
             -- we run all these together so it's harder to miss tests
-            let isDataConnector = \case
-                  DataConnector _dc -> True
-                  _ -> False
-             in any isDataConnector (backendTypesForFixture fixtureName)
+            any isDataConnector (backendTypesForFixture fixtureName)
           TestBackend backendType ->
             backendType `elem` backendTypesForFixture fixtureName
           TestNoBackends -> S.null (backendTypesForFixture fixtureName)

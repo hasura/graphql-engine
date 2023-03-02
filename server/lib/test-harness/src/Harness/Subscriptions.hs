@@ -27,9 +27,7 @@ where
 import Control.Concurrent (MVar, newEmptyMVar, putMVar, takeMVar)
 import Control.Concurrent.Async qualified as Async
 import Control.Concurrent.STM (atomically, newTVarIO, readTVar, writeTVar)
-import Control.Lens (preview)
 import Data.Aeson
-import Data.Aeson.Lens (key, _String)
 import Data.Aeson.QQ
 import Data.Aeson.Types (Pair)
 import Data.IORef (IORef, atomicModifyIORef', newIORef, readIORef)
@@ -43,6 +41,7 @@ import Harness.TestEnvironment
     TestEnvironment (..),
     testLogMessage,
   )
+import Harness.WebSockets (responseListener)
 import Hasura.Prelude
 import Network.WebSockets qualified as WS
 import System.Timeout (timeout)
@@ -163,44 +162,18 @@ withSubscriptionsHeaders' headers getTestEnvironment = aroundAllWith \actionWith
         atomicModify :: IORef x -> (x -> x) -> IO ()
         atomicModify ref f = atomicModifyIORef' ref \x -> (f x, ())
 
-        -- Is this an actual message or client/server busywork?
-        isInteresting :: Value -> Bool
-        isInteresting res =
-          preview (key "type") res
-            `notElem` [ Just "ka", -- keep alive
-                        Just "connection_ack" -- connection acknowledged
-                      ]
-
         -- listens for server responses and populates @handlers@ with the new
         -- response. It will only read one message at a time because it is
         -- blocked by reading/writing to the MVar. Will throw an exception to
         -- the other thread if it encounters an error.
-        responseListener :: IO ()
-        responseListener = do
-          msgBytes <- WS.receiveData conn
-          case eitherDecode msgBytes of
-            Left err -> do
-              throw $ userError (unlines ["Subscription decode failed: " <> err, "Payload: " <> show msgBytes])
-            Right msg -> do
-              when (isInteresting msg) do
-                testLogMessage testEnvironment $ LogSubscriptionResponse msg
+        listener :: IO ()
+        listener = responseListener conn \identifier _ payload -> do
+          readIORef handlers >>= \mvars ->
+            case Map.lookup identifier mvars of
+              Just mvar -> putMVar mvar payload
+              Nothing -> fail "Unexpected handler identifier"
 
-                let maybePayload :: Maybe Value
-                    maybePayload = preview (key "payload") msg
-
-                    maybeIdentifier :: Maybe Text
-                    maybeIdentifier = preview (key "id" . _String) msg
-
-                case liftA2 (,) maybePayload maybeIdentifier of
-                  Nothing -> do
-                    throw $ userError ("Unable to parse message: " ++ show msg)
-                  Just (payload, identifier) ->
-                    readIORef handlers >>= \mvars ->
-                      case Map.lookup identifier mvars of
-                        Just mvar -> putMVar mvar payload
-                        Nothing -> throw (userError "Unexpected handler identifier")
-
-              responseListener
+          listener
 
         -- Create a subscription over this websocket connection. Will be used
         -- by the user to create new subscriptions. The handled can be used to
@@ -231,9 +204,9 @@ withSubscriptionsHeaders' headers getTestEnvironment = aroundAllWith \actionWith
               "Subscription exceeded the allotted time of: " <> show time
             Just _ -> pure ()
 
-    -- @withAsync@ will take care of cancelling the 'responseListener' thread
+    -- @withAsync@ will take care of cancelling the 'listener' thread
     -- for us once the test has been executed.
-    Async.withAsync (handleExceptionsAndTimeout responseListener) \_ -> do
+    Async.withAsync (handleExceptionsAndTimeout listener) \_ -> do
       actionWithSubAndTest (mkSub, a)
 
 -- | Get the next response received on a subscription.

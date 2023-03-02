@@ -12,6 +12,7 @@ library
     , attoparsec
     , base
     , bytestring
+    , case-insensitive
     , conduit
     , containers
     , data-has
@@ -150,10 +151,12 @@ library
     Harness.Test.FixtureName
     Harness.Test.Introspection
     Harness.Test.Permissions
+    Harness.Test.Protocol
     Harness.Test.Schema
     Harness.Test.SchemaName
     Harness.Test.SetupAction
     Harness.Test.TestResource
     Harness.TestEnvironment
     Harness.Webhook
+    Harness.WebSockets
     Harness.Yaml

@@ -5,6 +5,7 @@
 module Harness.TestEnvironment
   ( TestEnvironment (..),
     GlobalTestEnvironment (..),
+    Protocol (..),
     Server (..),
     TestingMode (..),
     UniqueTestId (..),
@@ -34,6 +35,7 @@ import Harness.Services.Composed qualified as Services
 import Harness.Test.BackendType
 import Harness.Test.FixtureName
 import Hasura.Prelude
+import Network.WebSockets qualified as WS
 import Text.Pretty.Simple
 
 newtype UniqueTestId = UniqueTestId {getUniqueTestId :: UUID}
@@ -60,6 +62,8 @@ data GlobalTestEnvironment = GlobalTestEnvironment
     testingMode :: TestingMode,
     -- | connection details for the instance of HGE we're connecting to
     server :: Server,
+    -- | The protocol with which we make server requests.
+    requestProtocol :: Protocol,
     servicesConfig :: Services.TestServicesConfig
   }
 
@@ -88,6 +92,10 @@ data TestEnvironment = TestEnvironment
     -- to test permissions.
     testingRole :: Maybe Text
   }
+
+-- | How should we make requests to `graphql-engine`? Both WebSocket- and HTTP-
+-- based requests are supported.
+data Protocol = HTTP | WebSocket WS.Connection
 
 instance Has Logger TestEnvironment where
   getter = logger . globalEnvironment
