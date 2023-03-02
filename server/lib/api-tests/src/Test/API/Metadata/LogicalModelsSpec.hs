@@ -427,13 +427,13 @@ tests opts = do
               [yaml|
               type: pg_untrack_logical_model
               args:
-                root_field_name: some_native_query
+                root_field_name: some_logical_model
                 source: postgres
             |]
           )
           [yaml|
           code: not-found
-          error: "Logical model 'some_native_query' not found in source 'postgres'."
+          error: "Logical model 'some_logical_model' not found in source 'postgres'."
           path: "$.args"
         |]
 
