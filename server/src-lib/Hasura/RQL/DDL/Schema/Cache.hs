@@ -41,6 +41,8 @@ import Hasura.GraphQL.Schema (buildGQLContext)
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging
+import Hasura.LogicalModel.Cache (LogicalModelCache, LogicalModelInfo (..))
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.Action
@@ -621,7 +623,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys, st
       )
         `arr` (SourceInfo b)
     buildSource = proc (allSources, sourceMetadata, sourceConfig, tablesRawInfo, eventTriggerInfoMaps, _dbTables, dbFunctions, remoteSchemaMap, orderedRoles) -> do
-      let SourceMetadata sourceName _backendKind tables functions customSQL _ queryTagsConfig sourceCustomization _healthCheckConfig = sourceMetadata
+      let SourceMetadata sourceName _backendKind tables functions logicalModels _ queryTagsConfig sourceCustomization _healthCheckConfig = sourceMetadata
           tablesMetadata = OMap.elems tables
           (_, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
           alignTableMap :: HashMap (TableName b) a -> HashMap (TableName b) c -> HashMap (TableName b) (a, c)
@@ -703,7 +705,23 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys, st
 
       let functionCache = mapFromL _fiSQLName $ catMaybes functionCacheMaybes
 
-      returnA -< SourceInfo sourceName tableCache functionCache customSQL sourceConfig queryTagsConfig resolvedCustomization
+          -- There's currently nothing to "resolve" in the metadata object.
+          -- This will change when e.g. permissions are introduced, which will
+          -- change the logical model cache based on the role.
+          logicalModelCache :: LogicalModelCache b
+          logicalModelCache = mapFromL _lmiRootFieldName do
+            LogicalModelMetadata {..} <- OMap.elems logicalModels
+
+            pure
+              LogicalModelInfo
+                { _lmiRootFieldName = _lmmRootFieldName,
+                  _lmiCode = _lmmCode,
+                  _lmiReturns = _lmmReturns,
+                  _lmiArguments = _lmmArguments,
+                  _lmiDescription = _lmmDescription
+                }
+
+      returnA -< SourceInfo sourceName tableCache functionCache logicalModelCache sourceConfig queryTagsConfig resolvedCustomization
 
     buildAndCollectInfo ::
       forall arr m.

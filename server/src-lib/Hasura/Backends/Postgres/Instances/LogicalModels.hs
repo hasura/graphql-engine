@@ -11,7 +11,8 @@ import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection qualified as PG
 import Hasura.Backends.Postgres.Connection.Connect (withPostgresDB)
 import Hasura.Base.Error
-import Hasura.LogicalModel.Metadata
+import Hasura.LogicalModel.Metadata (InterpolatedItem (IIText, IIVariable), LogicalModelMetadata (..), getInterpolatedQuery)
+import Hasura.LogicalModel.Types (getLogicalModelName)
 import Hasura.Prelude
 import Hasura.SQL.Backend
 
@@ -20,13 +21,13 @@ validateLogicalModel ::
   (MonadIO m, MonadError QErr m) =>
   Env.Environment ->
   PG.PostgresConnConfiguration ->
-  LogicalModelInfo ('Postgres pgKind) ->
+  LogicalModelMetadata ('Postgres pgKind) ->
   m ()
 validateLogicalModel env connConf model = do
-  let name = getLogicalModelName $ lmiRootFieldName model
+  let name = getLogicalModelName $ _lmmRootFieldName model
   let code :: Text
       code = fold $ flip evalState (1 :: Int) do
-        for (getInterpolatedQuery $ lmiCode model) \case
+        for (getInterpolatedQuery $ _lmmCode model) \case
           IIText t -> pure t
           IIVariable _v -> do
             i <- get

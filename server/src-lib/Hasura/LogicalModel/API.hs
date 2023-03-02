@@ -22,7 +22,7 @@ import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Hasura.Base.Error
 import Hasura.CustomReturnType (CustomReturnType)
 import Hasura.EncJSON
-import Hasura.LogicalModel.Metadata (LogicalModelArgumentName, LogicalModelInfo (..), parseInterpolatedQuery)
+import Hasura.LogicalModel.Metadata (LogicalModelArgumentName, LogicalModelMetadata (..), parseInterpolatedQuery)
 import Hasura.LogicalModel.Types
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
@@ -85,7 +85,7 @@ deriving via
     (Backend b) => ToJSON (TrackLogicalModel b)
 
 -- | Validate a logical model and extract the logical model info from the request.
-logicalModelTrackToInfo ::
+logicalModelTrackToMetadata ::
   forall b m.
   ( BackendMetadata b,
     MonadIO m,
@@ -94,18 +94,22 @@ logicalModelTrackToInfo ::
   Env.Environment ->
   SourceConnConfiguration b ->
   TrackLogicalModel b ->
-  m (LogicalModelInfo b)
-logicalModelTrackToInfo env sourceConnConfig TrackLogicalModel {..} = do
-  lmiCode <- parseInterpolatedQuery tlmCode `onLeft` \e -> throw400 ParseFailed e
-  let lmiRootFieldName = tlmRootFieldName
-      lmiReturns = tlmReturns
-      lmiArguments = tlmArguments
-      lmiDescription = tlmDescription
-      lmInfoImpl = LogicalModelInfo {..}
+  m (LogicalModelMetadata b)
+logicalModelTrackToMetadata env sourceConnConfig TrackLogicalModel {..} = do
+  code <- parseInterpolatedQuery tlmCode `onLeft` \e -> throw400 ParseFailed e
 
-  validateLogicalModel @b env sourceConnConfig lmInfoImpl
+  let logicalModelMetadata =
+        LogicalModelMetadata
+          { _lmmRootFieldName = tlmRootFieldName,
+            _lmmCode = code,
+            _lmmReturns = tlmReturns,
+            _lmmArguments = tlmArguments,
+            _lmmDescription = tlmDescription
+          }
 
-  pure lmInfoImpl
+  validateLogicalModel @b env sourceConnConfig logicalModelMetadata
+
+  pure logicalModelMetadata
 
 -- | API payload for the 'get_logical_model' endpoint.
 data GetLogicalModel (b :: BackendType) = GetLogicalModel
@@ -171,11 +175,11 @@ runTrackLogicalModel env trackLogicalModelRequest = do
       . preview (metaSources . ix source . toSourceMetadata @b . smConfiguration)
       =<< getMetadata
 
-  (metadata :: LogicalModelInfo b) <- do
-    liftIO (runExceptT (logicalModelTrackToInfo @b env sourceConnConfig trackLogicalModelRequest))
+  (metadata :: LogicalModelMetadata b) <- do
+    liftIO (runExceptT (logicalModelTrackToMetadata @b env sourceConnConfig trackLogicalModelRequest))
       `onLeftM` throwError
 
-  let fieldName = lmiRootFieldName metadata
+  let fieldName = _lmmRootFieldName metadata
       metadataObj =
         MOSourceObjId source $
           AB.mkAnyBackend $
@@ -235,7 +239,7 @@ runUntrackLogicalModel q = do
       =<< getMetadata
 
   -- Check the logical model exists
-  unless (any ((== fieldName) . lmiRootFieldName) $ _smLogicalModels sourceMetadata) do
+  unless (any ((== fieldName) . _lmmRootFieldName) $ _smLogicalModels sourceMetadata) do
     throw400 NotFound $ "Logical model '" <> unName (getLogicalModelName fieldName) <> "' not found in source '" <> sourceNameToText source <> "'."
 
   let metadataObj =

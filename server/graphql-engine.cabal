@@ -741,6 +741,7 @@ library
                      , Hasura.GC
 
                      , Hasura.LogicalModel.IR
+                     , Hasura.LogicalModel.Cache
                      , Hasura.LogicalModel.Metadata
                      , Hasura.LogicalModel.API
                      , Hasura.LogicalModel.Schema

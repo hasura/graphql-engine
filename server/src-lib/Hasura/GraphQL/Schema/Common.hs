@@ -71,6 +71,7 @@ import Hasura.GraphQL.Schema.Options (SchemaOptions)
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Typename
+import Hasura.LogicalModel.Cache (LogicalModelCache)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
@@ -78,7 +79,6 @@ import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
-import Hasura.RQL.Types.Metadata.Common (LogicalModels)
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
@@ -429,7 +429,7 @@ takeValidFunctions = Map.filter functionFilter
     functionFilter = not . isSystemDefined . _fiSystemDefined
 
 -- | Currently we do no validation on logical models in schema. Should we?
-takeValidLogicalModels :: forall b. LogicalModels b -> LogicalModels b
+takeValidLogicalModels :: forall b. LogicalModelCache b -> LogicalModelCache b
 takeValidLogicalModels = id
 
 -- root field builder helpers

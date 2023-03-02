@@ -44,6 +44,7 @@ import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Schema.RemoteRelationship
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename (MkTypename (..))
+import Hasura.LogicalModel.Cache (LogicalModelCache)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR
@@ -52,7 +53,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Function
-import Hasura.RQL.Types.Metadata.Common (LogicalModels)
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryTags
@@ -641,7 +641,7 @@ buildQueryAndSubscriptionFields ::
   SourceInfo b ->
   TableCache b ->
   FunctionCache b ->
-  LogicalModels b ->
+  LogicalModelCache b ->
   SchemaT
     r
     m
@@ -692,7 +692,7 @@ buildLogicalModelFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   SourceInfo b ->
-  LogicalModels b ->
+  LogicalModelCache b ->
   SchemaT r m [P.FieldParser n (QueryRootField UnpreparedValue)]
 buildLogicalModelFields sourceInfo logicalModels = runMaybeTmempty $ do
   roleName <- retrieve scRole
@@ -701,7 +701,7 @@ buildLogicalModelFields sourceInfo logicalModels = runMaybeTmempty $ do
   -- permissions for logical models.
   guard $ roleName == adminRoleName
 
-  map mkRF . catMaybes <$> for (OMap.elems logicalModels) \model -> do
+  map mkRF . catMaybes <$> for (Map.elems logicalModels) \model -> do
     lift (buildLogicalModelRootFields model)
   where
     mkRF ::

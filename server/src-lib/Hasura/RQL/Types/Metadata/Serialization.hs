@@ -25,7 +25,7 @@ import Data.Aeson.Ordered qualified as AO
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Text.Extended qualified as T
 import Data.Vector qualified as Vector
-import Hasura.LogicalModel.Metadata (LogicalModelInfo (..))
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
   ( ActionDefinition (..),
@@ -120,7 +120,7 @@ sourcesToOrdJSONList sources =
             sourceKindPair = ("kind", AO.toOrdered _smKind)
             tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems _smTables)
             functionsPair = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction _smFunctions
-            logicalModelsPair = listToMaybeOrdPairSort "logical_models" AO.toOrdered lmiRootFieldName (OM.elems _smLogicalModels)
+            logicalModelsPair = listToMaybeOrdPairSort "logical_models" AO.toOrdered _lmmRootFieldName (OM.elems _smLogicalModels)
             configurationPair = [("configuration", AO.toOrdered _smConfiguration)]
             queryTagsConfigPair = maybe [] (\queryTagsConfig -> [("query_tags", AO.toOrdered queryTagsConfig)]) _smQueryTags
 

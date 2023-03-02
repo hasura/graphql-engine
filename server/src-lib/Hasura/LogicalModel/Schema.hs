@@ -20,8 +20,10 @@ import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
   ( customTypeSelectionList,
   )
+import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
 import Hasura.LogicalModel.IR (LogicalModel (..))
-import Hasura.LogicalModel.Metadata
+import Hasura.LogicalModel.Metadata (InterpolatedQuery (..), LogicalModelArgumentName (getLogicalModelArgumentName))
+import Hasura.LogicalModel.Types (getLogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (gBoolExpTrue)
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
@@ -54,19 +56,19 @@ defaultBuildLogicalModelRootFields ::
     m
     (Maybe (P.FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 defaultBuildLogicalModelRootFields LogicalModelInfo {..} = runMaybeT $ do
-  let fieldName = getLogicalModelName lmiRootFieldName
-  logicalModelArgsParser <- logicalModelArgumentsSchema @b @r @m @n fieldName lmiArguments
+  let fieldName = getLogicalModelName _lmiRootFieldName
+  logicalModelArgsParser <- logicalModelArgumentsSchema @b @r @m @n fieldName _lmiArguments
 
   sourceInfo :: SourceInfo b <- asks getter
 
   let sourceName = _siName sourceInfo
       tCase = _rscNamingConvention $ _siCustomization sourceInfo
-      description = G.Description <$> lmiDescription
+      description = G.Description <$> _lmiDescription
 
   stringifyNumbers <- retrieve Options.soStringifyNumbers
 
-  selectionSetParser <- MaybeT $ customTypeSelectionList @b @r @m @n (getLogicalModelName lmiRootFieldName) lmiReturns
-  customTypesArgsParser <- lift $ customTypeArguments @b @r @m @n (getLogicalModelName lmiRootFieldName) lmiReturns
+  selectionSetParser <- MaybeT $ customTypeSelectionList @b @r @m @n (getLogicalModelName _lmiRootFieldName) _lmiReturns
+  customTypesArgsParser <- lift $ customTypeArguments @b @r @m @n (getLogicalModelName _lmiRootFieldName) _lmiReturns
 
   let interpolatedQuery lmArgs =
         InterpolatedQuery $
@@ -79,10 +81,10 @@ defaultBuildLogicalModelRootFields LogicalModelInfo {..} = runMaybeT $ do
                   -- not_ happen
                   error $ "No logical model arg passed for " <> show var
             )
-            (getInterpolatedQuery lmiCode)
+            (getInterpolatedQuery _lmiCode)
 
   pure $
-    P.setFieldParserOrigin (MO.MOSourceObjId sourceName (mkAnyBackend $ MO.SMOLogicalModel @b lmiRootFieldName)) $
+    P.setFieldParserOrigin (MO.MOSourceObjId sourceName (mkAnyBackend $ MO.SMOLogicalModel @b _lmiRootFieldName)) $
       P.subselection
         fieldName
         description
@@ -98,7 +100,7 @@ defaultBuildLogicalModelRootFields LogicalModelInfo {..} = runMaybeT $ do
                 IR._asnFrom =
                   IR.FromLogicalModel
                     LogicalModel
-                      { lmRootFieldName = lmiRootFieldName,
+                      { lmRootFieldName = _lmiRootFieldName,
                         lmArgs,
                         lmInterpolatedQuery = interpolatedQuery lmArgs
                       },

@@ -81,7 +81,7 @@ import Data.List.Extended qualified as L
 import Data.Maybe (fromJust)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
-import Hasura.LogicalModel.Metadata (LogicalModelInfo (..), LogicalModelName)
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..), LogicalModelName)
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
@@ -405,7 +405,7 @@ type Tables b = InsOrdHashMap (TableName b) (TableMetadata b)
 
 type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 
-type LogicalModels b = InsOrdHashMap LogicalModelName (LogicalModelInfo b)
+type LogicalModels b = InsOrdHashMap LogicalModelName (LogicalModelMetadata b)
 
 type Endpoints = InsOrdHashMap EndpointName CreateEndpoint
 
@@ -440,7 +440,7 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadat
     _smName <- o .: "name"
     _smTables <- oMapFromL _tmTable <$> o .: "tables"
     _smFunctions <- oMapFromL _fmFunction <$> o .:? "functions" .!= []
-    _smLogicalModels <- oMapFromL lmiRootFieldName <$> o .:? "logical_models" .!= []
+    _smLogicalModels <- oMapFromL _lmmRootFieldName <$> o .:? "logical_models" .!= []
     _smConfiguration <- o .: "configuration"
     _smQueryTags <- o .:? "query_tags"
     _smCustomization <- o .:? "customization" .!= emptySourceCustomization
@@ -499,7 +499,7 @@ instance Backend b => HasCodec (SourceMetadata b) where
           .== _smTables
         <*> optionalFieldOrNullWithOmittedDefaultWith' "functions" (sortedElemsCodec _fmFunction) mempty
           .== _smFunctions
-        <*> optionalFieldOrNullWithOmittedDefaultWith' "logical_models" (sortedElemsCodec lmiRootFieldName) mempty
+        <*> optionalFieldOrNullWithOmittedDefaultWith' "logical_models" (sortedElemsCodec _lmmRootFieldName) mempty
           .== _smLogicalModels
         <*> requiredField' "configuration"
           .== _smConfiguration

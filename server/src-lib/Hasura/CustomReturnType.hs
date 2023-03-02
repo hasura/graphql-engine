@@ -6,8 +6,9 @@ module Hasura.CustomReturnType
   )
 where
 
-import Autodocodec (HasCodec)
+import Autodocodec (Autodocodec (Autodocodec), HasCodec)
 import Autodocodec qualified as AC
+import Data.Aeson (ToJSON)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend (Backend (..))
@@ -33,6 +34,11 @@ instance (Backend b) => HasCodec (CustomReturnType b) where
     where
       columnsDoc = "Return types for the logical model"
       descriptionDoc = "Optional description text which appears in the GraphQL Schema."
+
+deriving via
+  (Autodocodec (CustomReturnType b))
+  instance
+    Backend b => ToJSON (CustomReturnType b)
 
 deriving stock instance (Backend b) => Eq (CustomReturnType b)
 

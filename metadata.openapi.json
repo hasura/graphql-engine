@@ -668,8 +668,8 @@
                 ],
                 "type": "object"
             },
-            "BigqueryLogicalModelInfo": {
-                "description": "A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.",
+            "BigqueryLogicalModelMetadata": {
+                "description": "A logical model as represented in metadata.",
                 "properties": {
                     "arguments": {
                         "additionalProperties": {
@@ -887,7 +887,7 @@
                     "logical_models": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/BigqueryLogicalModelInfo"
+                            "$ref": "#/components/schemas/BigqueryLogicalModelMetadata"
                         },
                         "nullable": true,
                         "type": "array"
@@ -1481,8 +1481,8 @@
                 ],
                 "type": "object"
             },
-            "CitusLogicalModelInfo": {
-                "description": "A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.",
+            "CitusLogicalModelMetadata": {
+                "description": "A logical model as represented in metadata.",
                 "properties": {
                     "arguments": {
                         "additionalProperties": {
@@ -1728,7 +1728,7 @@
                     "logical_models": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/CitusLogicalModelInfo"
+                            "$ref": "#/components/schemas/CitusLogicalModelMetadata"
                         },
                         "nullable": true,
                         "type": "array"
@@ -2329,8 +2329,8 @@
                 ],
                 "type": "object"
             },
-            "CockroachLogicalModelInfo": {
-                "description": "A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.",
+            "CockroachLogicalModelMetadata": {
+                "description": "A logical model as represented in metadata.",
                 "properties": {
                     "arguments": {
                         "additionalProperties": {
@@ -2576,7 +2576,7 @@
                     "logical_models": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/CockroachLogicalModelInfo"
+                            "$ref": "#/components/schemas/CockroachLogicalModelMetadata"
                         },
                         "nullable": true,
                         "type": "array"
@@ -3252,8 +3252,8 @@
                 ],
                 "type": "object"
             },
-            "DataconnectorLogicalModelInfo": {
-                "description": "A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.",
+            "DataconnectorLogicalModelMetadata": {
+                "description": "A logical model as represented in metadata.",
                 "properties": {
                     "arguments": {
                         "additionalProperties": {
@@ -3477,7 +3477,7 @@
                     "logical_models": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/DataconnectorLogicalModelInfo"
+                            "$ref": "#/components/schemas/DataconnectorLogicalModelMetadata"
                         },
                         "nullable": true,
                         "type": "array"
@@ -4595,8 +4595,8 @@
                 ],
                 "type": "object"
             },
-            "MssqlLogicalModelInfo": {
-                "description": "A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.",
+            "MssqlLogicalModelMetadata": {
+                "description": "A logical model as represented in metadata.",
                 "properties": {
                     "arguments": {
                         "additionalProperties": {
@@ -4841,7 +4841,7 @@
                     "logical_models": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/MssqlLogicalModelInfo"
+                            "$ref": "#/components/schemas/MssqlLogicalModelMetadata"
                         },
                         "nullable": true,
                         "type": "array"
@@ -5436,8 +5436,8 @@
                 ],
                 "type": "object"
             },
-            "MysqlLogicalModelInfo": {
-                "description": "A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.",
+            "MysqlLogicalModelMetadata": {
+                "description": "A logical model as represented in metadata.",
                 "properties": {
                     "arguments": {
                         "additionalProperties": {
@@ -5710,7 +5710,7 @@
                     "logical_models": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/MysqlLogicalModelInfo"
+                            "$ref": "#/components/schemas/MysqlLogicalModelMetadata"
                         },
                         "nullable": true,
                         "type": "array"
@@ -6388,8 +6388,8 @@
                 ],
                 "type": "object"
             },
-            "PostgresLogicalModelInfo": {
-                "description": "A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.",
+            "PostgresLogicalModelMetadata": {
+                "description": "A logical model as represented in metadata.",
                 "properties": {
                     "arguments": {
                         "additionalProperties": {
@@ -6749,7 +6749,7 @@
                     "logical_models": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/PostgresLogicalModelInfo"
+                            "$ref": "#/components/schemas/PostgresLogicalModelMetadata"
                         },
                         "nullable": true,
                         "type": "array"
