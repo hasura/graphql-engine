@@ -3,14 +3,17 @@
 -- | Tests of the Logical Models feature.
 module Test.API.Metadata.LogicalModelsSpec (spec) where
 
+import Data.Aeson qualified as A
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
+import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml.InterpolateYaml
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
-import Harness.Yaml (shouldReturnYaml)
+import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
@@ -82,7 +85,9 @@ tests opts = do
                   target_date: date
                 returns:
                   columns:
-                    divided: integer
+                    divided:
+                      type: integer
+                      description: "a divided thing"
             |]
         )
         [yaml|
@@ -151,7 +156,9 @@ tests opts = do
                   unused: int
                 returns:
                   columns:
-                    divided: integer
+                    divided:
+                      type: integer
+                      description: "a divided thing"
             |]
         )
         [yaml|
@@ -176,7 +183,9 @@ tests opts = do
                   target_date: date
                 returns:
                   columns:
-                    divided: integer
+                    divided:
+                      type: integer
+                      description: "a divided thing"
             |]
         )
         [yaml|
@@ -202,7 +211,9 @@ tests opts = do
                   target_date: date
                 returns:
                   columns:
-                    divided: integer
+                    divided:
+                      type: integer
+                      description: "a divided thing"
             |]
         )
         [yaml|
@@ -227,7 +238,10 @@ tests opts = do
               target_date: date
             returns:
               columns:
-                divided: integer
+                    divided:
+                      type: integer
+                      nullable: false
+                      description: "a divided thing"
         |]
 
     it "Drops a logical model of a function and returns a 200" $ \testEnv -> do
@@ -246,7 +260,9 @@ tests opts = do
                 target_date: date
               returns:
                 columns:
-                  divided: integer
+                  divided:
+                    type: integer
+                    description: "a divided thing"
           |]
 
       shouldReturnYaml
@@ -280,7 +296,9 @@ tests opts = do
                 target_date: date
               returns:
                 columns:
-                  divided: integer
+                  divided:
+                    type: integer
+                    description: "a divided thing"
           |]
 
       _ <-
@@ -306,6 +324,97 @@ tests opts = do
         [yaml|
           []
         |]
+
+    it "Descriptions and nullability appear in the schema" $ \testEnv -> do
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnv
+            [yaml|
+              type: pg_track_logical_model
+              args:
+                type: query
+                source: postgres
+                root_field_name: divided_stuff
+                code: |
+                  SELECT thing / 2 AS divided, null as something_nullable FROM stuff
+                arguments:
+                  unused: int
+                returns:
+                  description: "Return type description"
+                  columns:
+                    divided:
+                      type: integer
+                      description: "A divided thing"
+                    something_nullable:
+                      type: integer
+                      description: "Something nullable"
+                      nullable: true
+            |]
+        )
+        [yaml|
+          message: success
+        |]
+
+      let queryTypesIntrospection :: A.Value
+          queryTypesIntrospection =
+            [graphql|
+                query {
+                  __type(name: "divided_stuff") {
+                    name
+                    description
+                    fields {
+                      name
+                      description
+                      type {
+                        name
+                        kind
+                        ofType {
+                          name
+                        }
+                      }
+                    }
+                  }
+                }
+              |]
+
+          expected =
+            [interpolateYaml|
+                {
+                  "data": {
+                    "__type": {
+                      "description": "Return type description",
+                      "fields": [
+                      {
+                        "description": "A divided thing",
+                        "name": "divided",
+                        "type": {
+                          "kind": "NON_NULL",
+                          "name": null,
+                          "ofType": {
+                            "name": "Int"
+                          }
+                        }
+                      },
+                      {
+                        "description": "Something nullable",
+                        "name": "something_nullable",
+                        "type": {
+                          "kind": "SCALAR",
+                          "name": "Int",
+                          "ofType": null
+                        }
+                      }
+                      ],
+                      "name": "divided_stuff"
+                    }
+                  }
+                }
+              |]
+
+      actual <- GraphqlEngine.postGraphql testEnv queryTypesIntrospection
+
+      actual `shouldBeYaml` expected
 
   describe "Validation fails on untrack a logical model" do
     it "when a logical model does not exist" $
@@ -350,7 +459,9 @@ tests opts = do
                     target_date: date
                   returns:
                     columns:
-                      divided: integer
+                      divided:
+                        type: integer
+                        description: "a divided thing"
               |]
           )
           [yaml|
@@ -390,7 +501,9 @@ tests opts = do
                     target_date: date
                   returns:
                     columns:
-                      divided: integer
+                      divided:
+                        type: integer
+                        description: "a divided thing"
               |]
           )
           [yaml|

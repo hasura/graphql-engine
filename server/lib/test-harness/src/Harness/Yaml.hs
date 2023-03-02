@@ -130,7 +130,7 @@ shouldReturnYamlF transform options actualIO expected = do
           then parseToMatch expected actual
           else actual
 
-  actual `shouldBe` expected
+  actual `shouldBeYaml` expected
 
 -- | The action @actualIO@ should produce the @expected@ YAML,
 -- represented (by the yaml package) as an aeson 'Value'.

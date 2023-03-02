@@ -512,15 +512,40 @@
                 ],
                 "type": "object"
             },
+            "BigqueryCustomColumn": {
+                "description": "A column of a custom return type",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema",
+                        "type": "string"
+                    },
+                    "nullable": {
+                        "default": false,
+                        "description": "Whether the type is nullable",
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/ScalarType"
+                    }
+                },
+                "required": [
+                    "type"
+                ],
+                "type": "object"
+            },
             "BigqueryCustomReturnType": {
                 "description": "A return type for a logical model.",
                 "properties": {
                     "columns": {
                         "additionalProperties": {
-                            "$ref": "#/components/schemas/ScalarType"
+                            "$ref": "#/components/schemas/BigqueryCustomColumn"
                         },
                         "description": "Return types for the logical model",
                         "type": "object"
+                    },
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -1196,16 +1221,41 @@
                 ],
                 "type": "object"
             },
+            "CitusCustomColumn": {
+                "description": "A column of a custom return type",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema",
+                        "type": "string"
+                    },
+                    "nullable": {
+                        "default": false,
+                        "description": "Whether the type is nullable",
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "description": "The type of the column\nPostgres Scalar Types",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "type"
+                ],
+                "type": "object"
+            },
             "CitusCustomReturnType": {
                 "description": "A return type for a logical model.",
                 "properties": {
                     "columns": {
                         "additionalProperties": {
-                            "description": "Postgres Scalar Types",
-                            "type": "string"
+                            "$ref": "#/components/schemas/CitusCustomColumn"
                         },
                         "description": "Return types for the logical model",
                         "type": "object"
+                    },
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -2019,16 +2069,41 @@
                 ],
                 "type": "object"
             },
+            "CockroachCustomColumn": {
+                "description": "A column of a custom return type",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema",
+                        "type": "string"
+                    },
+                    "nullable": {
+                        "default": false,
+                        "description": "Whether the type is nullable",
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "description": "The type of the column\nPostgres Scalar Types",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "type"
+                ],
+                "type": "object"
+            },
             "CockroachCustomReturnType": {
                 "description": "A return type for a logical model.",
                 "properties": {
                     "columns": {
                         "additionalProperties": {
-                            "description": "Postgres Scalar Types",
-                            "type": "string"
+                            "$ref": "#/components/schemas/CockroachCustomColumn"
                         },
                         "description": "Return types for the logical model",
                         "type": "object"
+                    },
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -3017,15 +3092,40 @@
                 ],
                 "type": "object"
             },
+            "DataconnectorCustomColumn": {
+                "description": "A column of a custom return type",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema",
+                        "type": "string"
+                    },
+                    "nullable": {
+                        "default": false,
+                        "description": "Whether the type is nullable",
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/ScalarType"
+                    }
+                },
+                "required": [
+                    "type"
+                ],
+                "type": "object"
+            },
             "DataconnectorCustomReturnType": {
                 "description": "A return type for a logical model.",
                 "properties": {
                     "columns": {
                         "additionalProperties": {
-                            "$ref": "#/components/schemas/ScalarType"
+                            "$ref": "#/components/schemas/DataconnectorCustomColumn"
                         },
                         "description": "Return types for the logical model",
                         "type": "object"
+                    },
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -4244,15 +4344,40 @@
                 ],
                 "type": "object"
             },
+            "MssqlCustomColumn": {
+                "description": "A column of a custom return type",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema",
+                        "type": "string"
+                    },
+                    "nullable": {
+                        "default": false,
+                        "description": "Whether the type is nullable",
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/ScalarType"
+                    }
+                },
+                "required": [
+                    "type"
+                ],
+                "type": "object"
+            },
             "MssqlCustomReturnType": {
                 "description": "A return type for a logical model.",
                 "properties": {
                     "columns": {
                         "additionalProperties": {
-                            "$ref": "#/components/schemas/ScalarType"
+                            "$ref": "#/components/schemas/MssqlCustomColumn"
                         },
                         "description": "Return types for the logical model",
                         "type": "object"
+                    },
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -5123,46 +5248,71 @@
                 ],
                 "type": "object"
             },
+            "MysqlCustomColumn": {
+                "description": "A column of a custom return type",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema",
+                        "type": "string"
+                    },
+                    "nullable": {
+                        "default": false,
+                        "description": "Whether the type is nullable",
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "description": "The type of the column\nA MySQL scalar type.",
+                        "enum": [
+                            "DATE",
+                            "DECIMAL",
+                            "DECIMAL",
+                            "TINYINT",
+                            "SMALLINT",
+                            "INT",
+                            "FLOAT",
+                            "DOUBLE",
+                            "NULL",
+                            "TIMESTAMP",
+                            "BIGINT",
+                            "MEDIUMINT",
+                            "DATE",
+                            "TIME",
+                            "DATETIME",
+                            "YEAR",
+                            "VARCHAR",
+                            "BIT",
+                            "ENUM",
+                            "SET",
+                            "TINYBLOB",
+                            "MEDIUMBLOB",
+                            "LONGBLOB",
+                            "BLOB",
+                            "VARCHAR",
+                            "TEXT",
+                            "GEOMETRY",
+                            "JSON"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "type"
+                ],
+                "type": "object"
+            },
             "MysqlCustomReturnType": {
                 "description": "A return type for a logical model.",
                 "properties": {
                     "columns": {
                         "additionalProperties": {
-                            "description": "A MySQL scalar type.",
-                            "enum": [
-                                "DATE",
-                                "DECIMAL",
-                                "DECIMAL",
-                                "TINYINT",
-                                "SMALLINT",
-                                "INT",
-                                "FLOAT",
-                                "DOUBLE",
-                                "NULL",
-                                "TIMESTAMP",
-                                "BIGINT",
-                                "MEDIUMINT",
-                                "DATE",
-                                "TIME",
-                                "DATETIME",
-                                "YEAR",
-                                "VARCHAR",
-                                "BIT",
-                                "ENUM",
-                                "SET",
-                                "TINYBLOB",
-                                "MEDIUMBLOB",
-                                "LONGBLOB",
-                                "BLOB",
-                                "VARCHAR",
-                                "TEXT",
-                                "GEOMETRY",
-                                "JSON"
-                            ],
-                            "type": "string"
+                            "$ref": "#/components/schemas/MysqlCustomColumn"
                         },
                         "description": "Return types for the logical model",
                         "type": "object"
+                    },
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -5978,16 +6128,41 @@
                 ],
                 "type": "object"
             },
+            "PostgresCustomColumn": {
+                "description": "A column of a custom return type",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema",
+                        "type": "string"
+                    },
+                    "nullable": {
+                        "default": false,
+                        "description": "Whether the type is nullable",
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "description": "The type of the column\nPostgres Scalar Types",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "type"
+                ],
+                "type": "object"
+            },
             "PostgresCustomReturnType": {
                 "description": "A return type for a logical model.",
                 "properties": {
                     "columns": {
                         "additionalProperties": {
-                            "description": "Postgres Scalar Types",
-                            "type": "string"
+                            "$ref": "#/components/schemas/PostgresCustomColumn"
                         },
                         "description": "Return types for the logical model",
                         "type": "object"
+                    },
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
                     }
                 },
                 "required": [

@@ -89,8 +89,10 @@ tests opts = do
                 code: *query
                 returns:
                   columns:
-                    one: text
-                    two: text
+                    one:
+                      type: text
+                    two:
+                      type: text
             |]
         )
         [yaml|
@@ -139,8 +141,10 @@ tests opts = do
                 code: *query
                 returns:
                   columns:
-                    one: text
-                    two: text
+                    one:
+                      type: text
+                    two:
+                      type: text
             |]
         )
         [yaml|
@@ -190,8 +194,10 @@ tests opts = do
                 code: *queryWithDuplicates
                 returns:
                   columns:
-                    one: text
-                    two: text
+                    one:
+                      type: text
+                    two:
+                      type: text
             |]
         )
         [yaml|
@@ -241,8 +247,10 @@ tests opts = do
                 code: *query
                 returns:
                   columns:
-                    one: text
-                    two: text
+                    one:
+                      type: text
+                    two:
+                      type: text
             |]
         )
         [yaml|
@@ -291,8 +299,10 @@ tests opts = do
                 code: *query
                 returns:
                   columns:
-                    one: text
-                    two: text
+                    one:
+                      type: text
+                    two:
+                      type: text
             |]
         )
         [yaml|
@@ -341,8 +351,10 @@ tests opts = do
                 code: *spicyQuery
                 returns:
                   columns:
-                    one: text
-                    two: text
+                    one:
+                      type: text
+                    two:
+                      type: text
             |]
         )
         [yaml|
@@ -403,10 +415,14 @@ tests opts = do
                   length: int
                 returns:
                   columns:
-                    id: integer
-                    title: text
-                    excerpt: text
-                    date: date
+                    id:
+                      type: integer
+                    title:
+                      type: text
+                    excerpt:
+                      type: text
+                    date:
+                      type: date
             |]
         )
         [yaml|
@@ -469,10 +485,14 @@ tests opts = do
                   length: int
                 returns:
                   columns:
-                    id: integer
-                    title: text
-                    excerpt: text
-                    date: date
+                    id:
+                      type: integer
+                    title:
+                      type: text
+                    excerpt:
+                      type: text
+                    date:
+                      type: date
             |]
         )
         [yaml|
@@ -494,10 +514,14 @@ tests opts = do
                   length: int
                 returns:
                   columns:
-                    id: integer
-                    title: text
-                    excerpt: text
-                    date: date
+                    id:
+                      type: integer
+                    title:
+                      type: text
+                    excerpt:
+                      type: text
+                    date:
+                      type: date
             |]
         )
         [yaml|
@@ -559,10 +583,14 @@ tests opts = do
                   length: int
                 returns:
                   columns:
-                    id: integer
-                    title: text
-                    excerpt: text
-                    date: date
+                    id:
+                      type: integer
+                    title:
+                      type: text
+                    excerpt:
+                      type: text
+                    date:
+                      type: date
             |]
         )
         [yaml|
@@ -624,10 +652,14 @@ tests opts = do
                   length: int
                 returns:
                   columns:
-                    id: integer
-                    title: text
-                    excerpt: text
-                    date: date
+                    id:
+                      type: integer
+                    title:
+                      type: text
+                    excerpt:
+                      type: text
+                    date:
+                      type: date
             |]
         )
         [yaml|

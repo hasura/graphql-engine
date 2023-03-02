@@ -44,7 +44,7 @@ import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
-import Hasura.CustomReturnType (CustomReturnType (..))
+import Hasura.CustomReturnType (CustomColumn (..), CustomReturnType (..))
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
@@ -475,30 +475,21 @@ defaultCustomTypeSelectionSet ::
   CustomReturnType b ->
   SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 defaultCustomTypeSelectionSet name customReturnType = runMaybeT $ do
-  let parseField (column, scalarType) = do
-        let -- At least in its first draft, we assume that all fields in a
-            -- custom return type are non-nullable. See NDAT-516 for progress.
-            nullability = False
-
-            -- Currently, row-level permissions are unsupported for custom
+  let parseField (column, CustomColumn {..}) = do
+        let -- Currently, row-level permissions are unsupported for custom
             -- return types. In fact, permissions are unsupported: the feature
             -- is assumed to be admin-only. If you've been asked to implement
             -- permissions, this is the place.
             caseBoolExpUnpreparedValue = Nothing
 
-            columnType = ColumnScalar scalarType
+            columnType = ColumnScalar ccType
             pathArg = scalarSelectionArgumentsParser columnType
-
-            -- Currently, we don't support descriptions for individual columns
-            -- of a custom return type. In future, we might want to add this as
-            -- an optional field in 'CustomReturnTypeRow'.
-            description = Nothing
 
         columnName <- hoistMaybe (G.mkName (toTxt column))
 
-        field <- lift $ columnParser columnType (G.Nullability nullability)
+        field <- lift $ columnParser columnType (G.Nullability ccNullable)
         pure $!
-          P.selection columnName description pathArg field
+          P.selection columnName (G.Description <$> ccDescription) pathArg field
             <&> IR.mkAnnColumnField column columnType caseBoolExpUnpreparedValue
 
   let fieldName = name
@@ -509,7 +500,7 @@ defaultCustomTypeSelectionSet name customReturnType = runMaybeT $ do
       -- type. In future, custom return types will be declared with an
       -- optional `description` key, which will be passed through to
       -- here. See NDAT-518 for progress.
-      description = Nothing
+      description = G.Description <$> crtDescription customReturnType
 
       -- We entirely ignore Relay for now.
       implementsInterfaces = mempty
@@ -724,7 +715,7 @@ customTypeDistinctArg name customReturnType = do
   tCase <- retrieve $ _rscNamingConvention . _siCustomization @b
 
   let maybeColumnDefinitions =
-        traverse definitionFromTypeRow (Map.toList (crtColumns customReturnType))
+        traverse definitionFromTypeRow (Map.keys (crtColumns customReturnType))
           >>= NE.nonEmpty
 
   case (,) <$> G.mkName "_enum_name" <*> maybeColumnDefinitions of
@@ -744,14 +735,14 @@ customTypeDistinctArg name customReturnType = do
               (P.fieldOptional distinctOnName distinctOnDesc . P.nullable . P.list)
         pure $ maybeDistinctOnColumns >>= NE.nonEmpty
   where
-    definitionFromTypeRow :: (Column b, ScalarType b) -> Maybe (P.Definition P.EnumValueInfo, Column b)
-    definitionFromTypeRow (name', _) = do
+    definitionFromTypeRow :: Column b -> Maybe (P.Definition P.EnumValueInfo, Column b)
+    definitionFromTypeRow name' = do
       columnName <- G.mkName (toTxt name')
 
       let definition =
             P.Definition
               { dName = columnName,
-                dDescription = Nothing,
+                dDescription = Just "column name",
                 dOrigin = Nothing,
                 dDirectives = mempty,
                 dInfo = P.EnumValueInfo

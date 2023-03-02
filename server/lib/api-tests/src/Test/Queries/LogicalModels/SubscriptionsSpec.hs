@@ -101,10 +101,14 @@ tests opts = do
                     length: int
                   returns:
                     columns:
-                      id: integer
-                      title: text
-                      excerpt: text
-                      date: date
+                      id:
+                        type: integer
+                      title:
+                        type: text
+                      excerpt:
+                        type: text
+                      date:
+                        type: date
               |]
           )
           [yaml|
