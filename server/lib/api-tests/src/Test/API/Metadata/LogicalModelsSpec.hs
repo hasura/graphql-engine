@@ -521,3 +521,51 @@ tests opts = do
                 statement: "PREPARE _logimo_vali_divided_stuff AS SELECT thing / $1 AS divided FROM does_not_exist WHERE date = $2"
               path: "$.args"
           |]
+
+  describe "Validation succeeds" do
+    it "when tracking then untracking then re-tracking a logical model" $
+      \testEnv -> do
+        shouldReturnYaml
+          opts
+          ( GraphqlEngine.postMetadata
+              testEnv
+              [yaml|
+                type: bulk
+                args:
+                  - type: pg_track_logical_model
+                    args:
+                      type: query
+                      source: postgres
+                      root_field_name: divided_stuff2
+                      code: *simpleQuery
+                      arguments:
+                        denominator: int
+                        target_date: date
+                      returns:
+                        columns:
+                          divided:
+                            type: integer
+                  - type: pg_untrack_logical_model
+                    args:
+                      root_field_name: divided_stuff2
+                      source: postgres
+                  - type: pg_track_logical_model
+                    args:
+                      type: query
+                      source: postgres
+                      root_field_name: divided_stuff2
+                      code: *simpleQuery
+                      arguments:
+                        denominator: int
+                        target_date: date
+                      returns:
+                        columns:
+                          divided:
+                            type: integer
+            |]
+          )
+          [yaml|
+            - message: success
+            - message: success
+            - message: success
+          |]

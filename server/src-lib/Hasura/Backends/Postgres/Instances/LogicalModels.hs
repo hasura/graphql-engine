@@ -32,22 +32,27 @@ validateLogicalModel env connConf model = do
             i <- get
             modify (+ 1)
             pure $ "$" <> tshow i
-  result <-
-    liftIO $
-      withPostgresDB env connConf $
-        PG.rawQE
-          ( \e ->
-              (err400 ValidationFailed "Failed to validate query")
-                { qeInternal = Just $ ExtraInternal $ toJSON e
-                }
-          )
-          (PG.fromText $ "PREPARE _logimo_vali_" <> toTxt name <> " AS " <> code)
-          []
-          False
-  case result of
-    -- running the query failed
-    Left err ->
-      throwError err
-    -- running the query succeeded
-    Right () ->
-      pure ()
+      runRaw :: (MonadIO m, MonadError QErr m) => PG.Query -> m ()
+      runRaw stmt =
+        liftEither
+          =<< liftIO
+            ( withPostgresDB
+                env
+                connConf
+                ( PG.rawQE
+                    ( \e ->
+                        (err400 ValidationFailed "Failed to validate query")
+                          { qeInternal = Just $ ExtraInternal $ toJSON e
+                          }
+                    )
+                    stmt
+                    []
+                    False
+                )
+            )
+      prepname = "_logimo_vali_" <> toTxt name
+
+  -- We don't need to deallocate because 'withPostgresDB' opens a connection,
+  -- runs a statement, and then closes the connection. Since a prepared statement only
+  -- lasts the duration of the session, once it closes, it is deallocated as well.
+  runRaw (PG.fromText $ "PREPARE " <> prepname <> " AS " <> code)
