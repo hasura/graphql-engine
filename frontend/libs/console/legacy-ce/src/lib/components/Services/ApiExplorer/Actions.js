@@ -178,7 +178,14 @@ const changeRequestParams = newParams => {
 };
 
 const createWsClient = (url, headers) => {
-  const websocketProtocol = getWebsocketProtocol(window.location.protocol);
+  let websocketProtocol = getWebsocketProtocol(window.location.protocol);
+  try {
+    const urlVar = new URL(url);
+    websocketProtocol = getWebsocketProtocol(urlVar.protocol);
+  } catch {
+    // ignore error
+  }
+
   const headersFinal = getHeadersAsJSON(headers);
   const graphqlUrl = `${websocketProtocol}//${url.split('//')[1]}`;
 
