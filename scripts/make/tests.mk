@@ -133,8 +133,12 @@ test-integration-postgres: remove-tix-file
 .PHONY: test-logical-models
 ## test-logical-models: run all tests for the Logical Model feature
 test-logical-models:
+	docker compose up -d --wait postgres
 	HSPEC_MATCH=LogicalModels make test-unit
-	HSPEC_MATCH=LogicalModels make test-postgres
+	HASURA_TEST_BACKEND_TYPE=Postgres \
+		HSPEC_MATCH=LogicalModels \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		cabal run api-tests:exe:api-tests
 
 .PHONY: py-tests
 ## py-tests: run the python-based test suite
