@@ -3,7 +3,7 @@ import { Button } from '../../../../../new-components/Button';
 import { CardedTable } from '../../../../../new-components/CardedTable';
 import { useState } from 'react';
 import { ConnectionInfoSchema } from '../schema';
-import { FaPlus, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaPlus, FaTrash } from 'react-icons/fa';
 import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
 import {
   areSSLSettingsEnabled,
@@ -32,8 +32,10 @@ export const ReadReplicas = ({
   const { watch, setValue } =
     useFormContext<Record<string, ConnectionInfoSchema[]>>();
 
-  const [mode, setMode] = useState<'idle' | 'add'>('idle');
+  const [mode, setMode] = useState<'idle' | 'add' | 'edit'>('idle');
   const readReplicas = watch(name);
+
+  const [activeRow, setActiveRow] = useState<number>();
 
   return (
     <div className="my-2">
@@ -42,20 +44,29 @@ export const ReadReplicas = ({
       ) : (
         <CardedTable
           columns={['No', 'Read Replica', null]}
-          data={(fields ?? []).map((field, i) => [
+          data={(readReplicas ?? []).map((field, i) => [
             i + 1,
             <div>{getDatabaseConnectionDisplayName(field.databaseUrl)}</div>,
-            <Button
-              size="sm"
-              icon={<FaTrash />}
-              mode="destructive"
-              onClick={() => {
-                setValue(
-                  name,
-                  readReplicas.filter((_, index) => index !== i)
-                );
-              }}
-            />,
+            <div className="flex gap-3 justify-end">
+              <Button
+                size="sm"
+                icon={<FaEdit />}
+                onClick={() => {
+                  setActiveRow(i);
+                  setMode('edit');
+                }}
+              />
+              <Button
+                size="sm"
+                icon={<FaTrash />}
+                onClick={() => {
+                  setValue(
+                    name,
+                    readReplicas.filter((_, index) => index !== i)
+                  );
+                }}
+              />
+            </div>,
           ])}
           showActionCell
         />
@@ -69,6 +80,7 @@ export const ReadReplicas = ({
             append({
               databaseUrl: { connectionType: 'databaseUrl', url: '' },
             });
+            setActiveRow(readReplicas?.length ?? 0);
           }}
           mode="primary"
           icon={<FaPlus />}
@@ -77,10 +89,10 @@ export const ReadReplicas = ({
         </Button>
       )}
 
-      {mode === 'add' && (
+      {(mode === 'add' || mode === 'edit') && (
         <Dialog
           hasBackdrop
-          title="Add Read Replica"
+          title={mode === 'edit' ? 'Edit Read Replica' : 'Add Read Replica'}
           onClose={() => {
             setMode('idle');
           }}
@@ -90,7 +102,7 @@ export const ReadReplicas = ({
           <div className="p-4">
             <div className="bg-white border border-hasGray-300 rounded-md shadow-sm overflow-hidden p-4">
               <DatabaseUrl
-                name={`${name}.${fields?.length - 1}.databaseUrl`}
+                name={`${name}.${activeRow}.databaseUrl`}
                 hideOptions={hideOptions}
               />
             </div>
@@ -103,14 +115,10 @@ export const ReadReplicas = ({
                   </div>
                 }
               >
-                <PoolSettings
-                  name={`${name}.${fields?.length - 1}.poolSettings`}
-                />
-                <IsolationLevel
-                  name={`${name}.${fields?.length - 1}.isolationLevel`}
-                />
+                <PoolSettings name={`${name}.${activeRow}.poolSettings`} />
+                <IsolationLevel name={`${name}.${activeRow}.isolationLevel`} />
                 <UsePreparedStatements
-                  name={`${name}.${fields?.length - 1}.usePreparedStatements`}
+                  name={`${name}.${activeRow}.usePreparedStatements`}
                 />
                 {areSSLSettingsEnabled() && (
                   <Collapsible
@@ -127,9 +135,7 @@ export const ReadReplicas = ({
                       </div>
                     }
                   >
-                    <SslSettings
-                      name={`${name}.${fields?.length - 1}.sslSettings`}
-                    />
+                    <SslSettings name={`${name}.${activeRow}.sslSettings`} />
                   </Collapsible>
                 )}
               </Collapsible>
@@ -137,15 +143,12 @@ export const ReadReplicas = ({
             <Button
               onClick={() => {
                 setMode('idle');
-                setValue(
-                  `${name}.${fields?.length - 1}`,
-                  fields[fields?.length - 1]
-                );
+                setActiveRow(undefined);
               }}
               mode="primary"
               className="my-2"
             >
-              Add Read Replica
+              {mode === 'edit' ? 'Edit Read Replica' : 'Add Read Replica'}
             </Button>
           </div>
         </Dialog>

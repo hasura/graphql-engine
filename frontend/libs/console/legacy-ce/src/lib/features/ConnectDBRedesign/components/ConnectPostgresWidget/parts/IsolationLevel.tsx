@@ -17,7 +17,7 @@ export const IsolationLevel = ({ name }: { name: string }) => {
           label: 'serializable',
         },
       ]}
-      name={`${name}.isolationLevel`}
+      name={name}
       label="Isolation Level"
       tooltip="The transaction isolation level in which the queries made to the source will be run"
     />

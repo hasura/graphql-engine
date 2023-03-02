@@ -4,6 +4,7 @@ import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { z } from 'zod';
 
 import { ReadReplicas } from './ReadReplicas';
+import { connectionInfoSchema } from '../schema';
 
 export default {
   component: ReadReplicas,
@@ -12,10 +13,12 @@ export default {
 export const Primary: ComponentStory<typeof ReadReplicas> = () => (
   <SimpleForm
     onSubmit={data => console.log(data)}
-    schema={z.any()}
+    schema={z.object({
+      readReplicas: z.array(connectionInfoSchema),
+    })}
     options={{}}
   >
-    <ReadReplicas name="rr" hideOptions={[]} />
+    <ReadReplicas name="readReplicas" hideOptions={[]} />
     <br />
     <Button type="submit" className="my-2">
       Submit

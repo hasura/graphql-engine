@@ -34,12 +34,14 @@ export const DatabaseUrl = ({
       {connectionType === 'databaseUrl' ? (
         <InputField
           name={`${name}.url`}
+          key={`${name}.url`}
           label="Database URL"
           placeholder="postgresql://username:password@hostname:port/postgres"
         />
       ) : connectionType === 'envVar' ? (
         <InputField
           name={`${name}.envVar`}
+          key={`${name}.envVar`}
           label="Environment variable"
           placeholder="HASURA_GRAPHQL_DB_URL_FROM_ENV"
         />
