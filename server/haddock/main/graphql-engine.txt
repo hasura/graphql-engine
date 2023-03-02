@@ -18697,10 +18697,10 @@ ActionRemoteRelationshipSelect :: HashMap FieldName Name -> r -> ActionRemoteRel
 --   an execution tree is constructed so that a backend is absolved of
 --   dealing with remote relationships.
 [_arrsRelationship] :: ActionRemoteRelationshipSelect r -> r
-_ACFNestedObject :: forall r_aupkA. Prism' (ActionFieldG r_aupkA) (Name, ActionFieldsG r_aupkA)
-_ACFExpression :: forall r_aupkA. Prism' (ActionFieldG r_aupkA) Text
-_ACFRemote :: forall r_aupkA. Prism' (ActionFieldG r_aupkA) (ActionRemoteRelationshipSelect r_aupkA)
-_ACFScalar :: forall r_aupkA. Prism' (ActionFieldG r_aupkA) Name
+_ACFNestedObject :: forall r_aupmQ. Prism' (ActionFieldG r_aupmQ) (Name, ActionFieldsG r_aupmQ)
+_ACFExpression :: forall r_aupmQ. Prism' (ActionFieldG r_aupmQ) Text
+_ACFRemote :: forall r_aupmQ. Prism' (ActionFieldG r_aupmQ) (ActionRemoteRelationshipSelect r_aupmQ)
+_ACFScalar :: forall r_aupmQ. Prism' (ActionFieldG r_aupmQ) Name
 data AnnActionExecution (r :: Type)
 AnnActionExecution :: ActionName -> GraphQLType -> ActionFieldsG r -> Value -> ActionOutputFields -> EnvRecord ResolvedWebhook -> [HeaderConf] -> Bool -> Timeout -> Maybe RequestTransform -> Maybe MetadataResponseTransform -> AnnActionExecution (r :: Type)
 [_aaeName] :: AnnActionExecution (r :: Type) -> ActionName
@@ -18754,30 +18754,30 @@ ASINoSource :: ActionSourceInfo b
 
 -- | All relationships refer to tables in one source
 ASISource :: SourceName -> SourceConfig b -> ActionSourceInfo b
-aaaqStringifyNum :: forall b_aupI7 r_aupI8. Lens' (AnnActionAsyncQuery b_aupI7 r_aupI8) StringifyNumbers
-aaaqSource :: forall b_aupI7 r_aupI8. Lens' (AnnActionAsyncQuery b_aupI7 r_aupI8) (ActionSourceInfo b_aupI7)
-aaaqOutputType :: forall b_aupI7 r_aupI8. Lens' (AnnActionAsyncQuery b_aupI7 r_aupI8) GraphQLType
-aaaqName :: forall b_aupI7 r_aupI8. Lens' (AnnActionAsyncQuery b_aupI7 r_aupI8) ActionName
-aaaqForwardClientHeaders :: forall b_aupI7 r_aupI8. Lens' (AnnActionAsyncQuery b_aupI7 r_aupI8) Bool
-aaaqFields :: forall b_aupI7 r_aupI8 r_auqhd. Lens (AnnActionAsyncQuery b_aupI7 r_aupI8) (AnnActionAsyncQuery b_aupI7 r_auqhd) (AsyncActionQueryFieldsG r_aupI8) (AsyncActionQueryFieldsG r_auqhd)
-aaaqDefinitionList :: forall b_aupI7 r_aupI8. Lens' (AnnActionAsyncQuery b_aupI7 r_aupI8) [(Column b_aupI7, ScalarType b_aupI7)]
-aaaqActionId :: forall b_aupI7 r_aupI8. Lens' (AnnActionAsyncQuery b_aupI7 r_aupI8) ActionId
-aaeWebhook :: forall r_aupIb. Lens' (AnnActionExecution r_aupIb) (EnvRecord ResolvedWebhook)
-aaeTimeOut :: forall r_aupIb. Lens' (AnnActionExecution r_aupIb) Timeout
-aaeResponseTransform :: forall r_aupIb. Lens' (AnnActionExecution r_aupIb) (Maybe MetadataResponseTransform)
-aaeRequestTransform :: forall r_aupIb. Lens' (AnnActionExecution r_aupIb) (Maybe RequestTransform)
-aaePayload :: forall r_aupIb. Lens' (AnnActionExecution r_aupIb) Value
-aaeOutputType :: forall r_aupIb. Lens' (AnnActionExecution r_aupIb) GraphQLType
-aaeOutputFields :: forall r_aupIb. Lens' (AnnActionExecution r_aupIb) ActionOutputFields
-aaeName :: forall r_aupIb. Lens' (AnnActionExecution r_aupIb) ActionName
-aaeHeaders :: forall r_aupIb. Lens' (AnnActionExecution r_aupIb) [HeaderConf]
-aaeForwardClientHeaders :: forall r_aupIb. Lens' (AnnActionExecution r_aupIb) Bool
-aaeFields :: forall r_aupIb r_auqnY. Lens (AnnActionExecution r_aupIb) (AnnActionExecution r_auqnY) (ActionFieldsG r_aupIb) (ActionFieldsG r_auqnY)
-_AsyncErrors :: forall r_aupIa. Prism' (AsyncActionQueryFieldG r_aupIa) ()
-_AsyncCreatedAt :: forall r_aupIa. Prism' (AsyncActionQueryFieldG r_aupIa) ()
-_AsyncId :: forall r_aupIa. Prism' (AsyncActionQueryFieldG r_aupIa) ()
-_AsyncOutput :: forall r_auqx1 r_aupIa. Prism (AsyncActionQueryFieldG r_auqx1) (AsyncActionQueryFieldG r_aupIa) (ActionFieldsG r_auqx1) (ActionFieldsG r_aupIa)
-_AsyncTypename :: forall r_aupIa. Prism' (AsyncActionQueryFieldG r_aupIa) Text
+aaaqStringifyNum :: forall b_aupKn r_aupKo. Lens' (AnnActionAsyncQuery b_aupKn r_aupKo) StringifyNumbers
+aaaqSource :: forall b_aupKn r_aupKo. Lens' (AnnActionAsyncQuery b_aupKn r_aupKo) (ActionSourceInfo b_aupKn)
+aaaqOutputType :: forall b_aupKn r_aupKo. Lens' (AnnActionAsyncQuery b_aupKn r_aupKo) GraphQLType
+aaaqName :: forall b_aupKn r_aupKo. Lens' (AnnActionAsyncQuery b_aupKn r_aupKo) ActionName
+aaaqForwardClientHeaders :: forall b_aupKn r_aupKo. Lens' (AnnActionAsyncQuery b_aupKn r_aupKo) Bool
+aaaqFields :: forall b_aupKn r_aupKo r_auqjt. Lens (AnnActionAsyncQuery b_aupKn r_aupKo) (AnnActionAsyncQuery b_aupKn r_auqjt) (AsyncActionQueryFieldsG r_aupKo) (AsyncActionQueryFieldsG r_auqjt)
+aaaqDefinitionList :: forall b_aupKn r_aupKo. Lens' (AnnActionAsyncQuery b_aupKn r_aupKo) [(Column b_aupKn, ScalarType b_aupKn)]
+aaaqActionId :: forall b_aupKn r_aupKo. Lens' (AnnActionAsyncQuery b_aupKn r_aupKo) ActionId
+aaeWebhook :: forall r_aupKr. Lens' (AnnActionExecution r_aupKr) (EnvRecord ResolvedWebhook)
+aaeTimeOut :: forall r_aupKr. Lens' (AnnActionExecution r_aupKr) Timeout
+aaeResponseTransform :: forall r_aupKr. Lens' (AnnActionExecution r_aupKr) (Maybe MetadataResponseTransform)
+aaeRequestTransform :: forall r_aupKr. Lens' (AnnActionExecution r_aupKr) (Maybe RequestTransform)
+aaePayload :: forall r_aupKr. Lens' (AnnActionExecution r_aupKr) Value
+aaeOutputType :: forall r_aupKr. Lens' (AnnActionExecution r_aupKr) GraphQLType
+aaeOutputFields :: forall r_aupKr. Lens' (AnnActionExecution r_aupKr) ActionOutputFields
+aaeName :: forall r_aupKr. Lens' (AnnActionExecution r_aupKr) ActionName
+aaeHeaders :: forall r_aupKr. Lens' (AnnActionExecution r_aupKr) [HeaderConf]
+aaeForwardClientHeaders :: forall r_aupKr. Lens' (AnnActionExecution r_aupKr) Bool
+aaeFields :: forall r_aupKr r_auqqe. Lens (AnnActionExecution r_aupKr) (AnnActionExecution r_auqqe) (ActionFieldsG r_aupKr) (ActionFieldsG r_auqqe)
+_AsyncErrors :: forall r_aupKq. Prism' (AsyncActionQueryFieldG r_aupKq) ()
+_AsyncCreatedAt :: forall r_aupKq. Prism' (AsyncActionQueryFieldG r_aupKq) ()
+_AsyncId :: forall r_aupKq. Prism' (AsyncActionQueryFieldG r_aupKq) ()
+_AsyncOutput :: forall r_auqzh r_aupKq. Prism (AsyncActionQueryFieldG r_auqzh) (AsyncActionQueryFieldG r_aupKq) (ActionFieldsG r_auqzh) (ActionFieldsG r_aupKq)
+_AsyncTypename :: forall r_aupKq. Prism' (AsyncActionQueryFieldG r_aupKq) Text
 instance Data.Traversable.Traversable Hasura.RQL.IR.Action.AnnActionExecution
 instance Data.Foldable.Foldable Hasura.RQL.IR.Action.AnnActionExecution
 instance GHC.Base.Functor Hasura.RQL.IR.Action.AnnActionExecution
@@ -23170,22 +23170,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aDg5C. Lens' (CreateEventTriggerQuery b_aDg5C) TriggerOnReplication
-cteqCleanupConfig :: forall b_aDg5C. Lens' (CreateEventTriggerQuery b_aDg5C) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aDg5C. Lens' (CreateEventTriggerQuery b_aDg5C) (Maybe Text)
-cetqWebhook :: forall b_aDg5C. Lens' (CreateEventTriggerQuery b_aDg5C) (Maybe InputWebhook)
-cetqUpdate :: forall b_aDg5C. Lens' (CreateEventTriggerQuery b_aDg5C) (Maybe (SubscribeOpSpec b_aDg5C))
-cetqTable :: forall b_aDg5C. Lens' (CreateEventTriggerQuery b_aDg5C) (TableName b_aDg5C)
-cetqSource :: forall b_aDg5C. Lens' (CreateEventTriggerQuery b_aDg5C) SourceName
-cetqRetryConf :: forall b_aDg5C. Lens' (CreateEventTriggerQuery b_aDg5C) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aDg5C. Lens' (CreateEventTriggerQuery b_aDg5C) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aDg5C. Lens' (CreateEventTriggerQuery b_aDg5C) (Maybe RequestTransform)
-cetqReplace :: forall b_aDg5C. Lens' (CreateEventTriggerQuery b_aDg5C) Bool
-cetqName :: forall b_aDg5C. Lens' (CreateEventTriggerQuery b_aDg5C) TriggerName
-cetqInsert :: forall b_aDg5C. Lens' (CreateEventTriggerQuery b_aDg5C) (Maybe (SubscribeOpSpec b_aDg5C))
-cetqHeaders :: forall b_aDg5C. Lens' (CreateEventTriggerQuery b_aDg5C) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aDg5C. Lens' (CreateEventTriggerQuery b_aDg5C) (Maybe Bool)
-cetqDelete :: forall b_aDg5C. Lens' (CreateEventTriggerQuery b_aDg5C) (Maybe (SubscribeOpSpec b_aDg5C))
+cteqTriggerOnReplication :: forall b_aDg7S. Lens' (CreateEventTriggerQuery b_aDg7S) TriggerOnReplication
+cteqCleanupConfig :: forall b_aDg7S. Lens' (CreateEventTriggerQuery b_aDg7S) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aDg7S. Lens' (CreateEventTriggerQuery b_aDg7S) (Maybe Text)
+cetqWebhook :: forall b_aDg7S. Lens' (CreateEventTriggerQuery b_aDg7S) (Maybe InputWebhook)
+cetqUpdate :: forall b_aDg7S. Lens' (CreateEventTriggerQuery b_aDg7S) (Maybe (SubscribeOpSpec b_aDg7S))
+cetqTable :: forall b_aDg7S. Lens' (CreateEventTriggerQuery b_aDg7S) (TableName b_aDg7S)
+cetqSource :: forall b_aDg7S. Lens' (CreateEventTriggerQuery b_aDg7S) SourceName
+cetqRetryConf :: forall b_aDg7S. Lens' (CreateEventTriggerQuery b_aDg7S) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aDg7S. Lens' (CreateEventTriggerQuery b_aDg7S) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aDg7S. Lens' (CreateEventTriggerQuery b_aDg7S) (Maybe RequestTransform)
+cetqReplace :: forall b_aDg7S. Lens' (CreateEventTriggerQuery b_aDg7S) Bool
+cetqName :: forall b_aDg7S. Lens' (CreateEventTriggerQuery b_aDg7S) TriggerName
+cetqInsert :: forall b_aDg7S. Lens' (CreateEventTriggerQuery b_aDg7S) (Maybe (SubscribeOpSpec b_aDg7S))
+cetqHeaders :: forall b_aDg7S. Lens' (CreateEventTriggerQuery b_aDg7S) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aDg7S. Lens' (CreateEventTriggerQuery b_aDg7S) (Maybe Bool)
+cetqDelete :: forall b_aDg7S. Lens' (CreateEventTriggerQuery b_aDg7S) (Maybe (SubscribeOpSpec b_aDg7S))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
