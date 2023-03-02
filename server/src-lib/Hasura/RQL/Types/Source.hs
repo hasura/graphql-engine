@@ -93,6 +93,7 @@ instance
       [ "name" .= _siName,
         "tables" .= _siTables,
         "functions" .= _siFunctions,
+        "logical_models" .= _siLogicalModels,
         "configuration" .= _siConfiguration,
         "query_tags_config" .= _siQueryTagsConfig
       ]
