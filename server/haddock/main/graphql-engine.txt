@@ -22601,13 +22601,25 @@ CreateLogicalModelPermission :: SourceName -> LogicalModelName -> PermDef b a ->
 [clmpRootFieldName] :: CreateLogicalModelPermission a (b :: BackendType) -> LogicalModelName
 [clmpInfo] :: CreateLogicalModelPermission a (b :: BackendType) -> PermDef b a
 runCreateSelectLogicalModelPermission :: forall b m. (Backend b, CacheRWM m, MetadataM m, MonadError QErr m, MonadIO m, HasServerConfigCtx m) => CreateLogicalModelPermission SelPerm b -> m EncJSON
+
+-- | To drop a permission, we need to know the source and root field name
+--   of the logical model, as well as the role whose permission we want to
+--   drop.
+data DropLogicalModelPermission (b :: BackendType)
+DropLogicalModelPermission :: SourceName -> LogicalModelName -> RoleName -> DropLogicalModelPermission (b :: BackendType)
+[dlmpSource] :: DropLogicalModelPermission (b :: BackendType) -> SourceName
+[dlmpRootFieldName] :: DropLogicalModelPermission (b :: BackendType) -> LogicalModelName
+[dlmpRole] :: DropLogicalModelPermission (b :: BackendType) -> RoleName
+runDropSelectLogicalModelPermission :: forall b m. (Backend b, CacheRWM m, MetadataM m, MonadError QErr m, MonadIO m, HasServerConfigCtx m) => DropLogicalModelPermission b -> m EncJSON
 instance GHC.Generics.Generic (Hasura.LogicalModel.API.CreateLogicalModelPermission a b)
+instance GHC.Generics.Generic (Hasura.LogicalModel.API.DropLogicalModelPermission b)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.API.TrackLogicalModel b)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.API.TrackLogicalModel b)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.LogicalModel.API.GetLogicalModel b)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.LogicalModel.API.GetLogicalModel b)
 instance GHC.Show.Show (Hasura.LogicalModel.API.UntrackLogicalModel b)
 instance GHC.Classes.Eq (Hasura.LogicalModel.API.UntrackLogicalModel b)
+instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.API.DropLogicalModelPermission b)
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.Types.Permission.PermDef b a) => Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.API.CreateLogicalModelPermission a b)
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.API.UntrackLogicalModel b)
 instance Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.API.UntrackLogicalModel b)
@@ -23217,22 +23229,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aDj1U. Lens' (CreateEventTriggerQuery b_aDj1U) TriggerOnReplication
-cteqCleanupConfig :: forall b_aDj1U. Lens' (CreateEventTriggerQuery b_aDj1U) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aDj1U. Lens' (CreateEventTriggerQuery b_aDj1U) (Maybe Text)
-cetqWebhook :: forall b_aDj1U. Lens' (CreateEventTriggerQuery b_aDj1U) (Maybe InputWebhook)
-cetqUpdate :: forall b_aDj1U. Lens' (CreateEventTriggerQuery b_aDj1U) (Maybe (SubscribeOpSpec b_aDj1U))
-cetqTable :: forall b_aDj1U. Lens' (CreateEventTriggerQuery b_aDj1U) (TableName b_aDj1U)
-cetqSource :: forall b_aDj1U. Lens' (CreateEventTriggerQuery b_aDj1U) SourceName
-cetqRetryConf :: forall b_aDj1U. Lens' (CreateEventTriggerQuery b_aDj1U) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aDj1U. Lens' (CreateEventTriggerQuery b_aDj1U) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aDj1U. Lens' (CreateEventTriggerQuery b_aDj1U) (Maybe RequestTransform)
-cetqReplace :: forall b_aDj1U. Lens' (CreateEventTriggerQuery b_aDj1U) Bool
-cetqName :: forall b_aDj1U. Lens' (CreateEventTriggerQuery b_aDj1U) TriggerName
-cetqInsert :: forall b_aDj1U. Lens' (CreateEventTriggerQuery b_aDj1U) (Maybe (SubscribeOpSpec b_aDj1U))
-cetqHeaders :: forall b_aDj1U. Lens' (CreateEventTriggerQuery b_aDj1U) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aDj1U. Lens' (CreateEventTriggerQuery b_aDj1U) (Maybe Bool)
-cetqDelete :: forall b_aDj1U. Lens' (CreateEventTriggerQuery b_aDj1U) (Maybe (SubscribeOpSpec b_aDj1U))
+cteqTriggerOnReplication :: forall b_aDjSS. Lens' (CreateEventTriggerQuery b_aDjSS) TriggerOnReplication
+cteqCleanupConfig :: forall b_aDjSS. Lens' (CreateEventTriggerQuery b_aDjSS) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aDjSS. Lens' (CreateEventTriggerQuery b_aDjSS) (Maybe Text)
+cetqWebhook :: forall b_aDjSS. Lens' (CreateEventTriggerQuery b_aDjSS) (Maybe InputWebhook)
+cetqUpdate :: forall b_aDjSS. Lens' (CreateEventTriggerQuery b_aDjSS) (Maybe (SubscribeOpSpec b_aDjSS))
+cetqTable :: forall b_aDjSS. Lens' (CreateEventTriggerQuery b_aDjSS) (TableName b_aDjSS)
+cetqSource :: forall b_aDjSS. Lens' (CreateEventTriggerQuery b_aDjSS) SourceName
+cetqRetryConf :: forall b_aDjSS. Lens' (CreateEventTriggerQuery b_aDjSS) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aDjSS. Lens' (CreateEventTriggerQuery b_aDjSS) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aDjSS. Lens' (CreateEventTriggerQuery b_aDjSS) (Maybe RequestTransform)
+cetqReplace :: forall b_aDjSS. Lens' (CreateEventTriggerQuery b_aDjSS) Bool
+cetqName :: forall b_aDjSS. Lens' (CreateEventTriggerQuery b_aDjSS) TriggerName
+cetqInsert :: forall b_aDjSS. Lens' (CreateEventTriggerQuery b_aDjSS) (Maybe (SubscribeOpSpec b_aDjSS))
+cetqHeaders :: forall b_aDjSS. Lens' (CreateEventTriggerQuery b_aDjSS) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aDjSS. Lens' (CreateEventTriggerQuery b_aDjSS) (Maybe Bool)
+cetqDelete :: forall b_aDjSS. Lens' (CreateEventTriggerQuery b_aDjSS) (Maybe (SubscribeOpSpec b_aDjSS))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
@@ -26200,6 +26212,7 @@ RMGetLogicalModel :: !AnyBackend GetLogicalModel -> RQLMetadataV1
 RMTrackLogicalModel :: !AnyBackend TrackLogicalModel -> RQLMetadataV1
 RMUntrackLogicalModel :: !AnyBackend UntrackLogicalModel -> RQLMetadataV1
 RMCreateSelectLogicalModelPermission :: !AnyBackend (CreateLogicalModelPermission SelPerm) -> RQLMetadataV1
+RMDropSelectLogicalModelPermission :: !AnyBackend DropLogicalModelPermission -> RQLMetadataV1
 RMCreateEventTrigger :: !AnyBackend (Unvalidated1 CreateEventTriggerQuery) -> RQLMetadataV1
 RMDeleteEventTrigger :: !AnyBackend DeleteEventTriggerQuery -> RQLMetadataV1
 RMRedeliverEvent :: !AnyBackend RedeliverEventQuery -> RQLMetadataV1
