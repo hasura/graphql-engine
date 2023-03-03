@@ -6,10 +6,12 @@ module Hasura.LogicalModel.API
     TrackLogicalModel (..),
     UntrackLogicalModel (..),
     CreateLogicalModelPermission (..),
+    DropLogicalModelPermission (..),
     runGetLogicalModel,
     runTrackLogicalModel,
     runUntrackLogicalModel,
     runCreateSelectLogicalModelPermission,
+    runDropSelectLogicalModelPermission,
     dropLogicalModelInMetadata,
     module Hasura.LogicalModel.Types,
   )
@@ -40,6 +42,7 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Server.Init.FeatureFlag as FF
 import Hasura.Server.Types (HasServerConfigCtx (..), ServerConfigCtx (..))
+import Hasura.Session (RoleName)
 
 -- | Default implementation of the 'track_logical_model' request payload.
 data TrackLogicalModel (b :: BackendType) = TrackLogicalModel
@@ -305,6 +308,45 @@ runCreateSelectLogicalModelPermission CreateLogicalModelPermission {..} = do
     MetadataModifier $
       logicalModelMetadataSetter @b clmpSource clmpRootFieldName . lmmSelectPermissions
         %~ OMap.insert (_pdRole clmpInfo) clmpInfo
+
+  pure successMsg
+
+-- | To drop a permission, we need to know the source and root field name of
+-- the logical model, as well as the role whose permission we want to drop.
+data DropLogicalModelPermission (b :: BackendType) = DropLogicalModelPermission
+  { dlmpSource :: SourceName,
+    dlmpRootFieldName :: LogicalModelName,
+    dlmpRole :: RoleName
+  }
+  deriving stock (Generic)
+
+instance FromJSON (DropLogicalModelPermission b) where
+  parseJSON = withObject "DropLogicalModelPermission" \obj -> do
+    dlmpSource <- obj .:? "source" .!= defaultSource
+    dlmpRootFieldName <- obj .: "root_field_name"
+    dlmpRole <- obj .: "role"
+
+    pure DropLogicalModelPermission {..}
+
+runDropSelectLogicalModelPermission ::
+  forall b m.
+  (Backend b, CacheRWM m, MetadataM m, MonadError QErr m, MonadIO m, HasServerConfigCtx m) =>
+  DropLogicalModelPermission b ->
+  m EncJSON
+runDropSelectLogicalModelPermission DropLogicalModelPermission {..} = do
+  throwIfFeatureDisabled
+  assertLogicalModelExists @b dlmpSource dlmpRootFieldName
+
+  let metadataObj :: MetadataObjId
+      metadataObj =
+        MOSourceObjId dlmpSource $
+          AB.mkAnyBackend $
+            SMOLogicalModel @b dlmpRootFieldName
+
+  buildSchemaCacheFor metadataObj $
+    MetadataModifier $
+      logicalModelMetadataSetter @b dlmpSource dlmpRootFieldName . lmmSelectPermissions
+        %~ OMap.delete dlmpRole
 
   pure successMsg
 

@@ -641,6 +641,116 @@ tests opts = do
           path: "$.args[0].args"
         |]
 
+    it "Adds a logical model, removes it, and returns 200" $ \testEnv -> do
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnv
+            [yaml|
+              type: bulk
+              args:
+                - type: pg_track_logical_model
+                  args:
+                    type: query
+                    source: postgres
+                    root_field_name: divided_stuff
+                    code: *simpleQuery
+                    arguments:
+                      unused: int
+                    returns:
+                      columns:
+                        divided:
+                          type: integer
+                          description: "a divided thing"
+                - type: pg_create_logical_model_select_permission
+                  args:
+                    source: postgres
+                    root_field_name: divided_stuff
+                    role: "test"
+                    permission:
+                      columns:
+                        - divided
+                      filter: {}
+                - type: pg_drop_logical_model_select_permission
+                  args:
+                    source: postgres
+                    root_field_name: divided_stuff
+                    role: "test"
+            |]
+        )
+        [yaml|
+          - message: success
+          - message: success
+          - message: success
+        |]
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnv
+            [yaml|
+              type: pg_get_logical_model
+              args:
+                source: postgres
+            |]
+        )
+        [yaml|
+          - root_field_name: divided_stuff
+            code: *simpleQuery
+            arguments:
+              unused: int
+            returns:
+              columns:
+                divided:
+                  description: a divided thing
+                  nullable: false
+                  type: integer
+        |]
+
+    it "Fails to drop a select permission on a nonexisting source" $ \testEnv -> do
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadataWithStatus
+            400
+            testEnv
+            [yaml|
+              type: pg_drop_logical_model_select_permission
+              args:
+                source: made_up_source
+                root_field_name: made_up_logical_model
+                role: "test"
+                permission:
+                  columns:
+                    - divided
+                  filter: {}
+            |]
+        )
+        [yaml|
+          code: not-found
+          error: "Source \"made_up_source\" not found."
+          path: "$.args"
+        |]
+
+    it "Fails to drop a select permission from a nonexisting logical model" $ \testEnv -> do
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadataWithStatus
+            400
+            testEnv
+            [yaml|
+              type: pg_drop_logical_model_select_permission
+              args:
+                source: postgres
+                root_field_name: made_up_logical_model
+                role: "test"
+            |]
+        )
+        [yaml|
+          code: "not-found"
+          error: "Logical model \"made_up_logical_model\" not found in source \"postgres\"."
+          path: "$.args"
+        |]
+
   describe "Validation succeeds" do
     it "when tracking then untracking then re-tracking a logical model" $
       \testEnv -> do

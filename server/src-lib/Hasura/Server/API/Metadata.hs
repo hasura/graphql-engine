@@ -138,6 +138,7 @@ data RQLMetadataV1
   | RMTrackLogicalModel !(AnyBackend LogicalModels.TrackLogicalModel)
   | RMUntrackLogicalModel !(AnyBackend LogicalModels.UntrackLogicalModel)
   | RMCreateSelectLogicalModelPermission !(AnyBackend (LogicalModels.CreateLogicalModelPermission SelPerm))
+  | RMDropSelectLogicalModelPermission !(AnyBackend LogicalModels.DropLogicalModelPermission)
   | -- Tables event triggers
     RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)
@@ -497,6 +498,7 @@ queryModifiesMetadata = \case
       RMTrackLogicalModel _ -> True
       RMUntrackLogicalModel _ -> True
       RMCreateSelectLogicalModelPermission _ -> True
+      RMDropSelectLogicalModelPermission _ -> True
       RMBulk qs -> any queryModifiesMetadata qs
       -- We used to assume that the fallthrough was True,
       -- but it is better to be explicit here to warn when new constructors are added.
@@ -683,6 +685,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMTrackLogicalModel q -> dispatchMetadata (LogicalModels.runTrackLogicalModel env) q
   RMUntrackLogicalModel q -> dispatchMetadata LogicalModels.runUntrackLogicalModel q
   RMCreateSelectLogicalModelPermission q -> dispatchMetadata LogicalModels.runCreateSelectLogicalModelPermission q
+  RMDropSelectLogicalModelPermission q -> dispatchMetadata LogicalModels.runDropSelectLogicalModelPermission q
   RMCreateEventTrigger q ->
     dispatchMetadataAndEventTrigger
       ( validateTransforms
