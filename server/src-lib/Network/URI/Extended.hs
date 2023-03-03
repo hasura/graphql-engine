@@ -12,16 +12,16 @@ import Data.Text qualified as T
 import Hasura.Prelude
 import Network.URI
 
-instance {-# INCOHERENT #-} FromJSON URI where
+instance FromJSON URI where
   parseJSON (String uri) = do
     let mUrl = parseURI $ T.unpack uri
     onNothing mUrl (fail "not a valid URI")
   parseJSON _ = fail "not a valid URI"
 
-instance {-# INCOHERENT #-} ToJSON URI where
+instance ToJSON URI where
   toJSON = String . tshow
 
-instance {-# INCOHERENT #-} ToJSONKey URI where
+instance ToJSONKey URI where
   toJSONKey = toJSONKeyText tshow
 
 instance Hashable URI where
