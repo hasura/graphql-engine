@@ -40,7 +40,6 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Server.Init.FeatureFlag as FF
 import Hasura.Server.Types (HasServerConfigCtx (..), ServerConfigCtx (..))
-import Language.GraphQL.Draft.Syntax (unName)
 
 -- | Default implementation of the 'track_logical_model' request payload.
 data TrackLogicalModel (b :: BackendType) = TrackLogicalModel
@@ -236,16 +235,7 @@ runUntrackLogicalModel ::
   m EncJSON
 runUntrackLogicalModel q = do
   throwIfFeatureDisabled
-
-  -- Check source exists
-  sourceMetadata <-
-    maybe (throw400 NotFound $ "Source " <> sourceNameToText source <> " not found.") pure
-      . preview (metaSources . ix source . toSourceMetadata @b)
-      =<< getMetadata
-
-  -- Check the logical model exists
-  unless (any ((== fieldName) . _lmmRootFieldName) $ _smLogicalModels sourceMetadata) do
-    throw400 NotFound $ "Logical model '" <> unName (getLogicalModelName fieldName) <> "' not found in source '" <> sourceNameToText source <> "'."
+  assertLogicalModelExists @b source fieldName
 
   let metadataObj =
         MOSourceObjId source $
@@ -261,7 +251,7 @@ runUntrackLogicalModel q = do
     fieldName = utlmRootFieldName q
 
 dropLogicalModelInMetadata :: forall b. BackendMetadata b => SourceName -> LogicalModelName -> MetadataModifier
-dropLogicalModelInMetadata source rootFieldName =
+dropLogicalModelInMetadata source rootFieldName = do
   MetadataModifier $
     metaSources . ix source . toSourceMetadata @b . smLogicalModels
       %~ OMap.delete rootFieldName
@@ -303,17 +293,7 @@ runCreateSelectLogicalModelPermission ::
   m EncJSON
 runCreateSelectLogicalModelPermission CreateLogicalModelPermission {..} = do
   throwIfFeatureDisabled
-
-  metadata <- getMetadata
-
-  let existingLogicalModel :: Traversal' Metadata (LogicalModelMetadata b)
-      existingLogicalModel = metaSources . ix clmpSource . toSourceMetadata . smLogicalModels @b . ix clmpRootFieldName
-
-  unless (has existingLogicalModel metadata) do
-    throw400 NotExists $
-      "Logical model "
-        <> clmpRootFieldName <<> " does not exist in source: "
-        <> sourceNameToText clmpSource
+  assertLogicalModelExists @b clmpSource clmpRootFieldName
 
   let metadataObj :: MetadataObjId
       metadataObj =
@@ -327,3 +307,22 @@ runCreateSelectLogicalModelPermission CreateLogicalModelPermission {..} = do
         %~ OMap.insert (_pdRole clmpInfo) clmpInfo
 
   pure successMsg
+
+-- | Check whether a logical model with the given root field name exists for
+-- the given source.
+assertLogicalModelExists :: forall b m. (Backend b, MetadataM m, MonadError QErr m) => SourceName -> LogicalModelName -> m ()
+assertLogicalModelExists sourceName rootFieldName = do
+  metadata <- getMetadata
+
+  let sourceMetadataTraversal :: Traversal' Metadata (SourceMetadata b)
+      sourceMetadataTraversal = metaSources . ix sourceName . toSourceMetadata @b
+
+  sourceMetadata <-
+    preview sourceMetadataTraversal metadata
+      `onNothing` throw400 NotFound ("Source " <> sourceName <<> " not found.")
+
+  let desiredLogicalModel :: Traversal' (SourceMetadata b) (LogicalModelMetadata b)
+      desiredLogicalModel = smLogicalModels . ix rootFieldName
+
+  unless (has desiredLogicalModel sourceMetadata) do
+    throw400 NotFound ("Logical model " <> rootFieldName <<> " not found in source " <> sourceName <<> ".")

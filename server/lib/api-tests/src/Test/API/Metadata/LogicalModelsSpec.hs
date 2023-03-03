@@ -433,7 +433,7 @@ tests opts = do
           )
           [yaml|
           code: not-found
-          error: "Logical model 'some_logical_model' not found in source 'postgres'."
+          error: "Logical model \"some_logical_model\" not found in source \"postgres\"."
           path: "$.args"
         |]
 
@@ -589,7 +589,32 @@ tests opts = do
                   type: integer
         |]
 
-  describe "Permissions" do
+    it "Fails to adds a select permission to a nonexisting source" $ \testEnv -> do
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadataWithStatus
+            400
+            testEnv
+            [yaml|
+              type: bulk
+              args:
+                - type: pg_create_logical_model_select_permission
+                  args:
+                    source: made_up_source
+                    root_field_name: made_up_logical_model
+                    role: "test"
+                    permission:
+                      columns:
+                        - divided
+                      filter: {}
+            |]
+        )
+        [yaml|
+          code: not-found
+          error: "Source \"made_up_source\" not found."
+          path: "$.args[0].args"
+        |]
+
     it "Fails to adds a select permission to a nonexisting logical model" $ \testEnv -> do
       shouldReturnYaml
         opts
@@ -611,8 +636,8 @@ tests opts = do
             |]
         )
         [yaml|
-          code: not-exists
-          error: "Logical model \"made_up_logical_model\" does not exist in source: postgres"
+          code: "not-found"
+          error: "Logical model \"made_up_logical_model\" not found in source \"postgres\"."
           path: "$.args[0].args"
         |]
 
