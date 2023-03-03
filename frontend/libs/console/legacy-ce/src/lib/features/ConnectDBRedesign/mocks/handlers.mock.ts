@@ -67,11 +67,10 @@ const mockMetadata: Metadata = {
         tables: [],
         configuration: {
           connection_info: {
-            connection_string: {
-              from_env: 'HASURA_ENV_VAR',
-            },
+            connection_string:
+              'DRIVER={ODBC Driver 17 for SQL Server};SERVER=host.docker.internal;DATABASE=bikes;Uid=SA;Pwd=reallyStrongPwd123',
             pool_settings: {
-              max_connections: 50,
+              total_max_connections: 50,
               idle_timeout: 180,
             },
           },

@@ -58,5 +58,5 @@ export const areSSLSettingsEnabled = () => {
 };
 
 export const areReadReplicasEnabled = () => {
-  return isProConsole(window.__env);
+  return isProConsole(window.__env) || true;
 };
