@@ -19,14 +19,14 @@ export const adaptPostgresConnection = (
     name: metadataSource.name,
     configuration: {
       serviceAccount:
-        typeof configuration.service_account == 'string'
+        'from_env' in configuration.service_account
           ? {
-              type: 'serviceAccountKey',
-              value: configuration.service_account,
-            }
-          : {
               type: 'envVar',
               envVar: configuration.service_account.from_env,
+            }
+          : {
+              type: 'serviceAccountKey',
+              value: configuration.service_account,
             },
       projectId:
         typeof configuration.project_id === 'string'

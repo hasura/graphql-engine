@@ -20,7 +20,7 @@ export const ConnectionString = ({ name }: { name: string }) => {
           label="Connect Database via"
           options={options}
           orientation="horizontal"
-          tooltip="Enviroment variable recomennded"
+          tooltip="Environment variable recommended"
         />
       </div>
 

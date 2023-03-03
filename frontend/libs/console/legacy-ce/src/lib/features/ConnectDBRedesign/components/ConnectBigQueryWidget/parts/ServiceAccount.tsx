@@ -1,11 +1,15 @@
-import { InputField, Radio } from '../../../../../new-components/Form';
+import {
+  CodeEditorField,
+  InputField,
+  Radio,
+} from '../../../../../new-components/Form';
 import { useFormContext } from 'react-hook-form';
 import { BigQueryConnectionSchema } from '../schema';
 
 export const ServiceAccount = ({ name }: { name: string }) => {
   const options = [
     { value: 'serviceAccountKey', label: 'Service Account Key' },
-    { value: 'envVar', label: 'Enviromnent variable' },
+    { value: 'envVar', label: 'Environment variable' },
   ];
 
   const { watch } =
@@ -26,16 +30,12 @@ export const ServiceAccount = ({ name }: { name: string }) => {
           label="Connect Database via"
           options={options}
           orientation="horizontal"
-          tooltip="Enviroment variable recomennded"
+          tooltip="Environment variable recommended"
         />
       </div>
 
       {connectionType === 'serviceAccountKey' ? (
-        <InputField
-          name={`${name}.value`}
-          label="Database URL"
-          placeholder=""
-        />
+        <CodeEditorField name={`${name}.value`} label="Service Account" />
       ) : (
         <InputField
           name={`${name}.envVar`}

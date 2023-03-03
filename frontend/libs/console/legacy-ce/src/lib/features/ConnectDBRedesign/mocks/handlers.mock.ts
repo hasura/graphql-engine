@@ -87,6 +87,22 @@ const mockMetadata: Metadata = {
           },
         },
       },
+      {
+        name: 'bigquery_test',
+        kind: 'bigquery',
+        tables: [],
+        configuration: {
+          datasets: ['sample_dataset', 'sample_dataset_2'],
+          global_select_limit: '1.0',
+          project_id: 'hasura-test',
+          service_account: {
+            client_email: 'service-account@someemail.com',
+            private_key:
+              '-----BEGIN PRIVATE KEY-----\nsecretkey\n-----END PRIVATE KEY-----\n',
+            project_id: 'hasura-test',
+          },
+        },
+      },
     ],
   },
 };

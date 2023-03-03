@@ -11,6 +11,7 @@ import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnec
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { useMetadata } from '../../../hasura-metadata-api';
 import { generatePostgresRequestPayload } from './utils/generateRequests';
+import { Collapsible } from '../../../../new-components/Collapsible';
 
 interface ConnectBigQueryWidgetProps {
   dataSourceName?: string;
@@ -57,10 +58,9 @@ export const ConnectBigQueryWidget = (props: ConnectBigQueryWidgetProps) => {
     }
   };
 
-  const [tab, setTab] = useState('connection_details');
   const {
     Form,
-    methods: { formState, reset },
+    methods: { reset },
   } = useConsoleForm({
     schema,
   });
@@ -69,55 +69,40 @@ export const ConnectBigQueryWidget = (props: ConnectBigQueryWidgetProps) => {
     try {
       reset(getDefaultValues(metadataSource));
     } catch (err) {
+      console.log(err);
       hasuraToast({
         type: 'error',
         title:
-          'Error while retriving database. Please check if the database is of type postgres',
+          'Error while retrieving database. Please check if the database is of type bigquery.',
       });
     }
   }, [metadataSource, reset]);
 
-  const connectionDetailsTabErrors = [
-    get(formState.errors, 'name'),
-    get(formState.errors, 'configuration.connectionInfo'),
-  ].filter(Boolean);
-
   return (
     <div>
       <div className="text-xl text-gray-600 font-semibold">
-        {isEditMode
-          ? 'Edit BigQuery Connection'
-          : 'Connect New BigQuery Database'}
+        {isEditMode ? 'Edit BigQuery Connection' : 'Connect BigQuery Database'}
       </div>
       <Form onSubmit={handleSubmit}>
-        <Tabs
-          value={tab}
-          onValueChange={value => setTab(value)}
-          items={[
-            {
-              value: 'connection_details',
-              label: 'Connection Details',
-              icon: connectionDetailsTabErrors.length ? (
-                <FaExclamationTriangle className="text-red-800" />
-              ) : undefined,
-              content: (
-                <div className="mt-sm">
-                  <InputField
-                    name="name"
-                    label="Database display name"
-                    placeholder="Database name"
-                  />
-                  <Configuration name="configuration" />
-                </div>
-              ),
-            },
-            {
-              value: 'customization',
-              label: 'GraphQL Customization',
-              content: <GraphQLCustomization name="customization" />,
-            },
-          ]}
+        <InputField
+          name="name"
+          label="Database name"
+          placeholder="Database name"
         />
+        <Configuration name="configuration" />
+
+        <div className="mt-sm">
+          <Collapsible
+            triggerChildren={
+              <div className="font-semibold text-muted">
+                GraphQL Customization
+              </div>
+            }
+          >
+            <GraphQLCustomization name="customization" />
+          </Collapsible>
+        </div>
+
         <div className="flex justify-end">
           <Button
             type="submit"

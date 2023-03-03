@@ -13,7 +13,7 @@ export const schema = z.object({
       }),
       z.object({
         type: z.literal('serviceAccountKey'),
-        value: z.string().min(1, 'Service account key cannot be empty'),
+        value: z.any(),
       }),
     ]),
     projectId: z.discriminatedUnion('type', [

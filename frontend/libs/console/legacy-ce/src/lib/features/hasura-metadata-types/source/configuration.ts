@@ -56,7 +56,7 @@ export interface MssqlConfiguration {
 }
 
 export interface BigQueryConfiguration {
-  service_account: string | ValidJson | FromEnv;
+  service_account: ValidJson | FromEnv;
   project_id: string | FromEnv;
   datasets: string[] | FromEnv;
 }
