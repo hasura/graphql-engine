@@ -18,7 +18,7 @@ module Hasura.Backends.Postgres.Translate.Types
     SelectNode (SelectNode),
     SelectSlicing (SelectSlicing, _ssLimit, _ssOffset),
     SelectSorting (..),
-    SelectSource (SelectSource, _ssPrefix),
+    SelectSource (SelectSource, _ssPrefix, _ssWhere, _ssFrom),
     SortingAndSlicing (SortingAndSlicing),
     SourcePrefixes (..),
     SimilarArrayFields,

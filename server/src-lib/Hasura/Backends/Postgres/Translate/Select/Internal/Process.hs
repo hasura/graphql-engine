@@ -342,10 +342,15 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
               fieldName
               PLSQNotRequired
               sel
-          let computedFieldTableSetSource = ComputedFieldTableSetSource fieldName selectSource
+          let selectSourceWithoutNulls =
+                case selectSource of
+                  SelectSource {_ssFrom = S.FIFunc (S.FunctionExp {S.feAlias = Just (S.FunctionAlias {S._faIdentifier = fnIden})})} ->
+                    selectSource {_ssWhere = S.BENotNull $ S.SERowIdentifier $ S.getTableAlias fnIden}
+                  _ -> selectSource
+              computedFieldTableSetSource = ComputedFieldTableSetSource fieldName selectSourceWithoutNulls
               extractor =
                 asJsonAggExtr selectTy (S.toColumnAlias fieldName) PLSQNotRequired $
-                  orderByForJsonAgg selectSource
+                  orderByForJsonAgg selectSourceWithoutNulls
           pure
             ( computedFieldTableSetSource,
               extractor,
