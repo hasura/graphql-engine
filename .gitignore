@@ -61,3 +61,6 @@ tests-hspec.log
 
 # Test run results from Sandwich-powered tests
 test_runs/
+
+# dependencies
+node_modules
