@@ -5,9 +5,11 @@ module Hasura.LogicalModel.API
   ( GetLogicalModel (..),
     TrackLogicalModel (..),
     UntrackLogicalModel (..),
+    CreateLogicalModelPermission (..),
     runGetLogicalModel,
     runTrackLogicalModel,
     runUntrackLogicalModel,
+    runCreateSelectLogicalModelPermission,
     dropLogicalModelInMetadata,
     module Hasura.LogicalModel.Types,
   )
@@ -15,22 +17,24 @@ where
 
 import Autodocodec (HasCodec)
 import Autodocodec qualified as AC
-import Control.Lens (preview, (^?))
+import Control.Lens (Traversal', has, preview, (^?))
 import Data.Aeson
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
+import Data.Text.Extended ((<<>))
 import Hasura.Base.Error
 import Hasura.CustomReturnType (CustomReturnType)
 import Hasura.EncJSON
-import Hasura.LogicalModel.Metadata (LogicalModelArgumentName, LogicalModelMetadata (..), parseInterpolatedQuery)
+import Hasura.LogicalModel.Metadata (LogicalModelArgumentName, LogicalModelMetadata (..), lmmSelectPermissions, parseInterpolatedQuery)
 import Hasura.LogicalModel.Types
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend, ScalarType, SourceConnConfiguration)
-import Hasura.RQL.Types.Common (SourceName, sourceNameToText, successMsg)
+import Hasura.RQL.Types.Common (SourceName, defaultSource, sourceNameToText, successMsg)
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Permission (PermDef (_pdRole), SelPerm)
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
@@ -104,6 +108,7 @@ logicalModelTrackToMetadata env sourceConnConfig TrackLogicalModel {..} = do
             _lmmCode = code,
             _lmmReturns = tlmReturns,
             _lmmArguments = tlmArguments,
+            _lmmSelectPermissions = mempty,
             _lmmDescription = tlmDescription
           }
 
@@ -269,3 +274,56 @@ throwIfFeatureDisabled = do
   enableLogicalModels <- liftIO (_sccCheckFeatureFlag configCtx FF.logicalModelInterface)
 
   unless enableLogicalModels (throw500 "LogicalModels is disabled!")
+
+-- | A permission for logical models is tied to a specific root field name and
+-- source. This wrapper adds both of those things to the JSON object that
+-- describes the permission.
+data CreateLogicalModelPermission a (b :: BackendType) = CreateLogicalModelPermission
+  { clmpSource :: SourceName,
+    clmpRootFieldName :: LogicalModelName,
+    clmpInfo :: PermDef b a
+  }
+  deriving stock (Generic)
+
+instance
+  FromJSON (PermDef b a) =>
+  FromJSON (CreateLogicalModelPermission a b)
+  where
+  parseJSON = withObject "CreateLogicalModelPermission" \obj -> do
+    clmpSource <- obj .:? "source" .!= defaultSource
+    clmpRootFieldName <- obj .: "root_field_name"
+    clmpInfo <- parseJSON (Object obj)
+
+    pure CreateLogicalModelPermission {..}
+
+runCreateSelectLogicalModelPermission ::
+  forall b m.
+  (Backend b, CacheRWM m, MetadataM m, MonadError QErr m, MonadIO m, HasServerConfigCtx m) =>
+  CreateLogicalModelPermission SelPerm b ->
+  m EncJSON
+runCreateSelectLogicalModelPermission CreateLogicalModelPermission {..} = do
+  throwIfFeatureDisabled
+
+  metadata <- getMetadata
+
+  let existingLogicalModel :: Traversal' Metadata (LogicalModelMetadata b)
+      existingLogicalModel = metaSources . ix clmpSource . toSourceMetadata . smLogicalModels @b . ix clmpRootFieldName
+
+  unless (has existingLogicalModel metadata) do
+    throw400 NotExists $
+      "Logical model "
+        <> clmpRootFieldName <<> " does not exist in source: "
+        <> sourceNameToText clmpSource
+
+  let metadataObj :: MetadataObjId
+      metadataObj =
+        MOSourceObjId clmpSource $
+          AB.mkAnyBackend $
+            SMOLogicalModel @b clmpRootFieldName
+
+  buildSchemaCacheFor metadataObj $
+    MetadataModifier $
+      logicalModelMetadataSetter @b clmpSource clmpRootFieldName . lmmSelectPermissions
+        %~ OMap.insert (_pdRole clmpInfo) clmpInfo
+
+  pure successMsg

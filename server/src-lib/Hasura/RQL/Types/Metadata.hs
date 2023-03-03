@@ -21,6 +21,7 @@ module Hasura.RQL.Types.Metadata
     emptyMetadata,
     emptyMetadataDefaults,
     functionMetadataSetter,
+    logicalModelMetadataSetter,
     metaActions,
     metaAllowlist,
     metaApiLimits,
@@ -53,6 +54,7 @@ import Data.Aeson.Types
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Monoid (Dual (..), Endo (..))
 import Hasura.Incremental qualified as Inc
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata, LogicalModelName)
 import Hasura.Metadata.DTO.MetadataV3 (MetadataV3 (..))
 import Hasura.Metadata.DTO.Placeholder (IsPlaceholder (placeholder))
 import Hasura.Prelude
@@ -273,6 +275,16 @@ functionMetadataSetter ::
   ASetter' Metadata (FunctionMetadata b)
 functionMetadataSetter source function =
   metaSources . ix source . toSourceMetadata . smFunctions . ix function
+
+-- | A lens setter for the metadata of a logical model as identified by the
+-- source name and root field name.
+logicalModelMetadataSetter ::
+  (Backend b) =>
+  SourceName ->
+  LogicalModelName ->
+  ASetter' Metadata (LogicalModelMetadata b)
+logicalModelMetadataSetter source logicalModelName =
+  metaSources . ix source . toSourceMetadata . smLogicalModels . ix logicalModelName
 
 -- | A simple monad class which enables fetching and setting @'Metadata'
 -- in the state.

@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Metadata representation of a logical model in the metadata,
@@ -6,6 +7,12 @@
 module Hasura.LogicalModel.Metadata
   ( LogicalModelName (..),
     LogicalModelMetadata (..),
+    lmmArguments,
+    lmmCode,
+    lmmDescription,
+    lmmReturns,
+    lmmRootFieldName,
+    lmmSelectPermissions,
     LogicalModelArgumentName (..),
     InterpolatedItem (..),
     InterpolatedQuery (..),
@@ -16,15 +23,19 @@ where
 
 import Autodocodec
 import Autodocodec qualified as AC
+import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.Bifunctor (first)
+import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec)
 import Data.Text qualified as T
 import Hasura.CustomReturnType (CustomReturnType)
 import Hasura.LogicalModel.Types
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Permission (SelPermDef, _pdRole)
 import Hasura.SQL.Backend
+import Hasura.Session (RoleName)
 
 newtype RawQuery = RawQuery {getRawQuery :: Text}
   deriving newtype (Eq, Ord, Show, FromJSON, ToJSON)
@@ -115,6 +126,7 @@ data LogicalModelMetadata (b :: BackendType) = LogicalModelMetadata
     _lmmCode :: InterpolatedQuery LogicalModelArgumentName,
     _lmmReturns :: CustomReturnType b,
     _lmmArguments :: HashMap LogicalModelArgumentName (ScalarType b),
+    _lmmSelectPermissions :: InsOrdHashMap RoleName (SelPermDef b),
     _lmmDescription :: Maybe Text
   }
   deriving (Generic)
@@ -122,10 +134,6 @@ data LogicalModelMetadata (b :: BackendType) = LogicalModelMetadata
 deriving instance Backend b => Eq (LogicalModelMetadata b)
 
 deriving instance Backend b => Show (LogicalModelMetadata b)
-
-instance Backend b => Hashable (LogicalModelMetadata b)
-
-instance Backend b => NFData (LogicalModelMetadata b)
 
 instance (Backend b) => HasCodec (LogicalModelMetadata b) where
   codec =
@@ -141,6 +149,8 @@ instance (Backend b) => HasCodec (LogicalModelMetadata b) where
           AC..= _lmmReturns
         <*> optionalFieldWithDefault "arguments" mempty argumentDoc
           AC..= _lmmArguments
+        <*> optSortedList "select_permissions" _pdRole
+          AC..= _lmmSelectPermissions
         <*> optionalField "description" descriptionDoc
           AC..= _lmmDescription
     where
@@ -149,6 +159,9 @@ instance (Backend b) => HasCodec (LogicalModelMetadata b) where
       argumentDoc = "Free variables in the expression and their types"
       returnsDoc = "Return type (table) of the expression"
       descriptionDoc = "A description of the logical model which appears in the graphql schema"
+
+      optSortedList name keyForElem =
+        AC.optionalFieldWithOmittedDefaultWith' name (sortedElemsCodec keyForElem) mempty
 
 deriving via
   (Autodocodec (LogicalModelMetadata b))
@@ -198,3 +211,5 @@ parseInterpolatedQuery =
             ('}' : '}' : rest) ->
               (IIVariable (LogicalModelArgumentName $ T.pack beforeCloseCurly) :) <$> consumeString rest
             _ -> Left "Found '{{' without a matching closing '}}'"
+
+makeLenses ''LogicalModelMetadata

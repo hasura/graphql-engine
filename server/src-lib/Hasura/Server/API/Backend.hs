@@ -171,5 +171,6 @@ logicalModelsCommands :: forall (b :: BackendType). Backend b => [CommandParser 
 logicalModelsCommands =
   [ commandParser "get_logical_model" $ RMGetLogicalModel . mkAnyBackend @b,
     commandParser "track_logical_model" $ RMTrackLogicalModel . mkAnyBackend @b,
-    commandParser "untrack_logical_model" $ RMUntrackLogicalModel . mkAnyBackend @b
+    commandParser "untrack_logical_model" $ RMUntrackLogicalModel . mkAnyBackend @b,
+    commandParser "create_logical_model_select_permission" $ RMCreateSelectLogicalModelPermission . mkAnyBackend @b
   ]

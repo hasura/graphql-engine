@@ -522,6 +522,100 @@ tests opts = do
               path: "$.args"
           |]
 
+  describe "Permissions" do
+    it "Adds a simple logical model function with no arguments a select permission and returns a 200" $ \testEnv -> do
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnv
+            [yaml|
+              type: bulk
+              args:
+                - type: pg_track_logical_model
+                  args:
+                    type: query
+                    source: postgres
+                    root_field_name: divided_stuff
+                    code: *simpleQuery
+                    arguments:
+                      unused: int
+                    returns:
+                      columns:
+                        divided:
+                          type: integer
+                          description: "a divided thing"
+                - type: pg_create_logical_model_select_permission
+                  args:
+                    source: postgres
+                    root_field_name: divided_stuff
+                    role: "test"
+                    permission:
+                      columns:
+                        - divided
+                      filter: {}
+            |]
+        )
+        [yaml|
+          - message: success
+          - message: success
+        |]
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnv
+            [yaml|
+              type: pg_get_logical_model
+              args:
+                source: postgres
+            |]
+        )
+        [yaml|
+          - root_field_name: divided_stuff
+            code: *simpleQuery
+            arguments:
+              unused: int
+            select_permissions:
+              - role: "test"
+                permission:
+                  columns:
+                    - divided
+                  filter: {}
+            returns:
+              columns:
+                divided:
+                  description: a divided thing
+                  nullable: false
+                  type: integer
+        |]
+
+  describe "Permissions" do
+    it "Fails to adds a select permission to a nonexisting logical model" $ \testEnv -> do
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadataWithStatus
+            400
+            testEnv
+            [yaml|
+              type: bulk
+              args:
+                - type: pg_create_logical_model_select_permission
+                  args:
+                    source: postgres
+                    root_field_name: made_up_logical_model
+                    role: "test"
+                    permission:
+                      columns:
+                        - divided
+                      filter: {}
+            |]
+        )
+        [yaml|
+          code: not-exists
+          error: "Logical model \"made_up_logical_model\" does not exist in source: postgres"
+          path: "$.args[0].args"
+        |]
+
   describe "Validation succeeds" do
     it "when tracking then untracking then re-tracking a logical model" $
       \testEnv -> do

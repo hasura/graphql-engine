@@ -693,6 +693,13 @@
                     "root_field_name": {
                         "description": "Root field name for the logical model",
                         "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/BigquerySelectPermDef"
+                        },
+                        "type": "array"
                     }
                 },
                 "required": [
@@ -1507,6 +1514,13 @@
                     "root_field_name": {
                         "description": "Root field name for the logical model",
                         "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CitusSelectPermDef"
+                        },
+                        "type": "array"
                     }
                 },
                 "required": [
@@ -2355,6 +2369,13 @@
                     "root_field_name": {
                         "description": "Root field name for the logical model",
                         "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CockroachSelectPermDef"
+                        },
+                        "type": "array"
                     }
                 },
                 "required": [
@@ -3277,6 +3298,13 @@
                     "root_field_name": {
                         "description": "Root field name for the logical model",
                         "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/DataconnectorSelectPermDef"
+                        },
+                        "type": "array"
                     }
                 },
                 "required": [
@@ -4620,6 +4648,13 @@
                     "root_field_name": {
                         "description": "Root field name for the logical model",
                         "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MssqlSelectPermDef"
+                        },
+                        "type": "array"
                     }
                 },
                 "required": [
@@ -5492,6 +5527,13 @@
                     "root_field_name": {
                         "description": "Root field name for the logical model",
                         "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MysqlSelectPermDef"
+                        },
+                        "type": "array"
                     }
                 },
                 "required": [
@@ -6414,6 +6456,13 @@
                     "root_field_name": {
                         "description": "Root field name for the logical model",
                         "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/PostgresSelectPermDef"
+                        },
+                        "type": "array"
                     }
                 },
                 "required": [
