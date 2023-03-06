@@ -104,7 +104,7 @@ conflictObjectParser tableInfo maybeUpdatePerms constraints = do
   pure $
     P.object objectName (Just objectDesc) do
       constraintField <- P.field Name._constraint Nothing constraintParser
-      let updateColumnsField = P.fieldWithDefault Name._update_columns Nothing (G.VList []) (P.list updateColumnsEnum)
+      let updateColumnsField = P.fieldWithDefault (applyFieldNameCaseIdentifier tCase updateColumnsFieldName) Nothing (G.VList []) (P.list updateColumnsEnum)
 
       whereExp <- P.fieldOptional Name._where Nothing whereExpParser
 

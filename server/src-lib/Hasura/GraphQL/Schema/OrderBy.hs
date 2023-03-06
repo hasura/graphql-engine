@@ -220,7 +220,7 @@ orderByAggregation sourceInfo tableInfo = P.memoizeOn 'orderByAggregation (_siNa
   -- there is heavy duplication between this and Select.tableAggregationFields
   -- it might be worth putting some of it in common, just to avoid issues when
   -- we change one but not the other?
-  tableGQLName <- getTableGQLName @b tableInfo
+  tableGQLName <- getTableIdentifierName @b tableInfo
   let customization = _siCustomization sourceInfo
       tCase = _rscNamingConvention customization
       mkTypename = _rscTypeNames customization
@@ -231,7 +231,8 @@ orderByAggregation sourceInfo tableInfo = P.memoizeOn 'orderByAggregation (_siNa
       numOperatorsAndColumns = HashMap.fromList $ (,numColumns) <$> numericAggOperators
       compOperatorsAndColumns = HashMap.fromList $ (,compColumns) <$> comparisonAggOperators
       customOperatorsAndColumns =
-        getCustomAggOpsColumns tCase allColumns <$> getCustomAggregateOperators @b (_siConfiguration sourceInfo)
+        HashMap.mapKeys (C.fromCustomName) $
+          getCustomAggOpsColumns tCase allColumns <$> getCustomAggregateOperators @b (_siConfiguration sourceInfo)
       allOperatorsAndColumns =
         HashMap.catMaybes $
           HashMap.unionsWith (<>) [numOperatorsAndColumns, compOperatorsAndColumns, customOperatorsAndColumns]
@@ -251,7 +252,7 @@ orderByAggregation sourceInfo tableInfo = P.memoizeOn 'orderByAggregation (_siNa
                   then Nothing
                   else Just $
                     for (HashMap.toList allOperatorsAndColumns) \(operator, fields) -> do
-                      parseOperator mkTypename operator tableGQLName fields
+                      parseOperator mkTypename operator tableGQLName tCase fields
               ]
   let objectName = runMkTypename mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableAggregateOrderByTypeName tableIdentifierName
       description = G.Description $ "order by aggregate values of table " <>> tableName
@@ -308,15 +309,18 @@ orderByAggregation sourceInfo tableInfo = P.memoizeOn 'orderByAggregation (_siNa
 
     parseOperator ::
       MkTypename ->
-      G.Name ->
-      G.Name ->
+      C.GQLNameIdentifier ->
+      C.GQLNameIdentifier ->
+      NamingCase ->
       InputFieldsParser n [(ColumnInfo b, ColumnType b, (BasicOrderType b, NullsOrderType b))] ->
       InputFieldsParser n (Maybe [IR.OrderByItemG b (IR.AnnotatedAggregateOrderBy b)])
-    parseOperator makeTypename operator tableGQLName columns =
-      let opText = G.unName operator
-          objectName = runMkTypename makeTypename $ tableGQLName <> Name.__ <> operator <> Name.__order_by
+    parseOperator makeTypename operator tableGQLName tCase columns =
+      let opText = G.unName $ applyFieldNameCaseIdentifier tCase operator
+          opTypeName = applyTypeNameCaseIdentifier tCase $ mkTableAggregateOrderByOpTypeName tableGQLName operator
+          opFieldName = applyFieldNameCaseIdentifier tCase operator
+          objectName = runMkTypename makeTypename opTypeName
           objectDesc = Just $ G.Description $ "order by " <> opText <> "() on columns of table " <>> tableName
-       in P.fieldOptional operator Nothing (P.object objectName objectDesc columns)
+       in P.fieldOptional opFieldName Nothing (P.object objectName objectDesc columns)
             `mapField` map (\(col, resultType, info) -> mkOrderByItemG (IR.AAOOp opText resultType col) info)
 
 orderByOperatorsHasuraCase ::

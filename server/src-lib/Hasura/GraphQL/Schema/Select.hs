@@ -40,6 +40,7 @@ import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Casing (GQLNameIdentifier)
+import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Base.Error
@@ -1039,13 +1040,11 @@ tableAggregationFields tableInfo = do
                 else Just $
                   for customOperatorsAndColumns \(operator, columnTypes) -> do
                     customFields <- traverse (uncurry mkCustomColumnAggField) (toList columnTypes)
-                    pure $ Map.singleton operator customFields
+                    pure $ Map.singleton (C.fromCustomName operator) customFields
             ]
     let nonCountFields =
           Map.mapWithKey
-            ( \operator fields ->
-                let fieldNameCase = applyFieldNameCaseCust tCase operator
-                 in parseAggOperator mkTypename operator fieldNameCase tCase tableGQLName fields
+            ( \operator fields -> parseAggOperator mkTypename operator tCase tableGQLName fields
             )
             nonCountFieldsMap
         aggregateFields = count : Map.elems nonCountFields
@@ -1065,9 +1064,9 @@ tableAggregationFields tableInfo = do
           )
         & nonEmpty
 
-    mkNumericAggFields :: G.Name -> [ColumnInfo b] -> SchemaT r m [FieldParser n (IR.ColFld b)]
+    mkNumericAggFields :: GQLNameIdentifier -> [ColumnInfo b] -> SchemaT r m [FieldParser n (IR.ColFld b)]
     mkNumericAggFields name
-      | name == Name._sum = traverse mkColumnAggField
+      | (C.toSnakeG name) == Name._sum = traverse mkColumnAggField
       -- Memoize here for more sharing. Note: we can't do `P.memoizeOn 'mkNumericAggFields...`
       -- due to stage restrictions, so just add a string key:
       | otherwise = traverse \columnInfo ->
@@ -1117,20 +1116,20 @@ tableAggregationFields tableInfo = do
 
     parseAggOperator ::
       MkTypename ->
-      G.Name ->
-      G.Name ->
+      GQLNameIdentifier ->
       NamingCase ->
       GQLNameIdentifier ->
       [FieldParser n (IR.ColFld b)] ->
       FieldParser n (IR.AggregateField b)
-    parseAggOperator makeTypename operator fieldName tCase tableGQLName columns =
-      let opText = G.unName operator
+    parseAggOperator makeTypename operator tCase tableGQLName columns =
+      let opFieldName = applyFieldNameCaseIdentifier tCase operator
+          opText = G.unName opFieldName
           setName = runMkTypename makeTypename $ applyTypeNameCaseIdentifier tCase $ mkTableAggOperatorTypeName tableGQLName operator
           setDesc = Just $ G.Description $ "aggregate " <> opText <> " on columns"
           subselectionParser =
             P.selectionSet setName setDesc columns
               <&> parsedSelectionsToFields IR.CFExp
-       in P.subselection_ fieldName Nothing subselectionParser
+       in P.subselection_ opFieldName Nothing subselectionParser
             <&> IR.AFOp . IR.AggregateOp opText
 
 -- | shared implementation between tables and custom types
