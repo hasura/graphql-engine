@@ -1,26 +1,24 @@
 import { useContext } from 'react';
-import { allOperators } from '../../../../../../components/Common/FilterQuery/utils';
+import { allOperators } from '../../../../../../components/Services/Data/TablePermissions/PermissionBuilder/utils';
 import { rowPermissionsContext } from './RowPermissionsProvider';
 import { tableContext } from './TableProvider';
 
-const defaultOperators = allOperators.map(o => ({
-  name: o.name,
-  operator: o.alias,
+const defaultOperators = allOperators.map(operator => ({
+  name: operator,
+  operator,
 }));
 
 export const Comparator = ({
   comparator,
+  v,
   path,
-  noValue,
 }: {
   comparator: string;
+  v: any;
   path: string[];
-  noValue?: boolean;
 }) => {
   const { setKey, comparators } = useContext(rowPermissionsContext);
-  const comparatorLevelId = `${path?.join('.')}-select${
-    noValue ? '-is-empty' : ''
-  }`;
+  const comparatorLevelId = `${path?.join('.')}-comparator`;
   const { columns } = useContext(tableContext);
   const columnName = path[path.length - 2];
   const column = columns.find(c => c.name === columnName);
@@ -40,7 +38,7 @@ export const Comparator = ({
     >
       {operators.map((o, index) => (
         <option key={index} value={o.operator}>
-          {o.name}
+          {o.operator}
         </option>
       ))}
     </select>

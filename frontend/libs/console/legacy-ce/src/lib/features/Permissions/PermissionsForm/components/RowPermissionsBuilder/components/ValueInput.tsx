@@ -9,21 +9,11 @@ import { Button } from '../../../../../../new-components/Button';
 import { graphQLTypeToJsType, isComparator } from './utils';
 import { ValueInputType } from './ValueInputType';
 
-export const ValueInput = ({
-  value,
-  path,
-  noValue,
-}: {
-  value: any;
-  path: string[];
-  noValue?: boolean;
-}) => {
+export const ValueInput = ({ value, path }: { value: any; path: string[] }) => {
   const { setValue, tables, comparators } = useContext(rowPermissionsContext);
   const { table, columns, setTable, setComparator } = useContext(tableContext);
   const comparatorName = path[path.length - 1];
-  const componentLevelId = `${path.join('.')}-select${
-    noValue ? '-no-value' : ''
-  }`;
+  const componentLevelId = `${path.join('.')}-value-input`;
 
   const stringifiedTable = JSON.stringify(table);
   // Sync table name with ColumnsContext table value
@@ -50,7 +40,7 @@ export const ValueInput = ({
             {tables.map(t => {
               const tableDisplayName = getTableDisplayName(t.table);
               return (
-                // Call JSON.stringify becayse value cannot be array or object. Will be parsed in setValue
+                // Call JSON.stringify because value cannot be array or object. Will be parsed in setValue
                 <option key={tableDisplayName} value={JSON.stringify(t.table)}>
                   {tableDisplayName}
                 </option>
@@ -76,7 +66,6 @@ export const ValueInput = ({
         jsType={jsType}
         componentLevelId={componentLevelId}
         path={path}
-        noValue={noValue}
         comparatorName={comparatorName}
         value={value}
         comparatorType={comparator?.type}

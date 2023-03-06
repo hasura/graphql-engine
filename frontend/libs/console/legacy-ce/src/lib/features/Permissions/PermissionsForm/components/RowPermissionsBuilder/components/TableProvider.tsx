@@ -3,7 +3,6 @@ import { areTablesEqual } from '../../../../../hasura-metadata-api';
 import { Table } from '../../../../../hasura-metadata-types';
 import { rowPermissionsContext } from './RowPermissionsProvider';
 import { Columns, Relationships, TableContext } from './types';
-import { getTableDisplayName } from '../../../../../DatabaseRelationships/utils/helpers';
 
 export const tableContext = createContext<TableContext>({
   table: {},

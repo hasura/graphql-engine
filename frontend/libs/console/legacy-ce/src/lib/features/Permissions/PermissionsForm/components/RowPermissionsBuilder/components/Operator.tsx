@@ -7,16 +7,16 @@ import { PermissionType } from './types';
 export const Operator = ({
   operator,
   path,
-  noValue,
+  v,
 }: {
   operator: string;
   path: string[];
-  noValue?: boolean;
+  v: any;
 }) => {
   const { operators, setKey } = useContext(rowPermissionsContext);
   const { columns, table, relationships } = useContext(tableContext);
   const parent = path[path.length - 1];
-  const operatorLevelId = `${path?.join('.')}-select${noValue ? '-empty' : ''}`;
+  const operatorLevelId = `${path?.join('.')}-operator`;
   return (
     <select
       data-testid={operatorLevelId || 'root-operator-picker'}
@@ -28,7 +28,6 @@ export const Operator = ({
         setKey({ path, key: e.target.value, type });
       }}
     >
-      PermissionType
       <option value="">-</option>
       {operators.boolean?.items.length ? (
         <optgroup label="Bool operators">

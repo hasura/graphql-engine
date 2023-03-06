@@ -55,6 +55,11 @@ export const comparators: Comparators = {
         operator: '_nin',
         type: IntType,
       },
+      {
+        name: 'column equals',
+        operator: '_ceq',
+        type: IntType,
+      },
     ],
   },
   string_SQLite_comparison_exp: {
@@ -103,6 +108,11 @@ export const comparators: Comparators = {
         name: 'not in',
         operator: '_nin',
         type: stringType,
+      },
+      {
+        name: 'column equals',
+        operator: '_ceq',
+        type: IntType,
       },
     ],
   },
@@ -177,7 +187,11 @@ export const comparators: Comparators = {
         operator: '_nin',
         type: StringType,
       },
-
+      {
+        name: 'column equals',
+        operator: '_ceq',
+        type: IntType,
+      },
       {
         name: '!~*',
         operator: '_niregex',
@@ -262,6 +276,11 @@ export const comparators: Comparators = {
         operator: '_nin',
         type: IntType,
       },
+      {
+        name: 'column equals',
+        operator: '_ceq',
+        type: IntType,
+      },
     ],
   },
   String_BigQuery_comparison_exp: {
@@ -315,6 +334,11 @@ export const comparators: Comparators = {
         name: 'not in',
         operator: '_nin',
         type: StringType,
+      },
+      {
+        name: 'column equals',
+        operator: '_ceq',
+        type: IntType,
       },
 
       {
@@ -371,6 +395,11 @@ export const comparators: Comparators = {
         operator: '_nin',
         type: FloatType,
       },
+      {
+        name: 'column equals',
+        operator: '_ceq',
+        type: IntType,
+      },
     ],
   },
   Boolean_BigQuery_comparison_exp: {
@@ -420,6 +449,11 @@ export const comparators: Comparators = {
         operator: '_nin',
         type: BooleanType,
       },
+      {
+        name: 'column equals',
+        operator: '_ceq',
+        type: IntType,
+      },
     ],
   },
   Int_BigQuery_comparison_exp: {
@@ -467,6 +501,11 @@ export const comparators: Comparators = {
       {
         name: 'not in',
         operator: '_nin',
+        type: IntType,
+      },
+      {
+        name: 'column equals',
+        operator: '_ceq',
         type: IntType,
       },
     ],

@@ -3,7 +3,7 @@ import { action } from '@storybook/addon-actions';
 
 import { RowPermissionsInput } from './RowPermissionsInput';
 import { within } from '@testing-library/dom';
-import { userEvent, waitFor } from '@storybook/testing-library';
+import { fireEvent, userEvent } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { tables } from './__tests__/fixtures/tables';
 import { comparators } from './__tests__/fixtures/comparators';
@@ -271,29 +271,103 @@ export const ColumnTypes: ComponentStory<typeof RowPermissionsInput> = args => (
   />
 );
 
+export const BooleanArrayType: ComponentStory<
+  typeof RowPermissionsInput
+> = args => (
+  <RowPermissionsInput
+    onPermissionsChange={action('onPermissionsChange')}
+    table={['Album']}
+    tables={tables}
+    comparators={comparators}
+    permissions={{ Author: { _ceq: ['name'] } }}
+  />
+);
+
+BooleanArrayType.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  expect(canvas.getByTestId('Author-operator')).toBeInTheDocument();
+  expect(canvas.getByTestId('Author._ceq-comparator')).toBeInTheDocument();
+  expect(
+    canvas.getByTestId('Author._ceq-column-comparator-entry')
+  ).toBeInTheDocument();
+};
+
+export const BooleanArrayTypeRoot: ComponentStory<
+  typeof RowPermissionsInput
+> = args => (
+  <RowPermissionsInput
+    onPermissionsChange={action('onPermissionsChange')}
+    table={['Album']}
+    tables={tables}
+    comparators={comparators}
+    permissions={{
+      Author: {
+        _ceq: [
+          // title belongs to Root table (Album)
+          'title',
+          '$',
+        ],
+      },
+    }}
+  />
+);
+
+BooleanArrayTypeRoot.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+
+  expect(canvas.getByTestId('Author._ceq-column-comparator-entry')).toHaveValue(
+    '$'
+  );
+
+  fireEvent.click(canvas.getByTestId('Author._ceq-column-comparator-entry'));
+
+  // Author._ceq-column-comparator-entry shows currently selected table columns (id, name, and surname)
+  expect(
+    canvas.getByTestId('Author._ceq-column-comparator-entry-id')
+  ).toBeInTheDocument();
+  expect(
+    canvas.getByTestId('Author._ceq-column-comparator-entry-name')
+  ).toBeInTheDocument();
+  expect(
+    canvas.getByTestId('Author._ceq-column-comparator-entry-surname')
+  ).toBeInTheDocument();
+
+  fireEvent.click(
+    canvas.getByTestId('Author._ceq-root-column-comparator-entry')
+  );
+
+  // Author._ceq-root-column-comparator-entry shows root columns (id and title)
+  expect(
+    canvas.getByTestId('Author._ceq-root-column-comparator-entry-id')
+  ).toBeInTheDocument();
+  expect(
+    canvas.getByTestId('Author._ceq-root-column-comparator-entry-title')
+  ).toBeInTheDocument();
+};
+
 SetRootLevelPermission.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
-  await userEvent.click(canvas.getByTestId('-select'));
-  await userEvent.selectOptions(canvas.getByTestId('-select'), 'Subject');
+  await userEvent.click(canvas.getByTestId('-operator'));
+  await userEvent.selectOptions(canvas.getByTestId('-operator'), 'Subject');
 };
 
 SetExistsPermission.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
-  await userEvent.selectOptions(canvas.getByTestId('-select'), '_exists');
+  await userEvent.selectOptions(canvas.getByTestId('-operator'), '_exists');
 
   await userEvent.selectOptions(
-    canvas.getByTestId('_exists._table-select'),
+    canvas.getByTestId('_exists._table-value-input'),
     'Label'
   );
 
   await userEvent.selectOptions(
-    canvas.getByTestId('_exists._where-select-empty'),
+    canvas.getByTestId('_exists._where-operator'),
     'id'
   );
 
   await userEvent.type(
-    canvas.getByTestId('_exists._where.id._eq-input'),
+    canvas.getByTestId('_exists._where.id._eq-value-input'),
     '1337'
   );
 };
@@ -301,30 +375,30 @@ SetExistsPermission.play = async ({ canvasElement }) => {
 SetMultilevelExistsPermission.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
-  await userEvent.selectOptions(canvas.getByTestId('-select'), '_exists');
+  await userEvent.selectOptions(canvas.getByTestId('-operator'), '_exists');
 
   await userEvent.selectOptions(
-    canvas.getByTestId('_exists._table-select'),
+    canvas.getByTestId('_exists._table-value-input'),
     'Label'
   );
 
   await userEvent.selectOptions(
-    canvas.getByTestId('_exists._where-select-empty'),
+    canvas.getByTestId('_exists._where-operator'),
     '_exists'
   );
 
   await userEvent.selectOptions(
-    canvas.getByTestId('_exists._where._exists._table-select'),
+    canvas.getByTestId('_exists._where._exists._table-value-input'),
     'Label'
   );
 
   await userEvent.selectOptions(
-    canvas.getByTestId('_exists._where._exists._where-select-empty'),
+    canvas.getByTestId('_exists._where._exists._where-operator'),
     'id'
   );
 
   await userEvent.type(
-    canvas.getByTestId('_exists._where._exists._where.id._eq-input'),
+    canvas.getByTestId('_exists._where._exists._where.id._eq-value-input'),
     '1337'
   );
 };
@@ -332,15 +406,15 @@ SetMultilevelExistsPermission.play = async ({ canvasElement }) => {
 SetAndPermission.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
-  await userEvent.selectOptions(canvas.getByTestId('-select'), '_and');
+  await userEvent.selectOptions(canvas.getByTestId('-operator'), '_and');
 
   await userEvent.selectOptions(
-    canvas.getByTestId('_and.1-select-empty'),
+    canvas.getByTestId('_and.1-operator'),
     'Series_reference'
   );
 
   await userEvent.type(
-    canvas.getByTestId('_and.1.Series_reference._eq-input'),
+    canvas.getByTestId('_and.1.Series_reference._eq-value-input'),
     '1337',
     { delay: 300 }
   );
@@ -349,38 +423,38 @@ SetAndPermission.play = async ({ canvasElement }) => {
 SetMultilevelAndPermission.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
-  await userEvent.selectOptions(canvas.getByTestId('-select'), '_and');
+  await userEvent.selectOptions(canvas.getByTestId('-operator'), '_and');
 
   await userEvent.selectOptions(
-    canvas.getByTestId('_and.1-select-empty'),
+    canvas.getByTestId('_and.1-operator'),
     'Series_reference'
   );
 
   await userEvent.type(
-    canvas.getByTestId('_and.1.Series_reference._eq-input'),
+    canvas.getByTestId('_and.1.Series_reference._eq-value-input'),
     '1337',
     { delay: 300 }
   );
 
   await userEvent.selectOptions(
-    canvas.getByTestId('_and.2-select-empty'),
+    canvas.getByTestId('_and.2-operator'),
     'STATUS'
   );
-  await userEvent.type(canvas.getByTestId('_and.2.STATUS._eq-input'), '1338');
+  await userEvent.type(
+    canvas.getByTestId('_and.2.STATUS._eq-value-input'),
+    '1338'
+  );
 };
 
 SetNotPermission.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
-  await userEvent.selectOptions(canvas.getByTestId('-select'), '_not');
+  await userEvent.selectOptions(canvas.getByTestId('-operator'), '_not');
+
+  await userEvent.selectOptions(canvas.getByTestId('_not-operator'), 'Period');
 
   await userEvent.selectOptions(
-    canvas.getByTestId('_not-select-empty'),
-    'Period'
-  );
-
-  await userEvent.selectOptions(
-    canvas.getByTestId('_not.Period._eq-select'),
+    canvas.getByTestId('_not.Period._eq-comparator'),
     '_neq'
   );
 };
@@ -388,49 +462,50 @@ SetNotPermission.play = async ({ canvasElement }) => {
 SetOrPermission.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
-  await userEvent.selectOptions(canvas.getByTestId('-select'), '_or');
+  await userEvent.selectOptions(canvas.getByTestId('-operator'), '_or');
 
-  await userEvent.selectOptions(
-    canvas.getByTestId('_or.1-select-empty'),
-    'Period'
+  await userEvent.selectOptions(canvas.getByTestId('_or.1-operator'), 'Period');
+
+  await userEvent.type(
+    canvas.getByTestId('_or.1.Period._eq-value-input'),
+    '1337'
   );
-
-  await userEvent.type(canvas.getByTestId('_or.1.Period._eq-input'), '1337');
 };
 
 SetMultilevelOrPermission.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
-  await userEvent.selectOptions(canvas.getByTestId('-select'), '_or');
+  await userEvent.selectOptions(canvas.getByTestId('-operator'), '_or');
 
   await userEvent.selectOptions(
-    canvas.getByTestId('_or.1-select-empty'),
+    canvas.getByTestId('_or.1-operator'),
     'Series_reference'
   );
 
   await userEvent.type(
-    canvas.getByTestId('_or.1.Series_reference._eq-input'),
+    canvas.getByTestId('_or.1.Series_reference._eq-value-input'),
     '1337',
     { delay: 300 }
   );
 
-  await userEvent.selectOptions(
-    canvas.getByTestId('_or.2-select-empty'),
-    'STATUS'
+  await userEvent.selectOptions(canvas.getByTestId('_or.2-operator'), 'STATUS');
+  await userEvent.type(
+    canvas.getByTestId('_or.2.STATUS._eq-value-input'),
+    '1338',
+    {
+      delay: 300,
+    }
   );
-  await userEvent.type(canvas.getByTestId('_or.2.STATUS._eq-input'), '1338', {
-    delay: 300,
-  });
 };
 
 SetDisabledExistsPermission.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
-  const existElement = canvas.getByTestId('_exists._where-input-no-value');
+  const existElement = canvas.getByTestId('_exists._where-value-input');
   expect(existElement).toHaveAttribute('disabled');
 
   await userEvent.selectOptions(
-    canvas.getByTestId('_exists._table-select'),
+    canvas.getByTestId('_exists._table-value-input'),
     'Label'
   );
 

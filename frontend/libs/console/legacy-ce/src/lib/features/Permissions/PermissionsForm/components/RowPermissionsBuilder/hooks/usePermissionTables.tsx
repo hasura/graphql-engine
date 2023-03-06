@@ -1,12 +1,15 @@
 import {
+  areTablesEqual,
   MetadataSelectors,
   useMetadata,
 } from '../../../../../hasura-metadata-api';
-import { Tables } from '../components';
 import { MetadataTable } from '../../../../../hasura-metadata-types';
 import { columnsFromSchema } from '../components/utils/columnsFromSchema';
 import { getTableDisplayName } from '../../../../../DatabaseRelationships';
 import { useIntrospectSchema } from '.';
+import { tableRelationships } from '../../../../../DatabaseRelationships/utils/tableRelationships';
+import { useTables } from '../../../../../Data/TrackTables/hooks/useTables';
+import { useTablesFkConstraints } from './useTablesFkConstraints';
 
 const getTableName = (table: MetadataTable) => {
   // Table name. Replace . with _ because GraphQL doesn't allow . in field names
@@ -20,59 +23,37 @@ export const usePermissionTables = ({
 }: {
   dataSourceName: string;
 }) => {
-  const { data: tables } = useMetadata(
-    MetadataSelectors.getTables(dataSourceName)
-  );
+  const { data: metadataTables, isLoading: isLoadingMetadataTables } =
+    useMetadata(MetadataSelectors.getTables(dataSourceName));
   const { data: schema } = useIntrospectSchema();
-  if (!tables) return [];
-  const allColumns = columnsFromSchema(schema);
-  return tables.map(table => {
-    const tableName = getTableName(table);
-    return {
-      table: table.table,
-      dataSource: dataSourceName,
-      relationships: tableRelationships(table),
-      columns: allColumns[tableName] ?? [],
-    };
+  const { data: tables, isLoading: isLoadingTables } = useTables({
+    dataSourceName,
   });
+  const { data: fkConstraints, isLoading: isDALIntrospectionLoading } =
+    useTablesFkConstraints({ dataSourceName, tables });
+  if (isLoadingMetadataTables || isLoadingTables || isDALIntrospectionLoading)
+    return [];
+  const allColumns = columnsFromSchema(schema);
+  return (
+    metadataTables?.map(metadataTable => {
+      const tableName = getTableName(metadataTable);
+      const table = tables?.find(t =>
+        areTablesEqual(metadataTable.table, t.table)
+      );
+      const relationships = fkConstraints?.find(({ table }) =>
+        areTablesEqual(table, metadataTable.table)
+      )?.relationships;
+      return {
+        table: metadataTable.table,
+        dataSource: dataSourceName,
+        relationships: tableRelationships(
+          metadataTable,
+          table?.table,
+          dataSourceName,
+          relationships
+        ),
+        columns: allColumns[tableName] ?? [],
+      };
+    }) ?? []
+  );
 };
-
-type Relationships = Tables[number]['relationships'];
-
-function tableRelationships(table: MetadataTable): Relationships {
-  const relationships = [] as Relationships;
-  if (table.array_relationships) {
-    relationships.push(
-      ...table.array_relationships.map(r => {
-        const relatedTable =
-          'manual_configuration' in r.using
-            ? r.using.manual_configuration.remote_table
-            : r.using.foreign_key_constraint_on.table;
-        return {
-          name: r.name,
-          type: 'array' as const,
-          table: relatedTable,
-        };
-      })
-    );
-  }
-  if (table.object_relationships) {
-    relationships.push(
-      ...table.object_relationships.map(r => {
-        const relatedTable =
-          'manual_configuration' in r.using
-            ? r.using.manual_configuration.remote_table
-            : Array.isArray(r.using.foreign_key_constraint_on) ||
-              typeof r.using.foreign_key_constraint_on === 'string'
-            ? r.using.foreign_key_constraint_on
-            : r.using.foreign_key_constraint_on.table;
-        return {
-          name: r.name,
-          type: 'object' as const,
-          table: relatedTable,
-        };
-      })
-    );
-  }
-  return relationships;
-}

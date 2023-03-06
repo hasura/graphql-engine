@@ -47,12 +47,13 @@ export const TypesProvider = ({ children }: { children: React.ReactNode }) => {
   //  Stringify values to get a stable value for useEffect
   const jsonPermissions = JSON.stringify(permissions);
   const stringifiedTable = JSON.stringify(table);
+  const stringifiedTables = JSON.stringify(tables);
   // Recursively set types
   useEffect(() => {
     const newTypes = getPermissionTypes(tables, table, permissions);
 
     setTypes(newTypes);
-  }, [jsonPermissions, setTypes, stringifiedTable]);
+  }, [jsonPermissions, setTypes, stringifiedTable, stringifiedTables]);
 
   return (
     <typesContext.Provider value={{ types, setType }}>

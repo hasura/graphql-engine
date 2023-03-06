@@ -53,6 +53,30 @@ describe('comparatorsFromSchema', () => {
         operator: '_nin',
         type: typeFromAST(schema, parseType('[number!]') as NamedTypeNode),
       },
+      {
+        name: '_ceq',
+        operator: '_ceq',
+      },
+      {
+        name: '_cne',
+        operator: '_cne',
+      },
+      {
+        name: '_cgt',
+        operator: '_cgt',
+      },
+      {
+        name: '_clt',
+        operator: '_clt',
+      },
+      {
+        name: '_cgte',
+        operator: '_cgte',
+      },
+      {
+        name: '_clte',
+        operator: '_clte',
+      },
     ]);
   });
 });

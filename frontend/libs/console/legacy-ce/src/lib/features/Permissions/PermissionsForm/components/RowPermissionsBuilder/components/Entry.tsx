@@ -25,27 +25,35 @@ export const Entry = ({
     >
       <div className={`p-2 ${isPrimitive(v) ? ' flex gap-4' : ''}`}>
         <span className="flex gap-4">
-          <Key k={k} path={path} />
+          <Key k={k} path={path} v={v} />
           <span>: </span>
-          {Array.isArray(v) ? (
-            <Token token={'['} inline />
-          ) : isPrimitive(v) ? null : (
-            <Token token={'{'} inline />
-          )}
+          <OpenToken v={v} />
         </span>
         <EntryType k={k} v={v} path={path} />
-        {Array.isArray(v) ? (
-          <div className="flex gap-2">
-            <Token token={']'} inline />
-            <Token token={','} inline />
-          </div>
-        ) : isPrimitive(v) ? null : (
-          <div className="flex gap-2">
-            <Token token={'}'} inline />
-            <Token token={','} inline />
-          </div>
-        )}
+        <EndToken v={v} />
       </div>
     </div>
   );
 };
+
+function OpenToken({ v }: { v: any }) {
+  return Array.isArray(v) ? (
+    <Token token={'['} inline />
+  ) : isPrimitive(v) ? null : (
+    <Token token={'{'} inline />
+  );
+}
+
+function EndToken({ v }: { v: any }) {
+  return Array.isArray(v) ? (
+    <div className="flex gap-2">
+      <Token token={']'} inline />
+      <Token token={','} inline />
+    </div>
+  ) : isPrimitive(v) ? null : (
+    <div className="flex gap-2">
+      <Token token={'}'} inline />
+      <Token token={','} inline />
+    </div>
+  );
+}

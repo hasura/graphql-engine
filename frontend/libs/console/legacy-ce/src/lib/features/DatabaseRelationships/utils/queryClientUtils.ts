@@ -5,6 +5,11 @@ interface BaseParams {
   table: Table;
 }
 
+interface ManyTablesParams {
+  dataSourceName: string;
+  tables: Table[] | undefined;
+}
+
 export const generateQueryKeys = {
   metadata: () => ['export_metadata'],
   fkConstraints: (params: BaseParams) =>
@@ -14,7 +19,13 @@ export const generateQueryKeys = {
       params.table,
       'fkConstraints',
     ] as const,
-
+  manyFkConstraints: (params: ManyTablesParams) =>
+    [
+      'dal-introspection',
+      params.dataSourceName,
+      params.tables,
+      'fkConstraints',
+    ] as const,
   columns: (params: BaseParams) =>
     [
       'dal-introspection',

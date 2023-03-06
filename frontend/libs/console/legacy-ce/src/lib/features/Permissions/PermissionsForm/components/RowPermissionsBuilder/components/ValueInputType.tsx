@@ -1,18 +1,14 @@
-import { areTablesEqual } from '../../../../../hasura-metadata-api';
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 import { rowPermissionsContext } from './RowPermissionsProvider';
 import { tableContext } from './TableProvider';
 import { Table } from '../../../../../hasura-metadata-types';
-import { getTableDisplayName } from '../../../../../DatabaseRelationships';
 import { isEmpty } from 'lodash';
-import { Button } from '../../../../../../new-components/Button';
 import { graphQLTypeToJsType } from './utils';
 
 export const ValueInputType = ({
   jsType,
   componentLevelId,
   path,
-  noValue,
   comparatorName,
   value,
   comparatorType,
@@ -20,7 +16,6 @@ export const ValueInputType = ({
   jsType: string;
   componentLevelId: string;
   path: string[];
-  noValue?: boolean;
   comparatorName: string;
   value: any;
   comparatorType: any;
@@ -28,9 +23,6 @@ export const ValueInputType = ({
   const { setValue } = useContext(rowPermissionsContext);
   const { table } = useContext(tableContext);
 
-  const componentLevelInputId = `${path.join('.')}-input${
-    noValue ? '-no-value' : ''
-  }`;
   const inputType =
     jsType === 'boolean' ? 'checkbox' : jsType === 'string' ? 'text' : 'number';
 
@@ -60,7 +52,7 @@ export const ValueInputType = ({
     default:
       return (
         <input
-          data-testid={`${componentLevelInputId}`}
+          data-testid={componentLevelId}
           disabled={comparatorName === '_where' && isEmpty(table)}
           className="border border-gray-200 rounded-md p-2 !mr-4"
           type={inputType}

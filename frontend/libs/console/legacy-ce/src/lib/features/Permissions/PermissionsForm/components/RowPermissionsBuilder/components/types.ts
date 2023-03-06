@@ -1,5 +1,6 @@
 import { Table } from '../../../../../hasura-metadata-types';
 import { GraphQLType } from 'graphql';
+import { Relationship } from '../../../../../DatabaseRelationships';
 
 export type Operators = Record<
   string,
@@ -14,11 +15,7 @@ export type Columns = Array<{
   graphQLType: GraphQLType;
 }>;
 
-export type Relationships = Array<{
-  name: string;
-  table: Table;
-  type: 'object' | 'array';
-}>;
+export type Relationships = Array<Relationship>;
 
 export type Tables = Array<{
   table: Table;
@@ -31,7 +28,7 @@ export type Comparator = {
     name: string;
     operator: string;
     defaultValue?: string;
-    type: GraphQLType;
+    type?: GraphQLType;
   }>;
 };
 

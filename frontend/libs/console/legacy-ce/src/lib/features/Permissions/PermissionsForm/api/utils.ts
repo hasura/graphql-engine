@@ -8,7 +8,7 @@ import { areTablesEqual } from '../../../hasura-metadata-api';
 import { Table } from '../../../hasura-metadata-types';
 import { getTableDisplayName } from '../../../DatabaseRelationships';
 
-const formatFilterValues = (formFilter: Record<string, any>[]) => {
+const formatFilterValues = (formFilter: Record<string, any>[] = []) => {
   return Object.entries(formFilter).reduce<Record<string, any>>(
     (acc, [operator, value]) => {
       if (operator === '_and' || operator === '_or') {
@@ -42,6 +42,7 @@ const createSelectObject = (input: PermissionsSchema) => {
       .filter(({ 1: value }) => value)
       .map(([key]) => key);
 
+    // Input may be undefined
     const filter = formatFilterValues(input.filter);
 
     const permissionObject: SelectPermissionMetadata = {
@@ -112,6 +113,7 @@ export type DeletePermissionMetadata = {
 
 const createDeleteObject = (input: PermissionsSchema) => {
   if (input.queryType === 'delete') {
+    // Input may be undefined
     const filter = formatFilterValues(input.filter);
 
     const permissionObject: DeletePermissionMetadata = {

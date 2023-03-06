@@ -3,6 +3,33 @@ import { GraphQLSchema, isInputObjectType } from 'graphql';
 import { lowerCase } from 'lodash';
 import { Comparators } from '../types';
 
+const columnComparators = [
+  {
+    name: '_ceq',
+    operator: '_ceq',
+  },
+  {
+    name: '_cne',
+    operator: '_cne',
+  },
+  {
+    name: '_cgt',
+    operator: '_cgt',
+  },
+  {
+    name: '_clt',
+    operator: '_clt',
+  },
+  {
+    name: '_cgte',
+    operator: '_cgte',
+  },
+  {
+    name: '_clte',
+    operator: '_clte',
+  },
+];
+
 export function comparatorsFromSchema(schema: GraphQLSchema): Comparators {
   // Get input types ending in `_comparison_exp`
   // E.g: String_BigQuery_comparison_exp, string_SQLite_comparison_exp, String_comparison_exp, etc...
@@ -22,6 +49,12 @@ export function comparatorsFromSchema(schema: GraphQLSchema): Comparators {
         type: field.type,
       };
     });
-    return { ...acc, [inputType.name]: { operators } };
+    return {
+      ...acc,
+      [inputType.name]: {
+        // Add column comparators because they are not reflected on the graphql schema
+        operators: [...operators, ...columnComparators],
+      },
+    };
   }, {});
 }
