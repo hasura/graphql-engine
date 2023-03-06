@@ -392,7 +392,7 @@ opExpDepCol = \case
 data ComputedFieldBoolExp (backend :: BackendType) scalar
   = -- | SQL function returning a scalar
     CFBEScalar [OpExpG backend scalar]
-  | -- | SQL function returning SET OF table
+  | -- | SQL function returning table or SETOF table
     CFBETable (TableName backend) (AnnBoolExp backend scalar)
   deriving (Functor, Foldable, Traversable, Generic)
 
