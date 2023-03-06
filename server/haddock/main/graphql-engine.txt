@@ -19786,6 +19786,7 @@ RemoteSchemaParser :: [FieldParser n (NamespacedField (RemoteSchemaRootField (Re
 [piMutation] :: RemoteSchemaParser n -> Maybe [FieldParser n (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))]
 [piSubscription] :: RemoteSchemaParser n -> Maybe [FieldParser n (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))]
 getTableRoles :: BackendSourceInfo -> [RoleName]
+getLogicalModelRoles :: BackendSourceInfo -> [RoleName]
 
 -- | Looks up table information for the given table name. This function
 --   should never fail, since the schema cache construction process is
@@ -20115,8 +20116,8 @@ selectTable :: (BackendTableSelectSchema b, MonadBuildSourceSchema b r m n) => T
 selectTableAggregate :: (BackendTableSelectSchema b, MonadBuildSourceSchema b r m n) => TableInfo b -> Name -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (AggSelectExp b)))
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
 class Backend b => BackendCustomTypeSelectSchema (b :: BackendType)
-customTypeArguments :: (BackendCustomTypeSelectSchema b, MonadBuildSourceSchema b r m n) => Name -> CustomReturnType b -> SchemaT r m (InputFieldsParser n (SelectArgsG b (UnpreparedValue b)))
-customTypeSelectionSet :: (BackendCustomTypeSelectSchema b, MonadBuildSourceSchema b r m n) => Name -> CustomReturnType b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
+logicalModelArguments :: (BackendCustomTypeSelectSchema b, MonadBuildSourceSchema b r m n) => Name -> CustomReturnType b -> SchemaT r m (InputFieldsParser n (SelectArgsG b (UnpreparedValue b)))
+logicalModelSelectionSet :: (BackendCustomTypeSelectSchema b, MonadBuildSourceSchema b r m n) => Name -> LogicalModelInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 class Backend b => BackendUpdateOperatorsSchema (b :: BackendType) where {
     
     -- | Intermediate Representation of the set of update operators that act
@@ -20417,8 +20418,8 @@ defaultTableSelectionSet :: forall b r m n. (AggregationPredicatesSchema b, Back
 -- | List of table fields object. Just a <tt><a>nonNullableObjectList</a>
 --   wrapper over </tt><a>tableSelectionSet</a>. &gt; table_name: [table!]!
 tableSelectionList :: (MonadBuildSchema b r m n, BackendTableSelectSchema b) => TableInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
-defaultCustomTypeSelectionSet :: forall b r m n. MonadBuildSchema b r m n => Name -> CustomReturnType b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
-customTypeSelectionList :: (MonadBuildSchema b r m n, BackendCustomTypeSelectSchema b) => Name -> CustomReturnType b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
+defaultLogicalModelSelectionSet :: forall b r m n. MonadBuildSchema b r m n => Name -> LogicalModelInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
+logicalModelSelectionList :: (MonadBuildSchema b r m n, BackendCustomTypeSelectSchema b) => Name -> LogicalModelInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 
 -- | Connection fields of a table
 --   
@@ -20507,7 +20508,7 @@ tableConnectionArgs :: forall b r m n. (MonadBuildSchema b r m n, AggregationPre
 --   }
 --   </pre>
 tableAggregationFields :: forall b r m n. MonadBuildSchema b r m n => TableInfo b -> SchemaT r m (Parser 'Output n (AggregateFields b))
-defaultCustomTypeArgs :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b) => Name -> CustomReturnType b -> SchemaT r m (InputFieldsParser n (SelectArgs b))
+defaultLogicalModelArgs :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b) => Name -> CustomReturnType b -> SchemaT r m (InputFieldsParser n (SelectArgs b))
 tablePermissionsInfo :: Backend b => SelPermInfo b -> TablePerms b
 
 
@@ -23307,22 +23308,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aDrWI. Lens' (CreateEventTriggerQuery b_aDrWI) TriggerOnReplication
-cteqCleanupConfig :: forall b_aDrWI. Lens' (CreateEventTriggerQuery b_aDrWI) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aDrWI. Lens' (CreateEventTriggerQuery b_aDrWI) (Maybe Text)
-cetqWebhook :: forall b_aDrWI. Lens' (CreateEventTriggerQuery b_aDrWI) (Maybe InputWebhook)
-cetqUpdate :: forall b_aDrWI. Lens' (CreateEventTriggerQuery b_aDrWI) (Maybe (SubscribeOpSpec b_aDrWI))
-cetqTable :: forall b_aDrWI. Lens' (CreateEventTriggerQuery b_aDrWI) (TableName b_aDrWI)
-cetqSource :: forall b_aDrWI. Lens' (CreateEventTriggerQuery b_aDrWI) SourceName
-cetqRetryConf :: forall b_aDrWI. Lens' (CreateEventTriggerQuery b_aDrWI) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aDrWI. Lens' (CreateEventTriggerQuery b_aDrWI) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aDrWI. Lens' (CreateEventTriggerQuery b_aDrWI) (Maybe RequestTransform)
-cetqReplace :: forall b_aDrWI. Lens' (CreateEventTriggerQuery b_aDrWI) Bool
-cetqName :: forall b_aDrWI. Lens' (CreateEventTriggerQuery b_aDrWI) TriggerName
-cetqInsert :: forall b_aDrWI. Lens' (CreateEventTriggerQuery b_aDrWI) (Maybe (SubscribeOpSpec b_aDrWI))
-cetqHeaders :: forall b_aDrWI. Lens' (CreateEventTriggerQuery b_aDrWI) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aDrWI. Lens' (CreateEventTriggerQuery b_aDrWI) (Maybe Bool)
-cetqDelete :: forall b_aDrWI. Lens' (CreateEventTriggerQuery b_aDrWI) (Maybe (SubscribeOpSpec b_aDrWI))
+cteqTriggerOnReplication :: forall b_aDsrc. Lens' (CreateEventTriggerQuery b_aDsrc) TriggerOnReplication
+cteqCleanupConfig :: forall b_aDsrc. Lens' (CreateEventTriggerQuery b_aDsrc) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aDsrc. Lens' (CreateEventTriggerQuery b_aDsrc) (Maybe Text)
+cetqWebhook :: forall b_aDsrc. Lens' (CreateEventTriggerQuery b_aDsrc) (Maybe InputWebhook)
+cetqUpdate :: forall b_aDsrc. Lens' (CreateEventTriggerQuery b_aDsrc) (Maybe (SubscribeOpSpec b_aDsrc))
+cetqTable :: forall b_aDsrc. Lens' (CreateEventTriggerQuery b_aDsrc) (TableName b_aDsrc)
+cetqSource :: forall b_aDsrc. Lens' (CreateEventTriggerQuery b_aDsrc) SourceName
+cetqRetryConf :: forall b_aDsrc. Lens' (CreateEventTriggerQuery b_aDsrc) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aDsrc. Lens' (CreateEventTriggerQuery b_aDsrc) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aDsrc. Lens' (CreateEventTriggerQuery b_aDsrc) (Maybe RequestTransform)
+cetqReplace :: forall b_aDsrc. Lens' (CreateEventTriggerQuery b_aDsrc) Bool
+cetqName :: forall b_aDsrc. Lens' (CreateEventTriggerQuery b_aDsrc) TriggerName
+cetqInsert :: forall b_aDsrc. Lens' (CreateEventTriggerQuery b_aDsrc) (Maybe (SubscribeOpSpec b_aDsrc))
+cetqHeaders :: forall b_aDsrc. Lens' (CreateEventTriggerQuery b_aDsrc) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aDsrc. Lens' (CreateEventTriggerQuery b_aDsrc) (Maybe Bool)
+cetqDelete :: forall b_aDsrc. Lens' (CreateEventTriggerQuery b_aDsrc) (Maybe (SubscribeOpSpec b_aDsrc))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
