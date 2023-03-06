@@ -24,6 +24,7 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     TableBuildInput (TableBuildInput, _tbiName),
     TablePermissionInputs (..),
     addTableContext,
+    addLogicalModelContext,
     bindErrorA,
     boActions,
     boCustomTypes,
@@ -56,6 +57,7 @@ import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Incremental qualified as Inc
+import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
@@ -431,3 +433,6 @@ buildInfoMapPreservingMetadataM extractKey mkMetadataObject buildInfo =
 
 addTableContext :: (Backend b) => TableName b -> Text -> Text
 addTableContext tableName e = "in table " <> tableName <<> ": " <> e
+
+addLogicalModelContext :: LogicalModelName -> Text -> Text
+addLogicalModelContext logicalModelName e = "in logical model " <> logicalModelName <<> ": " <> e

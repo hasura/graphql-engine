@@ -16,6 +16,7 @@ module Hasura.LogicalModel.Metadata
     LogicalModelArgumentName (..),
     InterpolatedItem (..),
     InterpolatedQuery (..),
+    WithLogicalModel (..),
     parseInterpolatedQuery,
     module Hasura.LogicalModel.Types,
   )
@@ -24,7 +25,8 @@ where
 import Autodocodec
 import Autodocodec qualified as AC
 import Control.Lens (makeLenses)
-import Data.Aeson
+import Data.Aeson (FromJSON (parseJSON), FromJSONKey, ToJSON, ToJSONKey, (.!=), (.:), (.:?))
+import Data.Aeson qualified as Aeson
 import Data.Bifunctor (first)
 import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec)
 import Data.Text qualified as T
@@ -33,6 +35,7 @@ import Hasura.LogicalModel.Types
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common (SourceName, ToAesonPairs (toAesonPairs), defaultSource)
 import Hasura.RQL.Types.Permission (SelPermDef, _pdRole)
 import Hasura.SQL.Backend
 import Hasura.Session (RoleName)
@@ -172,6 +175,28 @@ deriving via
   (Autodocodec (LogicalModelMetadata b))
   instance
     (Backend b) => (ToJSON (LogicalModelMetadata b))
+
+-- | A wrapper to tie something to a particular logical model. Specifically, it
+-- assumes the underlying '_wlmInfo' is represented as an object, and adds two
+-- keys to that object: @source@ and @root_field_name@.
+data WithLogicalModel a = WithLogicalModel
+  { _wlmSource :: SourceName,
+    _wlmName :: LogicalModelName,
+    _wlmInfo :: a
+  }
+  deriving stock (Eq, Show)
+
+instance (FromJSON a) => FromJSON (WithLogicalModel a) where
+  parseJSON = Aeson.withObject "LogicalModel" \obj -> do
+    _wlmSource <- obj .:? "source" .!= defaultSource
+    _wlmName <- obj .: "root_field_name"
+    _wlmInfo <- parseJSON (Aeson.Object obj)
+
+    pure WithLogicalModel {..}
+
+instance (ToAesonPairs a) => ToJSON (WithLogicalModel a) where
+  toJSON (WithLogicalModel source name info) =
+    Aeson.object $ ("source", Aeson.toJSON source) : ("root_field_name", Aeson.toJSON name) : toAesonPairs info
 
 -- | extract all of the `{{ variable }}` inside our query string
 parseInterpolatedQuery ::

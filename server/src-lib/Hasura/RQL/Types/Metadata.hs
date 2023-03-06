@@ -12,6 +12,7 @@ module Hasura.RQL.Types.Metadata
     dropEventTriggerInMetadata,
     dropFunctionInMetadata,
     dropPermissionInMetadata,
+    dropLogicalModelPermissionInMetadata,
     dropRelationshipInMetadata,
     dropRemoteRelationshipInMetadata,
     dropTableInMetadata,
@@ -54,7 +55,7 @@ import Data.Aeson.Types
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Monoid (Dual (..), Endo (..))
 import Hasura.Incremental qualified as Inc
-import Hasura.LogicalModel.Metadata (LogicalModelMetadata, LogicalModelName)
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata, LogicalModelName, lmmSelectPermissions)
 import Hasura.Metadata.DTO.MetadataV3 (MetadataV3 (..))
 import Hasura.Metadata.DTO.Placeholder (IsPlaceholder (placeholder))
 import Hasura.Prelude
@@ -382,6 +383,14 @@ dropPermissionInMetadata rn = \case
   PTSelect -> tmSelectPermissions %~ OM.delete rn
   PTDelete -> tmDeletePermissions %~ OM.delete rn
   PTUpdate -> tmUpdatePermissions %~ OM.delete rn
+
+dropLogicalModelPermissionInMetadata ::
+  RoleName -> PermType -> LogicalModelMetadata b -> LogicalModelMetadata b
+dropLogicalModelPermissionInMetadata rn = \case
+  PTSelect -> lmmSelectPermissions %~ OM.delete rn
+  PTInsert -> error "Not implemented yet"
+  PTDelete -> error "Not implemented yet"
+  PTUpdate -> error "Not implemented yet"
 
 dropComputedFieldInMetadata ::
   ComputedFieldName -> TableMetadata b -> TableMetadata b

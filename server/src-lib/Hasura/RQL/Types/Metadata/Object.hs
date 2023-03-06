@@ -7,6 +7,7 @@ module Hasura.RQL.Types.Metadata.Object
     MetadataObject (..),
     SourceMetadataObjId (..),
     TableMetadataObjId (..),
+    LogicalModelMetadataObjId (..),
     droppableInconsistentMetadata,
     getInconsistentRemoteSchemas,
     groupInconsistentMetadataById,
@@ -70,12 +71,20 @@ data TableMetadataObjId
 
 instance Hashable TableMetadataObjId
 
+-- | Identifiers for logical model elements within the metadata structure.
+data LogicalModelMetadataObjId
+  = LMMOPerm RoleName PermType
+  deriving (Show, Eq, Ord, Generic)
+
+instance Hashable LogicalModelMetadataObjId
+
 data SourceMetadataObjId b
   = SMOTable (TableName b)
   | SMOFunction (FunctionName b)
   | SMOFunctionPermission (FunctionName b) RoleName
   | SMOTableObj (TableName b) TableMetadataObjId
   | SMOLogicalModel LogicalModelName
+  | SMOLogicalModelObj LogicalModelName LogicalModelMetadataObjId
   deriving (Generic)
 
 deriving instance (Backend b) => Show (SourceMetadataObjId b)
@@ -137,6 +146,8 @@ moiTypeName = \case
       SMOTable _ -> "table"
       SMOFunction _ -> "function"
       SMOLogicalModel _ -> "logical_model"
+      SMOLogicalModelObj _ logicalModelObjectId -> case logicalModelObjectId of
+        LMMOPerm _ permType -> permTypeToCode permType <> "_permission"
       SMOFunctionPermission _ _ -> "function_permission"
       SMOTableObj _ tableObjectId -> case tableObjectId of
         MTORel _ relType -> relTypeToTxt relType <> "_relation"
@@ -189,6 +200,18 @@ moiName objectId =
           <> " in source "
           <> toTxt source
       SMOLogicalModel name -> toTxt name <> " in source " <> toTxt source
+      SMOLogicalModelObj logicalModelName logicalModelObjectId -> do
+        let objectName :: Text
+            objectName = case logicalModelObjectId of
+              LMMOPerm name _ -> toTxt name
+
+            sourceObjectId :: MetadataObjId
+            sourceObjectId =
+              MOSourceObjId source $
+                AB.mkAnyBackend $
+                  SMOLogicalModel @b logicalModelName
+
+        objectName <> " in " <> moiName sourceObjectId
       SMOTableObj tableName tableObjectId ->
         let tableObjectName = case tableObjectId of
               MTORel name _ -> toTxt name

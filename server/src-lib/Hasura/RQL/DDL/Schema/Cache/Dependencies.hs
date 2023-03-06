@@ -13,6 +13,8 @@ import Data.List (nub)
 import Data.Monoid (First)
 import Data.Text.Extended
 import Hasura.Base.Error
+import Hasura.CustomReturnType (crtColumns)
+import Hasura.LogicalModel.Cache (lmiPermissions, _lmiReturns)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal (permissionIsDefined)
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -151,7 +153,7 @@ pruneDanglingDependents cache =
             <> remoteSchemaName
               <<> " is not found"
       SOSourceObj source exists -> do
-        AB.dispatchAnyBackend @Backend exists $ \sourceObjId -> do
+        AB.dispatchAnyBackend @Backend exists $ \(sourceObjId :: SourceObjId b) -> do
           sourceInfo <- castSourceInfo source sourceObjId
           case sourceObjId of
             SOITable tableName -> do
@@ -160,6 +162,24 @@ pruneDanglingDependents cache =
               void $
                 M.lookup functionName (_siFunctions sourceInfo)
                   `onNothing` Left ("function " <> functionName <<> " is not tracked")
+            SOILogicalModel logicalModelName -> do
+              void $ resolveLogicalModel sourceInfo logicalModelName
+            SOILogicalModelObj logicalModelName logicalModelObjectId -> do
+              logicalModel <- resolveLogicalModel sourceInfo logicalModelName
+              case logicalModelObjectId of
+                LMOPerm roleName permType -> do
+                  let rolePermissions :: Maybe (RolePermInfo b)
+                      rolePermissions = logicalModel ^? lmiPermissions . ix roleName
+
+                  unless (any (permissionIsDefined permType) rolePermissions) $
+                    Left $
+                      "no "
+                        <> permTypeToCode permType
+                        <> " permission defined on logical model "
+                        <> logicalModelName <<> " for role " <>> roleName
+                LMOCol column ->
+                  unless (M.member column (crtColumns (_lmiReturns logicalModel))) do
+                    Left ("Could not find column " <> column <<> " in logical model " <>> logicalModelName)
             SOITableObj tableName tableObjectId -> do
               tableInfo <- resolveTable sourceInfo tableName
               case tableObjectId of
@@ -205,6 +225,10 @@ pruneDanglingDependents cache =
     resolveTable sourceInfo tableName =
       M.lookup tableName (_siTables sourceInfo)
         `onNothing` Left ("table " <> tableName <<> " is not tracked")
+
+    resolveLogicalModel sourceInfo logicalModelName =
+      M.lookup logicalModelName (_siLogicalModels sourceInfo)
+        `onNothing` Left ("logical model " <> logicalModelName <<> " is not tracked")
 
     columnToFieldName :: forall b. (Backend b) => TableInfo b -> Column b -> FieldName
     columnToFieldName _ = fromCol @b
@@ -274,6 +298,12 @@ deleteMetadataObject = \case
       SMOFunctionPermission functionName role ->
         siFunctions . ix functionName . fiPermissions %~ M.delete role
       SMOLogicalModel name -> siLogicalModels %~ M.delete name
+      SMOLogicalModelObj logicalModelName logicalModelObjectId ->
+        siLogicalModels . ix logicalModelName %~ case logicalModelObjectId of
+          LMMOPerm roleName PTSelect -> lmiPermissions . ix roleName . permSel .~ Nothing
+          LMMOPerm roleName PTInsert -> lmiPermissions . ix roleName . permIns .~ Nothing
+          LMMOPerm roleName PTUpdate -> lmiPermissions . ix roleName . permUpd .~ Nothing
+          LMMOPerm roleName PTDelete -> lmiPermissions . ix roleName . permDel .~ Nothing
       SMOTableObj tableName tableObjectId ->
         siTables . ix tableName %~ case tableObjectId of
           MTORel name _ -> tiCoreInfo . tciFieldInfoMap %~ M.delete (fromRel name)

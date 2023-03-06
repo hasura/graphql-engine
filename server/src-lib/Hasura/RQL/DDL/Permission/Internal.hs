@@ -10,6 +10,7 @@ module Hasura.RQL.DDL.Permission.Internal
     getDependentHeaders,
     annBoolExp,
     procBoolExp,
+    procLogicalModelBoolExp,
   )
 where
 
@@ -22,6 +23,7 @@ import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Base.Error
+import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -103,6 +105,45 @@ procBoolExp source tn fieldInfoMap be = do
 
   abe <- annBoolExp rhsParser rootFieldInfoMap fieldInfoMap $ unBoolExp be
   let deps = getBoolExpDeps source tn abe
+  return (abe, Seq.fromList deps)
+
+-- | Interpret a 'BoolExp' into an 'AnnBoolExp', collecting any dependencies as
+-- we go. At the moment, the only dependencies we're likely to encounter are
+-- independent dependencies on other tables. For example, "this user can only
+-- select from this logical model if their ID is in the @allowed_users@ table".
+procLogicalModelBoolExp ::
+  forall b m.
+  ( QErrM m,
+    TableCoreInfoRM b m,
+    BackendMetadata b,
+    GetAggregationPredicatesDeps b
+  ) =>
+  SourceName ->
+  LogicalModelName ->
+  FieldInfoMap (FieldInfo b) ->
+  BoolExp b ->
+  m (AnnBoolExpPartialSQL b, Seq SchemaDependency)
+procLogicalModelBoolExp source lmn fieldInfoMap be = do
+  let -- The parser for the "right hand side" of operations. We use @rhsParser@
+      -- as the name here for ease of grepping, though it's maybe a bit vague.
+      -- More specifically, if we think of an operation that combines a field
+      -- (such as those in tables or logical models) on the /left/ with a value
+      -- or session variable on the /right/, this is a parser for the latter.
+      rhsParser :: BoolExpRHSParser b m (PartialSQLExp b)
+      rhsParser = BoolExpRHSParser parseCollectableType PSESession
+
+  -- In Logical Models, there are no relationships (unlike tables, where one
+  -- table can reference another). This means that our root fieldInfoMap is
+  -- always going to be the same as our current fieldInfoMap, so we just pass
+  -- the same one in twice.
+  abe <- annBoolExp rhsParser fieldInfoMap fieldInfoMap (unBoolExp be)
+
+  let -- What dependencies do we have on the schema cache in order to process
+      -- this boolean expression? This dependency system is explained more
+      -- thoroughly in the 'buildLogicalModelSelPermInfo' inline comments.
+      deps :: [SchemaDependency]
+      deps = getLogicalModelBoolExpDeps source lmn abe
+
   return (abe, Seq.fromList deps)
 
 annBoolExp ::

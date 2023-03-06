@@ -24,6 +24,7 @@ module Hasura.RQL.DDL.Permission
     runSetPermComment,
     PermInfo,
     buildPermInfo,
+    buildLogicalModelPermInfo,
     addPermissionToMetadata,
     annBoolExp,
   )
@@ -40,6 +41,7 @@ import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal
 import Hasura.RQL.IR.BoolExp
@@ -232,6 +234,25 @@ buildPermInfo x1 x2 x3 roleName = \case
   UpdPerm' p -> buildUpdPermInfo x1 x2 x3 p
   DelPerm' p -> buildDelPermInfo x1 x2 x3 p
 
+-- | Given the logical model's definition and the permissions as defined in the
+-- logical model's metadata, try to construct the permission definition.
+buildLogicalModelPermInfo ::
+  ( BackendMetadata b,
+    QErrM m,
+    TableCoreInfoRM b m,
+    GetAggregationPredicatesDeps b
+  ) =>
+  SourceName ->
+  LogicalModelName ->
+  FieldInfoMap (FieldInfo b) ->
+  PermDefPermission b perm ->
+  m (WithDeps (PermInfo perm b))
+buildLogicalModelPermInfo sourceName logicalModelName fieldInfoMap = \case
+  SelPerm' p -> buildLogicalModelSelPermInfo sourceName logicalModelName fieldInfoMap p
+  InsPerm' _ -> error "Not implemented yet"
+  UpdPerm' _ -> error "Not implemented yet"
+  DelPerm' _ -> error "Not implemented yet"
+
 doesPermissionExistInMetadata ::
   forall b.
   TableMetadata b ->
@@ -396,6 +417,79 @@ validateAllowedRootFields sourceName tableName roleName SelPerm {..} = do
         throw400 ValidationFailed $
           "The \"select_aggregate\" root field can only be enabled in the query_root_fields or "
             <> " the subscription_root_fields when \"allow_aggregations\" is set to true"
+
+-- | Given the logical model's definition and the permissions as defined in the
+-- logical model's metadata, try to construct the @SELECT@ permission
+-- definition.
+buildLogicalModelSelPermInfo ::
+  forall b m.
+  ( QErrM m,
+    TableCoreInfoRM b m,
+    BackendMetadata b,
+    GetAggregationPredicatesDeps b
+  ) =>
+  SourceName ->
+  LogicalModelName ->
+  FieldInfoMap (FieldInfo b) ->
+  SelPerm b ->
+  m (WithDeps (SelPermInfo b))
+buildLogicalModelSelPermInfo source logicalModelName fieldInfoMap sp = withPathK "permission" do
+  let columns :: [Column b]
+      columns = interpColSpec (ciColumn <$> getCols fieldInfoMap) (spColumns sp)
+
+  -- Interpret the row permissions in the 'SelPerm' definition.
+  (spiFilter, boolExpDeps) <-
+    withPathK "filter" $
+      procLogicalModelBoolExp source logicalModelName fieldInfoMap (spFilter sp)
+
+  let -- What parts of the metadata are interesting when computing the
+      -- permissions? These dependencies bubble all the way up to
+      -- 'buildSchemaCacheRule' so we can know when we need to rebuild the
+      -- schema.
+      deps :: Seq SchemaDependency
+      deps =
+        mconcat
+          [ Seq.singleton (mkLogicalModelParentDep @b source logicalModelName),
+            boolExpDeps,
+            fmap (mkLogicalModelColDep @b DRUntyped source logicalModelName) $
+              Seq.fromList columns
+          ]
+
+      -- What headers are required in order to evaluate a given permission? For
+      -- example, does the permission mention the user's ID? If so, this
+      -- permission will require @x-hasura-user-id@.
+      spiRequiredHeaders :: HashSet Text
+      spiRequiredHeaders = getDependentHeaders (spFilter sp)
+
+  -- Are any row limits being applied to the user's results?
+  spiLimit <- withPathK "limit" case spLimit sp of
+    Just value | value < 0 -> throw400 NotSupported "unexpected negative value"
+    _ -> pure (spLimit sp)
+
+  let -- The columns accessible to this role.
+      --
+      -- TODO: do we care about inherited roles? We don't seem to set this to
+      -- anything other than 'Nothing' for in 'buildSelPermInfo' either.
+      spiCols :: HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))
+      spiCols = HM.fromList (map (,Nothing) columns)
+
+      -- Logical models don't have computed fields.
+      spiComputedFields :: HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
+      spiComputedFields = mempty
+
+  let -- We don't need something like validateAllowedRootFields because we
+      -- don't have any primary key or aggregate fields (table_by_pk etc).
+      spiAllowedQueryRootFields :: AllowedRootFields QueryRootFieldType
+      spiAllowedQueryRootFields = spAllowedQueryRootFields sp
+
+      spiAllowedSubscriptionRootFields :: AllowedRootFields SubscriptionRootFieldType
+      spiAllowedSubscriptionRootFields = spAllowedSubscriptionRootFields sp
+
+      -- We don't currently allow for aggregations over logical models.
+      spiAllowAgg :: Bool
+      spiAllowAgg = spAllowAggregations sp
+
+  return (SelPermInfo {..}, deps)
 
 buildSelPermInfo ::
   forall b m.

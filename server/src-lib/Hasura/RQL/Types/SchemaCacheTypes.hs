@@ -10,6 +10,7 @@ module Hasura.RQL.Types.SchemaCacheTypes
     SchemaObjId (..),
     SourceObjId (..),
     TableObjId (..),
+    LogicalModelObjId (..),
     purgeDependentObject,
     purgeSourceAndSchemaDependencies,
     reasonToTxt,
@@ -28,6 +29,7 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Hasura.Base.Error
+import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (PartialSQLExp)
 import Hasura.RQL.Types.Backend
@@ -57,10 +59,24 @@ deriving instance Backend b => Eq (TableObjId b)
 
 instance (Backend b) => Hashable (TableObjId b)
 
+-- | Identifiers for components of logical models within the metadata. These
+-- are used to track dependencies within the resolved schema (see
+-- 'SourceInfo').
+data LogicalModelObjId (b :: BackendType)
+  = LMOPerm RoleName PermType
+  | LMOCol (Column b)
+  deriving (Generic)
+
+deriving stock instance (Backend b) => Eq (LogicalModelObjId b)
+
+instance (Backend b) => Hashable (LogicalModelObjId b)
+
 data SourceObjId (b :: BackendType)
   = SOITable (TableName b)
   | SOITableObj (TableName b) (TableObjId b)
   | SOIFunction (FunctionName b)
+  | SOILogicalModel LogicalModelName
+  | SOILogicalModelObj LogicalModelName (LogicalModelObjId b)
   deriving (Eq, Generic)
 
 instance (Backend b) => Hashable (SourceObjId b)
@@ -89,6 +105,11 @@ reportSchemaObj = \case
       \case
         SOITable tn -> "table " <> toTxt tn
         SOIFunction fn -> "function " <> toTxt fn
+        SOILogicalModel lmn -> "logical model " <> toTxt lmn
+        SOILogicalModelObj lmn (LMOCol cn) ->
+          "logical model column " <> toTxt lmn <> "." <> toTxt cn
+        SOILogicalModelObj lmn (LMOPerm rn pt) ->
+          "permission " <> toTxt lmn <> "." <> roleNameToTxt rn <> "." <> permTypeToCode pt
         SOITableObj tn (TOCol cn) ->
           "column " <> toTxt tn <> "." <> toTxt cn
         SOITableObj tn (TORel cn) ->
