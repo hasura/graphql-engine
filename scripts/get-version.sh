@@ -21,6 +21,7 @@ set -o pipefail
 # returned by this script, to fail. SERVER_TEST_MODE env var is used to
 # force the version to be set to the value in /build/_server_output/version.txt.
 # This is done only for test_oss_server_pg_* CI jobs in server test mode.
+SERVER_TEST_MODE=${SERVER_TEST_MODE:-false}
 if [[ "$SERVER_TEST_MODE" == "true" ]]; then
   VERSION="$(cat /build/_server_output/version.txt)"
   echo "$VERSION"
