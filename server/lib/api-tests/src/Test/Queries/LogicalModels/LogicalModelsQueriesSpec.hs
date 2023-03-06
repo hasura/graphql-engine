@@ -29,7 +29,7 @@ featureFlagForLogicalModels = "HASURA_FF_LOGICAL_MODEL_INTERFACE"
 spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.hgeWithEnv [(featureFlagForLogicalModels, "True")] $
-    Fixture.run
+    Fixture.runClean -- re-run fixture setup on every test
       ( NE.fromList
           [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
               { Fixture.setupTeardown = \(testEnvironment, _) ->
@@ -690,5 +690,194 @@ tests opts = do
                   article_with_excerpt:
                     - excerpt: "I like to eat dog food I am a dogs..."
               |]
+
+      actual `shouldBe` expected
+
+    it "Uses a column permission that we are allowed to access" $ \testEnv -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnv
+          source = BackendType.backendSourceName backendTypeMetadata
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnv
+            [yaml|
+              type: bulk
+              args:
+                - type: pg_track_logical_model
+                  args:
+                    type: query
+                    source: *source
+                    root_field_name: hello_world_perms
+                    code: *query
+                    returns:
+                      columns:
+                        one:
+                          type: text
+                        two:
+                          type: text
+                - type: pg_create_logical_model_select_permission
+                  args:
+                    source: *source
+                    root_field_name: hello_world_perms
+                    role: "test"
+                    permission:
+                      columns:
+                        - one
+                      filter: {}
+            |]
+        )
+        [yaml|
+          - message: success
+          - message: success
+        |]
+
+      let expected =
+            [yaml|
+                data:
+                  hello_world_perms:
+                    - one: "hello"
+                    - one: "welcome"
+              |]
+
+          actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphqlWithHeaders
+              testEnv
+              [("X-Hasura-Role", "test")]
+              [graphql|
+              query {
+                hello_world_perms {
+                  one
+                }
+              }
+           |]
+
+      actual `shouldBe` expected
+
+    it "Fails because we access a column we do not have permissions for" $ \testEnv -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnv
+          source = BackendType.backendSourceName backendTypeMetadata
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnv
+            [yaml|
+              type: bulk
+              args:
+                - type: pg_track_logical_model
+                  args:
+                    type: query
+                    source: *source
+                    root_field_name: hello_world_perms
+                    code: *query
+                    returns:
+                      columns:
+                        one:
+                          type: text
+                        two:
+                          type: text
+                - type: pg_create_logical_model_select_permission
+                  args:
+                    source: *source
+                    root_field_name: hello_world_perms
+                    role: "test"
+                    permission:
+                      columns:
+                        - two
+                      filter: {}
+            |]
+        )
+        [yaml|
+          - message: success
+          - message: success
+        |]
+
+      let expected =
+            [yaml|
+                errors:
+                  - extensions:
+                      code: validation-failed
+                      path: $.selectionSet.hello_world_perms.selectionSet.one
+                    message: "field 'one' not found in type: 'hello_world_perms'"
+            |]
+
+          actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphqlWithHeaders
+              testEnv
+              [("X-Hasura-Role", "test")]
+              [graphql|
+              query {
+                hello_world_perms {
+                  one
+                }
+              }
+           |]
+
+      actual `shouldBe` expected
+
+    it "Using row permissions filters out some results" $ \testEnv -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnv
+          source = BackendType.backendSourceName backendTypeMetadata
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnv
+            [yaml|
+              type: bulk
+              args:
+                - type: pg_track_logical_model
+                  args:
+                    type: query
+                    source: *source
+                    root_field_name: hello_world_perms
+                    code: *query
+                    returns:
+                      columns:
+                        one:
+                          type: text
+                        two:
+                          type: text
+                - type: pg_create_logical_model_select_permission
+                  args:
+                    source: *source
+                    root_field_name: hello_world_perms
+                    role: "test"
+                    permission:
+                      columns: "*"
+                      filter:
+                        one:
+                          _eq: "welcome"
+            |]
+        )
+        [yaml|
+          - message: success
+          - message: success
+        |]
+
+      let expected =
+            [yaml|
+                data:
+                  hello_world_perms:
+                    - one: "welcome"
+                      two: "friend"
+              |]
+
+          actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphqlWithHeaders
+              testEnv
+              [("X-Hasura-Role", "test")]
+              [graphql|
+              query {
+                hello_world_perms {
+                  one
+                  two
+                }
+              }
+           |]
 
       actual `shouldBe` expected

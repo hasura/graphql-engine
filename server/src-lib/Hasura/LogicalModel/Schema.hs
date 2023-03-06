@@ -13,12 +13,14 @@ import Hasura.GraphQL.Schema.Backend
   )
 import Hasura.GraphQL.Schema.Common
   ( SchemaT,
+    partialSQLExpToUnpreparedValue,
     retrieve,
+    scRole,
   )
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
-  ( customTypeSelectionList,
+  ( logicalModelSelectionList,
   )
 import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
 import Hasura.LogicalModel.IR (LogicalModel (..))
@@ -41,9 +43,19 @@ import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
   ( ResolvedSourceCustomization (_rscNamingConvention),
   )
+import Hasura.RQL.Types.Table (SelPermInfo (..), _permSel)
 import Hasura.SQL.AnyBackend (mkAnyBackend)
+import Hasura.Session (RoleName, adminRoleName)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
+
+-- | find list of columns we're allowed to access for this role
+getSelPermInfoForLogicalModel ::
+  RoleName ->
+  LogicalModelInfo b ->
+  Maybe (SelPermInfo b)
+getSelPermInfoForLogicalModel role logicalModel =
+  HM.lookup role (_lmiPermissions logicalModel) >>= _permSel
 
 defaultBuildLogicalModelRootFields ::
   forall b r m n.
@@ -55,11 +67,12 @@ defaultBuildLogicalModelRootFields ::
     r
     m
     (Maybe (P.FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
-defaultBuildLogicalModelRootFields LogicalModelInfo {..} = runMaybeT $ do
+defaultBuildLogicalModelRootFields logicalModel@LogicalModelInfo {..} = runMaybeT $ do
   let fieldName = getLogicalModelName _lmiRootFieldName
   logicalModelArgsParser <- logicalModelArgumentsSchema @b @r @m @n fieldName _lmiArguments
 
   sourceInfo :: SourceInfo b <- asks getter
+  roleName <- retrieve scRole
 
   let sourceName = _siName sourceInfo
       tCase = _rscNamingConvention $ _siCustomization sourceInfo
@@ -67,8 +80,8 @@ defaultBuildLogicalModelRootFields LogicalModelInfo {..} = runMaybeT $ do
 
   stringifyNumbers <- retrieve Options.soStringifyNumbers
 
-  selectionSetParser <- MaybeT $ customTypeSelectionList @b @r @m @n (getLogicalModelName _lmiRootFieldName) _lmiReturns
-  customTypesArgsParser <- lift $ customTypeArguments @b @r @m @n (getLogicalModelName _lmiRootFieldName) _lmiReturns
+  selectionSetParser <- MaybeT $ logicalModelSelectionList @b @r @m @n (getLogicalModelName _lmiRootFieldName) logicalModel
+  customTypesArgsParser <- lift $ logicalModelArguments @b @r @m @n (getLogicalModelName _lmiRootFieldName) _lmiReturns
 
   let interpolatedQuery lmArgs =
         InterpolatedQuery $
@@ -82,6 +95,14 @@ defaultBuildLogicalModelRootFields LogicalModelInfo {..} = runMaybeT $ do
                   error $ "No logical model arg passed for " <> show var
             )
             (getInterpolatedQuery _lmiCode)
+
+  let logicalModelPerm = case getSelPermInfoForLogicalModel roleName logicalModel of
+        Just selectPermissions ->
+          IR.TablePerm
+            { IR._tpFilter = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions,
+              IR._tpLimit = spiLimit selectPermissions
+            }
+        Nothing -> IR.TablePerm gBoolExpTrue Nothing
 
   pure $
     P.setFieldParserOrigin (MO.MOSourceObjId sourceName (mkAnyBackend $ MO.SMOLogicalModel @b _lmiRootFieldName)) $
@@ -104,7 +125,10 @@ defaultBuildLogicalModelRootFields LogicalModelInfo {..} = runMaybeT $ do
                         lmArgs,
                         lmInterpolatedQuery = interpolatedQuery lmArgs
                       },
-                IR._asnPerm = IR.TablePerm gBoolExpTrue Nothing,
+                IR._asnPerm =
+                  if roleName == adminRoleName
+                    then IR.TablePerm gBoolExpTrue Nothing
+                    else logicalModelPerm,
                 IR._asnArgs = args,
                 IR._asnStrfyNum = stringifyNumbers,
                 IR._asnNamingConvention = Just tCase

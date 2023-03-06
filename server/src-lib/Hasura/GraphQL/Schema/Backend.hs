@@ -303,16 +303,16 @@ class Backend b => BackendTableSelectSchema (b :: BackendType) where
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
 
 class Backend b => BackendCustomTypeSelectSchema (b :: BackendType) where
-  customTypeArguments ::
+  logicalModelArguments ::
     MonadBuildSourceSchema b r m n =>
     G.Name ->
     CustomReturnType b ->
     SchemaT r m (InputFieldsParser n (IR.SelectArgsG b (UnpreparedValue b)))
 
-  customTypeSelectionSet ::
+  logicalModelSelectionSet ::
     MonadBuildSourceSchema b r m n =>
     G.Name ->
-    CustomReturnType b ->
+    LogicalModelInfo b ->
     SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 
 class Backend b => BackendUpdateOperatorsSchema (b :: BackendType) where

@@ -31,6 +31,7 @@ module Hasura.GraphQL.Schema.Common
     StreamSelectExp,
     TablePerms,
     getTableRoles,
+    getLogicalModelRoles,
     askTableInfo,
     comparisonAggOperators,
     mapField,
@@ -71,7 +72,7 @@ import Hasura.GraphQL.Schema.Options (SchemaOptions)
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Typename
-import Hasura.LogicalModel.Cache (LogicalModelCache)
+import Hasura.LogicalModel.Cache (LogicalModelCache, _lmiPermissions)
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp
@@ -321,6 +322,11 @@ getTableRoles :: BackendSourceInfo -> [RoleName]
 getTableRoles bsi = AB.dispatchAnyBackend @Backend bsi go
   where
     go si = Map.keys . _tiRolePermInfoMap =<< Map.elems (_siTables si)
+
+getLogicalModelRoles :: BackendSourceInfo -> [RoleName]
+getLogicalModelRoles bsi = AB.dispatchAnyBackend @Backend bsi go
+  where
+    go si = Map.keys . _lmiPermissions =<< Map.elems (_siLogicalModels si)
 
 -- | Looks up table information for the given table name. This function
 -- should never fail, since the schema cache construction process is

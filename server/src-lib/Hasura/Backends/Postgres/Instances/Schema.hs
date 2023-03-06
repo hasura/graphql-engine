@@ -288,8 +288,8 @@ instance
   ) =>
   BS.BackendCustomTypeSelectSchema ('Postgres pgKind)
   where
-  customTypeArguments = defaultCustomTypeArgs
-  customTypeSelectionSet = defaultCustomTypeSelectionSet
+  logicalModelArguments = defaultLogicalModelArgs
+  logicalModelSelectionSet = defaultLogicalModelSelectionSet
 
 instance
   ( Backend ('Postgres pgKind),

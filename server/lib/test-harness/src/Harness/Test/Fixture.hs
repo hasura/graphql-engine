@@ -6,6 +6,7 @@
 -- Central types and functions are 'Fixture', 'SetupAction', and 'run'.
 module Harness.Test.Fixture
   ( run,
+    runClean,
     runSingleSetup,
     runWithLocalTestEnvironment,
     runWithLocalTestEnvironmentSingleSetup,
@@ -89,6 +90,14 @@ import Test.Hspec
 -- now. When we come to run specs in parallel this will be helpful.
 run :: NonEmpty (Fixture ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith GlobalTestEnvironment
 run = runSingleSetup
+
+-- this refreshes all the metadata on every test, so we can test mutations etc
+-- is much slower though so try `run` first
+runClean :: NonEmpty (Fixture ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith GlobalTestEnvironment
+runClean fixtures tests = do
+  runWithLocalTestEnvironment
+    fixtures
+    (\opts -> beforeWith (\(te, ()) -> return te) (tests opts))
 
 -- given a fresh HgeServerInstance, add it in our `TestEnvironment`
 useHgeInTestEnvironment :: GlobalTestEnvironment -> HgeServerInstance -> IO GlobalTestEnvironment

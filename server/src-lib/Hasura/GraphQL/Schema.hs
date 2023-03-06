@@ -44,7 +44,7 @@ import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Schema.RemoteRelationship
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename (MkTypename (..))
-import Hasura.LogicalModel.Cache (LogicalModelCache)
+import Hasura.LogicalModel.Cache (LogicalModelCache, _lmiPermissions)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR
@@ -115,13 +115,14 @@ buildGQLContext ::
     )
 buildGQLContext ServerConfigCtx {..} sources allRemoteSchemas allActions customTypes = do
   let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
-      nonTableRoles =
+      actionRoles =
         Set.insert adminRoleName $
           Set.fromList (allActionInfos ^.. folded . aiPermissions . to Map.keys . folded)
             <> Set.fromList (bool mempty remoteSchemasRoles $ _sccRemoteSchemaPermsCtx == Options.EnableRemoteSchemaPermissions)
       allActionInfos = Map.elems allActions
       allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
-      allRoles = nonTableRoles <> allTableRoles
+      allLogicalModelRoles = Set.fromList $ getLogicalModelRoles =<< Map.elems sources
+      allRoles = actionRoles <> allTableRoles <> allLogicalModelRoles
 
   contexts <-
     -- Buld role contexts in parallel. We'd prefer deterministic parallelism
@@ -697,12 +698,16 @@ buildLogicalModelFields ::
 buildLogicalModelFields sourceInfo logicalModels = runMaybeTmempty $ do
   roleName <- retrieve scRole
 
-  -- Logical models are only enabled for the admin role, pending the design of
-  -- permissions for logical models.
-  guard $ roleName == adminRoleName
+  map mkRF . catMaybes <$> for (Map.elems logicalModels) \logicalModel -> do
+    -- only include this logical model in the schema
+    -- if the current role is admin, or we have a select permission
+    -- for this role (this is the broad strokes check. later, we'll filter
+    -- more granularly on columns and then rows)
+    guard $
+      roleName == adminRoleName
+        || roleName `Map.member` _lmiPermissions logicalModel
 
-  map mkRF . catMaybes <$> for (Map.elems logicalModels) \model -> do
-    lift (buildLogicalModelRootFields model)
+    lift (buildLogicalModelRootFields logicalModel)
   where
     mkRF ::
       FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)) ->
