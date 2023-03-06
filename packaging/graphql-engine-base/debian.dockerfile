@@ -1,6 +1,6 @@
-# DATE VERSION: 2022-08-02
+# DATE VERSION: 2023-03-06
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image for security updates
-FROM debian:buster-20220711-slim
+FROM debian:buster-20230227-slim
 
 # TARGETPLATFORM is automatically set up by docker buildx based on the platform we are targetting for
 ARG TARGETPLATFORM
