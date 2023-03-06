@@ -48,7 +48,7 @@ export type FieldWrapperPassThroughProps = {
     /**
      * The field label
      */
-    label: string;
+    label?: string;
     /**
      * The field label icon. Can be set only if label is set.
      */

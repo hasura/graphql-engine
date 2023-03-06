@@ -163,14 +163,12 @@ export const VariantWithTooltip: ComponentStory<typeof InputField> = () => {
 
   return (
     <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
-      {() => (
-        <InputField
-          name="inputFieldName"
-          label="The inputField label"
-          placeholder="The inputField placeholder"
-          tooltip="InputField tooltip"
-        />
-      )}
+      <InputField
+        name="inputFieldName"
+        label="The inputField label"
+        placeholder="The inputField placeholder"
+        tooltip="InputField tooltip"
+      />
     </SimpleForm>
   );
 };

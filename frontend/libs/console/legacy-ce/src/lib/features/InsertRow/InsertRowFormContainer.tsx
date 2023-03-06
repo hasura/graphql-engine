@@ -2,8 +2,9 @@ import { hasuraToast } from '../../new-components/Toasts';
 import { useState } from 'react';
 import { useInsertRow, FormData } from '../Data/hooks/useInsertRow';
 import { useListAllTableColumns } from '../Data/hooks/useListAllTableColumns';
+import { getPlaceholder } from './utils/getPlaceholder';
 import { Table } from '../hasura-metadata-types/source/table';
-import { InsertRowForm } from './InsertRowForm';
+import { InsertRowForm, InsertRowFormProps } from './InsertRowForm';
 
 type InsertRowFormContainerProps = {
   dataSourceName: string;
@@ -46,9 +47,18 @@ export const InsertRowFormContainer = ({
     setInserting(false);
   };
 
+  const columnsWithPlaceholder: InsertRowFormProps['columns'] = columns.map(
+    column => {
+      return {
+        ...column,
+        placeholder: getPlaceholder(column.dataType),
+      };
+    }
+  );
+
   return (
     <InsertRowForm
-      columns={columns}
+      columns={columnsWithPlaceholder}
       isInserting={isInserting}
       isLoading={isLoading}
       onInsertRow={onInsertRow}

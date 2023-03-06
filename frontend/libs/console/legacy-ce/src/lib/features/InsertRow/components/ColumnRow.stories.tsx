@@ -26,6 +26,8 @@ Base.args = {
   isNullDisabled: false,
   isDefaultDisabled: false,
   resetToken: '',
+  placeholder: 'placeholder...',
+  dataType: 'number',
 };
 
 export const Disabled = Template.bind({});
@@ -44,4 +46,18 @@ export const NoDefaultValue = Template.bind({});
 NoDefaultValue.args = {
   ...Base.args,
   isDefaultDisabled: true,
+};
+
+export const StringColumn = Template.bind({});
+StringColumn.args = {
+  ...Base.args,
+  dataType: 'string',
+  placeholder: 'string...',
+};
+
+export const JsonColumn = Template.bind({});
+JsonColumn.args = {
+  ...Base.args,
+  dataType: 'json',
+  placeholder: 'json...',
 };

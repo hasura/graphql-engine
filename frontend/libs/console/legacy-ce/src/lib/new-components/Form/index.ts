@@ -3,6 +3,8 @@ export * from './CheckboxesField';
 export * from './CodeEditorField';
 export * from './SimpleForm';
 export { InputField } from './InputField';
+export { Input } from './Input';
+export type { InputProps } from './Input';
 export type { InputFieldProps } from './InputField';
 export * from './GraphQLSanitizedInputField';
 export * from './Radio';

@@ -5,6 +5,7 @@ import addons from '@storybook/addons';
 import { DocsContainer, DocsPage } from '@storybook/addon-docs';
 import { initialize, mswDecorator } from 'msw-storybook-addon';
 import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
+import mockDateDecorator from '@netsells/storybook-mockdate';
 import theme from './theme';
 import 'react-loading-skeleton/dist/skeleton.css';
 import '../src/lib/theme/tailwind.css';
@@ -69,6 +70,7 @@ export const parameters = {
 export const decorators = [
   (fn, c) => <Provider store={store}>{fn(c)}</Provider>,
   mswDecorator,
+  mockDateDecorator,
   Story => {
     document.body.classList.add('hasura-tailwind-on');
     return (

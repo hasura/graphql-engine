@@ -108,8 +108,8 @@ describe('generateGraphQLInsertMutation for table with', () => {
     });
     const expectedGqlQuery = `
     mutation insertAlbumRows {
-      MySourceNamespace(objects: [{AlbumId: 1, ArtistId: 1, Title: "foo"}, {AlbumId: 2, ArtistId: 2, Title: "bar"}]) {
-        CustomInsertRoot {
+      MySourceNamespace {
+        CustomInsertRoot(objects: [{AlbumId: 1, ArtistId: 1, Title: "foo"}, {AlbumId: 2, ArtistId: 2, Title: "bar"}]) {
           affected_rows
         }
       }

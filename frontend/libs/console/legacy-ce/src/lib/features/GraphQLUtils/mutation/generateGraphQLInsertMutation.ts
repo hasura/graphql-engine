@@ -35,7 +35,9 @@ export const generateGraphQLInsertMutation = ({
       return `{${Object.entries(object)
         .map(
           ([column, value]) =>
-            `${column}: ${typeof value === 'string' ? `"${value}"` : value}`
+            `${column}: ${
+              typeof value === 'string' ? JSON.stringify(value) : value
+            }`
         )
         .join()}}`;
     })
@@ -46,10 +48,8 @@ export const generateGraphQLInsertMutation = ({
    */
   if (sourceCustomization?.root_fields?.namespace) {
     const mutationString = `mutation ${mutationName ?? 'MyMutation'}  {
-      ${
-        sourceCustomization.root_fields.namespace
-      } (objects: [ ${objectToInsert} ]) {
-        ${queryRoot} {
+      ${sourceCustomization.root_fields.namespace} {
+        ${queryRoot} (objects: [ ${objectToInsert} ]){
           affected_rows
         }
       }

@@ -20,29 +20,42 @@ export const Base = Template.bind({});
 const columns: InsertRowFormProps['columns'] = [
   {
     name: 'id',
-    dataType: 'string',
-    consoleDataType: 'string',
+    dataType: 'bigint',
+    consoleDataType: 'number',
     config: {
       comment: '',
     },
     isPrimaryKey: true,
+    placeholder: 'bigint',
   },
   {
     name: 'name',
-    dataType: 'string',
+    dataType: 'text',
     consoleDataType: 'string',
     config: {
       comment: '',
     },
+    placeholder: 'text',
   },
   {
-    name: 'surname',
-    dataType: 'string',
-    consoleDataType: 'string',
+    name: 'json',
+    dataType: 'jsonb',
+    consoleDataType: 'json',
     config: {
       comment: '',
     },
     nullable: true,
+    placeholder: '{"name":"john"}',
+  },
+  {
+    name: 'date',
+    dataType: 'date',
+    consoleDataType: 'text',
+    config: {
+      comment: '',
+    },
+    nullable: true,
+    placeholder: '2023-02-01',
   },
 ];
 
