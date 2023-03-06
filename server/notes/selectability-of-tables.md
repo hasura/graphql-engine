@@ -1,6 +1,6 @@
-This note is in [Hasura.GraphQL.Schema.Select](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Select.hs#L314).
+This note is in [Hasura.GraphQL.Schema.Select](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Select.hs#L315).
 It is referenced at:
-  - line 429 of [Hasura.GraphQL.Schema.Select](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Select.hs#L429)
+  - line 430 of [Hasura.GraphQL.Schema.Select](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Select.hs#L430)
 
 # Selectability of tables
 
