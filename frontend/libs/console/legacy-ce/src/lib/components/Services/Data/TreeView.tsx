@@ -21,6 +21,8 @@ import {
 } from '../../Common/utils/routesUtils';
 import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 import { GDCTree } from './GDCTree/GDCTree';
+import { useTreeData } from './GDCTree';
+import { DataNode } from 'antd/lib/tree';
 
 type SourceItemsTypes =
   | 'database'
@@ -408,7 +410,11 @@ const TreeView: React.FC<TreeViewProps> = ({
     onDatabaseChange(dataSource);
   };
 
-  if (items.length === 0) {
+  const { data: gdcDatabases } = useTreeData();
+
+  const allDatabases = [...items, ...(gdcDatabases ?? [])];
+
+  if (allDatabases.length === 0) {
     return preLoadState ? (
       <div className={styles.treeNav}>
         <span className={`${styles.title} ${styles.padd_bottom_small}`}>
@@ -453,7 +459,7 @@ const TreeView: React.FC<TreeViewProps> = ({
         />
       ))}
       <div id="tree-container" className="inline-block">
-        <GDCTree onSelect={gdcItemClick} />
+        <GDCTree onSelect={gdcItemClick} treeData={gdcDatabases ?? []} />
       </div>
     </div>
   );
