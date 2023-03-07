@@ -5,6 +5,7 @@ import { metadataHandlers as allowListMetadataHandlers } from '../features/Allow
 import { metadataHandlers as adhocEventMetadataHandlers } from '../features/AdhocEvents';
 import { metadataHandlers as queryCollectionMetadataHandlers } from '../features/QueryCollections';
 import { metadataHandlers as openTelemetryMetadataHandlers } from '../features/OpenTelemetry';
+import { metadataHandlers as dataMetadataHandlers } from '../features/Data';
 
 import { TMigration } from '../features/MetadataAPI/hooks/useMetadataMigration';
 
@@ -32,6 +33,7 @@ const metadataHandlers: Partial<Record<allowedMetadataTypes, MetadataReducer>> =
     ...queryCollectionMetadataHandlers,
     ...adhocEventMetadataHandlers,
     ...openTelemetryMetadataHandlers,
+    ...dataMetadataHandlers,
   };
 
 export const metadataReducer: MetadataReducer = (state, action) => {
