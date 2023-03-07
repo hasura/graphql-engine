@@ -295,7 +295,8 @@ tests opts = do
                 source: *source
                 root_field_name: hello_world_function_with_dummy
                 arguments:
-                  dummy: varchar
+                  dummy:
+                    type: varchar
                 code: *query
                 returns:
                   columns:
@@ -412,7 +413,8 @@ tests opts = do
                 root_field_name: article_with_excerpt
                 code: *spicyQuery
                 arguments:
-                  length: int
+                  length:
+                    type: int
                 returns:
                   columns:
                     id:
@@ -482,7 +484,8 @@ tests opts = do
                 root_field_name: article_with_excerpt_1
                 code: *spicyQuery
                 arguments:
-                  length: int
+                  length:
+                    type: int
                 returns:
                   columns:
                     id:
@@ -511,7 +514,8 @@ tests opts = do
                 root_field_name: article_with_excerpt_2
                 code: *spicyQuery
                 arguments:
-                  length: int
+                  length:
+                    type: int
                 returns:
                   columns:
                     id:
@@ -580,7 +584,8 @@ tests opts = do
                 root_field_name: article_with_excerpt
                 code: *spicyQuery
                 arguments:
-                  length: int
+                  length:
+                    type: int
                 returns:
                   columns:
                     id:
@@ -649,7 +654,8 @@ tests opts = do
                 root_field_name: article_with_excerpt
                 code: *spicyQuery
                 arguments:
-                  length: int
+                  length:
+                    type: int
                 returns:
                   columns:
                     id:

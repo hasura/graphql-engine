@@ -28,10 +28,10 @@ import Hasura.Base.Error
 import Hasura.CustomReturnType (CustomReturnType)
 import Hasura.EncJSON
 import Hasura.LogicalModel.Metadata (LogicalModelArgumentName, LogicalModelMetadata (..), lmmSelectPermissions, parseInterpolatedQuery)
-import Hasura.LogicalModel.Types
+import Hasura.LogicalModel.Types (LogicalModelName, NullableScalarType)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
-import Hasura.RQL.Types.Backend (Backend, ScalarType, SourceConnConfiguration)
+import Hasura.RQL.Types.Backend (Backend, SourceConnConfiguration)
 import Hasura.RQL.Types.Common (SourceName, defaultSource, sourceNameToText, successMsg)
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
@@ -49,7 +49,7 @@ data TrackLogicalModel (b :: BackendType) = TrackLogicalModel
   { tlmSource :: SourceName,
     tlmRootFieldName :: LogicalModelName,
     tlmCode :: Text,
-    tlmArguments :: HashMap LogicalModelArgumentName (ScalarType b),
+    tlmArguments :: HashMap LogicalModelArgumentName (NullableScalarType b),
     tlmDescription :: Maybe Text,
     tlmReturns :: CustomReturnType b
   }

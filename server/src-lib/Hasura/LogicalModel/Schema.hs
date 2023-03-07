@@ -25,16 +25,13 @@ import Hasura.GraphQL.Schema.Select
 import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
 import Hasura.LogicalModel.IR (LogicalModel (..))
 import Hasura.LogicalModel.Metadata (InterpolatedQuery (..), LogicalModelArgumentName (getLogicalModelArgumentName))
-import Hasura.LogicalModel.Types (getLogicalModelName)
+import Hasura.LogicalModel.Types (NullableScalarType (..), getLogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (gBoolExpTrue)
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Select (QueryDB (QDBMultipleRows))
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value (UnpreparedValue (UVParameter), openValueOrigin)
-import Hasura.RQL.Types.Backend
-  ( Backend (ScalarType),
-  )
 import Hasura.RQL.Types.Column qualified as Column
 import Hasura.RQL.Types.Metadata.Object qualified as MO
 import Hasura.RQL.Types.Source
@@ -138,7 +135,7 @@ logicalModelArgumentsSchema ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   G.Name ->
-  HashMap LogicalModelArgumentName (ScalarType b) ->
+  HashMap LogicalModelArgumentName (NullableScalarType b) ->
   MaybeT (SchemaT r m) (P.InputFieldsParser n (HashMap LogicalModelArgumentName (Column.ColumnValue b)))
 logicalModelArgumentsSchema logicalModelName argsSignature = do
   -- Lift 'SchemaT r m (InputFieldsParser ..)' into a monoid using Applicative.
@@ -147,18 +144,20 @@ logicalModelArgumentsSchema logicalModelName argsSignature = do
   argsParser <-
     getAp $
       foldMap
-        ( \(name, ty) -> Ap do
+        ( \(name, NullableScalarType {nstType, nstNullable, nstDescription}) -> Ap do
             argValueParser <-
               fmap (HM.singleton name . openValueOrigin)
-                <$> lift (columnParser (Column.ColumnScalar ty) (G.Nullability False))
-            -- TODO: Break in some interesting way if we cannot make a name?
+                <$> lift (columnParser (Column.ColumnScalar nstType) (G.Nullability nstNullable))
             -- TODO: Naming conventions?
             -- TODO: Custom fields? (Probably not)
             argName <- hoistMaybe (G.mkName (getLogicalModelArgumentName name))
-            return $
+            let description = case nstDescription of
+                  Just desc -> G.Description desc
+                  Nothing -> G.Description ("Logical model argument " <> getLogicalModelArgumentName name)
+            pure $
               P.field
                 argName
-                (Just $ G.Description ("Logical model argument " <> getLogicalModelArgumentName name))
+                (Just description)
                 argValueParser
         )
         (HM.toList argsSignature)

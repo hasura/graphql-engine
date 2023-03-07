@@ -98,7 +98,8 @@ tests opts = do
                   root_field_name: article_with_excerpt
                   code: *spicyQuery
                   arguments:
-                    length: int
+                    length:
+                      type: int
                   returns:
                     columns:
                       id:

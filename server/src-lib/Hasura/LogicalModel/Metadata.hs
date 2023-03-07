@@ -31,7 +31,7 @@ import Data.Bifunctor (first)
 import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec)
 import Data.Text qualified as T
 import Hasura.CustomReturnType (CustomReturnType)
-import Hasura.LogicalModel.Types
+import Hasura.LogicalModel.Types (LogicalModelName (..), NullableScalarType)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend
@@ -128,7 +128,7 @@ data LogicalModelMetadata (b :: BackendType) = LogicalModelMetadata
   { _lmmRootFieldName :: LogicalModelName,
     _lmmCode :: InterpolatedQuery LogicalModelArgumentName,
     _lmmReturns :: CustomReturnType b,
-    _lmmArguments :: HashMap LogicalModelArgumentName (ScalarType b),
+    _lmmArguments :: HashMap LogicalModelArgumentName (NullableScalarType b),
     _lmmSelectPermissions :: InsOrdHashMap RoleName (SelPermDef b),
     _lmmDescription :: Maybe Text
   }

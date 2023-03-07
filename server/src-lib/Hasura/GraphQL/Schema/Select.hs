@@ -46,7 +46,7 @@ import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
-import Hasura.CustomReturnType (CustomColumn (..), CustomReturnType (..))
+import Hasura.CustomReturnType (CustomReturnType (..))
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
@@ -66,6 +66,7 @@ import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename
 import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
+import Hasura.LogicalModel.Types (NullableScalarType (..))
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
@@ -503,22 +504,22 @@ defaultLogicalModelSelectionSet name logicalModelInfo = runMaybeT $ do
           Permission.PCStar -> True
           Permission.PCCols cols -> column `elem` cols
 
-  let parseField (column, CustomColumn {..}) = do
+  let parseField (column, NullableScalarType {..}) = do
         let -- Currently, row-level permissions are unsupported for custom
             -- return types. In fact, permissions are unsupported: the feature
             -- is assumed to be admin-only. If you've been asked to implement
             -- permissions, this is the place.
             caseBoolExpUnpreparedValue = Nothing
 
-            columnType = ColumnScalar ccType
+            columnType = ColumnScalar nstType
             pathArg = scalarSelectionArgumentsParser columnType
 
         columnName <- hoistMaybe (G.mkName (toTxt column))
 
-        field <- lift $ columnParser columnType (G.Nullability ccNullable)
+        field <- lift $ columnParser columnType (G.Nullability nstNullable)
 
         pure $!
-          P.selection columnName (G.Description <$> ccDescription) pathArg field
+          P.selection columnName (G.Description <$> nstDescription) pathArg field
             <&> IR.mkAnnColumnField column columnType caseBoolExpUnpreparedValue
 
   let fieldName = name
@@ -1069,7 +1070,7 @@ tableAggregationFields tableInfo = do
                 then Nothing
                 else Just $
                   for customOperatorsAndColumns \(operator, columnTypes) -> do
-                    customFields <- traverse (uncurry mkCustomColumnAggField) (toList columnTypes)
+                    customFields <- traverse (uncurry mkNullableScalarTypeAggField) (toList columnTypes)
                     pure $ Map.singleton (C.fromCustomName operator) customFields
             ]
     let nonCountFields =
@@ -1124,8 +1125,8 @@ tableAggregationFields tableInfo = do
           field
           $> IR.CFCol (ciColumn columnInfo) (ciType columnInfo)
 
-    mkCustomColumnAggField :: ColumnInfo b -> ScalarType b -> SchemaT r m (FieldParser n (IR.ColFld b))
-    mkCustomColumnAggField columnInfo resultType =
+    mkNullableScalarTypeAggField :: ColumnInfo b -> ScalarType b -> SchemaT r m (FieldParser n (IR.ColFld b))
+    mkNullableScalarTypeAggField columnInfo resultType =
       mkColumnAggField' columnInfo (ColumnScalar resultType)
 
     countField :: SchemaT r m (FieldParser n (IR.AggregateField b))

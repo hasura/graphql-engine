@@ -81,8 +81,10 @@ tests opts = do
                 root_field_name: divided_stuff
                 code: *query
                 arguments:
-                  denominator: int
-                  target_date: date
+                  denominator:
+                    type: int
+                  target_date:
+                    type: date
                 returns:
                   columns:
                     divided:
@@ -153,7 +155,8 @@ tests opts = do
                 root_field_name: divided_stuff
                 code: *simpleQuery
                 arguments:
-                  unused: int
+                  unused:
+                    type: int
                 returns:
                   columns:
                     divided:
@@ -179,8 +182,10 @@ tests opts = do
                 root_field_name: divided_stuff
                 code: "SELECT * FROM dogs WHERE name = {{name"
                 arguments:
-                  denominator: int
-                  target_date: date
+                  denominator:
+                    type: int
+                  target_date:
+                    type: date
                 returns:
                   columns:
                     divided:
@@ -207,8 +212,10 @@ tests opts = do
                 root_field_name: divided_stuff
                 code: *query
                 arguments:
-                  denominator: int
-                  target_date: date
+                  denominator:
+                    type: int
+                  target_date:
+                    type: date
                 returns:
                   columns:
                     divided:
@@ -234,8 +241,12 @@ tests opts = do
           - root_field_name: divided_stuff
             code: *query
             arguments:
-              denominator: int
-              target_date: date
+              denominator:
+                type: int
+                nullable: false
+              target_date:
+                type: date
+                nullable: false
             returns:
               columns:
                     divided:
@@ -256,8 +267,10 @@ tests opts = do
               root_field_name: divided_stuff
               code: *query
               arguments:
-                denominator: int
-                target_date: date
+                denominator:
+                  type: int
+                target_date:
+                  type: date
               returns:
                 columns:
                   divided:
@@ -292,8 +305,10 @@ tests opts = do
               root_field_name: divided_stuff
               code: *query
               arguments:
-                denominator: int
-                target_date: date
+                denominator:
+                  type: int
+                target_date:
+                  type: date
               returns:
                 columns:
                   divided:
@@ -339,7 +354,8 @@ tests opts = do
                 code: |
                   SELECT thing / 2 AS divided, null as something_nullable FROM stuff
                 arguments:
-                  unused: int
+                  unused:
+                    type: int
                 returns:
                   description: "Return type description"
                   columns:
@@ -455,8 +471,10 @@ tests opts = do
                   root_field_name: divided_stuff
                   code: *spicyQuery
                   arguments:
-                    denominator: int
-                    target_date: date
+                    denominator:
+                      type: int
+                    target_date:
+                      type: date
                   returns:
                     columns:
                       divided:
@@ -497,8 +515,10 @@ tests opts = do
                   root_field_name: divided_stuff
                   code: *spicyQuery
                   arguments:
-                    denominator: int
-                    target_date: date
+                    denominator:
+                      type: int
+                    target_date:
+                      type: date
                   returns:
                     columns:
                       divided:
@@ -538,7 +558,8 @@ tests opts = do
                     root_field_name: divided_stuff
                     code: *simpleQuery
                     arguments:
-                      unused: int
+                      unused:
+                        type: int
                     returns:
                       columns:
                         divided:
@@ -574,7 +595,9 @@ tests opts = do
           - root_field_name: divided_stuff
             code: *simpleQuery
             arguments:
-              unused: int
+              unused:
+                type: int
+                nullable: false
             select_permissions:
               - role: "test"
                 permission:
@@ -656,7 +679,8 @@ tests opts = do
                     root_field_name: divided_stuff
                     code: *simpleQuery
                     arguments:
-                      unused: int
+                      unused:
+                        type: int
                     returns:
                       columns:
                         divided:
@@ -698,7 +722,9 @@ tests opts = do
           - root_field_name: divided_stuff
             code: *simpleQuery
             arguments:
-              unused: int
+              unused:
+                type: int
+                nullable: false
             returns:
               columns:
                 divided:
@@ -768,8 +794,10 @@ tests opts = do
                       root_field_name: divided_stuff2
                       code: *simpleQuery
                       arguments:
-                        denominator: int
-                        target_date: date
+                        denominator:
+                          type: int
+                        target_date:
+                          type: date
                       returns:
                         columns:
                           divided:
@@ -785,8 +813,10 @@ tests opts = do
                       root_field_name: divided_stuff2
                       code: *simpleQuery
                       arguments:
-                        denominator: int
-                        target_date: date
+                        denominator:
+                          type: int
+                        target_date:
+                          type: date
                       returns:
                         columns:
                           divided:

@@ -5,7 +5,8 @@ where
 
 import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended (ToTxt (toTxt))
-import Hasura.CustomReturnType (CustomColumn (..), CustomReturnType (..))
+import Hasura.CustomReturnType (CustomReturnType (..))
+import Hasura.LogicalModel.Types (NullableScalarType (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnType (..))
@@ -21,16 +22,16 @@ toFieldInfo customReturnType =
     traverseWithIndex :: (Applicative m) => (Int -> aa -> m bb) -> [aa] -> m [bb]
     traverseWithIndex f = zipWithM f [0 ..]
 
-    customTypeToColumnInfo :: Int -> (Column b, CustomColumn b) -> Maybe (ColumnInfo b)
-    customTypeToColumnInfo i (column, CustomColumn {..}) = do
+    customTypeToColumnInfo :: Int -> (Column b, NullableScalarType b) -> Maybe (ColumnInfo b)
+    customTypeToColumnInfo i (column, NullableScalarType {..}) = do
       name <- G.mkName (toTxt column)
       pure $
         ColumnInfo
           { ciColumn = column,
             ciName = name,
             ciPosition = i,
-            ciType = ColumnScalar ccType,
-            ciIsNullable = ccNullable,
-            ciDescription = G.Description <$> ccDescription,
+            ciType = ColumnScalar nstType,
+            ciIsNullable = nstNullable,
+            ciDescription = G.Description <$> nstDescription,
             ciMutability = ColumnMutability {_cmIsInsertable = False, _cmIsUpdatable = False}
           }
