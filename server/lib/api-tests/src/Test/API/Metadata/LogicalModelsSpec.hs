@@ -82,7 +82,7 @@ tests opts = do
                 code: *query
                 arguments:
                   denominator:
-                    type: int
+                    type: integer
                   target_date:
                     type: date
                 returns:
@@ -156,7 +156,7 @@ tests opts = do
                 code: *simpleQuery
                 arguments:
                   unused:
-                    type: int
+                    type: integer
                 returns:
                   columns:
                     divided:
@@ -183,7 +183,7 @@ tests opts = do
                 code: "SELECT * FROM dogs WHERE name = {{name"
                 arguments:
                   denominator:
-                    type: int
+                    type: integer
                   target_date:
                     type: date
                 returns:
@@ -213,7 +213,7 @@ tests opts = do
                 code: *query
                 arguments:
                   denominator:
-                    type: int
+                    type: integer
                   target_date:
                     type: date
                 returns:
@@ -242,7 +242,7 @@ tests opts = do
             code: *query
             arguments:
               denominator:
-                type: int
+                type: integer
                 nullable: false
               target_date:
                 type: date
@@ -268,7 +268,7 @@ tests opts = do
               code: *query
               arguments:
                 denominator:
-                  type: int
+                  type: integer
                 target_date:
                   type: date
               returns:
@@ -306,7 +306,7 @@ tests opts = do
               code: *query
               arguments:
                 denominator:
-                  type: int
+                  type: integer
                 target_date:
                   type: date
               returns:
@@ -355,7 +355,7 @@ tests opts = do
                   SELECT thing / 2 AS divided, null as something_nullable FROM stuff
                 arguments:
                   unused:
-                    type: int
+                    type: integer
                 returns:
                   description: "Return type description"
                   columns:
@@ -472,7 +472,7 @@ tests opts = do
                   code: *spicyQuery
                   arguments:
                     denominator:
-                      type: int
+                      type: integer
                     target_date:
                       type: date
                   returns:
@@ -516,7 +516,7 @@ tests opts = do
                   code: *spicyQuery
                   arguments:
                     denominator:
-                      type: int
+                      type: integer
                     target_date:
                       type: date
                   returns:
@@ -559,7 +559,7 @@ tests opts = do
                     code: *simpleQuery
                     arguments:
                       unused:
-                        type: int
+                        type: integer
                     returns:
                       columns:
                         divided:
@@ -596,7 +596,7 @@ tests opts = do
             code: *simpleQuery
             arguments:
               unused:
-                type: int
+                type: integer
                 nullable: false
             select_permissions:
               - role: "test"
@@ -680,7 +680,7 @@ tests opts = do
                     code: *simpleQuery
                     arguments:
                       unused:
-                        type: int
+                        type: integer
                     returns:
                       columns:
                         divided:
@@ -723,7 +723,7 @@ tests opts = do
             code: *simpleQuery
             arguments:
               unused:
-                type: int
+                type: integer
                 nullable: false
             returns:
               columns:
@@ -795,7 +795,7 @@ tests opts = do
                       code: *simpleQuery
                       arguments:
                         denominator:
-                          type: int
+                          type: integer
                         target_date:
                           type: date
                       returns:
@@ -814,7 +814,7 @@ tests opts = do
                       code: *simpleQuery
                       arguments:
                         denominator:
-                          type: int
+                          type: integer
                         target_date:
                           type: date
                       returns:

@@ -99,7 +99,7 @@ tests opts = do
                   code: *spicyQuery
                   arguments:
                     length:
-                      type: int
+                      type: integer 
                   returns:
                     columns:
                       id:

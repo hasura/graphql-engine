@@ -414,7 +414,7 @@ tests opts = do
                 code: *spicyQuery
                 arguments:
                   length:
-                    type: int
+                    type: integer
                 returns:
                   columns:
                     id:
@@ -437,7 +437,7 @@ tests opts = do
               testEnvironment
               [graphql|
               query {
-                article_with_excerpt(args: { length: "34" }) {
+                article_with_excerpt(args: { length: 34 }) {
                   id
                   title
                   date
@@ -485,7 +485,7 @@ tests opts = do
                 code: *spicyQuery
                 arguments:
                   length:
-                    type: int
+                    type: integer
                 returns:
                   columns:
                     id:
@@ -515,7 +515,7 @@ tests opts = do
                 code: *spicyQuery
                 arguments:
                   length:
-                    type: int
+                    type: integer
                 returns:
                   columns:
                     id:
@@ -538,7 +538,7 @@ tests opts = do
               testEnvironment
               [graphql|
               query {
-                article_with_excerpt_1(args: { length: "34" }) {
+                article_with_excerpt_1(args: { length: 34 }) {
                   excerpt
                 }
                 article_with_excerpt_2(args: { length: "13" }) {
@@ -585,7 +585,7 @@ tests opts = do
                 code: *spicyQuery
                 arguments:
                   length:
-                    type: int
+                    type: integer
                 returns:
                   columns:
                     id:
@@ -608,10 +608,10 @@ tests opts = do
               testEnvironment
               [graphql|
               query {
-                first: article_with_excerpt(args: { length: "34" }) {
+                first: article_with_excerpt(args: { length: 34 }) {
                   excerpt
                 }
-                second: article_with_excerpt(args: { length: "13" }) {
+                second: article_with_excerpt(args: { length: 13 }) {
                   excerpt
                 }
               }
@@ -655,7 +655,7 @@ tests opts = do
                 code: *spicyQuery
                 arguments:
                   length:
-                    type: int
+                    type: integer
                 returns:
                   columns:
                     id:
@@ -674,7 +674,7 @@ tests opts = do
 
       let variables =
             [yaml|
-              length: "34"
+              length: 34
             |]
 
           actual :: IO Value
@@ -682,7 +682,7 @@ tests opts = do
             GraphqlEngine.postGraphqlWithVariables
               testEnvironment
               [graphql|
-                query MyQuery($length: int!) {
+                query MyQuery($length: Int!) {
                   article_with_excerpt(args: { length: $length }) {
                     excerpt
                   }
