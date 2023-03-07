@@ -200,6 +200,7 @@ bqDBRemoteRelationshipPlan ::
   forall m.
   ( MonadError QErr m
   ) =>
+  Env.Environment ->
   UserInfo ->
   SourceName ->
   SourceConfig 'BigQuery ->
@@ -217,7 +218,7 @@ bqDBRemoteRelationshipPlan ::
   Maybe G.Name ->
   Options.StringifyNumbers ->
   m (DBStepInfo 'BigQuery)
-bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship reqHeaders operationName stringifyNumbers = do
+bqDBRemoteRelationshipPlan _env userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship reqHeaders operationName stringifyNumbers = do
   flip runReaderT emptyQueryTagsComment $ bqDBQueryPlan userInfo Env.emptyEnvironment sourceName sourceConfig rootSelection reqHeaders operationName
   where
     coerceToColumn = BigQuery.ColumnName . getFieldNameTxt

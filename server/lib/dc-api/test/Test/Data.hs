@@ -26,11 +26,13 @@ module Test.Data
     insertField,
     deleteField,
     field,
+    fieldAt,
     _ColumnFieldNumber,
     _ColumnFieldString,
     _ColumnFieldBoolean,
     _ColumnFieldNull,
     _RelationshipFieldRows,
+    scalarValueComparison,
     orderByColumn,
     insertAutoIncPk,
     autoIncPks,
@@ -43,7 +45,7 @@ where
 import Codec.Compression.GZip qualified as GZip
 import Command (NameCasing (..), TestConfig (..))
 import Control.Arrow (first, (>>>))
-import Control.Lens (Index, IxValue, Ixed, Traversal', at, ix, (%~), (&), (?~), (^.), (^..), (^?), _Just)
+import Control.Lens (At, Index, IxValue, Ixed, Traversal', at, ix, (%~), (&), (?~), (^.), (^..), (^?), _Just)
 import Data.Aeson (eitherDecodeStrict)
 import Data.Aeson qualified as J
 import Data.Aeson.Lens (_Bool, _Null, _Number, _String)
@@ -654,6 +656,9 @@ deleteField fieldName = HashMap.delete (API.FieldName fieldName)
 field :: (Ixed m, Index m ~ API.FieldName) => Text -> Traversal' m (IxValue m)
 field fieldName = ix (API.FieldName fieldName)
 
+fieldAt :: (At m, Index m ~ API.FieldName) => Text -> Traversal' m (Maybe (IxValue m))
+fieldAt fieldName = at (API.FieldName fieldName)
+
 _ColumnFieldNumber :: Traversal' API.FieldValue Scientific
 _ColumnFieldNumber = API._ColumnFieldValue . _Number
 
@@ -668,6 +673,9 @@ _ColumnFieldNull = API._ColumnFieldValue . _Null
 
 _RelationshipFieldRows :: Traversal' API.FieldValue [HashMap API.FieldName API.FieldValue]
 _RelationshipFieldRows = API._RelationshipFieldValue . API.qrRows . _Just
+
+scalarValueComparison :: J.Value -> API.ScalarType -> API.ComparisonValue
+scalarValueComparison value valueType = API.ScalarValueComparison $ API.ScalarValue value valueType
 
 orderByColumn :: [API.RelationshipName] -> API.ColumnName -> API.OrderDirection -> API.OrderByElement
 orderByColumn targetPath columnName orderDirection =

@@ -83,7 +83,7 @@ sourceMetadata =
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests _opts = do
-  mockAgentGraphqlTest "delete rows with delete permissions" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "delete rows with delete permissions" $ \_testEnv performGraphqlRequest -> do
     let headers = [("X-Hasura-ArtistId", "90"), ("X-Hasura-Role", testRoleName)]
     let graphqlRequest =
           [graphql|
@@ -201,11 +201,11 @@ tests _opts = do
                               [ API.ApplyBinaryComparisonOperator
                                   API.Equal
                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "ArtistId") $ API.ScalarType "number")
-                                  (API.ScalarValue (Aeson.Number 90) $ API.ScalarType "number"),
+                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 90) (API.ScalarType "number")),
                                 API.ApplyBinaryComparisonOperator
                                   API.GreaterThan
                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                  (API.ScalarValue (Aeson.Number 111) $ API.ScalarType "number")
+                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 111) (API.ScalarType "number"))
                               ],
                         API._dmoReturningFields =
                           HashMap.fromList
@@ -236,7 +236,7 @@ tests _opts = do
             }
     _mrrRecordedRequest `shouldBe` Just (Mutation expectedRequest)
 
-  mockAgentGraphqlTest "delete row by pk with delete permissions" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "delete row by pk with delete permissions" $ \_testEnv performGraphqlRequest -> do
     let headers = [("X-Hasura-ArtistId", "90"), ("X-Hasura-Role", testRoleName)]
     let graphqlRequest =
           [graphql|
@@ -315,11 +315,11 @@ tests _opts = do
                               [ API.ApplyBinaryComparisonOperator
                                   API.Equal
                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "ArtistId") $ API.ScalarType "number")
-                                  (API.ScalarValue (Aeson.Number 90) $ API.ScalarType "number"),
+                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 90) (API.ScalarType "number")),
                                 API.ApplyBinaryComparisonOperator
                                   API.Equal
                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                  (API.ScalarValue (Aeson.Number 112) $ API.ScalarType "number")
+                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 112) (API.ScalarType "number"))
                               ],
                         API._dmoReturningFields =
                           HashMap.fromList

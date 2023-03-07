@@ -77,6 +77,7 @@ processRemoteJoins requestId logger env requestHeaders userInfo lhs maybeJoinTre
         `onLeft` (throw500 . T.pack)
     jsonResult <-
       foldJoinTreeWith
+        env
         callSource
         callRemoteServer
         userInfo
@@ -129,6 +130,7 @@ foldJoinTreeWith ::
     EB.MonadQueryTags m,
     Traversable f
   ) =>
+  Env.Environment ->
   -- | How to process a call to a source.
   (AB.AnyBackend S.SourceJoinCall -> m BL.ByteString) ->
   -- | How to process a call to a remote schema.
@@ -141,7 +143,7 @@ foldJoinTreeWith ::
   [HTTP.Header] ->
   Maybe G.Name ->
   m (f JO.Value)
-foldJoinTreeWith callSource callRemoteSchema userInfo lhs joinTree reqHeaders operationName = do
+foldJoinTreeWith env callSource callRemoteSchema userInfo lhs joinTree reqHeaders operationName = do
   (compositeValue, joins) <- collectJoinArguments (assignJoinIds joinTree) lhs
   joinIndices <- fmap catMaybes $
     for joins $ \JoinArguments {..} -> do
@@ -152,12 +154,13 @@ foldJoinTreeWith callSource callRemoteSchema userInfo lhs joinTree reqHeaders op
           maybeJoinIndex <- RS.makeRemoteSchemaJoinCall (callRemoteSchema remoteSchemaInfo) userInfo remoteSchemaJoin joinArguments
           pure $ fmap (childJoinTree,) maybeJoinIndex
         RemoteJoinSource sourceJoin childJoinTree -> do
-          maybeJoinIndex <- S.makeSourceJoinCall callSource userInfo sourceJoin _jalFieldName joinArguments reqHeaders operationName
+          maybeJoinIndex <- S.makeSourceJoinCall env callSource userInfo sourceJoin _jalFieldName joinArguments reqHeaders operationName
           pure $ fmap (childJoinTree,) maybeJoinIndex
       for previousStep $ \(childJoinTree, joinIndex) -> do
         forRemoteJoins childJoinTree joinIndex $ \childRemoteJoins -> do
           results <-
             foldJoinTreeWith
+              env
               callSource
               callRemoteSchema
               userInfo

@@ -48,7 +48,11 @@ capabilities =
     { _crCapabilities =
         API.Capabilities
           { API._cDataSchema = API.defaultDataSchemaCapabilities,
-            API._cQueries = Just API.QueryCapabilities,
+            API._cQueries =
+              Just
+                API.QueryCapabilities
+                  { _qcForeach = Just API.ForeachCapabilities
+                  },
             API._cMutations =
               Just $
                 API.MutationCapabilities

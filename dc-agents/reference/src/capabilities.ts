@@ -55,7 +55,9 @@ const capabilities: Capabilities = {
     supports_foreign_keys: true,
     column_nullability: "nullable_and_non_nullable",
   },
-  queries: {},
+  queries: {
+    foreach: {}
+  },
   relationships: {},
   comparisons: {
     subquery: {

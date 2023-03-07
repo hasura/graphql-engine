@@ -68,7 +68,10 @@ genColumnNullability =
   Gen.element [NullableAndNonNullableColumns, OnlyNullableColumns]
 
 genQueryCapabilities :: MonadGen m => m QueryCapabilities
-genQueryCapabilities = pure QueryCapabilities
+genQueryCapabilities = QueryCapabilities <$> Gen.maybe genForeachCapabilities
+
+genForeachCapabilities :: MonadGen m => m ForeachCapabilities
+genForeachCapabilities = pure ForeachCapabilities
 
 genMutationCapabilities :: MonadGen m => m MutationCapabilities
 genMutationCapabilities =

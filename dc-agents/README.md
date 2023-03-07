@@ -128,6 +128,9 @@ The `GET /capabilities` endpoint is used by `graphql-engine` to discover the cap
 ```json
 {
   "capabilities": {
+    "queries": {
+      "foreach": {}
+    },
     "data_schema": {
       "supports_primary_keys": true,
       "supports_foreign_keys": true,
@@ -163,6 +166,7 @@ The `GET /capabilities` endpoint is used by `graphql-engine` to discover the cap
 ```
 
 The `capabilities` section describes the _capabilities_ of the service. This includes
+- `queries`: The query capabilities that the agent supports
 - `data_schema`: What sorts of features the agent supports when describing its data schema
 - `relationships`: whether or not the agent supports relationships
 - `scalar_types`: scalar types and the operations they support. See [Scalar types capabilities](#scalar-type-capabilities).
@@ -170,6 +174,9 @@ The `capabilities` section describes the _capabilities_ of the service. This inc
 The `config_schema` property contains an [OpenAPI 3 Schema](https://swagger.io/specification/#schema-object) object that represents the schema of the configuration object. It can use references (`$ref`) to refer to other schemas defined in the `other_schemas` object by name.
 
 `graphql-engine` will use the `config_schema` OpenAPI 3 Schema to validate the user's configuration JSON before putting it into the `X-Hasura-DataConnector-Config` header.
+
+#### Query capabilities
+The agent can declare whether or not it supports ["foreach queries"](#foreach-queries) by including a `foreach` property with an empty object assigned to it. Foreach query support is optional, but is required if the agent is to be used as the target of remote relationships in HGE.
 
 #### Data schema capabilities
 The agent can declare whether or not it supports primary keys or foreign keys by setting the `supports_primary_keys` and `supports_foreign_keys` properties under the `data_schema` object on capabilities. If it does not declare support, it is expected that it will not return any such primary/foreign keys in the schema it exposes on the `/schema` endpoint.
@@ -1587,6 +1594,105 @@ For example, here's a query that retrieves artists ordered descending by the cou
   }
 }
 ```
+
+#### Foreach Queries
+HGE has the ability to perform joins between tables in different databases, known as "remote relationships". In order to be able to do this relatively efficiently, HGE requires data connector agents to support performing "foreach" queries, which are a variant of a normal query.
+
+Data connector agents that support foreach queries must declare it in their capabilities:
+
+```json
+{
+  "queries": {
+    "foreach": {}
+  }
+}
+```
+Agents that do not declare foreach query support will not be able to be used as the target data source in remote relationships in HGE and will not receive foreach queries.
+
+Foreach queries are very similar to standard queries, except they include an additional `foreach` property on the Query Request object:
+
+```json
+{
+  "table": ["Album"],
+  "table_relationships": [],
+  "query": {
+    "fields": {
+      "AlbumId": {
+        "type": "column",
+        "column": "AlbumId",
+        "column_type": "number"
+      },
+      "Title": {
+        "type": "column",
+        "column": "Title",
+        "column_type": "string"
+      }
+    }
+  },
+  "foreach": [
+    { "ArtistId": {"value": 1, "value_type": "number"} },
+    { "ArtistId": {"value": 2, "value_type": "number"} }
+  ]
+}
+```
+
+The easiest (and least performance-efficient) way of describing the purpose of foreach queries is that the query must be run for each element in the `foreach` array, and its results additionally filtered where the specified columns equal the specified values. For the above example, the query would need to be executed twice, first selecting only the rows where the column `ArtistId` is `1`, and again, but this time selecting only the rows where the column `ArtistId` is `2`. These filters must be applied _in addition_ to any `where` filter in the query itself.
+
+The results of a foreach query must be returned in the following format:
+
+```jsonc
+{
+  "rows": [ // The results of each foreach query must be put into this array. The order of results in here must be in the same order as in the query request foreach.
+    {
+      "query": { // The results of running each query must be put under a field called "query"
+        "rows": [
+          { "AlbumId": 1, "Title": "For Those About To Rock We Salute You" },
+          { "AlbumId": 4, "Title": "Let There Be Rock" }
+        ]
+      }
+    },
+    {
+      "query": {
+        "rows": [
+          { "AlbumId": 2, "Title": "Balls to the Wall" },
+          { "AlbumId": 3, "Title": "Restless and Wild" }
+        ]
+      }
+    }
+  ]
+}
+```
+This is the standard query response format, except that the results of running each foreach query are nested inside a top-level query response that contains a row per foreach array element. Each row has the field `query` which contains the specific query results for that iteration of the foreach query. The order of the result rows in this top-level response object must match the order of the `foreach` array in the request.
+
+##### Performance
+Obviously, running the query many times over in a loop for each item in the foreach array has the potential to be slow. One way to implement this efficiently in a relational database would be to perform a [`LATERAL` join](https://www.postgresql.org/docs/current/queries-table-expressions.html#QUERIES-LATERAL) from a rowset of the foreach values to the query table.
+
+For example, using the above example foreach query and Postgresql as an example RDBMS, one could perform all foreach queries in a single operation using a `LEFT OUTER JOIN LATERAL`:
+
+```sql
+SELECT foreach."Index", foreach."ArtistId", album."AlbumId", album."Title"
+FROM (VALUES (0, 1), (1, 2)) AS foreach ("Index", "ArtistId")
+LEFT OUTER JOIN LATERAL (
+	SELECT "AlbumId", "Title"
+	FROM "Album" album
+	WHERE album."ArtistId" = foreach."ArtistId"
+) AS album ON true
+ORDER BY foreach."Index" ASC
+```
+
+This returns:
+
+| Index | ArtistId | AlbumId | Title |
+|-------|----------|---------|-------|
+| 0 | 1 | 1 | For Those About To Rock We Salute You |
+| 0 | 1 | 4 | Let There Be Rock |
+| 1 | 2 | 2 | Balls to the Wall |
+| 1 | 1 | 3 | Restless and Wild |
+
+
+It is important to point out that a `LATERAL` join is necessary instead of regular join, because a lateral join preserves the necessary "for each" semantics; without it, performing other query operations like pagination using `LIMIT` and `OFFSET` in the subquery would not work correctly.
+
+The artificial `Index` column is inserted into the foreach rowset to ensure that the ordering of the results matches the original ordering of the foreach array in the query request.
 
 #### Type Definitions
 

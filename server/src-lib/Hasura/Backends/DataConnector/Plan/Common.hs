@@ -19,6 +19,7 @@ module Hasura.Backends.DataConnector.Plan.Common
     prepareLiteral,
     translateBoolExpToExpression,
     mkRelationshipName,
+    mapFieldNameHashMap,
     encodeAssocListAsObject,
   )
 where
@@ -335,7 +336,7 @@ translateOp sessionVariables columnName columnType opExp = do
       let columnPath = case rootOrCurrent of
             IsRoot -> API.QueryTable
             IsCurrent -> API.CurrentTable
-       in API.ApplyBinaryComparisonOperator operator currentComparisonColumn (API.AnotherColumn $ API.ComparisonColumn columnPath (Witch.from otherColumnName) columnType)
+       in API.ApplyBinaryComparisonOperator operator currentComparisonColumn (API.AnotherColumnComparison $ API.ComparisonColumn columnPath (Witch.from otherColumnName) columnType)
 
     inOperator :: Literal -> API.Expression
     inOperator literal =
@@ -346,12 +347,18 @@ translateOp sessionVariables columnName columnType opExp = do
 
     mkApplyBinaryComparisonOperatorToScalar :: API.BinaryComparisonOperator -> J.Value -> ScalarType -> API.Expression
     mkApplyBinaryComparisonOperatorToScalar operator value scalarType =
-      API.ApplyBinaryComparisonOperator operator currentComparisonColumn (API.ScalarValue value (Witch.from scalarType))
+      API.ApplyBinaryComparisonOperator operator currentComparisonColumn (API.ScalarValueComparison $ API.ScalarValue value (Witch.from scalarType))
 
 --------------------------------------------------------------------------------
 
 mkRelationshipName :: RelName -> API.RelationshipName
 mkRelationshipName relName = API.RelationshipName $ toTxt relName
+
+mapFieldNameHashMap :: Eq v => HashMap FieldName v -> Maybe (HashMap API.FieldName v)
+mapFieldNameHashMap = memptyToNothing . HashMap.mapKeys (API.FieldName . getFieldNameTxt)
+
+memptyToNothing :: (Monoid m, Eq m) => m -> Maybe m
+memptyToNothing m = if m == mempty then Nothing else Just m
 
 --------------------------------------------------------------------------------
 

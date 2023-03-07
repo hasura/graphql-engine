@@ -69,7 +69,7 @@ sourceMetadata =
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests _opts = describe "Order By Tests" $ do
-  mockAgentGraphqlTest "can order by column" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "can order by column" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -127,11 +127,12 @@ tests _opts = describe "Order By Tests" $ do
                       _qOffset = Nothing,
                       _qWhere = Nothing,
                       _qOrderBy = Just (API.OrderBy mempty (API.OrderByElement [] (API.OrderByColumn (API.ColumnName "AlbumId")) API.Ascending :| []))
-                    }
+                    },
+                _qrForeach = Nothing
               }
         )
 
-  mockAgentGraphqlTest "can order by aggregates" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "can order by aggregates" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -211,7 +212,8 @@ tests _opts = describe "Order By Tests" $ do
                                     API.Ascending
                                 ]
                             )
-                    }
+                    },
+                _qrForeach = Nothing
               }
         )
 

@@ -11,6 +11,7 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     defaultDataSchemaCapabilities,
     ColumnNullability (..),
     QueryCapabilities (..),
+    ForeachCapabilities (..),
     MutationCapabilities (..),
     InsertCapabilities (..),
     UpdateCapabilities (..),
@@ -131,14 +132,27 @@ instance HasCodec ColumnNullability where
           (NullableAndNonNullableColumns, "nullable_and_non_nullable")
         ]
 
-data QueryCapabilities = QueryCapabilities {}
+data QueryCapabilities = QueryCapabilities
+  { _qcForeach :: Maybe ForeachCapabilities
+  }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec QueryCapabilities
 
 instance HasCodec QueryCapabilities where
   codec =
-    object "QueryCapabilities" $ pure QueryCapabilities
+    object "QueryCapabilities" $
+      QueryCapabilities
+        <$> optionalField "foreach" "Whether or not the agent supports foreach queries, which are used to enable remote joins to the agent" .= _qcForeach
+
+data ForeachCapabilities = ForeachCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ForeachCapabilities
+
+instance HasCodec ForeachCapabilities where
+  codec =
+    object "ForeachCapabilities" $ pure ForeachCapabilities
 
 data MutationCapabilities = MutationCapabilities
   { _mcInsertCapabilities :: Maybe InsertCapabilities,

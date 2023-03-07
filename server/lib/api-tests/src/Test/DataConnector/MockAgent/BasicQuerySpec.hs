@@ -106,7 +106,7 @@ sourceMetadata =
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests _opts = describe "Basic Tests" $ do
-  mockAgentGraphqlTest "works with simple object query" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "works with simple object query" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -154,11 +154,12 @@ tests _opts = describe "Basic Tests" $ do
                       _qOffset = Nothing,
                       _qWhere = Nothing,
                       _qOrderBy = Nothing
-                    }
+                    },
+                _qrForeach = Nothing
               }
         )
 
-  mockAgentGraphqlTest "works with an exists-based permissions filter" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "works with an exists-based permissions filter" $ \_testEnv performGraphqlRequest -> do
     let headers =
           [ ("X-Hasura-Role", testRoleName),
             ("X-Hasura-EmployeeId", "1")
@@ -215,9 +216,10 @@ tests _opts = describe "Basic Tests" $ do
                             API.ApplyBinaryComparisonOperator
                               API.Equal
                               (API.ComparisonColumn API.CurrentTable (API.ColumnName "EmployeeId") $ API.ScalarType "number")
-                              (API.ScalarValue (Aeson.Number 1) $ API.ScalarType "number"),
+                              (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 1) (API.ScalarType "number")),
                       _qOrderBy = Nothing
-                    }
+                    },
+                _qrForeach = Nothing
               }
         )
 

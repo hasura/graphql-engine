@@ -118,7 +118,7 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
       _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can order results by a column in a related table where the related table is filtered" $ do
-      let artistTableFilter = ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "Name" artistNameScalarType) (ScalarValue (String "N") artistNameScalarType)
+      let artistTableFilter = ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "Name" artistNameScalarType) (Data.scalarValueComparison (String "N") artistNameScalarType)
       let orderByRelations = HashMap.fromList [(_tdArtistRelationshipName, OrderByRelation (Just artistTableFilter) mempty)]
       let orderBy =
             OrderBy orderByRelations $
@@ -288,7 +288,7 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
       _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
     it "can order results by an aggregate of a related table where the related table is filtered" $ do
-      let albumTableFilter = ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "Title" albumTitleScalarType) (ScalarValue (String "N") albumTitleScalarType)
+      let albumTableFilter = ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "Title" albumTitleScalarType) (Data.scalarValueComparison (String "N") albumTitleScalarType)
       let orderByRelations = HashMap.fromList [(_tdAlbumsRelationshipName, OrderByRelation (Just albumTableFilter) mempty)]
       let orderBy =
             OrderBy orderByRelations $
@@ -411,13 +411,13 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
 
     albumsQueryRequest :: QueryRequest
     albumsQueryRequest =
-      QueryRequest _tdAlbumsTableName [] albumsQuery
+      QueryRequest _tdAlbumsTableName [] albumsQuery Nothing
 
     artistsQueryRequest :: QueryRequest
     artistsQueryRequest =
       let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField _tdArtistsTableName "ArtistId"), ("Name", _tdColumnField _tdArtistsTableName "Name")]
           query = Data.emptyQuery & qFields ?~ fields
-       in QueryRequest _tdArtistsTableName [] query
+       in QueryRequest _tdArtistsTableName [] query Nothing
 
     tracksQuery :: Query
     tracksQuery =
@@ -426,13 +426,13 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
 
     tracksQueryRequest :: QueryRequest
     tracksQueryRequest =
-      QueryRequest _tdTracksTableName [] tracksQuery
+      QueryRequest _tdTracksTableName [] tracksQuery Nothing
 
     invoicesQueryRequest :: QueryRequest
     invoicesQueryRequest =
       let fields = Data.mkFieldsMap [("InvoiceId", _tdColumnField _tdInvoicesTableName "InvoiceId"), ("BillingState", _tdColumnField _tdInvoicesTableName "BillingState")]
           query = Data.emptyQuery & qFields ?~ fields
-       in QueryRequest _tdInvoicesTableName [] query
+       in QueryRequest _tdInvoicesTableName [] query Nothing
 
     orderBySingleColumnAggregateMax :: ColumnName -> ScalarType -> OrderByTarget
     orderBySingleColumnAggregateMax columnName resultType = OrderBySingleColumnAggregate $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|max|]) columnName resultType

@@ -89,7 +89,7 @@ sourceMetadata =
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests _opts = do
-  mockAgentGraphqlTest "insert multiple rows with insert permissions" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "insert multiple rows with insert permissions" $ \_testEnv performGraphqlRequest -> do
     let headers = [("X-Hasura-ArtistId", "2"), ("X-Hasura-Role", testRoleName)]
     let graphqlRequest =
           [graphql|
@@ -216,7 +216,7 @@ tests _opts = do
                             API.ApplyBinaryComparisonOperator
                               API.Equal
                               (API.ComparisonColumn API.CurrentTable (API.ColumnName "ArtistId") $ API.ScalarType "number")
-                              (API.ScalarValue (Aeson.Number 2) $ API.ScalarType "number"),
+                              (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 2) (API.ScalarType "number")),
                         API._imoReturningFields =
                           HashMap.fromList
                             [ (API.FieldName "insertedRows_AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),

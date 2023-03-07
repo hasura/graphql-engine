@@ -538,6 +538,7 @@ pgDBRemoteRelationshipPlan ::
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
   ) =>
+  Env.Environment ->
   UserInfo ->
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
@@ -555,7 +556,7 @@ pgDBRemoteRelationshipPlan ::
   Maybe G.Name ->
   Options.StringifyNumbers ->
   m (DBStepInfo ('Postgres pgKind))
-pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship reqHeaders operationName stringifyNumbers = do
+pgDBRemoteRelationshipPlan _env userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship reqHeaders operationName stringifyNumbers = do
   -- NOTE: 'QueryTags' currently cannot support remote relationship queries.
   --
   -- In the future if we want to add support we'll need to add a new type of

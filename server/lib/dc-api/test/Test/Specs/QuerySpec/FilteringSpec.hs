@@ -20,7 +20,7 @@ import Prelude
 spec :: TestData -> Maybe ComparisonCapabilities -> AgentDatasetTestSpec
 spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
   it "can filter using an equality expression" $ do
-    let where' = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (ScalarValue (Number 2) albumIdScalarType)
+    let where' = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (Data.scalarValueComparison (Number 2) albumIdScalarType)
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
 
@@ -31,7 +31,7 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
   it "can filter using an inequality expression" $ do
-    let where' = Not (ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (ScalarValue (Number 2) albumIdScalarType))
+    let where' = Not (ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (Data.scalarValueComparison (Number 2) albumIdScalarType))
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
 
@@ -64,8 +64,8 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
   it "can combine filters using an and expression" $ do
-    let where1 = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (ScalarValue (Number 58) artistIdScalarType)
-    let where2 = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Title" albumTitleScalarType) (ScalarValue (String "Stormbringer") albumTitleScalarType)
+    let where1 = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (Data.scalarValueComparison (Number 58) artistIdScalarType)
+    let where2 = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Title" albumTitleScalarType) (Data.scalarValueComparison (String "Stormbringer") albumTitleScalarType)
     let where' = And [where1, where2]
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
@@ -89,8 +89,8 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
   it "can combine filters using an or expression" $ do
-    let where1 = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (ScalarValue (Number 2) albumIdScalarType)
-    let where2 = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (ScalarValue (Number 3) albumIdScalarType)
+    let where1 = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (Data.scalarValueComparison (Number 2) albumIdScalarType)
+    let where2 = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (Data.scalarValueComparison (Number 3) albumIdScalarType)
     let where' = Or [where1, where2]
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
@@ -110,7 +110,7 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
   it "can filter by applying the greater than operator" $ do
-    let where' = ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (ScalarValue (Number 300) albumIdScalarType)
+    let where' = ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (Data.scalarValueComparison (Number 300) albumIdScalarType)
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
 
@@ -121,7 +121,7 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
   it "can filter by applying the greater than or equal operator" $ do
-    let where' = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (ScalarValue (Number 300) albumIdScalarType)
+    let where' = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (Data.scalarValueComparison (Number 300) albumIdScalarType)
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
 
@@ -132,7 +132,7 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
   it "can filter by applying the less than operator" $ do
-    let where' = ApplyBinaryComparisonOperator LessThan (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (ScalarValue (Number 100) albumIdScalarType)
+    let where' = ApplyBinaryComparisonOperator LessThan (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (Data.scalarValueComparison (Number 100) albumIdScalarType)
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
 
@@ -143,7 +143,7 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
   it "can filter by applying the less than or equal operator" $ do
-    let where' = ApplyBinaryComparisonOperator LessThanOrEqual (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (ScalarValue (Number 100) albumIdScalarType)
+    let where' = ApplyBinaryComparisonOperator LessThanOrEqual (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (Data.scalarValueComparison (Number 100) albumIdScalarType)
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
 
@@ -154,7 +154,7 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
   it "can filter using a greater than operator with a column comparison" $ do
-    let where' = ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (AnotherColumn (_tdCurrentComparisonColumn "ArtistId" albumIdScalarType))
+    let where' = ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (AnotherColumnComparison (_tdCurrentComparisonColumn "ArtistId" albumIdScalarType))
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
 
@@ -171,7 +171,7 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
           it "returns all rows if matching rows exist" $ do
             let where' =
                   Exists (UnrelatedTable _tdEmployeesTableName) $
-                    ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType) (ScalarValue (Number 1) employeeIdScalarType)
+                    ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType) (Data.scalarValueComparison (Number 1) employeeIdScalarType)
             let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
             receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
 
@@ -183,7 +183,7 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
           it "returns no rows if matching rows do not exist" $ do
             let where' =
                   Exists (UnrelatedTable _tdEmployeesTableName) $
-                    ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType) (ScalarValue (Number 0) employeeIdScalarType)
+                    ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType) (Data.scalarValueComparison (Number 0) employeeIdScalarType)
             let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
             receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
 
@@ -195,8 +195,8 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
             let where' =
                   Exists (UnrelatedTable _tdEmployeesTableName) $
                     And
-                      [ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType) (ScalarValue (Number 1) employeeIdScalarType),
-                        ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "City" employeeCityScalarType) (ScalarValue (String "Edmonton") employeeCityScalarType)
+                      [ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType) (Data.scalarValueComparison (Number 1) employeeIdScalarType),
+                        ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "City" employeeCityScalarType) (Data.scalarValueComparison (String "Edmonton") employeeCityScalarType)
                       ]
             let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
             receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
@@ -210,8 +210,8 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
             let where' =
                   Exists (UnrelatedTable _tdEmployeesTableName) $
                     And
-                      [ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType) (ScalarValue (Number 1) employeeIdScalarType),
-                        ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "City" employeeCityScalarType) (ScalarValue (String "Calgary") employeeCityScalarType)
+                      [ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType) (Data.scalarValueComparison (Number 1) employeeIdScalarType),
+                        ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "City" employeeCityScalarType) (Data.scalarValueComparison (String "Calgary") employeeCityScalarType)
                       ]
             let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
             receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
@@ -224,7 +224,7 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
       it "can filter by comparing against rows in a related table" $ do
         let where' =
               Exists (RelatedTable _tdArtistRelationshipName) $
-                ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" artistNameScalarType) (ScalarValue (String "AC/DC") artistNameScalarType)
+                ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" artistNameScalarType) (Data.scalarValueComparison (String "AC/DC") artistNameScalarType)
         let query =
               albumsQueryRequest
                 & qrTableRelationships .~ [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
@@ -247,7 +247,7 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
       it "can filter by comparing against rows in a deeply related table" $ do
         let where' =
               Exists (RelatedTable _tdAlbumsRelationshipName) . Exists (RelatedTable _tdTracksRelationshipName) . Exists (RelatedTable _tdGenreRelationshipName) $
-                ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" genreNameScalarType) (ScalarValue (String "Metal") genreNameScalarType)
+                ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" genreNameScalarType) (Data.scalarValueComparison (String "Metal") genreNameScalarType)
         let query =
               artistsQueryRequest
                 & qrTableRelationships
@@ -285,8 +285,8 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
         let where' =
               Exists (RelatedTable _tdAlbumsRelationshipName) $
                 And
-                  [ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (ScalarValue (Number 1) albumIdScalarType),
-                    ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Title" albumTitleScalarType) (ScalarValue (String "Let There Be Rock") albumTitleScalarType)
+                  [ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (Data.scalarValueComparison (Number 1) albumIdScalarType),
+                    ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Title" albumTitleScalarType) (Data.scalarValueComparison (String "Let There Be Rock") albumTitleScalarType)
                   ]
         let query =
               artistsQueryRequest
@@ -310,13 +310,13 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
     artistsQueryRequest =
       let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField _tdArtistsTableName "ArtistId"), ("Name", _tdColumnField _tdArtistsTableName "Name")]
           query = Data.emptyQuery & qFields ?~ fields
-       in QueryRequest _tdArtistsTableName [] query
+       in QueryRequest _tdArtistsTableName [] query Nothing
 
     albumsQueryRequest :: QueryRequest
     albumsQueryRequest =
       let fields = Data.mkFieldsMap [("AlbumId", _tdColumnField _tdAlbumsTableName "AlbumId"), ("ArtistId", _tdColumnField _tdAlbumsTableName "ArtistId"), ("Title", _tdColumnField _tdAlbumsTableName "Title")]
           query = Data.emptyQuery & qFields ?~ fields
-       in QueryRequest _tdAlbumsTableName [] query
+       in QueryRequest _tdAlbumsTableName [] query Nothing
 
     albumIdScalarType = _tdFindColumnScalarType _tdAlbumsTableName "AlbumId"
     albumTitleScalarType = _tdFindColumnScalarType _tdAlbumsTableName "Title"

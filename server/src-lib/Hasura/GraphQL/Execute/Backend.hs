@@ -149,6 +149,7 @@ class
     ( MonadError QErr m,
       MonadQueryTags m
     ) =>
+    Env.Environment ->
     UserInfo ->
     SourceName ->
     SourceConfig b ->

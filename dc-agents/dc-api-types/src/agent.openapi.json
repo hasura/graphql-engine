@@ -556,7 +556,15 @@
         },
         "type": "object"
       },
-      "QueryCapabilities": {},
+      "ForeachCapabilities": {},
+      "QueryCapabilities": {
+        "properties": {
+          "foreach": {
+            "$ref": "#/components/schemas/ForeachCapabilities"
+          }
+        },
+        "type": "object"
+      },
       "InsertCapabilities": {
         "properties": {
           "supports_nested_inserts": {
@@ -1206,6 +1214,17 @@
       },
       "QueryRequest": {
         "properties": {
+          "foreach": {
+            "description": "If present, a list of columns and values for the columns that the query must be repeated for, applying the column values as a filter for each query.",
+            "items": {
+              "additionalProperties": {
+                "$ref": "#/components/schemas/ScalarValue"
+              },
+              "type": "object"
+            },
+            "nullable": true,
+            "type": "array"
+          },
           "query": {
             "$ref": "#/components/schemas/Query"
           },
@@ -1998,6 +2017,21 @@
         "required": [
           "relations",
           "elements"
+        ],
+        "type": "object"
+      },
+      "ScalarValue": {
+        "properties": {
+          "value": {
+            "additionalProperties": true
+          },
+          "value_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          }
+        },
+        "required": [
+          "value",
+          "value_type"
         ],
         "type": "object"
       },

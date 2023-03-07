@@ -17,7 +17,7 @@ import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldBeYaml)
-import Hasura.Backends.DataConnector.API (ColumnName (..), ScalarType (..))
+import Hasura.Backends.DataConnector.API (ColumnName (..), ScalarType (..), ScalarValue (..))
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.API.V0.Expression
 import Hasura.Prelude
@@ -52,7 +52,7 @@ sourceMetadata =
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests _opts = describe "Custom scalar parsing tests" $ do
-  mockAgentGraphqlTest "works with simple object query" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "works with simple object query" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -106,11 +106,12 @@ tests _opts = describe "Custom scalar parsing tests" $ do
                       _qOffset = Nothing,
                       _qWhere = Nothing,
                       _qOrderBy = Nothing
-                    }
+                    },
+                _qrForeach = Nothing
               }
         )
 
-  mockAgentGraphqlTest "parses scalar literals in where queries" \performGraphqlRequest -> do
+  mockAgentGraphqlTest "parses scalar literals in where queries" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -175,34 +176,35 @@ tests _opts = describe "Custom scalar parsing tests" $ do
                             [ ApplyBinaryComparisonOperator
                                 Equal
                                 (ComparisonColumn {_ccPath = CurrentTable, _ccName = ColumnName {unColumnName = "MyBooleanColumn"}, _ccColumnType = ScalarType "MyBoolean"})
-                                (ScalarValue (Aeson.Bool True) (ScalarType "MyBoolean")),
+                                (ScalarValueComparison $ ScalarValue (Aeson.Bool True) (ScalarType "MyBoolean")),
                               ApplyBinaryComparisonOperator
                                 Equal
                                 (ComparisonColumn {_ccPath = CurrentTable, _ccName = ColumnName {unColumnName = "MyFloatColumn"}, _ccColumnType = ScalarType "MyFloat"})
-                                (ScalarValue (Aeson.Number 3.14) (ScalarType "MyFloat")),
+                                (ScalarValueComparison $ ScalarValue (Aeson.Number 3.14) (ScalarType "MyFloat")),
                               ApplyBinaryComparisonOperator
                                 Equal
                                 (ComparisonColumn {_ccPath = CurrentTable, _ccName = ColumnName {unColumnName = "MyStringColumn"}, _ccColumnType = ScalarType "MyString"})
-                                (ScalarValue (Aeson.String "foo") (ScalarType "MyString")),
+                                (ScalarValueComparison $ ScalarValue (Aeson.String "foo") (ScalarType "MyString")),
                               ApplyBinaryComparisonOperator
                                 Equal
                                 (ComparisonColumn {_ccPath = CurrentTable, _ccName = ColumnName {unColumnName = "MyIDColumn"}, _ccColumnType = ScalarType "MyID"})
-                                (ScalarValue (Aeson.String "x") (ScalarType "MyID")),
+                                (ScalarValueComparison $ ScalarValue (Aeson.String "x") (ScalarType "MyID")),
                               ApplyBinaryComparisonOperator
                                 Equal
                                 (ComparisonColumn {_ccPath = CurrentTable, _ccName = ColumnName {unColumnName = "MyIntColumn"}, _ccColumnType = ScalarType "MyInt"})
-                                (ScalarValue (Aeson.Number 42.0) (ScalarType "MyInt")),
+                                (ScalarValueComparison $ ScalarValue (Aeson.Number 42.0) (ScalarType "MyInt")),
                               ApplyBinaryComparisonOperator
                                 Equal
                                 (ComparisonColumn {_ccPath = CurrentTable, _ccName = ColumnName {unColumnName = "MyAnythingColumn"}, _ccColumnType = ScalarType "MyAnything"})
-                                (ScalarValue (Aeson.Object mempty) (ScalarType "MyAnything"))
+                                (ScalarValueComparison $ ScalarValue (Aeson.Object mempty) (ScalarType "MyAnything"))
                             ],
                       _qOrderBy = Nothing
-                    }
+                    },
+                _qrForeach = Nothing
               }
         )
 
-  mockAgentGraphqlTest "fails parsing float when expecting int" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing float when expecting int" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -229,7 +231,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentGraphqlTest "fails parsing string when expecting int" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing string when expecting int" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -256,7 +258,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentGraphqlTest "fails parsing boolean when expecting int" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing boolean when expecting int" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -283,7 +285,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentGraphqlTest "succeeds parsing int when expecting float" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "succeeds parsing int when expecting float" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -306,7 +308,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
             - MyIntColumn: 42
       |]
 
-  mockAgentGraphqlTest "fails parsing string when expecting float" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing string when expecting float" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -333,7 +335,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentGraphqlTest "fails parsing boolean when expecting float" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing boolean when expecting float" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -360,7 +362,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentGraphqlTest "fails parsing int when expecting string" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing int when expecting string" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -387,7 +389,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentGraphqlTest "fails parsing float when expecting string" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing float when expecting string" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -414,7 +416,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentGraphqlTest "fails parsing boolean when expecting string" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing boolean when expecting string" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -441,7 +443,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentGraphqlTest "fails parsing int when expecting boolean" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing int when expecting boolean" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -468,7 +470,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentGraphqlTest "fails parsing float when expecting boolean" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing float when expecting boolean" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -495,7 +497,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentGraphqlTest "fails parsing string when expecting boolean" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing string when expecting boolean" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -522,7 +524,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentGraphqlTest "succeeds parsing int when expecting ID" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "succeeds parsing int when expecting ID" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -545,7 +547,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
             - MyIntColumn: 42
       |]
 
-  mockAgentGraphqlTest "fails parsing float when expecting ID" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing float when expecting ID" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -572,7 +574,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentGraphqlTest "fails parsing boolean when expecting ID" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing boolean when expecting ID" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -599,7 +601,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentGraphqlTest "succeeds parsing int when expecting anything" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "succeeds parsing int when expecting anything" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -622,7 +624,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
             - MyIntColumn: 42
       |]
 
-  mockAgentGraphqlTest "succeeds parsing float when expecting anything" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "succeeds parsing float when expecting anything" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -645,7 +647,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
             - MyIntColumn: 42
       |]
 
-  mockAgentGraphqlTest "succeeds parsing string when expecting anything" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "succeeds parsing string when expecting anything" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -668,7 +670,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
             - MyIntColumn: 42
       |]
 
-  mockAgentGraphqlTest "succeeds parsing boolean when expecting anything" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "succeeds parsing boolean when expecting anything" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -691,7 +693,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
             - MyIntColumn: 42
       |]
 
-  mockAgentGraphqlTest "succeeds parsing array when expecting anything" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "succeeds parsing array when expecting anything" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|

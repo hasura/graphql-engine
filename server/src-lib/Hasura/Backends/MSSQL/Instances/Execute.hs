@@ -429,6 +429,7 @@ msDBRemoteRelationshipPlan ::
   forall m.
   ( MonadError QErr m
   ) =>
+  Env.Environment ->
   UserInfo ->
   SourceName ->
   SourceConfig 'MSSQL ->
@@ -446,7 +447,7 @@ msDBRemoteRelationshipPlan ::
   Maybe G.Name ->
   Options.StringifyNumbers ->
   m (DBStepInfo 'MSSQL)
-msDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship _headers _gName _stringifyNumbers = do
+msDBRemoteRelationshipPlan _env userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship _headers _gName _stringifyNumbers = do
   -- `stringifyNumbers` is not currently handled in any SQL Server operation
   statement <- planSourceRelationship (_uiSession userInfo) lhs lhsSchema argumentId relationship
 

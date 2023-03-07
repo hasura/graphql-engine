@@ -67,7 +67,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
     _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
   it "can filter in object relationships" $ do
-    let artistWhere = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "Name" artistNameScalarType) (ScalarValue (String "H") artistNameScalarType)
+    let artistWhere = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "Name" artistNameScalarType) (Data.scalarValueComparison (String "H") artistNameScalarType)
     let query = albumsWithArtistQuery (qWhere ?~ artistWhere)
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
 
@@ -85,7 +85,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
   it "can filter in array relationships" $ do
-    let albumsWhere = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "Title" albumTitleScalarType) (ScalarValue (String "O") albumTitleScalarType)
+    let albumsWhere = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "Title" albumTitleScalarType) (Data.scalarValueComparison (String "O") albumTitleScalarType)
     let query = artistsWithAlbumsQuery (qWhere ?~ albumsWhere)
     receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded query
 
@@ -115,7 +115,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                 ApplyBinaryComparisonOperator
                   Equal
                   (_tdCurrentComparisonColumn "Country" employeeCountryScalarType)
-                  (AnotherColumn (_tdQueryComparisonColumn "Country" employeeCountryScalarType))
+                  (AnotherColumnComparison (_tdQueryComparisonColumn "Country" employeeCountryScalarType))
         let query = customersWithSupportRepQuery id & qrQuery . qWhere ?~ where'
         receivedCustomers <- Data.sortResponseRowsBy "CustomerId" <$> queryGuarded query
 
@@ -143,7 +143,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                 ApplyBinaryComparisonOperator
                   Equal
                   (_tdCurrentComparisonColumn "Country" employeeCountryScalarType)
-                  (AnotherColumn (_tdQueryComparisonColumn "Country" employeeCountryScalarType))
+                  (AnotherColumnComparison (_tdQueryComparisonColumn "Country" employeeCountryScalarType))
         let query = employeesWithCustomersQuery id & qrQuery . qWhere ?~ where'
         receivedEmployees <- Data.sortResponseRowsBy "EmployeeId" <$> queryGuarded query
 
@@ -174,7 +174,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                   [ ( ApplyBinaryComparisonOperator
                         GreaterThan
                         (_tdCurrentComparisonColumn "FirstName" employeeFirstNameScalarType)
-                        (AnotherColumn (_tdCurrentComparisonColumn "LastName" employeeLastNameScalarType))
+                        (AnotherColumnComparison (_tdCurrentComparisonColumn "LastName" employeeLastNameScalarType))
                     ),
                     (Not (ApplyUnaryComparisonOperator IsNull (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType)))
                   ]
@@ -183,7 +183,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
               ApplyBinaryComparisonOperator
                 GreaterThan
                 (_tdCurrentComparisonColumn "FirstName" employeeFirstNameScalarType)
-                (AnotherColumn (_tdCurrentComparisonColumn "LastName" employeeLastNameScalarType))
+                (AnotherColumnComparison (_tdCurrentComparisonColumn "LastName" employeeLastNameScalarType))
 
         let query = customersWithSupportRepQuery (\q -> q & qWhere ?~ employeesWhere) & qrQuery . qWhere ?~ customersWhere
         receivedCustomers <- Data.sortResponseRowsBy "CustomerId" <$> queryGuarded query
@@ -216,7 +216,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                 ("Artist", RelField $ RelationshipField _tdArtistRelationshipName artistsSubquery)
               ]
           query = albumsQuery & qFields ?~ fields
-       in QueryRequest _tdAlbumsTableName [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships] query
+       in QueryRequest _tdAlbumsTableName [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships] query Nothing
 
     artistsWithAlbumsQuery :: (Query -> Query) -> QueryRequest
     artistsWithAlbumsQuery modifySubquery =
@@ -230,7 +230,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                 ("Albums", RelField $ RelationshipField _tdAlbumsRelationshipName albumsSubquery)
               ]
           query = artistsQuery & qFields ?~ fields
-       in QueryRequest _tdArtistsTableName [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships] query
+       in QueryRequest _tdArtistsTableName [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships] query Nothing
 
     employeesWithCustomersQuery :: (Query -> Query) -> QueryRequest
     employeesWithCustomersQuery modifySubquery =
@@ -242,7 +242,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                 [ ("SupportRepForCustomers", RelField $ RelationshipField _tdSupportRepForCustomersRelationshipName customersSubquery)
                 ]
           query = employeesQuery & qFields ?~ fields
-       in QueryRequest _tdEmployeesTableName [Data.onlyKeepRelationships [_tdSupportRepForCustomersRelationshipName] _tdEmployeesTableRelationships] query
+       in QueryRequest _tdEmployeesTableName [Data.onlyKeepRelationships [_tdSupportRepForCustomersRelationshipName] _tdEmployeesTableRelationships] query Nothing
 
     customersWithSupportRepQuery :: (Query -> Query) -> QueryRequest
     customersWithSupportRepQuery modifySubquery =
@@ -253,7 +253,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                 [ ("SupportRep", RelField $ RelationshipField _tdSupportRepRelationshipName supportRepSubquery)
                 ]
           query = customersQuery & qFields ?~ fields
-       in QueryRequest _tdCustomersTableName [Data.onlyKeepRelationships [_tdSupportRepRelationshipName] _tdCustomersTableRelationships] query
+       in QueryRequest _tdCustomersTableName [Data.onlyKeepRelationships [_tdSupportRepRelationshipName] _tdCustomersTableRelationships] query Nothing
 
     artistsQuery :: Query
     artistsQuery =

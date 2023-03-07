@@ -128,7 +128,7 @@ sourceMetadata =
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests _opts = describe "Object Relationships Tests" $ do
-  mockAgentGraphqlTest "works with multiple object relationships" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "works with multiple object relationships" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -253,11 +253,12 @@ tests _opts = describe "Object Relationships Tests" $ do
                       _qOffset = Nothing,
                       _qWhere = Nothing,
                       _qOrderBy = Nothing
-                    }
+                    },
+                _qrForeach = Nothing
               }
         )
 
-  mockAgentGraphqlTest "works with an order by that navigates relationships" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "works with an order by that navigates relationships" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -404,11 +405,12 @@ tests _opts = describe "Object Relationships Tests" $ do
                                   API.OrderByElement [] (API.OrderByColumn (API.ColumnName "Name")) API.Ascending
                                 ]
                             )
-                    }
+                    },
+                _qrForeach = Nothing
               }
         )
 
-  mockAgentGraphqlTest "works with an order by that navigates a relationship with table permissions" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "works with an order by that navigates a relationship with table permissions" $ \_testEnv performGraphqlRequest -> do
     let headers = [("X-Hasura-Role", testRoleName)]
     let graphqlRequest =
           [graphql|
@@ -483,7 +485,7 @@ tests _opts = describe "Object Relationships Tests" $ do
                             API.ApplyBinaryComparisonOperator
                               API.Equal
                               (API.ComparisonColumn API.CurrentTable (API.ColumnName "Country") $ API.ScalarType "string")
-                              (API.AnotherColumn (API.ComparisonColumn API.QueryTable (API.ColumnName "Country") $ API.ScalarType "string")),
+                              (API.AnotherColumnComparison (API.ComparisonColumn API.QueryTable (API.ColumnName "Country") $ API.ScalarType "string")),
                       _qOrderBy =
                         Just $
                           API.OrderBy
@@ -495,14 +497,15 @@ tests _opts = describe "Object Relationships Tests" $ do
                                             API.ApplyBinaryComparisonOperator
                                               API.Equal
                                               (API.ComparisonColumn API.CurrentTable (API.ColumnName "Country") $ API.ScalarType "string")
-                                              (API.AnotherColumn (API.ComparisonColumn API.QueryTable (API.ColumnName "Country") $ API.ScalarType "string"))
+                                              (API.AnotherColumnComparison (API.ComparisonColumn API.QueryTable (API.ColumnName "Country") $ API.ScalarType "string"))
                                       )
                                       mempty
                                   )
                                 ]
                             )
                             (API.OrderByElement [API.RelationshipName "SupportRepForCustomers"] API.OrderByStarCountAggregate API.Descending :| [])
-                    }
+                    },
+                _qrForeach = Nothing
               }
         )
 

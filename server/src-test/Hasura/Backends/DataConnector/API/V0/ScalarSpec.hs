@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Hasura.Backends.DataConnector.API.V0.ScalarSpec (spec, genScalarType) where
+module Hasura.Backends.DataConnector.API.V0.ScalarSpec (spec, genScalarType, genScalarValue) where
 
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0.Scalar
@@ -20,3 +20,6 @@ genScalarType :: (MonadGen m, GenBase m ~ Identity) => m ScalarType
 genScalarType =
   ScalarType
     <$> genArbitraryAlphaNumTextExcluding ["string", "number", "bool"] defaultRange
+
+genScalarValue :: (MonadGen m, GenBase m ~ Identity) => m ScalarValue
+genScalarValue = ScalarValue <$> genValue <*> genScalarType

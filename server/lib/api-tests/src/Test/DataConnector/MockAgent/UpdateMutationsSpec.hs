@@ -104,7 +104,7 @@ sourceMetadata =
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests _opts = do
-  mockAgentGraphqlTest "update rows with update permissions" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "update rows with update permissions" $ \_testEnv performGraphqlRequest -> do
     let headers = [("X-Hasura-AlbumId", "3"), ("X-Hasura-Role", testRoleName)]
     let graphqlRequest =
           [graphql|
@@ -235,18 +235,18 @@ tests _opts = do
                               [ API.ApplyBinaryComparisonOperator
                                   API.Equal
                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                  (API.ScalarValue (Aeson.Number 3) $ API.ScalarType "number"),
+                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number")),
                                 API.ApplyBinaryComparisonOperator
                                   API.Equal
                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "GenreId") $ API.ScalarType "number")
-                                  (API.ScalarValue (Aeson.Number 1) $ API.ScalarType "number")
+                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 1) (API.ScalarType "number"))
                               ],
                         API._umoPostUpdateCheck =
                           Just $
                             API.ApplyBinaryComparisonOperator
                               API.GreaterThan
                               (API.ComparisonColumn API.CurrentTable (API.ColumnName "UnitPrice") $ API.ScalarType "number")
-                              (API.ScalarValue (Aeson.Number 0) $ API.ScalarType "number"),
+                              (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 0) (API.ScalarType "number")),
                         API._umoReturningFields =
                           HashMap.fromList
                             [ (API.FieldName "updatedRows_TrackId", API.ColumnField (API.ColumnName "TrackId") (API.ScalarType "number")),
@@ -275,7 +275,7 @@ tests _opts = do
             }
     _mrrRecordedRequest `shouldBe` Just (Mutation expectedRequest)
 
-  mockAgentGraphqlTest "update_many rows with update permissions" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "update_many rows with update permissions" $ \_testEnv performGraphqlRequest -> do
     let headers = [("X-Hasura-AlbumId", "3"), ("X-Hasura-Role", testRoleName)]
     let graphqlRequest =
           [graphql|
@@ -374,7 +374,7 @@ tests _opts = do
             API.ApplyBinaryComparisonOperator
               API.GreaterThan
               (API.ComparisonColumn API.CurrentTable (API.ColumnName "UnitPrice") $ API.ScalarType "number")
-              (API.ScalarValue (Aeson.Number 0) $ API.ScalarType "number")
+              (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 0) (API.ScalarType "number"))
     let sharedReturning =
           HashMap.fromList
             [ (API.FieldName "updatedRows_TrackId", API.ColumnField (API.ColumnName "TrackId") (API.ScalarType "number")),
@@ -446,11 +446,11 @@ tests _opts = do
                               [ API.ApplyBinaryComparisonOperator
                                   API.Equal
                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                  (API.ScalarValue (Aeson.Number 3) $ API.ScalarType "number"),
+                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number")),
                                 API.ApplyBinaryComparisonOperator
                                   API.Equal
                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "TrackId") $ API.ScalarType "number")
-                                  (API.ScalarValue (Aeson.Number 3) $ API.ScalarType "number")
+                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number"))
                               ],
                         API._umoPostUpdateCheck = sharedPostUpdateCheck,
                         API._umoReturningFields = sharedReturning
@@ -484,11 +484,11 @@ tests _opts = do
                               [ API.ApplyBinaryComparisonOperator
                                   API.Equal
                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                  (API.ScalarValue (Aeson.Number 3) $ API.ScalarType "number"),
+                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number")),
                                 API.ApplyBinaryComparisonOperator
                                   API.GreaterThan
                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "TrackId") $ API.ScalarType "number")
-                                  (API.ScalarValue (Aeson.Number 3) $ API.ScalarType "number")
+                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number"))
                               ],
                         API._umoPostUpdateCheck = sharedPostUpdateCheck,
                         API._umoReturningFields = sharedReturning

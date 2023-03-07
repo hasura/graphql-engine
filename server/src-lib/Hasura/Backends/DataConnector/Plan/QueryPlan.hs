@@ -1,7 +1,13 @@
 module Hasura.Backends.DataConnector.Plan.QueryPlan
-  ( mkQueryPlan,
+  ( -- Main external interface
+    mkQueryPlan,
     queryHasRelations,
+    -- Internals reused by other plan modules
+    translateAnnSimpleSelectToQueryRequest,
+    translateAnnAggregateSelectToQueryRequest,
     translateAnnFields,
+    reshapeSimpleSelectRows,
+    reshapeTableAggregateFields,
     reshapeAnnFields,
   )
 where
@@ -69,24 +75,46 @@ mkQueryPlan sessionVariables (SourceConfig {}) ir = do
       m API.QueryRequest
     translateQueryDB =
       \case
-        QDBMultipleRows annSelect -> translateAnnSelectToQueryRequest (translateAnnFieldsWithNoAggregates sessionVariables noPrefix) annSelect
-        QDBSingleRow annSelect -> translateAnnSelectToQueryRequest (translateAnnFieldsWithNoAggregates sessionVariables noPrefix) annSelect
-        QDBAggregation annSelect -> translateAnnSelectToQueryRequest (translateTableAggregateFields sessionVariables) annSelect
+        QDBMultipleRows simpleSelect -> translateAnnSimpleSelectToQueryRequest sessionVariables simpleSelect
+        QDBSingleRow simpleSelect -> translateAnnSimpleSelectToQueryRequest sessionVariables simpleSelect
+        QDBAggregation aggregateSelect -> translateAnnAggregateSelectToQueryRequest sessionVariables aggregateSelect
 
-    translateAnnSelectToQueryRequest ::
-      (API.TableName -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> CPS.WriterT TableRelationships m FieldsAndAggregates) ->
-      AnnSelectG 'DataConnector fieldType (UnpreparedValue 'DataConnector) ->
-      m API.QueryRequest
-    translateAnnSelectToQueryRequest translateFieldsAndAggregates selectG = do
-      tableName <- extractTableName selectG
-      (query, (TableRelationships tableRelationships)) <- CPS.runWriterT (translateAnnSelect sessionVariables translateFieldsAndAggregates tableName selectG)
-      let apiTableRelationships = uncurry API.TableRelationships <$> HashMap.toList tableRelationships
-      pure $
-        API.QueryRequest
-          { _qrTable = tableName,
-            _qrTableRelationships = apiTableRelationships,
-            _qrQuery = query
-          }
+translateAnnSimpleSelectToQueryRequest ::
+  forall m.
+  MonadError QErr m =>
+  SessionVariables ->
+  AnnSimpleSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
+  m API.QueryRequest
+translateAnnSimpleSelectToQueryRequest sessionVariables simpleSelect =
+  translateAnnSelectToQueryRequest sessionVariables (translateAnnFieldsWithNoAggregates sessionVariables noPrefix) simpleSelect
+
+translateAnnAggregateSelectToQueryRequest ::
+  forall m.
+  MonadError QErr m =>
+  SessionVariables ->
+  AnnAggregateSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
+  m API.QueryRequest
+translateAnnAggregateSelectToQueryRequest sessionVariables aggregateSelect =
+  translateAnnSelectToQueryRequest sessionVariables (translateTableAggregateFields sessionVariables) aggregateSelect
+
+translateAnnSelectToQueryRequest ::
+  forall m fieldType.
+  MonadError QErr m =>
+  SessionVariables ->
+  (API.TableName -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> CPS.WriterT TableRelationships m FieldsAndAggregates) ->
+  AnnSelectG 'DataConnector fieldType (UnpreparedValue 'DataConnector) ->
+  m API.QueryRequest
+translateAnnSelectToQueryRequest sessionVariables translateFieldsAndAggregates selectG = do
+  tableName <- extractTableName selectG
+  (query, (TableRelationships tableRelationships)) <- CPS.runWriterT (translateAnnSelect sessionVariables translateFieldsAndAggregates tableName selectG)
+  let apiTableRelationships = uncurry API.TableRelationships <$> HashMap.toList tableRelationships
+  pure $
+    API.QueryRequest
+      { _qrTable = tableName,
+        _qrTableRelationships = apiTableRelationships,
+        _qrQuery = query,
+        _qrForeach = Nothing
+      }
 
 extractTableName :: MonadError QErr m => AnnSelectG 'DataConnector fieldsType valueType -> m API.TableName
 extractTableName selectG =
@@ -547,11 +575,3 @@ reshapeAnnRelationSelect reshapeFields annRelationSelect fieldValue =
     Right subqueryResponse ->
       let annSimpleSelect = _aarAnnSelect annRelationSelect
        in reshapeFields (_asnFields annSimpleSelect) subqueryResponse
-
---------------------------------------------------------------------------------
-
-mapFieldNameHashMap :: Eq v => HashMap FieldName v -> Maybe (HashMap API.FieldName v)
-mapFieldNameHashMap = memptyToNothing . HashMap.mapKeys (API.FieldName . getFieldNameTxt)
-
-memptyToNothing :: (Monoid m, Eq m) => m -> Maybe m
-memptyToNothing m = if m == mempty then Nothing else Just m

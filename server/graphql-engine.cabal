@@ -685,6 +685,7 @@ library
                      , Hasura.Backends.DataConnector.Plan.Common
                      , Hasura.Backends.DataConnector.Plan.MutationPlan
                      , Hasura.Backends.DataConnector.Plan.QueryPlan
+                     , Hasura.Backends.DataConnector.Plan.RemoteRelationshipPlan
 
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded

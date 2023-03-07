@@ -160,11 +160,11 @@ mockMutationResponse :: API.MutationResponse -> MockConfig -> MockConfig
 mockMutationResponse mutationResponse mockConfig =
   mockConfig {_mutationResponse = \_ -> Right mutationResponse}
 
-mockAgentGraphqlTest :: HasCallStack => String -> ((MockConfig -> RequestHeaders -> Aeson.Value -> IO MockRequestResults) -> Expectation) -> SpecWith (Arg ((TestEnvironment, MockAgentEnvironment) -> Expectation))
+mockAgentGraphqlTest :: HasCallStack => String -> (TestEnvironment -> (MockConfig -> RequestHeaders -> Aeson.Value -> IO MockRequestResults) -> Expectation) -> SpecWith (Arg ((TestEnvironment, MockAgentEnvironment) -> Expectation))
 mockAgentGraphqlTest name testBody =
   it name $ \(env, agentEnv) ->
     let performGraphqlRequest mockConfig requestHeaders graphqlRequest = performRecordedRequest agentEnv mockConfig (GraphqlEngine.postGraphqlWithHeaders env requestHeaders graphqlRequest)
-     in testBody performGraphqlRequest
+     in testBody env performGraphqlRequest
 
 mockAgentMetadataTest :: HasCallStack => String -> (TestEnvironment -> (MockConfig -> Aeson.Value -> IO MockRequestResults) -> Expectation) -> SpecWith (Arg ((TestEnvironment, MockAgentEnvironment) -> Expectation))
 mockAgentMetadataTest name testBody =

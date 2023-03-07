@@ -126,8 +126,8 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
               & imoRows .~ rows
               & imoPostInsertCheck
                 ?~ Or
-                  [ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (ScalarValue (J.Number acdcArtistId) artistIdScalarType),
-                    ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (ScalarValue (J.Number apocalypticaArtistId) artistIdScalarType)
+                  [ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (Data.scalarValueComparison (J.Number acdcArtistId) artistIdScalarType),
+                    ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (Data.scalarValueComparison (J.Number apocalypticaArtistId) artistIdScalarType)
                   ]
       let mutationRequest =
             Data.emptyMutationRequest
@@ -153,7 +153,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
       let insertOperation =
             mkInsertOperation _tdAlbumsTableName
               & imoRows .~ rows
-              & imoPostInsertCheck ?~ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (ScalarValue (J.Number acdcArtistId) artistIdScalarType)
+              & imoPostInsertCheck ?~ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (Data.scalarValueComparison (J.Number acdcArtistId) artistIdScalarType)
       let mutationRequest =
             Data.emptyMutationRequest
               & mrOperations .~ [InsertOperation insertOperation]
@@ -175,7 +175,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
                 & imoPostInsertCheck
                   ?~ Exists
                     (UnrelatedTable _tdEmployeesTableName)
-                    (ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType) (ScalarValue (J.Number someEmployeeIdThatExists) employeeIdScalarType))
+                    (ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType) (Data.scalarValueComparison (J.Number someEmployeeIdThatExists) employeeIdScalarType))
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
@@ -204,7 +204,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
                 & imoPostInsertCheck
                   ?~ Exists
                     (UnrelatedTable _tdEmployeesTableName)
-                    (ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType) (ScalarValue (J.Number someEmployeeIdThatDoesNotExist) employeeIdScalarType))
+                    (ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType) (Data.scalarValueComparison (J.Number someEmployeeIdThatDoesNotExist) employeeIdScalarType))
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
@@ -227,8 +227,8 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
                   ?~ Exists
                     (RelatedTable _tdArtistRelationshipName)
                     ( Or
-                        [ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" artistNameScalarType) (ScalarValue (J.String "AC/DC") artistNameScalarType),
-                          ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" artistNameScalarType) (ScalarValue (J.String "Apocalyptica") artistNameScalarType)
+                        [ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" artistNameScalarType) (Data.scalarValueComparison (J.String "AC/DC") artistNameScalarType),
+                          ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" artistNameScalarType) (Data.scalarValueComparison (J.String "Apocalyptica") artistNameScalarType)
                         ]
                     )
         let mutationRequest =
@@ -258,7 +258,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
                 & imoPostInsertCheck
                   ?~ Exists
                     (RelatedTable _tdArtistRelationshipName)
-                    (ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" artistNameScalarType) (ScalarValue (J.String "AC/DC") artistNameScalarType))
+                    (ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" artistNameScalarType) (Data.scalarValueComparison (J.String "AC/DC") artistNameScalarType))
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
@@ -712,7 +712,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             Data.emptyQuery
               & qFields ?~ mkFieldsFromExpectedData _tdArtistsTableName (expectedInsertedArtists artistsStartingId)
               & qWhere ?~ ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (J.Number . fromInteger <$> artistIds) artistIdScalarType
-       in QueryRequest _tdArtistsTableName [] query
+       in QueryRequest _tdArtistsTableName [] query Nothing
 
     albumsQueryRequest :: [Integer] -> QueryRequest
     albumsQueryRequest albumIds =
@@ -720,7 +720,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             Data.emptyQuery
               & qFields ?~ mkFieldsFromExpectedData _tdAlbumsTableName (expectedInsertedAcdcAlbums albumsStartingId)
               & qWhere ?~ ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (J.Number . fromInteger <$> albumIds) albumIdScalarType
-       in QueryRequest _tdAlbumsTableName [] query
+       in QueryRequest _tdAlbumsTableName [] query Nothing
 
     employeesQueryRequest :: [Integer] -> QueryRequest
     employeesQueryRequest employeeIds =
@@ -728,7 +728,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             Data.emptyQuery
               & qFields ?~ mkFieldsFromExpectedData _tdEmployeesTableName (expectedInsertedEmployees employeesStartingId)
               & qWhere ?~ ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "EmployeeId" albumIdScalarType) (J.Number . fromInteger <$> employeeIds) employeeIdScalarType
-       in QueryRequest _tdEmployeesTableName [] query
+       in QueryRequest _tdEmployeesTableName [] query Nothing
 
     artistsInsertSchema :: TableInsertSchema
     artistsInsertSchema =

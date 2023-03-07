@@ -35,7 +35,8 @@ backendTypeConfig =
             data_schema:
               supports_primary_keys: true
               supports_foreign_keys: true
-            queries: {}
+            queries:
+              foreach: {}
             relationships: {}
             comparisons:
               subquery:
