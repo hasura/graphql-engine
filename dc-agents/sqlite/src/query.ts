@@ -26,6 +26,7 @@ import {
     Query,
     ColumnFieldValue,
     NullColumnFieldValue,
+    ScalarValue,
   } from "@hasura/dc-api-types";
 import { customAlphabet } from "nanoid";
 import { DEBUGGING_TAGS, QUERY_LENGTH_LIMIT } from "./environment";
@@ -666,6 +667,86 @@ function query(request: QueryRequest): string {
   return tag('query', `SELECT ${result} as data`);
 }
 
+/**
+ * Creates a SELECT statement that returns rows for the foreach ids.
+ *
+ * Given:
+ * ```
+ * [
+ *   {"columnA": {"value": "A1", "value_type": "string" }, "columnB": {"value": B1, "value_type": "string" }},
+ *   {"columnA": {"value": "A2", "value_type": "string" }, "columnB": {"value": B2, "value_type": "string" }}
+ * ]
+ * ```
+ *
+ * We will generate the following SQL:
+ *
+ * ```
+ * SELECT value ->> '$.columnA' AS "columnA", value ->> '$.columnB' AS "columnB"
+ * FROM JSON_EACH('[{"columnA":"A1","columnB":"B1"},{"columnA":"A2","columnB":"B2"}]')
+ * ```
+ */
+function foreach_ids_table_value(foreachIds: Record<string, ScalarValue>[]): string {
+  const columnNames = Object.keys(foreachIds[0]);
+
+  const columns = columnNames.map(name => `value ->> ${escapeString("$." + name)} AS ${escapeIdentifier(name)}`);
+  const jsonData = foreachIds.map(ids => mapObject(ids, ([column, scalarValue]) => [column, scalarValue.value]));
+
+  return tag('foreach_ids_table_value', `SELECT ${columns} FROM JSON_EACH(${escapeString(JSON.stringify(jsonData))})`)
+}
+
+/**
+ * Creates SQL query for a foreach query request.
+ *
+ * This is done by creating a CTE table that contains the foreach ids, and then wrapping
+ * the existing query in a new one that joins from the CTE virtual table to the original query table
+ * using a generated table relationship and fields list.
+ *
+ * The SQL we generate looks like this:
+ *
+ *```
+ * WITH foreach_ids_xxx AS (
+ *   SELECT ... FROM ... (see foreach_ids_table_value)
+ * )
+ * SELECT table_subquery AS data
+ * ```
+ */
+function foreach_query(foreachIds: Record<string, ScalarValue>[], request: QueryRequest): string {
+  const randomSuffix = nanoid();
+  const foreachTableName: TableName = [`foreach_ids_${randomSuffix}`];
+  const foreachRelationshipName = "Foreach";
+  const foreachTableRelationship: TableRelationships = {
+    source_table: foreachTableName,
+    relationships: {
+      [foreachRelationshipName]: {
+        relationship_type: "array",
+        target_table: request.table,
+        column_mapping: mapObject(foreachIds[0], ([columnName, _scalarValue]) => [columnName, columnName])
+      }
+    }
+  };
+  const foreachQueryFields: Record<string, Field> = {
+    "query": {
+      type: "relationship",
+      relationship: foreachRelationshipName,
+      query: request.query
+    }
+  };
+
+  const foreachIdsTableValue = foreach_ids_table_value(foreachIds);
+  const tableSubquery = table_query(
+    [foreachTableRelationship, ...request.table_relationships],
+    foreachTableName,
+    null,
+    foreachQueryFields,
+    {},
+    null,
+    null,
+    null,
+    null,
+    );
+  return tag('foreach_query', `WITH ${escapeTableName(foreachTableName)} AS (${foreachIdsTableValue}) SELECT ${tableSubquery} AS data`);
+}
+
 /** Function to add SQL comments to the generated SQL to tag which procedures generated what text.
  *
  * comment('a','b') => '/*\<a>\*\/ b /*\</a>*\/'
@@ -726,7 +807,10 @@ function tag(t: string, s: string): string {
  */
 export async function queryData(config: Config, sqlLogger: SqlLogger, queryRequest: QueryRequest): Promise<QueryResponse> {
   return await withConnection(config, defaultMode, sqlLogger, async db => {
-    const q = query(queryRequest);
+    const q =
+      queryRequest.foreach
+        ? foreach_query(queryRequest.foreach, queryRequest)
+        : query(queryRequest);
 
     if(q.length > QUERY_LENGTH_LIMIT) {
       const error = new ErrorWithStatusCode(

@@ -80,7 +80,8 @@ backendTypeConfig =
                   _nand: bool
                   _xor: bool
                 graphql_type: Boolean
-            queries: {}
+            queries:
+              foreach: {}
             relationships: {}
             comparisons:
               subquery:
