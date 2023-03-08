@@ -73,6 +73,7 @@ instance BackendMetadata 'DataConnector where
   postDropSourceHook _sourceConfig _tableTriggerMap = pure ()
   buildComputedFieldBooleanExp _ _ _ _ _ _ =
     error "buildComputedFieldBooleanExp: not implemented for the Data Connector backend."
+  supportsBeingRemoteRelationshipTarget = supportsBeingRemoteRelationshipTarget'
 
 resolveBackendInfo' ::
   ( ArrowChoice arr,
@@ -377,3 +378,7 @@ mkTypedSessionVar columnType =
 
 errorAction :: MonadError QErr m => API.ErrorResponse -> m a
 errorAction e = throw400WithDetail DataConnectorError (errorResponseSummary e) (_crDetails e)
+
+supportsBeingRemoteRelationshipTarget' :: DC.SourceConfig -> Bool
+supportsBeingRemoteRelationshipTarget' DC.SourceConfig {..} =
+  isJust $ API._qcForeach =<< API._cQueries _scCapabilities

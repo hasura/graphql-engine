@@ -1244,7 +1244,7 @@ buildRemoteSchemaRemoteRelationship allSources remoteSchemaMap remoteSchema remo
           toJSON $
             CreateRemoteSchemaRemoteRelationship remoteSchema typeName _rrName _rrDefinition
       schemaObj = SORemoteSchemaRemoteRelationship remoteSchema typeName _rrName
-      addRemoteRelationshipContext e = "in remote relationship" <> _rrName <<> ": " <> e
+      addRemoteRelationshipContext e = "in remote relationship " <> _rrName <<> ": " <> e
       -- buildRemoteFieldInfo only knows how to construct dependencies on the RHS of the join condition,
       -- so the dependencies on the remote relationship on the LHS entity have to be computed here
       lhsDependency =

@@ -331,8 +331,11 @@ buildRemoteFieldInfo lhsIdentifier lhsJoinFields RemoteRelationship {..} allSour
       targetTables <-
         Map.lookup _tsrdSource allSources
           `onNothing` throw400 NotFound ("source not found: " <>> _tsrdSource)
-      AB.dispatchAnyBackend @Backend targetTables \(partiallyResolvedSource :: PartiallyResolvedSource b') -> do
+      AB.dispatchAnyBackendWithTwoConstraints @Backend @BackendMetadata targetTables \(partiallyResolvedSource :: PartiallyResolvedSource b') -> do
         let PartiallyResolvedSource _ sourceConfig _ targetTablesInfo _ = partiallyResolvedSource
+        unless (supportsBeingRemoteRelationshipTarget @b' sourceConfig) $
+          throw400 NotSupported ("source " <> sourceNameToText _tsrdSource <> " does not support being used as the target of a remote relationship")
+
         (targetTable :: TableName b') <- runAesonParser J.parseJSON _tsrdTable
         targetColumns <-
           fmap _tciFieldInfoMap $

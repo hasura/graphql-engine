@@ -9,6 +9,7 @@ module Harness.Backend.DataConnector.Mock
     teardown,
     agentConfig,
     mkLocalTestEnvironment,
+    mkLocalTestEnvironment',
 
     -- * Mock Test Construction
     MockConfig (..),
@@ -134,8 +135,11 @@ data MockAgentEnvironment = MockAgentEnvironment
 
 -- | Create the 'I.IORef's and launch the servant mock agent.
 mkLocalTestEnvironment :: TestEnvironment -> Managed MockAgentEnvironment
-mkLocalTestEnvironment _ = mkTestResource do
-  maeConfig <- I.newIORef chinookMock
+mkLocalTestEnvironment = mkLocalTestEnvironment' chinookMock
+
+mkLocalTestEnvironment' :: MockConfig -> TestEnvironment -> Managed MockAgentEnvironment
+mkLocalTestEnvironment' mockConfig _ = mkTestResource do
+  maeConfig <- I.newIORef mockConfig
   maeRecordedRequest <- I.newIORef Nothing
   maeRecordedRequestConfig <- I.newIORef Nothing
   maeThread <- Async.async $ runMockServer maeConfig maeRecordedRequest maeRecordedRequestConfig

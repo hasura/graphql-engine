@@ -5,11 +5,12 @@ module Test.DataConnector.MockAgent.RemoteRelationshipsSpec (spec) where
 
 --------------------------------------------------------------------------------
 
+import Control.Lens ((.~), _Just)
 import Data.Aeson qualified as Aeson
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.List.NonEmpty qualified as NonEmpty
-import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
+import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockConfig, MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -20,19 +21,35 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
-import Harness.Yaml (shouldBeYaml)
+import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
-import Test.Hspec (HasCallStack, SpecWith, describe, shouldBe)
+import Test.Hspec (HasCallStack, SpecWith, describe, it, shouldBe)
 
 --------------------------------------------------------------------------------
 
 spec :: SpecWith GlobalTestEnvironment
-spec =
+spec = describe "Remote Relationships Tests" $ do
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Mock.backendTypeMetadata)
             { Fixture.mkLocalTestEnvironment = Mock.mkLocalTestEnvironment,
+              Fixture.setupTeardown = \(testEnv, mockEnv) ->
+                [ -- First set up the mock server source, which will be the remote relationship target
+                  Mock.setupAction sourceMetadata Mock.agentConfig (testEnv, mockEnv),
+                  -- Then set up the postgres source which will be the remote relationship source
+                  -- including registering the remote relationships
+                  Fixture.SetupAction (setupPostgres testEnv >> registerRemoteRelationships testEnv) (const (teardownPostgres testEnv))
+                ]
+            }
+        ]
+    )
+    tests
+
+  Fixture.runWithLocalTestEnvironment
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Mock.backendTypeMetadata)
+            { Fixture.mkLocalTestEnvironment = Mock.mkLocalTestEnvironment' chinookMockThatDoesNotSupportForeachQueries,
               Fixture.setupTeardown = \(testEnv, mockEnv) ->
                 [ -- First set up the mock server source, which will be the remote relationship target
                   Mock.setupAction sourceMetadata Mock.agentConfig (testEnv, mockEnv),
@@ -42,7 +59,11 @@ spec =
             }
         ]
     )
-    tests
+    errorTests
+  where
+    chinookMockThatDoesNotSupportForeachQueries :: MockConfig
+    chinookMockThatDoesNotSupportForeachQueries =
+      Mock.chinookMock {Mock._capabilitiesResponse = Mock._capabilitiesResponse Mock.chinookMock & API.crCapabilities . API.cQueries . _Just . API.qcForeach .~ Nothing}
 
 --------------------------------------------------------------------------------
 
@@ -86,11 +107,12 @@ postgresTables =
       }
   ]
 
+pgSourceName :: String
+pgSourceName = "pg_source"
+
 setupPostgres :: HasCallStack => TestEnvironment -> IO ()
 setupPostgres testEnv = do
-  let pgSourceName :: String = "pg_source"
-      mockAgentSourceName = BackendType.backendSourceName Mock.backendTypeMetadata
-      sourceConfig = Postgres.defaultSourceConfiguration testEnv
+  let sourceConfig = Postgres.defaultSourceConfiguration testEnv
       schemaName = Schema.getSchemaName testEnv
 
   Postgres.createDatabase testEnv
@@ -118,6 +140,11 @@ setupPostgres testEnv = do
             schema: #{schemaName}
             name: #{tableName table}
       |]
+
+registerRemoteRelationships :: HasCallStack => TestEnvironment -> IO ()
+registerRemoteRelationships testEnv = do
+  let mockAgentSourceName = BackendType.backendSourceName Mock.backendTypeMetadata
+      schemaName = Schema.getSchemaName testEnv
 
   -- Postgres.PgArtist -> MockAgent.Album array relationship
   GraphqlEngine.postMetadata_
@@ -166,7 +193,7 @@ teardownPostgres testEnv = do
 --------------------------------------------------------------------------------
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-tests _opts = describe "Remote Relationships Tests" $ do
+tests _opts = do
   mockAgentGraphqlTest "can act as the target of a remote array relationship" $ \testEnv performGraphqlRequest -> do
     let pgSchemaName = Schema.getSchemaName testEnv
     let headers = []
@@ -483,3 +510,57 @@ mkRowsResponse rows = API.QueryResponse (Just $ HashMap.fromList <$> rows) Nothi
 
 mkQueryResponse :: [[(API.FieldName, API.FieldValue)]] -> [(API.FieldName, Aeson.Value)] -> API.QueryResponse
 mkQueryResponse rows aggregates = API.QueryResponse (Just $ HashMap.fromList <$> rows) (Just $ HashMap.fromList aggregates)
+
+errorTests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
+errorTests opts = do
+  it "creating a remote relationship returns an error when it is unsupported by the target" $ \(testEnv, _) -> do
+    let mockAgentSourceName = BackendType.backendSourceName Mock.backendTypeMetadata
+        schemaName = Schema.getSchemaName testEnv
+
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postMetadataWithStatus
+          400
+          testEnv
+          [yaml|
+          type: pg_create_remote_relationship
+          args:
+            source: *pgSourceName
+            table:
+              schema: *schemaName
+              name: PgArtist
+            name: RemoteAlbums
+            definition:
+              to_source:
+                source: *mockAgentSourceName
+                table: [Album]
+                relationship_type: array
+                field_mapping:
+                  ArtistId: ArtistId
+        |]
+      )
+      [interpolateYaml|
+        code: invalid-configuration
+        error: 'Inconsistent object: in table "#{schemaName}.PgArtist": in remote relationship "RemoteAlbums":
+          source #{mockAgentSourceName} does not support being used as the target of a remote relationship'
+        internal:
+        - definition:
+            definition:
+              to_source:
+                field_mapping:
+                  ArtistId: ArtistId
+                relationship_type: array
+                source: #{mockAgentSourceName}
+                table:
+                - Album
+            name: RemoteAlbums
+            source: #{pgSourceName}
+            table:
+              name: PgArtist
+              schema: #{schemaName}
+          name: remote_relationship RemoteAlbums in table #{schemaName}.PgArtist in source #{pgSourceName}
+          reason: 'Inconsistent object: in table "#{schemaName}.PgArtist": in remote relationship "RemoteAlbums":
+            source #{mockAgentSourceName} does not support being used as the target of a remote relationship'
+          type: remote_relationship
+        path: $.args
+      |]

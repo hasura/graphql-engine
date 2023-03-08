@@ -195,3 +195,7 @@ class
     m ()
   validateLogicalModel _ _ _ =
     throw500 "validateLogicalModel: not implemented for this backend."
+
+  -- | Allows the backend to control whether or not a particular source supports being
+  -- the target of remote relationships or not
+  supportsBeingRemoteRelationshipTarget :: SourceConfig b -> Bool

@@ -138,3 +138,4 @@ instance
   validateRelationship = validateRel @pgKind
   buildComputedFieldBooleanExp = Postgres.buildComputedFieldBooleanExp
   validateLogicalModel = Postgres.validateLogicalModel
+  supportsBeingRemoteRelationshipTarget _ = True
