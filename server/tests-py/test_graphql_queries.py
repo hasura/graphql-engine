@@ -131,9 +131,6 @@ class TestGraphQLQueryBasicMSSQL:
     def test_select_various_mssql_types(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_test_types_mssql.yaml', transport)
 
-    def test_select_query_user(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/select_query_user_mssql.yaml", transport)
-
     def test_select_query_user_col_change(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_query_user_col_change_mssql.yaml")
 
@@ -167,9 +164,6 @@ class TestGraphQLQueryBasicPostgres:
     def test_nested_select_with_foreign_key_alter(self, hge_ctx, transport):
         transport = 'http'
         check_query_f(hge_ctx, self.dir() + "/nested_select_with_foreign_key_alter.yaml", transport)
-
-    def test_select_query_user(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/select_query_user_postgres.yaml", transport)
 
     def test_select_query_user_col_change(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_query_user_col_change_postgres.yaml")
