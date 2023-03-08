@@ -35,9 +35,15 @@ const CustomDocItem = props => {
       }
     >
       <ActualDocItem {...props} />
-      <div className={styles['custom_doc_item_footer']}>
+      <div
+        className={
+          props.location.pathname === `/docs/latest/index/`
+            ? `custom_doc_item_footer-x-wide`
+            : styles['custom_doc_item_footer']
+        }
+      >
         {/*<PageHelpful />*/}
-        <ScrollToFeedbackButton />
+        <ScrollToFeedbackButton path={props.location.pathname}/>
         <HasuraConBanner {...props} />
         <GraphQLWithHasuraBanner />
         <CustomFooter />

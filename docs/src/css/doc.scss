@@ -153,10 +153,19 @@ html[data-theme='dark'] {
         margin-left: 0.25rem;
       }
 
+      .pagination-nav__label::before {
+        opacity: 0;
+      }
+
       &:hover {
         .pagination-nav__label::after {
           transform: translateX(0.25rem);
         }
+      }
+    }
+    &--prev {
+      .pagination-nav__label::after {
+        opacity: 0;
       }
     }
   }

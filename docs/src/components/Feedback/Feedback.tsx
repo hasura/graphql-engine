@@ -1,4 +1,4 @@
-import React, { ReactNode, useRef, useState } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { saTrack } from '@site/src/utils/segmentAnalytics';
 import styles from './styles.module.scss';
 export const Feedback = ({ metadata }: { metadata: any }) => {
