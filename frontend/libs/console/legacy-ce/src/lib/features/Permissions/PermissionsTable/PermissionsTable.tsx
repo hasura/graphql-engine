@@ -118,11 +118,8 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                   />
 
                   {permissionTypes.map(({ permissionType, access }) => {
-                    // only select is possible on GDC as mutations are not available yet
-                    const isEditable =
-                      (roleName !== 'admin' && permissionType === 'select') ||
-                      (roleName !== 'admin' && permissionType === 'insert') ||
-                      (roleName !== 'admin' && permissionType === 'delete');
+                    // TODO: add checks to see what permissions are supported by each db
+                    const isEditable = true;
 
                     if (isNewRole) {
                       return (
@@ -131,6 +128,7 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                           isEditable={isEditable}
                           access={access}
                           aria-label={`${state.context.newRoleName}-${permissionType}`}
+                          testId={`permission-table-button-${roleName}-${permissionType}`}
                           isCurrentEdit={
                             permissionType ===
                               state.context.selectedForm.queryType &&
@@ -165,6 +163,7 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                         isEditable={isEditable}
                         access={access}
                         aria-label={`${roleName}-${permissionType}`}
+                        testId={`permission-table-button-${roleName}-${permissionType}`}
                         isCurrentEdit={
                           permissionType ===
                             state.context.selectedForm.queryType &&

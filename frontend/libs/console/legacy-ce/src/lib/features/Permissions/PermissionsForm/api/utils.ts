@@ -127,6 +127,49 @@ const createDeleteObject = (input: PermissionsSchema) => {
   throw new Error('Case not handled');
 };
 
+type UpdatePermissionMetadata = {
+  columns: string[];
+  filter: Record<string, any>; // filter is PRE
+  check?: Record<string, any>; // check is POST
+  backend_only?: boolean;
+  set: Record<string, any>;
+};
+
+const createUpdateObject = (input: PermissionsSchema) => {
+  if (input.queryType === 'update') {
+    const columns = Object.entries(input.columns)
+      .filter(({ 1: value }) => value)
+      .map(([key]) => key);
+
+    const filter = formatFilterValues(input.filter);
+
+    const check = formatFilterValues(input.check);
+    const set =
+      input?.presets?.reduce((acc, preset) => {
+        if (preset.columnName === 'default') return acc;
+        const isNumber = !isNaN(Number(preset.columnValue));
+        return {
+          ...acc,
+          [preset.columnName]: isNumber
+            ? Number(preset.columnValue)
+            : preset.columnValue,
+        };
+      }, {}) ?? {};
+
+    const permissionObject: UpdatePermissionMetadata = {
+      columns,
+      filter,
+      check,
+      set,
+      backend_only: input.backendOnly,
+    };
+
+    return permissionObject;
+  }
+
+  throw new Error('Case not handled');
+};
+
 /**
  * creates the permissions object for the server
  */
@@ -137,7 +180,7 @@ const createPermission = (formData: PermissionsSchema) => {
     case 'insert':
       return createInsertObject(formData);
     case 'update':
-      throw new Error('Case not handled');
+      return createUpdateObject(formData);
     case 'delete':
       return createDeleteObject(formData);
     default:

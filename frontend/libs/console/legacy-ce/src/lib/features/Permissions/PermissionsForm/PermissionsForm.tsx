@@ -26,6 +26,8 @@ import ColumnRootFieldPermissions from './components/RootFieldPermissions/RootFi
 import { useListAllTableColumns } from '../../Data';
 import { useMetadataSource } from '../../MetadataAPI';
 import useScrollIntoView from './hooks/useScrollIntoView';
+import { getAllowedFilterKeys } from './hooks/dataFetchingHooks/useFormData/createFormData/index';
+import { isEmpty } from 'lodash';
 
 export interface ComponentProps {
   dataSourceName: string;
@@ -79,10 +81,8 @@ const Component = (props: ComponentProps) => {
     handleClose();
   };
 
-  // for update it is possible to set pre update and post update row checks
-  const rowPermissions = queryType === 'update' ? ['pre', 'post'] : [queryType];
-
   const { formData, defaultValues } = data || {};
+
   const {
     methods: { getValues, reset },
     Form,
@@ -106,10 +106,13 @@ const Component = (props: ComponentProps) => {
   const key = `${JSON.stringify(table)}-${queryType}-${roleName}`;
 
   const filterType = getValues('filterType');
-
+  const filterKeys = getAllowedFilterKeys(queryType);
   return (
     <Form onSubmit={onSubmit} key={key}>
-      <div className="bg-white rounded p-md border border-gray-300">
+      <div
+        className="bg-white rounded p-md border border-gray-300"
+        data-testid="permissions-form"
+      >
         <div className="pb-4 flex items-center gap-4">
           <Button type="button" onClick={handleClose}>
             Close
@@ -124,33 +127,47 @@ const Component = (props: ComponentProps) => {
           queryType={queryType}
           defaultOpen
         >
-          {rowPermissions.map(permissionName => (
-            <React.Fragment key={permissionName}>
-              {queryType === 'update' && (
+          <React.Fragment key={key}>
+            {queryType === 'update' && (
+              <p className="my-2">
+                <strong>Pre-update &nbsp; check</strong>
+                &nbsp;
+              </p>
+            )}
+            <RowPermissionsSection
+              table={table}
+              roleName={roleName}
+              queryType={queryType}
+              subQueryType={queryType === 'update' ? 'pre' : undefined}
+              permissionsKey={filterKeys[0]}
+              allRowChecks={allRowChecks || []}
+              dataSourceName={dataSourceName}
+              supportedOperators={data?.defaultValues?.supportedOperators ?? []}
+              defaultValues={defaultValues}
+            />
+            {queryType === 'update' && (
+              <div data-testid="post-update-check-container">
                 <p className="my-2">
-                  <strong>
-                    {permissionName === 'pre' ? 'Pre-update' : 'Post-update'}
-                    &nbsp; check
-                  </strong>
-                  &nbsp;
-                  {permissionName === 'Post-update' && '(optional)'}
+                  <strong>Post-update &nbsp; check</strong>
+                  &nbsp; (optional)
                 </p>
-              )}
-              <RowPermissionsSection
-                table={table}
-                queryType={queryType}
-                subQueryType={
-                  queryType === 'update' ? permissionName : undefined
-                }
-                allRowChecks={allRowChecks || []}
-                dataSourceName={dataSourceName}
-                supportedOperators={
-                  data?.defaultValues?.supportedOperators ?? []
-                }
-                defaultValues={defaultValues}
-              />
-            </React.Fragment>
-          ))}
+
+                <RowPermissionsSection
+                  table={table}
+                  roleName={roleName}
+                  queryType={queryType}
+                  subQueryType={queryType === 'update' ? 'post' : undefined}
+                  allRowChecks={allRowChecks || []}
+                  permissionsKey={filterKeys[1]}
+                  dataSourceName={dataSourceName}
+                  supportedOperators={
+                    data?.defaultValues?.supportedOperators ?? []
+                  }
+                  defaultValues={defaultValues}
+                />
+              </div>
+            )}
+          </React.Fragment>
         </RowPermissionsSectionWrapper>
         {queryType !== 'delete' && (
           <ColumnPermissionsSection

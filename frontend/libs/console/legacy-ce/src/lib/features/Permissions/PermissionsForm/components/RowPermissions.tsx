@@ -14,7 +14,6 @@ import { getIngForm } from '../../../../components/Services/Data/utils';
 import { RowPermissionBuilder } from './RowPermissionsBuilder';
 import { QueryType } from '../../types';
 import { ReturnValue } from '../hooks';
-import { getAllowedFilterKeys } from '../../PermissionsTable/hooks';
 
 const NoChecksLabel = () => (
   <span data-test="without-checks">Without any checks&nbsp;</span>
@@ -35,6 +34,8 @@ export interface RowPermissionsProps {
   dataSourceName: string;
   supportedOperators: Operator[];
   defaultValues: ReturnValue['defaultValues'];
+  permissionsKey: 'check' | 'filter';
+  roleName: string;
 }
 
 enum SelectedSection {
@@ -49,7 +50,7 @@ const getRowPermission = (queryType: QueryType, subQueryType?: string) => {
   }
 
   if (queryType === 'update') {
-    if (subQueryType === 'pre') {
+    if (subQueryType === 'post') {
       return 'check';
     }
 
@@ -68,7 +69,7 @@ const getRowPermissionCheckType = (
   }
 
   if (queryType === 'update') {
-    if (subQueryType === 'pre') {
+    if (subQueryType === 'post') {
       return 'checkType';
     }
 
@@ -121,6 +122,14 @@ const useTypeName = ({
   });
 };
 
+const getUpdatePermissionBuilderIdSuffix = (
+  id: string,
+  subQueryType: string | undefined
+) => {
+  if (subQueryType) return `${id}-${subQueryType}`;
+  return id;
+};
+
 export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
   table,
   queryType,
@@ -128,6 +137,8 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
   allRowChecks,
   dataSourceName,
   defaultValues,
+  permissionsKey,
+  roleName,
 }) => {
   const { data: tableName, isLoading } = useTypeName({ table, dataSourceName });
   const { register, watch, setValue } = useFormContext();
@@ -139,12 +150,7 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
     subQueryType
   );
 
-  // if the query type is update and pre checks are not set, disable post checks
-  const disabled =
-    queryType === 'update' && subQueryType === 'post' && !watch('check');
-
   const selectedSection = watch(rowPermissionsCheckType);
-
   return (
     <fieldset key={queryType} className="grid gap-2">
       <div>
@@ -153,7 +159,6 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
             id={SelectedSection.NoChecks}
             type="radio"
             value={SelectedSection.NoChecks}
-            disabled={disabled}
             onClick={() => {
               setValue(rowPermissionsCheckType, SelectedSection.NoChecks);
               setValue(rowPermissions, {});
@@ -189,14 +194,17 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
           <label className="flex items-center gap-2">
             <input
               id={`custom_${query}`}
+              data-testid={getUpdatePermissionBuilderIdSuffix(
+                `external-${roleName}-${query}-input`,
+                subQueryType
+              )}
               type="radio"
               value={query}
-              disabled={disabled}
+              {...register(rowPermissionsCheckType)}
               onClick={() => {
                 setValue(rowPermissionsCheckType, query);
                 setValue(rowPermissions, JSON.parse(value));
               }}
-              {...register(rowPermissionsCheckType)}
             />
             <span data-test="mutual-check">
               With same custom check as&nbsp;<strong>{query}</strong>
@@ -204,22 +212,16 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
           </label>
 
           {selectedSection === query && (
-            <div className="mt-4 p-6 rounded-lg bg-white border border-gray-200 min-h-32 w-full">
-              <AceEditor
-                mode="json"
-                minLines={1}
-                fontSize={14}
-                height="18px"
-                width="100%"
-                theme="github"
-                name={`${tableName}-json-editor`}
-                value="{}"
-                onChange={() =>
-                  setValue(rowPermissionsCheckType, SelectedSection.Custom)
-                }
-                editorProps={{ $blockScrolling: true }}
-                setOptions={{ useWorker: false }}
-              />
+            <div className="pt-4">
+              {!isLoading && tableName ? (
+                <RowPermissionBuilder
+                  permissionsKey={permissionsKey}
+                  table={table}
+                  dataSourceName={dataSourceName}
+                />
+              ) : (
+                <>Loading...</>
+              )}
             </div>
           )}
         </div>
@@ -230,8 +232,11 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
           <input
             id={SelectedSection.Custom}
             type="radio"
+            data-testid={getUpdatePermissionBuilderIdSuffix(
+              `custom-${roleName}-${queryType}-input`,
+              subQueryType
+            )}
             value={SelectedSection.Custom}
-            disabled={disabled}
             {...register(rowPermissionsCheckType)}
             onClick={() => {
               setValue(rowPermissionsCheckType, SelectedSection.Custom);
@@ -248,7 +253,7 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
           <div className="pt-4">
             {!isLoading && tableName ? (
               <RowPermissionBuilder
-                nesting={getAllowedFilterKeys(queryType)}
+                permissionsKey={permissionsKey}
                 table={table}
                 dataSourceName={dataSourceName}
               />

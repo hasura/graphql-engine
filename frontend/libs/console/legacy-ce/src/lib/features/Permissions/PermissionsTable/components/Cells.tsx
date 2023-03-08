@@ -71,12 +71,14 @@ export interface EditableCellProps extends React.ComponentProps<'button'> {
   access: 'fullAccess' | 'partialAccess' | 'noAccess';
   isEditable: boolean;
   isCurrentEdit: boolean;
+  testId: string;
 }
 
 export const EditableCell: React.FC<EditableCellProps> = ({
   access,
   isEditable,
   isCurrentEdit,
+  testId,
   ...rest
 }) => {
   if (!isEditable) {
@@ -90,6 +92,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
   return (
     <td>
       <button
+        data-testid={testId}
         type="submit"
         className={`cursor-pointer h-20 border-none w-full whitespace-nowrap text-center ${
           isCurrentEdit ? 'bg-amber-300' : 'hover:bg-indigo-50'

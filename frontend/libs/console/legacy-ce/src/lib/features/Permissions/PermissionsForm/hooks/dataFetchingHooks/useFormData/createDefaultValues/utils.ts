@@ -212,8 +212,8 @@ export const createPermission = {
     permission: UpdatePermissionDefinition,
     tableColumns: TableColumn[]
   ) => {
-    const check = JSON.stringify(permission?.check) || '';
-    const filter = JSON.stringify(permission?.filter) || '';
+    const check = permission?.check || {};
+    const filter = permission?.filter || {};
     const checkType = getCheckType(permission?.check);
     const filterType = getCheckType(permission?.filter);
     const presets = getPresets({

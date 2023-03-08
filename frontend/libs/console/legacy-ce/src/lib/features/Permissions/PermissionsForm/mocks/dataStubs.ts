@@ -101,7 +101,7 @@ export const metadata: Metadata = {
                 role: 'user',
                 permission: {
                   columns: ['ArtistId', 'Name'],
-                  filter: {},
+                  filter: { ArtistId: { _eq: 'X-Hasura-User-Id' } },
                   allow_aggregations: true,
                 },
               },
