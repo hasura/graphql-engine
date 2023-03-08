@@ -485,6 +485,7 @@ export const generateCreateEventTriggerQuery = (
           }
         : {}),
       replace,
+      headers: transformHeaders(state?.headers),
       request_transform: requestTransform,
     },
     source.driver
