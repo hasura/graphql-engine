@@ -1,11 +1,7 @@
 import React from 'react';
-import { isEnvironmentSupportMultiTenantConnectionPooling } from '@/utils/proConsole';
+import { isEnvironmentSupportMultiTenantConnectionPooling } from '../../../utils/proConsole';
 import { DeepRequired } from 'ts-essentials';
-import {
-  ColumnsInfoResult,
-  currentDriver,
-  DataSourcesAPI,
-} from '@/dataSources';
+import type { ColumnsInfoResult, DataSourcesAPI } from '../../';
 
 import {
   Table,
@@ -81,8 +77,8 @@ import {
   getAlterViewCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
-  getDataTriggerLogsCountQuery,
   getDataTriggerLogsQuery,
+  getDatabaseTableNames,
 } from './sqlUtils';
 import globals from '../../../Globals';
 
@@ -334,10 +330,6 @@ type ColumnsInfoPayload = {
 };
 
 const isColumnGenerated = (isGenerated: ColumnsInfoPayload['is_generated']) => {
-  if (currentDriver === 'cockroach') {
-    return isGenerated === 'YES';
-  }
-
   return isGenerated === 'ALWAYS';
 };
 
@@ -895,6 +887,6 @@ export const postgres: DataSourcesAPI = {
   getAlterViewCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
-  getDataTriggerLogsCountQuery,
   getDataTriggerLogsQuery,
+  getDatabaseTableNames,
 };

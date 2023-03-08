@@ -1,0 +1,142 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Check useInstallMetadata installs the correct metadata should install the correct metadata and call success callback 1`] = `
+{
+  "args": {
+    "sources": [
+      {
+        "configuration": {
+          "connection_info": {
+            "database_url": "postgres://postgres:postgrespassword@postgres:5432/postgres",
+            "isolation_level": "read-committed",
+            "use_prepared_statements": false,
+          },
+        },
+        "functions": [],
+        "kind": "postgres",
+        "name": "default",
+        "tables": [
+          {
+            "array_relationships": [
+              {
+                "name": "orders",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "customer_id",
+                    "table": {
+                      "name": "order",
+                      "schema": "public",
+                    },
+                  },
+                },
+              },
+            ],
+            "table": {
+              "name": "customer",
+              "schema": "public",
+            },
+          },
+          {
+            "object_relationships": [
+              {
+                "name": "customer",
+                "using": {
+                  "foreign_key_constraint_on": "customer_id",
+                },
+              },
+            ],
+            "table": {
+              "name": "order",
+              "schema": "public",
+            },
+          },
+        ],
+      },
+      {
+        "configuration": {
+          "connection_info": {
+            "database_url": "some_secret_db_url",
+            "isolation_level": "read-committed",
+            "use_prepared_statements": false,
+          },
+        },
+        "customization": {
+          "naming_convention": "hasura-default",
+        },
+        "kind": "postgres",
+        "name": "fragrant-firefly",
+        "tables": [
+          {
+            "array_relationships": [
+              {
+                "name": "article_tags",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "article_id",
+                    "table": {
+                      "name": "article_tag",
+                      "schema": "_manytomany",
+                    },
+                  },
+                },
+              },
+            ],
+            "table": {
+              "name": "article",
+              "schema": "_manytomany",
+            },
+          },
+          {
+            "object_relationships": [
+              {
+                "name": "article",
+                "using": {
+                  "foreign_key_constraint_on": "article_id",
+                },
+              },
+              {
+                "name": "tag",
+                "using": {
+                  "foreign_key_constraint_on": "tag_id",
+                },
+              },
+            ],
+            "table": {
+              "name": "article_tag",
+              "schema": "_manytomany",
+            },
+          },
+          {
+            "array_relationships": [
+              {
+                "name": "article_tags",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "tag_id",
+                    "table": {
+                      "name": "article_tag",
+                      "schema": "_manytomany",
+                    },
+                  },
+                },
+              },
+            ],
+            "table": {
+              "name": "tag",
+              "schema": "_manytomany",
+            },
+          },
+          {
+            "table": {
+              "name": "sample_table",
+              "schema": "public",
+            },
+          },
+        ],
+      },
+    ],
+    "version": 3,
+  },
+  "type": "replace_metadata",
+}
+`;

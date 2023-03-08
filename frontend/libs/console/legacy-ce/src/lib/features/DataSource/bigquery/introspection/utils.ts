@@ -1,5 +1,6 @@
+import { getEntries } from '../../../../components/Services/Data/Common/tsUtils';
 import { RunSQLResponse } from '../../api';
-import { IntrospectedTable } from '../../types';
+import { IntrospectedTable, TableColumn } from '../../types';
 
 export const adaptIntrospectedBigQueryTables = (
   runSqlResponse: RunSQLResponse
@@ -21,3 +22,30 @@ export const adaptIntrospectedBigQueryTables = (
 
   return adaptedResponse ?? [];
 };
+
+export function adaptSQLDataType(
+  sqlDataType: string
+): TableColumn['consoleDataType'] {
+  const DataTypeToSQLTypeMap: Record<TableColumn['consoleDataType'], string[]> =
+    {
+      boolean: ['BOOL'],
+      text: [],
+      string: [
+        'STRING',
+        'STRUCT',
+        'varchar',
+        'DATE',
+        'DATETIME',
+        'TIME',
+        'TIMESTAMP',
+      ],
+      number: ['BIGNUMERIC', 'FLOAT64', 'INT64', 'INTERVAL', 'NUMERIC'],
+      json: ['JSON', 'xml'],
+    };
+
+  const [dataType] = getEntries(DataTypeToSQLTypeMap).find(([, value]) =>
+    value.includes(sqlDataType)
+  ) ?? ['string', []];
+
+  return dataType;
+}

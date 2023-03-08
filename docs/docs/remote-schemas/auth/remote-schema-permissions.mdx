@@ -92,7 +92,7 @@ Metadata API.
 
 You can modify different [GraphQL Types](https://spec.graphql.org/June2018/#sec-Types) in the following manner:
 
-1. Scalar - A scalar definition cannot be modified differently from its correponding Remote Schema scalar definition.
+1. Scalar - A scalar definition cannot be modified differently from its corresponding Remote Schema scalar definition.
 2. Object - An object can omit some of the fields from its definition.
 3. Interface - An interface, like the object type, can omit some of the fields from its definition.
 4. Union - A union can be modified to only support a subset of the `possibleTypes` of its original union definition.
@@ -190,7 +190,7 @@ type Query {
 :::info Note
 
 By default, any preset string value in the format of `x-hasura-*` is assumed to be a
-[session variable](/auth/authorization/roles-variables.mdx#dynamic-session-variables)`. To override this behaviour i.e. to treat the value literally, the `static`argument equal to`true`needs to be added in the`preset`directive. In the following example, the`x-hasura-user-id`
+[session variable](/auth/authorization/roles-variables.mdx#dynamic-session-variables)`. To override this behavior i.e. to treat the value literally, the `static`argument equal to`true`needs to be added in the`preset`directive. In the following example, the`x-hasura-user-id`
 will be treated literally.
 
 ```graphql

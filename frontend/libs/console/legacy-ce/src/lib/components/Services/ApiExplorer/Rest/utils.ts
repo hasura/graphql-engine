@@ -86,8 +86,8 @@ const acceptedGQLTypes = [
   'Double',
 ] as const;
 export type VariableData = {
-  kind: typeof acceptedTypeKind[number] | 'Unsupported';
-  type: typeof acceptedGQLTypes[number];
+  kind: (typeof acceptedTypeKind)[number] | 'Unsupported';
+  type: (typeof acceptedGQLTypes)[number];
   name: string;
 };
 

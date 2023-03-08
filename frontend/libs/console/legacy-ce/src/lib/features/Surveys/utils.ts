@@ -1,6 +1,6 @@
 import moment from 'moment';
-import { cloudDataServiceApiClient } from '@/hooks/cloudDataServiceApiClient';
-import { reactQueryClient } from '@/lib/reactQuery';
+import { cloudDataServiceApiClient } from '../../hooks/cloudDataServiceApiClient';
+import { reactQueryClient } from '../../lib/reactQuery';
 import {
   addSurveyAnswerMutation,
   fetchAllSurveysDataQuery,

@@ -3,7 +3,7 @@ import { DownOutlined, RightOutlined } from '@ant-design/icons';
 import {
   availableFeatureFlagIds,
   useIsFeatureFlagEnabled,
-} from '@/features/FeatureFlags'; // Run time flag
+} from '../../../features/FeatureFlags'; // Run time flag
 import {
   FaDatabase,
   FaFolder,
@@ -21,6 +21,8 @@ import {
 } from '../../Common/utils/routesUtils';
 import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 import { GDCTree } from './GDCTree/GDCTree';
+import { useTreeData } from './GDCTree';
+import { DataNode } from 'antd/lib/tree';
 
 type SourceItemsTypes =
   | 'database'
@@ -408,11 +410,11 @@ const TreeView: React.FC<TreeViewProps> = ({
     onDatabaseChange(dataSource);
   };
 
-  const { enabled: isGDCTreeViewEnabled } = useIsFeatureFlagEnabled(
-    availableFeatureFlagIds.gdcId
-  );
+  const { data: gdcDatabases } = useTreeData();
 
-  if (items.length === 0 && !isGDCTreeViewEnabled) {
+  const allDatabases = [...items, ...(gdcDatabases ?? [])];
+
+  if (allDatabases.length === 0) {
     return preLoadState ? (
       <div className={styles.treeNav}>
         <span className={`${styles.title} ${styles.padd_bottom_small}`}>
@@ -456,11 +458,9 @@ const TreeView: React.FC<TreeViewProps> = ({
           schemaLoading={schemaLoading}
         />
       ))}
-      {isGDCTreeViewEnabled ? (
-        <div id="tree-container" className="inline-block">
-          <GDCTree onSelect={gdcItemClick} />
-        </div>
-      ) : null}
+      <div id="tree-container" className="inline-block">
+        <GDCTree onSelect={gdcItemClick} treeData={gdcDatabases ?? []} />
+      </div>
     </div>
   );
 };

@@ -45,8 +45,7 @@ On the Hasura Cloud dashboard, create a new project:
 
 After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
 
-On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Hasura will prompt you for a
-Postgres Database URL. We'll create this in the next step and then come back here.
+On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Select AlloyDB from the `Data Source Driver` dropdown. Hasura will prompt you for a Postgres Database URL. We'll create this in the next step and then come back here.
 
 <Thumbnail src="/img/cloud-dbs/alloy/alloy-existing-db-setup.png" alt="Hasura Cloud database setup" width="700px" />
 
@@ -88,6 +87,12 @@ Under the Networking tab, you'll be prompted to set up a list of IP addresses fo
 `SET UP CONNECTION`:
 
 <Thumbnail src="/img/cloud-dbs/alloy/alloy-set-up-connection.png" alt="AlloyDB set up connection" width="1000px" />
+
+:::info Note
+
+If you work within a company project, you might need extra permissions to ensure that you can choose a specific network. Please contact your Google Cloud admin.
+
+:::
 
 Either select an IP range or let GCP automatically allocate a range. After making your selection, click `CONTINUE` and
 then `CREATE CONNECTION`:
@@ -203,7 +208,7 @@ Then click `Connect Database`.
 
 :::info Note
 
-For security reasons, it is recommended to set database URLs as [env vars](/projects/env-vars.mdx) and using the env
+For security reasons, it is recommended to set database URLs as [env vars](/hasura-cloud/projects/env-vars.mdx) and using the env
 vars to connect to the databases in place of the raw database URLs.
 
 :::
@@ -218,8 +223,8 @@ Voilà. You are ready to start developing.
   [GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
 
 - If using Hasura Cloud, you can also click the gear icon to manage your Hasura Cloud project. (e.g. add
-  [collaborators](/projects/collaborators.mdx), [env vars](/projects/env-vars.mdx) or
-  [custom domains](/projects/domains.mdx)).
+  [collaborators](/hasura-cloud/projects/collaborators.mdx), [env vars](/hasura-cloud/projects/env-vars.mdx) or
+  [custom domains](/hasura-cloud/projects/domains.mdx)).
 
 <Thumbnail src="/img/getting-started/project-manage.png" alt="Project actions" width="860px" />
 

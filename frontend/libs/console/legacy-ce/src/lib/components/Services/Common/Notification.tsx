@@ -1,13 +1,14 @@
-import React, { ReactText } from 'react';
+import React, { ReactNode, ReactText } from 'react';
 import AceEditor from 'react-ace';
+import { toast } from 'react-hot-toast/headless';
 import {
-  removeAll as removeNotifications,
-  show as displayNotification,
-  NotificationLevel,
-} from 'react-notification-system-redux';
-import { showModal } from '@/store/modal/modal.actions';
-import { TableTrackingCustomizationModalKey } from '@/store/modal/modal.constants';
-import { Button } from '@/new-components/Button';
+  hasuraToast,
+  ToastProps,
+  ToastType,
+} from '../../../new-components/Toasts';
+import { showModal } from '../../../store/modal/modal.actions';
+import { TableTrackingCustomizationModalKey } from '../../../store/modal/modal.constants';
+import { Button } from '../../../new-components/Button';
 import { Thunk } from '../../../types';
 import { Json } from '../../Common/utils/tsUtils';
 
@@ -15,7 +16,7 @@ import './Notification/NotificationOverrides.css';
 import { isObject, isString } from '../../Common/utils/jsUtils';
 
 import styles from './Notification/Notification.module.scss';
-import { AlternateActionButton } from './AlternateActionButton';
+import { getAnalyticsAttributes } from '../../../features/Analytics';
 
 export interface Notification {
   title?: string | JSX.Element;
@@ -35,43 +36,61 @@ export interface Notification {
     onClick: () => void;
     trackId?: string;
   };
+  onRemove?: () => void;
 }
 
+/**
+ * @deprecated Please use the new toast API /new-components/Toasts/hasuraToast.tsx
+ */
 export const showNotification = (
   options: Notification,
-  level: NotificationLevel,
+  level: ToastType,
   noDismissNotifications?: boolean
 ): Thunk => {
-  return dispatch => {
-    if (level === 'success' && !noDismissNotifications) {
-      dispatch(removeNotifications());
-    }
-
-    const commonNotificationConfig = {
-      position: options.position || 'tr',
-      autoDismiss: ['error', 'warning'].includes(level) ? 0 : 5,
-      dismissible: ['error', 'warning'].includes(level)
-        ? ('button' as any) // bug in @types/react-notification-system-redux types
-        : ('click' as any),
-      ...options,
+  return () => {
+    const toastProps: ToastProps = {
+      type: level,
     };
+    let titleAsNode: ReactNode | undefined;
+    let messageAsNode: ReactNode | undefined;
 
-    if (!options.alternateActionButtonProps) {
-      dispatch(displayNotification(commonNotificationConfig, level));
-      return;
+    if (level === 'success') {
+      toast.remove();
     }
 
-    dispatch(
-      displayNotification(
-        {
-          ...commonNotificationConfig,
-          children: (
-            <AlternateActionButton {...options.alternateActionButtonProps} />
-          ),
-        },
-        level
-      )
+    if (options.alternateActionButtonProps) {
+      toastProps.button = {
+        label: options.alternateActionButtonProps.label,
+        onClick: options.alternateActionButtonProps.onClick,
+      };
+      if (options.alternateActionButtonProps.trackId) {
+        toastProps.button.dataAttributes = getAnalyticsAttributes(
+          options.alternateActionButtonProps.trackId
+        );
+      }
+    }
+
+    if (typeof options?.title === 'object' && toastProps?.children) {
+      titleAsNode = options.title;
+    } else if (typeof options?.title === 'string') {
+      toastProps.title = options.title;
+    }
+
+    if (typeof options?.message === 'object' && toastProps?.children) {
+      messageAsNode = options.message;
+    } else if (typeof options?.message === 'string') {
+      toastProps.message = options.message;
+    }
+
+    toastProps.children = (
+      <>
+        {titleAsNode}
+        {messageAsNode}
+        {options.children}
+      </>
     );
+
+    hasuraToast(toastProps);
   };
 };
 
@@ -221,6 +240,9 @@ export const getErrorMessage = (
   return '';
 };
 
+/**
+ * @deprecated Please use the new toast API /new-components/Toasts/hasuraToast.tsx
+ */
 const showErrorNotification = (
   title: string,
   message?: string | null,
@@ -267,7 +289,7 @@ const showErrorNotification = (
     const getNotificationAction = () => {
       if (errorJson) {
         const errorDetails = [
-          getNotificationDetails(errorJson, getRefreshBtn()),
+          getNotificationDetails(errorJson as Json, getRefreshBtn()),
         ];
 
         const action = {
@@ -338,6 +360,9 @@ const showErrorNotification = (
   };
 };
 
+/**
+ * @deprecated Please use the new toast API /new-components/Toasts/hasuraToast.tsx
+ */
 const showSuccessNotification = (
   title: string,
   message?: string,
@@ -358,6 +383,9 @@ const showSuccessNotification = (
   };
 };
 
+/**
+ * @deprecated Please use the new toast API /new-components/Toasts/hasuraToast.tsx
+ */
 const showInfoNotification = (title: string): Thunk => {
   return dispatch => {
     dispatch(
@@ -372,6 +400,9 @@ const showInfoNotification = (title: string): Thunk => {
   };
 };
 
+/**
+ * @deprecated Please use the new toast API /new-components/Toasts/hasuraToast.tsx
+ */
 const showWarningNotification = (
   title: string,
   message: string,

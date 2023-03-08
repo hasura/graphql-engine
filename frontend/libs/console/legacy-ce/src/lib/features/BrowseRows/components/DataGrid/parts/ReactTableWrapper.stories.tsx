@@ -1,9 +1,10 @@
 import React from 'react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
-import { Relationship } from '@/features/DatabaseRelationships';
+import { Relationship } from '../../../../DatabaseRelationships';
 import { expect } from '@storybook/jest';
 import { waitFor, within } from '@storybook/testing-library';
+import { action } from '@storybook/addon-actions';
 import { ReactTableWrapper } from './ReactTableWrapper';
 import { handlers } from '../../../__mocks__/handlers.mock';
 
@@ -33,11 +34,38 @@ const mockDataForRows = [
 ];
 
 export const Default: ComponentStory<typeof ReactTableWrapper> = () => {
-  return <ReactTableWrapper rows={mockDataForRows} />;
+  return (
+    <ReactTableWrapper
+      rows={mockDataForRows}
+      isRowsSelectionEnabled
+      onRowsSelect={action('onRowsSelect')}
+      onRowDelete={action('onRowDelete')}
+    />
+  );
 };
 
 export const Basic: ComponentStory<typeof ReactTableWrapper> = () => {
-  return <ReactTableWrapper rows={mockDataForRows} />;
+  return (
+    <ReactTableWrapper
+      rows={mockDataForRows}
+      isRowsSelectionEnabled
+      onRowsSelect={action('onRowsSelect')}
+      onRowDelete={action('onRowDelete')}
+    />
+  );
+};
+
+export const SelectionDisabled: ComponentStory<
+  typeof ReactTableWrapper
+> = () => {
+  return (
+    <ReactTableWrapper
+      rows={mockDataForRows}
+      isRowsSelectionEnabled={false}
+      onRowsSelect={action('onRowsSelect')}
+      onRowDelete={action('onRowDelete')}
+    />
+  );
 };
 
 Basic.storyName = '🧪 Test - Basic data with columns';
@@ -53,10 +81,10 @@ Basic.play = async ({ canvasElement }) => {
       const firstRowOfAlbum = await canvas.findAllByTestId(
         /^@table-cell-0-.*$/
       );
-      expect(firstRowOfAlbum.length).toBe(3);
+      expect(firstRowOfAlbum.length).toBe(4);
 
-      expect(firstRowOfAlbum[0]).toHaveTextContent('1'); // AlbumId
-      expect(firstRowOfAlbum[1]).toHaveTextContent(
+      expect(firstRowOfAlbum[1]).toHaveTextContent('1'); // AlbumId
+      expect(firstRowOfAlbum[2]).toHaveTextContent(
         'For Those About To Rock We Salute You'
       );
     },
@@ -64,48 +92,52 @@ Basic.play = async ({ canvasElement }) => {
   );
 };
 
-export const WithRelationships: ComponentStory<typeof ReactTableWrapper> =
-  () => {
-    const relationships: Relationship[] = [
-      {
-        name: 'Artist',
-        fromSource: 'sqlite_test',
-        fromTable: ['Album'],
-        relationshipType: 'Object',
-        type: 'localRelationship',
-        definition: {
-          toTable: ['Artist'],
-          mapping: {
-            ArtistId: 'ArtistId',
-          },
+export const WithRelationships: ComponentStory<
+  typeof ReactTableWrapper
+> = () => {
+  const relationships: Relationship[] = [
+    {
+      name: 'Artist',
+      fromSource: 'sqlite_test',
+      fromTable: ['Album'],
+      relationshipType: 'Object',
+      type: 'localRelationship',
+      definition: {
+        toTable: ['Artist'],
+        mapping: {
+          ArtistId: 'ArtistId',
         },
       },
-      {
-        name: 'Tracks',
-        fromSource: 'sqlite_test',
-        fromTable: ['Album'],
-        relationshipType: 'Object',
-        type: 'localRelationship',
-        definition: {
-          toTable: ['Track'],
-          mapping: {
-            AlbumId: 'AlbumId',
-          },
+    },
+    {
+      name: 'Tracks',
+      fromSource: 'sqlite_test',
+      fromTable: ['Album'],
+      relationshipType: 'Object',
+      type: 'localRelationship',
+      definition: {
+        toTable: ['Track'],
+        mapping: {
+          AlbumId: 'AlbumId',
         },
       },
-    ];
+    },
+  ];
 
-    return (
-      <ReactTableWrapper
-        rows={mockDataForRows}
-        relationships={{
-          allRelationships: relationships,
-          onClick: () => {},
-          onClose: () => {},
-        }}
-      />
-    );
-  };
+  return (
+    <ReactTableWrapper
+      rows={mockDataForRows}
+      relationships={{
+        allRelationships: relationships,
+        onClick: () => {},
+        onClose: () => {},
+      }}
+      isRowsSelectionEnabled
+      onRowsSelect={action('onRowsSelect')}
+      onRowDelete={action('onRowDelete')}
+    />
+  );
+};
 
 WithRelationships.storyName = '🧪 Test - Data with Relationships';
 

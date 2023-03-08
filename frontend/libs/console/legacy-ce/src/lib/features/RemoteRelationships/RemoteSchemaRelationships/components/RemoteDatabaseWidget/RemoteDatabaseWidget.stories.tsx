@@ -1,10 +1,10 @@
 import React from 'react';
 import * as z from 'zod';
 import { Story, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { action } from '@storybook/addon-actions';
-import { SimpleForm } from '@/new-components/Form';
-import { Button } from '@/new-components/Button';
+import { SimpleForm } from '../../../../../new-components/Form';
+import { Button } from '../../../../../new-components/Button';
 import { handlers } from '../../__mocks__';
 import { RemoteDatabaseWidget } from './RemoteDatabaseWidget';
 

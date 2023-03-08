@@ -1,4 +1,4 @@
-import { Metadata, Table } from '@/features/hasura-metadata-types';
+import { Metadata, Table } from '../hasura-metadata-types';
 import * as utils from './utils';
 
 /* 

@@ -15,6 +15,7 @@ import Data.Environment qualified as Env
 import Data.Text (pack)
 import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Execute.Backend qualified as EB
+import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Execute.Subscription.State qualified as ES
 import Hasura.GraphQL.Logging
 import Hasura.GraphQL.Transport.HTTP (MonadExecuteQuery)
@@ -31,7 +32,8 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.Auth (AuthMode, UserAuthentication)
 import Hasura.Server.Cors
 import Hasura.Server.Init.Config
-  ( KeepAliveDelay,
+  ( AllowListStatus,
+    KeepAliveDelay,
     WSConnectionInitTimeout,
   )
 import Hasura.Server.Limits
@@ -42,6 +44,7 @@ import Hasura.Server.Prometheus
     incWebsocketConnections,
   )
 import Hasura.Server.Types (ReadOnlyMode)
+import Hasura.Services.Network
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as HTTP
 import Network.WebSockets qualified as WS
@@ -57,9 +60,10 @@ createWSServerApp ::
     MonadQueryLog m,
     Tracing.HasReporter m,
     MonadExecuteQuery m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     EB.MonadQueryTags m,
-    HasResourceLimits m
+    HasResourceLimits m,
+    ProvidesNetwork m
   ) =>
   Env.Environment ->
   HashSet (L.EngineLogType L.Hasura) ->
@@ -107,12 +111,14 @@ createWSServerEnv ::
   (MonadIO m) =>
   L.Logger L.Hasura ->
   ES.SubscriptionsState ->
+  ES.LiveQueriesOptions ->
+  ES.StreamQueriesOptions ->
   IO (SchemaCache, SchemaCacheVer) ->
   HTTP.Manager ->
   CorsPolicy ->
   SQLGenCtx ->
   ReadOnlyMode ->
-  Bool ->
+  AllowListStatus ->
   KeepAliveDelay ->
   ServerMetrics ->
   PrometheusMetrics ->
@@ -121,6 +127,8 @@ createWSServerEnv ::
 createWSServerEnv
   logger
   lqState
+  lqOpts
+  streamQOpts
   getSchemaCache
   httpManager
   corsPolicy
@@ -136,6 +144,8 @@ createWSServerEnv
       WSServerEnv
         logger
         lqState
+        lqOpts
+        streamQOpts
         getSchemaCache
         httpManager
         corsPolicy

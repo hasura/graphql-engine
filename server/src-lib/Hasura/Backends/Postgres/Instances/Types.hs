@@ -12,10 +12,12 @@ where
 import Autodocodec (HasCodec (codec))
 import Data.Aeson (FromJSON)
 import Data.Aeson qualified as J
+import Data.Environment qualified as Env
 import Data.Kind (Type)
 import Data.Typeable
 import Hasura.Backends.Postgres.Connection qualified as Postgres
 import Hasura.Backends.Postgres.Connection.VersionCheck (runCockroachVersionCheck)
+import Hasura.Backends.Postgres.Execute.ConnectionTemplate qualified as Postgres
 import Hasura.Backends.Postgres.Instances.PingSource (runCockroachDBPing)
 import Hasura.Backends.Postgres.SQL.DML qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
@@ -55,11 +57,11 @@ class
   where
   type PgExtraTableMetadata pgKind :: Type
 
-  versionCheckImpl :: SourceConnConfiguration ('Postgres pgKind) -> IO (Either QErr ())
-  versionCheckImpl = const (pure $ Right ())
+  versionCheckImpl :: Env.Environment -> SourceConnConfiguration ('Postgres pgKind) -> IO (Either QErr ())
+  versionCheckImpl = const $ const (pure $ Right ())
 
-  runPingSourceImpl :: (String -> IO ()) -> SourceName -> SourceConnConfiguration ('Postgres pgKind) -> IO ()
-  runPingSourceImpl _ _ _ = pure ()
+  runPingSourceImpl :: Env.Environment -> (String -> IO ()) -> SourceName -> SourceConnConfiguration ('Postgres pgKind) -> IO ()
+  runPingSourceImpl _ _ _ _ = pure ()
 
 instance PostgresBackend 'Vanilla where
   type PgExtraTableMetadata 'Vanilla = ()
@@ -86,8 +88,6 @@ instance
   where
   type BackendConfig ('Postgres pgKind) = ()
   type BackendInfo ('Postgres pgKind) = ()
-  type SourceConfig ('Postgres pgKind) = Postgres.PGSourceConfig
-  type SourceConnConfiguration ('Postgres pgKind) = Postgres.PostgresConnConfiguration
   type TableName ('Postgres pgKind) = Postgres.QualifiedTable
   type FunctionName ('Postgres pgKind) = Postgres.QualifiedFunction
   type FunctionArgument ('Postgres pgKind) = Postgres.FunctionArg
@@ -122,6 +122,9 @@ instance
   type XNestedInserts ('Postgres pgKind) = XEnable
   type XStreamingSubscription ('Postgres pgKind) = XEnable
 
+  type ResolvedConnectionTemplate ('Postgres pgKind) = Maybe Postgres.PostgresResolvedConnectionTemplate -- 'Nothing' represents no connection template configured
+  type ConnectionTemplateRequestContext ('Postgres pgKind) = Postgres.RequestContext
+
   type HealthCheckTest ('Postgres pgKind) = HealthCheckTestSql
   healthCheckImplementation =
     Just $
@@ -152,6 +155,16 @@ instance
   getTableIdentifier = Postgres.getIdentifierQualifiedObject
   namingConventionSupport = Postgres.namingConventionSupport
 
-  resizeSourcePools sourceConfig = Postgres._pecResizePools (Postgres._pscExecCtx sourceConfig)
+  resizeSourcePools sourceConfig serverReplicas = (Postgres._pecRunAction (Postgres._pscExecCtx sourceConfig)) (Postgres.ResizePoolMode serverReplicas)
 
   defaultTriggerOnReplication = Just ((), TORDisableTrigger)
+
+  resolveConnectionTemplate = Postgres.pgResolveConnectionTemplate
+
+instance
+  ( HasTag ('Postgres pgKind)
+  ) =>
+  HasSourceConfiguration ('Postgres pgKind)
+  where
+  type SourceConfig ('Postgres pgKind) = Postgres.PGSourceConfig
+  type SourceConnConfiguration ('Postgres pgKind) = Postgres.PostgresConnConfiguration

@@ -1,9 +1,9 @@
 import { useQuery } from 'react-query';
-import { exportMetadata } from '@/features/DataSource';
-import { Table } from '@/features/hasura-metadata-types';
-import { useHttpClient } from '@/features/Network';
-import { areTablesEqual } from '@/features/RelationshipsTable';
+import { exportMetadata } from '../DataSource';
+import { Table } from '../hasura-metadata-types';
+import { useHttpClient } from '../Network';
 import { DEFAULT_STALE_TIME } from '../DatabaseRelationships';
+import { areTablesEqual } from './areTablesEqual';
 
 export const useMetadata = () => {
   const httpClient = useHttpClient();

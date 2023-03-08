@@ -1,6 +1,6 @@
-import CommonTabLayout from '@/components/Common/Layout/CommonTabLayout/CommonTabLayout';
+import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import React from 'react';
-import { BreadCrumb } from '@/components/Common/Layout/BreadCrumb/BreadCrumb';
+import { BreadCrumb } from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 
 const tabInfo = {
   details: {

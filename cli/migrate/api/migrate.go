@@ -156,6 +156,10 @@ func MigrateAPI(c *gin.Context) {
 					sourceKind = hasura.SourceKindMSSQL
 				case "citus":
 					sourceKind = hasura.SourceKindCitus
+				case "cockroach":
+					sourceKind = hasura.SourceKindCockroach
+				case "bigquery":
+					sourceKind = hasura.SourceKindBigQuery
 				default:
 					c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: fmt.Sprintf("cannot determine database kind for '%v'", sourceName)})
 					return

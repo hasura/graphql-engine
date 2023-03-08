@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 
 import {
   showSuccessNotification,
@@ -9,7 +9,7 @@ import {
 import {
   downloadObjectAsJsonFile,
   getCurrTimeForFileName,
-} from '../../../Common/utils/jsUtils';
+} from '../../../Common/utils/export.utils';
 import { exportMetadata } from '../../../../metadata/actions';
 
 class ExportMetadata extends Component {

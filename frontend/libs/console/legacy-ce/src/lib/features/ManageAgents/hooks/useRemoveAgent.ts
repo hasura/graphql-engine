@@ -1,5 +1,5 @@
-import { useMetadataMigration } from '@/features/MetadataAPI';
-import { useFireNotification } from '@/new-components/Notifications';
+import { useMetadataMigration } from '../../MetadataAPI';
+import { useFireNotification } from '../../../new-components/Notifications';
 import { useCallback } from 'react';
 import { useQueryClient } from 'react-query';
 

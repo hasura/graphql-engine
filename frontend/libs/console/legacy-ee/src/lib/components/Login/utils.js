@@ -48,10 +48,7 @@ const base64URLEncode = str => {
 };
 
 const sha256 = buffer => {
-  return crypto
-    .createHash('sha256')
-    .update(buffer)
-    .digest();
+  return crypto.createHash('sha256').update(buffer).digest();
 };
 
 const generateCodeVerifier = () => {

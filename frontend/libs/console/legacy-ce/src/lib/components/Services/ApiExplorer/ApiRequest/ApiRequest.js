@@ -10,7 +10,7 @@ import {
 import PropTypes from 'prop-types';
 import jwt from 'jsonwebtoken';
 
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import TextAreaWithCopy from '../../../Common/TextAreaWithCopy/TextAreaWithCopy';
 import Modal from '../../../Common/Modal/Modal';
 import Tooltip from '../../../Common/Tooltip/Tooltip';

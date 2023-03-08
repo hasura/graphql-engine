@@ -51,7 +51,8 @@ const StatsPanel = ({
   const onFilterChange = (type, value) => {
     const isSingleSelect = singleSelectFilters.indexOf(type) !== -1;
     const nextState = nextFilterValue(filtersData, type, value, isSingleSelect);
-    const finalState = nextState && nextState.length ? nextState : initialFiltersState;
+    const finalState =
+      nextState && nextState.length ? nextState : initialFiltersState;
     updateFilter(finalState);
     if (onFilterChange && typeof onFilterChange === 'function') {
       onFilterChangeCb(finalState, groups);

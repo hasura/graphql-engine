@@ -2,7 +2,7 @@ import { useMutation } from 'react-query';
 import {
   controlPlaneClient,
   updateUserClickedChangeProjectRegion,
-} from '@/features/ControlPlane';
+} from '../../ControlPlane';
 import { CheckDatabaseLatencyResponse } from './useCheckDatabaseLatency';
 
 type UpdateDBLatencyTableResponse = {
@@ -12,8 +12,6 @@ type UpdateDBLatencyTableResponse = {
     is_change_region_clicked: boolean;
   };
 };
-
-const client = controlPlaneClient();
 
 export const useUpdateProjectRegionChangeStat = () => {
   return useMutation({
@@ -25,12 +23,13 @@ export const useUpdateProjectRegionChangeStat = () => {
     ) => {
       if (
         !checkDatabaseLatencyResponse ||
-        typeof checkDatabaseLatencyResponse === 'string'
+        typeof checkDatabaseLatencyResponse === 'string' ||
+        !checkDatabaseLatencyResponse.insertDbLatencyData
       ) {
         return;
       }
 
-      return client.query<UpdateDBLatencyTableResponse>(
+      return controlPlaneClient.query<UpdateDBLatencyTableResponse>(
         updateUserClickedChangeProjectRegion,
         {
           rowId:

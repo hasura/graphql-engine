@@ -66,11 +66,13 @@ import Hasura.Server.Prometheus
   )
 import ListT qualified
 import Network.Wai.Extended (IpAddress)
+import Network.Wai.Handler.Warp qualified as Warp
 import Network.WebSockets qualified as WS
 import Refined (unrefine)
 import StmContainers.Map qualified as STMMap
 import System.IO.Error qualified as E
 import System.Metrics.Prometheus.Counter qualified as Prometheus.Counter
+import System.TimeManager qualified as TM
 
 newtype WSId = WSId {unWSId :: UUID.UUID}
   deriving (Show, Eq, Hashable)
@@ -343,14 +345,26 @@ createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger wr
     messageHandler = _hOnMessage wsHandlers
     closeHandler = _hOnClose wsHandlers
 
-    -- It's not clear what the unexpected exception handling story here should be. So at
-    -- least log properly and re-raise:
-    logUnexpectedExceptions = handle $ \(e :: SomeException) -> do
-      writeLog $
-        L.UnstructuredLog L.LevelError $
-          fromString $
-            "Unexpected exception raised in websocket. Please report this as a bug: " <> show e
-      throwIO e
+    logUnexpectedExceptions = flip catches handlers
+      where
+        handlers =
+          [ -- this exception occurs under the normal course of the web server running. Also fairly common during shutdowns.
+            -- Common suggestion is to gobble it.
+            -- Refer: https://hackage.haskell.org/package/warp-3.3.24/docs/src/Network.Wai.Handler.Warp.Settings.html#defaultShouldDisplayException
+            Handler $ \(_ :: TM.TimeoutThread) -> pure (),
+            Handler $ \(e :: Warp.InvalidRequest) -> do
+              writeLog $
+                L.UnstructuredLog L.LevelError $
+                  fromString $
+                    "Client exception: " <> show e
+              throwIO e,
+            Handler $ \(e :: SomeException) -> do
+              writeLog $
+                L.UnstructuredLog L.LevelError $
+                  fromString $
+                    "Unexpected exception raised in websocket. Please report this as a bug: " <> show e
+              throwIO e
+          ]
 
     shuttingDownReject =
       WS.RejectRequest

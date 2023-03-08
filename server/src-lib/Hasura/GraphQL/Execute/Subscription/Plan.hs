@@ -280,6 +280,7 @@ data SubscriptionQueryPlan (b :: BackendType) q = SubscriptionQueryPlan
   { _sqpParameterizedPlan :: ParameterizedSubscriptionQueryPlan b q,
     _sqpSourceConfig :: SourceConfig b,
     _sqpCohortId :: CohortId,
+    _sqpResolvedConnectionTemplate :: ResolvedConnectionTemplate b,
     _sqpVariables :: CohortVariables,
     -- | We need to know if the source has a namespace so that we can wrap it around
     -- the response from the DB

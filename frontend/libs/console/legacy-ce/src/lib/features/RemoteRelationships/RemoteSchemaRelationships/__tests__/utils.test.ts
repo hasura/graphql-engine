@@ -137,9 +137,9 @@ describe(' getTypesFromIntrospection', () => {
     expect(filterEnumType).toBe(undefined);
     // snapshot only contains object types
     expect(filterTypes).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "fields": Array [
+      [
+        {
+          "fields": [
             "_entities",
             "_service",
             "countries",
@@ -151,8 +151,8 @@ describe(' getTypesFromIntrospection', () => {
           ],
           "typeName": "Query",
         },
-        Object {
-          "fields": Array [
+        {
+          "fields": [
             "code",
             "name",
             "native",
@@ -167,16 +167,16 @@ describe(' getTypesFromIntrospection', () => {
           ],
           "typeName": "Country",
         },
-        Object {
-          "fields": Array [
+        {
+          "fields": [
             "code",
             "name",
             "countries",
           ],
           "typeName": "Continent",
         },
-        Object {
-          "fields": Array [
+        {
+          "fields": [
             "code",
             "name",
             "native",
@@ -184,16 +184,16 @@ describe(' getTypesFromIntrospection', () => {
           ],
           "typeName": "Language",
         },
-        Object {
-          "fields": Array [
+        {
+          "fields": [
             "code",
             "name",
             "country",
           ],
           "typeName": "State",
         },
-        Object {
-          "fields": Array [
+        {
+          "fields": [
             "sdl",
           ],
           "typeName": "_Service",

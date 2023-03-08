@@ -156,3 +156,121 @@ html[data-theme='dark'] {
     padding: 20px 24px;
   }
 }
+
+.observe-bg {
+  background: linear-gradient(235.85deg, #2c64f4 -66.27%, #00288e 108.5%, #a36ff8 129.05%, #16a9c9 145.37%);
+  margin: 40px 0;
+  border-radius: 12px;
+
+  h3 {
+    font-size: 20px !important;
+  }
+}
+
+.security-bg {
+  background: linear-gradient(117.44deg, #2c64f4 35.75%, #a36ff8 95.65%, #16a9c9 136.27%);
+  margin: 40px 0;
+  border-radius: 12px;
+
+  h3 {
+    font-size: 20px !important;
+  }
+}
+
+.snowflake-bg {
+  background: linear-gradient(117.44deg, #2c64f4 35.75%, #a36ff8 95.65%, #16a9c9 136.27%);
+  margin: 40px 0;
+  border-radius: 12px;
+}
+
+.webinar-banner {
+  background-image: none;
+  display: flex;
+  padding: 20px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .brand-light {
+    min-width: 171px;
+    max-width: 171px;
+    margin-top: 5px;
+  }
+
+  .content-div {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    h3 {
+      font-weight: 500;
+      font-size: 16px;
+      line-height: 1.5;
+      color: #ffffff;
+      margin: 0 8% 0 10%;
+    }
+
+    .hasura-con-register {
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 21px;
+      letter-spacing: 0.01em;
+      color: #ffffff;
+      white-space: nowrap;
+
+      svg {
+        margin-left: 8px;
+        transition: all 0.3s ease-in-out;
+        margin-bottom: -2px;
+
+        path {
+          stroke: white;
+        }
+      }
+    }
+  }
+
+  &:hover {
+    text-decoration: none;
+    .content-div {
+      .hasura-con-register {
+        svg {
+          transform: translateX(5px);
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 1290px) {
+  .webinar-banner {
+    padding: 20px 30px;
+
+    .content-div {
+      flex-wrap: wrap;
+      margin-left: 49px;
+
+      h3 {
+        margin: 0 0 12px;
+      }
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .webinar-banner {
+    padding: 30px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+
+    .content-div {
+      margin-left: 0px;
+
+      h3 {
+        margin: 24px 0;
+      }
+    }
+  }
+}

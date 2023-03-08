@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 
-import { useMetadata, useMetadataMigration } from '@/features/MetadataAPI';
-import { QueryCollection } from '@/metadata/types';
+import { useMetadata, useMetadataMigration } from '../../../MetadataAPI';
+import { QueryCollection } from '../../../../metadata/types';
 
 export const useEditOperationInQueryCollection = () => {
   const { mutate, ...rest } = useMetadataMigration();

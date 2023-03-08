@@ -2,7 +2,7 @@ import { action } from '@storybook/addon-actions';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import React from 'react';
 
-import { SimpleForm, InputField, useConsoleForm } from '@/new-components/Form';
+import { SimpleForm, InputField, useConsoleForm } from '.';
 import { FiSearch } from 'react-icons/fi';
 import { z } from 'zod';
 
@@ -163,14 +163,12 @@ export const VariantWithTooltip: ComponentStory<typeof InputField> = () => {
 
   return (
     <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
-      {() => (
-        <InputField
-          name="inputFieldName"
-          label="The inputField label"
-          placeholder="The inputField placeholder"
-          tooltip="InputField tooltip"
-        />
-      )}
+      <InputField
+        name="inputFieldName"
+        label="The inputField label"
+        placeholder="The inputField placeholder"
+        tooltip="InputField tooltip"
+      />
     </SimpleForm>
   );
 };

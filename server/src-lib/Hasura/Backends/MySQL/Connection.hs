@@ -38,7 +38,6 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend (BackendConfig)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table (TableEventTriggers)
 import Hasura.SQL.Backend
 
@@ -63,11 +62,10 @@ resolveSourceConfig _logger _name csc@ConnSourceConfig {_cscPoolSettings = ConnP
             (fromIntegral _cscMaxConnections)
         )
 
-resolveDatabaseMetadata :: (MonadIO m) => SourceConfig -> SourceTypeCustomization -> m (Either QErr (ResolvedSource 'MySQL))
-resolveDatabaseMetadata sc@SourceConfig {..} sourceCustomization =
-  runExceptT $ do
-    metadata <- liftIO $ withResource scConnectionPool (getMetadata scConfig)
-    pure $ ResolvedSource sc sourceCustomization metadata mempty mempty
+resolveDatabaseMetadata :: (MonadIO m) => SourceConfig -> m (Either QErr (DBObjectsIntrospection 'MySQL))
+resolveDatabaseMetadata SourceConfig {..} = runExceptT do
+  metadata <- liftIO $ withResource scConnectionPool (getMetadata scConfig)
+  pure $ DBObjectsIntrospection metadata mempty mempty
 
 postDropSourceHook ::
   (MonadIO m) =>

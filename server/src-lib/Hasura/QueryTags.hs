@@ -56,24 +56,24 @@ emptyQueryTagsComment :: QueryTagsComment
 emptyQueryTagsComment = QueryTagsComment mempty
 
 data QueryMetadata = QueryMetadata
-  { qmRequestId :: !RequestId,
-    qmOperationName :: !(Maybe GQL.Name),
-    qmFieldName :: !RootFieldAlias,
-    qmParameterizedQueryHash :: !ParameterizedQueryHash
+  { qmRequestId :: Maybe RequestId,
+    qmOperationName :: Maybe GQL.Name,
+    qmFieldName :: RootFieldAlias,
+    qmParameterizedQueryHash :: ParameterizedQueryHash
   }
   deriving (Show)
 
 data MutationMetadata = MutationMetadata
-  { mmRequestId :: !RequestId,
-    mmOperationName :: !(Maybe GQL.Name),
-    mmFieldName :: !RootFieldAlias,
-    mmParameterizedQueryHash :: !ParameterizedQueryHash
+  { mmRequestId :: Maybe RequestId,
+    mmOperationName :: Maybe GQL.Name,
+    mmFieldName :: RootFieldAlias,
+    mmParameterizedQueryHash :: ParameterizedQueryHash
   }
   deriving (Show)
 
 data LivequeryMetadata = LivequeryMetadata
-  { lqmFieldName :: !RootFieldAlias,
-    lqmParameterizedQueryHash :: !ParameterizedQueryHash
+  { lqmFieldName :: RootFieldAlias,
+    lqmParameterizedQueryHash :: ParameterizedQueryHash
   }
   deriving (Show)
 
@@ -86,17 +86,17 @@ encodeQueryTags = \case
     -- TODO: how do we want to encode RootFieldAlias?
     -- Currently uses ToTxt instance, which produces "namespace.fieldname"
     encodeQueryMetadata QueryMetadata {..} =
-      [ ("request_id", unRequestId qmRequestId),
-        ("field_name", toTxt qmFieldName),
-        ("parameterized_query_hash", bsToTxt $ unParamQueryHash qmParameterizedQueryHash)
-      ]
+      maybeToList ((,) "request_id" . unRequestId <$> qmRequestId)
+        <> [ ("field_name", toTxt qmFieldName),
+             ("parameterized_query_hash", bsToTxt $ unParamQueryHash qmParameterizedQueryHash)
+           ]
         <> operationNameAttributes qmOperationName
 
     encodeMutationMetadata MutationMetadata {..} =
-      [ ("request_id", unRequestId mmRequestId),
-        ("field_name", toTxt mmFieldName),
-        ("parameterized_query_hash", bsToTxt $ unParamQueryHash mmParameterizedQueryHash)
-      ]
+      maybeToList ((,) "request_id" . unRequestId <$> mmRequestId)
+        <> [ ("field_name", toTxt mmFieldName),
+             ("parameterized_query_hash", bsToTxt $ unParamQueryHash mmParameterizedQueryHash)
+           ]
         <> operationNameAttributes mmOperationName
 
     encodeLivequeryMetadata LivequeryMetadata {..} =

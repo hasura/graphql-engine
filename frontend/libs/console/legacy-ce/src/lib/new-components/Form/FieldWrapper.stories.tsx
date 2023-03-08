@@ -54,15 +54,16 @@ Basic.parameters = {
   },
 };
 
-export const VariantWithDescription: ComponentStory<typeof FieldWrapper> =
-  () => (
-    <FieldWrapper
-      label="The field wrapper label"
-      description="The field wrapper description"
-    >
-      <ChildrenExample />
-    </FieldWrapper>
-  );
+export const VariantWithDescription: ComponentStory<
+  typeof FieldWrapper
+> = () => (
+  <FieldWrapper
+    label="The field wrapper label"
+    description="The field wrapper description"
+  >
+    <ChildrenExample />
+  </FieldWrapper>
+);
 VariantWithDescription.storyName = '🎭 Variant - With description';
 VariantWithDescription.parameters = {
   docs: {
@@ -104,6 +105,46 @@ VariantWithDescriptionAndTooltip.parameters = {
   },
 };
 
+export const VariantWithDescriptionAndTooltipAndKnwMoreLink: ComponentStory<
+  typeof FieldWrapper
+> = () => (
+  <FieldWrapper
+    label="The field wrapper label"
+    description="The field wrapper description"
+    tooltip="The field wrapper tooltip"
+    learnMoreLink="https://hasura.io/docs"
+  >
+    <ChildrenExample />
+  </FieldWrapper>
+);
+VariantWithDescriptionAndTooltipAndKnwMoreLink.storyName =
+  '🎭 Variant - With description, tooltip, and know more link';
+VariantWithDescriptionAndTooltipAndKnwMoreLink.parameters = {
+  docs: {
+    source: { state: 'open' },
+  },
+};
+
+export const VariantWithDescriptionAndTooltipAndLearnMoreLink: ComponentStory<
+  typeof FieldWrapper
+> = () => (
+  <FieldWrapper
+    label="The field wrapper label"
+    description="The field wrapper description"
+    tooltip="The field wrapper tooltip"
+    learnMoreLink="https://hasura.io/docs"
+  >
+    <ChildrenExample />
+  </FieldWrapper>
+);
+VariantWithDescriptionAndTooltipAndLearnMoreLink.storyName =
+  '🎭 Variant - With description, tooltip, and know more link';
+VariantWithDescriptionAndTooltipAndLearnMoreLink.parameters = {
+  docs: {
+    source: { state: 'open' },
+  },
+};
+
 export const StateLoading: ComponentStory<typeof FieldWrapper> = () => (
   <FieldWrapper
     label="The field wrapper label"
@@ -121,17 +162,18 @@ StateLoading.parameters = {
   },
 };
 
-export const StateWithErrorMessage: ComponentStory<typeof FieldWrapper> =
-  () => (
-    <FieldWrapper
-      label="The field wrapper label"
-      description="The field wrapper description"
-      tooltip="The field wrapper tooltip"
-      error={{ message: 'The error message', type: 'error' }}
-    >
-      <ChildrenExample />
-    </FieldWrapper>
-  );
+export const StateWithErrorMessage: ComponentStory<
+  typeof FieldWrapper
+> = () => (
+  <FieldWrapper
+    label="The field wrapper label"
+    description="The field wrapper description"
+    tooltip="The field wrapper tooltip"
+    error={{ message: 'The error message', type: 'error' }}
+  >
+    <ChildrenExample />
+  </FieldWrapper>
+);
 StateWithErrorMessage.storyName = '🔁 State - With error message';
 StateWithErrorMessage.parameters = {
   docs: {

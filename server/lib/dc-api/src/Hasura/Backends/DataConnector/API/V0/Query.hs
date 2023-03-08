@@ -6,6 +6,7 @@ module Hasura.Backends.DataConnector.API.V0.Query
     qrTable,
     qrTableRelationships,
     qrQuery,
+    qrForeach,
     FieldName (..),
     Query (..),
     qFields,
@@ -41,6 +42,7 @@ import Data.Data (Data)
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
 import Data.Hashable (Hashable)
+import Data.List.NonEmpty (NonEmpty)
 import Data.OpenApi (ToSchema)
 import Data.Text (Text)
 import Data.Text qualified as T
@@ -61,7 +63,8 @@ import Prelude
 data QueryRequest = QueryRequest
   { _qrTable :: API.V0.TableName,
     _qrTableRelationships :: [API.V0.TableRelationships],
-    _qrQuery :: Query
+    _qrQuery :: Query,
+    _qrForeach :: Maybe (NonEmpty (HashMap API.V0.ColumnName API.V0.ScalarValue))
   }
   deriving stock (Eq, Ord, Show, Generic)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec QueryRequest
@@ -76,6 +79,8 @@ instance HasCodec QueryRequest where
           .= _qrTableRelationships
         <*> requiredField "query" "The details of the query against the table"
           .= _qrQuery
+        <*> optionalFieldOrNull "foreach" "If present, a list of columns and values for the columns that the query must be repeated for, applying the column values as a filter for each query."
+          .= _qrForeach
 
 newtype FieldName = FieldName {unFieldName :: Text}
   deriving stock (Eq, Ord, Show, Generic, Data)

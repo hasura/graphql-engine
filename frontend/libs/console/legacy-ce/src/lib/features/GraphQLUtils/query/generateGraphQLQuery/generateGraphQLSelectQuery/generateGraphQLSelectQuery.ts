@@ -1,5 +1,6 @@
-import { MetadataTable, Source } from '@/features/hasura-metadata-types';
-import { OrderBy, WhereClause } from '../../../types';
+import { WhereClause } from '../../../../DataSource';
+import { MetadataTable, Source } from '../../../../hasura-metadata-types';
+import { OrderBy } from '../../../types';
 import {
   getFields,
   getLimitClause,
@@ -23,7 +24,7 @@ export const generateGraphQLSelectQuery = async ({
   tableCustomization: MetadataTable['configuration'];
   sourceCustomization: Source['customization'];
   options?: {
-    where?: WhereClause;
+    where?: WhereClause[];
     offset?: number;
     limit?: number;
     order_by?: OrderBy[];

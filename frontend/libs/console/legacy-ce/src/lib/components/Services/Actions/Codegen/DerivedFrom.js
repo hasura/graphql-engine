@@ -1,6 +1,6 @@
 import React from 'react';
 import AceEditor from '../../../Common/AceEditor/BaseEditor';
-import { IconTooltip } from '@/new-components/Tooltip';
+import { IconTooltip } from '../../../../new-components/Tooltip';
 
 const DerivedFrom = ({ shouldDerive, parentMutation, toggleDerivation }) => {
   if (!parentMutation) return null;

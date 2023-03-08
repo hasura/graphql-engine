@@ -1,9 +1,9 @@
 import React from 'react';
-import { runFilterQuery } from '@/features/BrowseRows';
-import type { UserQuery } from '@/features/BrowseRows';
-import { useAppDispatch } from '@/store';
-import { NormalizedTable } from '@/dataSources/types';
-import { defaultUserQuery } from '@/components/Services/Data/TableBrowseRows/Hooks/useFiltersAndSortFormValues';
+import { runFilterQuery } from '../../features/BrowseRows';
+import type { UserQuery } from '../../features/BrowseRows';
+import { useAppDispatch } from '../../storeHooks';
+import { NormalizedTable } from '../../dataSources/types';
+import { defaultUserQuery } from '../../components/Services/Data/TableBrowseRows/Hooks/useFiltersAndSortFormValues';
 import {
   setLimit,
   setOffset,

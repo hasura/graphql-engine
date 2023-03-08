@@ -12,8 +12,8 @@
 -- information.
 module Hasura.Backends.Postgres.Connection.MonadTx
   ( MonadTx (..),
-    runTx,
     runTxWithCtx,
+    runTxWithCtxAndUserInfo,
     runQueryTx,
     withUserInfo,
     withTraceContext,
@@ -70,20 +70,6 @@ instance (MonadTx m) => MonadTx (Tracing.TraceT m) where
 instance (MonadIO m) => MonadTx (PG.TxET QErr m) where
   liftTx = hoist liftIO
 
--- | Executes the given query in a transaction of the specified
--- mode, within the provided PGExecCtx.
-runTx ::
-  ( MonadIO m,
-    MonadBaseControl IO m
-  ) =>
-  PGExecCtx ->
-  PG.TxAccess ->
-  PG.TxET QErr m a ->
-  ExceptT QErr m a
-runTx pgExecCtx = \case
-  PG.ReadOnly -> _pecRunReadOnly pgExecCtx
-  PG.ReadWrite -> _pecRunReadWrite pgExecCtx
-
 runTxWithCtx ::
   ( MonadIO m,
     MonadBaseControl IO m,
@@ -92,15 +78,31 @@ runTxWithCtx ::
     UserInfoM m
   ) =>
   PGExecCtx ->
-  PG.TxAccess ->
+  PGExecTxType ->
+  PGExecFrom ->
   PG.TxET QErr m a ->
   m a
-runTxWithCtx pgExecCtx txAccess tx = do
-  traceCtx <- Tracing.currentContext
+runTxWithCtx pgExecCtx pgExecTxType pgExecFrom tx = do
   userInfo <- askUserInfo
+  runTxWithCtxAndUserInfo userInfo pgExecCtx pgExecTxType pgExecFrom tx
+
+runTxWithCtxAndUserInfo ::
+  ( MonadIO m,
+    MonadBaseControl IO m,
+    MonadError QErr m,
+    Tracing.MonadTrace m
+  ) =>
+  UserInfo ->
+  PGExecCtx ->
+  PGExecTxType ->
+  PGExecFrom ->
+  PG.TxET QErr m a ->
+  m a
+runTxWithCtxAndUserInfo userInfo pgExecCtx pgExecTxType pgExecFrom tx = do
+  traceCtx <- Tracing.currentContext
   liftEitherM $
     runExceptT $
-      runTx pgExecCtx txAccess $
+      (_pecRunTx pgExecCtx) (PGExecCtxInfo pgExecTxType pgExecFrom) $
         withTraceContext traceCtx $
           withUserInfo userInfo tx
 
@@ -108,13 +110,18 @@ runTxWithCtx pgExecCtx txAccess tx = do
 -- and COMMIT. This should only be used for running a single statement query!
 runQueryTx ::
   ( MonadIO m,
+    MonadBaseControl IO m,
     MonadError QErr m
   ) =>
   PGExecCtx ->
-  PG.TxET QErr IO a ->
+  PGExecFrom ->
+  PG.TxET QErr m a ->
   m a
-runQueryTx pgExecCtx tx =
-  liftEither =<< liftIO (runExceptT $ _pecRunReadNoTx pgExecCtx tx)
+runQueryTx pgExecCtx pgExecFrom tx = do
+  let pgExecCtxInfo = PGExecCtxInfo NoTxRead pgExecFrom
+  liftEitherM $
+    runExceptT $
+      (_pecRunTx pgExecCtx) pgExecCtxInfo tx
 
 setHeadersTx :: (MonadIO m) => SessionVariables -> PG.TxET QErr m ()
 setHeadersTx session = do

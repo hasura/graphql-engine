@@ -56,22 +56,25 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Subscription
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
+import Hasura.Server.Init qualified as Init
 import Hasura.Server.Prometheus (PrometheusMetrics)
 import Hasura.Server.Types (ReadOnlyMode (..), RequestId (..))
+import Hasura.Services
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
-import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 
 -- | Execution context
+--
+-- TODO: can this be deduplicated with Run? is there anything in here that isn't
+-- already in the stack?
 data ExecutionCtx = ExecutionCtx
   { _ecxLogger :: L.Logger L.Hasura,
     _ecxSqlGenCtx :: SQLGenCtx,
     _ecxSchemaCache :: SchemaCache,
     _ecxSchemaCacheVer :: SchemaCacheVer,
-    _ecxHttpManager :: HTTP.Manager,
-    _ecxEnableAllowList :: Bool,
+    _ecxEnableAllowList :: Init.AllowListStatus,
     _ecxReadOnlyMode :: ReadOnlyMode,
     _ecxPrometheusMetrics :: PrometheusMetrics
   }
@@ -135,8 +138,10 @@ buildSubscriptionPlan ::
   UserInfo ->
   RootFieldMap (IR.QueryRootField IR.UnpreparedValue) ->
   ParameterizedQueryHash ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   m SubscriptionExecution
-buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
+buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders operationName = do
   ((liveQueryOnSourceFields, noRelationActionFields), streamingFields) <- foldlM go ((mempty, mempty), mempty) (OMap.toList rootFields)
 
   if
@@ -160,6 +165,8 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
                                   sourceName
                                   sourceConfig
                                   (rootFieldName, qdb)
+                                  reqHeaders
+                                  operationName
                               )
                               queryTagsComment
                       pure $
@@ -264,7 +271,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
           let subscriptionQueryTagsAttributes = encodeQueryTags $ QTLiveQuery $ LivequeryMetadata rootFieldName parameterizedQueryHash
           let queryTagsComment = Tagged.untag $ EB.createQueryTags @m subscriptionQueryTagsAttributes queryTagsConfig
           SubscriptionQueryPlan . AB.mkAnyBackend . MultiplexedSubscriptionQueryPlan
-            <$> runReaderT (EB.mkLiveQuerySubscriptionPlan userInfo sourceName sourceConfig (_rfaNamespace rootFieldName) qdbs) queryTagsComment
+            <$> runReaderT (EB.mkLiveQuerySubscriptionPlan userInfo sourceName sourceConfig (_rfaNamespace rootFieldName) qdbs reqHeaders operationName) queryTagsComment
       pure (sourceName, subscriptionPlan)
 
     checkField ::
@@ -281,16 +288,16 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
 
 checkQueryInAllowlist ::
   (MonadError QErr m) =>
-  Bool ->
+  Init.AllowListStatus ->
   AllowlistMode ->
   UserInfo ->
   GQLReqParsed ->
   SchemaCache ->
   m ()
-checkQueryInAllowlist allowlistEnabled allowlistMode userInfo req schemaCache =
+checkQueryInAllowlist allowListStatus allowlistMode userInfo req schemaCache =
   -- only for non-admin roles
   -- check if query is in allowlist
-  when (allowlistEnabled && role /= adminRoleName) do
+  when (Init.isAllowListEnabled allowListStatus && role /= adminRoleName) do
     let query = G.ExecutableDocument . unGQLExecDoc $ _grQuery req
         allowlist = scAllowlist schemaCache
         allowed = allowlistAllowsQuery allowlist allowlistMode role query
@@ -305,16 +312,19 @@ checkQueryInAllowlist allowlistEnabled allowlistMode userInfo req schemaCache =
 
 -- | Construct a 'ResolvedExecutionPlan' from a 'GQLReqParsed' and a
 -- bunch of metadata.
+--
+-- Labelling it as inlineable fixed a performance regression on GHC 8.10.7.
 {-# INLINEABLE getResolvedExecPlan #-}
 getResolvedExecPlan ::
   forall m.
   ( MonadError QErr m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     MonadIO m,
     MonadBaseControl IO m,
     Tracing.MonadTrace m,
     EC.MonadGQLExecutionCheck m,
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    ProvidesNetwork m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
@@ -325,7 +335,6 @@ getResolvedExecPlan ::
   SchemaCache ->
   SchemaCacheVer ->
   ET.GraphQLQueryType ->
-  HTTP.Manager ->
   [HTTP.Header] ->
   GQLReqUnparsed ->
   SingleOperation -> -- the first step of the execution plan
@@ -342,7 +351,6 @@ getResolvedExecPlan
   sc
   _scVer
   queryType
-  httpManager
   reqHeaders
   reqUnparsed
   queryParts -- the first step of the execution plan
@@ -361,7 +369,6 @@ getResolvedExecPlan
               prometheusMetrics
               gCtx
               userInfo
-              httpManager
               reqHeaders
               directives
               inlinedSelSet
@@ -382,7 +389,6 @@ getResolvedExecPlan
               gCtx
               sqlGenCtx
               userInfo
-              httpManager
               reqHeaders
               directives
               inlinedSelSet
@@ -417,7 +423,7 @@ getResolvedExecPlan
             _ ->
               unless (allowMultipleRootFields && isSingleNamespace unpreparedAST) $
                 throw400 ValidationFailed "subscriptions must select one top level field"
-          subscriptionPlan <- buildSubscriptionPlan userInfo unpreparedAST parameterizedQueryHash
+          subscriptionPlan <- buildSubscriptionPlan userInfo unpreparedAST parameterizedQueryHash reqHeaders maybeOperationName
           pure (parameterizedQueryHash, SubscriptionExecutionPlan subscriptionPlan)
     -- the parameterized query hash is calculated here because it is used in multiple
     -- places and instead of calculating it separately, this is a common place to calculate

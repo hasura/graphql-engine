@@ -33,9 +33,9 @@ import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Build (addRemoteSchemaP2Setup)
 import Hasura.RemoteSchema.SchemaCache.Types
+import Hasura.Services
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 
 -- | The payload for 'add_remote_schema', and a component of 'Metadata'.
 data AddRemoteSchemaQuery = AddRemoteSchemaQuery
@@ -62,7 +62,7 @@ runAddRemoteSchema ::
   ( QErrM m,
     CacheRWM m,
     MonadIO m,
-    HasHttpManagerM m,
+    ProvidesNetwork m,
     MetadataM m,
     Tracing.MonadTrace m
   ) =>
@@ -163,7 +163,7 @@ runUpdateRemoteSchema ::
   ( QErrM m,
     CacheRWM m,
     MonadIO m,
-    HasHttpManagerM m,
+    ProvidesNetwork m,
     MetadataM m,
     Tracing.MonadTrace m
   ) =>
@@ -196,9 +196,8 @@ runUpdateRemoteSchema env (AddRemoteSchemaQuery name defn comment) = do
     ( (isJust metadataRMSchemaURL && isJust currentRMSchemaURL && metadataRMSchemaURL == currentRMSchemaURL)
         || (isJust metadataRMSchemaURLFromEnv && isJust currentRMSchemaURLFromEnv && metadataRMSchemaURLFromEnv == currentRMSchemaURLFromEnv)
     )
-    $ do
-      httpMgr <- askHttpManager
-      void $ fetchRemoteSchema env httpMgr name rsi
+    $ void
+    $ fetchRemoteSchema env name rsi
 
   -- This will throw an error if the new schema fetched in incompatible
   -- with the existing permissions and relations

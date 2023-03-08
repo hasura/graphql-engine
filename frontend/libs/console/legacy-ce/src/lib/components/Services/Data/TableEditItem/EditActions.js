@@ -13,7 +13,7 @@ import {
   dataSource,
 } from '../../../../dataSources';
 import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
-import { isStringArray } from '../../../Common/utils/jsUtils';
+import { isArray, isStringArray } from '../../../Common/utils/jsUtils';
 import { generateTableDef } from '../../../../dataSources';
 import { getTableConfiguration } from '../TableBrowseRows/utils';
 
@@ -93,6 +93,16 @@ const editItem = (tableName, colValues) => {
           try {
             const arr = JSON.parse(colValue);
             _setObject[colName] = dataSource.arrayToPostgresArray(arr);
+          } catch {
+            errorMessage =
+              colName + ' :: could not read ' + colValue + ' as a valid array';
+          }
+        } else if (
+          colType === dataSource.columnDataTypes.ARRAY &&
+          isArray(colValue)
+        ) {
+          try {
+            _setObject[colName] = dataSource.arrayToPostgresArray(colValue);
           } catch {
             errorMessage =
               colName + ' :: could not read ' + colValue + ' as a valid array';

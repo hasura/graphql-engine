@@ -1,4 +1,4 @@
-import { QualifiedTable } from '@/metadata/types';
+import { QualifiedTable } from '../../../metadata/types';
 
 const generateWhereClause = (
   options: { schemas: string[]; tables?: QualifiedTable[] },

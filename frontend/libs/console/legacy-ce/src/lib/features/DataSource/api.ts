@@ -1,11 +1,11 @@
-import { AxiosInstance } from 'axios';
+import { AxiosInstance, AxiosResponseHeaders } from 'axios';
 import {
   Metadata,
   NativeDrivers,
   Source,
   SupportedDrivers,
-} from '@/features/hasura-metadata-types';
-import { isPostgres } from '@/metadata/dataSource.utils';
+} from '../hasura-metadata-types';
+import { isPostgres } from '../../metadata/dataSource.utils';
 
 export interface NetworkArgs {
   httpClient: AxiosInstance;
@@ -35,15 +35,17 @@ type RunSqlArgs = {
   sql: string;
 };
 
-export type RunSQLResponse =
-  | {
-      result: string[][];
-      result_type: 'TuplesOk';
-    }
-  | {
-      result_type: 'CommandOk';
-      result: null;
-    };
+export type RunSQLSelectResponse = {
+  result_type: 'TuplesOk';
+  result: string[][];
+};
+
+export type RunSQLCommandResponse = {
+  result_type: 'CommandOk';
+  result: null;
+};
+
+export type RunSQLResponse = RunSQLSelectResponse | RunSQLCommandResponse;
 
 const getRunSqlType = (driver: NativeDrivers) => {
   if (isPostgres(driver)) {
@@ -68,12 +70,23 @@ export const runGraphQL = async ({
   operationName,
   query,
   httpClient,
-}: { operationName: string; query: string } & NetworkArgs) => {
+  headers,
+}: {
+  operationName: string;
+  query: string;
+  headers?: AxiosResponseHeaders;
+} & NetworkArgs) => {
   try {
     const result = await httpClient.post('v1/graphql', {
       query,
       operationName,
+      headers,
     });
+    // Throw the first GraphQL Error
+    // We do this because response.status is 200 even if there are errors
+    if (result.data.errors?.length) {
+      throw new Error(result.data.errors[0].message || 'Unexpected');
+    }
     return result.data;
   } catch (err) {
     throw err;

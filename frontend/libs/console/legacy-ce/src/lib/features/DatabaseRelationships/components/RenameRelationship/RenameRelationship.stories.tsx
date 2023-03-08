@@ -1,12 +1,11 @@
 import React from 'react';
 
 import { ComponentStory, ComponentMeta } from '@storybook/react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { RenameRelationship } from './RenameRelationship';
 import { LocalRelationship } from '../../types';
 
 export default {
-  title: 'GDC Console/Relationships/Rename Relationship',
   component: RenameRelationship,
   decorators: [ReactQueryDecorator()],
 } as ComponentMeta<typeof RenameRelationship>;

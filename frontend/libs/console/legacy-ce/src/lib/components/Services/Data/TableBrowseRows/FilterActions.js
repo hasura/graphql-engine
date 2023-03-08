@@ -6,7 +6,7 @@ import {
   downloadObjectAsJsonFile,
   downloadObjectAsCsvFile,
   getCurrTimeForFileName,
-} from '../../../Common/utils/jsUtils';
+} from '../../../Common/utils/export.utils';
 
 const LOADING = 'ViewTable/FilterQuery/LOADING';
 

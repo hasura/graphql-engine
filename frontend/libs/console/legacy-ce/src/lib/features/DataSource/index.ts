@@ -1,8 +1,4 @@
-import {
-  Source,
-  SupportedDrivers,
-  Table,
-} from '@/features/hasura-metadata-types';
+import { Source, SupportedDrivers, Table } from '../hasura-metadata-types';
 import { OpenApiSchema } from '@hasura/dc-api-types';
 import { DataNode } from 'antd/lib/tree';
 import { AxiosInstance } from 'axios';
@@ -13,10 +9,11 @@ import { citus } from './citus';
 import { cockroach } from './cockroach';
 import { gdc } from './gdc';
 import { mssql } from './mssql';
-import { postgres, PostgresTable } from './postgres';
+import { postgres } from './postgres';
 import { alloy, AlloyDbTable } from './alloydb';
 import type {
   DriverInfoResponse,
+  GetDefaultQueryRootProps,
   GetFKRelationshipProps,
   GetSupportedOperatorsProps,
   GetTableColumnsProps,
@@ -40,10 +37,17 @@ import {
   NetworkArgs,
   runIntrospectionQuery,
   RunSQLResponse,
+  RunSQLSelectResponse,
+  RunSQLCommandResponse,
+  runGraphQL,
+  runMetadataQuery,
 } from './api';
 import { getAllSourceKinds } from './common/getAllSourceKinds';
 import { getTableName } from './common/getTableName';
+import { QueryType } from '../Permissions/types';
+import { ReleaseType } from './types';
 
+export type { PostgresTable } from './postgres';
 export enum Feature {
   NotImplemented = 'Not Implemented',
 }
@@ -102,7 +106,17 @@ export type Database = {
       props: GetTableRowsProps
     ) => Promise<TableRow[] | Feature.NotImplemented>;
   };
-  modify?: null;
+  modify?: {
+    defaultQueryRoot: (props: GetDefaultQueryRootProps) => Promise<string>;
+  };
+  config: {
+    getDefaultQueryRoot: (
+      table: Table
+    ) => Promise<string | Feature.NotImplemented>;
+    getSupportedQueryTypes: (
+      table: Table
+    ) => Promise<QueryType[] | Feature.NotImplemented>;
+  };
 };
 
 const drivers: Record<SupportedDrivers, Database> = {
@@ -170,7 +184,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
         return {
           name: driver.kind,
           displayName: driver.display_name,
-          release: 'Beta',
+          release: driver.release_name ?? 'GA',
           native: driver.builtin,
         };
       });
@@ -249,8 +263,8 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     }
 
     const kind = getDriver(dataSource);
-    /* 
-      NOTE: We need a set of metadata types. Until then dataSource is type-casted to `any` because `configuration` varies from DB to DB and the old metadata types contain 
+    /*
+      NOTE: We need a set of metadata types. Until then dataSource is type-casted to `any` because `configuration` varies from DB to DB and the old metadata types contain
       only pg databases at the moment. Changing the old types will require us to modify multiple legacy files
     */
 
@@ -343,8 +357,10 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   },
   getTablesWithHierarchy: async ({
     dataSourceName,
+    releaseName,
   }: {
     dataSourceName: string;
+    releaseName?: ReleaseType;
   }) => {
     const database = await getDatabaseMethods({ dataSourceName, httpClient });
 
@@ -357,6 +373,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     const treeData = await introspection.getTablesListAsTree({
       dataSourceName,
       httpClient,
+      releaseName,
     });
 
     if (treeData === Feature.NotImplemented) return null;
@@ -414,17 +431,47 @@ export const DataSource = (httpClient: AxiosInstance) => ({
 
     return operators;
   },
+  getDefaultQueryRoot: async ({
+    dataSourceName,
+    table,
+  }: {
+    dataSourceName: string;
+    table: Table;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    return database.config.getDefaultQueryRoot(table);
+  },
+  getSupportedQueryTypes: async ({
+    dataSourceName,
+    table,
+  }: {
+    dataSourceName: string;
+    table: Table;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    return database.config.getSupportedQueryTypes(table);
+  },
 });
 
-export { GDCTable } from './gdc';
+export type { GDCTable } from './gdc';
 export * from './guards';
 export * from './types';
+export * from './common/utils';
 export {
-  PostgresTable,
   exportMetadata,
+  runGraphQL,
   getTableName,
-  RunSQLResponse,
+  runMetadataQuery,
   getDriverPrefix,
   runIntrospectionQuery,
+};
+
+export type {
+  RunSQLResponse,
+  RunSQLSelectResponse,
+  RunSQLCommandResponse,
+  NetworkArgs,
   AlloyDbTable,
 };

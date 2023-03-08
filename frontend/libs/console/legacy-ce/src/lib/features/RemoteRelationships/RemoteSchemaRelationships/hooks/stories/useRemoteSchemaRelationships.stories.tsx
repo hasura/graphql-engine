@@ -1,7 +1,7 @@
-import { useRemoteSchemaRelationships } from '@/features/MetadataAPI';
-import { QualifiedTable } from '@/metadata/types';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
+import { useRemoteSchemaRelationships } from '../../../../MetadataAPI';
+import { QualifiedTable } from '../../../../../metadata/types';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
+import { ReduxDecorator } from '../../../../../storybook/decorators/redux-decorator';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import React from 'react';
 

@@ -1,4 +1,4 @@
-import { DataTarget } from '@/features/Datasources';
+import { DataTarget } from '../../../Datasources';
 import clsx from 'clsx';
 import get from 'lodash.get';
 import React, { useState } from 'react';

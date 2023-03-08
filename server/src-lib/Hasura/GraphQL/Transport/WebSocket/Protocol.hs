@@ -294,6 +294,7 @@ type WSConnInitTimer = (TVar WSConnInitTimerStatus, TMVar ())
 getWSTimerState :: WSConnInitTimer -> IO WSConnInitTimerStatus
 getWSTimerState (timerState, _) = readTVarIO timerState
 
+{-# ANN getNewWSTimer ("HLint: ignore Use withAsync" :: String) #-}
 getNewWSTimer :: Seconds -> IO WSConnInitTimer
 getNewWSTimer timeout = do
   timerState <- newTVarIO Running

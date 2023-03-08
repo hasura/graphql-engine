@@ -1,6 +1,6 @@
-import { Button } from '@/new-components/Button';
-import { CardedTable } from '@/new-components/CardedTable';
-import { FieldWrapper } from '@/new-components/Form';
+import { Button } from '../../../new-components/Button';
+import { CardedTable } from '../../../new-components/CardedTable';
+import { FieldWrapper } from '../../../new-components/Form';
 import { OpenApiReference, OpenApiSchema } from '@hasura/dc-api-types';
 import React, { useState } from 'react';
 import get from 'lodash.get';

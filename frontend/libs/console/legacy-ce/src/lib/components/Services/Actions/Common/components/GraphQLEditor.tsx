@@ -1,8 +1,11 @@
 import React from 'react';
 import { parse as sdlParser } from 'graphql/language/parser';
 import { GraphQLError } from 'graphql';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { IconTooltip } from '@/new-components/Tooltip';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+} from '../../../../../features/Analytics';
+import { IconTooltip } from '../../../../../new-components/Tooltip';
 import CrossIcon from '../../../../Common/Icons/Cross';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import { Nullable } from '../../../../Common/utils/tsUtils';

@@ -1,11 +1,9 @@
 import React from 'react';
 
-import styles from '../Common.module.scss';
-
-import { GlobalContext } from '../../App/App';
 import { trackRuntimeError } from '../../../telemetry';
 import { isConsoleError } from '../utils/jsUtils';
 
+import styles from '../Common.module.scss';
 /*
   This is a Button HOC that takes all the props supported by <button>
   - color(default: white): color of the button; currently supports yellow, red, green, gray and white
@@ -42,8 +40,6 @@ const Button: React.FC<ButtonProps> = props => {
       break;
   }
 
-  const globals = React.useContext(GlobalContext);
-
   const trackedOnClick = (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
@@ -54,7 +50,7 @@ const Button: React.FC<ButtonProps> = props => {
     } catch (error) {
       console.error(error);
       if (isConsoleError(error)) {
-        trackRuntimeError(globals, error);
+        trackRuntimeError(error);
       }
     }
   };

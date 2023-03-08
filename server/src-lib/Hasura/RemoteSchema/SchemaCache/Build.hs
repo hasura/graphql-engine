@@ -8,13 +8,14 @@ where
 
 import Control.Arrow.Extended
 import Control.Arrow.Interpret
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.Extended qualified as M
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.GraphQL.RemoteServer (fetchRemoteSchema)
+import Hasura.GraphQL.RemoteServer
 import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -27,9 +28,9 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Permission (resolveRoleBasedRemoteSchema)
 import Hasura.RemoteSchema.SchemaCache.Types
+import Hasura.Services
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 
 -- Resolves a user specified `RemoteSchemaMetadata` into information rich `RemoteSchemaCtx`
 -- However, given the nature of remote relationships, we cannot fully 'resolve' them, so
@@ -40,13 +41,14 @@ buildRemoteSchemas ::
     ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     Inc.ArrowCache m arr,
     MonadIO m,
-    HasHttpManagerM m,
+    MonadBaseControl IO m,
     Eq remoteRelationshipDefinition,
     ToJSON remoteRelationshipDefinition,
-    MonadError QErr m
+    MonadError QErr m,
+    ProvidesNetwork m
   ) =>
   Env.Environment ->
-  ( (Inc.Dependency (HashMap RemoteSchemaName Inc.InvalidationKey), OrderedRoles),
+  ( (Inc.Dependency (HashMap RemoteSchemaName Inc.InvalidationKey), OrderedRoles, Maybe (HashMap RemoteSchemaName BL.ByteString)),
     [RemoteSchemaMetadataG remoteRelationshipDefinition]
   )
     `arr` HashMap RemoteSchemaName (PartiallyResolvedRemoteSchemaCtxG remoteRelationshipDefinition, MetadataObject)
@@ -56,14 +58,19 @@ buildRemoteSchemas env =
     -- We want to cache this call because it fetches the remote schema over
     -- HTTP, and we don’t want to re-run that if the remote schema definition
     -- hasn’t changed.
-    buildRemoteSchema = Inc.cache proc ((invalidationKeys, orderedRoles), remoteSchema@(RemoteSchemaMetadata name defn _comment permissions relationships)) -> do
+    buildRemoteSchema = Inc.cache proc ((invalidationKeys, orderedRoles, storedIntrospection), remoteSchema@(RemoteSchemaMetadata name defn _comment permissions relationships)) -> do
       Inc.dependOn -< Inc.selectKeyD name invalidationKeys
       remoteSchemaContextParts <-
         (|
           withRecordInconsistency
             ( liftEitherA <<< bindA
-                -<
-                  runExceptT $ noopTrace $ addRemoteSchemaP2Setup env name defn
+                -< runExceptT
+                  case M.lookup name =<< storedIntrospection of
+                    Nothing -> noopTrace $ addRemoteSchemaP2Setup env name defn
+                    Just rawIntro -> do
+                      rsDef <- validateRemoteSchemaDef env defn
+                      (ir, rsi) <- stitchRemoteSchema rawIntro name rsDef
+                      pure (ir, rawIntro, rsi)
             )
           |) (mkRemoteSchemaMetadataObject remoteSchema)
       case remoteSchemaContextParts of
@@ -72,8 +79,8 @@ buildRemoteSchemas env =
           -- we then resolve permissions
           resolvedPermissions <- buildRemoteSchemaPermissions -< ((name, introspection, orderedRoles), fmap (name,) permissions)
           -- resolve remote relationships
-          let transformedRelationships = flip fmap relationships $ \RemoteSchemaTypeRelationships {..} -> fmap (PartiallyResolvedRemoteRelationship _rstrsName) _rstrsRelationships
-          let remoteSchemaContext =
+          let transformedRelationships = relationships <&> \RemoteSchemaTypeRelationships {..} -> PartiallyResolvedRemoteRelationship _rstrsName <$> _rstrsRelationships
+              remoteSchemaContext =
                 RemoteSchemaCtx
                   { _rscName = name,
                     _rscIntroOriginal = introspection,
@@ -96,7 +103,7 @@ buildRemoteSchemaPermissions ::
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
     ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
-    Inc.ArrowCache m arr,
+    ArrowKleisli m arr,
     MonadError QErr m
   ) =>
   -- this ridiculous duplication of [(RemoteSchemaName, RemoteSchemaPermissionMetadata)]
@@ -163,12 +170,11 @@ buildRemoteSchemaPermissions = proc ((remoteSchemaName, originalIntrospection, o
        in MetadataObject objectId $ toJSON defn
 
 addRemoteSchemaP2Setup ::
-  (QErrM m, MonadIO m, HasHttpManagerM m, Tracing.MonadTrace m) =>
+  (QErrM m, MonadIO m, ProvidesNetwork m, Tracing.MonadTrace m) =>
   Env.Environment ->
   RemoteSchemaName ->
   RemoteSchemaDef ->
   m (IntrospectionResult, BL.ByteString, RemoteSchemaInfo)
 addRemoteSchemaP2Setup env name def = do
-  httpMgr <- askHttpManager
   rsi <- validateRemoteSchemaDef env def
-  fetchRemoteSchema env httpMgr name rsi
+  fetchRemoteSchema env name rsi

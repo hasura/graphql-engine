@@ -1,4 +1,4 @@
-import type { CloudCliEnv, EnvVars } from '@/Globals';
+import type { CloudCliEnv, EnvVars } from '../Globals';
 
 export type ProConsoleEnv = {
   consoleMode: EnvVars['consoleMode'];
@@ -16,8 +16,16 @@ export const isProConsole = (env: ProConsoleEnv) => {
     return true;
   }
 
-  if (env.consoleMode === 'cli' && env.pro === true) {
-    return true;
+  if (env.consoleMode === 'cli') {
+    if (
+      env.consoleType === 'cloud' ||
+      env.consoleType === 'pro' ||
+      env.consoleType === 'pro-lite'
+    )
+      return true;
+
+    // to support old CLI logic, when consoleType is not provided by the CLI
+    if (env.pro === true) return true;
   }
 
   return false;
@@ -50,3 +58,5 @@ export const isEnvironmentSupportMultiTenantConnectionPooling = (
   // there should not be any other console modes
   throw new Error(`Invalid consoleMode:  ${env.consoleMode}`);
 };
+
+export const isImportFromOpenAPIEnabled = isProConsole;

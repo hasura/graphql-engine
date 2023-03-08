@@ -1,8 +1,10 @@
-import Endpoints from '@/Endpoints';
-import { Api } from '@/hooks/apiUtils';
-import { useAppSelector } from '@/store';
+import Endpoints from '../../../../../Endpoints';
+import { Api } from '../../../../../hooks/apiUtils';
+import { useAppSelector } from '../../../../../storeHooks';
 import { useQuery, UseQueryOptions } from 'react-query';
 import { CronTriggerAPIResult, ScheduledTrigger } from '../../types';
+
+export const CRON_TRIGGERS_QUERY_KEY = 'cronTrigger';
 
 export function useGetCronTriggers(
   queryOptions?: Omit<
@@ -30,7 +32,7 @@ export function useGetCronTriggers(
   };
 
   return useQuery({
-    queryKey: 'cronTrigger',
+    queryKey: CRON_TRIGGERS_QUERY_KEY,
     queryFn,
     ...queryOptions,
     select: data => {

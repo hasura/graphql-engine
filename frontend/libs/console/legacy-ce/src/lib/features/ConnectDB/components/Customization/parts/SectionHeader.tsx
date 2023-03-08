@@ -1,4 +1,4 @@
-import { IconTooltip } from '@/new-components/Tooltip';
+import { IconTooltip } from '../../../../../new-components/Tooltip';
 import React from 'react';
 
 export const SectionHeader: React.VFC<{ header: string; tip: string }> = ({

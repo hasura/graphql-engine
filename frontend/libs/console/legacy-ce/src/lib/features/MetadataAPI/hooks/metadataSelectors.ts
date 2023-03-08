@@ -1,9 +1,9 @@
 import {
   keyToPermission,
   permKeys,
-} from '@/components/Services/Data/mergeData';
-import type { Permission, ComputedField } from '@/dataSources/types';
-import { DataTarget } from '@/features/Datasources';
+} from '../../../components/Services/Data/mergeData';
+import type { Permission, ComputedField } from '../../../dataSources/types';
+import { DataTarget } from '../../Datasources';
 
 import type {
   QualifiedTable,
@@ -14,7 +14,7 @@ import type {
   ObjectRelationship,
   ArrayRelationship,
   QueryCollectionEntry,
-} from '@/metadata/types';
+} from '../../../metadata/types';
 import { MetadataResponse } from '..';
 
 export namespace MetadataSelector {

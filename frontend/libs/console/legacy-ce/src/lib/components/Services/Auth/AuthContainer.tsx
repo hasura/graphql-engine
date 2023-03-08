@@ -1,4 +1,4 @@
-import { ENABLE_AUTH_LAYER } from '@/utils/featureFlags';
+import { ENABLE_AUTH_LAYER } from '../../../utils/featureFlags';
 import React from 'react';
 import { AuthContextProvider } from './useAuthContext';
 

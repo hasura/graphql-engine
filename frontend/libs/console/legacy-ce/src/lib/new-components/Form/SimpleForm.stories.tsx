@@ -3,8 +3,8 @@ import { ComponentMeta, ComponentStory } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 
 import { z } from 'zod';
-import { InputField, SimpleForm } from '@/new-components/Form';
-import { Button } from '@/new-components/Button';
+import { InputField, SimpleForm } from '.';
+import { Button } from '../Button';
 
 export default {
   title: 'components/Forms 📁/Form 📁/Simple forms 🧬',

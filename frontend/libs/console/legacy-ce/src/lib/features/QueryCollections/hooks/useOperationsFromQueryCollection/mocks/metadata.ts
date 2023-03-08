@@ -1,4 +1,4 @@
-import { MetadataResponse } from '@/features/MetadataAPI';
+import { MetadataResponse } from '../../../../MetadataAPI';
 
 export const metadata: MetadataResponse = {
   resource_version: 48,

@@ -30,6 +30,7 @@
 #   - {name: unsafePerformIO, within: []} # unsafePerformIO can only appear in no modules
 
 - functions:
+
       - name: "Test.Hspec.focus"
         within: []
         message: "Specs with focusing should only be used during development"
@@ -237,3 +238,47 @@
       - error: {lhs: "Control.Concurrent.threadDelay", rhs: "Control.Concurrent.Extended.sleep", note: "Please use `sleep` instead (and read the docs!)"}
       - suggest: {lhs: "Control.Concurrent.Async.Lifted.Safe.async", rhs: "Control.Concurrent.Async.Lifted.Safe.withAsync", note: "Please use 'Control.Control.Concurrent.Async.Lifted.Safe.withAsync' or our 'forkImmortal' instead for more robust threading."}
       - suggest: {lhs: "Control.Concurrent.forkIO", rhs: "Control.Concurrent.Async.Lifted.Safe.withAsync", note: "Please use 'Control.Control.Concurrent.Async.Lifted.Safe.withAsync' or our 'forkImmortal' instead for more robust threading."}
+      - suggest: {
+          lhs: "System.Environment.getEnvironment",
+          rhs: "env_from_function_argument",
+          note: "Instead of 'getEnvironment', use the environment from the server context, typically accessible as a function argument"
+      }
+      - suggest: {
+          lhs: "Data.Environment.getEnvironment",
+          rhs:  "env_from_function_argument",
+          note: "Instead of 'getEnvironment', use the environment from the server context, typically accessible as a function argument"
+      }
+
+- ignore: {
+    group: {name: "unsafe"},
+    within: ["Harness.**", "Spec", "Spec.**", "SpecHook", "Test.**"]
+    }
+
+
+
+
+# Glorious import restrictions
+
+# We limit the place where the module `Hasura.RQL.Types.Instances` can be
+# imported in order to make it easier to avoid module cycles.
+#
+# This check is initially quite limited, and will need to be extended to cover
+# other instance-defining modules as well:
+#
+#  * RQL.Types.Metadata.Instances
+#  * Hasura.GraphQL.Transport.Instances
+#  * Hasura.GraphQL.Execute.Instances
+#  * Hasura.GraphQL.Schema.Instances
+#  * Hasura.Server.API.Instances
+#  * Hasura.RQL.Types.SchemaCache.Instances
+
+- modules:
+    - name: Hasura.RQL.Types.Instances
+      within: [
+                Hasura.RQL.IR.Select,
+                Hasura.RQL.Types.Metadata.Object,
+                Hasura.RQL.Types.Relationships.Remote,
+                Hasura.RQL.Types.SchemaCacheTypes,
+                Hasura.RQL.Types.Source,
+                Hasura.GraphQL.Schema.Build.UpdateSpec
+              ]

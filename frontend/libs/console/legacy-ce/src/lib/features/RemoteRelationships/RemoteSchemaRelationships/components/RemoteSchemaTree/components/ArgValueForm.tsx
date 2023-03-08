@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaCircle } from 'react-icons/fa';
 import { GraphQLType } from 'graphql';
 
-import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
+import { useDebouncedEffect } from '../../../../../../hooks/useDebounceEffect';
 import {
   ArgValue,
   ArgValueKind,

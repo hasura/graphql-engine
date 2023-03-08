@@ -1,7 +1,7 @@
 ---
 sidebar_label: hasura migrate create
 sidebar_position: 24
-description: Create files required for a migration using the Hasura CLI
+description: Create ``sql`` files required for a migration using the Hasura CLI
 keywords:
   - hasura
   - docs
@@ -11,11 +11,15 @@ keywords:
 
 # Hasura CLI: hasura migrate create
 
-Create files required for a migration.
+Create ``sql`` files required for a migration.
 
 ## Synopsis
 
-Create `sql` files required for a migration.
+As you make changes to your database's schema, Hasura tracks these changes via migrations. This command creates a ``sql`` file that contains the changes you made that can then be applied to a database.
+
+Further reading:
+- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-migrations/
+
 
 ```bash
 hasura migrate create [migration-name] [flags]
@@ -26,6 +30,9 @@ hasura migrate create [migration-name] [flags]
 ```bash
 # Setup migration files for the first time by introspecting a server:
 hasura migrate create "init" --from-server
+
+# Setup migration files for the first time by introspecting a server when there are multiple schemas:
+hasura migrate create "init" --from-server --schema myschema1,myschema2
 
 # Use with admin secret:
 hasura migrate create --admin-secret "<admin-secret>"

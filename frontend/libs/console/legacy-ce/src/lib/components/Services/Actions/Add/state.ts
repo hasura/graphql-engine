@@ -5,21 +5,8 @@ import {
 } from '../Common/stateDefaults';
 import { DefaultState } from './types';
 
-let defaultHandler = '';
-if (typeof navigator !== 'undefined') {
-  const { appVersion } = navigator;
-  const isLinux =
-    appVersion.toLowerCase().includes('linux') ||
-    appVersion.toLowerCase().includes('x11');
-  if (isLinux) {
-    defaultHandler = 'http://localhost:3000';
-  } else {
-    defaultHandler = 'http://host.docker.internal:3000';
-  }
-}
-
 const state: DefaultState = {
-  handler: defaultHandler,
+  handler: '',
   actionDefinition: {
     sdl: defaultActionDefSdl,
     error: null,
@@ -34,7 +21,7 @@ const state: DefaultState = {
   },
   headers: [defaultHeader],
   forwardClientHeaders: false,
-  execution: 'synchronous',
+  kind: 'synchronous',
   isFetching: false,
   derive: {
     operation: '',

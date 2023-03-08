@@ -1,9 +1,9 @@
-import type { EnvVars } from '@/Globals';
+import type { EnvVars } from '../../../../Globals';
 
 import * as Sentry from '@sentry/react';
 import { BrowserTracing } from '@sentry/tracing';
 
-import globals from '@/Globals';
+import globals from '../../../../Globals';
 import { getSentryTags } from './getSentryTags';
 import { errorMustBeBlocked } from './errorMustBeBlocked';
 import { getSentryEnvironment } from './getSentryEnvironment';
@@ -56,6 +56,12 @@ export function startSentryTracing(globalVars: Globals, envVars: EnvVars) {
         // sensitive data
         dom: false,
       }),
+
+      // ATTENTION: functions like programmaticallyTraceError could internally log errors to the
+      // browser's console, causing an infinite loop!
+      // new CaptureConsoleIntegration({
+      //   levels: ['error'],
+      // }),
     ],
 
     // Allow grouping logs by environment

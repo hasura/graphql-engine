@@ -1,11 +1,14 @@
-import styles from "./Main.module.scss";
-import {Link} from "react-router";
-import React from "react";
+import React from 'react';
+import { Link } from 'react-router';
+import clsx from 'clsx';
 
-import {
-  Tooltip,
-} from '@hasura/console-oss';
+import { Tooltip } from '@hasura/console-legacy-ce';
 
+export const linkStyle =
+  'flex items-stretch gap-2 text-white font-bold rounded py-2 px-3 hover:!text-white active:text-primary focus:text-primary bg-transparent hover:bg-slate-900 !no-underline cursor-pointer';
+export const activeLinkStyle =
+  'text-primary hover:!text-primary focus:!text-primary visited:!text-primary bg-slate-900';
+export const itemContainerStyle = 'h-full flex items-center ml-xs';
 
 const HeaderNavItem = ({
   title,
@@ -15,9 +18,10 @@ const HeaderNavItem = ({
   linkPath,
   appPrefix,
   currentActiveBlock,
-  isDefault = false
+  isDefault = false,
 }) => {
-  const className = currentActiveBlock === itemPath || (isDefault && currentActiveBlock === '') ? styles.navSideBarActive : '';
+  const isActive =
+    currentActiveBlock === itemPath || (isDefault && currentActiveBlock === '');
 
   return (
     <li>
@@ -25,20 +29,21 @@ const HeaderNavItem = ({
         id={tooltipText}
         side="bottom"
         tooltipContentChildren={tooltipText}
+        className="h-full"
       >
         <Link
-          className={className}
+          className={clsx(linkStyle, isActive && activeLinkStyle)}
           data-test={`${title.toLowerCase()}-tab-link`}
           to={appPrefix + linkPath}
         >
-          <div className={styles.iconCenter} data-test={itemPath}>
+          <span className="text-sm self-baseline" data-test={itemPath}>
             {icon}
-          </div>
-          <p className="uppercase">{title}</p>
+          </span>
+          <span className="uppercase text-left">{title}</span>
         </Link>
       </Tooltip>
     </li>
   );
-}
+};
 
 export default HeaderNavItem;

@@ -1,32 +1,28 @@
 # ghcid gets its own cache
-GHCID_FLAGS = --builddir ./dist-newstyle/repl --repl-option -O0 --repl-option -fobject-code
-GHCID_TESTS_FLAGS = --builddir ./dist-newstyle/repl-tests --repl-option -O0
+GRAPHQL_ENGINE_PATH=$(shell cabal list-bin exe:graphql-engine)
 
-PANE_WIDTH = $(shell tmux display -p "\#{pane_width}" || echo 80)
-PANE_HEIGHT = $(shell tmux display -p "\#{pane_height}" || echo 30 )
+# `ghcid` breaks if this flag is on because it does it's qualified imports the
+# Traditional way
+GHC_OPTIONS=-Wno-prepositive-qualified-module
 
-# once ghcid's window errors are fixed we can remove this explicit width/height
-# nonsense
-# this needs to make it into ghcid: https://github.com/biegunka/terminal-size/pull/16
+GHCID_FLAGS = --builddir ./dist-newstyle/repl --repl-option -O0 --repl-option -fobject-code --ghc-options=$(GHC_OPTIONS)
+GHCID_TESTS_FLAGS = --builddir ./dist-newstyle/repl-tests --repl-option -O0 --ghc-options=$(GHC_OPTIONS)
+
 define run_ghcid_api_tests
 	@if [[ $$(uname -p) == 'arm' ]]; then \
-		HASURA_TEST_BACKEND_TYPE="$(2)" ghcid -c "DYLD_LIBRARY_PATH=$$DYLD_LIBRARY_PATH cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
-			--test "main" \
-			--width=$(PANE_WIDTH) \
-			--height=$(PANE_HEIGHT); \
+		HASURA_TEST_BACKEND_TYPE="$(2)" GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) ghcid -c "DYLD_LIBRARY_PATH=$${DYLD_LIBRARY_PATH:-} cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+			--test "main"; \
 	else \
-  	HASURA_TEST_BACKEND_TYPE="$(2)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+  	HASURA_TEST_BACKEND_TYPE="$(2)" GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
   		--test "main"; \
 	fi
 endef
 
 define run_ghcid_main_tests
 	@if [[ $$(uname -p) == 'arm' ]]; then \
-		HASURA_TEST_BACKEND_TYPE="$(3)" ghcid -c "DYLD_LIBRARY_PATH=$$DYLD_LIBRARY_PATH cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+		HASURA_TEST_BACKEND_TYPE="$(3)" ghcid -c "DYLD_LIBRARY_PATH=$${DYLD_LIBRARY_PATH:-} cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
 			--test "main" \
-			--setup ":set args $(2)" \
-			--width=$(PANE_WIDTH) \
-			--height=$(PANE_HEIGHT); \
+			--setup ":set args $(2)"; \
 	else \
   	HASURA_TEST_BACKEND_TYPE="$(3)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
   		--test "main" \
@@ -36,11 +32,7 @@ endef
 
 
 define run_ghcid
-	@if [[ $$(uname -p) == 'arm' ]]; then \
-		ghcid -c "cabal repl $(1) $(GHCID_FLAGS)" --width=$(PANE_WIDTH) --height=$(PANE_HEIGHT); \
-	else \
-  	ghcid -c "cabal repl $(1) $(GHCID_FLAGS)"; \
-	fi
+	ghcid -c "cabal repl $(1) $(GHCID_FLAGS)";
 endef
 
 .PHONY: ghcid-library
@@ -72,6 +64,12 @@ ghcid-api-tests-pro:
 ## ghcid-test-backends: run all api tests in ghcid
 ghcid-test-backends: start-backends remove-tix-file
 	$(call run_ghcid_api_tests,api-tests:exe:api-tests)
+
+.PHONY: ghcid-test-postgres
+## ghcid-test-backends: run tests for Postgres backend in ghcid
+ghcid-test-postgres: remove-tix-file
+	docker compose up postgres -d --wait postgres
+	$(call run_ghcid_api_tests,api-tests:exe:api-tests,Postgres)
 
 .PHONY: ghcid-test-bigquery
 ## ghcid-test-bigquery: run tests for BigQuery backend in ghcid

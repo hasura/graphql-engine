@@ -1,0 +1,57 @@
+table:
+  schema: public
+  name: order
+object_relationships:
+  - name: billing_address
+    using:
+      foreign_key_constraint_on: billing_address_id
+  - name: order_status
+    using:
+      foreign_key_constraint_on: status
+  - name: shipping_address
+    using:
+      foreign_key_constraint_on: shipping_address_id
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id
+array_relationships:
+  - name: products
+    using:
+      foreign_key_constraint_on:
+        column: order_id
+        table:
+          schema: public
+          name: order_product
+insert_permissions:
+  - role: site-admin
+    permission:
+      check: {}
+      columns: '*'
+  - role: user
+    permission:
+      check:
+        user_id:
+          _eq: X-Hasura-User-Id
+      columns: '*'
+select_permissions:
+  - role: site-admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id
+update_permissions:
+  - role: site-admin
+    permission:
+      columns: '*'
+      filter: {}
+      check: null
+delete_permissions:
+  - role: site-admin
+    permission:
+      filter: {}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 import { useQuery } from '@apollo/react-hooks';
 
-import { Button } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
 
 import { fetchOperations, getProjectConfigs } from './graphql.queries';
 import Inspect from './Inspect';
@@ -15,7 +15,7 @@ import {
   getWhereClause,
 } from './utils';
 
-import { DragFoldTable, tableScss } from '@hasura/console-oss';
+import { DragFoldTable, tableScss } from '@hasura/console-legacy-ce';
 
 import {
   // NO_ROLE_SYMBOL,
@@ -37,8 +37,8 @@ const defaultState = {
     time: 'desc',
   },
 };
-import failure  from '../images/failure.svg';
-import success  from '../images/success.svg';
+import failure from '../images/failure.svg';
+import success from '../images/success.svg';
 
 const BrowserRows = props => {
   const [browseState, setState] = useState(defaultState);
@@ -340,8 +340,9 @@ const BrowserRows = props => {
             newRow[elem] = (
               <div
                 key={key}
-                className={`${styles.columnRow} ${elem === 'success' &&
-                  styles.textCenter}`}
+                className={`${styles.columnRow} ${
+                  elem === 'success' && styles.textCenter
+                }`}
                 title={getTitle()}
               >
                 {renderElement()}

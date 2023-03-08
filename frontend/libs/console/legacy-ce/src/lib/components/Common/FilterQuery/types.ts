@@ -23,6 +23,7 @@ export type Operator =
   | '$regex'
   | '$iregex'
   | '$nregex'
+  | '_is_null'
   | '$niregex';
 
 // Operator with names and aliases
@@ -139,7 +140,6 @@ export type RunQuery = (options?: RunQueryOptions) => void;
 
 export type FilterRenderProp = (
   rows: any[],
-  count: number | undefined,
   state: FilterState,
   setState: SetFilterState,
   runQuery: RunQuery

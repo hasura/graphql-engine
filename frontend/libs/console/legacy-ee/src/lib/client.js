@@ -4,7 +4,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
-import { ReactQueryProvider, startTracing } from '@hasura/console-oss';
+import { ReactQueryProvider, startTracing } from '@hasura/console-legacy-ce';
 
 import { Router, browserHistory } from 'react-router';
 import { syncHistoryWithStore } from 'react-router-redux';

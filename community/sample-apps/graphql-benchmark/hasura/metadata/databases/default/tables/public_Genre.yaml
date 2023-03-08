@@ -1,0 +1,11 @@
+table:
+  name: Genre
+  schema: public
+array_relationships:
+  - name: Tracks
+    using:
+      foreign_key_constraint_on:
+        column: GenreId
+        table:
+          name: Track
+          schema: public

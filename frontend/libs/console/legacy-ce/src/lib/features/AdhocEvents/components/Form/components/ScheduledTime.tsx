@@ -1,9 +1,10 @@
 import React from 'react';
 import DateTimePicker from 'react-datetime';
-import { IconTooltip } from '@/new-components/Tooltip';
+import 'react-datetime/css/react-datetime.css';
+import { IconTooltip } from '../../../../../new-components/Tooltip';
 import { useFormContext } from 'react-hook-form';
 import { Moment } from 'moment';
-import { inputStyles } from '@/components/Services/Events/constants';
+import { inputStyles } from '../../../../../components/Services/Events/constants';
 
 export const ScheduledTime = () => {
   const { setValue, watch } = useFormContext();

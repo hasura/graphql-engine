@@ -10,25 +10,24 @@ import {
   FaRedoAlt,
   FaExternalLinkAlt,
 } from 'react-icons/fa';
-import { ManageAgents } from '@/features/ManageAgents';
-import { Button } from '@/new-components/Button';
-import { useMetadataSource } from '@/features/MetadataAPI';
-import {
-  availableFeatureFlagIds,
-  useIsFeatureFlagEnabled,
-} from '@/features/FeatureFlags';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { nativeDrivers } from '@/features/DataSource';
-import { getProjectId } from '@/utils/cloudConsole';
+import { browserHistory } from 'react-router';
+import produce from 'immer';
+import { ManageAgents } from '../../../../features/ManageAgents';
+import { Button } from '../../../../new-components/Button';
+import { useMetadataSource } from '../../../../features/MetadataAPI';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
+import { nativeDrivers } from '../../../../features/DataSource';
+import { getProjectId } from '../../../../utils/cloudConsole';
 import {
   CheckDatabaseLatencyResponse,
   useCheckDatabaseLatency,
   useUpdateProjectRegionChangeStat,
-} from '@/features/ConnectDB';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
-import { isCloudConsole } from '@/utils';
-import globals from '@/Globals';
-import KnowMoreLink from '@/components/Common/KnowMoreLink/KnowMoreLink';
+} from '../../../../features/ConnectDB';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
+import { isCloudConsole } from '../../../../utils';
+import globals from '../../../../Globals';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
+
 import styles from './styles.module.scss';
 import { Dispatch, ReduxState } from '../../../../types';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
@@ -60,6 +59,7 @@ import {
   useVPCBannerVisibility,
 } from './utils';
 import { NeonDashboardLink } from '../DataSources/CreateDataSource/Neon/components/NeonDashboardLink';
+import { ListConnectedDatabases } from '../../../../features/ConnectDBRedesign';
 
 const KNOW_MORE_PROJECT_REGION_UPDATE =
   'https://hasura.io/docs/latest/projects/regions/#changing-region-of-an-existing-project';
@@ -181,7 +181,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
           </span>
         )}
       </td>
-      <td className="px-sm py-xs max-w-xs align-top">
+      <td className="px-sm py-xs max-w-xs align-center">
         <CollapsibleToggle
           dataSource={dataSource}
           dbVersion={dbVersion}
@@ -200,7 +200,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
           </ToolTip>
         )}
       </td>
-      <td className="px-sm py-xs max-w-xs align-top break-all">
+      <td className="px-sm py-xs max-w-xs align-center break-all">
         {showUrl ? (
           typeof dataSource.url === 'string' ? (
             dataSource.url
@@ -258,7 +258,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
   );
 };
 
-interface ManageDatabaseProps extends InjectedProps {}
+type ManageDatabaseProps = InjectedProps;
 
 let autoRedirectedToConnectPage = false;
 
@@ -286,10 +286,6 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
 
   const { show: shouldShowVPCBanner, dismiss: dismissVPCBanner } =
     useVPCBannerVisibility();
-
-  const { enabled: isDCAgentsManageUIEnabled } = useIsFeatureFlagEnabled(
-    availableFeatureFlagIds.gdcId
-  );
 
   const crumbs = [
     {
@@ -365,7 +361,9 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   };
 
   const [showCheckLatencyButton, setLatencyButtonVisibility] = useState(
-    isPgMssqlSourceConnected && isCloudConsole(globals)
+    sourcesFromMetadata.length !== 0 &&
+      isPgMssqlSourceConnected &&
+      isCloudConsole(globals)
   );
 
   const [latencyCheckData, setLatencyCheckData] = useState<
@@ -388,7 +386,25 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   const showAccelerateProjectSection =
     isCloudConsole(globals) &&
     !showCheckLatencyButton &&
-    !checkHighLatencySources(latencyCheckData);
+    !checkHighLatencySources(latencyCheckData) &&
+    (!queryResponse.isLoading || !queryResponse.isFetching);
+
+  useEffect(() => {
+    if (!location.search.includes('trigger_db_latency_check')) {
+      return;
+    }
+
+    setFireLatencyRequest(true);
+
+    const newLocation = produce(browserHistory.getCurrentLocation(), draft => {
+      // NOTE: the next few lines will help remove the query param once we trigger
+      // a request to check the db latency to avoid situations where might
+      // end up rendering the page in loops
+      delete draft.query.trigger_db_latency_check;
+    });
+
+    browserHistory.replace(newLocation);
+  }, []);
 
   return (
     <RightContainer>
@@ -464,18 +480,16 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
                           />
                         );
                       }
-                      if (isDCAgentsManageUIEnabled)
-                        return (
-                          <GDCDatabaseListItem
-                            dataSource={{
-                              name: source.name,
-                              kind: source.kind,
-                            }}
-                            inconsistentObjects={inconsistentObjects}
-                            dispatch={dispatch}
-                          />
-                        );
-                      return null;
+                      return (
+                        <GDCDatabaseListItem
+                          dataSource={{
+                            name: source.name,
+                            kind: source.kind,
+                          }}
+                          inconsistentObjects={inconsistentObjects}
+                          dispatch={dispatch}
+                        />
+                      );
                     })
                   ) : (
                     <td colSpan={3} className="text-center px-sm py-xs">
@@ -488,11 +502,6 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
             </div>
           </div>
 
-          {isDCAgentsManageUIEnabled ? (
-            <div className="mt-lg">
-              <ManageAgents />
-            </div>
-          ) : null}
           {showCheckLatencyButton ? (
             <Button
               size="md"
@@ -523,7 +532,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
                     either deploy your Hasura project in the same region as your
                     database or select a database instance that&apos;s closer to
                     where you&apos;ve deployed Hasura.
-                    <KnowMoreLink href={KNOW_MORE_PROJECT_REGION_UPDATE} />
+                    <LearnMoreLink href={KNOW_MORE_PROJECT_REGION_UPDATE} />
                   </span>
                   <div className="flex items-center flex-row ml-xs">
                     <Button
@@ -577,6 +586,10 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
             </div>
           ) : null}
           <NeonDashboardLink className="mt-lg" />
+
+          <div className="mt-lg">
+            <ManageAgents />
+          </div>
         </div>
       </Analytics>
     </RightContainer>

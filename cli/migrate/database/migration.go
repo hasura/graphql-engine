@@ -111,6 +111,7 @@ type HasuraOpts struct {
 	PGSourceOps         hasura.PGSourceOps
 	MSSQLSourceOps      hasura.MSSQLSourceOps
 	CitusSourceOps      hasura.CitusSourceOps
+	BigQuerySourceOps   hasura.BigQuerySourceOps
 	MetadataOps         hasura.CommonMetadataOperations
 	V2MetadataOps       hasura.V2CommonMetadataOperations
 	GenericQueryRequest hasura.GenericSend

@@ -94,7 +94,7 @@ ifMatchedObjectParser tableInfo = runMaybeT do
         matchColumnsName = Name._match_columns
         updateColumnsName = Name._update_columns
         whereName = Name._where
-    whereExpParser <- boolExp tableInfo
+    whereExpParser <- tableBoolExp tableInfo
     pure $
       P.object objectName (Just objectDesc) do
         _imConditions <-

@@ -71,7 +71,7 @@ const TableBody = ({ children }: ChildrenProps) => {
 const TableBodyRow = (props: React.ComponentProps<'tr'>) => {
   const { children, className, ...tableRowAttributes } = props;
   return (
-    <tr className={clsx('group', className)} {...tableRowAttributes}>
+    <tr className={clsx('group relative', className)} {...tableRowAttributes}>
       {children}
     </tr>
   );
@@ -80,7 +80,8 @@ const TableBodyRow = (props: React.ComponentProps<'tr'>) => {
 const TableBodyCell = ({ children, ...cellAttributes }: ChildrenProps) => {
   return (
     <td
-      className="px-sm py-xs whitespace-nowrap text-muted"
+      // style={{ maxWidth: '20ch' }}
+      className="px-sm py-xs whitespace-nowrap text-muted overflow-hidden text-ellipsis"
       {...cellAttributes}
     >
       {children}
@@ -90,7 +91,7 @@ const TableBodyCell = ({ children, ...cellAttributes }: ChildrenProps) => {
 
 const TableBodyActionCell = ({ children }: ChildrenProps) => {
   return (
-    <td className="px-sm py-xs whitespace-nowrap text-right font-semibold opacity-0 group-hover:opacity-100">
+    <td className="px-sm py-xs whitespace-nowrap text-right font-semibold">
       {children}
     </td>
   );
@@ -104,7 +105,7 @@ interface BodyProps {
 const Body = ({ data, showActionCell = false }: BodyProps) => {
   return (
     <TableBody>
-      {data.map(row => {
+      {data.map((row, rowIndex) => {
         return (
           <TableBodyRow>
             {row.map((cell, index) => {

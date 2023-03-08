@@ -1,6 +1,6 @@
-import { useMetadataVersion, useMetadataTables } from '@/features/MetadataAPI';
-import { trimDefaultValue } from '@/components/Services/Data/mergeData';
-import { dataSourceSqlQueries } from '@/features/SqlQueries';
+import { useMetadataVersion, useMetadataTables } from '../features/MetadataAPI';
+import { trimDefaultValue } from '../components/Services/Data/mergeData';
+import { dataSourceSqlQueries } from '../features/SqlQueries';
 import type { QualifiedTable, TableEntry } from './../metadata/types';
 import type { NormalizedTable, TableType } from '../dataSources/types';
 import type { QualifiedDataSource, RunSQLResponse } from './types';

@@ -39,8 +39,9 @@ tests _ = do
             expected =
               [yaml|
             builtin: false
-            display_name: "FOOBARDB (foobar)"
+            display_name: "FOOBARDB"
             kind: foobar
+            available: true
           |]
         response' `shouldBe` [expected]
 
@@ -78,7 +79,7 @@ addSource =
       name: myfoobar
       replace_configuration: false
       configuration:
-        db: /db.chinook.sqlite
+        value: {}
   |]
 
 listSourceKinds :: Value

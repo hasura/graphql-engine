@@ -4,7 +4,6 @@ module Test.Schema.ViewsSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
-import Data.Text qualified as T
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
@@ -103,18 +102,18 @@ tests opts = do
 --------------------------------------------------------------------------------
 -- Shared setup
 
-createSQL :: Schema.SchemaName -> String
+createSQL :: Schema.SchemaName -> Text
 createSQL schemaName =
-  let schemaNameString = T.unpack (Schema.unSchemaName schemaName)
+  let schemaNameString = Schema.unSchemaName schemaName
    in "CREATE OR REPLACE VIEW "
         <> schemaNameString
         <> ".author_view AS SELECT id, name FROM "
         <> schemaNameString
         <> ".author"
 
-dropSQL :: Schema.SchemaName -> String
+dropSQL :: Schema.SchemaName -> Text
 dropSQL schemaName =
-  let schemaNameString = T.unpack (Schema.unSchemaName schemaName)
+  let schemaNameString = Schema.unSchemaName schemaName
    in "DROP VIEW IF EXISTS " <> schemaNameString <> ".author_view"
 
 --------------------------------------------------------------------------------

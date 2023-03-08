@@ -27,7 +27,7 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 	metadataCmd := &cobra.Command{
 		Use:     "metadata",
 		Aliases: []string{"md"},
-		Short:   "Manage Hasura GraphQL engine metadata saved in the database",
+		Short:   "Manage Hasura GraphQL Engine Metadata saved in the database",
 		Long: `This command allows you to manage the Hasura GraphQL Engine Metadata saved in the database via a collection of flags and subcommands.
 		
 Further reading:
@@ -63,9 +63,9 @@ Further reading:
 
 	f := metadataCmd.PersistentFlags()
 
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
-	f.String("access-key", "", "access key for Hasura GraphQL engine")
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
+	f.String("access-key", "", "access key for Hasura GraphQL Engine")
 	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
 		ec.Logger.WithError(err).Errorf("error while using a dependency library")
 	}

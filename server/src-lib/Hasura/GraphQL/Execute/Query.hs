@@ -30,12 +30,13 @@ import Hasura.RQL.IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
+import Hasura.RQL.Types.QueryTags
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (RequestId (..))
+import Hasura.Services.Network
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
-import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 
 parseGraphQLQuery ::
@@ -60,14 +61,14 @@ convertQuerySelSet ::
   forall m.
   ( MonadError QErr m,
     MonadGQLExecutionCheck m,
-    MonadQueryTags m
+    MonadQueryTags m,
+    ProvidesNetwork m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
   PrometheusMetrics ->
   GQLContext ->
   UserInfo ->
-  HTTP.Manager ->
   HTTP.RequestHeaders ->
   [G.Directive G.Name] ->
   G.SelectionSet G.NoFragments G.Name ->
@@ -84,7 +85,6 @@ convertQuerySelSet
   prometheusMetrics
   gqlContext
   userInfo
-  manager
   reqHeaders
   directives
   fields
@@ -111,19 +111,38 @@ convertQuerySelSet
               AB.dispatchAnyBackend @BackendExecute
                 exists
                 \(SourceConfigWith (sourceConfig :: (SourceConfig b)) queryTagsConfig (QDBR db)) -> do
-                  let queryTagsAttributes = encodeQueryTags $ QTQuery $ QueryMetadata reqId maybeOperationName rootFieldName parameterizedQueryHash
+                  let mReqId =
+                        case _qtcOmitRequestId <$> queryTagsConfig of
+                          -- we include the request id only if a user explicitly wishes for it to be included.
+                          Just False -> Just reqId
+                          _ -> Nothing
+                      queryTagsAttributes = encodeQueryTags $ QTQuery $ QueryMetadata mReqId maybeOperationName rootFieldName parameterizedQueryHash
                       queryTagsComment = Tagged.untag $ createQueryTags @m queryTagsAttributes queryTagsConfig
                       (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsQueryDB db
-                  dbStepInfo <- flip runReaderT queryTagsComment $ mkDBQueryPlan @b userInfo env sourceName sourceConfig noRelsDBAST
+                  dbStepInfo <- flip runReaderT queryTagsComment $ mkDBQueryPlan @b userInfo env sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName
                   pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
             RFRemote rf -> do
               RemoteSchemaRootField remoteSchemaInfo resultCustomizer remoteField <- runVariableCache $ for rf $ resolveRemoteVariable userInfo
               let (noRelsRemoteField, remoteJoins) = RJ.getRemoteJoinsGraphQLField remoteField
               pure $ buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeQuery noRelsRemoteField remoteJoins (GH._grOperationName gqlUnparsed)
             RFAction action -> do
+              httpManager <- askHTTPManager
               let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
               (actionExecution, actionName, fch) <- pure $ case noRelsDBAST of
-                AQQuery s -> (AEPSync $ resolveActionExecution env logger prometheusMetrics userInfo s (ActionExecContext manager reqHeaders (_uiSession userInfo)) (Just (GH._grQuery gqlUnparsed)), _aaeName s, _aaeForwardClientHeaders s)
+                AQQuery s ->
+                  ( AEPSync $
+                      resolveActionExecution
+                        httpManager
+                        env
+                        logger
+                        prometheusMetrics
+                        userInfo
+                        s
+                        (ActionExecContext reqHeaders (_uiSession userInfo))
+                        (Just (GH._grQuery gqlUnparsed)),
+                    _aaeName s,
+                    _aaeForwardClientHeaders s
+                  )
                 AQAsync s -> (AEPAsyncQuery $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s, _aaaqName s, _aaaqForwardClientHeaders s)
               pure $ ExecStepAction actionExecution (ActionsInfo actionName fch) remoteJoins
             RFRaw r -> flip onLeft throwError =<< executeIntrospection userInfo r introspectionDisabledRoles

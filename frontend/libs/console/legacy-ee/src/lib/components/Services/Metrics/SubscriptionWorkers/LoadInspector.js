@@ -13,11 +13,11 @@ const LoadInspector = props => {
       projectId: projectId,
       pollerId: pollerId,
     },
-    fetchPolicy: 'cache-and-network'
+    fetchPolicy: 'cache-and-network',
   };
   const { loading, error, data } = useQuery(
     fetchSubscriptionWorkerDetail,
-    options,
+    options
   );
 
   if (loading) {

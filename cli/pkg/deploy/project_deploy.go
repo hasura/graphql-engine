@@ -2,10 +2,12 @@ package deploy
 
 import (
 	"fmt"
+	"io"
+
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"io"
 )
 
 type ProjectDeploy struct {
@@ -39,6 +41,12 @@ func WithEndpoint(endpoint string) ProjectDeployOption {
 func WithCliExtPath(path string) ProjectDeployOption {
 	return func(d *ProjectDeploy) {
 		d.ec.CliExtSourceBinPath = path
+	}
+}
+
+func WithLogger(logger *logrus.Logger) ProjectDeployOption {
+	return func(p *ProjectDeploy) {
+		p.ec.Logger = logger
 	}
 }
 

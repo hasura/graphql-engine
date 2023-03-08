@@ -4,7 +4,7 @@ import { userEvent, waitFor, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { screen } from '@testing-library/dom';
 
-import { Tooltip } from '@/new-components/Tooltip';
+import { Tooltip } from '.';
 
 export default {
   title: 'components/Tooltip 📁/Tooltip ⚛️',
@@ -76,6 +76,29 @@ export const VariantSide: ComponentStory<typeof Tooltip> = () => (
 );
 VariantSide.storyName = '🎭 Variant - Side';
 VariantSide.parameters = {
+  docs: {
+    source: { state: 'open' },
+  },
+};
+
+export const VariantAlign: ComponentStory<typeof Tooltip> = () => (
+  <>
+    <Tooltip tooltipContentChildren={<TooltipChildrenExample />}>
+      <ChildrenExample />
+    </Tooltip>
+    <Tooltip align="start" tooltipContentChildren={<TooltipChildrenExample />}>
+      <ChildrenExample />
+    </Tooltip>
+    <Tooltip align="center" tooltipContentChildren={<TooltipChildrenExample />}>
+      <ChildrenExample />
+    </Tooltip>
+    <Tooltip align="end" tooltipContentChildren={<TooltipChildrenExample />}>
+      <ChildrenExample />
+    </Tooltip>
+  </>
+);
+VariantAlign.storyName = '🎭 Variant - Align';
+VariantAlign.parameters = {
   docs: {
     source: { state: 'open' },
   },

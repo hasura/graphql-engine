@@ -1,7 +1,7 @@
 import Skeleton from 'react-loading-skeleton';
-import { useServerConfig } from '@/hooks';
-import { Badge } from '@/new-components/Badge';
-import { Tooltip } from '@/new-components/Tooltip';
+import { useServerConfig } from '../../../../hooks';
+import { Badge } from '../../../../new-components/Badge';
+import { Tooltip } from '../../../../new-components/Tooltip';
 import React from 'react';
 import { FaExclamationTriangle } from 'react-icons/fa';
 

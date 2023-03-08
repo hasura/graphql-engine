@@ -1,7 +1,7 @@
 import React from 'react';
 
 import PropTypes from 'prop-types';
-import { Button } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
 import { Link } from 'react-router';
 import { FaExclamationCircle } from 'react-icons/fa';
 

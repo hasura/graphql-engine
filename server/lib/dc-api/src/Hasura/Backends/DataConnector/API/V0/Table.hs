@@ -17,6 +17,7 @@ module Hasura.Backends.DataConnector.API.V0.Table
     tiDeletable,
     TableType (..),
     ForeignKeys (..),
+    unForeignKeys,
     ConstraintName (..),
     Constraint (..),
     cForeignTable,
@@ -111,13 +112,13 @@ instance HasCodec TableType where
 
 --------------------------------------------------------------------------------
 
-newtype ForeignKeys = ForeignKeys {unForeignKeys :: HashMap ConstraintName Constraint}
+newtype ForeignKeys = ForeignKeys {_unForeignKeys :: HashMap ConstraintName Constraint}
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON) via Autodocodec ForeignKeys
 
 instance HasCodec ForeignKeys where
-  codec = dimapCodec ForeignKeys unForeignKeys $ codec @(HashMap ConstraintName Constraint)
+  codec = dimapCodec ForeignKeys _unForeignKeys $ codec @(HashMap ConstraintName Constraint)
 
 --------------------------------------------------------------------------------
 
@@ -145,3 +146,4 @@ instance HasCodec Constraint where
 
 $(makeLenses ''TableInfo)
 $(makeLenses ''Constraint)
+$(makeLenses ''ForeignKeys)

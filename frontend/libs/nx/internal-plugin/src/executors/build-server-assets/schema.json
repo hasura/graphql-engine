@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "title": "BuildServerAssets executor",
+  "description": "",
+  "type": "object",
+  "properties": {},
+  "required": []
+}

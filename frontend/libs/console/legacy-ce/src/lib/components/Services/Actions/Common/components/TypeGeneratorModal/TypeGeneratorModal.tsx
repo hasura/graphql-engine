@@ -1,5 +1,5 @@
-import { Dialog } from '@/new-components/Dialog';
-import { SimpleForm } from '@/new-components/Form';
+import { Dialog } from '../../../../../../new-components/Dialog';
+import { SimpleForm } from '../../../../../../new-components/Form';
 import { SchemaType } from './types';
 import React from 'react';
 import { schema, TypeGeneratorForm } from './TypeGeneratorForm';

@@ -1,1 +1,1 @@
-export * from './components/OASGeneratorModal/';
+export * from './components/OASGenerator';

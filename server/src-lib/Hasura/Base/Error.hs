@@ -110,6 +110,8 @@ data Code
   | Unexpected
   | UnexpectedPayload
   | ValidationFailed
+  | -- | Connection templates
+    TemplateResolutionFailed
   deriving (Show, Eq)
 
 instance ToJSON Code where
@@ -156,6 +158,7 @@ instance ToJSON Code where
     Unexpected -> "unexpected"
     UnexpectedPayload -> "unexpected-payload"
     ValidationFailed -> "validation-failed"
+    TemplateResolutionFailed -> "template-resolution-failed"
 
 data QErr = QErr
   { qePath :: JSONPath,

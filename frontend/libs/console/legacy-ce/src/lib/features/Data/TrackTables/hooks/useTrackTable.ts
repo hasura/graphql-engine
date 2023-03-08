@@ -1,9 +1,11 @@
-import { useMetadataMigration } from '@/features/MetadataAPI';
-import { useFireNotification } from '@/new-components/Notifications';
+import { useMetadataMigration } from '../../../MetadataAPI';
+import { useFireNotification } from '../../../../new-components/Notifications';
 import React, { useCallback } from 'react';
 import { useQueryClient } from 'react-query';
-import { useIsUnmounted } from '@/components/Services/Data';
-import { useMetadataSource, tablesQueryKey } from '@/features/Data';
+import { useInvalidateMetadata } from '../../../hasura-metadata-api';
+import { useIsUnmounted } from '../../../../components/Services/Data/Common/tsUtils';
+import { useMetadataSource } from './useMetadataSource';
+import { tablesQueryKey } from './useTables';
 import type { TrackableTable } from '../types';
 import { buildTrackingQuery, TrackingQuery } from './buildTrackingQuery';
 
@@ -17,6 +19,7 @@ export const useTrackTable = (dataSourceName: string) => {
   const unMounted = useIsUnmounted();
 
   const { data } = useMetadataSource(dataSourceName);
+  const invalidateMetadata = useInvalidateMetadata();
 
   const metadata = data?.metadata;
 
@@ -76,7 +79,7 @@ export const useTrackTable = (dataSourceName: string) => {
             'trackTables',
             'metadataSource',
           ]);
-
+          invalidateMetadata();
           fireNotification({
             title: 'Success',
             message: `${noun} ${verb} ${action}ed`,

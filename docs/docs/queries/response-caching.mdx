@@ -16,7 +16,9 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 # Query Response Caching
 
-<div className="badge badge--primary heading-badge">Available on: Cloud, Enterprise Edition</div>
+<div className="badge badge--primary heading-badge">
+  Available on: Cloud Standard, Cloud Professional, Cloud Enterprise, Self-hosted Enterprise
+</div>
 
 ## Introduction
 
@@ -33,12 +35,6 @@ A query's response can be cached only if the following conditions hold:
 - The query **isn't** an `Action` that has `forward_client_headers` (see
   [ActionDefinition](/api-reference/syntax-defs.mdx#actiondefinition)) set to `true`.
 - The response JSON is **under** 100KB in size
-
-:::tip Support
-
-Query response caching is available for Hasura Cloud projects on the `Free` tier and above.
-
-:::
 
 ## Enable caching
 

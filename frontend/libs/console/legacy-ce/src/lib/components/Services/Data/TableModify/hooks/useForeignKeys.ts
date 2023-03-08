@@ -1,5 +1,5 @@
-import { dataSource, Table } from '@/dataSources';
-import { useAppDispatch } from '@/store';
+import { dataSource, Table } from '../../../../../dataSources';
+import { useAppDispatch } from '../../../../../storeHooks';
 import { useEffect } from 'react';
 import { getExistingFKConstraints } from '../../Common/Components/utils';
 import { updateSchemaInfo } from '../../DataActions';

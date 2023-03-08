@@ -22,3 +22,4 @@ instance BackendMetadata 'MySQL where
   postDropSourceHook = MySQL.postDropSourceHook
   buildComputedFieldBooleanExp _ _ _ _ _ _ =
     error "buildComputedFieldBooleanExp: MySQL backend does not support this operation yet."
+  supportsBeingRemoteRelationshipTarget _ = False

@@ -140,11 +140,11 @@ data ConflictingDefinitions origin
 
 instance ToErrorValue (ConflictingDefinitions origin) where
   toErrorValue (ConflictingDefinitions (type1, origin1) (type2, origins)) =
-    "Found conflicting definitions for "
+    "Found conflicting definitions for GraphQL type "
       <> toErrorValue (getName type1)
       <> ".  The definition at "
       <> toErrorValue origin1
-      <> " differs from the the definitions "
+      <> " differs from the definitions at "
       <> toErrorValue origins
       <> "."
       <> "\nFormer has definition:\n"

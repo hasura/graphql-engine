@@ -1,16 +1,18 @@
-import { useHttpClient } from '@/features/Network';
+import { useHttpClient } from '../../Network';
 import { useQuery } from 'react-query';
-import { DataSource, TableColumn } from '@/features/DataSource';
-import { Table } from '@/features/hasura-metadata-types';
+import { DataSource, TableColumn } from '../../DataSource';
+import { Table } from '../../hasura-metadata-types';
 import { AxiosError } from 'axios';
 import { generateQueryKeys } from '../utils/queryClientUtils';
 
 export const useTableColumns = ({
   dataSourceName,
   table,
+  enabled = true,
 }: {
   dataSourceName: string;
   table: Table;
+  enabled?: boolean;
 }) => {
   const httpClient = useHttpClient();
   return useQuery<TableColumn[], AxiosError>({

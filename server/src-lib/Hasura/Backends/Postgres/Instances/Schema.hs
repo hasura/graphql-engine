@@ -65,6 +65,7 @@ import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Update qualified as SU
 import Hasura.GraphQL.Schema.Update.Batch qualified as SUB
+import Hasura.LogicalModel.Schema qualified as LogicalModels
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -282,6 +283,15 @@ instance
   tableSelectionSet = defaultTableSelectionSet
 
 instance
+  ( PostgresSchema pgKind,
+    Backend ('Postgres pgKind)
+  ) =>
+  BS.BackendCustomTypeSelectSchema ('Postgres pgKind)
+  where
+  logicalModelArguments = defaultLogicalModelArgs
+  logicalModelSelectionSet = defaultLogicalModelSelectionSet
+
+instance
   ( Backend ('Postgres pgKind),
     PostgresSchema pgKind
   ) =>
@@ -297,6 +307,7 @@ instance
   buildFunctionQueryFields = buildFunctionQueryFieldsPG
   buildFunctionRelayQueryFields = pgkBuildFunctionRelayQueryFields
   buildFunctionMutationFields = buildFunctionMutationFieldsPG
+  buildLogicalModelRootFields = LogicalModels.defaultBuildLogicalModelRootFields
 
   mkRelationshipParser = GSB.mkDefaultRelationshipParser backendInsertParser ()
 

@@ -1,6 +1,6 @@
 import React from 'react';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 import styles from '../../RemoteSchema/RemoteSchema.module.scss';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 
 import Rectangle from './images/Rectangle.svg';
 
@@ -10,11 +10,11 @@ type TopicDescriptionProps = {
   description: React.ReactNode;
   imgElement?: JSX.Element;
   imgUrl?: string;
-  knowMoreHref?: string;
+  learnMoreHref?: string;
 };
 
 const TopicDescription = (props: TopicDescriptionProps) => {
-  const { title, imgUrl, imgAlt, description, knowMoreHref, imgElement } =
+  const { title, imgUrl, imgAlt, description, learnMoreHref, imgElement } =
     props;
   return (
     <div>
@@ -27,7 +27,8 @@ const TopicDescription = (props: TopicDescriptionProps) => {
         {imgElement ?? null}
       </div>
       <div className="text-lg font-normalleading-6 w-8/12">
-        {description} {knowMoreHref && <KnowMoreLink href={knowMoreHref} />}
+        {description}
+        {learnMoreHref && <LearnMoreLink href={learnMoreHref} />}
       </div>
     </div>
   );

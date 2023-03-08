@@ -1,5 +1,5 @@
 import { rest } from 'msw';
-import Endpoints from '@/Endpoints';
+import Endpoints from '../../../../../Endpoints';
 import { listCronTriggerAPIResponse } from './CronTriggerListAPIResponse';
 import { CronRequestBody, CronResponseBody } from './types';
 

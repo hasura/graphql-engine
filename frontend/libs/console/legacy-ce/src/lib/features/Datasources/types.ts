@@ -1,4 +1,4 @@
-import { APIError } from '@/hooks/error';
+import { APIError } from '../../hooks/error';
 import { UseQueryOptions } from 'react-query';
 
 export type RunSQLQueryOptions<KEY extends readonly unknown[], DATA> = Omit<

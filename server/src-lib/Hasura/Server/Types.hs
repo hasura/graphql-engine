@@ -29,6 +29,7 @@ import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude hiding (intercalate)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata (MetadataDefaults)
+import Hasura.Server.Init.FeatureFlag (FeatureFlag)
 import Hasura.Server.Utils
 import Network.HTTP.Types qualified as HTTP
 
@@ -146,10 +147,10 @@ data ServerConfigCtx = ServerConfigCtx
     _sccEventingMode :: EventingMode,
     _sccReadOnlyMode :: ReadOnlyMode,
     -- | stores global default naming convention
-    _sccDefaultNamingConvention :: Maybe NamingCase,
-    _sccMetadataDefaults :: MetadataDefaults
+    _sccDefaultNamingConvention :: NamingCase,
+    _sccMetadataDefaults :: MetadataDefaults,
+    _sccCheckFeatureFlag :: FeatureFlag -> IO Bool
   }
-  deriving (Show, Eq)
 
 askMetadataDefaults :: HasServerConfigCtx m => m MetadataDefaults
 askMetadataDefaults = do

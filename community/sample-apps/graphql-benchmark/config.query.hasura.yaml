@@ -1,0 +1,64 @@
+url: "http://host.docker.internal:8080/v1/graphql"
+# url: https://benchmark-hasura-rso3d2ja7a-uc.a.run.app/v1/graphql
+headers:
+  content-type: application/json
+# "Debug" mode enables request and response logging for Autocannon and K6
+# This lets you see what is happening and confirm proper behavior.
+# This should be disabled for genuine benchmarks, and only used for debugging/visibility.
+debug: false
+queries:
+  # Name: Unique name for the query
+  - name: GetAllArtistsAlbumsAndTracks
+    # Tools: List of benchmarking tools to run: ['autocannon', 'k6', 'wrk2']
+    tools: [k6]
+    execution_strategy: REQUESTS_PER_SECOND
+    rps: 2000
+    duration: 10s
+    connections: 50
+    query: |
+      query GetAllArtistsAlbumsTracks_Genres {
+        Artist {
+          ArtistId
+          Name
+          Albums {
+            AlbumId
+            Title
+            Tracks {
+              TrackId
+              Name
+              Composer
+              Genre {
+                GenreId
+                Name
+              }
+            }
+          }
+        }
+      }
+  - name: AlbumByPK
+    tools: [k6]
+    execution_strategy: FIXED_REQUEST_NUMBER
+    requests: 10000
+    query: |
+      query AlbumByPK {
+        Album_by_pk(AlbumId: 1) {
+          AlbumId
+          Title
+        }
+      }
+  - name: AlbumByPKMultiStage
+    tools: [k6]
+    execution_strategy: MULTI_STAGE
+    initial_rps: 0
+    stages:
+      - duration: 5s
+        target: 100
+      - duration: 5s
+        target: 1000
+    query: |
+      query AlbumByPK {
+        Album_by_pk(AlbumId: 1) {
+          AlbumId
+          Title
+        }
+      }

@@ -158,11 +158,31 @@ flag ghci-load-test-with-lib
 common common-all
   ghc-options:
     -foptimal-applicative-do
-    -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
     -- This is just to keep compile-times in check and might be adjusted later (See mono #2610):
     -fmax-simplifier-iterations=2
-    -- Insisting on export lists might help with compile times, and help to document modules:
-    -Wmissing-export-lists
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missing-import-lists
+    -Wno-missed-specialisations
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
+    -- We want these warnings, but the code doesn't satisfy them yet:
+    -Wno-missing-deriving-strategies
+    -Wno-unused-packages
+    -Wno-deriving-typeable
+    -Wno-prepositive-qualified-module
+    -Wno-implicit-lift
+    -Wno-identities
+    -Wno-operator-whitespace
+    -Wno-partial-fields
+    -Wno-redundant-bang-patterns
+    -Wno-unused-type-patterns
 
   if flag(profiling)
     cpp-options: -DPROFILING
@@ -198,6 +218,7 @@ common common-all
     DeriveLift
     DeriveTraversable
     DerivingVia
+    EmptyCase
     FlexibleContexts
     FlexibleInstances
     FunctionalDependencies
@@ -243,32 +264,34 @@ common lib-depends
                      , aeson
                      , aeson-casing
                      , aeson-ordered
+                     , arrows-extra
                      , attoparsec
                      , attoparsec-iso8601 >= 1.0
                      , autodocodec
                      , autodocodec-openapi3
                      , barbies
                      , base
+                     , ghc-debug-stub
                      , bytestring
                      , containers
                      , data-default
+                     , dc-api
                      , deepseq
                      , dependent-map >=0.4 && <0.5
                      , dependent-sum
                      , dependent-sum-template
                      , either
+                     , error-message
                      , exceptions
                      , fast-logger
-                     , dc-api
                      , free
                      , hashable
-                     , hasura-error-message
                      , hasura-prelude
-                     , hasura-schema-parsers
                      , http-client-tls
                      , http-conduit
                      , http-media
                      , http-types
+                     , incremental
                      , kan-extensions
                      , kriti-lang
                      , lifted-base
@@ -290,6 +313,7 @@ common lib-depends
                      , reflection
                      , retry
                      , safe-exceptions
+                     , schema-parsers
                      , scientific
                      , semialign
                      , servant
@@ -305,6 +329,7 @@ common lib-depends
                      , these
                      , time >= 1.9
                      , time-compat
+                     , time-manager
                      , transformers
                      , transformers-base
                      , unordered-containers >= 0.2.12
@@ -449,6 +474,9 @@ common lib-depends
                      , mysql-simple
                       -- dependency of vendored 'ip':
                      , wide-word
+
+                     -- debounce logs
+                     , fold-debounce
   if !flag(profiling)
     -- ghc-heap-view can't be built with profiling
     build-depends:     ghc-heap-view
@@ -457,29 +485,25 @@ library
   import: common-all, lib-depends
   hs-source-dirs:      src-lib
   exposed-modules:     Autodocodec.Extended
-                     , Control.Arrow.Extended
-                     , Control.Arrow.Interpret
-                     , Control.Arrow.Trans
                      , Control.Concurrent.Extended
                      , Control.Monad.Circular
                      , Control.Monad.Memoize
                      , Control.Monad.Stateless
                      , Control.Monad.Trans.Managed
-                     , Control.Monad.Unique
                      , Data.Aeson.Extended
                      , Data.Aeson.Kriti.Functions
                      , Data.Environment
                      , Data.HashMap.Strict.Extended
-                     , Data.HashMap.Strict.Multi
-                     , Data.HashMap.Strict.NonEmpty
                      , Data.HashMap.Strict.InsOrd.Autodocodec
                      , Data.HashMap.Strict.InsOrd.Extended
+                     , Data.HashMap.Strict.Multi
+                     , Data.HashMap.Strict.NonEmpty
                      , Data.List.Extended
                      , Data.Parser.CacheControl
                      , Data.Parser.Expires
                      , Data.Parser.JSONPath
-                     , Data.SqlCommenter
                      , Data.SerializableBlob
+                     , Data.SqlCommenter
                      , Data.Text.Casing
                      , Data.Text.Extended
                      , Data.Text.NonEmpty
@@ -490,12 +514,14 @@ library
                      , GHC.AssertNF.CPP
                      , GHC.Stats.Extended
                      , GHC.Generics.Extended
+
                      , Hasura.App
                      , Hasura.Metadata.Class
 
                      , Hasura.Base.Error
                      , Hasura.Base.Instances
 
+                     , Hasura.App.State
                      , Hasura.Backends.BigQuery.Connection
                      , Hasura.Backends.BigQuery.Execute
                      , Hasura.Backends.BigQuery.DDL
@@ -571,6 +597,7 @@ library
                      , Hasura.Backends.Postgres.DDL.Source
                      , Hasura.Backends.Postgres.DDL.Source.Version
                      , Hasura.Backends.Postgres.DDL.Table
+                     , Hasura.Backends.Postgres.Execute.ConnectionTemplate
                      , Hasura.Backends.Postgres.Execute.Subscription
                      , Hasura.Backends.Postgres.Execute.Insert
                      , Hasura.Backends.Postgres.Execute.Mutation
@@ -579,6 +606,7 @@ library
                      , Hasura.Backends.Postgres.Instances.API
                      , Hasura.Backends.Postgres.Instances.Execute
                      , Hasura.Backends.Postgres.Instances.Metadata
+                     , Hasura.Backends.Postgres.Instances.LogicalModels
                      , Hasura.Backends.Postgres.Instances.PingSource
                      , Hasura.Backends.Postgres.Instances.Schema
                      , Hasura.Backends.Postgres.Instances.SchemaCache
@@ -654,13 +682,15 @@ library
                      , Hasura.Backends.DataConnector.Adapter.Types.Mutations
                      , Hasura.Backends.DataConnector.Agent.Client
                      , Hasura.Backends.DataConnector.Logging
-                     , Hasura.Backends.DataConnector.Plan
+                     , Hasura.Backends.DataConnector.Plan.Common
+                     , Hasura.Backends.DataConnector.Plan.MutationPlan
+                     , Hasura.Backends.DataConnector.Plan.QueryPlan
+                     , Hasura.Backends.DataConnector.Plan.RemoteRelationshipPlan
 
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
                      , Hasura.Logging
                      , Hasura.HTTP
-                     , Hasura.Incremental
                      , Hasura.PingSources
                      , Hasura.Server.API.Backend
                      , Hasura.Server.API.Instances
@@ -678,6 +708,7 @@ library
                      , Hasura.Server.Init.Arg.PrettyPrinter
                      , Hasura.Server.Init.Config
                      , Hasura.Server.Init.Env
+                     , Hasura.Server.Init.FeatureFlag
                      , Hasura.Server.Init.Logging
                      , Hasura.Server.Limits
                      , Hasura.Server.Logging
@@ -691,10 +722,12 @@ library
                      , Hasura.Server.Version
                      , Hasura.ShutdownLatch
 
+                     , Hasura.CustomReturnType
+                     , Hasura.CustomReturnType.Common
+
                      , Hasura.EncJSON
                      , Hasura.GraphQL.Execute.Query
                      , Hasura.GraphQL.Logging
-                     , Hasura.Incremental.Select
                      , Hasura.RQL.DML.Select
                      , Hasura.RQL.Types.Run
                      , Hasura.Session
@@ -707,9 +740,14 @@ library
                      , Hasura.Server.Telemetry.Counters
                      , Hasura.Server.Auth.JWT
                      , Hasura.GC
-                     , Hasura.Incremental.Internal.Cache
-                     , Hasura.Incremental.Internal.Dependency
-                     , Hasura.Incremental.Internal.Rule
+
+                     , Hasura.LogicalModel.IR
+                     , Hasura.LogicalModel.Cache
+                     , Hasura.LogicalModel.Metadata
+                     , Hasura.LogicalModel.API
+                     , Hasura.LogicalModel.Schema
+                     , Hasura.LogicalModel.Types
+
                      , Hasura.Server.Auth.WebHook
                      , Hasura.Server.Middleware
                      , Hasura.Server.Cors
@@ -721,6 +759,8 @@ library
                      , Hasura.Server.Migrate.Internal
                      , Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging
+                     , Hasura.Services
+                     , Hasura.Services.Network
                      , Hasura.RemoteSchema.Metadata.Base
                      , Hasura.RemoteSchema.Metadata.Customization
                      , Hasura.RemoteSchema.Metadata.Permission
@@ -779,15 +819,18 @@ library
                      , Hasura.RQL.Types.SchemaCache.Instances
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.Source
+                     , Hasura.RQL.Types.SourceConfiguration
                      , Hasura.RQL.Types.SourceCustomization
                      , Hasura.RQL.Types.Subscription
                      , Hasura.RQL.Types.Table
                      , Hasura.RQL.DDL.Action
                      , Hasura.RQL.DDL.ApiLimit
                      , Hasura.RQL.DDL.ComputedField
+                     , Hasura.RQL.DDL.ConnectionTemplate
                      , Hasura.RQL.DDL.CustomTypes
                      , Hasura.RQL.DDL.DataConnector
                      , Hasura.RQL.DDL.Endpoint
+                     , Hasura.RQL.DDL.FeatureFlag
                      , Hasura.RQL.DDL.GraphqlSchemaIntrospection
                      , Hasura.RQL.DDL.InheritedRoles
                      , Hasura.RQL.DDL.Headers
@@ -802,6 +845,7 @@ library
                      , Hasura.RQL.DDL.Relationship.Rename
                      , Hasura.RQL.DDL.Relationship.Suggest
                      , Hasura.RQL.DDL.RemoteRelationship
+                     , Hasura.RQL.DDL.Warnings
                      , Hasura.RQL.DDL.Webhook.Transform
                      , Hasura.RQL.DDL.Webhook.Transform.Body
                      , Hasura.RQL.DDL.Webhook.Transform.Class
@@ -844,13 +888,13 @@ library
                      , Hasura.RQL.IR.Delete
                      , Hasura.RQL.IR.Insert
                      , Hasura.RQL.IR.OrderBy
-                     , Hasura.RQL.IR.Returning
-                     , Hasura.RQL.IR.Select
                      , Hasura.RQL.IR.RemoteSchema
+                     , Hasura.RQL.IR.Returning
+                     , Hasura.RQL.IR.Root
+                     , Hasura.RQL.IR.Select
                      , Hasura.RQL.IR.Update
                      , Hasura.RQL.IR.Update.Batch
                      , Hasura.RQL.IR.Value
-                     , Hasura.RQL.IR.Root
                      , Hasura.RQL.IR
                      , Hasura.GraphQL.Analyse
                      , Hasura.GraphQL.ApolloFederation
@@ -948,7 +992,6 @@ library
                      , Hasura.Tracing.TraceId
                      , Hasura.QueryTags
                      , Network.HTTP.Client.Transformable
-                     , Network.HTTP.Client.Manager
                      , Network.HTTP.Client.DynamicTlsPermissions
                      , Network.HTTP.Client.Restricted
                      , Network.HTTP.Client.Blocklisting
@@ -975,6 +1018,7 @@ executable graphql-engine
   main-is:           Main.hs
   build-depends:     base
                    , graphql-engine
+                   , ghc-debug-stub
                    , bytestring
                    , ekg-core
                    , ekg-prometheus
@@ -1118,6 +1162,7 @@ test-suite graphql-engine-tests
     Hasura.Backends.MySQL.TypesSpec
     Hasura.Backends.Postgres.Connection.VersionCheckSpec
     Hasura.Backends.Postgres.Execute.PrepareSpec
+    Hasura.Backends.Postgres.LogicalModels.LogicalModelsSpec
     Hasura.Backends.Postgres.RQLGenerator
     Hasura.Backends.Postgres.RQLGenerator.GenAnnSelectG
     Hasura.Backends.Postgres.RQLGenerator.GenAssociatedTypes
@@ -1137,8 +1182,7 @@ test-suite graphql-engine-tests
     Hasura.GraphQL.Schema.BoolExp.AggregationPredicatesSpec
     Hasura.GraphQL.Schema.Build.UpdateSpec
     Hasura.GraphQL.Schema.Introspection
-    Hasura.GraphQL.Schema.RemoteTest
-    Hasura.IncrementalSpec
+    Hasura.GraphQL.Schema.RemoteSpec
     Hasura.Metadata.DTO.MetadataDTOSpec
     Hasura.QuickCheck.Instances
     Hasura.RQL.DDL.Webhook.TransformSpec
@@ -1210,6 +1254,7 @@ test-suite graphql-engine-test-postgres
   hs-source-dirs: test-postgres
   main-is: Main.hs
   other-modules:
-    Hasura.EventTriggerCleanupSuite
-    Hasura.StreamingSubscriptionSuite
-    Hasura.Server.MigrateSuite
+    Constants
+    Test.Hasura.EventTriggerCleanupSuite
+    Test.Hasura.StreamingSubscriptionSuite
+    Test.Hasura.Server.MigrateSuite

@@ -2,6 +2,7 @@ import { isEqual } from '../../components/Common/utils/jsUtils';
 import { Nullable } from '../../components/Common/utils/tsUtils';
 import { QualifiedTable } from '../../metadata/types';
 import { FixMe } from '../../types';
+
 import {
   BaseTable,
   CheckConstraint,
@@ -87,7 +88,7 @@ export const getUntrackedTables = (tables: Table[]) => {
 };
 
 export const getTableColumnNames = (table: Table) => {
-  return table.columns.map(c => c.column_name);
+  return table?.columns?.map(c => c?.column_name);
 };
 
 export function escapeTableColumns(table: Table) {
@@ -117,12 +118,12 @@ export const getTableColumn = (table: Table, columnName: string) => {
 };
 
 export const getTableRelationshipNames = (table: Table) => {
-  return table?.relationships?.map(r => r.rel_name);
+  return table?.relationships?.map(r => r?.rel_name);
 };
 
 export function getTableRelationship(table: Table, relationshipName: string) {
   return table?.relationships?.find(
-    relationship => relationship.rel_name === relationshipName
+    relationship => relationship?.rel_name === relationshipName
   );
 }
 
@@ -131,9 +132,9 @@ export function getRelationshipRefTable(
   relationship: Relationship
 ): QualifiedTable | null {
   let refTable = null;
-
-  const relationshipDef = relationship.rel_def;
-  const relationshipType = relationship.rel_type;
+  if (!relationship) return null;
+  const relationshipDef = relationship?.rel_def;
+  const relationshipType = relationship?.rel_type;
 
   // if manual relationship
   if (relationshipDef.manual_configuration) {
@@ -186,11 +187,21 @@ export function getTableFromRelationshipChain(
     .split(/\./g)
     .filter(it => !it.startsWith('_') && Number.isNaN(parseInt(it, 10)))
     .slice(0, -1);
-  return rels.reduce((acc, name) => {
+
+  const objectRelationshipTable = rels.reduce((acc, name) => {
     const rship = getTableRelationship(acc, name)!;
     const rShipDef = getRelationshipRefTable(acc, rship)!;
     return findTable(allTables, rShipDef)!;
   }, startTable);
+  if (objectRelationshipTable) return objectRelationshipTable;
+
+  const table = allTables.filter((table: Table) => {
+    const tableRelationship = table.relationships?.find(relationship => {
+      return relationship?.rel_name === rels?.[0];
+    });
+    return !!tableRelationship;
+  })?.[0];
+  return table;
 }
 
 export const getEnumColumnMappings = (

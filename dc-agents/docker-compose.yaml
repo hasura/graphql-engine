@@ -25,12 +25,14 @@ services:
     ports:
       - "65007:8100"
     volumes:
-      - "./sqlite/test/db.chinook.sqlite:/db.chinook.sqlite"
-      - "./sqlite/test/db.sqlite:/db.sqlite"
+      - "./sqlite/dataset_templates:/app/sqlite/dataset_templates"
     environment:
       METRICS: y
       PRETTY_PRINT_LOGS: y
       LOG_LEVEL: debug
+      MUTATIONS: y
+      DATASETS: y
+      DATASET_DELETE: y
     healthcheck:
       test:
         - CMD

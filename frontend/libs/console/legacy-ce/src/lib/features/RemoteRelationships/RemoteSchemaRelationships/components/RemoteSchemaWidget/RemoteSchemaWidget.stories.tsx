@@ -1,9 +1,9 @@
 import React from 'react';
 import * as z from 'zod';
 import { Meta, Story } from '@storybook/react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { action } from '@storybook/addon-actions';
-import { SimpleForm } from '@/new-components/Form';
+import { SimpleForm } from '../../../../../new-components/Form';
 import {
   customer_columns,
   handlers,
@@ -60,8 +60,9 @@ Primary.parameters = {
   chromatic: { disableSnapshot: true },
 };
 
-export const RemoteSchemaWidgetWithExistingRelationship: Story<RemoteSchemaWidgetProps> =
-  args => <RemoteSchemaWidget {...args} />;
+export const RemoteSchemaWidgetWithExistingRelationship: Story<
+  RemoteSchemaWidgetProps
+> = args => <RemoteSchemaWidget {...args} />;
 RemoteSchemaWidgetWithExistingRelationship.args = {
   schemaName: 'remoteSchema1',
   fields: customer_columns,

@@ -152,10 +152,14 @@ input[type='submit'] {
   cursor: pointer;
 }
 
-button[disabled],
+/* 
+This button style was overriding all disabled buttons in console,
+which was not allowing the `cursor-not-allowed` class to take effect
+*/
+/* button[disabled],
 html input[disabled] {
   cursor: default;
-}
+} */
 
 button::-moz-focus-inner,
 input::-moz-focus-inner {

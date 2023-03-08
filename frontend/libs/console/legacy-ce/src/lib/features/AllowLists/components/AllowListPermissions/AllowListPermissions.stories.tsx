@@ -1,7 +1,7 @@
 import React from 'react';
 import { Story, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { handlers } from '@/mocks/metadata.mock';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { handlers } from '../../../../mocks/metadata.mock';
 import {
   AllowListPermissions,
   AllowListPermissionsTabProps,

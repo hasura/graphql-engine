@@ -1,4 +1,4 @@
-import { Analytics } from '@/features/Analytics';
+import { Analytics } from '../../../../Analytics';
 import clsx from 'clsx';
 import React from 'react';
 import { FaAngleRight } from 'react-icons/fa';

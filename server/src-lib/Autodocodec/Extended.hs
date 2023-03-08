@@ -1,6 +1,9 @@
 module Autodocodec.Extended
   ( caseInsensitiveHashMapCodec,
     caseInsensitiveTextCodec,
+    graphQLEnumValueCodec,
+    graphQLExecutableDocumentCodec,
+    graphQLFieldDescriptionCodec,
     graphQLFieldNameCodec,
     graphQLValueCodec,
     graphQLSchemaDocumentCodec,
@@ -11,6 +14,8 @@ module Autodocodec.Extended
     optionalFieldOrIncludedNull',
     optionalFieldOrIncludedNullWith,
     optionalFieldOrIncludedNullWith',
+    refinedCodec,
+    refinedCodecWith,
   )
 where
 
@@ -24,9 +29,12 @@ import Data.Text qualified as T
 import Data.Typeable (Typeable)
 import Hasura.Metadata.DTO.Utils (typeableName)
 import Hasura.Prelude
+import Language.GraphQL.Draft.Parser qualified as G
 import Language.GraphQL.Draft.Parser qualified as GParser
+import Language.GraphQL.Draft.Printer qualified as G
 import Language.GraphQL.Draft.Printer qualified as GPrinter
 import Language.GraphQL.Draft.Syntax qualified as G
+import Refined qualified as R
 import Text.Builder qualified as TB
 
 -- | Like 'hashMapCodec', but with case-insensitive keys.
@@ -46,6 +54,15 @@ caseInsensitiveHashMapCodec elemCodec =
 caseInsensitiveTextCodec :: forall a. (CI.FoldCase a, HasCodec a) => JSONCodec (CI.CI a)
 caseInsensitiveTextCodec = dimapCodec CI.mk CI.original codec
 
+graphQLEnumValueCodec :: JSONCodec G.EnumValue
+graphQLEnumValueCodec = dimapCodec G.EnumValue G.unEnumValue graphQLFieldNameCodec
+
+graphQLExecutableDocumentCodec :: JSONCodec (G.ExecutableDocument G.Name)
+graphQLExecutableDocumentCodec = bimapCodec dec enc codec
+  where
+    dec = mapLeft T.unpack . G.parseExecutableDoc
+    enc = G.renderExecutableDoc
+
 -- | Codec for a GraphQL field name
 graphQLFieldNameCodec :: JSONCodec G.Name
 graphQLFieldNameCodec = named "GraphQLName" $ bimapCodec dec enc codec
@@ -54,6 +71,9 @@ graphQLFieldNameCodec = named "GraphQLName" $ bimapCodec dec enc codec
       maybeToEither ("invalid GraphQL field name '" <> T.unpack text <> "'") $
         G.mkName text
     enc = G.unName
+
+graphQLFieldDescriptionCodec :: JSONCodec G.Description
+graphQLFieldDescriptionCodec = dimapCodec G.Description G.unDescription codec
 
 graphQLValueCodec :: forall var. Typeable var => JSONCodec var -> JSONCodec (G.Value var)
 graphQLValueCodec varCodec =
@@ -208,3 +228,20 @@ orIncludedNullHelper = dimapCodec dec enc
     enc = \case
       Nothing -> Just Nothing -- This is the case that differs from the stock `orNullHelper`
       Just a -> Just (Just a)
+
+-- | Codec for values wrapped with a type-level predicate using the refined
+-- package.
+--
+-- This version assumes that the underlying value type implements @HasCodec@.
+refinedCodec :: (HasCodec a, R.Predicate p a) => JSONCodec (R.Refined p a)
+refinedCodec = refinedCodecWith codec
+
+-- | Codec for values wrapped with a type-level predicate using the refined
+-- package.
+--
+-- This version requires a codec to be provided for the underlying value type.
+refinedCodecWith :: R.Predicate p a => JSONCodec a -> JSONCodec (R.Refined p a)
+refinedCodecWith underlyingCodec = bimapCodec dec enc underlyingCodec
+  where
+    dec = mapLeft show . R.refine
+    enc = R.unrefine

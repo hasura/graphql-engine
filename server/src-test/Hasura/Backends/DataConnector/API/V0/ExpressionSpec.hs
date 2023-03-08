@@ -16,7 +16,7 @@ import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName)
-import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType)
+import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType, genScalarValue)
 import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName)
 import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumTextExcluding)
 import Hasura.Prelude
@@ -68,7 +68,7 @@ spec = do
 
   describe "ComparisonColumn" $ do
     testToFromJSONToSchema
-      (ComparisonColumn QueryTable (ColumnName "column_name") StringTy)
+      (ComparisonColumn QueryTable (ColumnName "column_name") (ScalarType "string"))
       [aesonQQ|{"path": ["$"], "name": "column_name", "column_type": "string"}|]
 
     jsonOpenApiProperties genComparisonColumn
@@ -81,13 +81,13 @@ spec = do
     jsonOpenApiProperties genColumnPath
 
   describe "ComparisonValue" $ do
-    describe "AnotherColumn" $
+    describe "AnotherColumnComparison" $
       testToFromJSONToSchema
-        (AnotherColumn $ ComparisonColumn CurrentTable (ColumnName "my_column_name") StringTy)
+        (AnotherColumnComparison $ ComparisonColumn CurrentTable (ColumnName "my_column_name") (ScalarType "string"))
         [aesonQQ|{"type": "column", "column": {"name": "my_column_name", "column_type": "string"}}|]
-    describe "ScalarValue" $
+    describe "ScalarValueComparison" $
       testToFromJSONToSchema
-        (ScalarValue (String "scalar value") StringTy)
+        (ScalarValueComparison $ ScalarValue (String "scalar value") (ScalarType "string"))
         [aesonQQ|{"type": "scalar", "value": "scalar value", "value_type": "string"}|]
 
     jsonOpenApiProperties genComparisonValue
@@ -112,8 +112,8 @@ spec = do
     jsonOpenApiProperties genExistsInTable
 
   describe "Expression" $ do
-    let comparisonColumn = ComparisonColumn CurrentTable (ColumnName "my_column_name") StringTy
-    let scalarValue = ScalarValue (String "scalar value") StringTy
+    let comparisonColumn = ComparisonColumn CurrentTable (ColumnName "my_column_name") (ScalarType "string")
+    let scalarValue = ScalarValueComparison $ ScalarValue (String "scalar value") (ScalarType "string")
     let scalarValues = [String "scalar value"]
     let unaryComparisonExpression = ApplyUnaryComparisonOperator IsNull comparisonColumn
 
@@ -195,7 +195,7 @@ spec = do
 
     describe "BinaryArrayComparisonOperator" $ do
       testToFromJSONToSchema
-        (ApplyBinaryArrayComparisonOperator In comparisonColumn scalarValues StringTy)
+        (ApplyBinaryArrayComparisonOperator In comparisonColumn scalarValues (ScalarType "string"))
         [aesonQQ|
           {
             "type": "binary_arr_op",
@@ -257,8 +257,8 @@ genColumnPath =
 genComparisonValue :: (MonadGen m, GenBase m ~ Identity) => m ComparisonValue
 genComparisonValue =
   Gen.choice
-    [ AnotherColumn <$> genComparisonColumn,
-      ScalarValue <$> genValue <*> genScalarType
+    [ AnotherColumnComparison <$> genComparisonColumn,
+      ScalarValueComparison <$> genScalarValue
     ]
 
 genExistsInTable :: MonadGen m => m ExistsInTable

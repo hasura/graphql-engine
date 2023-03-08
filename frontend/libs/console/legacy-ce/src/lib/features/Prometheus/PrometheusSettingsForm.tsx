@@ -3,10 +3,15 @@ import { z } from 'zod';
 import Skeleton from 'react-loading-skeleton';
 import 'ace-builds/src-noconflict/mode-yaml';
 
-import { CodeEditorField, InputField, SimpleForm } from '@/new-components/Form';
-import { Button } from '@/new-components/Button';
-import { Badge } from '@/new-components/Badge';
-import { Card } from '@/new-components/Card';
+import {
+  CodeEditorField,
+  InputField,
+  SimpleForm,
+} from '../../new-components/Form';
+import { Button } from '../../new-components/Button';
+import { Badge } from '../../new-components/Badge';
+import { Card } from '../../new-components/Card';
+import { LearnMoreLink } from '../../new-components/LearnMoreLink';
 import {
   FaCheckCircle,
   FaExclamationTriangle,
@@ -39,13 +44,8 @@ type PrometheusFormProps = {
 
 const PrometheusFormIntro = () => (
   <p className="text-muted">
-    Expose your Prometheus performance metrics from your Hasura GraphQL Engine.{' '}
-    <a
-      href="https://hasura.io/docs/latest/enterprise/metrics/"
-      className="text-secondary text-sm italic hover:underline hover:cursor-pointer"
-    >
-      (Read More)
-    </a>
+    Expose your Prometheus performance metrics from your Hasura GraphQL Engine.
+    <LearnMoreLink href="https://hasura.io/docs/latest/enterprise/metrics/" />
   </p>
 );
 
@@ -220,7 +220,7 @@ export const PrometheusSettingsForm: React.VFC<PrometheusFormProps> = ({
     );
     PrometheusSettings = () => (
       <>
-        <PrometheusAnimation />
+        <PrometheusAnimation enabled />
         <PrometheusFormFields
           prometheusUrl={prometheusUrl}
           prometheusConfig={prometheusConfig}

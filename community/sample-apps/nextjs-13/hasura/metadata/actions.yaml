@@ -1,0 +1,55 @@
+actions:
+  - name: adminLogin
+    definition:
+      kind: ''
+      handler: '{{NEXTJS_SERVER_URL}}/api/actions/admin-login'
+    permissions:
+      - role: anonymous
+  - name: adminSignup
+    definition:
+      kind: synchronous
+      handler: '{{NEXTJS_SERVER_URL}}/api/actions/admin-signup'
+    permissions:
+      - role: site-admin
+  - name: createPaymentIntent
+    definition:
+      kind: synchronous
+      handler: '{{NEXTJS_SERVER_URL}}/api/actions/create-payment-intent'
+    permissions:
+      - role: anonymous
+      - role: site-admin
+      - role: user
+  - name: login
+    definition:
+      kind: synchronous
+      handler: '{{NEXTJS_SERVER_URL}}/api/actions/login'
+    permissions:
+      - role: anonymous
+  - name: refreshToken
+    definition:
+      kind: ''
+      handler: '{{NEXTJS_SERVER_URL}}/api/actions/refresh-token'
+    permissions:
+      - role: anonymous
+      - role: site-admin
+      - role: user
+  - name: signup
+    definition:
+      kind: synchronous
+      handler: '{{NEXTJS_SERVER_URL}}/api/actions/signup'
+    permissions:
+      - role: anonymous
+custom_types:
+  enums: []
+  input_objects:
+    - name: SignupInput
+    - name: LoginInput
+    - name: AdminLoginInput
+    - name: AdminSignupInput
+    - name: CreatePaymentIntentInput
+    - name: RefreshTokenInput
+  objects:
+    - name: PaymentIntentClientSecret
+    - name: JWT
+    - name: RefreshTokenJWT
+  scalars: []

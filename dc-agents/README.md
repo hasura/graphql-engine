@@ -128,6 +128,9 @@ The `GET /capabilities` endpoint is used by `graphql-engine` to discover the cap
 ```json
 {
   "capabilities": {
+    "queries": {
+      "foreach": {}
+    },
     "data_schema": {
       "supports_primary_keys": true,
       "supports_foreign_keys": true,
@@ -163,13 +166,17 @@ The `GET /capabilities` endpoint is used by `graphql-engine` to discover the cap
 ```
 
 The `capabilities` section describes the _capabilities_ of the service. This includes
+- `queries`: The query capabilities that the agent supports
 - `data_schema`: What sorts of features the agent supports when describing its data schema
 - `relationships`: whether or not the agent supports relationships
-- `scalar_types`: custom scalar types and the operations they support. See [Scalar types capabilities](#scalar-type-capabilities).
+- `scalar_types`: scalar types and the operations they support. See [Scalar types capabilities](#scalar-type-capabilities).
 
 The `config_schema` property contains an [OpenAPI 3 Schema](https://swagger.io/specification/#schema-object) object that represents the schema of the configuration object. It can use references (`$ref`) to refer to other schemas defined in the `other_schemas` object by name.
 
 `graphql-engine` will use the `config_schema` OpenAPI 3 Schema to validate the user's configuration JSON before putting it into the `X-Hasura-DataConnector-Config` header.
+
+#### Query capabilities
+The agent can declare whether or not it supports ["foreach queries"](#foreach-queries) by including a `foreach` property with an empty object assigned to it. Foreach query support is optional, but is required if the agent is to be used as the target of remote relationships in HGE.
 
 #### Data schema capabilities
 The agent can declare whether or not it supports primary keys or foreign keys by setting the `supports_primary_keys` and `supports_foreign_keys` properties under the `data_schema` object on capabilities. If it does not declare support, it is expected that it will not return any such primary/foreign keys in the schema it exposes on the `/schema` endpoint.
@@ -178,23 +185,27 @@ If the agent only supports table columns that are always nullable, then it shoul
 
 #### Scalar type capabilities
 
-The agent is expected to support a default set of scalar types (`Number`, `String`, `Bool`) and a default set of [comparison operators](#filters) on these types.
-Agents may optionally declare support for their own custom scalar types, along with custom comparison operators and aggregate functions on those types.
-The agent may optionally specify how to parse values of custom scalar types by associating them with one of the built-in GraphQL types (`Int`, `Float`, `String`, `Boolean` or `ID`)
+Agents should declare the scalar types they support, along with the comparison operators and aggregate functions on those types.
+The agent may optionally specify how to parse values of scalar type by associating it with one of the built-in GraphQL types (`Int`, `Float`, `String`, `Boolean` or `ID`)
 
-Custom scalar types are declared by adding a property to the `scalar_types` section of the [capabilities](#capabilities-and-configuration-schema).
+Scalar types are declared by adding a property to the `scalar_types` section of the [capabilities](#capabilities-and-configuration-schema).
 
-Custom comparison types can be defined by adding a `comparison_operators` property to the scalar type capabilities object.
+Comparison operators can be defined by adding a `comparison_operators` property to the scalar type capabilities object.
 The `comparison_operators` property is an object where each key specifies a comparison operator name.
 The operator name must be a valid GraphQL name.
 The value associated with each key should be a string specifying the argument type, which must be a valid scalar type.
+All scalar types must also support the built-in comparison operators `eq`, `gt`, `gte`, `lt` and `lte`.
 
-Custom aggregate functions can be defined by adding an `aggregate_functions` property to the scalar type capabilities object.
+Aggregate functions can be defined by adding an `aggregate_functions` property to the scalar type capabilities object.
 The `aggregate_functions` property must be an object mapping aggregate function names to their result types.
 Aggregate function names must be must be valid GraphQL names.
 Result types must be valid scalar types.
 
-The `graphql_type` property can be used to tell Hasura GraphQL Engine to parse values of the custom scalar type as though they were one of the built-in GraphQL scalar types `Int`, `Float`, `String`, `Boolean`, or `ID`.
+Update column operators are operators that can defined to allow custom mutation operations to be performed on columns of the particular scalar type.
+These can be defined by adding an `update_column_operators` property, which maps the operator name to an object that defines the operator's `argument_type`. The name specified in capabilities will be prefixed with `_` when it is used in the GraphQL mutation schema.
+The `argument_type` must be a valid scalar type.
+
+The `graphql_type` property can be used to tell Hasura GraphQL Engine to parse values of the scalar type as though they were one of the built-in GraphQL scalar types `Int`, `Float`, `String`, `Boolean`, or `ID`.
 
 Example:
 
@@ -207,13 +218,16 @@ capabilities:
       aggregate_functions:
         max: DateTime
         min: DateTime
+      update_column_operators:
+        set_year:
+          argument_type: Number
       graphql_type: String
 ```
 
-This example declares a custom scalar type `DateTime` which should be parsed as though it were a GraphQL `String`.
+This example declares a scalar type `DateTime` which should be parsed as though it were a GraphQL `String`.
 The type supports a comparison operator `in_year`, which takes an argument of type `Number`.
 
-An example GraphQL query using the custom comparison operator might look like below:
+An example GraphQL query using the comparison operator might look like below:
 ```graphql
 query MyQuery {
   Employee(where: {BirthDate: {in_year: 1962}}) {
@@ -223,9 +237,22 @@ query MyQuery {
 }
 ```
 In this query we have an `Employee` field with a `BirthDate` property of type `DateTime`.
-The `in_year` custom comparison operator is being used to request all employees with a birth date in the year 1962.
+The `in_year` comparison operator is being used to request all employees with a birth date in the year 1962.
 
 The example also defines two aggregate functions `min` and `max`, both of which have a result type of `DateTime`.
+
+The example also defined a `set_year` update operator, which could be used in an update mutation:
+
+```graphql
+mutation MyMutation {
+  update_Employee(_set_year: {BirthDate: 1980}) {
+    returning {
+      BirthDate
+    }
+    affected_rows
+  }
+}
+```
 
 ### Mutations capabilities
 The agent can declare whether it supports mutations (ie. changing data) against its data source. If it supports mutations, it needs to declare a `mutations` capability with agent-specific values for the following properties:
@@ -257,6 +284,20 @@ It also should specify its supported level of transactional atomicity when perfo
 The preference would be to support the highest level of atomicity possible (ie `heteregeneous_operations` is preferred over `row`). It is also possible to omit the property, which would imply no atomicity at all (failures cannot be rolled back whatsoever).
 
 The agent can also specify whether or not it supports `returning` data from mutations. This refers to the ability to return the data that was mutated by mutation operations (for example, the updated rows in an update, or the deleted rows in a delete).
+
+### Dataset Capabilities
+
+The agent can declare whether it supports datasets (ie. api for creating/cloning schemas). If it supports datasets, it needs to declare a `datasets` capability:
+
+```json
+{
+  "capabilities": {
+    "datasets": { }
+  }
+}
+```
+
+See [Datasets](#datasets) for information on how this capability is used.
 
 ### Schema
 
@@ -1161,7 +1202,8 @@ This would cause the following query request to be performed:
       "aggregate_max_ArtistId": {
         "type": "single_column",
         "function": "max",
-        "column": "ArtistId"
+        "column": "ArtistId",
+        "result_type": "number"
       }
     }
   }
@@ -1170,15 +1212,9 @@ This would cause the following query request to be performed:
 
 Notice the `Query` has an `aggregates` property; this property contains an object where the property name is the field name of the aggregate, and the value is a description of the aggregate. In the example above, we're using the `max` function on the `ArtistId` column. The `max` function is a function that operates on a single column, so the type of the aggregate is `single_column`.
 
-These are the supported `single_column` functions:
-- `avg`
-- `max`
-- `min`
-- `stddev_pop`
-- `stddev_samp`
-- `sum`
-- `var_pop`
-- `var_samp`
+The supported `single_column` functions are defined by the agent in [its capabilities](#scalar-type-capabilities). They are associated with the scalar types that the agent declares, and each scalar type declares the set of functions that can be used on columns of that scalar type (the `aggregate_functions` property in scalar type capabilities).
+
+Every aggregate function declared in capabilities has a result scalar type (ie. the type of the value returned by the aggregate function). This is usually, but not always, the same as the scalar type the aggregate function is for (ie. the type of the column the function is used with). This result scalar type is provided in the `result_type` property on `single_column` query aggregations.
 
 The aggregate function is to be run over all rows that match the `Query`. In this case, the query has no filters on it (ie. no `where`, `limit` or `offset` properties), so the query would be selecting all rows in the Artist table.
 
@@ -1424,7 +1460,7 @@ The order by element `target` is specified as an object, whose `type` property s
 |------|-------------------|-------------|
 | `column` | `column` | Sort by the `column` specified |
 | `star_count_aggregate` | - | Sort by the count of all rows on the related target table (a non-empty `target_path` will always be specified) |
-| `single_column_aggregate` | `function`, `column` | Sort by the value of applying the specified aggregate function to the column values of the rows in the related target table (a non-empty `target_path` will always be specified) |
+| `single_column_aggregate` | `function`, `column`, `result_type` | Sort by the value of applying the specified aggregate function to the column values of the rows in the related target table (a non-empty `target_path` will always be specified). The aggregate function will return `result_type` scalar type |
 
 The `target_path` property is a list of relationships to navigate before finding the `target` to sort on. This is how sorting on columns or aggregates on related tables is expressed. Note that aggregate-typed targets will never be found on the current table (ie. a `target_path` of `[]`) and are always applied to a related table.
 
@@ -1558,6 +1594,105 @@ For example, here's a query that retrieves artists ordered descending by the cou
   }
 }
 ```
+
+#### Foreach Queries
+HGE has the ability to perform joins between tables in different databases, known as "remote relationships". In order to be able to do this relatively efficiently, HGE requires data connector agents to support performing "foreach" queries, which are a variant of a normal query.
+
+Data connector agents that support foreach queries must declare it in their capabilities:
+
+```json
+{
+  "queries": {
+    "foreach": {}
+  }
+}
+```
+Agents that do not declare foreach query support will not be able to be used as the target data source in remote relationships in HGE and will not receive foreach queries.
+
+Foreach queries are very similar to standard queries, except they include an additional `foreach` property on the Query Request object:
+
+```json
+{
+  "table": ["Album"],
+  "table_relationships": [],
+  "query": {
+    "fields": {
+      "AlbumId": {
+        "type": "column",
+        "column": "AlbumId",
+        "column_type": "number"
+      },
+      "Title": {
+        "type": "column",
+        "column": "Title",
+        "column_type": "string"
+      }
+    }
+  },
+  "foreach": [
+    { "ArtistId": {"value": 1, "value_type": "number"} },
+    { "ArtistId": {"value": 2, "value_type": "number"} }
+  ]
+}
+```
+
+The easiest (and least performance-efficient) way of describing the purpose of foreach queries is that the query must be run for each element in the `foreach` array, and its results additionally filtered where the specified columns equal the specified values. For the above example, the query would need to be executed twice, first selecting only the rows where the column `ArtistId` is `1`, and again, but this time selecting only the rows where the column `ArtistId` is `2`. These filters must be applied _in addition_ to any `where` filter in the query itself.
+
+The results of a foreach query must be returned in the following format:
+
+```jsonc
+{
+  "rows": [ // The results of each foreach query must be put into this array. The order of results in here must be in the same order as in the query request foreach.
+    {
+      "query": { // The results of running each query must be put under a field called "query"
+        "rows": [
+          { "AlbumId": 1, "Title": "For Those About To Rock We Salute You" },
+          { "AlbumId": 4, "Title": "Let There Be Rock" }
+        ]
+      }
+    },
+    {
+      "query": {
+        "rows": [
+          { "AlbumId": 2, "Title": "Balls to the Wall" },
+          { "AlbumId": 3, "Title": "Restless and Wild" }
+        ]
+      }
+    }
+  ]
+}
+```
+This is the standard query response format, except that the results of running each foreach query are nested inside a top-level query response that contains a row per foreach array element. Each row has the field `query` which contains the specific query results for that iteration of the foreach query. The order of the result rows in this top-level response object must match the order of the `foreach` array in the request.
+
+##### Performance
+Obviously, running the query many times over in a loop for each item in the foreach array has the potential to be slow. One way to implement this efficiently in a relational database would be to perform a [`LATERAL` join](https://www.postgresql.org/docs/current/queries-table-expressions.html#QUERIES-LATERAL) from a rowset of the foreach values to the query table.
+
+For example, using the above example foreach query and Postgresql as an example RDBMS, one could perform all foreach queries in a single operation using a `LEFT OUTER JOIN LATERAL`:
+
+```sql
+SELECT foreach."Index", foreach."ArtistId", album."AlbumId", album."Title"
+FROM (VALUES (0, 1), (1, 2)) AS foreach ("Index", "ArtistId")
+LEFT OUTER JOIN LATERAL (
+	SELECT "AlbumId", "Title"
+	FROM "Album" album
+	WHERE album."ArtistId" = foreach."ArtistId"
+) AS album ON true
+ORDER BY foreach."Index" ASC
+```
+
+This returns:
+
+| Index | ArtistId | AlbumId | Title |
+|-------|----------|---------|-------|
+| 0 | 1 | 1 | For Those About To Rock We Salute You |
+| 0 | 1 | 4 | Let There Be Rock |
+| 1 | 2 | 2 | Balls to the Wall |
+| 1 | 1 | 3 | Restless and Wild |
+
+
+It is important to point out that a `LATERAL` join is necessary instead of regular join, because a lateral join preserves the necessary "for each" semantics; without it, performing other query operations like pagination using `LIMIT` and `OFFSET` in the subquery would not work correctly.
+
+The artificial `Index` column is inserted into the foreach rowset to ensure that the ordering of the results matches the original ordering of the foreach array in the query request.
 
 #### Type Definitions
 
@@ -2022,8 +2157,8 @@ Here's an example of a mutation that updates a Track row:
 mutation UpdateTrack {
   update_Track(
     where: { TrackId: { _eq: 1 } },
-    _inc: { Milliseconds: 100 },
-    _set: { UnitPrice: 2.50 }
+    _set: { UnitPrice: 2.50 },
+    _inc: { Milliseconds: 100 }
     ) {
     affected_rows
     returning {
@@ -2056,17 +2191,18 @@ This would get translated into a mutation request like so:
           "value_type": "number"
         }
       },
-      "updates": [
-        {
-          "type": "increment",
-          "column": "Milliseconds",
-          "value": 100,
-          "value_type": "number"
-        },
+      "updates": [,
         {
           "type": "set",
           "column": "UnitPrice",
           "value": 2.50,
+          "value_type": "number"
+        }
+        {
+          "type": "custom_operator",
+          "operator_name": "inc",
+          "column": "Milliseconds",
+          "value": 100,
           "value_type": "number"
         }
       ],
@@ -2095,8 +2231,8 @@ Breaking down the properties in the `update`-typed mutation operation:
 * `table`: specifies the table we're updating rows in
 * `where`: An expression (same as the expression in a Query's `where` property) that is used to select the matching rows to update
 * `updates`: An array of `RowUpdate` objects that describe the individual updates to be applied to each row that matches the expression in `where`. There are two types of `RowUpdate`s:
-  * `increment` - This increments the specified column by the specified amount
   * `set` - This sets the specified column to the specified value
+  * `custom_operator` - This defines a mutation to a column using a custom update column operator defined by the agent in its capabilities. The `operator_name` property specifies which operator was used. In this case, `inc` is the custom operator.
 * `post_update_check`: The post-update check is an expression (in the same format as `Query`'s `where` property) that all updated rows must match otherwise the changes made must be reverted. This expression comes from `graphql-engine`'s permissions system. The reason that it is a "post-update" check is because it operates on the post-update data (such as the results of increment updates), can involve joins via relationships to other tables, and can potentially involve data that is only available post-insert such as computed columns. If the agent knows it can compute the result of such a check without actually performing an update, it is free to do so, but it must produce a result that is indistinguishable from that which was done post-update. If the post-update check fails, the mutation request should fail with an error using the error code `mutation-permission-check-failure`.
 * `returning_fields`: This specifies a list of fields to return in the response. The property takes the same format as the `fields` property on Queries. It is expected that the specified fields will be returned for all rows affected by the update (ie. all updated rows).
 
@@ -2160,3 +2296,42 @@ Breaking down the properties in the `delete`-typed mutation operation:
 * `returning_fields`: This specifies a list of fields to return in the response. The property takes the same format as the `fields` property on Queries. It is expected that the specified fields will be returned for all rows affected by the deletion (ie. all deleted rows).
 
 Delete operations return responses that are the same as insert and update operations, except the affected rows in `returning` are the deleted rows instead.
+
+### Datasets
+
+The `/datasets` resource is available to use in order to create new databases/schemas from templates.
+
+Datasets are represented by abstract names referencing database-schema templates that can be cloned from and clones that can be used via config and deleted. This feature is required for testing the mutations feature, but may also have non-test uses - for example - spinning up interactive demo projects.
+
+The `/datasets/:name` resource has the following methods:
+
+* `GET /datasets/templates/:template_name` -> `{"exists": true|false}`
+* `POST /datasets/clones/:clone_name {"from": template_name}` -> `{"config": {...}}`
+* `DELETE /datasets/clones/:clone_name` -> `{"message": "success"}`
+
+The `POST` method is the most significant way to interact with the API. It allows for cloning a dataset template to a new name. The new name can be used to delete the dataset, and the config returned from the POST API call can be used as the config header for non-dataset interactions such as queries.
+
+The following diagram shows the interactions between the various datatypes and resource methods:
+
+```mermaid
+flowchart TD;
+    NAME["Dataset Name"] --> GET["GET /datasets/templates/:template_name"];
+    style NAME stroke:#0f3,stroke-width:2px
+    NAME -- clone_name --> POST;
+    NAME -- from --> POST["POST /datasets/clones/:clone_name { from: TEMPLATE_NAME }"];
+    GET --> EXISTS["{ exists: true }"];
+    GET --> EXISTSF["{ exists: false }"];
+    GET --> FAILUREG["400"];
+    style FAILUREG stroke:#f33,stroke-width:2px
+    POST --> FAILUREP["400"];
+    style FAILUREP stroke:#f33,stroke-width:2px
+    NAME --> DELETE["DELETE /datasets/clones/:clone_name"];
+    POST --> CONFIG["Source Config"];
+    style CONFIG stroke:#0f3,stroke-width:2px
+    DELETE --> SUCCESSD["{ message: 'success' }"];
+    DELETE --> FAILURED["400"];
+    style FAILURED stroke:#f33,stroke-width:2px
+    CONFIG --> SCHEMA["POST /schema"];
+    CONFIG --> QUERY["POST /query"];
+    CONFIG --> MUTATION["POST /mutation"];
+```

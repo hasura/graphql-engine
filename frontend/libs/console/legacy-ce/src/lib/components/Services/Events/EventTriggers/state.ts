@@ -28,7 +28,7 @@ export type LocalEventTriggerState = {
   headers: Header[];
   source: string;
   isAllColumnChecked: boolean;
-  cleanupConfig: EventTriggerAutoCleanup;
+  cleanupConfig?: EventTriggerAutoCleanup;
 };
 
 export const defaultState: LocalEventTriggerState = {
@@ -56,23 +56,13 @@ export const defaultState: LocalEventTriggerState = {
   headers: [defaultHeader],
   source: '',
   isAllColumnChecked: true,
-  cleanupConfig: {
-    schedule: '0 0 * * *',
-    batch_size: 10000,
-    clear_older_than: 168,
-    timeout: 60,
-    clean_invocation_logs: false,
-    paused: true,
-  },
 };
 
 export const parseServerETDefinition = (
   eventTrigger?: EventTrigger,
   databaseInfo?: DatabaseInfo
-): LocalEventTriggerState => {
-  if (!eventTrigger) {
-    return defaultState;
-  }
+) => {
+  if (!eventTrigger) return defaultState;
 
   const etConf = eventTrigger.configuration;
   const etDef = etConf.definition;
@@ -81,27 +71,34 @@ export const parseServerETDefinition = (
     eventTrigger.table_name,
     eventTrigger.schema_name
   );
-  const columnInfo =
-    databaseInfo?.[eventTrigger.schema_name]?.[eventTrigger.table_name] ?? [];
 
-  return {
-    name: eventTrigger.name,
-    source: eventTrigger.source ?? '',
+  const result: LocalEventTriggerState = {
     table: etTableDef,
-    operations: parseEventTriggerOperations(etDef),
-    operationColumns: databaseInfo
-      ? getETOperationColumns(
-          etDef.update ? etDef.update.columns : [],
-          columnInfo
-        )
-      : [],
-    webhook: parseServerWebhook(etConf.webhook, etConf.webhook_from_env),
+    operationColumns: [],
+    name: eventTrigger.name,
     retryConf: etConf.retry_conf,
-    headers: parseServerHeaders(eventTrigger.configuration.headers),
+    source: eventTrigger.source ?? '',
+    operations: parseEventTriggerOperations(etDef),
     isAllColumnChecked: etDef?.update?.columns === '*',
-    cleanupConfig:
-      eventTrigger.configuration?.cleanup_config ?? defaultState.cleanupConfig,
+    headers: parseServerHeaders(eventTrigger.configuration.headers),
+    webhook: parseServerWebhook(etConf.webhook, etConf.webhook_from_env),
   };
+
+  if (databaseInfo) {
+    const columnInfo =
+      databaseInfo?.[eventTrigger.schema_name]?.[eventTrigger.table_name] ?? [];
+
+    result.operationColumns = getETOperationColumns(
+      etDef.update ? etDef.update.columns : [],
+      columnInfo
+    );
+  }
+
+  if (eventTrigger?.configuration?.cleanup_config) {
+    result.cleanupConfig = eventTrigger.configuration.cleanup_config;
+  }
+
+  return result;
 };
 
 export const useEventTrigger = (initState?: LocalEventTriggerState) => {

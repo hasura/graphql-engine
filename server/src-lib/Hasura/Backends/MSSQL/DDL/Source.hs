@@ -40,7 +40,6 @@ import Hasura.RQL.Types.Backend (BackendConfig)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (..))
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.Server.Migrate.Version (SourceCatalogMigrationState (..))
@@ -59,18 +58,17 @@ resolveSourceConfig ::
   Env.Environment ->
   manager ->
   m (Either QErr MSSQLSourceConfig)
-resolveSourceConfig _logger name config _backendKind _backendConfig _env _manager = runExceptT do
+resolveSourceConfig _logger name config _backendKind _backendConfig env _manager = runExceptT do
   sourceResolver <- getMSSQLSourceResolver
-  liftEitherM $ liftIO $ sourceResolver name config
+  liftEitherM $ liftIO $ sourceResolver env name config
 
 resolveDatabaseMetadata ::
   (MonadIO m, MonadBaseControl IO m) =>
   MSSQLSourceConfig ->
-  SourceTypeCustomization ->
-  m (Either QErr (ResolvedSource 'MSSQL))
-resolveDatabaseMetadata config customization = runExceptT do
+  m (Either QErr (DBObjectsIntrospection 'MSSQL))
+resolveDatabaseMetadata config = runExceptT do
   dbTablesMetadata <- mssqlRunReadOnly mssqlExecCtx $ loadDBMetadata
-  pure $ ResolvedSource config customization dbTablesMetadata mempty mempty
+  pure $ DBObjectsIntrospection dbTablesMetadata mempty mempty
   where
     MSSQLSourceConfig _connString mssqlExecCtx = config
 

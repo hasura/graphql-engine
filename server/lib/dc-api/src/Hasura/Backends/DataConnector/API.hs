@@ -17,8 +17,11 @@ module Hasura.Backends.DataConnector.API
     capabilitiesCase,
     schemaCase,
     queryCase,
+    mutationCase,
     openApiSchema,
-    Routes (..),
+    RoutesG (..),
+    Routes,
+    DatasetRoutes (..),
     apiClient,
   )
 where
@@ -26,7 +29,6 @@ where
 import Control.Arrow (left)
 import Data.ByteString.Lazy as BL
 import Data.Data (Proxy (..))
-import Data.Foldable (for_)
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.OpenApi (OpenApi)
 import Data.Text (Text)
@@ -37,7 +39,7 @@ import Servant.API
 import Servant.API.Generic
 import Servant.Client (Client, ClientM, client, matchUnion)
 import Servant.OpenApi
-import Prelude (Maybe (Just, Nothing), Monad, show)
+import Prelude
 
 --------------------------------------------------------------------------------
 -- Servant Routes
@@ -78,10 +80,10 @@ schemaCase defaultAction schemaAction errorAction union = do
 
 type SchemaResponses = '[V0.SchemaResponse, V0.ErrorResponse, V0.ErrorResponse400]
 
-type SchemaApi =
+type SchemaApi config =
   "schema"
     :> SourceNameHeader Required
-    :> ConfigHeader Required
+    :> ConfigHeader config Required
     :> UVerb 'GET '[JSON] SchemaResponses
 
 -- | This function defines a central place to ensure that all cases are covered for query and error responses.
@@ -99,41 +101,75 @@ queryCase defaultAction queryAction errorAction union = do
 
 type QueryResponses = '[V0.QueryResponse, V0.ErrorResponse, V0.ErrorResponse400]
 
+-- | This function defines a central place to ensure that all cases are covered for mutation and error responses.
+--   When additional responses are added to the Union, this should be updated to ensure that all responses have been considered.
+mutationCase :: a -> (MutationResponse -> a) -> (ErrorResponse -> a) -> Union MutationResponses -> a
+mutationCase defaultAction mutationAction errorAction union = do
+  let mutationM = matchUnion @MutationResponse union
+  let errorM = matchUnion @ErrorResponse union
+  let errorM400 = matchUnion @ErrorResponse400 union
+  case (mutationM, errorM, errorM400) of
+    (Nothing, Nothing, Nothing) -> defaultAction
+    (Just c, _, _) -> mutationAction c
+    (_, Just e, _) -> errorAction e
+    (_, _, Just (WithStatus e)) -> errorAction e
+
 type MutationResponses = '[V0.MutationResponse, V0.ErrorResponse, V0.ErrorResponse400]
 
-type QueryApi =
+type QueryApi config =
   "query"
     :> SourceNameHeader Required
-    :> ConfigHeader Required
+    :> ConfigHeader config Required
     :> ReqBody '[JSON] V0.QueryRequest
     :> UVerb 'POST '[JSON] QueryResponses
 
-type ExplainApi =
+type ExplainApi config =
   "explain"
     :> SourceNameHeader Required
-    :> ConfigHeader Required
+    :> ConfigHeader config Required
     :> ReqBody '[JSON] V0.QueryRequest
     :> Post '[JSON] V0.ExplainResponse
 
-type MutationApi =
+type MutationApi config =
   "mutation"
     :> SourceNameHeader Required
-    :> ConfigHeader Required
+    :> ConfigHeader config Required
     :> ReqBody '[JSON] V0.MutationRequest
     :> UVerb 'POST '[JSON] MutationResponses
 
-type HealthApi =
+type HealthApi config =
   "health"
     :> SourceNameHeader Optional
-    :> ConfigHeader Optional
+    :> ConfigHeader config Optional
     :> GetNoContent
 
-type RawApi =
+type RawApi config =
   "raw"
     :> SourceNameHeader Required
-    :> ConfigHeader Required
+    :> ConfigHeader config Required
     :> ReqBody '[JSON] V0.RawRequest
     :> Post '[JSON] V0.RawResponse
+
+type DatasetGetTemplateApi =
+  "datasets"
+    :> "templates"
+    :> Capture "template_name" DatasetTemplateName
+    :> Get '[JSON] V0.DatasetGetTemplateResponse
+
+type DatasetCreateCloneApi =
+  "datasets"
+    :> "clones"
+    :> Capture "clone_name" DatasetCloneName
+    :> ReqBody '[JSON] V0.DatasetCreateCloneRequest
+    :> Post '[JSON] V0.DatasetCreateCloneResponse
+
+type DatasetDeleteCloneApi =
+  "datasets"
+    :> "clones"
+    :> Capture "clone_name" DatasetCloneName
+    :> Delete '[JSON] V0.DatasetDeleteCloneResponse
+
+type DatasetApi = DatasetGetTemplateApi :<|> DatasetCreateCloneApi :<|> DatasetDeleteCloneApi
 
 data Prometheus
 
@@ -153,35 +189,60 @@ instance MimeUnrender Prometheus Text where
 
 type MetricsApi = "metrics" :> Get '[Prometheus] Text
 
-type ConfigHeader optionality = Header' '[optionality, Strict] "X-Hasura-DataConnector-Config" V0.Config
+type ConfigHeader config optionality = Header' '[optionality, Strict] "X-Hasura-DataConnector-Config" config
 
 type SourceNameHeader optionality = Header' '[optionality, Strict] "X-Hasura-DataConnector-SourceName" SourceName
 
 type SourceName = Text
 
-data Routes mode = Routes
+data RoutesG config mode = Routes
   { -- | 'GET /capabilities'
     _capabilities :: mode :- CapabilitiesApi,
     -- | 'GET /schema'
-    _schema :: mode :- SchemaApi,
+    _schema :: mode :- SchemaApi config,
     -- | 'POST /query'
-    _query :: mode :- QueryApi,
+    _query :: mode :- QueryApi config,
     -- | 'POST /explain'
-    _explain :: mode :- ExplainApi,
+    _explain :: mode :- ExplainApi config,
     -- | 'POST /mutation'
-    _mutation :: mode :- MutationApi,
+    _mutation :: mode :- MutationApi config,
     -- | 'GET /health'
-    _health :: mode :- HealthApi,
+    _health :: mode :- HealthApi config,
     -- | 'GET /metrics'
     _metrics :: mode :- MetricsApi,
     -- | 'GET /raw'
-    _raw :: mode :- RawApi
+    _raw :: mode :- RawApi config,
+    -- | '/datasets'
+    _datasets :: mode :- NamedRoutes DatasetRoutes
   }
   deriving stock (Generic)
 
+data DatasetRoutes mode = DatasetRoutes
+  { -- | 'GET /datasets/templates/:template_name'
+    _getTemplate :: mode :- DatasetGetTemplateApi,
+    -- | 'POST /datasets/clones/:clone_name'
+    _createClone :: mode :- DatasetCreateCloneApi,
+    -- | 'DELETE /datasets/clones/:clone_name'
+    _deleteClone :: mode :- DatasetDeleteCloneApi
+  }
+  deriving stock (Generic)
+
+type Routes = RoutesG V0.Config
+
 -- | servant-openapi3 does not (yet) support NamedRoutes so we need to compose the
 -- API the old-fashioned way using :<|> for use by @toOpenApi@
-type Api = CapabilitiesApi :<|> SchemaApi :<|> QueryApi :<|> ExplainApi :<|> MutationApi :<|> HealthApi :<|> MetricsApi :<|> RawApi
+type ApiG config =
+  CapabilitiesApi
+    :<|> SchemaApi config
+    :<|> QueryApi config
+    :<|> ExplainApi config
+    :<|> MutationApi config
+    :<|> HealthApi config
+    :<|> MetricsApi
+    :<|> RawApi config
+    :<|> DatasetApi
+
+type Api = ApiG V0.Config
 
 -- | Provide an OpenApi 3.0 schema for the API
 openApiSchema :: OpenApi

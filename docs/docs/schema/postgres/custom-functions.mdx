@@ -1,7 +1,7 @@
 ---
 sidebar_label: Extend with SQL functions
 sidebar_position: 5
-description: Customise the Hasura GraphQL schema with Postgres SQL functions
+description: Customize the Hasura GraphQL schema with Postgres SQL functions
 keywords:
   - hasura
   - docs
@@ -38,7 +38,7 @@ Custom SQL functions can also be queried as [computed fields](/schema/postgres/c
 Currently, only functions which satisfy the following constraints can be exposed as top level fields in the GraphQL API
 (_terminology from_ [Postgres docs](https://www.postgresql.org/docs/current/sql-createfunction.html)):
 
-- **Function behaviour**: `STABLE` or `IMMUTABLE` functions may _only_ be exposed as queries. `VOLATILE` functions may
+- **Function behavior**: `STABLE` or `IMMUTABLE` functions may _only_ be exposed as queries. `VOLATILE` functions may
   be exposed as mutations or queries.
 - **Return type**: MUST be `SETOF <table-name>` OR `<table-name>` where `<table-name>` is already tracked
 - **Argument modes**: ONLY `IN`

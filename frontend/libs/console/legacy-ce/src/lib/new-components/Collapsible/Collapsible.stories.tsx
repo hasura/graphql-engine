@@ -4,7 +4,7 @@ import { userEvent, waitFor, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { screen } from '@testing-library/dom';
 
-import { Collapsible } from '@/new-components/Collapsible';
+import { Collapsible } from '.';
 
 export default {
   title: 'Components/Collapsible ⚛️',
@@ -85,12 +85,13 @@ StateOpen.parameters = {
   },
 };
 
-export const TestingClickedInteraction: ComponentStory<typeof Collapsible> =
-  () => (
-    <Collapsible triggerChildren={<ChildrenExample />}>
-      <ChildrenExample />
-    </Collapsible>
-  );
+export const TestingClickedInteraction: ComponentStory<
+  typeof Collapsible
+> = () => (
+  <Collapsible triggerChildren={<ChildrenExample />}>
+    <ChildrenExample />
+  </Collapsible>
+);
 TestingClickedInteraction.storyName = '🧪 Testing - Clicked interaction';
 TestingClickedInteraction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);

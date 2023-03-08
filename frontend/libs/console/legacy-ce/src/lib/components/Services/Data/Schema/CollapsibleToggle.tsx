@@ -1,6 +1,7 @@
-import ToolTip from '@/components/Common/Tooltip/Tooltip';
-import { TaskEvent } from '@/features/ConnectDB';
-import { Badge } from '@/new-components/Badge';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
+import { isNumber, isFloat } from '../../../Common/utils/jsUtils';
+import { TaskEvent } from '../../../../features/ConnectDB';
+import { Badge } from '../../../../new-components/Badge';
 import React, { useState } from 'react';
 import {
   FaCheck,
@@ -78,21 +79,26 @@ const CollapsibleToggle: React.FC<CollapsibleToggleProps> = ({
         <div className="flex items-center">
           <div className="text-gray-600 font-semibold mr-xs break-all">
             {dataSource.name}{' '}
-            <span className="font-normal">
+            <span className="font-normal mr-px">
               ({driverToLabel[dataSource.driver]})
             </span>
-            {dbLatencyData && (
-              <ToolTip
-                message={`Latency: ${dbLatencyData.avg_latency} ms`}
-                placement="top"
-              >
-                <Badge color={getBadgeColorForLatencyData(dbLatencyData)}>
-                  {getBadgeTextForLatencyData(dbLatencyData)}
-                </Badge>
-              </ToolTip>
-            )}
+            {dbLatencyData &&
+              (isNumber(dbLatencyData.avg_latency) ||
+                isFloat(dbLatencyData.avg_latency)) &&
+              Math.ceil(dbLatencyData.avg_latency) > 0 && (
+                <ToolTip
+                  message={`Latency: ${Math.ceil(
+                    dbLatencyData.avg_latency
+                  )} ms`}
+                  placement="top"
+                >
+                  <Badge color={getBadgeColorForLatencyData(dbLatencyData)}>
+                    {getBadgeTextForLatencyData(dbLatencyData)}
+                  </Badge>
+                </ToolTip>
+              )}
           </div>
-          <div className="flex ml-auto w-full sm:w-6/12">
+          <div className="flex ml-auto w-[30%] sm:w-1/4">
             {!!dataSource?.read_replicas?.length && (
               <span className="mr-xs inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-gray-800">
                 {dataSource.read_replicas.length} Replicas
@@ -107,64 +113,62 @@ const CollapsibleToggle: React.FC<CollapsibleToggleProps> = ({
       </div>
 
       {isOpen ? (
-        <>
-          <div className="mt-xs space-y-xs">
-            {dbVersion ? (
-              <div className="flex content-start">
-                <div className="text-gray-600 font-semibold">Database</div>
-                <div className="ml-auto w-full sm:w-6/12">{dbVersion}</div>
+        <div className="mt-xs space-y-xs">
+          {dbVersion ? (
+            <div className="flex content-start">
+              <div className="text-gray-600 font-semibold">Database</div>
+              <div className="ml-auto w-full sm:w-6/12">{dbVersion}</div>
+            </div>
+          ) : null}
+          {dataSource.connection_pool_settings?.max_connections ? (
+            <div className="flex content-start">
+              <div className="text-gray-600 font-semibold mr-xs">
+                Max Connections
               </div>
-            ) : null}
-            {dataSource.connection_pool_settings?.max_connections ? (
-              <div className="flex content-start">
-                <div className="text-gray-600 font-semibold mr-xs">
-                  Max Connections
-                </div>
-                <div className="ml-auto w-full sm:w-6/12">
-                  {dataSource.connection_pool_settings?.max_connections}
-                </div>
+              <div className="ml-auto w-full sm:w-6/12">
+                {dataSource.connection_pool_settings?.max_connections}
               </div>
-            ) : null}
-            {dataSource.connection_pool_settings?.idle_timeout ? (
-              <div className="flex content-start">
-                <div className="text-gray-600 font-semibold mr-xs">
-                  Idle Timeout
-                </div>
-                <div className="ml-auto w-full sm:w-6/12">
-                  {dataSource.connection_pool_settings?.idle_timeout}
-                </div>
+            </div>
+          ) : null}
+          {dataSource.connection_pool_settings?.idle_timeout ? (
+            <div className="flex content-start">
+              <div className="text-gray-600 font-semibold mr-xs">
+                Idle Timeout
               </div>
-            ) : null}
-            {dataSource.connection_pool_settings?.retries ? (
-              <div className="flex content-start">
-                <div className="text-gray-600 font-semibold mr-xs">Retries</div>
-                <div className="ml-auto w-full sm:w-6/12">
-                  {dataSource.connection_pool_settings?.retries}
-                </div>
+              <div className="ml-auto w-full sm:w-6/12">
+                {dataSource.connection_pool_settings?.idle_timeout}
               </div>
-            ) : null}
-            {dataSource.connection_pool_settings?.pool_timeout ? (
-              <div className="flex content-start">
-                <div className="text-gray-600 font-semibold mr-xs">
-                  Pool Timeout
-                </div>
-                <div className="ml-auto w-full sm:w-6/12">
-                  {dataSource.connection_pool_settings?.pool_timeout}
-                </div>
+            </div>
+          ) : null}
+          {dataSource.connection_pool_settings?.retries ? (
+            <div className="flex content-start">
+              <div className="text-gray-600 font-semibold mr-xs">Retries</div>
+              <div className="ml-auto w-full sm:w-6/12">
+                {dataSource.connection_pool_settings?.retries}
               </div>
-            ) : null}
-            {dataSource.connection_pool_settings?.connection_lifetime ? (
-              <div className="flex content-start">
-                <div className="text-gray-600 font-semibold mr-xs">
-                  Connection Lifetime
-                </div>
-                <div className="ml-auto w-full sm:w-6/12">
-                  {dataSource.connection_pool_settings?.connection_lifetime}
-                </div>
+            </div>
+          ) : null}
+          {dataSource.connection_pool_settings?.pool_timeout ? (
+            <div className="flex content-start">
+              <div className="text-gray-600 font-semibold mr-xs">
+                Pool Timeout
               </div>
-            ) : null}
-          </div>
-        </>
+              <div className="ml-auto w-full sm:w-6/12">
+                {dataSource.connection_pool_settings?.pool_timeout}
+              </div>
+            </div>
+          ) : null}
+          {dataSource.connection_pool_settings?.connection_lifetime ? (
+            <div className="flex content-start">
+              <div className="text-gray-600 font-semibold mr-xs">
+                Connection Lifetime
+              </div>
+              <div className="ml-auto w-full sm:w-6/12">
+                {dataSource.connection_pool_settings?.connection_lifetime}
+              </div>
+            </div>
+          ) : null}
+        </div>
       ) : (
         ''
       )}

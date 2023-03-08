@@ -2,13 +2,17 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Test.Data
-  ( -- = Test Data
+  ( -- = Chinook Test Data
     TestData (..),
     mkTestData,
     schemaTables,
     allTableRows,
+    -- = TestingEdgeCases Test Data
+    EdgeCasesTestData (..),
+    mkEdgeCasesTestData,
     -- = Utilities
     emptyQuery,
+    emptyMutationRequest,
     sortBy,
     filterColumnsByQueryFields,
     filterColumns,
@@ -22,21 +26,29 @@ module Test.Data
     insertField,
     deleteField,
     field,
+    fieldAt,
     _ColumnFieldNumber,
     _ColumnFieldString,
     _ColumnFieldBoolean,
+    _ColumnFieldNull,
     _RelationshipFieldRows,
+    scalarValueComparison,
     orderByColumn,
+    insertAutoIncPk,
+    autoIncPks,
+    mkSubqueryFieldValue,
+    mkSubqueryRowsFieldValue,
+    mkSubqueryAggregatesFieldValue,
   )
 where
 
 import Codec.Compression.GZip qualified as GZip
 import Command (NameCasing (..), TestConfig (..))
 import Control.Arrow (first, (>>>))
-import Control.Lens (Index, IxValue, Ixed, Traversal', ix, lens, (%~), (&), (^.), (^..), (^?), _Just)
+import Control.Lens (At, Index, IxValue, Ixed, Traversal', at, ix, (%~), (&), (?~), (^.), (^..), (^?), _Just)
 import Data.Aeson (eitherDecodeStrict)
 import Data.Aeson qualified as J
-import Data.Aeson.Lens (_Bool, _Number, _String)
+import Data.Aeson.Lens (_Bool, _Null, _Number, _String)
 import Data.Bifunctor (bimap)
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as BSL
@@ -65,10 +77,10 @@ schemaTables :: [API.TableInfo]
 schemaTables = sortOn API._tiName . either error id . eitherDecodeStrict $ schemaBS
 
 numericColumns :: [API.ColumnName]
-numericColumns = schemaTables >>= (API._tiColumns >>> mapMaybe (\API.ColumnInfo {..} -> if _ciType == API.NumberTy then Just _ciName else Nothing))
+numericColumns = schemaTables >>= (API._tiColumns >>> mapMaybe (\API.ColumnInfo {..} -> if _ciType == API.ScalarType "number" then Just _ciName else Nothing))
 
 chinookXmlBS :: ByteString
-chinookXmlBS = $(makeRelativeToProject "test/Test/Data/ChinookData.xml.gz" >>= embedFile)
+chinookXmlBS = $(makeRelativeToProject "test/Test/Data/Chinook.xml.gz" >>= embedFile)
 
 chinookXml :: XML.Document
 chinookXml = XML.parseLBS_ XML.def . GZip.decompress $ BSL.fromStrict chinookXmlBS
@@ -188,16 +200,21 @@ employeesRowsById =
 
 employeesTableRelationships :: API.TableRelationships
 employeesTableRelationships =
-  let joinFieldMapping = HashMap.fromList [(API.ColumnName "EmployeeId", API.ColumnName "SupportRepId")]
+  let supportRepJoinFieldMapping = HashMap.fromList [(API.ColumnName "EmployeeId", API.ColumnName "SupportRepId")]
+      reportsToEmployeeJoinFieldMapping = HashMap.fromList [(API.ColumnName "ReportsTo", API.ColumnName "EmployeeId")]
    in API.TableRelationships
         employeesTableName
         ( HashMap.fromList
-            [ (supportRepForCustomersRelationshipName, API.Relationship customersTableName API.ArrayRelationship joinFieldMapping)
+            [ (supportRepForCustomersRelationshipName, API.Relationship customersTableName API.ArrayRelationship supportRepJoinFieldMapping),
+              (reportsToEmployeeRelationshipName, API.Relationship employeesTableName API.ObjectRelationship reportsToEmployeeJoinFieldMapping)
             ]
         )
 
 supportRepForCustomersRelationshipName :: API.RelationshipName
 supportRepForCustomersRelationshipName = API.RelationshipName "SupportRepForCustomers"
+
+reportsToEmployeeRelationshipName :: API.RelationshipName
+reportsToEmployeeRelationshipName = API.RelationshipName "ReportsToEmployee"
 
 invoicesTableName :: API.TableName
 invoicesTableName = mkTableName "Invoice"
@@ -205,11 +222,48 @@ invoicesTableName = mkTableName "Invoice"
 invoicesRows :: [HashMap API.FieldName API.FieldValue]
 invoicesRows = sortBy (API.FieldName "InvoiceId") $ readTableFromXmlIntoRows invoicesTableName
 
+invoicesRowsById :: HashMap Scientific (HashMap API.FieldName API.FieldValue)
+invoicesRowsById =
+  HashMap.fromList $ mapMaybe (\invoice -> (,invoice) <$> invoice ^? field "InvoiceId" . _ColumnFieldNumber) invoicesRows
+
+invoicesTableRelationships :: API.TableRelationships
+invoicesTableRelationships =
+  let invoiceLinesJoinFieldMapping = HashMap.fromList [(API.ColumnName "InvoiceId", API.ColumnName "InvoiceId")]
+      customersJoinFieldMapping = HashMap.fromList [(API.ColumnName "CustomerId", API.ColumnName "CustomerId")]
+   in API.TableRelationships
+        invoicesTableName
+        ( HashMap.fromList
+            [ (invoiceLinesRelationshipName, API.Relationship invoiceLinesTableName API.ArrayRelationship invoiceLinesJoinFieldMapping),
+              (customerRelationshipName, API.Relationship customersTableName API.ObjectRelationship customersJoinFieldMapping)
+            ]
+        )
+
+customerRelationshipName :: API.RelationshipName
+customerRelationshipName = API.RelationshipName "Customer"
+
 invoiceLinesTableName :: API.TableName
 invoiceLinesTableName = mkTableName "InvoiceLine"
 
 invoiceLinesRows :: [HashMap API.FieldName API.FieldValue]
 invoiceLinesRows = sortBy (API.FieldName "InvoiceLineId") $ readTableFromXmlIntoRows invoiceLinesTableName
+
+invoiceLinesTableRelationships :: API.TableRelationships
+invoiceLinesTableRelationships =
+  let invoiceJoinFieldMapping = HashMap.fromList [(API.ColumnName "InvoiceId", API.ColumnName "InvoiceId")]
+      tracksJoinFieldMapping = HashMap.fromList [(API.ColumnName "TrackId", API.ColumnName "TrackId")]
+   in API.TableRelationships
+        invoiceLinesTableName
+        ( HashMap.fromList
+            [ (invoiceRelationshipName, API.Relationship invoicesTableName API.ObjectRelationship invoiceJoinFieldMapping),
+              (trackRelationshipName, API.Relationship tracksTableName API.ObjectRelationship tracksJoinFieldMapping)
+            ]
+        )
+
+invoiceRelationshipName :: API.RelationshipName
+invoiceRelationshipName = API.RelationshipName "Invoice"
+
+trackRelationshipName :: API.RelationshipName
+trackRelationshipName = API.RelationshipName "Track"
 
 mediaTypesTableName :: API.TableName
 mediaTypesTableName = mkTableName "MediaType"
@@ -223,19 +277,25 @@ tracksTableName = mkTableName "Track"
 tracksRows :: [HashMap API.FieldName API.FieldValue]
 tracksRows = sortBy (API.FieldName "TrackId") $ readTableFromXmlIntoRows tracksTableName
 
+tracksRowsById :: HashMap Scientific (HashMap API.FieldName API.FieldValue)
+tracksRowsById =
+  HashMap.fromList $ mapMaybe (\track -> (,track) <$> track ^? field "TrackId" . _ColumnFieldNumber) tracksRows
+
 tracksTableRelationships :: API.TableRelationships
 tracksTableRelationships =
   let invoiceLinesJoinFieldMapping = HashMap.fromList [(API.ColumnName "TrackId", API.ColumnName "TrackId")]
       mediaTypeJoinFieldMapping = HashMap.fromList [(API.ColumnName "MediaTypeId", API.ColumnName "MediaTypeId")]
       albumJoinFieldMapping = HashMap.fromList [(API.ColumnName "AlbumId", API.ColumnName "AlbumId")]
       genreJoinFieldMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
+      playlistTracksJoinFieldMapping = HashMap.fromList [(API.ColumnName "TrackId", API.ColumnName "TrackId")]
    in API.TableRelationships
         tracksTableName
         ( HashMap.fromList
             [ (invoiceLinesRelationshipName, API.Relationship invoiceLinesTableName API.ArrayRelationship invoiceLinesJoinFieldMapping),
               (mediaTypeRelationshipName, API.Relationship mediaTypesTableName API.ObjectRelationship mediaTypeJoinFieldMapping),
               (albumRelationshipName, API.Relationship albumsTableName API.ObjectRelationship albumJoinFieldMapping),
-              (genreRelationshipName, API.Relationship genresTableName API.ObjectRelationship genreJoinFieldMapping)
+              (genreRelationshipName, API.Relationship genresTableName API.ObjectRelationship genreJoinFieldMapping),
+              (playlistTracksRelationshipName, API.Relationship playlistTracksTableName API.ArrayRelationship playlistTracksJoinFieldMapping)
             ]
         )
 
@@ -250,6 +310,9 @@ albumRelationshipName = API.RelationshipName "Album"
 
 genreRelationshipName :: API.RelationshipName
 genreRelationshipName = API.RelationshipName "Genre"
+
+playlistTracksRelationshipName :: API.RelationshipName
+playlistTracksRelationshipName = API.RelationshipName "PlaylistTracks"
 
 genresTableName :: API.TableName
 genresTableName = mkTableName "Genre"
@@ -322,114 +385,174 @@ data TestData = TestData
     _tdEmployeesRowsById :: HashMap Scientific (HashMap API.FieldName API.FieldValue),
     _tdEmployeesTableRelationships :: API.TableRelationships,
     _tdSupportRepForCustomersRelationshipName :: API.RelationshipName,
+    _tdReportsToEmployeeRelationshipName :: API.RelationshipName,
     -- = Invoices table
     _tdInvoicesTableName :: API.TableName,
     _tdInvoicesRows :: [HashMap API.FieldName API.FieldValue],
+    _tdInvoicesRowsById :: HashMap Scientific (HashMap API.FieldName API.FieldValue),
+    _tdInvoicesTableRelationships :: API.TableRelationships,
+    _tdCustomerRelationshipName :: API.RelationshipName,
     -- = InvoiceLines table
     _tdInvoiceLinesTableName :: API.TableName,
     _tdInvoiceLinesRows :: [HashMap API.FieldName API.FieldValue],
+    _tdInvoiceLinesTableRelationships :: API.TableRelationships,
+    _tdInvoiceRelationshipName :: API.RelationshipName,
+    _tdTrackRelationshipName :: API.RelationshipName,
     -- = MediaTypes table
     _tdMediaTypesTableName :: API.TableName,
     _tdMediaTypesRows :: [HashMap API.FieldName API.FieldValue],
     -- = Tracks table
     _tdTracksTableName :: API.TableName,
     _tdTracksRows :: [HashMap API.FieldName API.FieldValue],
+    _tdTracksRowsById :: HashMap Scientific (HashMap API.FieldName API.FieldValue),
     _tdTracksTableRelationships :: API.TableRelationships,
     _tdInvoiceLinesRelationshipName :: API.RelationshipName,
     _tdMediaTypeRelationshipName :: API.RelationshipName,
     _tdAlbumRelationshipName :: API.RelationshipName,
     _tdGenreRelationshipName :: API.RelationshipName,
+    _tdPlaylistTracksRelationshipName :: API.RelationshipName,
+    -- = PlaylistTracks table
+    _tdPlaylistTracksTableName :: API.TableName,
+    _tdPlaylistTracksRows :: [HashMap API.FieldName API.FieldValue],
     -- = Genres table
     _tdGenresTableName :: API.TableName,
     _tdGenresRows :: [HashMap API.FieldName API.FieldValue],
     _tdGenresTableRelationships :: API.TableRelationships,
     -- = Scalar Types
-    _tdStringType :: API.ScalarType,
-    _tdIntType :: API.ScalarType,
-    _tdFloatType :: API.ScalarType,
+    _tdFindColumnScalarType :: API.TableName -> Text -> API.ScalarType,
     -- = Utility functions
     _tdColumnName :: Text -> API.ColumnName,
-    _tdColumnField :: Text -> API.ScalarType -> API.Field,
+    _tdColumnField :: API.TableName -> Text -> API.Field,
+    _tdColumnInsertSchema :: API.TableName -> Text -> API.ColumnInsertSchema,
+    _tdRowColumnOperatorValue :: API.TableName -> Text -> J.Value -> API.RowColumnOperatorValue,
     _tdQueryComparisonColumn :: Text -> API.ScalarType -> API.ComparisonColumn,
     _tdCurrentComparisonColumn :: Text -> API.ScalarType -> API.ComparisonColumn,
     _tdOrderByColumn :: [API.RelationshipName] -> Text -> API.OrderDirection -> API.OrderByElement
   }
 
-mkTestData :: TestConfig -> TestData
-mkTestData TestConfig {..} =
+-- | Test data from the Chinook dataset template
+mkTestData :: API.SchemaResponse -> TestConfig -> TestData
+mkTestData schemaResponse testConfig =
   TestData
     { _tdSchemaTables = formatTableInfo <$> schemaTables,
-      _tdArtistsTableName = formatTableName artistsTableName,
+      _tdArtistsTableName = formatTableName testConfig artistsTableName,
       _tdArtistsRows = artistsRows,
       _tdArtistsRowsById = artistsRowsById,
       _tdArtistsTableRelationships = formatTableRelationships artistsTableRelationships,
       _tdAlbumsRelationshipName = albumsRelationshipName,
-      _tdAlbumsTableName = formatTableName albumsTableName,
+      _tdAlbumsTableName = formatTableName testConfig albumsTableName,
       _tdAlbumsRows = albumsRows,
       _tdAlbumsRowsById = albumsRowsById,
       _tdAlbumsTableRelationships = formatTableRelationships albumsTableRelationships,
       _tdArtistRelationshipName = artistRelationshipName,
       _tdTracksRelationshipName = tracksRelationshipName,
-      _tdCustomersTableName = formatTableName customersTableName,
+      _tdCustomersTableName = formatTableName testConfig customersTableName,
       _tdCustomersRows = customersRows,
       _tdCustomersTableRelationships = formatTableRelationships customersTableRelationships,
       _tdSupportRepRelationshipName = supportRepRelationshipName,
-      _tdEmployeesTableName = formatTableName employeesTableName,
+      _tdEmployeesTableName = formatTableName testConfig employeesTableName,
       _tdEmployeesRows = employeesRows,
       _tdEmployeesRowsById = employeesRowsById,
       _tdEmployeesTableRelationships = formatTableRelationships employeesTableRelationships,
       _tdSupportRepForCustomersRelationshipName = supportRepForCustomersRelationshipName,
-      _tdInvoicesTableName = formatTableName invoicesTableName,
+      _tdReportsToEmployeeRelationshipName = reportsToEmployeeRelationshipName,
+      _tdInvoicesTableName = formatTableName testConfig invoicesTableName,
       _tdInvoicesRows = invoicesRows,
-      _tdInvoiceLinesTableName = formatTableName invoiceLinesTableName,
+      _tdInvoicesRowsById = invoicesRowsById,
+      _tdInvoicesTableRelationships = formatTableRelationships invoicesTableRelationships,
+      _tdCustomerRelationshipName = customerRelationshipName,
+      _tdInvoiceLinesTableName = formatTableName testConfig invoiceLinesTableName,
       _tdInvoiceLinesRows = invoiceLinesRows,
-      _tdMediaTypesTableName = formatTableName mediaTypesTableName,
+      _tdInvoiceLinesTableRelationships = formatTableRelationships invoiceLinesTableRelationships,
+      _tdInvoiceRelationshipName = invoiceRelationshipName,
+      _tdTrackRelationshipName = trackRelationshipName,
+      _tdMediaTypesTableName = formatTableName testConfig mediaTypesTableName,
       _tdMediaTypesRows = mediaTypesRows,
-      _tdTracksTableName = formatTableName tracksTableName,
+      _tdTracksTableName = formatTableName testConfig tracksTableName,
       _tdTracksRows = tracksRows,
+      _tdTracksRowsById = tracksRowsById,
       _tdTracksTableRelationships = formatTableRelationships tracksTableRelationships,
       _tdInvoiceLinesRelationshipName = invoiceLinesRelationshipName,
       _tdMediaTypeRelationshipName = mediaTypeRelationshipName,
       _tdAlbumRelationshipName = albumRelationshipName,
       _tdGenreRelationshipName = genreRelationshipName,
-      _tdGenresTableName = formatTableName genresTableName,
+      _tdPlaylistTracksRelationshipName = playlistTracksRelationshipName,
+      _tdPlaylistTracksTableName = formatTableName testConfig playlistTracksTableName,
+      _tdPlaylistTracksRows = playlistTracksRows,
+      _tdGenresTableName = formatTableName testConfig genresTableName,
       _tdGenresRows = genresRows,
       _tdGenresTableRelationships = formatTableRelationships genresTableRelationships,
-      _tdColumnName = API.ColumnName . applyNameCasing _tcColumnNameCasing,
-      _tdColumnField = columnField . applyNameCasing _tcColumnNameCasing,
-      _tdStringType = API.StringTy,
-      _tdIntType = API.NumberTy,
-      _tdFloatType = API.NumberTy,
-      _tdQueryComparisonColumn = queryComparisonColumn . applyNameCasing _tcColumnNameCasing,
-      _tdCurrentComparisonColumn = currentComparisonColumn . applyNameCasing _tcColumnNameCasing,
-      _tdOrderByColumn = \targetPath name -> orderByColumn targetPath (applyNameCasing _tcColumnNameCasing name)
+      _tdColumnName = formatColumnName testConfig . API.ColumnName,
+      _tdColumnField = columnField schemaResponse testConfig,
+      _tdColumnInsertSchema = columnInsertSchema schemaResponse testConfig,
+      _tdRowColumnOperatorValue = rowColumnOperatorValue schemaResponse testConfig,
+      _tdFindColumnScalarType = \tableName name -> findColumnScalarType schemaResponse tableName (formatColumnName testConfig $ API.ColumnName name),
+      _tdQueryComparisonColumn = API.ComparisonColumn API.QueryTable . formatColumnName testConfig . API.ColumnName,
+      _tdCurrentComparisonColumn = API.ComparisonColumn API.CurrentTable . formatColumnName testConfig . API.ColumnName,
+      _tdOrderByColumn = \targetPath name -> orderByColumn targetPath (formatColumnName testConfig $ API.ColumnName name)
     }
   where
-    formatTableName :: API.TableName -> API.TableName
-    formatTableName = applyTableNamePrefix _tcTableNamePrefix . API.TableName . fmap (applyNameCasing _tcTableNameCasing) . API.unTableName
-
     formatTableRelationships :: API.TableRelationships -> API.TableRelationships
     formatTableRelationships =
       prefixTableRelationships
-        >>> API.trRelationships . traverse . API.rColumnMapping %~ (HashMap.toList >>> fmap (bimap formatColumnName formatColumnName) >>> HashMap.fromList)
-
-    formatColumnName :: API.ColumnName -> API.ColumnName
-    formatColumnName = API.ColumnName . applyNameCasing _tcColumnNameCasing . API.unColumnName
+        >>> API.trRelationships . traverse . API.rColumnMapping %~ (HashMap.toList >>> fmap (bimap (formatColumnName testConfig) (formatColumnName testConfig)) >>> HashMap.fromList)
 
     prefixTableRelationships :: API.TableRelationships -> API.TableRelationships
     prefixTableRelationships =
-      API.trSourceTable %~ formatTableName
-        >>> API.trRelationships . traverse . API.rTargetTable %~ formatTableName
+      API.trSourceTable %~ formatTableName testConfig
+        >>> API.trRelationships . traverse . API.rTargetTable %~ formatTableName testConfig
 
     formatTableInfo :: API.TableInfo -> API.TableInfo
     formatTableInfo =
-      API.tiName %~ formatTableName
-        >>> API.tiColumns . traverse . API.ciName %~ formatColumnName
-        >>> API.tiPrimaryKey . traverse %~ formatColumnName
-        >>> API.tiForeignKeys . lens API.unForeignKeys (const API.ForeignKeys) . traverse
-          %~ ( API.cForeignTable %~ formatTableName
-                 >>> API.cColumnMapping %~ (HashMap.toList >>> fmap (bimap formatColumnName formatColumnName) >>> HashMap.fromList)
+      API.tiName %~ formatTableName testConfig
+        >>> API.tiColumns . traverse . API.ciName %~ formatColumnName testConfig
+        >>> API.tiPrimaryKey . traverse %~ formatColumnName testConfig
+        >>> API.tiForeignKeys . API.unForeignKeys . traverse
+          %~ ( API.cForeignTable %~ formatTableName testConfig
+                 >>> API.cColumnMapping %~ (HashMap.toList >>> fmap (bimap (formatColumnName testConfig) (formatColumnName testConfig)) >>> HashMap.fromList)
              )
+
+-- | Test data from the TestingEdgeCases dataset template
+data EdgeCasesTestData = EdgeCasesTestData
+  { -- = NoPrimaryKey table
+    _ectdNoPrimaryKeyTableName :: API.TableName,
+    -- = DefaultedPrimaryKey table
+    _ectdDefaultedPrimaryKeyTableName :: API.TableName,
+    -- = AllColumnsDefaultable table
+    _ectdAllColumnsDefaultableTableName :: API.TableName,
+    -- = Scalar Types
+    _ectdFindColumnScalarType :: API.TableName -> Text -> API.ScalarType,
+    -- = Utility functions
+    _ectdTableExists :: API.TableName -> Bool,
+    _ectdColumnField :: API.TableName -> Text -> API.Field,
+    _ectdColumnInsertSchema :: API.TableName -> Text -> API.ColumnInsertSchema,
+    _ectdRowColumnOperatorValue :: API.TableName -> Text -> J.Value -> API.RowColumnOperatorValue,
+    _ectdCurrentComparisonColumn :: Text -> API.ScalarType -> API.ComparisonColumn
+  }
+
+mkEdgeCasesTestData :: TestConfig -> API.SchemaResponse -> EdgeCasesTestData
+mkEdgeCasesTestData testConfig schemaResponse =
+  EdgeCasesTestData
+    { _ectdNoPrimaryKeyTableName = noPrimaryKeyTableName,
+      _ectdDefaultedPrimaryKeyTableName = defaultedPrimaryKeyTableName,
+      _ectdAllColumnsDefaultableTableName = allColumnsDefaultableTableName,
+      _ectdFindColumnScalarType = \tableName name -> findColumnScalarType schemaResponse tableName (formatColumnName testConfig $ API.ColumnName name),
+      _ectdTableExists = tableExists,
+      _ectdColumnField = columnField schemaResponse testConfig,
+      _ectdColumnInsertSchema = columnInsertSchema schemaResponse testConfig,
+      _ectdRowColumnOperatorValue = rowColumnOperatorValue schemaResponse testConfig,
+      _ectdCurrentComparisonColumn = API.ComparisonColumn API.CurrentTable . formatColumnName testConfig . API.ColumnName
+    }
+  where
+    tableExists :: API.TableName -> Bool
+    tableExists tableName = tableName `elem` (API._tiName <$> API._srTables schemaResponse)
+
+    noPrimaryKeyTableName = formatTableName testConfig (API.TableName $ "NoPrimaryKey" :| [])
+    defaultedPrimaryKeyTableName = formatTableName testConfig (API.TableName $ "DefaultedPrimaryKey" :| [])
+    allColumnsDefaultableTableName = formatTableName testConfig (API.TableName $ "AllColumnsDefaultable" :| [])
+
+formatTableName :: TestConfig -> API.TableName -> API.TableName
+formatTableName TestConfig {..} = applyTableNamePrefix _tcTableNamePrefix . API.TableName . fmap (applyNameCasing _tcTableNameCasing) . API.unTableName
 
 applyTableNamePrefix :: [Text] -> API.TableName -> API.TableName
 applyTableNamePrefix prefix tableName@(API.TableName rawTableName) =
@@ -443,8 +566,42 @@ applyNameCasing casing text = case casing of
   Lowercase -> Text.toLower text
   Uppercase -> Text.toUpper text
 
+formatColumnName :: TestConfig -> API.ColumnName -> API.ColumnName
+formatColumnName TestConfig {..} = API.ColumnName . applyNameCasing _tcColumnNameCasing . API.unColumnName
+
+columnField :: API.SchemaResponse -> TestConfig -> API.TableName -> Text -> API.Field
+columnField schemaResponse testConfig tableName columnName =
+  API.ColumnField columnName' scalarType
+  where
+    columnName' = formatColumnName testConfig $ API.ColumnName columnName
+    scalarType = findColumnScalarType schemaResponse tableName columnName'
+
+columnInsertSchema :: API.SchemaResponse -> TestConfig -> API.TableName -> Text -> API.ColumnInsertSchema
+columnInsertSchema schemaResponse testConfig tableName columnName =
+  API.ColumnInsertSchema columnName' scalarType
+  where
+    columnName' = formatColumnName testConfig $ API.ColumnName columnName
+    scalarType = findColumnScalarType schemaResponse tableName columnName'
+
+rowColumnOperatorValue :: API.SchemaResponse -> TestConfig -> API.TableName -> Text -> J.Value -> API.RowColumnOperatorValue
+rowColumnOperatorValue schemaResponse testConfig tableName columnName value =
+  API.RowColumnOperatorValue columnName' value scalarType
+  where
+    columnName' = formatColumnName testConfig $ API.ColumnName columnName
+    scalarType = findColumnScalarType schemaResponse tableName columnName'
+
+findColumnScalarType :: API.SchemaResponse -> API.TableName -> API.ColumnName -> API.ScalarType
+findColumnScalarType API.SchemaResponse {..} tableName columnName =
+  maybe (error $ "Can't find the scalar type of column " <> show columnName <> " in table " <> show tableName) API._ciType columnInfo
+  where
+    tableInfo = find (\API.TableInfo {..} -> _tiName == tableName) _srTables
+    columnInfo = find (\API.ColumnInfo {..} -> _ciName == columnName) =<< API._tiColumns <$> tableInfo
+
 emptyQuery :: API.Query
 emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing
+
+emptyMutationRequest :: API.MutationRequest
+emptyMutationRequest = API.MutationRequest mempty mempty mempty
 
 sortBy :: (Ixed m, Ord (IxValue m)) => Index m -> [m] -> [m]
 sortBy propName = sortOn (^? ix propName)
@@ -499,6 +656,9 @@ deleteField fieldName = HashMap.delete (API.FieldName fieldName)
 field :: (Ixed m, Index m ~ API.FieldName) => Text -> Traversal' m (IxValue m)
 field fieldName = ix (API.FieldName fieldName)
 
+fieldAt :: (At m, Index m ~ API.FieldName) => Text -> Traversal' m (Maybe (IxValue m))
+fieldAt fieldName = at (API.FieldName fieldName)
+
 _ColumnFieldNumber :: Traversal' API.FieldValue Scientific
 _ColumnFieldNumber = API._ColumnFieldValue . _Number
 
@@ -508,18 +668,38 @@ _ColumnFieldString = API._ColumnFieldValue . _String
 _ColumnFieldBoolean :: Traversal' API.FieldValue Bool
 _ColumnFieldBoolean = API._ColumnFieldValue . _Bool
 
+_ColumnFieldNull :: Traversal' API.FieldValue ()
+_ColumnFieldNull = API._ColumnFieldValue . _Null
+
 _RelationshipFieldRows :: Traversal' API.FieldValue [HashMap API.FieldName API.FieldValue]
 _RelationshipFieldRows = API._RelationshipFieldValue . API.qrRows . _Just
 
-columnField :: Text -> API.ScalarType -> API.Field
-columnField name scalarType = API.ColumnField (API.ColumnName name) scalarType
+scalarValueComparison :: J.Value -> API.ScalarType -> API.ComparisonValue
+scalarValueComparison value valueType = API.ScalarValueComparison $ API.ScalarValue value valueType
 
-queryComparisonColumn :: Text -> API.ScalarType -> API.ComparisonColumn
-queryComparisonColumn columnName scalarType = API.ComparisonColumn API.QueryTable (API.ColumnName columnName) scalarType
-
-currentComparisonColumn :: Text -> API.ScalarType -> API.ComparisonColumn
-currentComparisonColumn columnName scalarType = API.ComparisonColumn API.CurrentTable (API.ColumnName columnName) scalarType
-
-orderByColumn :: [API.RelationshipName] -> Text -> API.OrderDirection -> API.OrderByElement
+orderByColumn :: [API.RelationshipName] -> API.ColumnName -> API.OrderDirection -> API.OrderByElement
 orderByColumn targetPath columnName orderDirection =
-  API.OrderByElement targetPath (API.OrderByColumn $ API.ColumnName columnName) orderDirection
+  API.OrderByElement targetPath (API.OrderByColumn columnName) orderDirection
+
+insertAutoIncPk :: Text -> Integer -> [HashMap API.FieldName API.FieldValue] -> [HashMap API.FieldName API.FieldValue]
+insertAutoIncPk pkFieldName startingPkId rows =
+  zip [startingPkId ..] rows
+    & fmap
+      ( \(albumId, albumRow) ->
+          albumRow & at (API.FieldName pkFieldName) ?~ API.mkColumnFieldValue (J.Number $ fromInteger albumId)
+      )
+
+autoIncPks :: Integer -> [a] -> [Integer]
+autoIncPks startingPkId rows = fst <$> zip [startingPkId ..] rows
+
+mkSubqueryFieldValue :: Maybe [HashMap API.FieldName API.FieldValue] -> Maybe (HashMap API.FieldName J.Value) -> API.FieldValue
+mkSubqueryFieldValue rows aggregates =
+  API.mkRelationshipFieldValue $ API.QueryResponse rows aggregates
+
+mkSubqueryRowsFieldValue :: [HashMap API.FieldName API.FieldValue] -> API.FieldValue
+mkSubqueryRowsFieldValue rows =
+  API.mkRelationshipFieldValue $ API.QueryResponse (Just rows) Nothing
+
+mkSubqueryAggregatesFieldValue :: HashMap API.FieldName J.Value -> API.FieldValue
+mkSubqueryAggregatesFieldValue aggregates =
+  API.mkRelationshipFieldValue $ API.QueryResponse Nothing (Just aggregates)

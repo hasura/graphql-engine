@@ -46,6 +46,11 @@ export const allOperators: OperatorDef[] = [
     operator: '$niregex',
     alias: '_niregex',
   },
+  {
+    name: '_is_null',
+    operator: '_is_null',
+    alias: '_is_null',
+  },
 ];
 
 export const getOperatorDefaultValue = (op: Operator) => {

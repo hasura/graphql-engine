@@ -45,6 +45,7 @@ import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value (PGScalarValue (..))
 import Hasura.Backends.Postgres.Translate.Select qualified as RS
+import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (selectToSelectWith, toQuery)
 import Hasura.Backends.Postgres.Types.Function qualified as TF
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -73,12 +74,12 @@ import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Backend
-import Hasura.SQL.Types
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Utils
   ( mkClientHeadersForward,
     mkSetCookieHeaders,
   )
+import Hasura.Services.Network
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -87,13 +88,13 @@ import Network.Wreq qualified as Wreq
 import System.Metrics.Prometheus.Counter as Prometheus.Counter
 
 fetchActionLogResponses ::
-  (MonadError QErr m, MonadMetadataStorage (MetadataStorageT m), Foldable t) =>
+  (MonadError QErr m, MonadMetadataStorage m, Foldable t) =>
   t ActionId ->
   m (ActionLogResponseMap, Bool)
 fetchActionLogResponses actionIds = do
   responses <- for (toList actionIds) $ \actionId ->
     (actionId,)
-      <$> liftEitherM (runMetadataStorageT $ fetchActionResponse actionId)
+      <$> liftEitherM (fetchActionResponse actionId)
   -- An action is said to be completed/processed iff response is captured from webhook or
   -- in case any exception occured in calling webhook.
   let isActionComplete ActionLogResponse {..} =
@@ -105,7 +106,7 @@ runActionExecution ::
     MonadBaseControl IO m,
     MonadError QErr m,
     Tracing.MonadTrace m,
-    MonadMetadataStorage (MetadataStorageT m)
+    MonadMetadataStorage m
   ) =>
   UserInfo ->
   ActionExecutionPlan ->
@@ -114,14 +115,14 @@ runActionExecution userInfo aep =
   withElapsedTime $ case aep of
     AEPSync e -> second Just <$> unActionExecution e
     AEPAsyncQuery (AsyncActionQueryExecutionPlan actionId execution) -> do
-      actionLogResponse <- liftEitherM $ runMetadataStorageT $ fetchActionResponse actionId
+      actionLogResponse <- liftEitherM $ fetchActionResponse actionId
       (,Nothing) <$> case execution of
         AAQENoRelationships f -> liftEither $ f actionLogResponse
         AAQEOnSourceDB srcConfig (AsyncActionQuerySourceExecution _ jsonAggSelect f) -> do
           let selectAST = f actionLogResponse
           selectResolved <- traverse (prepareWithoutPlan userInfo) selectAST
-          let querySQL = PG.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggSelect selectResolved
-          liftEitherM $ runExceptT $ runTx (_pscExecCtx srcConfig) PG.ReadOnly $ liftTx $ asSingleRowJsonResp querySQL []
+          let querySQL = toQuery $ selectToSelectWith $ RS.mkSQLSelect jsonAggSelect selectResolved
+          liftEitherM $ runExceptT $ _pecRunTx (_pscExecCtx srcConfig) (PGExecCtxInfo (Tx PG.ReadOnly Nothing) InternalRawQuery) $ liftTx $ asSingleRowJsonResp querySQL []
     AEPAsyncMutation actionId -> pure $ (,Nothing) $ encJFromJValue $ actionIdToText actionId
 
 -- | This function is generally used on the result of 'selectQuerySQL',
@@ -137,6 +138,7 @@ asSingleRowJsonResp query args =
 
 -- | Synchronously execute webhook handler and resolve response to action "output"
 resolveActionExecution ::
+  HTTP.Manager ->
   Env.Environment ->
   L.Logger L.Hasura ->
   PrometheusMetrics ->
@@ -145,7 +147,7 @@ resolveActionExecution ::
   ActionExecContext ->
   Maybe GQLQueryText ->
   ActionExecution
-resolveActionExecution env logger prometheusMetrics _userInfo IR.AnnActionExecution {..} ActionExecContext {..} gqlQueryText =
+resolveActionExecution httpManager env logger prometheusMetrics _userInfo IR.AnnActionExecution {..} ActionExecContext {..} gqlQueryText =
   ActionExecution $ first (encJFromOrderedValue . makeActionResponseNoRelations _aaeFields _aaeOutputType _aaeOutputFields True) <$> runWebhook
   where
     handlerPayload = ActionWebhookPayload (ActionContext _aaeName) _aecSessionVariables _aaePayload gqlQueryText
@@ -154,10 +156,11 @@ resolveActionExecution env logger prometheusMetrics _userInfo IR.AnnActionExecut
       (MonadIO m, MonadError QErr m, Tracing.MonadTrace m) =>
       m (ActionWebhookResponse, HTTP.ResponseHeaders)
     runWebhook =
+      -- TODO: do we need to add the logger as a reader? can't we just give it as an argument?
       flip runReaderT logger $
         callWebhook
           env
-          _aecManager
+          httpManager
           prometheusMetrics
           _aaeOutputType
           _aaeOutputFields
@@ -229,7 +232,7 @@ makeActionResponseNoRelations annFields outputType outputF shouldCheckOutputFiel
             let fieldText = getFieldNameTxt fieldName
              in (fieldText,) <$> case annField of
                   IR.ACFExpression t -> Just $ AO.String t
-                  IR.ACFScalar fname -> AO.toOrdered <$> KM.lookup (K.fromText $ G.unName fname) obj
+                  IR.ACFScalar fname -> Just $ maybe AO.Null AO.toOrdered (KM.lookup (K.fromText $ G.unName fname) obj)
                   IR.ACFNestedObject _ nestedFields -> do
                     let mkValue :: J.Value -> Maybe AO.Value
                         mkValue = \case
@@ -282,13 +285,13 @@ metadata storage. See Note [Resolving async action query] below.
 
 -- | Resolve asynchronous action mutation which returns only the action uuid
 resolveActionMutationAsync ::
-  (MonadMetadataStorage m) =>
+  (MonadMetadataStorage m, MonadError QErr m) =>
   IR.AnnActionMutationAsync ->
   [HTTP.Header] ->
   SessionVariables ->
   m ActionId
 resolveActionMutationAsync annAction reqHeaders sessionVariables =
-  insertAction actionName sessionVariables reqHeaders inputArgs
+  liftEitherM $ insertAction actionName sessionVariables reqHeaders inputArgs
   where
     IR.AnnActionMutationAsync actionName _ inputArgs = annAction
 
@@ -430,18 +433,18 @@ asyncActionsProcessor ::
     MonadBaseControl IO m,
     LA.Forall (LA.Pure m),
     Tracing.HasReporter m,
-    MonadMetadataStorage (MetadataStorageT m)
+    MonadMetadataStorage m,
+    ProvidesNetwork m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
   IO SchemaCache ->
   STM.TVar (Set LockedActionEventId) ->
-  HTTP.Manager ->
   PrometheusMetrics ->
   Milliseconds ->
   Maybe GH.GQLQueryText ->
   m (Forever m)
-asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager prometheusMetrics sleepTime gqlQueryText =
+asyncActionsProcessor env logger getSCFromRef' lockedActionEvents prometheusMetrics sleepTime gqlQueryText =
   return $
     Forever () $
       const $ do
@@ -451,7 +454,7 @@ asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager pr
         unless (Map.null asyncActions) $ do
           -- fetch undelivered action events only when there's at least
           -- one async action present in the schema cache
-          asyncInvocationsE <- runMetadataStorageT fetchUndeliveredActionEvents
+          asyncInvocationsE <- fetchUndeliveredActionEvents
           asyncInvocations <- liftIO $ onLeft asyncInvocationsE mempty
           -- save the actions that are currently fetched from the DB to
           -- be processed in a TVar (Set LockedActionEventId) and when
@@ -467,6 +470,7 @@ asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager pr
   where
     callHandler :: ActionCache -> ActionLogItem -> m ()
     callHandler actionCache actionLogItem = Tracing.runTraceT Tracing.sampleAlways "async actions processor" do
+      httpManager <- askHTTPManager
       let ActionLogItem
             actionId
             actionName
@@ -488,6 +492,7 @@ asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager pr
               metadataResponseTransform = _adResponseTransform definition
           eitherRes <-
             runExceptT $
+              -- TODO: do we need to add the logger as a reader? can't we just give it as an argument?
               flip runReaderT logger $
                 callWebhook
                   env
@@ -503,7 +508,7 @@ asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager pr
                   timeout
                   metadataRequestTransform
                   metadataResponseTransform
-          resE <- runMetadataStorageT $
+          resE <-
             setActionStatus actionId $ case eitherRes of
               Left e -> AASError e
               Right (responsePayload, _) -> AASCompleted $ J.toJSON responsePayload

@@ -58,11 +58,11 @@ import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RemoteSchema.Metadata (RemoteSchemaName)
 import Hasura.Server.Types
+import Hasura.Services.Network
 import Hasura.Session
 import Hasura.Tracing (TraceT)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
-import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 
 -- * Inconsistencies
 
@@ -237,15 +237,13 @@ newtype MetadataT m a = MetadataT {unMetadataT :: StateT Metadata m a}
       MFunctor,
       Tracing.MonadTrace,
       MonadBase b,
-      MonadBaseControl b
+      MonadBaseControl b,
+      ProvidesNetwork
     )
 
 instance (Monad m) => MetadataM (MetadataT m) where
   getMetadata = MetadataT get
   putMetadata = MetadataT . put
-
-instance (HasHttpManagerM m) => HasHttpManagerM (MetadataT m) where
-  askHttpManager = lift askHttpManager
 
 instance (UserInfoM m) => UserInfoM (MetadataT m) where
   askUserInfo = lift askUserInfo
@@ -343,7 +341,7 @@ getInconsistentQueryCollections rs qcs lqToMetadataObj restEndpoints allowLst =
         lqs = _cdQueries . _ccDefinition $ cc
 
     inAllowList :: [NormalizedQuery] -> (ListedQuery) -> Bool
-    inAllowList nqList (ListedQuery {..}) = any (\nq -> unNormalizedQuery nq == (unGQLQuery . getGQLQuery) _lqQuery) nqList
+    inAllowList logicalModelList (ListedQuery {..}) = any (\lmCode -> unNormalizedQuery lmCode == (unGQLQuery . getGQLQuery) _lqQuery) logicalModelList
 
     inRESTEndpoints :: EndpointTrie GQLQueryWithText -> (ListedQuery) -> [Text]
     inRESTEndpoints edTrie lq = map fst $ filter (queryIsFaulty) allQueries

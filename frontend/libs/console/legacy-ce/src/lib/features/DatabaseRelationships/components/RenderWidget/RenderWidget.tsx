@@ -1,9 +1,9 @@
-import { Table } from '@/features/hasura-metadata-types';
-import React from 'react';
+import { Table } from '../../../hasura-metadata-types';
+import { Dialog } from '../../../../new-components/Dialog';
 import { MODE, Relationship } from '../../types';
+import { RelationshipForm } from '../RelationshipForm';
 import { RenameRelationship } from '../RenameRelationship/RenameRelationship';
 import { ConfirmDeleteRelationshipPopup } from './parts/ConfirmDeleteRelationshipPopup';
-import { CreateRelationship } from './parts/CreateRelationship';
 
 interface RenderWidgetProps {
   dataSourceName: string;
@@ -16,28 +16,60 @@ interface RenderWidgetProps {
 }
 
 export const RenderWidget = (props: RenderWidgetProps) => {
-  const { mode, relationship, table, dataSourceName, ...callbacks } = props;
-
-  if (mode === MODE.CREATE)
-    return (
-      <CreateRelationship
-        dataSourceName={dataSourceName}
-        table={table}
-        {...callbacks}
-      />
-    );
-
-  if (mode === MODE.RENAME && relationship)
-    return <RenameRelationship relationship={relationship} {...callbacks} />;
+  const {
+    mode,
+    relationship,
+    table,
+    dataSourceName,
+    onSuccess,
+    onCancel,
+    onError,
+  } = props;
 
   if (mode === MODE.DELETE && relationship)
     return (
       <ConfirmDeleteRelationshipPopup
         relationship={relationship}
-        {...callbacks}
+        onSuccess={onSuccess}
+        onCancel={onCancel}
+        onError={onError}
       />
     );
 
-  // Since we support only local relationships for GDC, there is no edit mode for it. Edit only exists for remote relationships
-  return null;
+  if (mode === MODE.RENAME && relationship)
+    return (
+      <RenameRelationship
+        relationship={relationship}
+        onSuccess={onSuccess}
+        onCancel={onCancel}
+        onError={onError}
+      />
+    );
+
+  return (
+    <Dialog
+      hasBackdrop
+      title={mode === MODE.EDIT ? 'Edit Relationship' : 'Create Relationship'}
+      description={
+        mode === MODE.EDIT
+          ? 'Edit your existing relationship.'
+          : 'Create and track a new relationship to view it in your GraphQL schema.'
+      }
+      onClose={onCancel}
+      size="xxl"
+    >
+      <div>
+        <RelationshipForm.Widget
+          dataSourceName={dataSourceName}
+          table={table}
+          onSuccess={onSuccess}
+          onCancel={onCancel}
+          onError={onError}
+          defaultValue={
+            mode === MODE.EDIT && relationship ? relationship : undefined
+          }
+        />
+      </div>
+    </Dialog>
+  );
 };

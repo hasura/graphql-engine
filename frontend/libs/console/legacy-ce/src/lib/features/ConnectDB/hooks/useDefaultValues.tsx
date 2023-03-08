@@ -1,4 +1,4 @@
-import { useMetadataSource } from '@/features/MetadataAPI';
+import { useMetadataSource } from '../../MetadataAPI';
 
 interface Args {
   name: string;

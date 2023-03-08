@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Row } from 'react-bootstrap';
 import moment from 'moment';
 import { useSubscription } from 'react-apollo';
-import { Analytics, REDACT_EVERYTHING } from '@hasura/console-oss';
+import { Analytics, REDACT_EVERYTHING } from '@hasura/console-legacy-ce';
 
-import { loadInconsistentObjects as loadInconsistentObjectsAction } from '@hasura/console-oss';
+import { loadInconsistentObjects as loadInconsistentObjectsAction } from '@hasura/console-legacy-ce';
 
 import { isAdmin } from '../utils';
 import SourceHealth from './SourceHealth';
@@ -29,9 +29,7 @@ const Overview = ({
     if (!metadata.loading && _isAdmin) refetchMetadata();
   }, []);
   const [fromTime, setFromTime] = useState(
-    moment()
-      .subtract(1, 'hour')
-      .toISOString()
+    moment().subtract(1, 'hour').toISOString()
   );
 
   const liveStats = useSubscription(fetchLiveStats, {

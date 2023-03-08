@@ -32,7 +32,7 @@ exports[`generateTypeDef should return input type definitions of a single typeNa
 `;
 
 exports[`getAllTypeNames should return all type names 1`] = `
-Array [
+[
   "NewSchemaUserTable",
   "Table",
 ]

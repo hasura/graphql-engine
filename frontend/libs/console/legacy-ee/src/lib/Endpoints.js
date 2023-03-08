@@ -3,7 +3,7 @@ import globals from './Globals';
 import {
   Endpoints as endpointOSS,
   EndpointNamedExps,
-} from '@hasura/console-oss';
+} from '@hasura/console-legacy-ce';
 
 const metricsBaseUrl = globals.metricsApiUrl;
 export const { globalCookiePolicy, baseUrl, hasuractlUrl } = EndpointNamedExps;

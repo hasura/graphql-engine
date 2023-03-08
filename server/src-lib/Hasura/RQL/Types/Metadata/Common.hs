@@ -15,6 +15,7 @@ module Hasura.RQL.Types.Metadata.Common
     ComputedFields,
     CronTriggers,
     Endpoints,
+    LogicalModels,
     EventTriggers,
     FunctionMetadata (..),
     Functions,
@@ -46,6 +47,7 @@ module Hasura.RQL.Types.Metadata.Common
     smQueryTags,
     smTables,
     smCustomization,
+    smLogicalModels,
     smHealthCheckConfig,
     sourcesCodec,
     tmArrayRelationships,
@@ -79,6 +81,7 @@ import Data.List.Extended qualified as L
 import Data.Maybe (fromJust)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..), LogicalModelName)
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
@@ -144,9 +147,12 @@ instance Backend b => HasCodec (ComputedFieldMetadata b) where
   codec =
     AC.object (codecNamePrefix @b <> "ComputedFieldMetadata") $
       ComputedFieldMetadata
-        <$> requiredField' "name" AC..= _cfmName
-        <*> requiredFieldWith' "definition" placeholderCodecViaJSON AC..= _cfmDefinition
-        <*> optionalFieldWithOmittedDefault' "comment" Automatic AC..= _cfmComment
+        <$> requiredField' "name"
+          AC..= _cfmName
+        <*> requiredFieldWith' "definition" placeholderCodecViaJSON
+          AC..= _cfmDefinition
+        <*> optionalFieldWithOmittedDefault' "comment" Automatic
+          AC..= _cfmComment
 
 instance (Backend b) => ToJSON (ComputedFieldMetadata b) where
   toJSON ComputedFieldMetadata {..} =
@@ -159,9 +165,13 @@ instance (Backend b) => ToJSON (ComputedFieldMetadata b) where
 instance (Backend b) => FromJSON (ComputedFieldMetadata b) where
   parseJSON = withObject "ComputedFieldMetadata" $ \obj ->
     ComputedFieldMetadata
-      <$> obj .: "name"
-      <*> obj .: "definition"
-      <*> obj .:? "comment" .!= Automatic
+      <$> obj
+        .: "name"
+      <*> obj
+        .: "definition"
+      <*> obj
+        .:? "comment"
+        .!= Automatic
 
 type Relationships a = InsOrdHashMap RelName a
 
@@ -202,19 +212,31 @@ instance (Backend b) => HasCodec (TableMetadata b) where
     CommentCodec "Representation of a table in metadata, 'tables.yaml' and 'metadata.json'" $
       AC.object (codecNamePrefix @b <> "TableMetadata") $
         TableMetadata
-          <$> requiredField' "table" .== _tmTable
-          <*> optionalFieldWithOmittedDefault' "is_enum" False .== _tmIsEnum
-          <*> optionalFieldWithOmittedDefault "configuration" emptyTableConfig configDoc .== _tmConfiguration
-          <*> optSortedList "object_relationships" _rdName .== _tmObjectRelationships
-          <*> optSortedList "array_relationships" _rdName .== _tmArrayRelationships
-          <*> optSortedList "computed_fields" _cfmName .== _tmComputedFields
-          <*> optSortedList "remote_relationships" _rrName .== _tmRemoteRelationships
-          <*> optSortedList "insert_permissions" _pdRole .== _tmInsertPermissions
-          <*> optSortedList "select_permissions" _pdRole .== _tmSelectPermissions
-          <*> optSortedList "update_permissions" _pdRole .== _tmUpdatePermissions
-          <*> optSortedList "delete_permissions" _pdRole .== _tmDeletePermissions
+          <$> requiredField' "table"
+            .== _tmTable
+          <*> optionalFieldWithOmittedDefault' "is_enum" False
+            .== _tmIsEnum
+          <*> optionalFieldWithOmittedDefault "configuration" emptyTableConfig configDoc
+            .== _tmConfiguration
+          <*> optSortedList "object_relationships" _rdName
+            .== _tmObjectRelationships
+          <*> optSortedList "array_relationships" _rdName
+            .== _tmArrayRelationships
+          <*> optSortedList "computed_fields" _cfmName
+            .== _tmComputedFields
+          <*> optSortedList "remote_relationships" _rrName
+            .== _tmRemoteRelationships
+          <*> optSortedList "insert_permissions" _pdRole
+            .== _tmInsertPermissions
+          <*> optSortedList "select_permissions" _pdRole
+            .== _tmSelectPermissions
+          <*> optSortedList "update_permissions" _pdRole
+            .== _tmUpdatePermissions
+          <*> optSortedList "delete_permissions" _pdRole
+            .== _tmDeletePermissions
           <*> eventTriggers
-          <*> optionalFieldOrNull' "apollo_federation_config" .== _tmApolloFederationConfig
+          <*> optionalFieldOrNull' "apollo_federation_config"
+            .== _tmApolloFederationConfig
     where
       -- Some backends do not implement event triggers. In those cases we tailor
       -- the codec to omit the @"event_triggers"@ field from the API.
@@ -267,9 +289,14 @@ instance (Backend b) => FromJSON (TableMetadata b) where
           <> show (HS.toList unexpectedKeys)
 
     TableMetadata
-      <$> o .: tableKey
-      <*> o .:? isEnumKey .!= False
-      <*> o .:? configKey .!= emptyTableConfig
+      <$> o
+        .: tableKey
+      <*> o
+        .:? isEnumKey
+        .!= False
+      <*> o
+        .:? configKey
+        .!= emptyTableConfig
       <*> parseListAsMap "object relationships" _rdName (o .:? orKey .!= [])
       <*> parseListAsMap "array relationships" _rdName (o .:? arKey .!= [])
       <*> parseListAsMap "computed fields" _cfmName (o .:? cfKey .!= [])
@@ -279,7 +306,8 @@ instance (Backend b) => FromJSON (TableMetadata b) where
       <*> parseListAsMap "update permissions" _pdRole (o .:? upKey .!= [])
       <*> parseListAsMap "delete permissions" _pdRole (o .:? dpKey .!= [])
       <*> parseListAsMap "event triggers" etcName (o .:? etKey .!= [])
-      <*> o .:? enableAFKey
+      <*> o
+        .:? enableAFKey
     where
       tableKey = "table"
       isEnumKey = "is_enum"
@@ -335,10 +363,16 @@ $(makeLenses ''FunctionMetadata)
 instance (Backend b) => FromJSON (FunctionMetadata b) where
   parseJSON = withObject "FunctionMetadata" $ \o ->
     FunctionMetadata
-      <$> o .: "function"
-      <*> o .:? "configuration" .!= emptyFunctionConfig
-      <*> o .:? "permissions" .!= []
-      <*> o .:? "comment"
+      <$> o
+        .: "function"
+      <*> o
+        .:? "configuration"
+        .!= emptyFunctionConfig
+      <*> o
+        .:? "permissions"
+        .!= []
+      <*> o
+        .:? "comment"
 
 instance (Backend b) => HasCodec (FunctionMetadata b) where
   codec =
@@ -351,10 +385,14 @@ instance (Backend b) => HasCodec (FunctionMetadata b) where
       )
       $ AC.object (codecNamePrefix @b <> "FunctionMetadata")
       $ FunctionMetadata
-        <$> requiredField "function" nameDoc AC..= _fmFunction
-        <*> optionalFieldWithOmittedDefault "configuration" emptyFunctionConfig configDoc AC..= _fmConfiguration
-        <*> optionalFieldWithOmittedDefault' "permissions" [] AC..= _fmPermissions
-        <*> optionalField' "comment" AC..= _fmComment
+        <$> requiredField "function" nameDoc
+          AC..= _fmFunction
+        <*> optionalFieldWithOmittedDefault "configuration" emptyFunctionConfig configDoc
+          AC..= _fmConfiguration
+        <*> optionalFieldWithOmittedDefault' "permissions" []
+          AC..= _fmPermissions
+        <*> optionalField' "comment"
+          AC..= _fmComment
     where
       nameDoc = "Name of the SQL function"
       configDoc = "Configuration for the SQL function"
@@ -366,6 +404,8 @@ type RemoteSchemas = InsOrdHashMap RemoteSchemaName RemoteSchemaMetadata
 type Tables b = InsOrdHashMap (TableName b) (TableMetadata b)
 
 type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
+
+type LogicalModels b = InsOrdHashMap LogicalModelName (LogicalModelMetadata b)
 
 type Endpoints = InsOrdHashMap EndpointName CreateEndpoint
 
@@ -381,6 +421,7 @@ data SourceMetadata b = SourceMetadata
     _smKind :: BackendSourceKind b,
     _smTables :: Tables b,
     _smFunctions :: Functions b,
+    _smLogicalModels :: LogicalModels b,
     _smConfiguration :: SourceConnConfiguration b,
     _smQueryTags :: Maybe QueryTagsConfig,
     _smCustomization :: SourceCustomization,
@@ -399,6 +440,7 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadat
     _smName <- o .: "name"
     _smTables <- oMapFromL _tmTable <$> o .: "tables"
     _smFunctions <- oMapFromL _fmFunction <$> o .:? "functions" .!= []
+    _smLogicalModels <- oMapFromL _lmmRootFieldName <$> o .:? "logical_models" .!= []
     _smConfiguration <- o .: "configuration"
     _smQueryTags <- o .:? "query_tags"
     _smCustomization <- o .:? "customization" .!= emptySourceCustomization
@@ -449,13 +491,22 @@ instance Backend b => HasCodec (SourceMetadata b) where
   codec =
     AC.object (codecNamePrefix @b <> "SourceMetadata") $
       SourceMetadata
-        <$> requiredField' "name" .== _smName
-        <*> requiredField' "kind" .== _smKind
-        <*> requiredFieldWith' "tables" (sortedElemsCodec _tmTable) .== _smTables
-        <*> optionalFieldOrNullWithOmittedDefaultWith' "functions" (sortedElemsCodec _fmFunction) mempty .== _smFunctions
-        <*> requiredField' "configuration" .== _smConfiguration
-        <*> optionalFieldOrNull' "query_tags" .== _smQueryTags
-        <*> optionalFieldWithOmittedDefault' "customization" emptySourceCustomization .== _smCustomization
+        <$> requiredField' "name"
+          .== _smName
+        <*> requiredField' "kind"
+          .== _smKind
+        <*> requiredFieldWith' "tables" (sortedElemsCodec _tmTable)
+          .== _smTables
+        <*> optionalFieldOrNullWithOmittedDefaultWith' "functions" (sortedElemsCodec _fmFunction) mempty
+          .== _smFunctions
+        <*> optionalFieldOrNullWithOmittedDefaultWith' "logical_models" (sortedElemsCodec _lmmRootFieldName) mempty
+          .== _smLogicalModels
+        <*> requiredField' "configuration"
+          .== _smConfiguration
+        <*> optionalFieldOrNull' "query_tags"
+          .== _smQueryTags
+        <*> optionalFieldWithOmittedDefault' "customization" emptySourceCustomization
+          .== _smCustomization
         <*> healthCheckField
     where
       healthCheckField = case healthCheckImplementation @b of
@@ -483,6 +534,7 @@ mkSourceMetadata name backendSourceKind config customization healthCheckConfig =
         @b
         name
         backendSourceKind
+        mempty
         mempty
         mempty
         config

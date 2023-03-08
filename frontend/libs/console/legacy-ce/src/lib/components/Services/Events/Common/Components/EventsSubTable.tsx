@@ -1,8 +1,8 @@
 import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import ReactTable from 'react-table';
-import { currentDriver, dataSource } from '@/dataSources';
-import { getRunSqlQuery } from '@/components/Common/utils/v1QueryUtils';
+import { currentDriver, dataSource } from '../../../../../dataSources';
+import { getRunSqlQuery } from '../../../../Common/utils/v1QueryUtils';
 import InvocationLogDetails from './InvocationLogDetails';
 import { Event } from '../../types';
 import {

@@ -1,8 +1,11 @@
 import React from 'react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { ReduxDecorator } from '../../../../storybook/decorators/redux-decorator';
 import { ComponentMeta } from '@storybook/react';
-import { handlers, createDefaultInitialData } from '@/mocks/metadata.mock';
+import {
+  handlers,
+  createDefaultInitialData,
+} from '../../../../mocks/metadata.mock';
 import { action } from '@storybook/addon-actions';
 
 import { QueryCollectionHeader } from './QueryCollectionHeader';

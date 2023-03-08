@@ -392,7 +392,7 @@ deleteFromTable scenario tableInfo fieldName description = runMaybeT $ do
   lift do
     let whereName = Name._where
         whereDesc = "filter the rows which have to be deleted"
-    whereArg <- P.field whereName (Just whereDesc) <$> boolExp tableInfo
+    whereArg <- P.field whereName (Just whereDesc) <$> tableBoolExp tableInfo
     selection <- mutationSelectionSet tableInfo
     let columns = tableColumns tableInfo
     pure $
@@ -482,7 +482,7 @@ mutationSelectionSet tableInfo = do
           returningDesc = "data from the rows affected by the mutation"
       pure $ IR.MRet <$> P.subselection_ returningName (Just returningDesc) tableSet
     let selectionName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableMutationResponseTypeName tableGQLName
-        affectedRowsName = Name._affected_rows
+        affectedRowsName = applyFieldNameCaseIdentifier tCase affectedRowsFieldName
         affectedRowsDesc = "number of rows affected by the mutation"
         selectionDesc = G.Description $ "response of any mutation on the table " <>> tableName
         selectionFields =

@@ -53,10 +53,10 @@ After making your changes
 
 ...console assets:
 
-    $ cd console
+    $ cd frontend
     $ nvm use
     $ npm ci
-    $ npm run server-build
+    $ npm run server-build:ce
     $ cd ..
 
 ...and the server:
@@ -141,10 +141,10 @@ The following command can be used to build and launch a local `graphql-engine` i
 ```
 $ cabal new-run -- exe:graphql-engine \
     --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
-    serve --enable-console --console-assets-dir=console/static/dist
+    serve --enable-console --console-assets-dir=frontend/dist/apps/server-assets-console-ce
 ```
 
-This will launch a server on port 8080, and it will serve the console assets if they were built with `npm run server-build` as mentioned above.
+This will launch a server on port 8080, and it will serve the console assets if they were built with `npm run server-build:ce` as mentioned above.
 
 #### Test
 

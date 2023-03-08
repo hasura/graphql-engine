@@ -6,10 +6,12 @@
 -- Central types and functions are 'Fixture', 'SetupAction', and 'run'.
 module Harness.Test.Fixture
   ( run,
+    runClean,
     runSingleSetup,
     runWithLocalTestEnvironment,
     runWithLocalTestEnvironmentSingleSetup,
     runWithLocalTestEnvironmentInternal,
+    hgeWithEnv,
     createDatabases,
     Fixture (..),
     fixture,
@@ -31,8 +33,10 @@ module Harness.Test.Fixture
   )
 where
 
+import Control.Concurrent.Async qualified as Async
 import Control.Monad.Managed (Managed, runManaged, with)
 import Data.Aeson (Value)
+import Data.Has (getter)
 import Data.Set qualified as S
 import Data.Text qualified as T
 import Data.UUID.V4 (nextRandom)
@@ -42,6 +46,7 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.Exceptions
 import Harness.Logging
+import Harness.Services.GraphqlEngine
 import Harness.Test.BackendType
 import Harness.Test.CustomOptions
 import Harness.Test.FixtureName
@@ -49,7 +54,7 @@ import Harness.Test.SetupAction (SetupAction (..))
 import Harness.Test.SetupAction qualified as SetupAction
 import Harness.TestEnvironment
   ( GlobalTestEnvironment (..),
-    Server,
+    Server (..),
     TestEnvironment (..),
     TestingMode (..),
     UniqueTestId (..),
@@ -86,7 +91,42 @@ import Test.Hspec
 run :: NonEmpty (Fixture ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith GlobalTestEnvironment
 run = runSingleSetup
 
--- runWithLocalTestEnvironment fixtures (\opts -> beforeWith (\(te, ()) -> return te) (tests opts))
+-- this refreshes all the metadata on every test, so we can test mutations etc
+-- is much slower though so try `run` first
+runClean :: NonEmpty (Fixture ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith GlobalTestEnvironment
+runClean fixtures tests = do
+  runWithLocalTestEnvironment
+    fixtures
+    (\opts -> beforeWith (\(te, ()) -> return te) (tests opts))
+
+-- given a fresh HgeServerInstance, add it in our `TestEnvironment`
+useHgeInTestEnvironment :: GlobalTestEnvironment -> HgeServerInstance -> IO GlobalTestEnvironment
+useHgeInTestEnvironment globalTestEnvironment (HgeServerInstance {hgeServerHost, hgeServerPort}) = do
+  serverThreadIrrelevant <- Async.async (return ())
+  let server =
+        Server
+          { port = fromIntegral hgeServerPort,
+            urlPrefix = "http://" <> T.unpack hgeServerHost,
+            thread = serverThreadIrrelevant
+          }
+  pure $ globalTestEnvironment {server = server}
+
+-- | Start an instance of HGE which has certain environment variables defined
+-- and pass it around inside the `GlobalTestEnvironment`
+hgeWithEnv :: [(String, String)] -> SpecWith GlobalTestEnvironment -> SpecWith GlobalTestEnvironment
+hgeWithEnv env = do
+  let hgeConfig = emptyHgeConfig {hgeConfigEnvironmentVars = env}
+
+  aroundAllWith
+    ( \specs globalTestEnvironment -> runManaged $ do
+        hgeServerInstance <-
+          spawnServer
+            (getter globalTestEnvironment)
+            (getter globalTestEnvironment)
+            (getter globalTestEnvironment)
+            hgeConfig
+        liftIO $ useHgeInTestEnvironment globalTestEnvironment hgeServerInstance >>= specs
+    )
 
 {-# DEPRECATED runSingleSetup "runSingleSetup lets all specs in aFixture share a single database environment, which impedes parallelisation and out-of-order execution." #-}
 runSingleSetup :: NonEmpty (Fixture ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith GlobalTestEnvironment
@@ -138,10 +178,7 @@ runWithLocalTestEnvironmentInternal aroundSomeWith fixtures tests =
             Postgres `elem` backendTypesForFixture fixtureName
           TestBackend (DataConnector _) ->
             -- we run all these together so it's harder to miss tests
-            let isDataConnector = \case
-                  DataConnector _dc -> True
-                  _ -> False
-             in any isDataConnector (backendTypesForFixture fixtureName)
+            any isDataConnector (backendTypesForFixture fixtureName)
           TestBackend backendType ->
             backendType `elem` backendTypesForFixture fixtureName
           TestNoBackends -> S.null (backendTypesForFixture fixtureName)
@@ -273,10 +310,6 @@ runSetupActions logger acts = go acts []
       [] -> return (rethrowAll cleanupAcc)
       SetupAction {setupAction, teardownAction} : rest -> do
         a <- try setupAction
-        -- It would be nice to be able to log the execution of setup actions
-        -- into a logfile or similar.  Using `putStrLn` interferes with the
-        -- default Hspec test runner's output, so the lines below have been left
-        -- commented out.
         case a of
           Left (exn :: SomeException) -> do
             log $ LogFixtureSetupFailed (length cleanupAcc)

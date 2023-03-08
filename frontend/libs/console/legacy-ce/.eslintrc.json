@@ -15,12 +15,6 @@
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "rules": {
-        "@nrwl/nx/enforce-module-boundaries": [
-          "error",
-          {
-            "allowCircularSelfDependency": true
-          }
-        ],
         "react/forbid-dom-props": [
           "error",
           {
@@ -102,7 +96,10 @@
         "**/__tests__/**/*.[jt]s?(x)",
         "**/?(*.)+(spec|test).[jt]s?(x)"
       ],
-      "extends": ["plugin:testing-library/react", "plugin:jest-dom/recommended"],
+      "extends": [
+        "plugin:testing-library/react",
+        "plugin:jest-dom/recommended"
+      ],
       "rules": {
         "testing-library/no-unnecessary-act": "warn",
         "testing-library/prefer-query-by-disappearance": "warn",

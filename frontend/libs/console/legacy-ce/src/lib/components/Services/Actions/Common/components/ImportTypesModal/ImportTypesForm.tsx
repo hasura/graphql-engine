@@ -5,7 +5,7 @@ import { FaArrowRight } from 'react-icons/fa';
 import 'ace-builds/src-noconflict/theme-github';
 import 'ace-builds/src-noconflict/theme-eclipse';
 import 'ace-builds/src-noconflict/ext-language_tools';
-import { CardedTable } from '@/new-components/CardedTable';
+import { CardedTable } from '../../../../../../new-components/CardedTable';
 
 import { useIntrospectionSchema } from './useIntrospectionSchema';
 import { TypeSearchForm } from './SearchTypes';

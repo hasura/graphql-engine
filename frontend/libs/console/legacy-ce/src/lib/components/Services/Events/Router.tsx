@@ -64,7 +64,9 @@ const triggerRoutes = (
       <Route path=":triggerName" component={TriggerContainerConnector}>
         <Route
           path={getETModifyRoute({ type: 'relative' })}
-          component={ModifyEventTrigger}
+          component={props => (
+            <ModifyEventTrigger {...props} key={props?.params?.triggerName} />
+          )}
         />
         <Route
           path={getETPendingEventsRoute('relative')}

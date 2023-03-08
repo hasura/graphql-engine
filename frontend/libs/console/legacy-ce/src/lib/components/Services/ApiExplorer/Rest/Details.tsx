@@ -1,9 +1,9 @@
 import React, { useRef } from 'react';
 import { RouteComponentProps } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import AceEditor from '../../../Common/AceEditor/BaseEditor';
 import { Badge } from '../../../UIKit/atoms';

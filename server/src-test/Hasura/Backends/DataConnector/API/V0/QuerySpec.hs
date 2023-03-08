@@ -19,7 +19,7 @@ import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
 import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression)
 import Hasura.Backends.DataConnector.API.V0.OrderBySpec (genOrderBy)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName, genTableRelationships)
-import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType)
+import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType, genScalarValue)
 import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName)
 import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText, genHashMap)
 import Hasura.Prelude
@@ -33,7 +33,7 @@ spec = do
   describe "Field" $ do
     describe "ColumnField" $
       testToFromJSONToSchema
-        (ColumnField (ColumnName "my_column_name") StringTy)
+        (ColumnField (ColumnName "my_column_name") (ScalarType "string"))
         [aesonQQ|
           { "type": "column",
             "column": "my_column_name",
@@ -55,7 +55,7 @@ spec = do
   describe "Query" $ do
     let query =
           Query
-            { _qFields = Just $ HashMap.fromList [(FieldName "my_field_alias", ColumnField (ColumnName "my_field_name") StringTy)],
+            { _qFields = Just $ HashMap.fromList [(FieldName "my_field_alias", ColumnField (ColumnName "my_field_name") (ScalarType "string"))],
               _qAggregates = Just $ HashMap.fromList [(FieldName "my_aggregate", StarCount)],
               _qLimit = Just 10,
               _qOffset = Just 20,
@@ -91,14 +91,19 @@ spec = do
           QueryRequest
             { _qrTable = TableName ["my_table"],
               _qrTableRelationships = [],
-              _qrQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing
+              _qrQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing,
+              _qrForeach = Just (HashMap.fromList [(ColumnName "my_id", ScalarValue (J.Number 666) (ScalarType "number"))] :| [])
             }
     testToFromJSONToSchema
       queryRequest
       [aesonQQ|
         { "table": ["my_table"],
           "table_relationships": [],
-          "query": { "fields": {} } }
+          "query": { "fields": {} },
+          "foreach": [
+            { "my_id": { "value": 666, "value_type": "number" } }
+          ]
+        }
       |]
     jsonOpenApiProperties genQueryRequest
 
@@ -185,6 +190,7 @@ genQueryRequest =
     <$> genTableName
     <*> Gen.list defaultRange genTableRelationships
     <*> genQuery
+    <*> Gen.maybe (Gen.nonEmpty defaultRange (genHashMap genColumnName genScalarValue defaultRange))
 
 genFieldValue :: Gen FieldValue
 genFieldValue =

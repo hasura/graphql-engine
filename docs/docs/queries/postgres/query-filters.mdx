@@ -26,9 +26,7 @@ For example, to fetch data for an author whose name is "Sidney":
 
 ```graphql {3}
 query {
-  authors(
-    where: {name: {_eq: "Sidney"}}
-  ) {
+  authors(where: { name: { _eq: "Sidney" } }) {
     id
     name
   }
@@ -43,10 +41,10 @@ greater than 4 along with those articles:
 
 ```graphql {2,5}
 query {
-  authors (where: {articles: {rating: {_gt: 4}}}) {
+  authors(where: { articles: { rating: { _gt: 4 } } }) {
     id
     name
-    articles (where: {rating: {_gt: 4}}) {
+    articles(where: { rating: { _gt: 4 } }) {
       id
       title
       rating
@@ -81,7 +79,7 @@ types.
 
 **Example: Integer (works with Double, Float, Numeric, etc.)**
 
-Fetch data about an author whose `id` *(an integer field)* is equal to
+Fetch data about an author whose `id` _(an integer field)_ is equal to
 3:
 
 <GraphiQLIDE
@@ -93,7 +91,7 @@ Fetch data about an author whose `id` *(an integer field)* is equal to
     name
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -107,7 +105,7 @@ response={`{
 
 **Example: String or Text**
 
-Fetch a list of authors with `name` *(a text field)* as "Sidney":
+Fetch a list of authors with `name` _(a text field)_ as "Sidney":
 
 <GraphiQLIDE
   query={`query {
@@ -118,7 +116,7 @@ Fetch a list of authors with `name` *(a text field)* as "Sidney":
     name
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -145,7 +143,7 @@ a boolean field):
     is_published
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -188,7 +186,7 @@ Fetch a list of articles that were published on a certain date
     published_on
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -228,7 +226,7 @@ is either `false` or `null`:
     is_published
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -279,7 +277,7 @@ Fetch a list of articles rated 4 or more (`rating` is an integer field):
     rating
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -305,7 +303,7 @@ response={`{
 **Example: String or Text**
 
 Fetch a list of authors whose names begin with M or any letter that
-follows M *(essentially, a filter based on a dictionary sort)*:
+follows M _(essentially, a filter based on a dictionary sort)_:
 
 <GraphiQLIDE
   query={`query {
@@ -316,7 +314,7 @@ follows M *(essentially, a filter based on a dictionary sort)*:
     name
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -347,7 +345,7 @@ Fetch a list of articles that were published on or after date
     published_on
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -401,7 +399,7 @@ Fetch a list of articles rated 1, 3 or 5:
     rating
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -442,7 +440,7 @@ Fetch a list of those authors whose names are NOT part of a list:
     name
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -488,7 +486,7 @@ Fetch a list of articles whose titles contain the word “amet”:
     title
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -527,7 +525,7 @@ Fetch a list of authors whose names begin with A or C:
     name
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -570,7 +568,7 @@ Fetch a list of articles whose titles match the regex “\[ae\]met”:
     title
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -626,7 +624,7 @@ Fetch all authors living within a particular pincode (present in `address` JSONB
     address
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -643,7 +641,7 @@ response={`{
     ]
   }
 }`}
-variables={`{
+  variables={`{
   "jsonFilter": {
     "pincode": 560095
   }
@@ -667,7 +665,7 @@ column:
     address
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -716,7 +714,7 @@ value:
     geom_col
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "geom_table": [
       {
@@ -732,7 +730,7 @@ response={`{
     ]
   }
 }`}
-variables={`{
+  variables={`{
   "polygon": {
     "type": "Polygon",
     "coordinates": [
@@ -748,7 +746,7 @@ variables={`{
 }`}
 />
 
-**Example: \_st_d\_within**
+**Example: \_st_d_within**
 
 Fetch a list of `geometry` values which are 3 units from a given `point`
 value:
@@ -762,7 +760,7 @@ value:
     geom_col
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "geom_table": [
       {
@@ -788,7 +786,7 @@ response={`{
     ]
   }
 }`}
-variables={`{
+  variables={`{
   "point": {
     "type": "Point",
     "coordinates": [ 0, 0 ]
@@ -796,7 +794,7 @@ variables={`{
 }`}
 />
 
-**Example: \_st_3d_d\_within**
+**Example: \_st_3d_d_within**
 
 This is completely analogous to the `_st_d_within` example above, the
 only difference being that our coordinates now have three components
@@ -811,7 +809,7 @@ instead of two.
     geom_col
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "geom_table": [
       {
@@ -839,7 +837,7 @@ response={`{
     ]
   }
 }`}
-variables={`{
+  variables={`{
   "point": {
     "type": "Point",
     "coordinates": [ 0, 0, 0 ]
@@ -861,7 +859,7 @@ value:
     geom_col
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "geom_table": [
       {
@@ -878,7 +876,7 @@ response={`{
     ]
   }
 }`}
-variables={`{
+  variables={`{
   "polygon": {
     "type": "Polygon",
     "coordinates": [
@@ -915,7 +913,7 @@ Fetch a list of articles that have a value in the `published_on` field:
     published_on
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -969,7 +967,7 @@ boolean ST_Intersects( raster <raster-col> , raster <raster-value> );
     rast
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "dummy_rast": [
       {
@@ -983,7 +981,7 @@ response={`{
     ]
   }
 }`}
-variables={`{
+  variables={`{
   "rast": "0100000100000000000000004000000000000000C00000000000000000000000000000084000000000000000000000000000000000E610000001000100440001"
 }`}
 />
@@ -1006,7 +1004,7 @@ boolean ST_Intersects( raster <raster-col> , geometry geommin , integer nband=NU
     rast
   }
 }`}
-response={`{
+  response={`{
  "data": {
    "dummy_rast": [
      {
@@ -1020,7 +1018,7 @@ response={`{
    ]
  }
 }`}
-variables={`{
+  variables={`{
  "point": {
    "type": "Point",
    "coordinates": [
@@ -1055,7 +1053,7 @@ boolean ST_Intersects( raster <raster-col> , integer nband , geometry geommin );
     rast
   }
 }`}
-response={`{
+  response={`{
  "data": {
    "dummy_rast": [
      {
@@ -1069,7 +1067,7 @@ response={`{
    ]
  }
 }`}
-variables={`{
+  variables={`{
  "point": {
    "type": "Point",
    "coordinates": [
@@ -1109,7 +1107,7 @@ Select ancestors of an <em>ltree</em> argument
     path
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "tree": [
       {
@@ -1144,7 +1142,7 @@ Select <em>ltree</em> paths matching any <em>lquery</em> regex in an array
     path
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "tree": [
       {
@@ -1199,7 +1197,7 @@ Fetch all authors who don't have any published articles:
     }
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -1267,7 +1265,7 @@ example: in year 2017):
     published_on
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -1324,7 +1322,7 @@ Fetch a list of articles rated more than 4 or published after
     published_on
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -1385,7 +1383,7 @@ Fetch all authors with only their 5 rated articles:
     }
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -1427,26 +1425,25 @@ For example:
 
 ```graphql {2}
 query {
-  articles (where: {author: {name: {_eq: "Sidney"}}}) {
+  articles(where: { author: { name: { _eq: "Sidney" } } }) {
     id
     title
   }
 }
 ```
 
-The behaviour of the comparison operators depends on whether the nested
+The behavior of the comparison operators depends on whether the nested
 objects are a single object related via an object relationship or an
 array of objects related via an array relationship.
 
--   In case of an **object relationship**, a row will be returned if the
-    single nested object satisfies the defined condition.
--   In case of an **array relationship**, a row will be returned if
-    **any of the nested objects** satisfy the defined condition.
+- In case of an **object relationship**, a row will be returned if the
+  single nested object satisfies the defined condition.
+- In case of an **array relationship**, a row will be returned if
+  **any of the nested objects** satisfy the defined condition.
 
 :::caution Limitations
 
-**This is only supported for local relationships**, such as relationships between two local database tables. 
-	
+**This is only supported for local relationships**, such as relationships between two local database tables.
 **This is not supported for remote relationships**, such as remote database relationships or Remote Schema relationships.
 
 :::
@@ -1475,7 +1472,7 @@ Fetch all articles whose author's name starts with "A":
     }
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -1540,7 +1537,7 @@ Fetch all authors which have written at least one article which is rated
     }
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -1605,7 +1602,7 @@ nested objects satisfy the condition.
 For example:
 
 | condition                           | where expression                            |
-|-------------------------------------|---------------------------------------------|
+| ----------------------------------- | ------------------------------------------- |
 | `{object: {field: {_eq: "value"}}}` | `{_not: {object: {field: {_neq: "value"}}}` |
 | `{object: {field: {_gt: "value"}}}` | `{_not: {object: {field: {_lte: "value"}}}` |
 
@@ -1631,7 +1628,7 @@ Fetch all authors which have all of their articles published i.e. have
     }
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -1696,13 +1693,13 @@ response={`{
 By default a row is returned if any of the nested objects satisfy a
 condition. To achieve the above, we need to frame the `where` expression
 as `{_not: {condition}}`. This reads as: fetch if not (any of the nested
-objects satisfy the condition) i.e. none of the nested objects satisy
+objects satisfy the condition) i.e. none of the nested objects satisfy
 the condition.
 
 For example,
 
 | condition                           | where expression                           |
-|-------------------------------------|--------------------------------------------|
+| ----------------------------------- | ------------------------------------------ |
 | `{object: {field: {_eq: "value"}}}` | `{_not: {object: {field: {_eq: "value"}}}` |
 | `{object: {field: {_gt: "value"}}}` | `{_not: {object: {field: {_gt: "value"}}}` |
 
@@ -1728,7 +1725,7 @@ Fetch all authors which have none of their articles published i.e. have
     }
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -1782,7 +1779,7 @@ Fetch all authors which have at least one article written by them:
     }
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -1830,7 +1827,7 @@ Fetch all authors which have not written any articles:
     }
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -1864,7 +1861,7 @@ For example:
 
 ```graphql {2}
 query {
-  author (where: {full_name: {_ilike: "%bob%"}}){
+  author(where: { full_name: { _ilike: "%bob%" } }) {
     id
     first_name
     last_name
@@ -1872,13 +1869,13 @@ query {
 }
 ```
 
-The behaviour of the comparison operators depends on whether the
+The behavior of the comparison operators depends on whether the
 computed fields return scalar type values or set of table rows.
 
--   In case of scalar type, a row will be returned if the computed field
-    returned scalar value satisfied the defined condition.
--   In case of table row type, a row will be returned if **any of the
-    returned rows** sastisfy the defined condition.
+- In case of scalar type, a row will be returned if the computed field
+  returned scalar value satisfied the defined condition.
+- In case of table row type, a row will be returned if **any of the
+  returned rows** sastisfy the defined condition.
 
 Let's look at a few use cases based on the above:
 
@@ -1897,7 +1894,7 @@ students whose total marks is above "80":
     name
   }
 }`}
-response={`{
+  response={`{
    "data": {
      "student": [
        {
@@ -1928,7 +1925,7 @@ have atleast a published article in medicine field:
     name
   }
 }`}
-response={`{
+  response={`{
  "data": {
    "author": [
      {
@@ -1959,7 +1956,7 @@ count of published articles is more than 10:
     name
   }
 }`}
-response={`{
+  response={`{
  "data": {
    "author": [
      {
@@ -1981,22 +1978,21 @@ You can filter based on _aggregations_ over the elements of an array relationshi
 
 The aggregation functions supported are:
 
-* `avg(number)`: Computes the average (arithmetic mean) of all the non-null input values.
-* `bool_and(bool)`: Returns true if **all** non-null input values are true, otherwise false.
-* `bool_or(bool)`: Returns true if **any** non-null input value is true, otherwise false.
-* `count(*)`, `count(col1, col2, ..)` : Computes the number of input rows in which the input value is not null.
-* `max(number)`: Computes the maximum of the non-null input values.
-* `min(number)`: Computes the minimum of the non-null input values.
-* `sum(number)`: Computes the sum of the non-null input values.
-* `corr(Y number, X number)`: Computes the correlation coefficient.
-* `covar_samp(Y number, X number)`: Computes the sample covariance.
-* `stddev_samp(number)`: Computes the sample standard deviation of the input values.
-* `var_samp(number)`: Computes the sample variance of the input values (square of the sample standard deviation).
+- `avg(number)`: Computes the average (arithmetic mean) of all the non-null input values.
+- `bool_and(bool)`: Returns true if **all** non-null input values are true, otherwise false.
+- `bool_or(bool)`: Returns true if **any** non-null input value is true, otherwise false.
+- `count(*)`, `count(col1, col2, ..)` : Computes the number of input rows in which the input value is not null.
+- `max(number)`: Computes the maximum of the non-null input values.
+- `min(number)`: Computes the minimum of the non-null input values.
+- `sum(number)`: Computes the sum of the non-null input values.
+- `corr(Y number, X number)`: Computes the correlation coefficient.
+- `covar_samp(Y number, X number)`: Computes the sample covariance.
+- `stddev_samp(number)`: Computes the sample standard deviation of the input values.
+- `var_samp(number)`: Computes the sample variance of the input values (square of the sample standard deviation).
 
 The semantics of the above functions is documented in the [PostgreSQL documentation](https://www.postgresql.org/docs/14/functions-aggregate.html).
 
 For the complete specification of the schema of aggregation predicates, see the [API reference: AggregationExp](/api-reference/graphql-api/query.mdx#aggregationexp).
-
 
 **Example:**
 
@@ -2034,7 +2030,7 @@ Suppose we want to query only the best restaurants. In that case, we can filter 
     name
   }
 }`}
-response={`{
+  response={`{
    "data": {
      "restaurant": [
        {
@@ -2051,7 +2047,6 @@ response={`{
 }`}
 />
 
-
 ## Cast a field to a different type before filtering (\_cast)
 
 The `_cast` operator can be used to cast a field to a different type, which allows type-specific
@@ -2064,14 +2059,13 @@ Currently, only the following type casts are supported:
 
 Casting using `_cast` corresponds directly to [SQL type casts](https://www.postgresql.org/docs/current/sql-expressions.html#SQL-SYNTAX-TYPE-CASTS).
 
-
 **Example: cast jsonb to string**
 
 Columns of type `jsonb` can be cast to `String` to use [text operators](/api-reference/graphql-api/query.mdx#text-operators) on a
 `jsonb` field:
 
 <GraphiQLIDE
-query={`query get_authors_in_bengaluru {
+  query={`query get_authors_in_bengaluru {
   authors(
     where: {
       address: {_cast: {String: {_ilike: "%bengaluru%"}}}
@@ -2082,7 +2076,7 @@ query={`query get_authors_in_bengaluru {
     address
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -2119,7 +2113,7 @@ cast the field to `geography` before comparing:
     name
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "cities": [
       {
@@ -2131,7 +2125,7 @@ response={`{
     ]
   }
 }`}
-variables={`{
+  variables={`{
   "point": {
     "type": "Point",
     "coordinates": [1, 50]
@@ -2158,7 +2152,7 @@ operations in a filter:
     name
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "cities": [
       {
@@ -2167,7 +2161,7 @@ response={`{
     ]
   }
 }`}
-variables={`{
+  variables={`{
   "polygon": {
     "type": "Polygon",
     "crs": {
@@ -2208,10 +2202,10 @@ it's `null`).
 
 **For example**:
 
--   any query with the condition `{ where: {} }` will return all objects
-    without applying any filter.
--   any query with the condition `{ where: { nested_object: {} } }` will
-    return all objects for which atleast one `nested_object` exists.
+- any query with the condition `{ where: {} }` will return all objects
+  without applying any filter.
+- any query with the condition `{ where: { nested_object: {} } }` will
+  return all objects for which atleast one `nested_object` exists.
 
 ## Evaluation of **null** values in comparison expressions {#pg-null-value-evaluation}
 
@@ -2229,5 +2223,5 @@ For example, the expression `{ where: { id: {_eq: null }}}` will be
 reduced to `{ where: {id: {}} }` which will return all objects for which
 an `id` is set, i.e. all objects will be returned.
 
-This behaviour can be preserved in versions v2.0.0 and above by setting
+This behavior can be preserved in versions v2.0.0 and above by setting
 the `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env var to `true`.

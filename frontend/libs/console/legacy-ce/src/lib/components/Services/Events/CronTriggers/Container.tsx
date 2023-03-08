@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Helmet from 'react-helmet';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import {
   getDataEventsLandingRoute,
@@ -112,7 +112,7 @@ const STContainer: React.FC<Props> = ({
   return (
     <Analytics name="CronTriggers" {...REDACT_EVERYTHING}>
       <div
-        className={`${styles.view_stitch_schema_wrapper} ${styles.addWrapper}`}
+        className={`${styles.view_stitch_schema_wrapper} ${styles.addWrapper} pt-5`}
       >
         <Helmet
           title={getReactHelmetTitle(

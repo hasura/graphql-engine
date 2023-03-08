@@ -53,21 +53,21 @@ schema =
 
 functionSetup :: TestEnvironment -> Fixture.SetupAction
 functionSetup testEnvironment =
-  let schemaName = T.unpack $ unSchemaName (getSchemaName testEnvironment)
+  let schemaName = unSchemaName (getSchemaName testEnvironment)
    in SetupAction.noTeardown $
         Postgres.run_ testEnvironment $
           "CREATE FUNCTION "
-            ++ schemaName
-            ++ ".authors(author_row "
-            ++ schemaName
-            ++ ".author) \
+            <> schemaName
+            <> ".authors(author_row "
+            <> schemaName
+            <> ".author) \
                \RETURNS SETOF "
-            ++ schemaName
-            ++ ".author AS $$ \
+            <> schemaName
+            <> ".author AS $$ \
                \  SELECT * \
                \  FROM "
-            ++ schemaName
-            ++ ".author \
+            <> schemaName
+            <> ".author \
                \$$ LANGUAGE sql STABLE;"
 
 --------------------------------------------------------------------------------
@@ -86,5 +86,5 @@ tests _opts = do
       --   "path": "$"
       -- }
       Postgres.runSQL
-        ("alter table \"" ++ schemaName ++ "\".\"author\" add column \"iae\" integer\n null;")
+        ("alter table \"" <> schemaName <> "\".\"author\" add column \"iae\" integer\n null;")
         testEnvironment

@@ -1,12 +1,12 @@
 import React from 'react';
-import { useRemoteDatabaseRelationships } from '@/features/MetadataAPI';
-import { NormalizedTable } from '@/dataSources/types';
-import { Dispatch } from '@/types';
-import { currentDriver } from '@/dataSources';
+import { useRemoteDatabaseRelationships } from '../../../../../features/MetadataAPI';
+import { NormalizedTable } from '../../../../../dataSources/types';
+import { Dispatch } from '../../../../../types';
+import { currentDriver } from '../../../../../dataSources';
+import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 
 import styles from '../../TableModify/ModifyTable.module.scss';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
-import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 import AddManualRelationship from './AddManualRelationship';
 
 type Props = {
@@ -54,8 +54,10 @@ export const RemoteDbRelationships: React.FC<Props> = ({
           <h4 className={styles.subheading_text}>
             Remote Database Relationships
             <ToolTip message="Relationships to remote database tables" />
-            &nbsp;
-            <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/databases/postgres/schema/remote-relationships/remote-source-relationships.html" />
+            <LearnMoreLink
+              href="https://hasura.io/docs/latest/graphql/core/databases/postgres/schema/remote-relationships/remote-source-relationships.html"
+              className="font-normal"
+            />
           </h4>
           <div className={styles.activeEdit}>
             {data?.map(r => (

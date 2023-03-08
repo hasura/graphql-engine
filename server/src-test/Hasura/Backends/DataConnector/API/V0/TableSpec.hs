@@ -34,7 +34,7 @@ spec = do
         ( TableInfo
             (TableName ["my_table_name"])
             View
-            [ColumnInfo (ColumnName "id") StringTy False Nothing False False]
+            [ColumnInfo (ColumnName "id") (ScalarType "string") False Nothing False False]
             [ColumnName "id"]
             (ForeignKeys mempty)
             (Just "my description")
@@ -58,7 +58,7 @@ spec = do
         ( TableInfo
             (TableName ["my_table_name"])
             Table
-            [ColumnInfo (ColumnName "id") StringTy False Nothing False False]
+            [ColumnInfo (ColumnName "id") (ScalarType "string") False Nothing False False]
             [ColumnName "id"]
             (ForeignKeys $ HashMap.singleton (ConstraintName "Artist") (Constraint (TableName ["artist_table"]) (HashMap.singleton (ColumnName "ArtistId") (ColumnName "ArtistId"))))
             (Just "my description")

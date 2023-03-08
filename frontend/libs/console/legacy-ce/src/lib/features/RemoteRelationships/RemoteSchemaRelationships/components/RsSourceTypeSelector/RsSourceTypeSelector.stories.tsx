@@ -2,8 +2,8 @@ import React from 'react';
 import * as z from 'zod';
 import { action } from '@storybook/addon-actions';
 import { Meta, Story } from '@storybook/react';
-import { SimpleForm } from '@/new-components/Form';
-import { Button } from '@/new-components/Button';
+import { SimpleForm } from '../../../../../new-components/Form';
+import { Button } from '../../../../../new-components/Button';
 import {
   remoteSchemaSelectorKey,
   RsSourceTypeSelector,

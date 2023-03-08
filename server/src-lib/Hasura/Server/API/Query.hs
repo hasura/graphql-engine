@@ -56,10 +56,9 @@ import Hasura.RemoteSchema.MetadataAPI
 import Hasura.SQL.Backend
 import Hasura.Server.Types
 import Hasura.Server.Utils
+import Hasura.Services
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Client qualified as HTTP
-import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 
 data RQLQueryV1
   = RQAddExistingTableOrView !(TrackTable ('Postgres 'Vanilla))
@@ -176,23 +175,24 @@ $( concat
 
 runQuery ::
   ( MonadIO m,
+    MonadError QErr m,
     Tracing.MonadTrace m,
     MonadBaseControl IO m,
-    MonadMetadataStorage m,
+    MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     MonadQueryTags m,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    ProvidesHasuraServices m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
   InstanceId ->
   UserInfo ->
   RebuildableSchemaCache ->
-  HTTP.Manager ->
   ServerConfigCtx ->
   RQLQuery ->
   m (EncJSON, RebuildableSchemaCache)
-runQuery env logger instanceId userInfo sc hMgr serverConfigCtx query = do
+runQuery env logger instanceId userInfo sc serverConfigCtx query = do
   when ((_sccReadOnlyMode serverConfigCtx == ReadOnlyModeEnabled) && queryModifiesUserDB query) $
     throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
@@ -204,7 +204,7 @@ runQuery env logger instanceId userInfo sc hMgr serverConfigCtx query = do
           then emptyMetadataDefaults
           else _sccMetadataDefaults serverConfigCtx
 
-  (metadata, currentResourceVersion) <- fetchMetadata
+  (metadata, currentResourceVersion) <- liftEitherM fetchMetadata
   result <-
     runReaderT (runQueryM env query) logger & \x -> do
       ((js, meta), rsc, ci) <-
@@ -212,21 +212,19 @@ runQuery env logger instanceId userInfo sc hMgr serverConfigCtx query = do
           & runMetadataT metadata metadataDefaults
           & runCacheRWT sc
           & peelRun runCtx
-          & runExceptT
-          & liftEitherM
       pure (js, rsc, ci, meta)
   withReload currentResourceVersion result
   where
-    runCtx = RunCtx userInfo hMgr serverConfigCtx
+    runCtx = RunCtx userInfo serverConfigCtx
 
     withReload currentResourceVersion (result, updatedCache, invalidations, updatedMetadata) = do
       when (queryModifiesSchemaCache query) $ do
         case (_sccMaintenanceMode serverConfigCtx) of
           MaintenanceModeDisabled -> do
             -- set modified metadata in storage
-            newResourceVersion <- setMetadata currentResourceVersion updatedMetadata
+            newResourceVersion <- liftEitherM $ setMetadata currentResourceVersion updatedMetadata
             -- notify schema cache sync
-            notifySchemaCacheSync newResourceVersion instanceId invalidations
+            liftEitherM $ notifySchemaCacheSync newResourceVersion instanceId invalidations
           MaintenanceModeEnabled () ->
             throw500 "metadata cannot be modified in maintenance mode"
       pure (result, updatedCache)
@@ -395,15 +393,16 @@ runQueryM ::
     UserInfoM m,
     MonadBaseControl IO m,
     MonadIO m,
-    HasHttpManagerM m,
     HasServerConfigCtx m,
     Tracing.MonadTrace m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
     MonadQueryTags m,
     MonadReader r m,
+    MonadError QErr m,
     Has (L.Logger L.Hasura) r,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    ProvidesHasuraServices m
   ) =>
   Env.Environment ->
   RQLQuery ->

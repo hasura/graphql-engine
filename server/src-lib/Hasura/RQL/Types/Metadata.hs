@@ -12,6 +12,7 @@ module Hasura.RQL.Types.Metadata
     dropEventTriggerInMetadata,
     dropFunctionInMetadata,
     dropPermissionInMetadata,
+    dropLogicalModelPermissionInMetadata,
     dropRelationshipInMetadata,
     dropRemoteRelationshipInMetadata,
     dropTableInMetadata,
@@ -21,6 +22,7 @@ module Hasura.RQL.Types.Metadata
     emptyMetadata,
     emptyMetadataDefaults,
     functionMetadataSetter,
+    logicalModelMetadataSetter,
     metaActions,
     metaAllowlist,
     metaApiLimits,
@@ -53,6 +55,7 @@ import Data.Aeson.Types
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Monoid (Dual (..), Endo (..))
 import Hasura.Incremental qualified as Inc
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata, LogicalModelName, lmmSelectPermissions)
 import Hasura.Metadata.DTO.MetadataV3 (MetadataV3 (..))
 import Hasura.Metadata.DTO.Placeholder (IsPlaceholder (placeholder))
 import Hasura.Prelude
@@ -274,6 +277,16 @@ functionMetadataSetter ::
 functionMetadataSetter source function =
   metaSources . ix source . toSourceMetadata . smFunctions . ix function
 
+-- | A lens setter for the metadata of a logical model as identified by the
+-- source name and root field name.
+logicalModelMetadataSetter ::
+  (Backend b) =>
+  SourceName ->
+  LogicalModelName ->
+  ASetter' Metadata (LogicalModelMetadata b)
+logicalModelMetadataSetter source logicalModelName =
+  metaSources . ix source . toSourceMetadata . smLogicalModels . ix logicalModelName
+
 -- | A simple monad class which enables fetching and setting @'Metadata'
 -- in the state.
 class (Monad m) => MetadataM m where
@@ -370,6 +383,14 @@ dropPermissionInMetadata rn = \case
   PTSelect -> tmSelectPermissions %~ OM.delete rn
   PTDelete -> tmDeletePermissions %~ OM.delete rn
   PTUpdate -> tmUpdatePermissions %~ OM.delete rn
+
+dropLogicalModelPermissionInMetadata ::
+  RoleName -> PermType -> LogicalModelMetadata b -> LogicalModelMetadata b
+dropLogicalModelPermissionInMetadata rn = \case
+  PTSelect -> lmmSelectPermissions %~ OM.delete rn
+  PTInsert -> error "Not implemented yet"
+  PTDelete -> error "Not implemented yet"
+  PTUpdate -> error "Not implemented yet"
 
 dropComputedFieldInMetadata ::
   ComputedFieldName -> TableMetadata b -> TableMetadata b
@@ -511,12 +532,12 @@ metadataToDTO
     MetadataV3
       { metaV3Sources = sources,
         metaV3RemoteSchemas = remoteSchemas,
-        metaV3QueryCollections = placeholder <$> queryCollectionsToOrdJSONList queryCollections,
+        metaV3QueryCollections = queryCollections,
         metaV3Allowlist = placeholder <$> allowlistToOrdJSONList allowlist,
-        metaV3Actions = placeholder <$> actionMetadataToOrdJSONList actions,
-        metaV3CustomTypes = placeholder <$> customTypesToOrdJSON customTypes,
-        metaV3CronTriggers = placeholder <$> cronTriggersToOrdJSONList cronTriggers,
-        metaV3RestEndpoints = placeholder <$> endpointsToOrdJSONList endpoints,
+        metaV3Actions = actions,
+        metaV3CustomTypes = customTypes,
+        metaV3CronTriggers = cronTriggers,
+        metaV3RestEndpoints = endpoints,
         metaV3ApiLimits = placeholder . objectFromOrdJSON <$> apiLimitsToOrdJSON apiLimits,
         metaV3MetricsConfig = placeholder . objectFromOrdJSON <$> metricsConfigToOrdJSON metricsConfig,
         metaV3InheritedRoles = placeholder <$> inheritedRolesToOrdJSONList inheritedRoles,

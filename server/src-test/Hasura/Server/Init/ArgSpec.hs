@@ -27,6 +27,7 @@ import Hasura.Server.Init qualified as UUT
 import Hasura.Server.Logging qualified as Logging
 import Hasura.Server.Types qualified as Types
 import Hasura.Session qualified as Session
+import Network.WebSockets qualified as WS
 import Options.Applicative qualified as Opt
 import Refined (NonNegative, Positive, refineTH)
 import Test.Hspec qualified as Hspec
@@ -822,8 +823,8 @@ serveParserSpec =
           -- Then
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
-      fmap UUT.rsoEnableConsole result `Hspec.shouldSatisfy` \case
-        Opt.Success enableConsole -> enableConsole == True
+      fmap UUT.rsoConsoleStatus result `Hspec.shouldSatisfy` \case
+        Opt.Success enableConsole -> enableConsole == UUT.ConsoleEnabled
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -901,7 +902,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoEnableTelemetry result `Hspec.shouldSatisfy` \case
-        Opt.Success enableTelemetry -> enableTelemetry == Just True
+        Opt.Success enableTelemetry -> enableTelemetry == Just UUT.TelemetryEnabled
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -940,7 +941,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoWsReadCookie result `Hspec.shouldSatisfy` \case
-        Opt.Success wsReadCookie -> wsReadCookie == True
+        Opt.Success wsReadCookie -> wsReadCookie == UUT.WsReadCookieEnabled
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1225,8 +1226,8 @@ serveParserSpec =
           -- Then
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
-      fmap UUT.rsoEnableAllowlist result `Hspec.shouldSatisfy` \case
-        Opt.Success enableAllowList -> enableAllowList == True
+      fmap UUT.rsoEnableAllowList result `Hspec.shouldSatisfy` \case
+        Opt.Success enableAllowList -> UUT.isAllowListEnabled enableAllowList
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1370,7 +1371,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoDevMode result `Hspec.shouldSatisfy` \case
-        Opt.Success devMode -> devMode == True
+        Opt.Success devMode -> UUT.isDevModeEnabled devMode
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1396,7 +1397,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoAdminInternalErrors result `Hspec.shouldSatisfy` \case
-        Opt.Success adminInternalErrors -> adminInternalErrors == Just True
+        Opt.Success adminInternalErrors -> adminInternalErrors == Just UUT.AdminInternalErrorsEnabled
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1604,7 +1605,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoWebSocketCompression result `Hspec.shouldSatisfy` \case
-        Opt.Success webSocketCompression -> webSocketCompression == True
+        Opt.Success webSocketCompression -> webSocketCompression == WS.PermessageDeflateCompression WS.defaultPermessageDeflate
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 

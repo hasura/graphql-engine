@@ -44,6 +44,7 @@ import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Schema.RemoteRelationship
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename (MkTypename (..))
+import Hasura.LogicalModel.Cache (LogicalModelCache, _lmiPermissions)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR
@@ -114,13 +115,14 @@ buildGQLContext ::
     )
 buildGQLContext ServerConfigCtx {..} sources allRemoteSchemas allActions customTypes = do
   let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
-      nonTableRoles =
+      actionRoles =
         Set.insert adminRoleName $
           Set.fromList (allActionInfos ^.. folded . aiPermissions . to Map.keys . folded)
             <> Set.fromList (bool mempty remoteSchemasRoles $ _sccRemoteSchemaPermsCtx == Options.EnableRemoteSchemaPermissions)
       allActionInfos = Map.elems allActions
       allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
-      allRoles = nonTableRoles <> allTableRoles
+      allLogicalModelRoles = Set.fromList $ getLogicalModelRoles =<< Map.elems sources
+      allRoles = actionRoles <> allTableRoles <> allLogicalModelRoles
 
   contexts <-
     -- Buld role contexts in parallel. We'd prefer deterministic parallelism
@@ -322,20 +324,21 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
       SourceInfo b ->
       MemoizeT
         m
-        ( [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))],
-          [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))],
-          [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))],
-          [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))],
-          [(G.Name, Parser 'Output P.Parse (ApolloFederationParserFunction P.Parse))]
+        ( [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))], -- query fields
+          [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))], -- mutation backend fields
+          [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))], -- mutation frontend fields
+          [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))], -- subscription fields
+          [(G.Name, Parser 'Output P.Parse (ApolloFederationParserFunction P.Parse))] -- apollo federation tables
         )
-    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo _ tables functions _ _ sourceCustomization) =
+    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo _ tables functions logicalModels _ _ sourceCustomization) =
       runSourceSchema schemaContext schemaOptions sourceInfo do
         let validFunctions = takeValidFunctions functions
+            validLogicalModels = takeValidLogicalModels logicalModels
             validTables = takeValidTables tables
             mkRootFieldName = _rscRootFields sourceCustomization
             makeTypename = SC._rscTypeNames sourceCustomization
         (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields, apolloFedTableParsers) <-
-          buildQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions
+          buildQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions validLogicalModels
         (,,,,apolloFedTableParsers)
           <$> customizeFields
             sourceCustomization
@@ -453,7 +456,7 @@ buildRelayRoleContext options sources actions customTypes role expFeatures = do
           [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))],
           [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))]
         )
-    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo _ tables functions _ _ sourceCustomization) = do
+    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo _ tables functions _customSQL _ _ sourceCustomization) = do
       runSourceSchema schemaContext schemaOptions sourceInfo do
         let validFunctions = takeValidFunctions functions
             validTables = takeValidTables tables
@@ -639,8 +642,15 @@ buildQueryAndSubscriptionFields ::
   SourceInfo b ->
   TableCache b ->
   FunctionCache b ->
-  SchemaT r m ([P.FieldParser n (QueryRootField UnpreparedValue)], [P.FieldParser n (SubscriptionRootField UnpreparedValue)], [(G.Name, Parser 'Output n (ApolloFederationParserFunction n))])
-buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs FEAQuery -> functions) = do
+  LogicalModelCache b ->
+  SchemaT
+    r
+    m
+    ( [P.FieldParser n (QueryRootField UnpreparedValue)],
+      [P.FieldParser n (SubscriptionRootField UnpreparedValue)],
+      [(G.Name, Parser 'Output n (ApolloFederationParserFunction n))]
+    )
+buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs FEAQuery -> functions) logicalModels = do
   roleName <- retrieve scRole
   functionPermsCtx <- retrieve Options.soInferFunctionPermissions
   functionSelectExpParsers <-
@@ -652,6 +662,8 @@ buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs
             || functionPermsCtx == Options.InferFunctionPermissions
         let targetTableName = _fiReturnType functionInfo
         lift $ mkRFs $ buildFunctionQueryFields mkRootFieldName functionName functionInfo targetTableName
+  logicalModelRootFields <-
+    buildLogicalModelFields sourceInfo logicalModels
 
   (tableQueryFields, tableSubscriptionFields, apolloFedTableParsers) <-
     unzip3 . catMaybes
@@ -663,12 +675,43 @@ buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs
       tableSubscriptionRootFields = fmap mkRF $ concat tableSubscriptionFields
 
   pure
-    ( tableQueryRootFields <> functionSelectExpParsers,
-      tableSubscriptionRootFields <> functionSelectExpParsers,
+    ( tableQueryRootFields <> functionSelectExpParsers <> logicalModelRootFields,
+      tableSubscriptionRootFields <> functionSelectExpParsers <> logicalModelRootFields,
       catMaybes apolloFedTableParsers
     )
   where
     mkRFs = mkRootFields sourceName sourceConfig queryTagsConfig QDBR
+    mkRF = mkRootField sourceName sourceConfig queryTagsConfig QDBR
+    sourceName = _siName sourceInfo
+    sourceConfig = _siConfiguration sourceInfo
+    queryTagsConfig = _siQueryTagsConfig sourceInfo
+
+runMaybeTmempty :: (Monad m, Monoid a) => MaybeT m a -> m a
+runMaybeTmempty = (`onNothingM` (pure mempty)) . runMaybeT
+
+buildLogicalModelFields ::
+  forall b r m n.
+  MonadBuildSchema b r m n =>
+  SourceInfo b ->
+  LogicalModelCache b ->
+  SchemaT r m [P.FieldParser n (QueryRootField UnpreparedValue)]
+buildLogicalModelFields sourceInfo logicalModels = runMaybeTmempty $ do
+  roleName <- retrieve scRole
+
+  map mkRF . catMaybes <$> for (Map.elems logicalModels) \logicalModel -> do
+    -- only include this logical model in the schema
+    -- if the current role is admin, or we have a select permission
+    -- for this role (this is the broad strokes check. later, we'll filter
+    -- more granularly on columns and then rows)
+    guard $
+      roleName == adminRoleName
+        || roleName `Map.member` _lmiPermissions logicalModel
+
+    lift (buildLogicalModelRootFields logicalModel)
+  where
+    mkRF ::
+      FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)) ->
+      FieldParser n (QueryRootField UnpreparedValue)
     mkRF = mkRootField sourceName sourceConfig queryTagsConfig QDBR
     sourceName = _siName sourceInfo
     sourceConfig = _siConfiguration sourceInfo

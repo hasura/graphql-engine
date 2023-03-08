@@ -51,7 +51,6 @@ import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.HTTP
 import Hasura.Logging
-import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata.Object
@@ -353,8 +352,8 @@ instance HttpLog m => HttpLog (ReaderT r m) where
 
   logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
 
-instance HttpLog m => HttpLog (MetadataStorageT m) where
-  type ExtraHttpLogMetadata (MetadataStorageT m) = ExtraHttpLogMetadata m
+instance HttpLog m => HttpLog (ExceptT e m) where
+  type ExtraHttpLogMetadata (ExceptT e m) = ExtraHttpLogMetadata m
 
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m

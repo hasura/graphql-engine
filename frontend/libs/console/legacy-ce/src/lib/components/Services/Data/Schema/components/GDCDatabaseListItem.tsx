@@ -1,8 +1,8 @@
-import { Source } from '@/features/hasura-metadata-types';
-import { exportMetadata } from '@/metadata/actions';
-import { Button } from '@/new-components/Button';
-import { Tooltip } from '@/new-components/Tooltip';
-import { Dispatch } from '@/types';
+import { Source } from '../../../../../features/hasura-metadata-types';
+import { exportMetadata } from '../../../../../metadata/actions';
+import { Button } from '../../../../../new-components/Button';
+import { Tooltip } from '../../../../../new-components/Tooltip';
+import { Dispatch } from '../../../../../types';
 import React from 'react';
 import { FaExclamationTriangle } from 'react-icons/fa';
 import { useQueryClient } from 'react-query';
@@ -85,7 +85,7 @@ export const GDCDatabaseListItem: React.FC<GDCDatabaseListItemItemProps> = ({
           Remove
         </Button>
       </td>
-      <td className="px-sm py-xs max-w-xs align-top break-all">
+      <td className="px-sm py-xs max-w-xs align-center break-all">
         <div className="font-bold">
           {dataSource.name}{' '}
           <span className="font-normal">({dataSource.kind})</span>

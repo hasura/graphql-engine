@@ -33,7 +33,8 @@ module Hasura.Backends.DataConnector.Adapter.Types
   )
 where
 
-import Autodocodec (HasCodec (codec), dimapCodec, named)
+import Autodocodec (HasCodec (codec))
+import Autodocodec qualified as AC
 import Control.Lens (makeLenses)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, genericParseJSON, genericToJSON)
 import Data.Aeson qualified as J
@@ -48,7 +49,6 @@ import Data.Text.NonEmpty (NonEmptyText, mkNonEmptyTextUnsafe)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue (ToErrorValue (..))
-import Hasura.GraphQL.Parser.Name.TypeSystem (_Boolean, _Float, _Int, _String)
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as GQL
@@ -83,7 +83,7 @@ instance FromJSON ConnSourceConfig where
 -- TODO: Write a proper codec, and use it to derive FromJSON and ToJSON
 -- instances.
 instance HasCodec ConnSourceConfig where
-  codec = named "DataConnectorConnConfiguration" $ placeholderCodecViaJSON
+  codec = AC.named "DataConnectorConnConfiguration" $ placeholderCodecViaJSON
 
 --------------------------------------------------------------------------------
 
@@ -210,7 +210,7 @@ newtype TableName = TableName {unTableName :: NonEmpty Text}
   deriving newtype (Hashable, NFData, ToJSON)
 
 instance HasCodec TableName where
-  codec = dimapCodec TableName unTableName codec
+  codec = AC.dimapCodec TableName unTableName codec
 
 instance FromJSON TableName where
   parseJSON value =
@@ -258,7 +258,7 @@ newtype ColumnName = ColumnName {unColumnName :: Text}
   deriving newtype (NFData, Hashable, FromJSON, ToJSON, ToJSONKey, FromJSONKey)
 
 instance HasCodec ColumnName where
-  codec = dimapCodec ColumnName unColumnName codec
+  codec = AC.dimapCodec ColumnName unColumnName codec
 
 instance Witch.From API.ColumnName ColumnName where
   from (API.ColumnName n) = ColumnName n
@@ -279,7 +279,7 @@ newtype FunctionName = FunctionName {unFunctionName :: NonEmpty Text}
   deriving newtype (FromJSON, Hashable, NFData, ToJSON)
 
 instance HasCodec FunctionName where
-  codec = dimapCodec FunctionName unFunctionName codec
+  codec = AC.dimapCodec FunctionName unFunctionName codec
 
 instance ToJSONKey FunctionName where
   toJSONKey = toJSONKeyText toTxt
@@ -329,43 +329,31 @@ instance Witch.From OrderDirection API.OrderDirection where
 --------------------------------------------------------------------------------
 
 data ScalarType
-  = StringTy
-  | NumberTy
-  | BoolTy
-  | CustomTy Text (Maybe API.GraphQLType)
+  = ScalarType Text (Maybe API.GraphQLType)
   deriving stock (Eq, Generic, Ord, Show)
   deriving anyclass (FromJSON, FromJSONKey, Hashable, NFData, ToJSON, ToJSONKey)
 
+instance HasCodec ScalarType where
+  codec = AC.named "ScalarType" placeholderCodecViaJSON
+
 instance ToTxt ScalarType where
-  toTxt = tshow
+  toTxt (ScalarType name _) = name
 
 instance ToErrorValue ScalarType where
-  toErrorValue = ErrorValue.squote . tshow
+  toErrorValue = ErrorValue.squote . toTxt
 
 instance Witch.From ScalarType API.ScalarType where
-  from = \case
-    StringTy -> API.StringTy
-    NumberTy -> API.NumberTy
-    BoolTy -> API.BoolTy
-    CustomTy name _ -> API.CustomTy name
+  from (ScalarType name _) = API.ScalarType name
 
 mkScalarType :: API.Capabilities -> API.ScalarType -> ScalarType
-mkScalarType API.Capabilities {..} apiType = case apiType of
-  API.StringTy -> StringTy
-  API.NumberTy -> NumberTy
-  API.BoolTy -> BoolTy
-  API.CustomTy name -> CustomTy name graphQLType
-    where
-      graphQLType = HashMap.lookup apiType (API.unScalarTypesCapabilities _cScalarTypes) >>= API._stcGraphQLType
+mkScalarType API.Capabilities {..} apiType@(API.ScalarType name) =
+  ScalarType name graphQLType
+  where
+    graphQLType = HashMap.lookup apiType (API.unScalarTypesCapabilities _cScalarTypes) >>= API._stcGraphQLType
 
 fromGQLType :: GQL.Name -> API.ScalarType
 fromGQLType typeName =
-  if
-      | typeName == _String -> API.StringTy
-      | typeName == _Int -> API.NumberTy
-      | typeName == _Float -> API.NumberTy
-      | typeName == _Boolean -> API.BoolTy
-      | otherwise -> API.CustomTy $ GQL.unName typeName
+  API.ScalarType $ GQL.unName typeName
 
 --------------------------------------------------------------------------------
 

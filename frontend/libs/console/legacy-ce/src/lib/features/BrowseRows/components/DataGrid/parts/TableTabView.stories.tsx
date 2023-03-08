@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { userEvent, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { TableTabView } from './TableTabView';
 

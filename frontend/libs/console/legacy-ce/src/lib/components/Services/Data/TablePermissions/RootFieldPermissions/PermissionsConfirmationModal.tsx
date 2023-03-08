@@ -1,7 +1,10 @@
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { Button } from '@/new-components/Button';
-import { Dialog } from '@/new-components/Dialog';
-import { Checkbox } from '@/new-components/Form';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+} from '../../../../../features/Analytics';
+import { Button } from '../../../../../new-components/Button';
+import { Dialog } from '../../../../../new-components/Dialog';
+import { CheckboxesField } from '../../../../../new-components/Form';
 import React from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { FaExclamationTriangle } from 'react-icons/fa';
@@ -12,7 +15,7 @@ type CustomDialogFooterProps = {
 };
 
 type FormValues = {
-  noPermissionsConfirmationDialog: 'enabled' | boolean;
+  noPermissionsConfirmationDialog: ['enabled'];
 };
 
 const CustomDialogFooter: React.FC<CustomDialogFooterProps> = ({
@@ -21,7 +24,7 @@ const CustomDialogFooter: React.FC<CustomDialogFooterProps> = ({
 }) => {
   const methods = useForm<FormValues>({
     defaultValues: {
-      noPermissionsConfirmationDialog: false,
+      noPermissionsConfirmationDialog: [],
     },
   });
 
@@ -33,7 +36,7 @@ const CustomDialogFooter: React.FC<CustomDialogFooterProps> = ({
     <div className="flex items-center border-t border-gray-300 bg-white p-sm">
       <div className="flex-grow">
         <FormProvider {...methods}>
-          <Checkbox
+          <CheckboxesField
             name="noPermissionsConfirmationDialog"
             options={[{ value: 'enabled', label: "Don't ask me again" }]}
           />

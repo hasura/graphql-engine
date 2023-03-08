@@ -6,7 +6,6 @@ where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Hasura.Base.Error
-import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.Types.ApiLimit (ApiLimit)
 import Hasura.Server.Types qualified as HGE
@@ -48,5 +47,3 @@ instance HasResourceLimits m => HasResourceLimits (ReaderT r m)
 instance HasResourceLimits m => HasResourceLimits (ExceptT e m)
 
 instance HasResourceLimits m => HasResourceLimits (Tracing.TraceT m)
-
-instance HasResourceLimits m => HasResourceLimits (MetadataStorageT m)

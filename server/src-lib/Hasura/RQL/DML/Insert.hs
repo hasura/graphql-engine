@@ -256,7 +256,7 @@ runInsert q = do
   userInfo <- askUserInfo
   res <- convInsQ q
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
-  runTxWithCtx (_pscExecCtx sourceConfig) PG.ReadWrite $
+  runTxWithCtx (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) LegacyRQLQuery $
     flip runReaderT emptyQueryTagsComment $
       execInsertQuery strfyNum Nothing userInfo res
 

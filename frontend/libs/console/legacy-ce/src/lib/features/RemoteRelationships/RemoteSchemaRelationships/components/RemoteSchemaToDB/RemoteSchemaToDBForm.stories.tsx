@@ -1,10 +1,10 @@
 import React from 'react';
 
 import { Meta, Story } from '@storybook/react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { within, userEvent } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
-import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
+import { ReduxDecorator } from '../../../../../storybook/decorators/redux-decorator';
 
 import {
   RemoteSchemaToDbForm,
@@ -43,7 +43,7 @@ PrimaryWithTest.args = Primary.args;
 PrimaryWithTest.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
-  const submitButton = await canvas.findByText('Add Relationship');
+  const submitButton = (await canvas.findAllByText('Add Relationship'))[1];
 
   userEvent.click(submitButton);
 
@@ -72,8 +72,9 @@ PrimaryWithTest.play = async ({ canvasElement }) => {
   userEvent.click(submitButton);
 };
 
-export const WithExistingRelationship: Story<RemoteSchemaToDbFormProps> =
-  args => <RemoteSchemaToDbForm {...args} />;
+export const WithExistingRelationship: Story<
+  RemoteSchemaToDbFormProps
+> = args => <RemoteSchemaToDbForm {...args} />;
 WithExistingRelationship.args = {
   ...Primary.args,
   sourceRemoteSchema: 'with_default_values',

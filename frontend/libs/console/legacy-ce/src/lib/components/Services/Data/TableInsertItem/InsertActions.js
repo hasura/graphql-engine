@@ -19,7 +19,7 @@ import {
   getInsertDownQuery,
 } from '../../../Common/utils/v1QueryUtils';
 import { makeMigrationCall } from '../DataActions';
-import { removeAll } from 'react-notification-system-redux';
+import toast from 'react-hot-toast/headless';
 import { getNotificationDetails } from '../../Common/Notification';
 import { getTableConfiguration } from '../TableBrowseRows/utils';
 
@@ -232,7 +232,7 @@ const insertItem = (tableName, colValues, isMigration = false) => {
       },
 
       err => {
-        dispatch(removeAll());
+        toast.remove();
         dispatch(showErrorNotification('Insert failed!', err.error, err));
       }
     );

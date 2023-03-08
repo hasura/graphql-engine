@@ -10,8 +10,8 @@
     <script src="https://graphql-engine-cdn.hasura.io/pro-console/assets/common/js/lottie.min.js"></script>
     <script>
       // Needed since if the env var is not defined, it won't be replaced with undefined but keep as the string
-      const getEnv = (value) => (value.startsWith('%NX') ? undefined : value);
-      const getEnvAsBool = (value) => Boolean(getEnv(value));
+      const getEnv = value => (value.startsWith('%NX') ? undefined : value);
+      const getEnvAsBool = value => Boolean(getEnv(value));
 
       const serverEnvVars = {
         dataApiUrl: getEnv('%NX_DATA_API_URL%'),

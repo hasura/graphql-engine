@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: postgrespassword
+  node:
+    build: ./nodejs
+    ports:
+      - "8080:8080"
+    depends_on:
+      - "postgres"
+volumes:
+  db_data:

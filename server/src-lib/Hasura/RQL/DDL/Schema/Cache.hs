@@ -36,10 +36,14 @@ import Data.Sequence qualified as Seq
 import Data.Set qualified as S
 import Data.Text.Extended
 import Hasura.Base.Error
+import Hasura.CustomReturnType.Common (toFieldInfo)
+import Hasura.EncJSON
 import Hasura.GraphQL.Schema (buildGQLContext)
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging
+import Hasura.LogicalModel.Cache (LogicalModelCache, LogicalModelInfo (..))
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.Action
@@ -89,10 +93,10 @@ import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.SQL.Tag
 import Hasura.Server.Migrate.Version
 import Hasura.Server.Types
+import Hasura.Services
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
-import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 
 {- Note [Roles Inheritance]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -149,7 +153,7 @@ buildRebuildableSchemaCacheWithReason ::
 buildRebuildableSchemaCacheWithReason reason logger env metadata = do
   result <-
     flip runReaderT reason $
-      Inc.build (buildSchemaCacheRule logger env) (metadata, initialInvalidationKeys)
+      Inc.build (buildSchemaCacheRule logger env) (metadata, initialInvalidationKeys, Nothing)
 
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
 
@@ -166,18 +170,19 @@ newtype CacheRWT m a
       MonadReader r,
       MonadError e,
       UserInfoM,
-      HasHttpManagerM,
       MonadMetadataStorage,
       MonadMetadataStorageQueryAPI,
       Tracing.MonadTrace,
       HasServerConfigCtx,
       MonadBase b,
-      MonadBaseControl b
+      MonadBaseControl b,
+      ProvidesNetwork
     )
 
 instance (MonadEventLogCleanup m) => MonadEventLogCleanup (CacheRWT m) where
   runLogCleaner conf = lift $ runLogCleaner conf
   generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
+  updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
 
 runCacheRWT ::
   Functor m =>
@@ -196,7 +201,7 @@ instance (Monad m) => CacheRM (CacheRWT m) where
 instance
   ( MonadIO m,
     MonadError QErr m,
-    HasHttpManagerM m,
+    ProvidesNetwork m,
     MonadResolveSource m,
     HasServerConfigCtx m
   ) =>
@@ -210,7 +215,7 @@ instance
       lift $
         runCacheBuildM $
           flip runReaderT buildReason $
-            Inc.build rule (metadata, newInvalidationKeys)
+            Inc.build rule (metadata, newInvalidationKeys, Nothing)
     let schemaCache = (Inc.result result) {scMetadataResourceVersion = metadataVersion}
         prunedInvalidationKeys = pruneInvalidationKeys schemaCache newInvalidationKeys
         !newCache = RebuildableSchemaCache schemaCache prunedInvalidationKeys (Inc.rebuildRule result)
@@ -304,21 +309,21 @@ buildSchemaCacheRule ::
     MonadBaseControl IO m,
     MonadError QErr m,
     MonadReader BuildReason m,
-    HasHttpManagerM m,
+    ProvidesNetwork m,
     MonadResolveSource m,
     HasServerConfigCtx m
   ) =>
   Logger Hasura ->
   Env.Environment ->
-  (Metadata, InvalidationKeys) `arr` SchemaCache
-buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) -> do
+  (Metadata, InvalidationKeys, Maybe StoredIntrospection) `arr` SchemaCache
+buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys, storedIntrospection) -> do
   invalidationKeysDep <- Inc.newDependency -< invalidationKeys
   metadataDefaults <- bindA -< askMetadataDefaults
   let metadata@Metadata {..} = overrideMetadataDefaults metadataNoDefaults metadataDefaults
   metadataDep <- Inc.newDependency -< metadata
 
   (inconsistentObjects, (resolvedOutputs, dependencyInconsistentObjects, resolvedDependencies), ((adminIntrospection, gqlContext, gqlContextUnauth, inconsistentRemoteSchemas), (relayContext, relayContextUnauth))) <-
-    Inc.cache buildOutputsAndSchema -< (metadataDep, invalidationKeysDep)
+    Inc.cache buildOutputsAndSchema -< (metadataDep, invalidationKeysDep, storedIntrospection)
 
   let (resolvedEndpoints, endpointCollectedInfo) = runIdentity $ runWriterT $ buildRESTEndpoints _metaQueryCollections (OMap.elems _metaRestEndpoints)
       (cronTriggersMap, cronTriggersCollectedInfo) = runIdentity $ runWriterT $ buildCronTriggers (OMap.elems _metaCronTriggers)
@@ -413,8 +418,8 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
         }
   where
     -- See Note [Avoiding GraphQL schema rebuilds when changing irrelevant Metadata]
-    buildOutputsAndSchema = proc (metadataDep, invalidationKeysDep) -> do
-      (outputs, collectedInfo) <- runWriterA buildAndCollectInfo -< (metadataDep, invalidationKeysDep)
+    buildOutputsAndSchema = proc (metadataDep, invalidationKeysDep, storedIntrospection) -> do
+      (outputs, collectedInfo) <- runWriterA buildAndCollectInfo -< (metadataDep, invalidationKeysDep, storedIntrospection)
       let (inconsistentObjects, unresolvedDependencies) = partitionEithers $ toList collectedInfo
       out2@(resolvedOutputs, _dependencyInconsistentObjects, _resolvedDependencies) <- resolveDependencies -< (outputs, unresolvedDependencies)
       out3 <-
@@ -437,7 +442,8 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
         Inc.ArrowDistribute arr,
         ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadIO m,
-        HasHttpManagerM m
+        MonadBaseControl IO m,
+        ProvidesNetwork m
       ) =>
       (BackendConfigWrapper b, Inc.Dependency (BackendMap BackendInvalidationKeysWrapper)) `arr` BackendCache
     resolveBackendInfo' = proc (backendConfigWrapper, backendInvalidationMap) -> do
@@ -454,7 +460,8 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
         Inc.ArrowDistribute arr,
         ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadIO m,
-        HasHttpManagerM m
+        MonadBaseControl IO m,
+        ProvidesNetwork m
       ) =>
       (Inc.Dependency (BackendMap BackendInvalidationKeysWrapper), [AB.AnyBackend BackendConfigWrapper]) `arr` BackendCache
     resolveBackendCache = proc (backendInvalidationMap, backendConfigs) -> do
@@ -472,8 +479,9 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
         Inc.ArrowCache m arr,
         ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadIO m,
+        MonadBaseControl IO m,
         MonadResolveSource m,
-        HasHttpManagerM m,
+        ProvidesNetwork m,
         BackendMetadata b
       ) =>
       ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey),
@@ -485,7 +493,11 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
         `arr` Maybe (SourceConfig b)
     tryGetSourceConfig = Inc.cache proc (invalidationKeys, sourceName, sourceConfig, backendKind, backendInfo) -> do
       let metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
-      httpMgr <- bindA -< askHttpManager
+      -- TODO: if we make all of 'resolveSourceConfig' a Service, we could
+      -- delegate to it the responsibility of extracting the HTTP manager, and
+      -- avoid having to thread 'ProvidesNetwork' throughout the cache building
+      -- code.
+      httpMgr <- bindA -< askHTTPManager
       Inc.dependOn -< Inc.selectKeyD sourceName invalidationKeys
       (|
         withRecordInconsistency
@@ -501,30 +513,34 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
         MonadIO m,
         MonadBaseControl IO m,
         MonadResolveSource m,
-        HasHttpManagerM m,
+        ProvidesNetwork m,
         BackendMetadata b
       ) =>
       ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey),
+        Maybe (BackendIntrospection b),
         BackendInfoAndSourceMetadata b
       )
-        `arr` Maybe (ResolvedSource b)
-    tryResolveSource = Inc.cache proc (invalidationKeys, BackendInfoAndSourceMetadata {..}) -> do
+        `arr` Maybe (SourceConfig b, DBObjectsIntrospection b)
+    tryResolveSource = Inc.cache proc (invalidationKeys, sourceIntrospection, BackendInfoAndSourceMetadata {..}) -> do
       let sourceName = _smName _bcasmSourceMetadata
           metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
 
       maybeSourceConfig <- tryGetSourceConfig @b -< (invalidationKeys, sourceName, _smConfiguration _bcasmSourceMetadata, _smKind _bcasmSourceMetadata, _bcasmBackendInfo)
       case maybeSourceConfig of
         Nothing -> returnA -< Nothing
-        Just sourceConfig ->
-          (|
-            withRecordInconsistency
-              ( liftEitherA <<< bindA
-                  -< do
-                    resSource <- resolveDatabaseMetadata _bcasmSourceMetadata sourceConfig (getSourceTypeCustomization $ _smCustomization _bcasmSourceMetadata)
-                    for_ resSource $ liftIO . unLogger logger
-                    pure resSource
-              )
-          |) metadataObj
+        Just sourceConfig -> do
+          case biMetadata <$> sourceIntrospection of
+            Just rs -> returnA -< Just (sourceConfig, rs)
+            _ ->
+              (|
+                withRecordInconsistency
+                  ( liftEitherA <<< bindA
+                      -< do
+                        resSource <- resolveDatabaseMetadata _bcasmSourceMetadata sourceConfig
+                        for_ resSource $ liftIO . unLogger logger
+                        pure $ (sourceConfig,) <$> resSource
+                  )
+              |) metadataObj
 
     -- impl notes (swann):
     --
@@ -608,7 +624,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
       )
         `arr` (SourceInfo b)
     buildSource = proc (allSources, sourceMetadata, sourceConfig, tablesRawInfo, eventTriggerInfoMaps, _dbTables, dbFunctions, remoteSchemaMap, orderedRoles) -> do
-      let SourceMetadata sourceName _backendKind tables functions _ queryTagsConfig sourceCustomization _healthCheckConfig = sourceMetadata
+      let SourceMetadata sourceName _backendKind tables functions logicalModels _ queryTagsConfig sourceCustomization _healthCheckConfig = sourceMetadata
           tablesMetadata = OMap.elems tables
           (_, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
           alignTableMap :: HashMap (TableName b) a -> HashMap (TableName b) c -> HashMap (TableName b) (a, c)
@@ -687,9 +703,35 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
                   (functionInfo, dep) <- buildFunctionInfo sourceName qf systemDefined config permissionsMap rawfunctionInfo comment namingConv
                   recordDependenciesM metadataObject schemaObject (Seq.singleton dep)
                   pure functionInfo
+
       let functionCache = mapFromL _fiSQLName $ catMaybes functionCacheMaybes
 
-      returnA -< SourceInfo sourceName tableCache functionCache sourceConfig queryTagsConfig resolvedCustomization
+      logicalModelCacheMaybes <-
+        interpretWriter
+          -< for
+            (OMap.elems logicalModels)
+            \LogicalModelMetadata {..} -> runExceptT do
+              fieldInfoMap <- case toFieldInfo _lmmReturns of
+                Nothing -> pure mempty
+                Just fields -> pure (mapFromL fieldInfoName fields)
+
+              logicalModelPermissions <-
+                buildLogicalModelPermissions sourceName tableCoreInfos _lmmRootFieldName fieldInfoMap _lmmSelectPermissions orderedRoles
+
+              pure
+                LogicalModelInfo
+                  { _lmiRootFieldName = _lmmRootFieldName,
+                    _lmiCode = _lmmCode,
+                    _lmiReturns = _lmmReturns,
+                    _lmiArguments = _lmmArguments,
+                    _lmiPermissions = logicalModelPermissions,
+                    _lmiDescription = _lmmDescription
+                  }
+
+      let logicalModelCache :: LogicalModelCache b
+          logicalModelCache = mapFromL _lmiRootFieldName (mapMaybe eitherToMaybe logicalModelCacheMaybes)
+
+      returnA -< SourceInfo sourceName tableCache functionCache logicalModelCache sourceConfig queryTagsConfig resolvedCustomization
 
     buildAndCollectInfo ::
       forall arr m.
@@ -701,12 +743,12 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
         MonadError QErr m,
         MonadReader BuildReason m,
         MonadBaseControl IO m,
-        HasHttpManagerM m,
+        ProvidesNetwork m,
         HasServerConfigCtx m,
         MonadResolveSource m
       ) =>
-      (Inc.Dependency Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
-    buildAndCollectInfo = proc (metadataDep, invalidationKeys) -> do
+      (Inc.Dependency Metadata, Inc.Dependency InvalidationKeys, Maybe StoredIntrospection) `arr` BuildOutputs
+    buildAndCollectInfo = proc (metadataDep, invalidationKeys, storedIntrospection) -> do
       sources <- Inc.dependOn -< Inc.selectD #_metaSources metadataDep
       remoteSchemas <- Inc.dependOn -< Inc.selectD #_metaRemoteSchemas metadataDep
       customTypes <- Inc.dependOn -< Inc.selectD #_metaCustomTypes metadataDep
@@ -719,7 +761,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
             HS.fromList $
               concat $
                 OMap.elems sources >>= \(BackendSourceMetadata e) ->
-                  AB.dispatchAnyBackend @Backend e \(SourceMetadata _ _ tables _functions _ _ _ _) -> do
+                  AB.dispatchAnyBackend @Backend e \(SourceMetadata _ _ tables _functions _customSQL _ _ _ _) -> do
                     table <- OMap.elems tables
                     pure $
                       OMap.keys (_tmInsertPermissions table)
@@ -740,7 +782,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
 
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
-      remoteSchemaMap <- buildRemoteSchemas env -< ((remoteSchemaInvalidationKeys, orderedRoles), OMap.elems remoteSchemas)
+      remoteSchemaMap <- buildRemoteSchemas env -< ((remoteSchemaInvalidationKeys, orderedRoles, fmap encJToLBS . siRemotes <$> storedIntrospection), OMap.elems remoteSchemas)
       let remoteSchemaCtxMap = M.map fst remoteSchemaMap
 
       !defaultNC <- bindA -< _sccDefaultNamingConvention <$> askServerConfigCtx
@@ -758,32 +800,34 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
           Inc.keyed
             ( \_ exists ->
                 AB.dispatchAnyBackendArrow @BackendMetadata @BackendEventTrigger
-                  ( proc (backendInfoAndSourceMetadata, (invalidationKeys, defaultNC, isNamingConventionEnabled)) -> do
+                  ( proc (backendInfoAndSourceMetadata :: BackendInfoAndSourceMetadata b, (invalidationKeys, storedIntrospection, defaultNC, isNamingConventionEnabled)) -> do
                       let sourceMetadata = _bcasmSourceMetadata backendInfoAndSourceMetadata
                           sourceName = _smName sourceMetadata
                           sourceInvalidationsKeys = Inc.selectD #_ikSources invalidationKeys
-                      maybeResolvedSource <- tryResolveSource -< (sourceInvalidationsKeys, backendInfoAndSourceMetadata)
+                          sourceIntrospection = AB.unpackAnyBackend @b =<< M.lookup sourceName =<< siBackendIntrospection <$> storedIntrospection
+                      maybeResolvedSource <- tryResolveSource -< (sourceInvalidationsKeys, sourceIntrospection, backendInfoAndSourceMetadata)
                       case maybeResolvedSource of
                         Nothing -> returnA -< Nothing
-                        Just (source :: ResolvedSource b) -> do
+                        Just (sourceConfig, source) -> do
                           let metadataInvalidationKey = Inc.selectD #_ikMetadata invalidationKeys
                               (tableInputs, _, _) = unzip3 $ map mkTableInputs $ OMap.elems $ _smTables sourceMetadata
-                              !namingConv = if isNamingConventionEnabled then getNamingConvention (_smCustomization sourceMetadata) defaultNC else HasuraCase
+                              scNamingConvention = _scNamingConvention $ _smCustomization sourceMetadata
+                              !namingConv = if isNamingConventionEnabled then fromMaybe defaultNC scNamingConvention else HasuraCase
                           tablesCoreInfo <-
                             buildTableCache
                               -<
                                 ( sourceName,
-                                  _rsConfig source,
+                                  sourceConfig,
                                   _rsTables source,
                                   tableInputs,
                                   metadataInvalidationKey,
+                                  sourceIntrospection,
                                   namingConv
                                 )
 
                           let tablesMetadata = OMap.elems $ _smTables sourceMetadata
                               eventTriggers = map (_tmTable &&& OMap.elems . _tmEventTriggers) tablesMetadata
                               numEventTriggers = sum $ map (length . snd) eventTriggers
-                              sourceConfig = _rsConfig source
 
                           (recreateEventTriggers, sourceCatalogMigrationState) <- initCatalogIfNeeded -< (Proxy :: Proxy b, numEventTriggers > 0, sourceConfig)
 
@@ -804,10 +848,10 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
                             -<
                               Just $
                                 AB.mkAnyBackend @b $
-                                  PartiallyResolvedSource sourceMetadata source tablesCoreInfo eventTriggerInfoMaps
+                                  PartiallyResolvedSource sourceMetadata sourceConfig source tablesCoreInfo eventTriggerInfoMaps
                   )
                   -<
-                    (exists, (invalidationKeys, defaultNC, isNamingConventionEnabled))
+                    (exists, (invalidationKeys, storedIntrospection, defaultNC, isNamingConventionEnabled))
             )
           |) (M.fromList $ OMap.toList backendInfoAndSourceMetadata)
       let partiallyResolvedSources = catMaybes partiallyResolvedSourcesMaybes
@@ -830,8 +874,8 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
                         (allResolvedSources, remoteSchemaCtxMap, orderedRoles)
                         )
                     -> do
-                      let PartiallyResolvedSource sourceMetadata resolvedSource tablesInfo eventTriggers = partiallyResolvedSource
-                          ResolvedSource sourceConfig _sourceCustomization tablesMeta functionsMeta scalars = resolvedSource
+                      let PartiallyResolvedSource sourceMetadata sourceConfig introspection tablesInfo eventTriggers = partiallyResolvedSource
+                          DBObjectsIntrospection tablesMeta functionsMeta scalars = introspection
                       so <-
                         Inc.cache buildSource
                           -<
@@ -900,27 +944,27 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
       MonadWriter (Seq (Either InconsistentMetadata md)) m =>
       OpenTelemetryConfig ->
       m OpenTelemetryInfo
-    buildOpenTelemetry openTelemetryConfig = do
-      case _ocStatus openTelemetryConfig of
-        OtelDisabled ->
-          -- Disable all components if OpenTelemetry export not enabled
-          pure $ OpenTelemetryInfo Nothing Nothing
-        OtelEnabled -> do
-          mOtelExporterInfo <-
-            let exporterOtlp = _ocExporterOtlp openTelemetryConfig
-             in withRecordInconsistencyM (MetadataObject (MOOpenTelemetry OtelSubobjectExporterOtlp) (toJSON exporterOtlp)) $
-                  liftEither $
-                    parseOtelExporterConfig env exporterOtlp
-          mOtelBatchSpanProcessorInfo <-
-            let batchSpanProcessor = _ocBatchSpanProcessor openTelemetryConfig
-             in withRecordInconsistencyM (MetadataObject (MOOpenTelemetry OtelSubobjectBatchSpanProcessor) (toJSON batchSpanProcessor)) $
-                  liftEither $
-                    parseOtelBatchSpanProcessorConfig batchSpanProcessor
-          pure $
+    buildOpenTelemetry OpenTelemetryConfig {..} = do
+      -- Always perform validation, even if OpenTelemetry is disabled
+      mOtelExporterInfo <-
+        fmap join $
+          withRecordInconsistencyM (MetadataObject (MOOpenTelemetry OtelSubobjectExporterOtlp) (toJSON _ocExporterOtlp)) $
+            liftEither $
+              parseOtelExporterConfig _ocStatus env _ocExporterOtlp
+      mOtelBatchSpanProcessorInfo <-
+        withRecordInconsistencyM (MetadataObject (MOOpenTelemetry OtelSubobjectBatchSpanProcessor) (toJSON _ocBatchSpanProcessor)) $
+          liftEither $
+            parseOtelBatchSpanProcessorConfig _ocBatchSpanProcessor
+      pure $
+        case _ocStatus of
+          OtelDisabled ->
+            -- Disable all components if OpenTelemetry export not enabled
+            OpenTelemetryInfo Nothing Nothing
+          OtelEnabled ->
             OpenTelemetryInfo
               mOtelExporterInfo
               -- Disable data types if they are not in the enabled set
-              ( if OtelTraces `S.member` _ocEnabledDataTypes openTelemetryConfig
+              ( if OtelTraces `S.member` _ocEnabledDataTypes
                   then mOtelBatchSpanProcessorInfo
                   else Nothing
               )
@@ -1200,7 +1244,7 @@ buildRemoteSchemaRemoteRelationship allSources remoteSchemaMap remoteSchema remo
           toJSON $
             CreateRemoteSchemaRemoteRelationship remoteSchema typeName _rrName _rrDefinition
       schemaObj = SORemoteSchemaRemoteRelationship remoteSchema typeName _rrName
-      addRemoteRelationshipContext e = "in remote relationship" <> _rrName <<> ": " <> e
+      addRemoteRelationshipContext e = "in remote relationship " <> _rrName <<> ": " <> e
       -- buildRemoteFieldInfo only knows how to construct dependencies on the RHS of the join condition,
       -- so the dependencies on the remote relationship on the LHS entity have to be computed here
       lhsDependency =

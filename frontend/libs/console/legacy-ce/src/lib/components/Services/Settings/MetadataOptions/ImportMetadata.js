@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 
 import { uploadFile } from '../../../Common/utils/jsUtils';
 import { replaceMetadataFromFile } from '../../../../metadata/actions';

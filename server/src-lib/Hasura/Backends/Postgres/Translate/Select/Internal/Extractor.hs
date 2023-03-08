@@ -57,7 +57,7 @@ mkAggregateOrderByExtractorAndFields annAggOrderBy =
       ( S.Extractor S.countStar alias,
         [(FieldName "count", AFCount S.CTStar)]
       )
-    AAOOp opText pgColumnInfo ->
+    AAOOp opText _resultType pgColumnInfo ->
       let pgColumn = ciColumn pgColumnInfo
           pgType = ciType pgColumnInfo
        in ( S.Extractor (S.SEFnApp opText [S.SEIdentifier $ toIdentifier pgColumn] Nothing) alias,

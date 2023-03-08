@@ -1,15 +1,15 @@
-import { Api } from '@/hooks/apiUtils';
-import { QualifiedTable } from '@/metadata/types';
+import { Api } from '../../../hooks/apiUtils';
+import { QualifiedTable } from '../../../metadata/types';
 import {
   MetadataSelector,
   useMetadata,
   useMetadataVersion,
-} from '@/features/MetadataAPI';
+} from '../../MetadataAPI';
 import { useQuery, UseQueryResult } from 'react-query';
-import { useAppSelector } from '@/store';
-import { getRunSqlQuery } from '@/components/Common/utils/v1QueryUtils';
-import Endpoints from '@/Endpoints';
-import { RunSQLResponse } from '@/hooks/types';
+import { useAppSelector } from '../../../storeHooks';
+import { getRunSqlQuery } from '../../../components/Common/utils/v1QueryUtils';
+import Endpoints from '../../../Endpoints';
+import { RunSQLResponse } from '../../../hooks/types';
 import { dataSourceSqlQueries } from '..';
 
 export const useTableColumns = (

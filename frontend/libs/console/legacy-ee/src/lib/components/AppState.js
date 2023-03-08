@@ -1,4 +1,4 @@
-export * from '@hasura/console-oss/lib/appState';
+export * from '@hasura/console-legacy-ce';
 
 const CONSOLE_PERSONAL_ACCESS_TOKEN = 'PERSONAL_ACCESS_TOKEN';
 

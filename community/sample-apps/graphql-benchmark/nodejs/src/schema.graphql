@@ -1,0 +1,46 @@
+schema {
+  query: Query
+}
+
+type Query {
+  Album_by_pk(AlbumId: Int!): Album
+  Album: [Album!]!
+  Artist_by_pk(ArtistId: Int!): Artist
+  Artist: [Artist!]!
+  Track_by_pk(TrackId: Int!): Track
+  Track: [Track!]!
+  Genre_by_pk(GenreId: Int!): Genre
+  Genre: [Genre!]!
+}
+
+type Album {
+  AlbumId: Int!
+  Artist: Artist
+  ArtistId: Int!
+  Title: String!
+  Tracks: [Track!]
+}
+
+type Artist {
+  ArtistId: Int!
+  Name: String
+  Albums: [Album!]
+}
+
+type Track {
+  Album: Album
+  AlbumId: Int
+  Bytes: Int
+  Composer: String
+  TrackId: Int!
+  MediaTypeId: Int!
+  Milliseconds: Int!
+  Name: String!
+  GenreId: Int!
+  Genre: Genre
+}
+
+type Genre {
+  GenreId: Int!
+  Name: String!
+}

@@ -36,6 +36,7 @@ data TlsAllow = TlsAllow
 instance FromJSON TlsAllow where
   parseJSON j = aString j <|> anObject j
     where
+      -- TODO: investigate if `withText` parser is needed anymore
       aString = withText "TlsAllow" $ \s ->
         if T.null s
           then fail "missing \"host\" field in input"
@@ -70,12 +71,21 @@ instance ToJSON TlsPermission where
 
 type AddHostToTLSAllowlist = TlsAllow
 
-data DropHostFromTLSAllowlist = DropHostFromTLSAllowlist {_dhftaHost :: String}
+data DropHostFromTLSAllowlist = DropHostFromTLSAllowlist
+  { dhftaHost :: String,
+    dhftaSuffix :: Maybe String
+  }
   deriving (Show, Eq)
 
 instance FromJSON DropHostFromTLSAllowlist where
   parseJSON = withObject "DropHostFromTLSAllowlist" $ \o ->
-    DropHostFromTLSAllowlist <$> o .: "host"
+    DropHostFromTLSAllowlist
+      <$> o .: "host"
+      <*> o .:? "suffix"
 
 instance ToJSON DropHostFromTLSAllowlist where
-  toJSON (DropHostFromTLSAllowlist h) = object ["host" A..= h]
+  toJSON (DropHostFromTLSAllowlist h p) =
+    object
+      [ "host" A..= h,
+        "suffix" A..= p
+      ]

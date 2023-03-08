@@ -69,7 +69,7 @@ services:
     depends_on:
       - reference-agent
     image: "hasura/dc-agent-tests:${HASURA_VERSION}"
-    command: ["tests-dc-api", 'test', '-u', 'http://reference-agent:8100', '-s', '{}']
+    command: ["tests-dc-api", 'test', '--agent-base-url', 'http://reference-agent:8100']
     restart: on-failure
 
   swagger-ui:

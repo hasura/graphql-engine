@@ -1,6 +1,0 @@
-overwrite: true
-schema: "src/features/ControlPlane/schema.json"
-documents: "src/features/ControlPlane/queries.ts"
-generates:
-  src/features/ControlPlane/generatedGraphQLTypes.ts:
-    plugins: ["typescript", "typescript-operations"]

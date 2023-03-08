@@ -4,7 +4,7 @@ import { userEvent, waitFor, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { screen } from '@testing-library/dom';
 
-import { IconTooltip } from '@/new-components/Tooltip';
+import { IconTooltip } from '.';
 
 export default {
   title: 'components/Tooltip 📁/IconTooltip 🧬',
@@ -65,8 +65,9 @@ TestingHoveredStyle.parameters = {
   },
 };
 
-export const TestingHoveredInteraction: ComponentStory<typeof IconTooltip> =
-  () => <IconTooltip message="The tooltip message" />;
+export const TestingHoveredInteraction: ComponentStory<
+  typeof IconTooltip
+> = () => <IconTooltip message="The tooltip message" />;
 TestingHoveredInteraction.storyName = '🧪 Testing - Hovered interaction';
 TestingHoveredInteraction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);

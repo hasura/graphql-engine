@@ -39,9 +39,9 @@ If you are re-running this command to update your Mac, you may need to run
    This step may require you to have python2 installed and available in your $PATH.
 
    ```sh
-   cd console
+   cd frontend
    npm ci
-   npm run server-build
+   npm run server-build:ce
    cd ..
    ```
 

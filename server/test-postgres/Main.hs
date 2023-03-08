@@ -2,27 +2,30 @@
 
 module Main (main) where
 
+import Constants qualified
 import Control.Concurrent.MVar
+import Control.Monad.Trans.Managed (ManagedT (..))
 import Control.Natural ((:~>) (..))
 import Data.Aeson qualified as A
 import Data.ByteString.Lazy.Char8 qualified as BL
 import Data.ByteString.Lazy.UTF8 qualified as LBS
 import Data.Environment qualified as Env
+import Data.Text qualified as T
 import Data.Time.Clock (getCurrentTime)
 import Data.URL.Template
 import Database.PG.Query qualified as PG
 import Hasura.App
   ( PGMetadataStorageAppT (..),
+    initGlobalCtx,
+    initialiseContext,
     mkMSSQLSourceResolver,
     mkPgSourceResolver,
   )
-import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Connection.Settings
 import Hasura.Backends.Postgres.Execute.Types
-import Hasura.EventTriggerCleanupSuite qualified as EventTriggerCleanupSuite
+import Hasura.Base.Error
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging
-import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -31,16 +34,23 @@ import Hasura.RQL.Types.Metadata (emptyMetadataDefaults)
 import Hasura.RQL.Types.ResizePool
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.Server.Init
+import Hasura.Server.Init.FeatureFlag as FF
+import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Migrate
-import Hasura.Server.MigrateSuite qualified as MigrateSuite
+import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
 import Hasura.Server.Types
-import Hasura.StreamingSubscriptionSuite qualified as StreamingSubscriptionSuite
+import Hasura.Tracing (sampleAlways)
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.TLS qualified as HTTP
 import System.Environment (getEnvironment)
 import System.Exit (exitFailure)
+import System.Metrics qualified as EKG
+import Test.Hasura.EventTriggerCleanupSuite qualified as EventTriggerCleanupSuite
+import Test.Hasura.Server.MigrateSuite qualified as MigrateSuite
+import Test.Hasura.StreamingSubscriptionSuite qualified as StreamingSubscriptionSuite
 import Test.Hspec
 
+{-# ANN main ("HLINT: ignore Use env_from_function_argument" :: String) #-}
 main :: IO ()
 main = do
   env <- getEnvironment
@@ -58,7 +68,14 @@ main = do
       urlConf = UrlValue $ InputWebhook $ mkPlainURLTemplate pgUrlText
       sourceConnInfo =
         PostgresSourceConnInfo urlConf (Just setPostgresPoolSettings) True PG.ReadCommitted Nothing
-      sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema
+      sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema Nothing mempty
+      rci =
+        PostgresConnInfo
+          { _pciDatabaseConn = Nothing,
+            _pciRetries = Nothing
+          }
+      serveOptions = Constants.serveOptions
+      metadataDbUrl = Just (T.unpack pgUrlText)
 
   pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams {PG.cpConns = 1} print
   let pgContext = mkPGExecCtx PG.Serializable pgPool NeverResizePool
@@ -70,6 +87,14 @@ main = do
 
       setupCacheRef = do
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
+        globalCtx <- initGlobalCtx envMap metadataDbUrl rci
+        (_, serverMetrics) <-
+          liftIO $ do
+            store <- EKG.newStore @TestMetricsSpec
+            serverMetrics <-
+              liftIO $ createServerMetrics $ EKG.subset ServerSubset store
+            pure (EKG.subset EKG.emptyOf store, serverMetrics)
+        prometheusMetrics <- makeDummyPrometheusMetrics
         let sqlGenCtx =
               SQLGenCtx
                 Options.Don'tStringifyNumbers
@@ -87,15 +112,27 @@ main = do
                 mempty
                 EventingEnabled
                 readOnlyMode
-                Nothing -- We are not testing the naming convention here, so defaulting to hasura-default
+                (_default defaultNamingConventionOption)
                 emptyMetadataDefaults
+                (FF.checkFeatureFlag mempty)
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver serverConfigCtx
-            pgLogger = print
 
-            run :: MetadataStorageT (PGMetadataStorageAppT CacheBuild) a -> IO a
+        (appCtx, appEnv) <- runManagedT
+          ( initialiseContext
+              envMap
+              globalCtx
+              serveOptions
+              Nothing
+              serverMetrics
+              prometheusMetrics
+              sampleAlways
+          )
+          $ \(appCtx, appEnv) -> return (appCtx, appEnv)
+
+        let run :: ExceptT QErr (PGMetadataStorageAppT CacheBuild) a -> IO a
             run =
-              runMetadataStorageT
-                >>> flip runPGMetadataStorageAppT (pgPool, pgLogger)
+              runExceptT
+                >>> flip runPGMetadataStorageAppT (appCtx, appEnv)
                 >>> runCacheBuild cacheBuildParams
                 >>> runExceptT
                 >=> flip onLeft printErrJExit
@@ -104,7 +141,7 @@ main = do
         (metadata, schemaCache) <- run do
           metadata <-
             snd
-              <$> (liftEitherM . runExceptT . runTx pgContext PG.ReadWrite)
+              <$> (liftEitherM . runExceptT . _pecRunTx pgContext (PGExecCtxInfo (Tx PG.ReadWrite Nothing) InternalRawQuery))
                 (migrateCatalog (Just sourceConfig) defaultPostgresExtensionsSchema maintenanceMode =<< liftIO getCurrentTime)
           schemaCache <- lift $ lift $ buildRebuildableSchemaCache logger envMap metadata
           pure (metadata, schemaCache)
@@ -128,3 +165,7 @@ printErrExit = (*> exitFailure) . putStrLn
 
 printErrJExit :: (A.ToJSON a) => a -> IO b
 printErrJExit = (*> exitFailure) . BL.putStrLn . A.encode
+
+-- | Used only for 'runApp' above.
+data TestMetricsSpec name metricType tags
+  = ServerSubset (ServerMetricsSpec name metricType tags)

@@ -34,7 +34,7 @@ Further Reading:
   # Create a Hasura Action with codegen
   hasura actions create [action-name] --with-codegen
 
-  # Create a Hasura Action by deriving from a hasura operation
+  # Create a Hasura Action by deriving from a Hasura operation
   hasura actions create [action-name] --derive-from ''
 
   # Create a Hasura Action with a different kind or webhook
@@ -54,9 +54,9 @@ Further Reading:
 	f := actionsCreateCmd.Flags()
 
 	f.StringVar(&opts.deriveFrom, "derive-from", "", "derive action from a Hasura operation")
-	f.BoolVar(&opts.withCodegen, "with-codegen", false, "create action along with codegen")
-	f.String("kind", "", "kind to use in action")
-	f.String("webhook", "", "webhook to use in action")
+	f.BoolVar(&opts.withCodegen, "with-codegen", false, "create Action along with codegen")
+	f.String("kind", "", "kind to use in Action")
+	f.String("webhook", "", "webhook to use in Action")
 
 	// bind to viper
 	util.BindPFlag(v, "actions.kind", f.Lookup("kind"))

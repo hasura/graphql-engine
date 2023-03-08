@@ -13,6 +13,7 @@
 @use 'introduction-page';
 @use 'cloud-db-icon-gallery';
 @use 'admonitions';
+@use 'badges';
 
 /* Custom Styles */
 .no-shadow {
@@ -44,11 +45,40 @@
 
 .heading-badge {
   font-size: 0.9rem;
+  + p {
+    margin-top: 1rem;
+  }
 }
 
-// Table body fix for longer types and args
-tbody {
-  word-break: break-word;
+.db-tables {
+  table {
+    td:first-child {
+      width: 40%;
+    }
+  }
+}
+
+.server-reference-tables {
+  h3 {
+    margin-top: 4rem;
+  }
+  table {
+    td:nth-child(2) {
+      width: 84%;
+    }
+  }
+}
+
+.pricing-table {
+  td:first-child {
+    width: 20%;
+  }
+  td:last-child {
+    width: 30%;
+  }
+  td {
+    vertical-align: top;
+  }
 }
 
 /* Dark Mode Styles */

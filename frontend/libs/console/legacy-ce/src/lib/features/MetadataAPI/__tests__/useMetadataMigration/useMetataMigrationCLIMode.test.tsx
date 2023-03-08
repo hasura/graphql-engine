@@ -4,7 +4,7 @@ import { screen, waitFor as testLibWaitFor } from '@testing-library/react';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import React from 'react';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import { useMetadataMigration } from '../../hooks/useMetadataMigration';
 import { useMetadataVersion } from '../../hooks/useMetadataVersion';
 import {
@@ -128,10 +128,10 @@ describe('in CLI mode', () => {
 
     await testLibWaitFor(() => {
       expect(screen.getByRole('heading')).toMatchInlineSnapshot(`
-      <h1>
-        2
-      </h1>
-    `);
+              <h1>
+                2
+              </h1>
+          `);
     });
   });
 
@@ -146,7 +146,7 @@ describe('in CLI mode', () => {
     await waitFor(() => result.current.isSuccess);
 
     expect(result.current?.data).toMatchInlineSnapshot(`
-      Object {
+      {
         "message": "mock success response from cli server",
       }
     `);

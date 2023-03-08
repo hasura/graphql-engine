@@ -1,4 +1,4 @@
-import { NativeDrivers } from '@/features/hasura-metadata-types';
+import { NativeDrivers } from '../features/hasura-metadata-types';
 
 export type DataSourceDriver =
   | 'postgres'

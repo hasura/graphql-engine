@@ -14,6 +14,7 @@ type Client struct {
 	V2Query    V2Query
 	PGDump     PGDump
 	V1Graphql  V1Graphql
+	V1Version  V1Version
 }
 
 type V1Query interface {
@@ -38,17 +39,30 @@ type CatalogStateOperations interface {
 type SourceKind string
 
 const (
-	SourceKindPG    SourceKind = "postgres"
-	SourceKindMSSQL SourceKind = "mssql"
-	SourceKindCitus SourceKind = "citus"
+	SourceKindPG        SourceKind = "postgres"
+	SourceKindMSSQL     SourceKind = "mssql"
+	SourceKindCitus     SourceKind = "citus"
+	SourceKindCockroach SourceKind = "cockroach"
+	SourceKindBigQuery  SourceKind = "bigquery"
 )
 
 type V2Query interface {
 	PGSourceOps
 	MSSQLSourceOps
 	CitusSourceOps
+	CockroachSourceOps
+	BigQuerySourceOps
 	Send(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error)
 	Bulk([]RequestBody) (io.Reader, error)
+}
+
+type V1VersionResponse struct {
+	Version    string  `json:"version,omitempty"`
+	ServerType *string `json:"server_type,omitempty"`
+}
+
+type V1Version interface {
+	GetVersion() (*V1VersionResponse, error)
 }
 
 type IntrospectionSchema interface{}

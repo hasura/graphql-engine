@@ -16,7 +16,7 @@ import {
   isFeatureSupported,
 } from '../../../../dataSources';
 import { getTableConfiguration } from './utils';
-import { reloadDataSource } from '@/metadata/actions';
+import { reloadDataSource } from '../../../../metadata/actions';
 import { updateLimit } from './ViewAction.utils';
 
 /* ****************** View actions *************/

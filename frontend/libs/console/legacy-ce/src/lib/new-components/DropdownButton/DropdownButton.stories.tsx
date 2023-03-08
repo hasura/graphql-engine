@@ -2,7 +2,7 @@ import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { within, userEvent, screen } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
-import { Button } from '@/new-components/Button';
+import { Button } from '../Button';
 
 import { DropdownButton } from './DropdownButton';
 
@@ -65,4 +65,28 @@ Default.play = async ({ args, canvasElement }) => {
   expect(screen.queryByText('Another action')).not.toBeInTheDocument();
   // the action is called
   expect(args.onClick).toHaveBeenCalled();
+};
+
+export const Disabled: ComponentStory<typeof Button> = args => (
+  <DropdownButton
+    items={[
+      ['Action', <span className="text-red-600">Destructive Action</span>],
+      ['Another action'],
+    ]}
+    {...args}
+    disabled
+  >
+    The DropdownButton label
+  </DropdownButton>
+);
+
+Disabled.play = async ({ args, canvasElement }) => {
+  const canvas = within(canvasElement);
+
+  // click the trigger
+  userEvent.click(canvas.getByText('The DropdownButton label'));
+  // the menu is not visible (please note that this test makes sense only if there is another test
+  // that checks that the menu is visible when the button is enabled. Otherwise if the dropdown opens
+  // after a millisecond, this test could go green even if then the menu appears)
+  expect(screen.queryByText('Another action')).not.toBeInTheDocument();
 };

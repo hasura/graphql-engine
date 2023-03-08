@@ -88,6 +88,7 @@ import Hasura.Server.Prometheus
   )
 import Hasura.Server.Telemetry.Counters qualified as Telem
 import Hasura.Server.Types (RequestId, getRequestId)
+import Hasura.Services.Network
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax (Name (..))
@@ -406,9 +407,10 @@ onStart ::
     Tracing.MonadTrace m,
     MonadExecuteQuery m,
     MC.MonadBaseControl IO m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     EB.MonadQueryTags m,
-    HasResourceLimits m
+    HasResourceLimits m,
+    ProvidesNetwork m
   ) =>
   Env.Environment ->
   HashSet (L.EngineLogType L.Hasura) ->
@@ -467,7 +469,6 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
         sc
         scVer
         queryType
-        httpMgr
         reqHdrs
         q
         queryParts
@@ -514,7 +515,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
                         (telemTimeIO_DT, resp) <-
                           AB.dispatchAnyBackend @BackendTransport
                             exists
-                            \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
+                            \(EB.DBStepInfo _ sourceConfig genSql tx resolvedConnectionTemplate :: EB.DBStepInfo b) ->
                               runDBQuery @b
                                 requestId
                                 q
@@ -524,8 +525,9 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
                                 sourceConfig
                                 tx
                                 genSql
+                                resolvedConnectionTemplate
                         finalResponse <-
-                          RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
+                          RJ.processRemoteJoins requestId logger env reqHdrs userInfo resp remoteJoins q
                         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
                       E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
                         logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
@@ -535,7 +537,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
                         (time, (resp, _)) <- doQErr $ do
                           (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                           finalResponse <-
-                            RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
+                            RJ.processRemoteJoins requestId logger env reqHdrs userInfo resp remoteJoins q
                           pure (time, (finalResponse, hdrs))
                         pure $ AnnotatedResponsePart time Telem.Empty resp []
                       E.ExecStepRaw json -> do
@@ -561,12 +563,12 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
       -- See Note [Backwards-compatible transaction optimisation]
       case coalescePostgresMutations mutationPlan of
         -- we are in the aforementioned case; we circumvent the normal process
-        Just (sourceConfig, pgMutations) -> do
+        Just (sourceConfig, resolvedConnectionTemplate, pgMutations) -> do
           resp <-
             runExceptT $
               runLimits $
                 doQErr $
-                  runPGMutationTransaction requestId q userInfo logger sourceConfig pgMutations
+                  runPGMutationTransaction requestId q userInfo logger sourceConfig resolvedConnectionTemplate pgMutations
           -- we do not construct result fragments since we have only one result
           handleResult requestId gqlOpType resp \(telemTimeIO_DT, results) -> do
             let telemQueryType = Telem.Query
@@ -591,7 +593,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
                         (telemTimeIO_DT, resp) <-
                           AB.dispatchAnyBackend @BackendTransport
                             exists
-                            \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
+                            \(EB.DBStepInfo _ sourceConfig genSql tx resolvedConnectionTemplate :: EB.DBStepInfo b) ->
                               runDBMutation @b
                                 requestId
                                 q
@@ -601,15 +603,16 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
                                 sourceConfig
                                 tx
                                 genSql
+                                resolvedConnectionTemplate
                         finalResponse <-
-                          RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
+                          RJ.processRemoteJoins requestId logger env reqHdrs userInfo resp remoteJoins q
                         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
                       E.ExecStepAction actionExecPlan _ remoteJoins -> do
                         logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
                         (time, (resp, hdrs)) <- doQErr $ do
                           (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                           finalResponse <-
-                            RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
+                            RJ.processRemoteJoins requestId logger env reqHdrs userInfo resp remoteJoins q
                           pure (time, (finalResponse, hdrs))
                         pure $ AnnotatedResponsePart time Telem.Empty resp $ fromMaybe [] hdrs
                       E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
@@ -671,7 +674,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
           -- Update async action query subscription state
           case NE.nonEmpty (toList actionIds) of
             Nothing -> do
-              logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindDatabase
+              logQueryLog logger $ QueryLog q Nothing requestId (QueryLogKindDatabase Nothing)
               -- No async action query fields present, do nothing.
               pure ()
             Just nonEmptyActionIds -> do
@@ -766,7 +769,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
     runRemoteGQ requestId reqUnparsed fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins = do
       (telemTimeIO_DT, _respHdrs, resp) <-
         doQErr $
-          E.execRemoteGQ env httpMgr userInfo reqHdrs (rsDef rsi) gqlReq
+          E.execRemoteGQ env userInfo reqHdrs (rsDef rsi) gqlReq
       value <- mapExceptT lift $ extractFieldFromResponse fieldName resultCustomizer resp
       finalResponse <-
         doQErr $
@@ -774,7 +777,6 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
             requestId
             logger
             env
-            httpMgr
             reqHdrs
             userInfo
             -- TODO: avoid encode and decode here
@@ -786,8 +788,10 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
     WSServerEnv
       logger
       subscriptionsState
+      lqOpts
+      streamQOpts
       getSchemaCache
-      httpMgr
+      _
       _
       sqlGenCtx
       readOnlyMode
@@ -902,6 +906,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
               (_wsePrometheusMetrics serverEnv)
               subscriberMetadata
               subscriptionsState
+              lqOpts
               sourceName
               parameterizedQueryHash
               opName
@@ -928,6 +933,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
             (_wsePrometheusMetrics serverEnv)
             subscriberMetadata
             subscriptionsState
+            streamQOpts
             sourceName
             parameterizedQueryHash
             opName
@@ -1000,9 +1006,10 @@ onMessage ::
     Tracing.HasReporter m,
     MonadExecuteQuery m,
     MC.MonadBaseControl IO m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     EB.MonadQueryTags m,
-    HasResourceLimits m
+    HasResourceLimits m,
+    ProvidesNetwork m
   ) =>
   Env.Environment ->
   HashSet (L.EngineLogType L.Hasura) ->

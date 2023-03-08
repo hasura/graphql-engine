@@ -1,6 +1,6 @@
-import { CardedTable } from '@/new-components/CardedTable';
-import { Switch } from '@/new-components/Switch';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { CardedTable } from '../../../../new-components/CardedTable';
+import { Switch } from '../../../../new-components/Switch';
+import { Analytics, REDACT_EVERYTHING } from '../../../Analytics';
 import React from 'react';
 import { useFeatureFlags } from '../../hooks/useFeatureFlags';
 import { useSetFeatureFlagEnabled } from '../../hooks/useSetFeatureFlagEnabled';

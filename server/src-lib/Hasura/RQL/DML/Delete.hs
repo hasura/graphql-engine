@@ -74,7 +74,7 @@ validateDeleteQWith
     -- convert the where clause
     annSQLBoolExp <-
       withPathK "where" $
-        convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr tableName (valueParserWithCollectableType prepValBldr)
+        convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr fieldInfoMap (valueParserWithCollectableType prepValBldr)
 
     resolvedDelFltr <-
       convAnnBoolExpPartialSQL sessVarBldr $
@@ -122,6 +122,6 @@ runDelete q = do
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   userInfo <- askUserInfo
   validateDeleteQ q
-    >>= runTxWithCtx (_pscExecCtx sourceConfig) PG.ReadWrite
+    >>= runTxWithCtx (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) LegacyRQLQuery
       . flip runReaderT emptyQueryTagsComment
       . execDeleteQuery strfyNum Nothing userInfo

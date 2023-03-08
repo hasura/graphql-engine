@@ -1,6 +1,6 @@
 import React from 'react';
 import { ComponentMeta } from '@storybook/react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { FeatureFlags } from './FeatureFlags';
 import { FeatureFlagDefinition } from '../../types';
 

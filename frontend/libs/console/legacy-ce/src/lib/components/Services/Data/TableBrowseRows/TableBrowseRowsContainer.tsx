@@ -1,15 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '@/store';
-import { getManualEventsTriggers } from '@/metadata/selector';
+import { useAppDispatch, useAppSelector } from '../../../../storeHooks';
+import { getManualEventsTriggers } from '../../../../metadata/selector';
 import {
   adaptFormValuesToQuery,
   getFiltersAndSortFromUrlQueryParams,
   runFilterQuery,
   UserQuery,
-} from '@/features/BrowseRows';
-import useIsFirstRender from '@/hooks/useIsFirstRender';
+} from '../../../../features/BrowseRows';
+import useIsFirstRender from '../../../../hooks/useIsFirstRender';
+import { TableColumn } from '../../../../features/DataSource';
 import { vSetDefaults } from './ViewActions';
-
 import { setTable } from '../DataActions';
 import ViewRows from './ViewRows';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
@@ -107,7 +107,8 @@ export const TableBrowseRowsContainer = (
         filterAndSortFromQueryParams,
         (tableSchema?.columns || []).map(column => ({
           name: column.column_name,
-          dataType: column.data_type,
+          dataType: column.data_type as TableColumn['dataType'],
+          consoleDataType: 'string',
         }))
       );
 

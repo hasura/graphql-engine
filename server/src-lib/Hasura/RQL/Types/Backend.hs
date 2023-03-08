@@ -2,35 +2,37 @@
 
 module Hasura.RQL.Types.Backend
   ( Backend (..),
-    Representable,
     SessionVarType,
     XDisable,
     XEnable,
     ComputedFieldReturnType (..),
     _ReturnsTable,
     SupportedNamingCase (..),
+    HasSourceConfiguration (..),
+    Representable,
   )
 where
 
 import Autodocodec (HasCodec)
 import Control.Lens.TH (makePrisms)
 import Data.Aeson.Extended
+import Data.Environment qualified as Env
 import Data.Kind (Type)
 import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Extended
 import Data.Typeable (Typeable)
 import Hasura.Base.Error
 import Hasura.Base.ToErrorValue
+import Hasura.EncJSON (EncJSON)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation)
 import Hasura.RQL.Types.ResizePool (ServerReplicas)
+import Hasura.RQL.Types.SourceConfiguration
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
-
-type Representable a = (Show a, Eq a, Hashable a, NFData a)
 
 type SessionVarType b = CollectableType (ScalarType b)
 
@@ -69,90 +71,78 @@ data SupportedNamingCase = OnlyHasuraCase | AllConventions
 -- type application or a 'Proxy' parameter to disambiguate between
 -- different backends at the call site.
 class
-  ( Representable (TableName b),
-    Representable (FunctionName b),
-    Representable (FunctionArgument b),
-    Representable (ConstraintName b),
+  ( HasSourceConfiguration b,
     Representable (BasicOrderType b),
-    Representable (NullsOrderType b),
     Representable (Column b),
-    Representable (ScalarType b),
-    Representable (SQLExpression b),
-    Representable (ScalarSelectionArguments b),
-    Representable (SourceConnConfiguration b),
-    Representable (ExtraTableMetadata b),
-    Representable (XComputedField b),
     Representable (ComputedFieldDefinition b),
     Representable (ComputedFieldImplicitArguments b),
     Representable (ComputedFieldReturn b),
+    Representable (ConstraintName b),
+    Representable (ExtraTableMetadata b),
+    Representable (FunctionArgument b),
+    Representable (FunctionName b),
     Representable (HealthCheckTest b),
+    Representable (NullsOrderType b),
+    Representable (SQLExpression b),
+    Representable (ScalarSelectionArguments b),
+    Representable (ScalarType b),
+    Representable (XComputedField b),
+    Representable (TableName b),
     Eq (RawFunctionInfo b),
+    Representable (ResolvedConnectionTemplate b),
     Ord (TableName b),
     Ord (FunctionName b),
     Ord (ScalarType b),
     Ord (Column b),
     Data (TableName b),
     FromJSON (BackendConfig b),
-    FromJSON (BackendInfo b),
     FromJSON (Column b),
+    FromJSON (ComputedFieldDefinition b),
+    FromJSON (ConnectionTemplateRequestContext b),
     FromJSON (ConstraintName b),
+    FromJSON (ExtraTableMetadata b),
     FromJSON (FunctionName b),
+    FromJSON (HealthCheckTest b),
+    FromJSON (RawFunctionInfo b),
     FromJSON (ScalarType b),
     FromJSON (TableName b),
-    FromJSON (SourceConnConfiguration b),
-    FromJSON (ExtraTableMetadata b),
-    FromJSON (ComputedFieldDefinition b),
-    FromJSON (BackendSourceKind b),
-    FromJSON (HealthCheckTest b),
     FromJSONKey (Column b),
     HasCodec (BackendSourceKind b),
     HasCodec (Column b),
     HasCodec (FunctionName b),
-    HasCodec (SourceConnConfiguration b),
+    HasCodec (ScalarType b),
     HasCodec (TableName b),
     ToJSON (BackendConfig b),
-    ToJSON (BackendInfo b),
     ToJSON (Column b),
     ToJSON (ConstraintName b),
     ToJSON (FunctionArgument b),
     ToJSON (FunctionName b),
     ToJSON (ScalarType b),
-    ToJSON (SourceConfig b),
     ToJSON (TableName b),
-    ToJSON (SourceConnConfiguration b),
     ToJSON (ExtraTableMetadata b),
     ToJSON (SQLExpression b),
     ToJSON (ComputedFieldDefinition b),
     ToJSON (ComputedFieldImplicitArguments b),
     ToJSON (ComputedFieldReturn b),
     ToJSON (HealthCheckTest b),
+    ToJSON (ResolvedConnectionTemplate b),
     ToJSONKey (Column b),
-    ToJSONKey (FunctionName b),
     ToJSONKey (ScalarType b),
-    ToJSONKey (TableName b),
     ToTxt (Column b),
     ToTxt (FunctionName b),
     ToTxt (ScalarType b),
     ToTxt (TableName b),
     ToTxt (ConstraintName b),
     ToErrorValue (Column b),
-    ToErrorValue (FunctionName b),
-    ToErrorValue (ScalarType b),
     ToErrorValue (TableName b),
-    ToErrorValue (ConstraintName b),
-    Typeable (TableName b),
-    Typeable (ConstraintName b),
     Typeable (Column b),
     Typeable b,
     HasTag b,
     -- constraints of function argument
-    Functor (FunctionArgumentExp b),
-    Foldable (FunctionArgumentExp b),
     Traversable (FunctionArgumentExp b),
     -- Type constraints.
     Eq (BackendConfig b),
     Show (BackendConfig b),
-    Monoid (BackendConfig b),
     Eq (BackendInfo b),
     Show (BackendInfo b),
     Monoid (BackendInfo b),
@@ -160,7 +150,6 @@ class
     Show (CountType b),
     Eq (ScalarValue b),
     Show (ScalarValue b),
-    Eq (SourceConfig b),
     -- Extension constraints.
     Eq (XNodesAgg b),
     Show (XNodesAgg b),
@@ -170,14 +159,8 @@ class
     Show (XStreamingSubscription b),
     -- Intermediate Representations
     Traversable (BooleanOperators b),
-    Functor (UpdateVariant b),
-    Foldable (UpdateVariant b),
     Traversable (UpdateVariant b),
-    Functor (BackendInsert b),
-    Foldable (BackendInsert b),
     Traversable (BackendInsert b),
-    Functor (AggregationPredicates b),
-    Foldable (AggregationPredicates b),
     Traversable (AggregationPredicates b)
   ) =>
   Backend (b :: BackendType)
@@ -189,13 +172,6 @@ class
 
   -- | Runtime backend info derived from (possibly enriched) BackendConfig and stored in SchemaCache
   type BackendInfo b :: Type
-
-  -- | User facing connection configuration for a database.
-  type SourceConnConfiguration b :: Type
-
-  -- | Internal connection configuration for a database - connection string,
-  -- connection pool etc
-  type SourceConfig b :: Type
 
   -- Fully qualified name of a table
   type TableName b :: Type
@@ -261,14 +237,14 @@ class
   healthCheckImplementation = Nothing
 
   -- | An Implementation for version checking when adding a source.
-  versionCheckImplementation :: SourceConnConfiguration b -> IO (Either QErr ())
-  versionCheckImplementation = const (pure $ Right ())
+  versionCheckImplementation :: Env.Environment -> SourceConnConfiguration b -> IO (Either QErr ())
+  versionCheckImplementation = const (const (pure $ Right ()))
 
   -- | A backend type can opt into providing an implementation for
   -- fingerprinted pings to the source,
   -- useful for attribution that the user is using Hasura
-  runPingSource :: (String -> IO ()) -> SourceName -> SourceConnConfiguration b -> IO ()
-  runPingSource _ _ _ = pure ()
+  runPingSource :: Env.Environment -> (String -> IO ()) -> SourceName -> SourceConnConfiguration b -> IO ()
+  runPingSource _ _ _ _ = pure ()
 
   -- Backend-specific IR types
 
@@ -321,6 +297,18 @@ class
   type XNestedInserts b :: Type
 
   type XStreamingSubscription b :: Type
+
+  -- The result of dynamic connection template resolution
+  type ResolvedConnectionTemplate b :: Type
+  type ResolvedConnectionTemplate b = () -- Uninmplemented value
+
+  -- The request context for dynamic connection template resolution. This is
+  -- defined for the `<backend>_test_connection_template` metadata API
+  type ConnectionTemplateRequestContext b :: Type
+  type ConnectionTemplateRequestContext b = () -- Uninmplemented value
+
+  resolveConnectionTemplate :: SourceConfig b -> ConnectionTemplateRequestContext b -> Either QErr EncJSON
+  resolveConnectionTemplate _ _ = Left (err400 (NotSupported) "connection template is not implemented")
 
   -- functions on types
   isComparableType :: ScalarType b -> Bool

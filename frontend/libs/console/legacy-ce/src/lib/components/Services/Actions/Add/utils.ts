@@ -26,6 +26,12 @@ const getArgObjFromDefinition = (
   if (type === 'Int' || type === 'Float' || type === 'BigInt')
     return { [name]: 10 };
   if (type === 'Boolean') return { [name]: false };
+  if (type === '[String]' || type === '[ID]') {
+    return { [name]: ['foo', 'bar'] };
+  }
+  if (type === '[Int]' || type === '[Float]' || type === '[BigInt]') {
+    return { [name]: [10, 20] };
+  }
 
   const userDefType = typesdef?.types.find(
     (t: Record<string, any>) => t.name === type

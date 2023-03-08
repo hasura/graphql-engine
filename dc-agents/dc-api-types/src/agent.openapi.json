@@ -370,6 +370,103 @@
           }
         }
       }
+    },
+    "/datasets/templates/{template_name}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetGetTemplateResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "`template_name` not found"
+          }
+        }
+      }
+    },
+    "/datasets/clones/{clone_name}": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "clone_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json;charset=utf-8": {
+              "schema": {
+                "$ref": "#/components/schemas/DatasetCreateCloneRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetCreateCloneResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid `body`"
+          },
+          "404": {
+            "description": "`clone_name` not found"
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "clone_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetDeleteCloneResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "`clone_name` not found"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -403,6 +500,9 @@
           },
           "data_schema": {
             "$ref": "#/components/schemas/DataSchemaCapabilities"
+          },
+          "datasets": {
+            "$ref": "#/components/schemas/DatasetCapabilities"
           },
           "explain": {
             "$ref": "#/components/schemas/ExplainCapabilities"
@@ -456,7 +556,15 @@
         },
         "type": "object"
       },
-      "QueryCapabilities": {},
+      "ForeachCapabilities": {},
+      "QueryCapabilities": {
+        "properties": {
+          "foreach": {
+            "$ref": "#/components/schemas/ForeachCapabilities"
+          }
+        },
+        "type": "object"
+      },
       "InsertCapabilities": {
         "properties": {
           "supports_nested_inserts": {
@@ -502,33 +610,38 @@
       },
       "SubscriptionCapabilities": {},
       "ScalarType": {
-        "additionalProperties": true,
-        "anyOf": [
-          {
-            "enum": [
-              "string",
-              "number",
-              "bool"
-            ],
-            "type": "string"
-          },
-          {
-            "type": "string"
-          }
-        ]
+        "type": "string"
       },
       "ComparisonOperators": {
         "additionalProperties": {
           "$ref": "#/components/schemas/ScalarType"
         },
-        "description": "A map from comparison operator names to their argument types.\nOperator and argument type names must be valid GraphQL names.\nResult type names must be defined scalar types - either built-in or declared in ScalarTypesCapabilities.\n",
+        "description": "A map from comparison operator names to their argument types.\nOperator and argument type names must be valid GraphQL names.\nArgument type names must be defined scalar types declared in ScalarTypesCapabilities.\n",
         "type": "object"
       },
       "AggregateFunctions": {
         "additionalProperties": {
           "$ref": "#/components/schemas/ScalarType"
         },
-        "description": "A map from aggregate function names to their result types.\nFunction and result type names must be valid GraphQL names.\nResult type names must be defined scalar types - either built-in or declared in ScalarTypesCapabilities.\n",
+        "description": "A map from aggregate function names to their result types.\nFunction and result type names must be valid GraphQL names.\nResult type names must be defined scalar types declared in ScalarTypesCapabilities.\n",
+        "type": "object"
+      },
+      "UpdateColumnOperatorDefinition": {
+        "properties": {
+          "argument_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          }
+        },
+        "required": [
+          "argument_type"
+        ],
+        "type": "object"
+      },
+      "UpdateColumnOperators": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/UpdateColumnOperatorDefinition"
+        },
+        "description": "A map from update column operator names to their definitions.\nOperator names must be valid GraphQL names.\n",
         "type": "object"
       },
       "GraphQLType": {
@@ -542,7 +655,7 @@
         "type": "string"
       },
       "ScalarTypeCapabilities": {
-        "description": "Capabilities of a scalar type.\ncomparison_operators: The comparison operators supported by the scalar type.\naggregate_functions: The aggregate functions supported by the scalar type.\ngraphql_type: Associates the custom scalar type with one of the built-in GraphQL scalar types.  If a `graphql_type` is specified then HGE will use the parser for that built-in type when parsing values of the custom type. If not given then any JSON value will be accepted.\n",
+        "description": "Capabilities of a scalar type.\ncomparison_operators: The comparison operators supported by the scalar type.\naggregate_functions: The aggregate functions supported by the scalar type.\nupdate_column_operators: The update column operators supported by the scalar type.\ngraphql_type: Associates the custom scalar type with one of the built-in GraphQL scalar types.  If a `graphql_type` is specified then HGE will use the parser for that built-in type when parsing values of the custom type. If not given then any JSON value will be accepted.\n",
         "properties": {
           "aggregate_functions": {
             "$ref": "#/components/schemas/AggregateFunctions"
@@ -552,6 +665,9 @@
           },
           "graphql_type": {
             "$ref": "#/components/schemas/GraphQLType"
+          },
+          "update_column_operators": {
+            "$ref": "#/components/schemas/UpdateColumnOperators"
           }
         },
         "type": "object"
@@ -586,6 +702,7 @@
       "MetricsCapabilities": {},
       "ExplainCapabilities": {},
       "RawCapabilities": {},
+      "DatasetCapabilities": {},
       "ConfigSchemaResponse": {
         "nullable": false,
         "properties": {
@@ -1097,6 +1214,17 @@
       },
       "QueryRequest": {
         "properties": {
+          "foreach": {
+            "description": "If present, a list of columns and values for the columns that the query must be repeated for, applying the column values as a filter for each query.",
+            "items": {
+              "additionalProperties": {
+                "$ref": "#/components/schemas/ScalarValue"
+              },
+              "type": "object"
+            },
+            "nullable": true,
+            "type": "array"
+          },
           "query": {
             "$ref": "#/components/schemas/Query"
           },
@@ -1307,6 +1435,9 @@
           "function": {
             "$ref": "#/components/schemas/SingleColumnAggregateFunction"
           },
+          "result_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          },
           "type": {
             "enum": [
               "single_column"
@@ -1317,6 +1448,7 @@
         "required": [
           "function",
           "column",
+          "result_type",
           "type"
         ],
         "type": "object"
@@ -1777,6 +1909,9 @@
           "function": {
             "$ref": "#/components/schemas/SingleColumnAggregateFunction"
           },
+          "result_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          },
           "type": {
             "enum": [
               "single_column_aggregate"
@@ -1787,6 +1922,7 @@
         "required": [
           "function",
           "column",
+          "result_type",
           "type"
         ],
         "type": "object"
@@ -1881,6 +2017,21 @@
         "required": [
           "relations",
           "elements"
+        ],
+        "type": "object"
+      },
+      "ScalarValue": {
+        "properties": {
+          "value": {
+            "additionalProperties": true
+          },
+          "value_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          }
+        },
+        "required": [
+          "value",
+          "value_type"
         ],
         "type": "object"
       },
@@ -2133,6 +2284,9 @@
       },
       "InsertMutationOperation": {
         "properties": {
+          "post_insert_check": {
+            "$ref": "#/components/schemas/Expression"
+          },
           "returning_fields": {
             "additionalProperties": {
               "$ref": "#/components/schemas/Field"
@@ -2196,27 +2350,34 @@
         ],
         "type": "object"
       },
-      "IncrementColumnRowUpdate": {
+      "UpdateColumnOperatorName": {
+        "type": "string"
+      },
+      "CustomUpdateColumnOperatorRowUpdate": {
         "properties": {
           "column": {
             "description": "The name of the column in the row",
             "type": "string"
           },
+          "operator_name": {
+            "$ref": "#/components/schemas/UpdateColumnOperatorName"
+          },
           "type": {
             "enum": [
-              "increment"
+              "custom_operator"
             ],
             "type": "string"
           },
           "value": {
             "additionalProperties": true,
-            "description": "The value to use for the column"
+            "description": "The value to use with the column operator"
           },
           "value_type": {
             "$ref": "#/components/schemas/ScalarType"
           }
         },
         "required": [
+          "operator_name",
           "column",
           "value",
           "value_type",
@@ -2238,7 +2399,7 @@
           },
           "value": {
             "additionalProperties": true,
-            "description": "The value to use for the column"
+            "description": "The value to use with the column operator"
           },
           "value_type": {
             "$ref": "#/components/schemas/ScalarType"
@@ -2255,14 +2416,14 @@
       "RowUpdate": {
         "discriminator": {
           "mapping": {
-            "increment": "IncrementColumnRowUpdate",
+            "custom_operator": "CustomUpdateColumnOperatorRowUpdate",
             "set": "SetColumnRowUpdate"
           },
           "propertyName": "type"
         },
         "oneOf": [
           {
-            "$ref": "#/components/schemas/IncrementColumnRowUpdate"
+            "$ref": "#/components/schemas/CustomUpdateColumnOperatorRowUpdate"
           },
           {
             "$ref": "#/components/schemas/SetColumnRowUpdate"
@@ -2271,6 +2432,9 @@
       },
       "UpdateMutationOperation": {
         "properties": {
+          "post_update_check": {
+            "$ref": "#/components/schemas/Expression"
+          },
           "returning_fields": {
             "additionalProperties": {
               "$ref": "#/components/schemas/Field"
@@ -2355,6 +2519,61 @@
         },
         "required": [
           "query"
+        ],
+        "type": "object"
+      },
+      "DatasetGetTemplateResponse": {
+        "properties": {
+          "exists": {
+            "description": "Message detailing if the dataset exists",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "exists"
+        ],
+        "type": "object"
+      },
+      "DatasetCreateCloneResponse": {
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/Config"
+          }
+        },
+        "required": [
+          "config"
+        ],
+        "type": "object"
+      },
+      "Config": {
+        "additionalProperties": {
+          "additionalProperties": true
+        },
+        "type": "object"
+      },
+      "DatasetCreateCloneRequest": {
+        "properties": {
+          "from": {
+            "$ref": "#/components/schemas/DatasetTemplateName"
+          }
+        },
+        "required": [
+          "from"
+        ],
+        "type": "object"
+      },
+      "DatasetTemplateName": {
+        "type": "string"
+      },
+      "DatasetDeleteCloneResponse": {
+        "properties": {
+          "message": {
+            "description": "The named dataset to clone from",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
         ],
         "type": "object"
       }

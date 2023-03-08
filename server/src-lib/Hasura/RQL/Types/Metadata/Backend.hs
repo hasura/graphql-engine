@@ -11,6 +11,7 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -26,13 +27,12 @@ import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Server.Migrate.Version
+import Hasura.Services.Network
 import Network.HTTP.Client qualified as HTTP
-import Network.HTTP.Client.Manager (HasHttpManagerM)
 
 class
   ( Backend b,
@@ -75,7 +75,8 @@ class
       Inc.ArrowDistribute arr,
       ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
       MonadIO m,
-      HasHttpManagerM m
+      MonadBaseControl IO m,
+      ProvidesNetwork m
     ) =>
     Logger Hasura ->
     (Inc.Dependency (Maybe (BackendInvalidationKeys b)), BackendConfig b) `arr` BackendInfo b
@@ -90,7 +91,7 @@ class
   -- | Function that resolves the connection related source configuration, and
   -- creates a connection pool (and other related parameters) in the process
   resolveSourceConfig ::
-    (MonadIO m, MonadResolveSource m) =>
+    (MonadIO m, MonadBaseControl IO m, MonadResolveSource m) =>
     Logger Hasura ->
     SourceName ->
     SourceConnConfiguration b ->
@@ -105,14 +106,13 @@ class
     (MonadIO m, MonadBaseControl IO m, MonadResolveSource m) =>
     SourceMetadata b ->
     SourceConfig b ->
-    SourceTypeCustomization ->
-    m (Either QErr (ResolvedSource b))
+    m (Either QErr (DBObjectsIntrospection b))
 
   parseBoolExpOperations ::
-    (MonadError QErr m, TableCoreInfoRM b m) =>
+    (MonadError QErr m) =>
     ValueParser b m v ->
-    TableName b ->
-    FieldInfoMap (FieldInfo b) ->
+    FieldInfoMap (FieldInfo b) -> -- The root table's FieldInfoMap
+    FieldInfoMap (FieldInfo b) -> -- The FieldInfoMap of the table currently "in focus"
     ColumnReference b ->
     Value ->
     m [OpExpG b v]
@@ -172,8 +172,8 @@ class
     ) =>
     BoolExpResolver b m v ->
     BoolExpRHSParser b m v ->
-    TableName b ->
-    FieldInfoMap (FieldInfo b) ->
+    FieldInfoMap (FieldInfo b) -> -- The root table's FieldInfoMap
+    FieldInfoMap (FieldInfo b) -> -- The FieldInfoMap of the table currently "in focus"
     ComputedFieldInfo b ->
     Value ->
     m (AnnComputedFieldBoolExp b v)
@@ -186,3 +186,16 @@ class
     (MonadIO m, MonadBaseControl IO m) =>
     SourceConfig b ->
     ExceptT QErr m (RecreateEventTriggers, SourceCatalogMigrationState)
+
+  validateLogicalModel ::
+    (MonadIO m, MonadError QErr m) =>
+    Env.Environment ->
+    SourceConnConfiguration b ->
+    LogicalModelMetadata b ->
+    m ()
+  validateLogicalModel _ _ _ =
+    throw500 "validateLogicalModel: not implemented for this backend."
+
+  -- | Allows the backend to control whether or not a particular source supports being
+  -- the target of remote relationships or not
+  supportsBeingRemoteRelationshipTarget :: SourceConfig b -> Bool

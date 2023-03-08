@@ -1,4 +1,4 @@
-import { getElementFromAlias, baseUrl } from '../../../helpers/dataHelpers';
+import { getBaseUrl } from '../../../support/getBaseUrl';
 
 // fake inconsistentMetadata api response
 const inconsistentMetadata = {
@@ -29,17 +29,19 @@ export const inconsistentMetadataPage = () => {
     // send all other requests to the destination server
     req.reply();
   });
+
+  const baseUrl = getBaseUrl();
   cy.url().should(
     'eq',
     `${baseUrl}/settings/metadata-status?is_redirected=true`
   );
 
-  cy.get(getElementFromAlias('inconsistent_name_0')).contains('DB2');
-  cy.get(getElementFromAlias('inconsistent_type_0')).contains('source');
-  cy.get(getElementFromAlias('inconsistent_reason_0')).contains(
+  cy.get('[data-test=inconsistent_name_0').contains('DB2');
+  cy.get('[data-test=inconsistent_type_0').contains('source');
+  cy.get('[data-test=inconsistent_reason_0').contains(
     'Inconsistent object: connection error'
   );
-  cy.get(getElementFromAlias('inconsistent_reason_0')).contains(
+  cy.get('[data-test=inconsistent_reason_0').contains(
     'could not translate host name "db" to address: Name or service not known'
   );
 };

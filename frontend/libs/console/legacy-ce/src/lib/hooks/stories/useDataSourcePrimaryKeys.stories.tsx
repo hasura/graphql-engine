@@ -1,5 +1,5 @@
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
+import { ReactQueryDecorator } from '../../storybook/decorators/react-query';
+import { ReduxDecorator } from '../../storybook/decorators/redux-decorator';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import React from 'react';
 import { AllPrimaryKeys } from './useDataSourcePrimaryKeys.component';

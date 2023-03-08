@@ -1,8 +1,10 @@
-import { useAppSelector } from '@/store';
+import { InconsistentObject } from '../../../metadata/types';
+import { useSelector } from 'react-redux';
 
 export const useInconsistentObject = () => {
-  const inconsistentObjects = useAppSelector(
+  // Needed to avoid circular dependency
+  const inconsistentObjects = useSelector<any>(
     state => state.metadata.inconsistentObjects
-  );
+  ) as InconsistentObject[];
   return inconsistentObjects;
 };

@@ -29,13 +29,13 @@ import ConnectDatabase from './DataSources/ConnectDatabase';
 import { setDriver } from '../../../dataSources';
 import { UPDATE_CURRENT_DATA_SOURCE } from './DataActions';
 import { getSourcesFromMetadata } from '../../../metadata/selector';
-import { ManageDatabaseContainer } from '@/features/Data';
-import { Connect } from '@/features/ConnectDB';
+import { ManageDatabaseContainer } from '../../../features/Data';
+import { Connect } from '../../../features/ConnectDB';
 import { TableInsertItemContainer } from './TableInsertItem/TableInsertItemContainer';
 import { ModifyTableContainer } from './TableModify/ModifyTableContainer';
 import { TableEditItemContainer } from './TableEditItem/TableEditItemContainer';
 import { TableBrowseRowsContainer } from './TableBrowseRows/TableBrowseRowsContainer';
-import { ManageTable } from '@/features/Data/ManageTable';
+import { ManageTable } from '../../../features/Data/ManageTable';
 
 const makeDataRouter = (
   connect,

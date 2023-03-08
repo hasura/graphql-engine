@@ -2,7 +2,7 @@ import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 
-import { Card } from '@/new-components/Card';
+import { Card } from '.';
 
 export default {
   title: 'components/Card ⚛️',

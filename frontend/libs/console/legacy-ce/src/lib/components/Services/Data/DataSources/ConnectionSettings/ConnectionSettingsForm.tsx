@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle */
-import { useMetadata } from '@/features/MetadataAPI';
-import globals from '@/Globals';
-import { isCloudConsole } from '@/utils';
+import { useMetadata } from '../../../../../features/MetadataAPI';
+import globals from '../../../../../Globals';
+import { isCloudConsole } from '../../../../../utils';
 import React, { Dispatch } from 'react';
 import { ConnectDBActions, ConnectDBState } from '../state';
 import { buildFormSettings } from './buildFormSettings';

@@ -26,6 +26,7 @@ module Hasura.GraphQL.Schema.Backend
   ( -- * Main Types
     BackendSchema (..),
     BackendTableSelectSchema (..),
+    BackendCustomTypeSelectSchema (..),
     BackendUpdateOperatorsSchema (..),
     MonadBuildSchema,
 
@@ -39,10 +40,12 @@ where
 
 import Data.Kind (Type)
 import Data.Text.Casing (GQLNameIdentifier)
+import Hasura.CustomReturnType (CustomReturnType)
 import Hasura.GraphQL.ApolloFederation (ApolloFederationParserFunction)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser hiding (Type)
+import Hasura.LogicalModel.Cache (LogicalModelInfo)
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Insert qualified as IR
@@ -180,6 +183,15 @@ class
     TableName b ->
     SchemaT r m [FieldParser n (MutationDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
+  buildLogicalModelRootFields ::
+    MonadBuildSchema b r m n =>
+    LogicalModelInfo b ->
+    SchemaT
+      r
+      m
+      (Maybe (FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+  buildLogicalModelRootFields _ = pure Nothing
+
   -- | Make a parser for relationships. Default implementaton elides
   -- relationships altogether.
   mkRelationshipParser ::
@@ -289,6 +301,19 @@ class Backend b => BackendTableSelectSchema (b :: BackendType) where
     SchemaT r m (Maybe (FieldParser n (AggSelectExp b)))
 
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
+
+class Backend b => BackendCustomTypeSelectSchema (b :: BackendType) where
+  logicalModelArguments ::
+    MonadBuildSourceSchema b r m n =>
+    G.Name ->
+    CustomReturnType b ->
+    SchemaT r m (InputFieldsParser n (IR.SelectArgsG b (UnpreparedValue b)))
+
+  logicalModelSelectionSet ::
+    MonadBuildSourceSchema b r m n =>
+    G.Name ->
+    LogicalModelInfo b ->
+    SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 
 class Backend b => BackendUpdateOperatorsSchema (b :: BackendType) where
   -- | Intermediate Representation of the set of update operators that act

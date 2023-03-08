@@ -87,7 +87,9 @@ module Hasura.RQL.Types.SchemaCache
     DependencyReason (..),
     SchemaDependency (..),
     mkParentDep,
+    mkLogicalModelParentDep,
     mkColDep,
+    mkLogicalModelColDep,
     mkComputedFieldDep,
     getDependentObjs,
     getDependentObjsWith,
@@ -99,6 +101,7 @@ module Hasura.RQL.Types.SchemaCache
     CronTriggerInfo (..),
     MetadataResourceVersion (..),
     initialResourceVersion,
+    getLogicalModelBoolExpDeps,
     getBoolExpDeps,
     InlinedAllowlist,
     BoolExpM (..),
@@ -123,6 +126,7 @@ import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection qualified as Postgres
 import Hasura.Base.Error
 import Hasura.GraphQL.Context (GQLContext, RoleContext)
+import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.IR.BoolExp
@@ -178,6 +182,24 @@ mkParentDep ::
 mkParentDep s tn =
   SchemaDependency (SOSourceObj s $ AB.mkAnyBackend @b (SOITable tn)) DRTable
 
+-- | When we depend on anything to do with logical models, we also declare that
+-- we depend on the logical model as a whole. This is the "parent" dependency
+-- in the dependency tree for a given logical model.
+mkLogicalModelParentDep ::
+  forall b.
+  Backend b =>
+  SourceName ->
+  LogicalModelName ->
+  SchemaDependency
+mkLogicalModelParentDep source logicalModelName = do
+  let sourceObject :: SchemaObjId
+      sourceObject =
+        SOSourceObj source $
+          AB.mkAnyBackend @b $
+            SOILogicalModel logicalModelName
+
+  SchemaDependency sourceObject DRTable
+
 mkColDep ::
   forall b.
   (Backend b) =>
@@ -192,6 +214,26 @@ mkColDep reason source tn col =
     . AB.mkAnyBackend
     . SOITableObj @b tn
     $ TOCol @b col
+
+-- | Declare a dependency on a particular column of a logical model's return
+-- type.
+mkLogicalModelColDep ::
+  forall b.
+  (Backend b) =>
+  DependencyReason ->
+  SourceName ->
+  LogicalModelName ->
+  Column b ->
+  SchemaDependency
+mkLogicalModelColDep reason source logicalModelName column = do
+  let sourceObject :: SchemaObjId
+      sourceObject =
+        SOSourceObj source $
+          AB.mkAnyBackend $
+            SOILogicalModelObj @b logicalModelName $
+              LMOCol @b column
+
+  SchemaDependency sourceObject reason
 
 mkComputedFieldDep ::
   forall b.
@@ -687,6 +729,60 @@ getRemoteDependencies schemaCache sourceName =
       SORemoteSchemaPermission {} -> False
       SORole {} -> False
 
+-- | What schema dependencies does a given row permission for a logical model
+-- have? This will almost certainly involve some number of dependencies on
+-- logical models, but may also involve dependencies on tables. Although we
+-- can't relate tables and logical models yet, we can still declare permissions
+-- like, "you can only see this logical model if your user ID exists in this
+-- table".
+getLogicalModelBoolExpDeps ::
+  forall b.
+  (GetAggregationPredicatesDeps b) =>
+  SourceName ->
+  LogicalModelName ->
+  AnnBoolExpPartialSQL b ->
+  [SchemaDependency]
+getLogicalModelBoolExpDeps source logicalModelName = \case
+  BoolAnd exps -> concatMap (getLogicalModelBoolExpDeps source logicalModelName) exps
+  BoolOr exps -> concatMap (getLogicalModelBoolExpDeps source logicalModelName) exps
+  BoolNot e -> getLogicalModelBoolExpDeps source logicalModelName e
+  BoolField fld -> getLogicalModelColExpDeps source logicalModelName fld
+  BoolExists (GExists refqt whereExp) -> do
+    let table :: SchemaObjId
+        table = SOSourceObj source $ AB.mkAnyBackend $ SOITable @b refqt
+
+    SchemaDependency table DRRemoteTable : getBoolExpDeps source refqt whereExp
+
+-- | What schema dependencies does this row permission for a particular column
+-- within a logical model have? This is a fairly simple function at the moment
+-- as there's only one type of column: columns! As a result, we have no
+-- dependencies from relationships, computed fields, or aggregation predicates,
+-- as none of these things are supported.
+getLogicalModelColExpDeps ::
+  forall b.
+  (GetAggregationPredicatesDeps b) =>
+  SourceName ->
+  LogicalModelName ->
+  AnnBoolExpFld b (PartialSQLExp b) ->
+  [SchemaDependency]
+getLogicalModelColExpDeps source logicalModelName = \case
+  AVRelationship _ _ -> []
+  AVComputedField _ -> []
+  AVAggregationPredicates _ -> []
+  AVColumn colInfo opExps -> do
+    let columnName :: Column b
+        columnName = ciColumn colInfo
+
+        -- Do we depend on /any/ arbitrary SQL expression, or are /all/ our
+        -- dependencies on session variables?
+        colDepReason :: DependencyReason
+        colDepReason = bool DRSessionVariable DROnType (any hasStaticExp opExps)
+
+        colDep :: SchemaDependency
+        colDep = mkLogicalModelColDep @b colDepReason source logicalModelName columnName
+
+    colDep : getLogicalModelOpExpDeps source logicalModelName opExps
+
 -- | Discover the schema dependencies of an @AnnBoolExpPartialSQL@.
 getBoolExpDeps ::
   forall b.
@@ -773,6 +869,20 @@ getOpExpDeps opExps = do
           IsRoot -> rootTable
           IsCurrent -> currTable
     pure $ mkColDep @b DROnType source table col
+
+-- | What dependencies does this row permission for a logical model have? This
+-- is really a utility function for the tree of dependency traversals under
+-- 'getLogicalModelBoolExpDeps', specifically focusing on boolean operators.
+getLogicalModelOpExpDeps ::
+  forall b.
+  (Backend b) =>
+  SourceName ->
+  LogicalModelName ->
+  [OpExpG b (PartialSQLExp b)] ->
+  [SchemaDependency]
+getLogicalModelOpExpDeps source logicalModelName operatorExpressions = do
+  RootOrCurrentColumn _ column <- mapMaybe opExpDepCol operatorExpressions
+  pure (mkLogicalModelColDep @b DROnType source logicalModelName column)
 
 -- | Asking for a table's fields info without explicit @'SourceName' argument.
 -- The source name is implicitly inferred from @'SourceM' via @'TableCoreInfoRM'.

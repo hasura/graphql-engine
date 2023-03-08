@@ -32,12 +32,7 @@ import DetailsView from './components/Services/ApiExplorer/Rest/Details';
 import { HerokuCallbackHandler } from './components/Services/Data/DataSources/CreateDataSource/Heroku/TempCallback';
 import { NeonCallbackHandler } from './components/Services/Data/DataSources/CreateDataSource/Neon/TempCallback';
 import InsecureDomains from './components/Services/Settings/InsercureDomains/AllowInsecureDomains';
-import {
-  checkFeatureSupport,
-  INSECURE_TLS_ALLOW_LIST,
-} from './helpers/versionUtils';
 import AuthContainer from './components/Services/Auth/AuthContainer';
-import { PrometheusSettings } from './features/Prometheus';
 import { FeatureFlags } from './features/FeatureFlags';
 import { AllowListDetail } from './components/Services/AllowList';
 
@@ -155,10 +150,9 @@ const routes = store => {
             <Route path="logout" component={logoutConnector(connect)} />
             <Route path="about" component={aboutConnector(connect)} />
             <Route path="inherited-roles" component={inheritedRolesConnector} />
-            {checkFeatureSupport(INSECURE_TLS_ALLOW_LIST) && (
-              <Route path="insecure-domain" component={InsecureDomains} />
-            )}
-            <Route path="prometheus-settings" component={PrometheusSettings} />
+
+            <Route path="insecure-domain" component={InsecureDomains} />
+
             <Route path="feature-flags" component={FeatureFlags} />
           </Route>
           {dataRouter}

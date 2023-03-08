@@ -1,10 +1,10 @@
-import { SelectItem } from '@/components/Common/SelectInputSplitField/SelectInputSplitField';
-import { TableColumn } from '@/features/DataSource';
+import { SelectItem } from '../../../../../components/Common/SelectInputSplitField/SelectInputSplitField';
+import { TableColumn } from '../../../../DataSource';
 import { createHistory } from 'history';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
-import { ReduxState } from '@/types';
-import { NormalizedTable } from '@/dataSources/types';
+import { ReduxState } from '../../../../../types';
+import { NormalizedTable } from '../../../../../dataSources/types';
 import {
   Integers,
   Reals,
@@ -24,12 +24,12 @@ const convertValue = (
   if (Array.isArray(value)) {
     return value;
   }
-  if (tableColumnType === 'integer') {
+  if (tableColumnType === 'integer' || tableColumnType === 'number') {
     const parsed = parseInt(value, 10);
     if (!isNaN(parsed)) return parsed;
     return value;
   }
-  if (tableColumnType === 'boolean') {
+  if (tableColumnType === 'boolean' || tableColumnType === 'bool') {
     if (typeof value === 'string') {
       return value === 'true';
     }

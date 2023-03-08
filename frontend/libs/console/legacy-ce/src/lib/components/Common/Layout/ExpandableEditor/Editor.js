@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 
 class Editor extends React.Component {
   static getDerivedStateFromProps(nextProps, state) {
@@ -67,7 +67,7 @@ class Editor extends React.Component {
     const saveWithToggle = () => saveFunc(this.toggleEditor);
     return (
       <Button
-        type="submit"
+        type="button"
         mode="primary"
         isLoading={isProcessing}
         loadingText="Saving..."
@@ -87,7 +87,7 @@ class Editor extends React.Component {
     const removeWithToggle = () => removeFunc(this.toggleEditor);
     return (
       <Button
-        type="submit"
+        type="button"
         mode="destructive"
         isLoading={isProcessing}
         loadingText="Removing..."

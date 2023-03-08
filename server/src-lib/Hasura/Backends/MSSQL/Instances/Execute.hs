@@ -52,16 +52,17 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
+import Network.HTTP.Types qualified as HTTP
 
 instance BackendExecute 'MSSQL where
   type PreparedQuery 'MSSQL = Text
   type MultiplexedQuery 'MSSQL = MultiplexedQuery'
-  type ExecutionMonad 'MSSQL = ExceptT QErr IO
+  type ExecutionMonad 'MSSQL = ExceptT QErr
 
   mkDBQueryPlan = msDBQueryPlan
   mkDBMutationPlan = msDBMutationPlan
   mkLiveQuerySubscriptionPlan = msDBLiveQuerySubscriptionPlan
-  mkDBStreamingSubscriptionPlan _ _ _ _ = throw500 "Streaming subscriptions are not supported for MS-SQL sources yet"
+  mkDBStreamingSubscriptionPlan _ _ _ _ _ _ = throw500 "Streaming subscriptions are not supported for MS-SQL sources yet"
   mkDBQueryExplain = msDBQueryExplain
   mkSubscriptionExplain = msDBSubscriptionExplain
 
@@ -91,18 +92,20 @@ msDBQueryPlan ::
   SourceName ->
   SourceConfig 'MSSQL ->
   QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   m (DBStepInfo 'MSSQL)
-msDBQueryPlan userInfo _env sourceName sourceConfig qrf = do
+msDBQueryPlan userInfo _env sourceName sourceConfig qrf _ _ = do
   let sessionVariables = _uiSession userInfo
   statement <- planQuery sessionVariables qrf
   queryTags <- ask
   -- Append Query tags comment to the select statement
   let printer = fromSelect statement `withQueryTagsPrinter` queryTags
       queryString = ODBC.renderQuery (toQueryPretty printer)
-  pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) (runSelectQuery printer)
+
+  pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) (runSelectQuery printer) ()
   where
-    runSelectQuery :: Printer -> ExceptT QErr IO EncJSON
-    runSelectQuery queryPrinter = do
+    runSelectQuery queryPrinter = OnBaseMonad do
       let queryTx = encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat queryPrinter)
       mssqlRunReadOnly (_mscExecCtx sourceConfig) queryTx
 
@@ -125,13 +128,15 @@ msDBQueryExplain ::
   SourceName ->
   SourceConfig 'MSSQL ->
   QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   m (AB.AnyBackend DBStepInfo)
-msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
+msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf _ _ = do
   let sessionVariables = _uiSession userInfo
   statement <- planQuery sessionVariables qrf
   let query = toQueryPretty (fromSelect statement)
       queryString = ODBC.renderQuery query
-      odbcQuery =
+      odbcQuery = OnBaseMonad $
         mssqlRunReadOnly
           (_mscExecCtx sourceConfig)
           do
@@ -145,13 +150,13 @@ msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
               )
   pure $
     AB.mkAnyBackend $
-      DBStepInfo @'MSSQL sourceName sourceConfig Nothing odbcQuery
+      DBStepInfo @'MSSQL sourceName sourceConfig Nothing odbcQuery ()
 
 msDBSubscriptionExplain ::
   (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
   SubscriptionQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL) ->
   m SubscriptionQueryPlanExplanation
-msDBSubscriptionExplain (SubscriptionQueryPlan plan sourceConfig cohortId variables _) = do
+msDBSubscriptionExplain (SubscriptionQueryPlan plan sourceConfig cohortId _dynamicConnection variables _) = do
   let (MultiplexedQuery' reselect _queryTags) = _plqpQuery plan
       query = toQueryPretty $ fromSelect $ multiplexRootReselect [(cohortId, variables)] reselect
       mssqlExecCtx = (_mscExecCtx sourceConfig)
@@ -240,19 +245,22 @@ msDBMutationPlan ::
     MonadReader QueryTagsComment m
   ) =>
   UserInfo ->
+  Env.Environment ->
   Options.StringifyNumbers ->
   SourceName ->
   SourceConfig 'MSSQL ->
   MutationDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   m (DBStepInfo 'MSSQL)
-msDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf = do
+msDBMutationPlan userInfo _environment stringifyNum sourceName sourceConfig mrf _headers _gName = do
   go <$> case mrf of
     MDBInsert annInsert -> executeInsert userInfo stringifyNum sourceConfig annInsert
     MDBDelete annDelete -> executeDelete userInfo stringifyNum sourceConfig annDelete
     MDBUpdate annUpdate -> executeUpdate userInfo stringifyNum sourceConfig annUpdate
     MDBFunction {} -> throw400 NotSupported "function mutations are not supported in MSSQL"
   where
-    go v = DBStepInfo @'MSSQL sourceName sourceConfig Nothing v
+    go v = DBStepInfo @'MSSQL sourceName sourceConfig Nothing v ()
 
 -- * Subscription
 
@@ -268,16 +276,23 @@ msDBLiveQuerySubscriptionPlan ::
   SourceConfig 'MSSQL ->
   Maybe G.Name ->
   RootFieldMap (QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL)) ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   m (SubscriptionQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL))
-msDBLiveQuerySubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig namespace rootFields = do
+msDBLiveQuerySubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig namespace rootFields _ _ = do
   (reselect, prepareState) <- planSubscription (OMap.mapKeys _rfaAlias rootFields) _uiSession
   cohortVariables <- prepareStateCohortVariables sourceConfig _uiSession prepareState
   queryTags <- ask
   let parameterizedPlan = ParameterizedSubscriptionQueryPlan _uiRole $ (MultiplexedQuery' reselect queryTags)
   pure $
-    SubscriptionQueryPlan parameterizedPlan sourceConfig dummyCohortId cohortVariables namespace
+    SubscriptionQueryPlan parameterizedPlan sourceConfig dummyCohortId () cohortVariables namespace
 
-prepareStateCohortVariables :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m) => SourceConfig 'MSSQL -> SessionVariables -> PrepareState -> m CohortVariables
+prepareStateCohortVariables ::
+  (MonadError QErr m, MonadIO m, MonadBaseControl IO m) =>
+  SourceConfig 'MSSQL ->
+  SessionVariables ->
+  PrepareState ->
+  m CohortVariables
 prepareStateCohortVariables sourceConfig session prepState = do
   (namedVars, posVars) <- validateVariables sourceConfig session prepState
   let PrepareState {sessionVariables} = prepState
@@ -414,6 +429,7 @@ msDBRemoteRelationshipPlan ::
   forall m.
   ( MonadError QErr m
   ) =>
+  Env.Environment ->
   UserInfo ->
   SourceName ->
   SourceConfig 'MSSQL ->
@@ -427,9 +443,11 @@ msDBRemoteRelationshipPlan ::
   -- response along with the relationship.
   RQLTypes.FieldName ->
   (RQLTypes.FieldName, SourceRelationshipSelection 'MSSQL Void UnpreparedValue) ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   Options.StringifyNumbers ->
   m (DBStepInfo 'MSSQL)
-msDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship _stringifyNumbers = do
+msDBRemoteRelationshipPlan _env userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship _headers _gName _stringifyNumbers = do
   -- `stringifyNumbers` is not currently handled in any SQL Server operation
   statement <- planSourceRelationship (_uiSession userInfo) lhs lhsSchema argumentId relationship
 
@@ -437,9 +455,8 @@ msDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
       queryString = ODBC.renderQuery $ toQueryPretty printer
       odbcQuery = runSelectQuery printer
 
-  pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) odbcQuery
+  pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) odbcQuery ()
   where
-    runSelectQuery :: Printer -> ExceptT QErr IO EncJSON
-    runSelectQuery queryPrinter = do
+    runSelectQuery queryPrinter = OnBaseMonad do
       let queryTx = encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat queryPrinter)
       mssqlRunReadOnly (_mscExecCtx sourceConfig) queryTx

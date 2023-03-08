@@ -1,4 +1,5 @@
 {
-  "label": "MySQL [Preview]",
-  "position": 5
+  "label": "MySQL",
+  "position": 5,
+  "className": "alpha-cat"
 }

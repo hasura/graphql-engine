@@ -5,6 +5,7 @@ export {
   useMetadataTables,
   useRemoteDatabaseRelationships,
   useRemoteSchemaRelationships,
+  useSupportedQueryTypes,
 } from './hooks/useMetadataTables';
 export { useMetadataVersion } from './hooks/useMetadataVersion';
 export { useMetadataTableComputedFields } from './hooks/useMetadataTableComputedFields';
@@ -32,6 +33,6 @@ export { useObjectRelationships } from './hooks/useObjectRelationships';
 export { useArrayRelationships } from './hooks/useArrayRelationships';
 export { useLocalRelationships } from './hooks/useLocalRelationships';
 
-export { TMigration } from './hooks/useMetadataMigration';
+export type { TMigration } from './hooks/useMetadataMigration';
 
 export * from './types';

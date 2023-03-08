@@ -1,0 +1,29 @@
+query GetProducts {
+  product(limit: 10) {
+    id
+    name
+  }
+}
+
+query GetProduct($id: Int!) {
+  product_by_pk(id: $id) {
+    id
+    description
+    name
+    price
+    image_urls(path: "$[0]")
+  }
+}
+
+mutation PlaceOrder($products: order_product_arr_rel_insert_input!) {
+  insert_order_one(
+    object: {
+      products: $products
+      billing_address_id: 222
+      user_id: 225
+      shipping_address_id: 222
+    }
+  ) {
+    id
+  }
+}

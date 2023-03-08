@@ -6,6 +6,8 @@ import {
   parseCustomTypes,
   hydrateTypeRelationships,
 } from './hasuraCustomTypeUtils';
+import { format } from 'prettier/standalone';
+import parserGraphql from 'prettier/parser-graphql';
 
 export const isValidOperationName = operationName => {
   return operationName === 'query' || operationName === 'mutation';
@@ -20,6 +22,13 @@ const getActionTypeFromOperationType = operationType => {
     return 'query';
   }
   return 'mutation';
+};
+
+export const formatSdl = sdl => {
+  return format(sdl, {
+    parser: 'graphql',
+    plugins: [parserGraphql],
+  });
 };
 
 const getOperationTypeFromActionType = operationType => {
@@ -134,8 +143,10 @@ export const getTypesFromSdl = sdl => {
 
   schemaAst.definitions.forEach(def => {
     const typeDef = getTypeFromAstDef(def);
-    typeDefinition.error = typeDef.error;
-    typeDefinition.types.push(typeDef);
+    if (typeDef) {
+      typeDefinition.error = typeDef.error;
+      typeDefinition.types.push(typeDef);
+    }
   });
 
   return typeDefinition;
@@ -298,17 +309,19 @@ export const getActionDefinitionSdl = (
   outputType,
   description
 ) => {
-  return getObjectTypeSdl({
-    name: getOperationTypeFromActionType(actionType),
-    fields: [
-      {
-        name,
-        arguments: args,
-        type: outputType,
-        description,
-      },
-    ],
-  });
+  return formatSdl(
+    getObjectTypeSdl({
+      name: getOperationTypeFromActionType(actionType),
+      fields: [
+        {
+          name,
+          arguments: args,
+          type: outputType,
+          description,
+        },
+      ],
+    })
+  );
 };
 
 export const getServerTypesFromSdl = (sdl, existingTypes) => {

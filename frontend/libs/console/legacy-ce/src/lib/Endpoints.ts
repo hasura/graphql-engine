@@ -1,4 +1,4 @@
-import { getWebsocketProtocol } from '@/helpers/protocol';
+import { getWebsocketProtocol } from './helpers/protocol';
 import consoleGlobals from './Globals';
 
 export const globalCookiePolicy = 'same-origin';

@@ -1,4 +1,5 @@
 export type { GlobalWindowHeap } from './core/heap/types';
+export * from './types';
 
 // CORE UTILITIES
 export { startTracing } from './core/startTracing';

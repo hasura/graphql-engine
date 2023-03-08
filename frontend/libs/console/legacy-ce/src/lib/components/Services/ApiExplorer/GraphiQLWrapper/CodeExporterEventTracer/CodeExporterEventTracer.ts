@@ -1,4 +1,4 @@
-import { programmaticallyTraceError } from '@/features/Analytics';
+import { programmaticallyTraceError } from '../../../../../features/Analytics';
 import { useEffect } from 'react';
 import { onGraphiQlContainerClick } from './onGraphiQlContainerClick';
 

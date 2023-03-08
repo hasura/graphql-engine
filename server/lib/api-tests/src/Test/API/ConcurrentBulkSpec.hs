@@ -92,15 +92,12 @@ postgresRunSqlQuery :: TestEnvironment -> String -> IO Value
 postgresRunSqlQuery testEnvironment bulkType = do
   let backendTypeMetadata = fromMaybe (error "Expected a backend type but got nothing") $ getBackendTypeConfig testEnvironment
       sourceName = BackendType.backendSourceName backendTypeMetadata
-      backendPrefix =
-        case BackendType.backendTypeString backendTypeMetadata of
-          "pg" -> ""
-          x -> x <> "_"
+      backendPrefix = BackendType.backendTypeString backendTypeMetadata
   postV2Query 200 testEnvironment $
     [interpolateYaml|
       type: #{bulkType}
       args:
-      - type: #{backendPrefix}run_sql
+      - type: #{backendPrefix}_run_sql
         args:
           cascade: false
           read_only: true
@@ -108,7 +105,7 @@ postgresRunSqlQuery testEnvironment bulkType = do
           sql: |
             SELECT column_name, table_name, is_generated, is_identity, identity_generation
             FROM information_schema.columns where table_schema = 'public';
-      - type: #{backendPrefix}run_sql
+      - type: #{backendPrefix}_run_sql
         args:
           cascade: false
           read_only: true
@@ -116,7 +113,7 @@ postgresRunSqlQuery testEnvironment bulkType = do
           sql: |
             SELECT is_identity
             FROM information_schema.columns where table_schema = 'public';
-      - type: #{backendPrefix}run_sql
+      - type: #{backendPrefix}_run_sql
         args:
           cascade: false
           read_only: true
@@ -124,7 +121,7 @@ postgresRunSqlQuery testEnvironment bulkType = do
           sql: |
             SELECT column_name, table_name
             FROM information_schema.columns where table_schema = 'public';
-      - type: #{backendPrefix}run_sql
+      - type: #{backendPrefix}_run_sql
         args:
           cascade: false
           read_only: true
@@ -138,17 +135,14 @@ runSqlDrop :: TestEnvironment -> IO Value
 runSqlDrop testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Expected a backend type but got nothing") $ getBackendTypeConfig testEnvironment
       sourceName = BackendType.backendSourceName backendTypeMetadata
-      backendPrefix =
-        case BackendType.backendTypeString backendTypeMetadata of
-          "pg" -> ""
-          x -> x <> "_"
+      backendPrefix = BackendType.backendTypeString backendTypeMetadata
   postV2Query
     500
     testEnvironment
     [interpolateYaml|
       type: concurrent_bulk
       args:
-      - type: #{backendPrefix}run_sql
+      - type: #{backendPrefix}_run_sql
         args:
           cascade: false
           read_only: false
@@ -161,15 +155,12 @@ mssqlRunSqlQuery :: TestEnvironment -> String -> IO Value
 mssqlRunSqlQuery testEnvironment bulkType = do
   let backendTypeMetadata = fromMaybe (error "Expected a backend type but got nothing") $ getBackendTypeConfig testEnvironment
       sourceName = BackendType.backendSourceName backendTypeMetadata
-      backendPrefix =
-        case BackendType.backendTypeString backendTypeMetadata of
-          "pg" -> ""
-          x -> x <> "_"
+      backendPrefix = BackendType.backendTypeString backendTypeMetadata
   postV2Query 200 testEnvironment $
     [interpolateYaml|
       type: #{bulkType}
       args:
-      - type: #{backendPrefix}run_sql
+      - type: #{backendPrefix}_run_sql
         args:
           cascade: false
           read_only: true
@@ -183,7 +174,7 @@ mssqlRunSqlQuery testEnvironment bulkType = do
                 'db_datareader', 'db_denydatawriter', 'db_denydatareader', 'hdb_catalog'
               )
             ORDER BY s.name;
-      - type: #{backendPrefix}run_sql
+      - type: #{backendPrefix}_run_sql
         args:
           cascade: false
           read_only: true
@@ -198,7 +189,7 @@ mssqlRunSqlQuery testEnvironment bulkType = do
                 'db_datareader', 'db_denydatawriter', 'db_denydatareader', 'hdb_catalog'
               )
             ORDER BY s.name;
-      - type: #{backendPrefix}run_sql
+      - type: #{backendPrefix}_run_sql
         args:
           cascade: false
           read_only: true
@@ -211,7 +202,7 @@ mssqlRunSqlQuery testEnvironment bulkType = do
                 'guest', 'INFORMATION_SCHEMA', 'sys'
               )
             ORDER BY s.name;
-      - type: #{backendPrefix}run_sql
+      - type: #{backendPrefix}_run_sql
         args:
           cascade: false
           read_only: true

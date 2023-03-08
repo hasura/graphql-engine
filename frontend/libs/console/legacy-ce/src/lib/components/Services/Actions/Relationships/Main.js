@@ -1,5 +1,5 @@
 import React from 'react';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import styles from '../Actions.module.scss';
 import ActionContainer from '../Containers/ActionContainer';
 import { findAction } from '../utils';

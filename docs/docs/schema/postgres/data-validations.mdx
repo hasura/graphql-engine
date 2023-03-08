@@ -200,7 +200,7 @@ BEGIN
 
   -- throw an error if article content is too long
   IF content_length > 100 THEN
-      RAISE EXCEPTION 'Content can not have more than 100 words';
+      RAISE EXCEPTION USING ERRCODE= '22000', MESSAGE= 'Content can not have more than 100 words';
   END IF;
 
   -- return the article row if no error
@@ -232,16 +232,10 @@ Now, if we try to insert an article whose content has more than 100 words, we'll
     {
       "message": "postgres query error",
       "extensions": {
-        "internal": {
-          "error": {
-            "exec_status": "FatalError",
-            "message": "Content can not have more than 100 words",
-            "status_code": "P0001",
-          },
-        },
-        "path": "$.selectionSet.insert_article.args.objects",
-        "code": "unexpected"
-      }
+        "path": "$",
+        "code": "data-exception"
+      },
+      "message": "Content can not have more than 100 words"
     }
   ]
 }`}

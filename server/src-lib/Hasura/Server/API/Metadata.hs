@@ -21,15 +21,18 @@ import GHC.Generics.Extended (constrName)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Logging qualified as L
+import Hasura.LogicalModel.API qualified as LogicalModels
 import Hasura.Metadata.Class
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ApiLimit
 import Hasura.RQL.DDL.ComputedField
+import Hasura.RQL.DDL.ConnectionTemplate
 import Hasura.RQL.DDL.CustomTypes
 import Hasura.RQL.DDL.DataConnector
 import Hasura.RQL.DDL.Endpoint
 import Hasura.RQL.DDL.EventTrigger
+import Hasura.RQL.DDL.FeatureFlag
 import Hasura.RQL.DDL.GraphqlSchemaIntrospection
 import Hasura.RQL.DDL.InheritedRoles
 import Hasura.RQL.DDL.Metadata
@@ -74,11 +77,12 @@ import Hasura.SQL.Backend
 import Hasura.Server.API.Backend
 import Hasura.Server.API.Instances ()
 import Hasura.Server.Logging (SchemaSyncLog (..), SchemaSyncThreadType (TTMetadataApi))
+import Hasura.Server.SchemaCacheRef
 import Hasura.Server.Types
 import Hasura.Server.Utils (APIVersion (..))
+import Hasura.Services
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Client.Manager qualified as HTTP
 
 data RQLMetadataV1
   = -- Sources
@@ -127,6 +131,14 @@ data RQLMetadataV1
   | -- Computed fields
     RMAddComputedField !(AnyBackend AddComputedField)
   | RMDropComputedField !(AnyBackend DropComputedField)
+  | -- Connection template
+    RMTestConnectionTemplate !(AnyBackend TestConnectionTemplate)
+  | -- Logical Models
+    RMGetLogicalModel !(AnyBackend LogicalModels.GetLogicalModel)
+  | RMTrackLogicalModel !(AnyBackend LogicalModels.TrackLogicalModel)
+  | RMUntrackLogicalModel !(AnyBackend LogicalModels.UntrackLogicalModel)
+  | RMCreateSelectLogicalModelPermission !(AnyBackend (LogicalModels.CreateLogicalModelPermission SelPerm))
+  | RMDropSelectLogicalModelPermission !(AnyBackend LogicalModels.DropLogicalModelPermission)
   | -- Tables event triggers
     RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)
@@ -210,6 +222,8 @@ data RQLMetadataV1
   | RMGetCatalogState !GetCatalogState
   | RMSetCatalogState !SetCatalogState
   | RMTestWebhookTransform !(Unvalidated TestWebhookTransform)
+  | -- Feature Flags
+    RMGetFeatureFlag !GetFeatureFlag
   | -- Bulk metadata queries
     RMBulk [RQLMetadataRequest]
   deriving (Generic)
@@ -289,6 +303,7 @@ instance FromJSON RQLMetadataV1 where
       "set_query_tags" -> RMSetQueryTagsConfig <$> args
       "set_opentelemetry_config" -> RMSetOpenTelemetryConfig <$> args
       "set_opentelemetry_status" -> RMSetOpenTelemetryStatus <$> args
+      "get_feature_flag" -> RMGetFeatureFlag <$> args
       "bulk" -> RMBulk <$> args
       -- Backend prefixed metadata actions:
       _ -> do
@@ -365,23 +380,25 @@ instance FromJSON RQLMetadata where
 
 runMetadataQuery ::
   ( MonadIO m,
+    MonadError QErr m,
     MonadBaseControl IO m,
     Tracing.MonadTrace m,
-    MonadMetadataStorage m,
+    MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    ProvidesHasuraServices m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
   InstanceId ->
   UserInfo ->
-  HTTP.Manager ->
   ServerConfigCtx ->
-  RebuildableSchemaCache ->
+  SchemaCacheRef ->
   RQLMetadata ->
   m (EncJSON, RebuildableSchemaCache)
-runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx schemaCache RQLMetadata {..} = do
-  (metadata, currentResourceVersion) <- Tracing.trace "fetchMetadata" fetchMetadata
+runMetadataQuery env logger instanceId userInfo serverConfigCtx schemaCacheRef RQLMetadata {..} = do
+  schemaCache <- liftIO $ fst <$> readSchemaCacheRef schemaCacheRef
+  (metadata, currentResourceVersion) <- Tracing.trace "fetchMetadata" $ liftEitherM fetchMetadata
   let exportsMetadata = \case
         RMV1 (RMExportMetadata _) -> True
         RMV2 (RMV2ExportMetadata _) -> True
@@ -410,9 +427,7 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
       & flip runReaderT logger
       & runMetadataT metadata metadataDefaults
       & runCacheRWT schemaCache
-      & peelRun (RunCtx userInfo httpManager serverConfigCtx)
-      & runExceptT
-      & liftEitherM
+      & peelRun (RunCtx userInfo serverConfigCtx)
   -- set modified metadata in storage
   if queryModifiesMetadata _rqlMetadata
     then case (_sccMaintenanceMode serverConfigCtx, _sccReadOnlyMode serverConfigCtx) of
@@ -424,7 +439,8 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
               "Attempting to put new metadata in storage"
         newResourceVersion <-
           Tracing.trace "setMetadata" $
-            setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
+            liftEitherM $
+              setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
         L.unLogger logger $
           SchemaSyncLog L.LevelInfo TTMetadataApi $
             String $
@@ -432,7 +448,8 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
 
         -- notify schema cache sync
         Tracing.trace "notifySchemaCacheSync" $
-          notifySchemaCacheSync newResourceVersion instanceId cacheInvalidations
+          liftEitherM $
+            notifySchemaCacheSync newResourceVersion instanceId cacheInvalidations
         L.unLogger logger $
           SchemaSyncLog L.LevelInfo TTMetadataApi $
             String $
@@ -442,9 +459,7 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
           Tracing.trace "setMetadataResourceVersionInSchemaCache" $
             setMetadataResourceVersionInSchemaCache newResourceVersion
               & runCacheRWT modSchemaCache
-              & peelRun (RunCtx userInfo httpManager serverConfigCtx)
-              & runExceptT
-              & liftEitherM
+              & peelRun (RunCtx userInfo serverConfigCtx)
 
         pure (r, modSchemaCache')
       (MaintenanceModeEnabled (), ReadOnlyModeDisabled) ->
@@ -477,7 +492,13 @@ queryModifiesMetadata = \case
       RMListSourceKinds _ -> False
       RMGetSourceTables _ -> False
       RMGetTableInfo _ -> False
+      RMTestConnectionTemplate _ -> False
       RMSuggestRelationships _ -> False
+      RMGetLogicalModel _ -> False
+      RMTrackLogicalModel _ -> True
+      RMUntrackLogicalModel _ -> True
+      RMCreateSelectLogicalModelPermission _ -> True
+      RMDropSelectLogicalModelPermission _ -> True
       RMBulk qs -> any queryModifiesMetadata qs
       -- We used to assume that the fallthrough was True,
       -- but it is better to be explicit here to warn when new constructors are added.
@@ -564,6 +585,7 @@ queryModifiesMetadata = \case
       RMSetQueryTagsConfig _ -> True
       RMSetOpenTelemetryConfig _ -> True
       RMSetOpenTelemetryStatus _ -> True
+      RMGetFeatureFlag _ -> False
   RMV2 q ->
     case q of
       RMV2ExportMetadata _ -> False
@@ -575,13 +597,14 @@ runMetadataQueryM ::
     CacheRWM m,
     Tracing.MonadTrace m,
     UserInfoM m,
-    HTTP.HasHttpManagerM m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
     HasServerConfigCtx m,
     MonadReader r m,
     Has (L.Logger L.Hasura) r,
-    MonadEventLogCleanup m
+    MonadError QErr m,
+    MonadEventLogCleanup m,
+    ProvidesHasuraServices m
   ) =>
   Env.Environment ->
   MetadataResourceVersion ->
@@ -605,20 +628,21 @@ runMetadataQueryV1M ::
     CacheRWM m,
     Tracing.MonadTrace m,
     UserInfoM m,
-    HTTP.HasHttpManagerM m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
     HasServerConfigCtx m,
     MonadReader r m,
     Has (L.Logger L.Hasura) r,
-    MonadEventLogCleanup m
+    MonadError QErr m,
+    MonadEventLogCleanup m,
+    ProvidesHasuraServices m
   ) =>
   Env.Environment ->
   MetadataResourceVersion ->
   RQLMetadataV1 ->
   m EncJSON
 runMetadataQueryV1M env currentResourceVersion = \case
-  RMAddSource q -> dispatchMetadata runAddSource q
+  RMAddSource q -> dispatchMetadata (runAddSource env) q
   RMDropSource q -> runDropSource q
   RMRenameSource q -> runRenameSource q
   RMUpdateSource q -> dispatchMetadata runUpdateSource q
@@ -656,6 +680,12 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDropFunctionPermission q -> dispatchMetadata runDropFunctionPermission q
   RMAddComputedField q -> dispatchMetadata runAddComputedField q
   RMDropComputedField q -> dispatchMetadata runDropComputedField q
+  RMTestConnectionTemplate q -> dispatchMetadata runTestConnectionTemplate q
+  RMGetLogicalModel q -> dispatchMetadata LogicalModels.runGetLogicalModel q
+  RMTrackLogicalModel q -> dispatchMetadata (LogicalModels.runTrackLogicalModel env) q
+  RMUntrackLogicalModel q -> dispatchMetadata LogicalModels.runUntrackLogicalModel q
+  RMCreateSelectLogicalModelPermission q -> dispatchMetadata LogicalModels.runCreateSelectLogicalModelPermission q
+  RMDropSelectLogicalModelPermission q -> dispatchMetadata LogicalModels.runDropSelectLogicalModelPermission q
   RMCreateEventTrigger q ->
     dispatchMetadataAndEventTrigger
       ( validateTransforms
@@ -747,6 +777,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMSetQueryTagsConfig q -> runSetQueryTagsConfig q
   RMSetOpenTelemetryConfig q -> runSetOpenTelemetryConfig q
   RMSetOpenTelemetryStatus q -> runSetOpenTelemetryStatus q
+  RMGetFeatureFlag q -> runGetFeatureFlag q
   RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
   where
     dispatchMetadata ::
@@ -772,6 +803,7 @@ runMetadataQueryV2M ::
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
     Has (L.Logger L.Hasura) r,
+    MonadError QErr m,
     MonadEventLogCleanup m
   ) =>
   MetadataResourceVersion ->

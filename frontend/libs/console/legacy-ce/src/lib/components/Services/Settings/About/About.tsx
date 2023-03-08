@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Connect } from 'react-redux';
 import Helmet from 'react-helmet';
 import { FaSpinner } from 'react-icons/fa';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 
 import globals from '../../../../Globals';
 

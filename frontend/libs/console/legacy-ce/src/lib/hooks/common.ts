@@ -1,8 +1,8 @@
-import { getRunSqlQuery } from '@/components/Common/utils/v1QueryUtils';
-import Endpoints from '@/Endpoints';
-import { useAppSelector } from '@/store';
-import { Constraint } from '@/dataSources/types';
-import { MSSqlConstraint } from '@/components/Services/Data/mergeData';
+import { getRunSqlQuery } from '../components/Common/utils/v1QueryUtils';
+import Endpoints from '../Endpoints';
+import { useAppSelector } from '../storeHooks';
+import { Constraint } from '../dataSources/types';
+import { MSSqlConstraint } from '../components/Services/Data/mergeData';
 import type { UseQueryOptions } from 'react-query';
 import { useQuery } from 'react-query';
 import { APIError } from './error';

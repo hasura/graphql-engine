@@ -1,5 +1,5 @@
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
+import { ReactQueryDecorator } from '../../storybook/decorators/react-query';
+import { ReduxDecorator } from '../../storybook/decorators/redux-decorator';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import React from 'react';
 import { NonTrackableFunctions } from './useNonTrackableFunctions.component';
@@ -12,10 +12,11 @@ export default {
   ],
 } as ComponentMeta<typeof NonTrackableFunctions>;
 
-export const Playground: ComponentStory<typeof NonTrackableFunctions> =
-  args => {
-    return <NonTrackableFunctions {...args} />;
-  };
+export const Playground: ComponentStory<
+  typeof NonTrackableFunctions
+> = args => {
+  return <NonTrackableFunctions {...args} />;
+};
 
 Playground.args = {
   currentDatasource: 'default',

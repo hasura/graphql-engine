@@ -1,6 +1,6 @@
-import { CLI_CONSOLE_MODE } from '@/constants';
-import Endpoints from '@/Endpoints';
-import globals from '@/Globals';
+import { CLI_CONSOLE_MODE } from '../../../constants';
+import Endpoints from '../../../Endpoints';
+import globals from '../../../Globals';
 
 const rqlQueryTypes = [
   'select',

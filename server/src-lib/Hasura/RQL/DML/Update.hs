@@ -177,7 +177,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   -- convert the where clause
   annSQLBoolExp <-
     withPathK "where" $
-      convBoolExp fieldInfoMap selPerm (uqWhere uq) sessVarBldr tableName prepValBldr
+      convBoolExp fieldInfoMap selPerm (uqWhere uq) sessVarBldr fieldInfoMap prepValBldr
 
   resolvedUpdFltr <-
     convAnnBoolExpPartialSQL sessVarBldr $
@@ -237,6 +237,6 @@ runUpdate q = do
   userInfo <- askUserInfo
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   validateUpdateQuery q
-    >>= runTxWithCtx (_pscExecCtx sourceConfig) PG.ReadWrite
+    >>= runTxWithCtx (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) LegacyRQLQuery
       . flip runReaderT emptyQueryTagsComment
       . execUpdateQuery strfyNum Nothing userInfo

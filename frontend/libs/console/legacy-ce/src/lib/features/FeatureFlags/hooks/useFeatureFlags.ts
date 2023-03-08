@@ -1,6 +1,6 @@
 import { useQuery } from 'react-query';
-import { getLSItem, LS_KEYS } from '@/utils/localStorage';
-import { isJsonString } from '@/components/Common/utils/jsUtils';
+import { getLSItem, LS_KEYS } from '../../../utils/localStorage';
+import { isJsonString } from '../../../components/Common/utils/jsUtils';
 import {
   FeatureFlagType,
   FeatureFlagDefinition,

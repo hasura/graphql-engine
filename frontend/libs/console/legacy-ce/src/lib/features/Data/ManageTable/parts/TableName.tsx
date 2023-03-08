@@ -1,6 +1,6 @@
-import { Badge } from '@/new-components/Badge';
-import { Button } from '@/new-components/Button';
-import { DropdownMenu } from '@/new-components/DropdownMenu';
+import { Badge } from '../../../../new-components/Badge';
+import { Button } from '../../../../new-components/Button';
+import { DropdownMenu } from '../../../../new-components/DropdownMenu';
 import React from 'react';
 import { FaChevronDown, FaDatabase } from 'react-icons/fa';
 

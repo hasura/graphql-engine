@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import { saveActionPermission, removeActionPermission } from '../ServerIO';
 import { permCloseEdit } from './reducer';
 

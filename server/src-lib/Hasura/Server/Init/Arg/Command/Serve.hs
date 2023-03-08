@@ -73,7 +73,7 @@ import Database.PG.Query qualified as Query
 import Hasura.Backends.Postgres.Connection.MonadTx qualified as MonadTx
 import Hasura.Cache.Bounded qualified as Bounded
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
-import Hasura.GraphQL.Schema.NamingCase (NamingCase)
+import Hasura.GraphQL.Schema.NamingCase qualified as NC
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
@@ -87,6 +87,7 @@ import Hasura.Server.Logging qualified as Server.Logging
 import Hasura.Server.Types qualified as Types
 import Hasura.Session qualified as Session
 import Network.Wai.Handler.Warp qualified as Warp
+import Network.WebSockets qualified as WebSockets
 import Options.Applicative qualified as Opt
 import Refined (NonNegative, Positive, Refined, refineTH)
 import Witch qualified
@@ -475,17 +476,18 @@ disableCorsOption =
       Config._helpMessage = "Disable CORS. Do not send any CORS headers on any request"
     }
 
-parseEnableConsole :: Opt.Parser Bool
+parseEnableConsole :: Opt.Parser Config.ConsoleStatus
 parseEnableConsole =
-  Opt.switch
-    ( Opt.long "enable-console"
-        <> Opt.help (Config._helpMessage enableConsoleOption)
-    )
+  (bool Config.ConsoleDisabled Config.ConsoleEnabled)
+    <$> Opt.switch
+      ( Opt.long "enable-console"
+          <> Opt.help (Config._helpMessage enableConsoleOption)
+      )
 
-enableConsoleOption :: Config.Option Bool
+enableConsoleOption :: Config.Option Config.ConsoleStatus
 enableConsoleOption =
   Config.Option
-    { Config._default = False,
+    { Config._default = Config.ConsoleDisabled,
       Config._envVar = "HASURA_GRAPHQL_ENABLE_CONSOLE",
       Config._helpMessage = "Enable API Console (default: false)"
     }
@@ -529,7 +531,7 @@ consoleSentryDsnOption =
     }
 
 -- NOTE: Should this be an 'Opt.flag'?
-parseEnableTelemetry :: Opt.Parser (Maybe Bool)
+parseEnableTelemetry :: Opt.Parser (Maybe Config.TelemetryStatus)
 parseEnableTelemetry =
   Opt.optional $
     Opt.option
@@ -538,25 +540,26 @@ parseEnableTelemetry =
           <> Opt.help (Config._helpMessage enableTelemetryOption)
       )
 
-enableTelemetryOption :: Config.Option Bool
+enableTelemetryOption :: Config.Option Config.TelemetryStatus
 enableTelemetryOption =
   Config.Option
-    { _default = True,
+    { _default = Config.TelemetryEnabled,
       _envVar = "HASURA_GRAPHQL_ENABLE_TELEMETRY",
       _helpMessage = "Enable anonymous telemetry on the server and console. For more information, see: https://hasura.io/docs/latest/guides/telemetry (default: true)"
     }
 
-parseWsReadCookie :: Opt.Parser Bool
+parseWsReadCookie :: Opt.Parser Config.WsReadCookieStatus
 parseWsReadCookie =
-  Opt.switch
-    ( Opt.long "ws-read-cookie"
-        <> Opt.help (Config._helpMessage wsReadCookieOption)
-    )
+  bool Config.WsReadCookieDisabled Config.WsReadCookieEnabled
+    <$> Opt.switch
+      ( Opt.long "ws-read-cookie"
+          <> Opt.help (Config._helpMessage wsReadCookieOption)
+      )
 
-wsReadCookieOption :: Config.Option Bool
+wsReadCookieOption :: Config.Option Config.WsReadCookieStatus
 wsReadCookieOption =
   Config.Option
-    { Config._default = False,
+    { Config._default = Config.WsReadCookieDisabled,
       Config._envVar = "HASURA_GRAPHQL_WS_READ_COOKIE",
       Config._helpMessage =
         "Read cookie on WebSocket initial handshake, even when CORS is disabled."
@@ -698,17 +701,18 @@ streamingMxBatchSizeOption =
           <> "size. Default 100. "
     }
 
-parseEnableAllowlist :: Opt.Parser Bool
+parseEnableAllowlist :: Opt.Parser Config.AllowListStatus
 parseEnableAllowlist =
-  Opt.switch
-    ( Opt.long "enable-allowlist"
-        <> Opt.help (Config._helpMessage enableAllowlistOption)
-    )
+  bool Config.AllowListDisabled Config.AllowListEnabled
+    <$> Opt.switch
+      ( Opt.long "enable-allowlist"
+          <> Opt.help (Config._helpMessage enableAllowlistOption)
+      )
 
-enableAllowlistOption :: Config.Option Bool
+enableAllowlistOption :: Config.Option Config.AllowListStatus
 enableAllowlistOption =
   Config.Option
-    { Config._default = False,
+    { Config._default = Config.AllowListDisabled,
       Config._envVar = "HASURA_GRAPHQL_ENABLE_ALLOWLIST",
       Config._helpMessage = "Only accept allowed GraphQL queries"
     }
@@ -770,22 +774,23 @@ parsePlanCacheSize =
             )
       )
 
-parseGraphqlDevMode :: Opt.Parser Bool
+parseGraphqlDevMode :: Opt.Parser Config.DevModeStatus
 parseGraphqlDevMode =
-  Opt.switch
-    ( Opt.long "dev-mode"
-        <> Opt.help (Config._helpMessage graphqlDevModeOption)
-    )
+  bool Config.DevModeDisabled Config.DevModeEnabled
+    <$> Opt.switch
+      ( Opt.long "dev-mode"
+          <> Opt.help (Config._helpMessage graphqlDevModeOption)
+      )
 
-graphqlDevModeOption :: Config.Option Bool
+graphqlDevModeOption :: Config.Option Config.DevModeStatus
 graphqlDevModeOption =
   Config.Option
-    { Config._default = False,
+    { Config._default = Config.DevModeDisabled,
       Config._envVar = "HASURA_GRAPHQL_DEV_MODE",
       Config._helpMessage = "Set dev mode for GraphQL requests; include 'internal' key in the errors extensions (if required) of the response"
     }
 
-parseGraphqlAdminInternalErrors :: Opt.Parser (Maybe Bool)
+parseGraphqlAdminInternalErrors :: Opt.Parser (Maybe Config.AdminInternalErrorsStatus)
 parseGraphqlAdminInternalErrors =
   Opt.optional $
     Opt.option
@@ -794,11 +799,11 @@ parseGraphqlAdminInternalErrors =
           <> Opt.help (Config._helpMessage graphqlAdminInternalErrorsOption)
       )
 
-graphqlAdminInternalErrorsOption :: Config.Option Bool
+graphqlAdminInternalErrorsOption :: Config.Option Config.AdminInternalErrorsStatus
 graphqlAdminInternalErrorsOption =
   Config.Option
     { -- Default to `true` to enable backwards compatibility
-      Config._default = True,
+      Config._default = Config.AdminInternalErrorsEnabled,
       Config._envVar = "HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS",
       Config._helpMessage = "Enables including 'internal' information in an error response for requests made by an 'admin' (default: true)"
     }
@@ -876,17 +881,18 @@ enableRemoteSchemaPermsOption =
       Config._helpMessage = "Enables remote schema permissions (default: false)"
     }
 
-parseWebSocketCompression :: Opt.Parser Bool
+parseWebSocketCompression :: Opt.Parser WebSockets.CompressionOptions
 parseWebSocketCompression =
-  Opt.switch
-    ( Opt.long "websocket-compression"
-        <> Opt.help (Config._helpMessage webSocketCompressionOption)
-    )
+  bool WebSockets.NoCompression (WebSockets.PermessageDeflateCompression WebSockets.defaultPermessageDeflate)
+    <$> Opt.switch
+      ( Opt.long "websocket-compression"
+          <> Opt.help (Config._helpMessage webSocketCompressionOption)
+      )
 
-webSocketCompressionOption :: Config.Option Bool
+webSocketCompressionOption :: Config.Option WebSockets.CompressionOptions
 webSocketCompressionOption =
   Config.Option
-    { Config._default = False,
+    { Config._default = WebSockets.NoCompression,
       Config._envVar = "HASURA_GRAPHQL_CONNECTION_COMPRESSION",
       Config._helpMessage = "Enable WebSocket permessage-deflate compression (default: false)"
     }
@@ -1061,7 +1067,7 @@ enableMetadataQueryLoggingOption =
 
 -- TODO(SOLOMON): The defaulting behavior for this occurs inside the Engine. In
 -- an isolated PR we should move that defaulting in the parsing stage.
-parseDefaultNamingConvention :: Opt.Parser (Maybe NamingCase)
+parseDefaultNamingConvention :: Opt.Parser (Maybe NC.NamingCase)
 parseDefaultNamingConvention =
   Opt.optional $
     Opt.option
@@ -1070,14 +1076,10 @@ parseDefaultNamingConvention =
           <> Opt.help (Config._helpMessage defaultNamingConventionOption)
       )
 
--- NOTE: This should be 'Config.Option NC.NamingCase' with a default
--- of 'NC.HasuraCase' but 'ServeOptions' expects a 'Maybe
--- NC.NamingCase' and HGE handles the defaulting explicitly. This
--- should be changed in a subsequent PR.
-defaultNamingConventionOption :: Config.Option ()
+defaultNamingConventionOption :: Config.Option NC.NamingCase
 defaultNamingConventionOption =
   Config.Option
-    { Config._default = (),
+    { Config._default = NC.HasuraCase,
       Config._envVar = "HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION",
       Config._helpMessage =
         "Default naming convention for the auto generated graphql names. Possible values are"

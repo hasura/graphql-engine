@@ -1,5 +1,5 @@
-import globals from '@/Globals';
-import type { LuxFeature } from '@/Globals';
+import globals from '../Globals';
+import type { LuxFeature } from '../Globals';
 
 /*
  * This function returns true only if the current context is Hasura Cloud
@@ -17,4 +17,8 @@ export function hasLuxFeatureAccess(g: typeof globals, feature: LuxFeature) {
 
 export function getProjectId(g: typeof globals) {
   return isCloudConsole(g) ? g.hasuraCloudProjectId : undefined;
+}
+
+export function getTenantId(g: typeof globals) {
+  return isCloudConsole(g) ? g.hasuraCloudTenantId : undefined;
 }

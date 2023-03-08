@@ -1,6 +1,7 @@
 -- | Utility functions for use defining autodocodec codecs.
 module Hasura.Metadata.DTO.Utils
   ( boolConstCodec,
+    boundedEnumCodec,
     codecNamePrefix,
     discriminatorField,
     fromEnvCodec,
@@ -12,6 +13,7 @@ where
 
 import Autodocodec
 import Data.Char (isAlphaNum)
+import Data.List.NonEmpty qualified as NE
 import Data.Scientific (Scientific)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
@@ -28,6 +30,29 @@ boolConstCodec trueCase falseCase =
     (bool trueCase falseCase)
     (== trueCase)
     $ codec @Bool
+
+-- | A codec for a 'Bounded' 'Enum' that maps to literal strings using
+-- a provided function.
+--
+--
+-- === Example usage
+--
+-- >>> data Fruit = FruitApple | FruitOrange deriving (Show, Eq, Enum, Bounded)
+-- >>> let c = boundedEnumCodec (snakeCase . drop 5)
+-- >>> toJSONVia c Apple
+-- String "apple"
+-- >>> JSON.parseMaybe (parseJSONVia c) (String "orange") :: Maybe Fruit
+-- Just Orange
+boundedEnumCodec ::
+  forall enum.
+  (Eq enum, Enum enum, Bounded enum) =>
+  (enum -> String) ->
+  JSONCodec enum
+boundedEnumCodec display =
+  let ls = [minBound .. maxBound]
+   in case NE.nonEmpty ls of
+        Nothing -> error "0 enum values ?!"
+        Just ne -> stringConstCodec (NE.map (\v -> (v, T.pack (display v))) ne)
 
 -- | Defines a required object field named @version@ that must have the given
 -- integer value. On serialization the field will have the given value
@@ -50,7 +75,7 @@ optionalVersionField v =
 
 -- | Useful in an object codec for a field that indicates the type of the
 -- object within a union.
-discriminatorField :: Text -> Text -> ObjectCodec () ()
+discriminatorField :: Text -> Text -> ObjectCodec a ()
 discriminatorField name value =
   dimapCodec (const ()) (const value) $
     requiredFieldWith' name (literalTextCodec value)

@@ -26,7 +26,7 @@ All requests are `POST` requests to the `/v1/graphql` (or
 
 The `/v1/graphql` endpoint returns HTTP 200 status codes for all
 responses. This is a **breaking** change from the `/v1alpha1/graphql`
-behaviour, where request errors and internal errors were responded with
+behavior, where request errors and internal errors were responded with
 4xx and 5xx status codes.
 
 :::
@@ -35,9 +35,8 @@ behaviour, where request errors and internal errors were responded with
 
 The following types of requests can be made using the GraphQL API:
 
-- [Query / Subscription](/api-reference/graphql-api/query.mdx )
+- [Query / Subscription](/api-reference/graphql-api/query.mdx)
 - [Mutation](/api-reference/graphql-api/mutation.mdx)
-
 
 ## Batching requests
 
@@ -62,7 +61,7 @@ query second {
     name
   }
 }`}
-response={`[
+  response={`[
   {
     "data": {
       "author": [

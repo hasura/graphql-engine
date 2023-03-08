@@ -1,9 +1,9 @@
-import { Table, TableRow, TableHeader } from '@/components/Common/Table';
-import { currentDriver, Driver, setDriver } from '@/dataSources';
-import { TableColumn } from '@/dataSources/types';
-import { QualifiedTable } from '@/metadata/types';
+import { Table, TableRow, TableHeader } from '../../components/Common/Table';
+import { currentDriver, Driver, setDriver } from '../../dataSources';
+import { TableColumn } from '../../dataSources/types';
+import { QualifiedTable } from '../../metadata/types';
 
-import { useAppDispatch, useAppSelector } from '@/store';
+import { useAppDispatch, useAppSelector } from '../../storeHooks';
 import React from 'react';
 import { useSingleTable } from '..';
 

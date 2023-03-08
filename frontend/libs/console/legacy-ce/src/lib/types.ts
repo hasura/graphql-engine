@@ -91,3 +91,44 @@ export type NullableProps<T> = { [K in keyof T]: T[K] | null };
 export type DeepNullableProps<T> = {
   [K in keyof T]: DeepNullableProps<T[K]> | null;
 };
+
+/**
+ * Set all keys in an object to Never. Useful for writing custom types.
+ * To grasp it:
+ * Given { a: string; b: number }
+ * called like this MakeNever<MyType>
+ * It will output { a: never; b: never }
+ */
+export type MakeNever<T> = {
+  [P in keyof T]: never;
+};
+
+/**
+ * Makes a discriminated union
+ * Useful if you have part of the object where you need
+ *
+ * To grasp it:
+ * Given { buttonLabel: string, buttonIcon?: string; onClick: () => void }
+ * Called like this DiscriminatedTypes<MyType, 'buttonLabel'>
+ * It will output { buttonLabel?: string; buttonIcon?: never; onClick?: never } | { buttonLabel: string; buttonIcon?: string: onClick: () => void; }
+ * This way :
+ *   If buttonLabel is not set, buttonIcon and onClick cannot be set
+ *   If buttonLabel is set, buttonIcon can be set and onClick is mandatory
+ *
+ * @example <caption>Here you prevent `labelIcon` and `labelColor` to be passed without `label`,
+ * but you can pass just `label` if you want.</caption>
+ * type FieldWrapperProps =
+ *  | {
+ *      id: string;
+ *    } & DiscriminatedTypes<
+ *      {
+ *        label: string;
+ *        labelColor: string;
+ *        labelIcon?: React.ReactElement;
+ *      },
+ *      'label'
+ *    >;
+ */
+export type DiscriminatedTypes<T, K extends keyof T> =
+  | MakeNever<Partial<Pick<T, K>> & Partial<Omit<T, K>>>
+  | (Required<Pick<T, K>> & Omit<T, K>);

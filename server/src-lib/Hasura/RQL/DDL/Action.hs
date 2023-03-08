@@ -258,7 +258,8 @@ data DropAction = DropAction
 $(J.deriveJSON hasuraJSON ''DropAction)
 
 runDropAction ::
-  ( CacheRWM m,
+  ( MonadError QErr m,
+    CacheRWM m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m
   ) =>
@@ -269,7 +270,7 @@ runDropAction (DropAction actionName clearDataM) = do
   withNewInconsistentObjsCheck $
     buildSchemaCache $
       dropActionInMetadata actionName
-  when (shouldClearActionData clearData) $ deleteActionData actionName
+  when (shouldClearActionData clearData) $ liftEitherM $ deleteActionData actionName
   return successMsg
   where
     -- When clearData is not present we assume that

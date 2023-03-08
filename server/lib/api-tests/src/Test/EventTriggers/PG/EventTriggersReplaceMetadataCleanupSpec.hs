@@ -12,6 +12,7 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
+import Harness.Services.Postgres qualified as Postgres
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
@@ -138,7 +139,7 @@ checkIfPGTableExists testEnvironment tableName = do
       handleNullExp err = throw err
   catch
     ( bracket
-        (Postgres.connectPostgreSQL (Postgres.makeFreshDbConnectionString testEnvironment))
+        (Postgres.connectPostgreSQL (txtToBs $ Postgres.getPostgresServerUrl $ Postgres.makeFreshDbConnectionString testEnvironment))
         Postgres.close
         ( \conn -> do
             rows :: [[String]] <- Postgres.query_ conn (fromString sqlQuery)

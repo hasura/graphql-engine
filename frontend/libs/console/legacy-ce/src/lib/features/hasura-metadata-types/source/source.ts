@@ -1,4 +1,4 @@
-import { Driver } from '@/dataSources';
+import { Driver } from '../../../dataSources';
 import {
   BigQueryConfiguration,
   CitusConfiguration,
@@ -18,6 +18,8 @@ export type NativeDrivers =
 export type GDCDriver = string;
 export type SupportedDrivers = Driver | GDCDriver;
 
+export type NamingConvention = 'hasura-default' | 'graphql-default';
+
 export type SourceCustomization = {
   root_fields?: {
     namespace?: string;
@@ -28,7 +30,7 @@ export type SourceCustomization = {
     prefix?: string;
     suffix?: string;
   };
-  naming_convention?: string;
+  naming_convention?: NamingConvention;
 };
 
 export type PGFunction = {

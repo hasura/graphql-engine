@@ -1,13 +1,13 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
-import { useConsoleForm } from '@/new-components/Form';
+import { useConsoleForm } from '../../../../../new-components/Form';
 import {
   allowedMetadataTypes,
   useMetadataMigration,
-} from '@/features/MetadataAPI';
-import { useFireNotification } from '@/new-components/Notifications';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
-import { Button } from '@/new-components/Button';
+} from '../../../../MetadataAPI';
+import { useFireNotification } from '../../../../../new-components/Notifications';
+import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
+import { Button } from '../../../../../new-components/Button';
 import { FormElements } from './FormElements';
 import { schema, Schema } from './schema';
 import { useDefaultValues } from './hooks';
@@ -151,7 +151,7 @@ export const RemoteSchemaToDbForm = ({
             <span className="font-semibold ml-sm">
               {existingRelationshipName
                 ? 'Edit Relationship'
-                : 'Create New Relationship'}
+                : 'Add Relationship'}
             </span>
           </div>
           <hr className="mb-md border-gray-300" />

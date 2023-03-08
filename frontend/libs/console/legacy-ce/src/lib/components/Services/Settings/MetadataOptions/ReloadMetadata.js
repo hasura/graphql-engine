@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
-import { Button } from '@/new-components/Button';
-import { IconTooltip } from '@/new-components/Tooltip';
+import { Button } from '../../../../new-components/Button';
+import { IconTooltip } from '../../../../new-components/Tooltip';
 import {
   showSuccessNotification,
   showErrorNotification,

@@ -52,9 +52,9 @@ getSchemaNameInternal (Just BackendType.BigQuery) uniqueTestId =
     T.pack $
       "hasura_test_"
         <> show uniqueTestId
-getSchemaNameInternal (Just BackendType.Postgres) _ = SchemaName $ T.pack Constants.postgresDb
+getSchemaNameInternal (Just BackendType.Postgres) _ = SchemaName Constants.postgresDb
 getSchemaNameInternal (Just BackendType.SQLServer) _ = SchemaName $ T.pack Constants.sqlserverDb
-getSchemaNameInternal (Just BackendType.Citus) _ = SchemaName $ T.pack Constants.citusDb
-getSchemaNameInternal (Just BackendType.Cockroach) _ = SchemaName $ T.pack Constants.cockroachDb
+getSchemaNameInternal (Just BackendType.Citus) _ = SchemaName Constants.citusDb
+getSchemaNameInternal (Just BackendType.Cockroach) _ = SchemaName Constants.cockroachDb
 getSchemaNameInternal (Just (BackendType.DataConnector "sqlite")) _ = SchemaName "main"
 getSchemaNameInternal (Just (BackendType.DataConnector _)) _ = SchemaName $ T.pack Constants.dataConnectorDb

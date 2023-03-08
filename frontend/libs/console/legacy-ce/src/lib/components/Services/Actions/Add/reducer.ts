@@ -4,7 +4,7 @@ import {
   SET_ACTION_COMMENT,
   SET_ACTION_DEFINITION,
   SET_ACTION_HANDLER,
-  SET_ACTION_EXECUTION,
+  SET_ACTION_KIND,
   SET_DEFAULTS,
   SET_DERIVED_ACTION_PARENT_OPERATION,
   SET_FETCHING,
@@ -46,10 +46,10 @@ export const setActionHandler = (handler: string): SetActionHandler => ({
 });
 
 export const setActionExecution = (
-  execution: ActionExecution
+  kind: ActionExecution
 ): SetActionExecution => ({
-  type: SET_ACTION_EXECUTION,
-  execution,
+  type: SET_ACTION_KIND,
+  kind,
 });
 
 export const setActionComment = (comment: string): SetActionComment => ({
@@ -118,10 +118,10 @@ const reducer = (
         ...state,
         handler: action.handler,
       };
-    case SET_ACTION_EXECUTION:
+    case SET_ACTION_KIND:
       return {
         ...state,
-        execution: action.execution,
+        kind: action.kind,
       };
     case SET_ACTION_COMMENT:
       return {

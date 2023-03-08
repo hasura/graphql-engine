@@ -1,7 +1,7 @@
-import { useMetadataMigration } from '@/features/MetadataAPI';
+import { useMetadataMigration } from '../../MetadataAPI';
 import { useCallback, useMemo } from 'react';
 import { useQueryClient } from 'react-query';
-import { useMetadata } from '@/features/hasura-metadata-api';
+import { useMetadata } from '../../hasura-metadata-api';
 import { LocalRelationship } from '../types';
 import {
   generateCreateLocalRelationshipWithManualConfigurationRequest,
@@ -9,13 +9,16 @@ import {
   generateRenameLocalRelationshipRequest,
 } from '../utils/generateRequest';
 import { generateQueryKeys } from '../utils/queryClientUtils';
+import { Table } from '../../hasura-metadata-types';
 
 export const useManageLocalRelationship = ({
   dataSourceName,
+  table,
   onSuccess,
   onError,
 }: {
   dataSourceName: string;
+  table: Table;
   onSuccess?: () => void;
   onError?: (err: Error) => void;
 }) => {
@@ -32,6 +35,10 @@ export const useManageLocalRelationship = ({
     () => ({
       onSuccess: () => {
         queryClient.invalidateQueries(generateQueryKeys.metadata());
+
+        queryClient.invalidateQueries(
+          generateQueryKeys.suggestedRelationships({ dataSourceName, table })
+        );
         onSuccess?.();
       },
       onError: (err: Error) => {

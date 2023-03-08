@@ -9,15 +9,15 @@ import Data.Text qualified as Text
 import Hasura.Backends.DataConnector.API
 import Hasura.Backends.DataConnector.API qualified as API
 import Language.GraphQL.Draft.Syntax (Name (..))
-import Test.AgentClient (queryGuarded)
+import Test.AgentAPI (queryGuarded)
 import Test.Data (TestData (..))
 import Test.Data qualified as Data
 import Test.Sandwich (describe, shouldBe)
-import Test.TestHelpers (AgentTestSpec, it)
+import Test.TestHelpers (AgentDatasetTestSpec, it)
 import Prelude
 
-spec :: TestData -> SourceName -> Config -> ScalarTypesCapabilities -> AgentTestSpec
-spec TestData {..} sourceName config (ScalarTypesCapabilities scalarTypesCapabilities) = describe "Custom Operators in Queries" do
+spec :: TestData -> ScalarTypesCapabilities -> AgentDatasetTestSpec
+spec TestData {..} (ScalarTypesCapabilities scalarTypesCapabilities) = describe "Custom Operators in Queries" do
   describe "Top-level application of custom operators" do
     -- We run a list monad to identify test representatives,
     let items :: HashMap.HashMap (Name, ScalarType) (ColumnName, TableName, ColumnName, ScalarType)
@@ -34,19 +34,19 @@ spec TestData {..} sourceName config (ScalarTypesCapabilities scalarTypesCapabil
     forM_ (HashMap.toList items) \((operatorName, columnType), (columnName, tableName, argColumnName, argType)) -> do
       -- Perform a select using the operator in a where clause
       let queryRequest =
-            let fields = Data.mkFieldsMap [(unColumnName columnName, _tdColumnField (unColumnName columnName) columnType)]
+            let fields = Data.mkFieldsMap [(unColumnName columnName, _tdColumnField tableName (unColumnName columnName))]
                 query' = Data.emptyQuery & qFields ?~ fields
-             in QueryRequest tableName [] query'
+             in QueryRequest tableName [] query' Nothing
           where' =
             ApplyBinaryComparisonOperator
               (CustomBinaryComparisonOperator (unName operatorName))
               (_tdCurrentComparisonColumn (unColumnName columnName) columnType)
-              (AnotherColumn $ ComparisonColumn CurrentTable argColumnName argType)
+              (AnotherColumnComparison $ ComparisonColumn CurrentTable argColumnName argType)
           query =
             queryRequest
               & qrQuery . qWhere ?~ where'
               & qrQuery . qLimit ?~ 1 -- No need to test actual results
-      it (Text.unpack $ "ComparisonOperator " <> unName operatorName <> ": " <> scalarTypeToText columnType <> " executes without an error") do
-        result <- queryGuarded sourceName config query
+      it (Text.unpack $ "ComparisonOperator " <> unName operatorName <> ": " <> getScalarType columnType <> " executes without an error") do
+        result <- queryGuarded query
         -- Check that you get a success response
         Data.responseRows result `shouldBe` take 1 (Data.responseRows result)

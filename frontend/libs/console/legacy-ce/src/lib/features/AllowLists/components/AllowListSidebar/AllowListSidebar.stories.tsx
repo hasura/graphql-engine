@@ -1,10 +1,10 @@
 import React from 'react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { ReduxDecorator } from '../../../../storybook/decorators/redux-decorator';
 import { ComponentMeta } from '@storybook/react';
 
 import { action } from '@storybook/addon-actions';
-import { handlers } from '@/mocks/metadata.mock';
+import { handlers } from '../../../../mocks/metadata.mock';
 
 import { AllowListSidebar } from './AllowListSidebar';
 

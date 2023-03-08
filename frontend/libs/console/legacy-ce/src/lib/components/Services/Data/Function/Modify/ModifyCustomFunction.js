@@ -8,8 +8,8 @@ import {
   Analytics,
   REDACT_EVERYTHING,
   getAnalyticsAttributes,
-} from '@/features/Analytics';
-import { Button } from '@/new-components/Button';
+} from '../../../../../features/Analytics';
+import { Button } from '../../../../../new-components/Button';
 import CommonTabLayout from '../../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import tabInfo from './tabInfo';
 import globals from '../../../../../Globals';
@@ -31,7 +31,7 @@ import {
 import SessionVarSection from './SessionVarSection';
 import RawSqlButton from '../../Common/Components/RawSqlButton';
 
-import { isFeatureSupported } from '@/dataSources';
+import { isFeatureSupported } from '../../../../../dataSources';
 
 export const pageTitle = 'Custom Function';
 

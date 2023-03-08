@@ -1,4 +1,4 @@
-import { CardedTable } from '@/new-components/CardedTable';
+import { CardedTable } from '../../../new-components/CardedTable';
 import React from 'react';
 import { FaTrash } from 'react-icons/fa';
 import { useListAvailableAgentsFromMetadata } from '../hooks';

@@ -7,7 +7,7 @@ module Hasura.Backends.Postgres.Connection.Connect
   )
 where
 
-import Data.Environment (getEnvironment)
+import Data.Environment qualified as Env
 import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection qualified as PG
 import Hasura.Base.Error (QErr)
@@ -15,8 +15,8 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Common (resolveUrlConf)
 
 -- | Connect to a postgres database and run a transaction.
-withPostgresDB :: PG.PostgresConnConfiguration -> PG.TxET QErr IO a -> IO (Either QErr a)
-withPostgresDB PG.PostgresConnConfiguration {..} tx = do
+withPostgresDB :: Env.Environment -> PG.PostgresConnConfiguration -> PG.TxET QErr IO a -> IO (Either QErr a)
+withPostgresDB env PG.PostgresConnConfiguration {..} tx = do
   generateMinimalPool _pccConnectionInfo >>= \case
     Left err ->
       -- Cannot able to intialise a pool due to a bad connection config.
@@ -25,7 +25,6 @@ withPostgresDB PG.PostgresConnConfiguration {..} tx = do
   where
     generateMinimalPool :: PG.PostgresSourceConnInfo -> IO (Either QErr PG.PGPool)
     generateMinimalPool PG.PostgresSourceConnInfo {..} = runExceptT do
-      env <- lift getEnvironment
       urlText <- resolveUrlConf env _psciDatabaseUrl
       let connInfo = PG.ConnInfo 0 $ PG.CDDatabaseURI $ txtToBs urlText
           -- Create pool with only one connection

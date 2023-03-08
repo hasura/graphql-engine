@@ -1,11 +1,11 @@
-import { getConfirmation } from '@/components/Common/utils/jsUtils';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
   findTable,
   generateTableDef,
   isFeatureSupported,
   Table,
-} from '@/dataSources';
-import { useAppDispatch, useAppSelector } from '@/store';
+} from '../../../../dataSources';
+import { useAppDispatch, useAppSelector } from '../../../../storeHooks';
 import React, { useEffect } from 'react';
 import { getAllDataTypeMap } from '../Common/utils';
 import {

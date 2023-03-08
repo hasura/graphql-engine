@@ -1,11 +1,11 @@
 import {
   MetadataUtils,
-  useInvalidateMetata,
+  useInvalidateMetadata,
   useMetadata,
-} from '@/features/hasura-metadata-api';
-import { MetadataTable } from '@/features/hasura-metadata-types';
-import { useMetadataMigration } from '@/features/MetadataAPI';
-import { useFireNotification } from '@/new-components/Notifications';
+} from '../../../hasura-metadata-api';
+import { MetadataTable } from '../../../hasura-metadata-types';
+import { useMetadataMigration } from '../../../MetadataAPI';
+import { useFireNotification } from '../../../../new-components/Notifications';
 import { useCallback } from 'react';
 
 export const useUpdateTableConfiguration = (
@@ -16,7 +16,7 @@ export const useUpdateTableConfiguration = (
 
   const { fireNotification } = useFireNotification();
 
-  const invalidateMetadata = useInvalidateMetata();
+  const invalidateMetadata = useInvalidateMetadata();
 
   const { data } = useMetadata(m => ({
     source: MetadataUtils.findMetadataSource(dataSourceName, m),

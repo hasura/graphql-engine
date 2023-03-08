@@ -1,4 +1,4 @@
-import { LS_KEYS } from '@/utils/localStorage';
+import { LS_KEYS } from '../../../../../../utils/localStorage';
 import { NeonIntegrationStatus } from './useNeonIntegration';
 import type { Props as NeonBannerProps } from './components/Neon/NeonBanner';
 

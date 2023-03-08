@@ -38,11 +38,11 @@ import Hasura.Backends.Postgres.Instances.Metadata ()
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Backends.Postgres.SQL.Value
-import Hasura.Backends.Postgres.Translate.BoolExp
 import Hasura.Backends.Postgres.Translate.Column
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.DDL.Permission (annBoolExp)
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BoolExp
@@ -365,12 +365,12 @@ convBoolExp ::
   SelPermInfo ('Postgres 'Vanilla) ->
   BoolExp ('Postgres 'Vanilla) ->
   SessionVariableBuilder m ->
-  TableName ('Postgres 'Vanilla) ->
+  FieldInfoMap (FieldInfo ('Postgres 'Vanilla)) ->
   ValueParser ('Postgres 'Vanilla) m (SQLExpression ('Postgres 'Vanilla)) ->
   m (AnnBoolExpSQL ('Postgres 'Vanilla))
-convBoolExp cim spi be sessVarBldr rootTable rhsParser = do
+convBoolExp cim spi be sessVarBldr rootFieldInfoMap rhsParser = do
   let boolExpRHSParser = BoolExpRHSParser rhsParser $ _svbCurrentSession sessVarBldr
-  abe <- annBoolExp boolExpRHSParser rootTable cim $ unBoolExp be
+  abe <- annBoolExp boolExpRHSParser rootFieldInfoMap cim $ unBoolExp be
   checkSelPerm spi sessVarBldr abe
 
 -- validate headers

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ComponentMeta, Story } from '@storybook/react';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../../../new-components/Button';
 
 import { EmptyState } from './EmptyState';
 

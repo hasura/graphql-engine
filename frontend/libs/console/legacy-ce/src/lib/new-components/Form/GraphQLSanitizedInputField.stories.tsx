@@ -2,10 +2,7 @@ import { action } from '@storybook/addon-actions';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import React from 'react';
 
-import {
-  SimpleForm,
-  GraphQLSanitizedInputField as InputField,
-} from '@/new-components/Form';
+import { SimpleForm, GraphQLSanitizedInputField as InputField } from '.';
 import { z } from 'zod';
 
 type StoryType = ComponentStory<typeof InputField>;

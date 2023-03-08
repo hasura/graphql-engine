@@ -24,12 +24,12 @@ parseBoolExpOperations ::
   forall m v.
   (MonadError QErr m) => -- , TableCoreInfoRM 'MSSQL m)
   ValueParser 'MSSQL m v ->
-  TableName ->
+  FieldInfoMap (FieldInfo 'MSSQL) ->
   FieldInfoMap (FieldInfo 'MSSQL) ->
   ColumnReference 'MSSQL ->
   J.Value ->
   m [OpExpG 'MSSQL v]
-parseBoolExpOperations rhsParser _table _fields columnRef value =
+parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value =
   withPathK (toTxt columnRef) $ parseOperations (columnReferenceType columnRef) value
   where
     parseWithTy ty = rhsParser (CollectableTypeScalar ty)

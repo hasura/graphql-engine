@@ -37,6 +37,7 @@ data Error
   = UnsupportedOpExpG (IR.OpExpG 'MySQL Expression)
   | IdentifierNotSupported
   | FunctionNotSupported
+  | LogicalModelNotSupported
   | NodesUnsupportedForNow
   | ConnectionsNotSupported
   deriving (Show, Eq)
@@ -343,7 +344,7 @@ unfurlAnnOrderByElement =
               (const (fromAlias selectFrom))
               ( case annAggregateOrderBy of
                   IR.AAOCount -> pure (CountAggregate StarCountable)
-                  IR.AAOOp text columnInfo -> do
+                  IR.AAOOp text _resultType columnInfo -> do
                     fieldName <- fromColumnInfo columnInfo
                     pure (OpAggregate text (pure (ColumnExpression fieldName)))
               )
@@ -506,6 +507,7 @@ fromSelectAggregate mparentRelationship annSelectG = do
       IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
       IR.FromIdentifier {} -> refute $ pure IdentifierNotSupported
       IR.FromFunction {} -> refute $ pure FunctionNotSupported
+      IR.FromLogicalModel {} -> refute $ pure LogicalModelNotSupported
   _mforeignKeyConditions <- fmap (Where . fromMaybe []) $
     for mparentRelationship $
       \(entityAlias, mapping) ->
@@ -696,6 +698,7 @@ fromSelectRows annSelectG = do
       IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
       IR.FromIdentifier {} -> refute $ pure IdentifierNotSupported
       IR.FromFunction {} -> refute $ pure FunctionNotSupported
+      IR.FromLogicalModel {} -> refute $ pure LogicalModelNotSupported
   Args
     { argsOrderBy,
       argsWhere,

@@ -1,7 +1,7 @@
 import React from 'react';
-import { handlers } from '@/mocks/metadata.mock';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
+import { handlers } from '../../../../mocks/metadata.mock';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { ReduxDecorator } from '../../../../storybook/decorators/redux-decorator';
 import { ComponentMeta, Story } from '@storybook/react';
 import { within, userEvent, screen } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';

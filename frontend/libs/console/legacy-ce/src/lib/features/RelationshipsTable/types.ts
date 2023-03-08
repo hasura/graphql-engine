@@ -2,7 +2,7 @@ import {
   ArrayRelationship,
   ObjectRelationship,
   RemoteRelationship,
-} from '@/metadata/types';
+} from '../../metadata/types';
 
 export type RelationshipType =
   | ObjectRelationship

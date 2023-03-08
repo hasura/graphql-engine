@@ -1,5 +1,5 @@
-import { ConnectionSettingsFormProps } from '@/components/Services/Data/DataSources/ConnectionSettings/ConnectionSettingsForm';
-import { IconTooltip } from '@/new-components/Tooltip';
+import { ConnectionSettingsFormProps } from '../ConnectionSettingsForm';
+import { IconTooltip } from '../../../../../../new-components/Tooltip';
 import React from 'react';
 import styles from '../../DataSources.module.scss';
 

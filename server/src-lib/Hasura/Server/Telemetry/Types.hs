@@ -8,6 +8,7 @@ module Hasura.Server.Telemetry.Types
     RelationshipMetric (..),
     PermissionMetric (..),
     ActionMetric (..),
+    LogicalModelsMetrics (..),
     Metrics (..),
     SourceMetadata (..),
     HasuraTelemetry (..),
@@ -73,6 +74,23 @@ data ActionMetric = ActionMetric
 
 $(A.deriveToJSON hasuraJSON ''ActionMetric)
 
+data LogicalModelsMetrics = LogicalModelsMetrics
+  { _lmmWithParameters :: Int,
+    _lmmWithoutParameters :: Int
+  }
+  deriving (Show, Eq)
+
+instance Semigroup LogicalModelsMetrics where
+  a <> b =
+    LogicalModelsMetrics
+      (_lmmWithParameters a + _lmmWithParameters b)
+      (_lmmWithoutParameters a + _lmmWithoutParameters b)
+
+instance Monoid LogicalModelsMetrics where
+  mempty = LogicalModelsMetrics 0 0
+
+$(A.deriveToJSON hasuraJSON ''LogicalModelsMetrics)
+
 data Metrics = Metrics
   { _mtTables :: Int,
     _mtViews :: Int,
@@ -83,7 +101,8 @@ data Metrics = Metrics
     _mtFunctions :: Int,
     _mtRemoteSchemas :: Maybe Int,
     _mtServiceTimings :: Maybe ServiceTimingMetrics,
-    _mtActions :: Maybe ActionMetric
+    _mtActions :: Maybe ActionMetric,
+    _mtLogicalModels :: LogicalModelsMetrics
   }
   deriving (Show, Eq)
 

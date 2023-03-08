@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../../new-components/Button';
 import Dropdown from '../../../../Common/Dropdown/Dropdown';
 import { Dispatch } from '../../../../../types';
 import {
@@ -33,46 +33,47 @@ interface FrequentlyUsedColumnSelectorProps {
   dispatch?: Dispatch | null;
 }
 
-const FrequentlyUsedColumnSelector: React.VFC<FrequentlyUsedColumnSelectorProps> =
-  ({ onSelect, postgresVersion, action = null, dispatch = null }) => {
-    const frequentlyUsedColumnsOptions = frequentlyUsedColumns
-      .filter(fuc => !action || fuc.validFor.includes(action))
-      .filter(col =>
-        postgresVersion && col.minPGVersion
-          ? parseFloat(postgresVersion) >= col.minPGVersion
-          : true
-      )
-      .map(fuc => {
-        const { title, subTitle } = getFreqUsedColDisplayInfo(fuc);
-        return {
-          content: (
+const FrequentlyUsedColumnSelector: React.VFC<
+  FrequentlyUsedColumnSelectorProps
+> = ({ onSelect, postgresVersion, action = null, dispatch = null }) => {
+  const frequentlyUsedColumnsOptions = frequentlyUsedColumns
+    .filter(fuc => !action || fuc.validFor.includes(action))
+    .filter(col =>
+      postgresVersion && col.minPGVersion
+        ? parseFloat(postgresVersion) >= col.minPGVersion
+        : true
+    )
+    .map(fuc => {
+      const { title, subTitle } = getFreqUsedColDisplayInfo(fuc);
+      return {
+        content: (
+          <div>
             <div>
-              <div>
-                <b>{title}</b>
-              </div>
-              <div>{subTitle}</div>
+              <b>{title}</b>
             </div>
-          ),
-          onClick: () => (dispatch ? dispatch(onSelect(fuc)) : onSelect(fuc)),
-        };
-      });
+            <div>{subTitle}</div>
+          </div>
+        ),
+        onClick: () => (dispatch ? dispatch(onSelect(fuc)) : onSelect(fuc)),
+      };
+    });
 
-    return (
-      <Dropdown
-        testId="frequently-used-columns"
-        options={frequentlyUsedColumnsOptions}
-        data-test="frequently-used-columns"
-        position="bottom"
-        key="frequently-used-columns"
-        keyPrefix="frequently-used-columns"
-      >
-        {({ onClick }) => (
-          <Button size="sm" onClick={onClick}>
-            + Frequently used columns
-          </Button>
-        )}
-      </Dropdown>
-    );
-  };
+  return (
+    <Dropdown
+      testId="frequently-used-columns"
+      options={frequentlyUsedColumnsOptions}
+      data-test="frequently-used-columns"
+      position="bottom"
+      key="frequently-used-columns"
+      keyPrefix="frequently-used-columns"
+    >
+      {({ onClick }) => (
+        <Button size="sm" onClick={onClick}>
+          + Frequently used columns
+        </Button>
+      )}
+    </Dropdown>
+  );
+};
 
 export default FrequentlyUsedColumnSelector;

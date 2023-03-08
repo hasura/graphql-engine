@@ -16,7 +16,7 @@ import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.Server.Auth
 import Hasura.Server.Auth.JWT
-import Hasura.Server.Init.Config (API (METRICS))
+import Hasura.Server.Init.Config (API (METRICS), AllowListStatus)
 import Hasura.Server.Types (ExperimentalFeature)
 import Hasura.Server.Version (Version, currentVersion)
 
@@ -37,13 +37,13 @@ data ServerConfig = ServerConfig
     scfgIsAuthHookSet :: !Bool,
     scfgIsJwtSet :: !Bool,
     scfgJwt :: ![JWTInfo],
-    scfgIsAllowListEnabled :: !Bool,
+    scfgIsAllowListEnabled :: !AllowListStatus,
     scfgLiveQueries :: !ES.LiveQueriesOptions,
     scfgStreamingQueries :: !ES.SubscriptionsOptions,
     scfgConsoleAssetsDir :: !(Maybe Text),
     scfgExperimentalFeatures :: !(Set.HashSet ExperimentalFeature),
     scfgIsPrometheusMetricsEnabled :: !Bool,
-    scfgDefaultNamingConvention :: !(Maybe NamingCase)
+    scfgDefaultNamingConvention :: !NamingCase
   }
   deriving (Show, Eq)
 
@@ -53,19 +53,19 @@ runGetConfig ::
   Options.InferFunctionPermissions ->
   Options.RemoteSchemaPermissions ->
   AuthMode ->
-  Bool ->
+  AllowListStatus ->
   ES.LiveQueriesOptions ->
   ES.SubscriptionsOptions ->
   Maybe Text ->
   Set.HashSet ExperimentalFeature ->
   Set.HashSet API ->
-  Maybe NamingCase ->
+  NamingCase ->
   ServerConfig
 runGetConfig
   functionPermsCtx
   remoteSchemaPermsCtx
   am
-  isAllowListEnabled
+  allowListStatus
   liveQueryOpts
   streamQueryOpts
   consoleAssetsDir
@@ -80,7 +80,7 @@ runGetConfig
       (isAuthHookSet am)
       (isJWTSet am)
       (getJWTInfo am)
-      isAllowListEnabled
+      allowListStatus
       liveQueryOpts
       streamQueryOpts
       consoleAssetsDir

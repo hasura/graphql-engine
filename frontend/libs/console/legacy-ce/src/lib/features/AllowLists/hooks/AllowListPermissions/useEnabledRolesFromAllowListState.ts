@@ -1,5 +1,5 @@
 import React from 'react';
-import { useRoles } from '@/features/MetadataAPI';
+import { useRoles } from '../../../MetadataAPI';
 import { useEnabledRolesFromAllowList } from './useEnabledRolesFromAllowList';
 
 export const useEnabledRolesFromAllowListState = (collectionName: string) => {

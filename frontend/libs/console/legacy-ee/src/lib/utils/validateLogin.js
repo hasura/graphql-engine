@@ -1,15 +1,18 @@
-import { changeRequestHeader, UPDATE_DATA_HEADERS } from '@hasura/console-oss';
+import {
+  changeRequestHeader,
+  UPDATE_DATA_HEADERS,
+} from '@hasura/console-legacy-ce';
 import {
   clearAdminSecretState,
   clearPATState,
   loadAdminSecretState,
-  loadPATState
+  loadPATState,
 } from '../components/AppState';
 import {
   getHeaders,
   SET_METADATA,
   UPDATE_PROJECT_ID,
-  UPDATE_PROJECT_NAME
+  UPDATE_PROJECT_NAME,
 } from '../components/Main/Actions';
 import { OAUTH_CALLBACK_URL, SERVER_CONSOLE_MODE } from '../constants';
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
@@ -66,7 +69,10 @@ const validateLogin = ({ dispatch }) => {
       let adminSecret = '';
       // Check the console mode and retrieve adminSecret accordingly.
       if (globals.consoleMode === SERVER_CONSOLE_MODE) {
-        adminSecret = extendedGlobals.adminSecret || loadAdminSecretState() || globals.adminSecret;
+        adminSecret =
+          extendedGlobals.adminSecret ||
+          loadAdminSecretState() ||
+          globals.adminSecret;
       } else {
         adminSecret = globals.adminSecret;
       }
@@ -111,12 +117,10 @@ const validateLogin = ({ dispatch }) => {
             // if it is set: pass it on
             const p = parseQueryString(search);
             const appendAutoLoginIfAvailable = () => {
-              if (p &&
+              if (
+                p &&
                 'auto_login' in p &&
-                (
-                  p.auto_login ||
-                  p.auto_login === 'true'
-                )
+                (p.auto_login || p.auto_login === 'true')
               ) {
                 return '&auto_login=true';
               }

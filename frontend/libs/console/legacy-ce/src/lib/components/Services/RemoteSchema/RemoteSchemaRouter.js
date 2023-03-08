@@ -13,7 +13,7 @@ import { FILTER_REMOTE_SCHEMAS } from './Actions';
 
 import { appPrefix } from './constants';
 import RelationshipsConnector from './Relationships';
-import { RemoteSchemaDetails } from '@/features/RemoteSchema/components/Details/RemoteSchemaDetails';
+import { RemoteSchemaDetails } from '../../../features/RemoteSchema/components/Details/RemoteSchemaDetails';
 
 const filterItem = dispatch => {
   return (dataList, searchVal) => {

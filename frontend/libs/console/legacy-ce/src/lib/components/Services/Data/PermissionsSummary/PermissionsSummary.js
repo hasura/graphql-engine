@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import Modal from '../../../Common/Modal/Modal';
 
 import styles from './PermissionsSummary.module.scss';

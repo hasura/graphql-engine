@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Dispatch } from '@/types';
+import { Dispatch } from '../../../../types';
 import {
   DependentSQLGenerator,
   FrequentlyUsedColumn,
-} from '@/dataSources/types';
+} from '../../../../dataSources/types';
 import { addColSql } from './ModifyActions';
 import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';

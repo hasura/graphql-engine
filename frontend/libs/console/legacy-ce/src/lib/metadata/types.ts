@@ -1,7 +1,11 @@
-import { Moment } from 'moment';
-import { Nullable } from './../components/Common/utils/tsUtils';
-import { Driver } from '../dataSources';
-import { PermissionsType } from '../components/Services/RemoteSchema/Permissions/types';
+import type { Moment } from 'moment';
+
+import type { OpenTelemetry } from '../features/hasura-metadata-types';
+import type { KeyValuePair } from '../components/Common/ConfigureTransformation/stateDefaults';
+
+import type { Driver } from '../dataSources';
+import type { Nullable } from './../components/Common/utils/tsUtils';
+import type { PermissionsType } from '../components/Services/RemoteSchema/Permissions/types';
 
 export type DataSource = {
   name: string;
@@ -946,7 +950,7 @@ export type RequestTransformBodyActions =
 export type RequestTransformBody = {
   action: RequestTransformBodyActions;
   template?: string;
-  form_template?: Record<string, string>;
+  form_template?: Record<string, string> | string;
 };
 
 export type ResponseTransformBody = {
@@ -966,7 +970,7 @@ interface RequestTransformFields {
   url?: Nullable<string>;
   content_type?: Nullable<RequestTransformContentType>;
   request_headers?: Nullable<RequestTransformHeaders>;
-  query_params?: Nullable<Record<string, string>>;
+  query_params?: Nullable<Record<string, string>> | string;
   template_engine?: Nullable<RequestTransformTemplateEngine>;
 }
 
@@ -1152,6 +1156,15 @@ type GraphQLCustomizationMetadata = {
   naming_convention: GraphQLFieldCustomization['namingConvention'];
 };
 
+// Used for Dynamic Connection Routing
+export type ConnectionSet = {
+  connection_info: SourceConnectionInfo;
+  name: string;
+};
+
+export type SourceConnectionTemplate = {
+  template: string | null;
+};
 export interface MetadataDataSource {
   name: string;
   kind:
@@ -1167,6 +1180,8 @@ export interface MetadataDataSource {
     extensions_schema?: string;
     // pro-only feature
     read_replicas?: SourceConnectionInfo[];
+    connection_template?: SourceConnectionTemplate;
+    connection_set?: ConnectionSet[];
     service_account?: BigQueryServiceAccount;
     global_select_limit?: number;
     project_id?: string;
@@ -1231,6 +1246,14 @@ export interface HasuraMetadataV3 {
   graphql_schema_introspection?: {
     disabled_for_roles: string[];
   };
+
+  /**
+   * The EE Lite OpenTelemetry settings.
+   *
+   * ATTENTION: Both Lux and the EE Lite server allow configuring OpenTelemetry. Anyway, this only
+   * represents the EE Lite one since Lux stores the OpenTelemetry settings by itself.
+   */
+  opentelemetry?: OpenTelemetry;
 }
 
 // Inconsistent Objects
@@ -1270,3 +1293,5 @@ type InconsistentObjectDefinition = {
   url_from_env: string;
   forward_client_headers: boolean;
 };
+
+export type QueryParams = KeyValuePair[] | string;

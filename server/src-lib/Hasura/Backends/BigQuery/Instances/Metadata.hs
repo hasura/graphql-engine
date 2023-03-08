@@ -23,3 +23,4 @@ instance BackendMetadata 'BigQuery where
   postDropSourceHook = BigQuery.postDropSourceHook
   buildComputedFieldBooleanExp _ _ _ _ _ _ =
     throw400 UnexpectedPayload "Computed fields are not supported in boolean expressions"
+  supportsBeingRemoteRelationshipTarget _ = True

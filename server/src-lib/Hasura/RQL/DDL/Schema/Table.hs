@@ -428,10 +428,11 @@ buildTableCache ::
     DBTablesMetadata b,
     [TableBuildInput b],
     Inc.Dependency Inc.InvalidationKey,
+    Maybe (BackendIntrospection b),
     NamingCase
   )
     `arr` Map.HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
-buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuildInputs, reloadMetadataInvalidationKey, tCase) -> do
+buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuildInputs, reloadMetadataInvalidationKey, sourceIntrospection, tCase) -> do
   rawTableInfos <-
     (|
       Inc.keyed
@@ -446,7 +447,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
                           -<
                             err400 NotExists $ "no such table/view exists in source: " <>> _tbiName table
                       Just metadataTable ->
-                        buildRawTableInfo -< (table, metadataTable, sourceConfig, reloadMetadataInvalidationKey)
+                        buildRawTableInfo -< (table, metadataTable, sourceConfig, reloadMetadataInvalidationKey, biEnumValues <$> sourceIntrospection)
                 )
             |) (mkTableMetadataObject source tableName)
         )
@@ -480,24 +481,28 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
         ( TableBuildInput b,
           DBTableMetadata b,
           SourceConfig b,
-          Inc.Dependency Inc.InvalidationKey
+          Inc.Dependency Inc.InvalidationKey,
+          Maybe (HashMap (TableName b) EnumValues)
         )
         (TableCoreInfoG b (RawColumnInfo b) (Column b))
-    buildRawTableInfo = Inc.cache proc (tableBuildInput, metadataTable, sourceConfig, reloadMetadataInvalidationKey) -> do
+    buildRawTableInfo = Inc.cache proc (tableBuildInput, metadataTable, sourceConfig, reloadMetadataInvalidationKey, sourceIntrospection) -> do
       let TableBuildInput name isEnum config apolloFedConfig = tableBuildInput
           columns :: [RawColumnInfo b] = _ptmiColumns metadataTable
           columnMap = mapFromL (FieldName . toTxt . rciName) columns
           primaryKey = _ptmiPrimaryKey metadataTable
           description = buildDescription name config metadataTable
       rawPrimaryKey <- liftEitherA -< traverse (resolvePrimaryKeyColumns columnMap) primaryKey
-      enumValues <-
+      enumValues <- do
         if isEnum
           then do
-            -- We want to make sure we reload enum values whenever someone explicitly calls
-            -- `reload_metadata`.
-            Inc.dependOn -< reloadMetadataInvalidationKey
-            eitherEnums <- bindA -< fetchAndValidateEnumValues sourceConfig name rawPrimaryKey columns
-            liftEitherA -< Just <$> eitherEnums
+            case HM.lookup name =<< sourceIntrospection of
+              Just enumValues -> returnA -< Just enumValues
+              _ -> do
+                -- We want to make sure we reload enum values whenever someone explicitly calls
+                -- `reload_metadata`.
+                Inc.dependOn -< reloadMetadataInvalidationKey
+                eitherEnums <- bindA -< fetchAndValidateEnumValues sourceConfig name rawPrimaryKey columns
+                liftEitherA -< Just <$> eitherEnums
           else returnA -< Nothing
 
       returnA

@@ -34,6 +34,7 @@ module Hasura.RQL.Types.EventTrigger
     TriggerLogCleanupSources (..),
     TriggerLogCleanupToggleConfig (..),
     updateCleanupConfig,
+    isIllegalTriggerName,
   )
 where
 
@@ -42,8 +43,10 @@ import Autodocodec qualified as AC
 import Data.Aeson
 import Data.Aeson.Extended ((.=?))
 import Data.Aeson.TH
+import Data.ByteString.Lazy qualified as LBS
 import Data.HashMap.Strict qualified as M
 import Data.List.NonEmpty qualified as NE
+import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Data.Time.Clock qualified as Time
@@ -57,6 +60,7 @@ import Hasura.RQL.Types.Common (EnvRecord, InputWebhook, ResolvedWebhook, Source
 import Hasura.RQL.Types.Eventing
 import Hasura.SQL.Backend
 import System.Cron (CronSchedule)
+import Text.Regex.TDFA qualified as TDFA
 
 -- | Unique name for event trigger.
 newtype TriggerName = TriggerName {unTriggerName :: NonEmptyText}
@@ -80,6 +84,13 @@ instance HasCodec TriggerName where
 
 triggerNameToTxt :: TriggerName -> Text
 triggerNameToTxt = unNonEmptyText . unTriggerName
+
+isIllegalTriggerName :: TriggerName -> Bool
+isIllegalTriggerName (TriggerName name) =
+  -- TODO (paritosh): Should we allow `.`? (See issue 9429)
+  let regex = "^[A-Za-z]+[A-Za-z0-9_\\-]*$" :: LBS.ByteString
+      compiledRegex = TDFA.makeRegex regex :: TDFA.Regex
+   in not $ TDFA.match compiledRegex . T.unpack $ unNonEmptyText name
 
 data Ops = INSERT | UPDATE | DELETE | MANUAL deriving (Show, Eq, Generic)
 

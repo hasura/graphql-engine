@@ -1,6 +1,6 @@
 import React from 'react';
 import BootstrapModal from 'react-bootstrap/lib/Modal';
-import { Tooltip } from '@hasura/console-oss';
+import { Tooltip } from '@hasura/console-legacy-ce';
 // import BootstrapModalButton from 'react-bootstrap/lib/Button';
 import CustomCopy from '../Common/CustomCopy';
 import { REFETCH_DELAY, EXECUTION_TIME_DIVIDER_CONSTANT } from './constants';
@@ -35,7 +35,6 @@ const Modal = props => {
     operation_string: operationString,
     variables,
   } = websocketData;
-
 
   const renderWarningSymbol = () => {
     if (

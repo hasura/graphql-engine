@@ -1,7 +1,7 @@
 import React, { ReactText } from 'react';
 import { useFieldArray } from 'react-hook-form';
 import { FaPlusCircle } from 'react-icons/fa';
-import { Button } from '@/new-components/Button';
+import { Button } from '../Button';
 import { RequestHeadersSelectorSchema } from './schema';
 import { KeyValueHeader } from './components/KeyValueHeader';
 

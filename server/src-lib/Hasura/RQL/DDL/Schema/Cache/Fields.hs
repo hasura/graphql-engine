@@ -307,7 +307,7 @@ buildRemoteRelationship allSources allColumns remoteSchemaMap source table rr@Re
           AB.mkAnyBackend $
             SOITableObj @b table $
               TORemoteRel _rrName
-      addRemoteRelationshipContext e = "in remote relationship" <> _rrName <<> ": " <> e
+      addRemoteRelationshipContext e = "in remote relationship " <> _rrName <<> ": " <> e
   withRecordInconsistencyM metadataObject $
     modifyErr (addTableContext @b table . addRemoteRelationshipContext) $ do
       (remoteField, rhsDependencies) <-

@@ -2,7 +2,7 @@ import React from 'react';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import { FaChevronRight } from 'react-icons/fa';
 
-import { IconTooltip } from '@/new-components/Tooltip';
+import { IconTooltip } from '../Tooltip';
 
 export interface CollapseHeaderProps extends React.HTMLAttributes<HTMLElement> {
   /**
@@ -119,6 +119,7 @@ export const Collapse = ({
   disabled = false,
   disabledMessage,
   rootClassName,
+  ...props
 }: CollapseProps): JSX.Element => {
   const [open, setOpen] = React.useState(defaultOpen);
 
@@ -131,6 +132,7 @@ export const Collapse = ({
       open={open}
       onOpenChange={onOpenChange}
       className={rootClassName}
+      {...props}
     >
       <CollapseCtx.Provider value={{ open }}>
         {!!title && (

@@ -1,14 +1,14 @@
 import React, { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import {
   LinkBlockVertical,
   LinkBlockHorizontal,
-} from '@/new-components/LinkBlock';
-import { useListRemoteSchemas } from '@/features/MetadataAPI';
-import { useTableColumns } from '@/features/SqlQueries';
-import { DatabaseSelector } from '@/features/Data';
-import { DataTarget } from '@/features/Datasources';
+} from '../../../../new-components/LinkBlock';
+import { useListRemoteSchemas } from '../../../MetadataAPI';
+import { useTableColumns } from '../../../SqlQueries';
+import { DatabaseSelector } from '../../../Data/components/index';
+import { DataTarget } from '../../../Datasources';
 
 import { RemoteSchemaWidget } from '../../RemoteSchemaRelationships/components/RemoteSchemaWidget';
 import {

@@ -1,5 +1,5 @@
-import { Button } from '@/new-components/Button';
-import { InputField, SimpleForm } from '@/new-components/Form';
+import { Button } from '../../../new-components/Button';
+import { InputField, SimpleForm } from '../../../new-components/Form';
 import React from 'react';
 import { z } from 'zod';
 import { useAddAgent } from '../hooks/useAddAgent';

@@ -1,5 +1,5 @@
 import { rest } from 'msw';
-import { Metadata } from '@/features/hasura-metadata-types';
+import { Metadata } from '../../../hasura-metadata-types';
 
 const baseUrl = 'http://localhost:8080';
 

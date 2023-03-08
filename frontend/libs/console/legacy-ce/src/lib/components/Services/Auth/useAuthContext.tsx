@@ -1,5 +1,5 @@
-import globals from '@/Globals';
-import { useConsoleConfig } from '@/hooks/useEnvVars';
+import globals from '../../../Globals';
+import { useConsoleConfig } from '../../../hooks/useEnvVars';
 import React, { createContext, useContext } from 'react';
 import { browserHistory } from 'react-router';
 import { getAdminSecret } from '../ApiExplorer/ApiRequest/utils';

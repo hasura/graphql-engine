@@ -1,4 +1,4 @@
-import ToolTip from '@/components/Common/Tooltip/Tooltip';
+import ToolTip from '../../../../Common/Tooltip/Tooltip';
 import React from 'react';
 
 interface InputProps extends React.ComponentProps<'input'> {

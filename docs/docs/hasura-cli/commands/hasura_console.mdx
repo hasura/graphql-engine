@@ -1,7 +1,7 @@
 ---
 sidebar_label: hasura console
 sidebar_position: 7
-description: Open the console to manage the database and try out APIs using the Hasura CLI
+description: Open the Console to manage the database and try out APIs using the Hasura CLI
 keywords:
   - hasura
   - docs
@@ -11,11 +11,11 @@ keywords:
 
 # Hasura CLI: hasura console
 
-Open the console to manage the database and try out APIs.
+Open the Console to manage the database and try out APIs.
 
 ## Synopsis
 
-Run a web server to serve the Hasura Console for the GraphQL Engine to manage the database and build queries.
+This command will start a web server to serve the Hasura Console for the GraphQL Engine. You can use this to manage the database, build queries, and try out APIs. The Console is served at http://localhost:9695 by default. You can change the port using the --console-port flag and further configure the command by including other available flags.
 
 ```bash
 hasura console [flags]
@@ -38,6 +38,9 @@ hasura console --admin-secret "<admin-secret>"
 
 # Connect to an instance specified by the flag, overrides the one mentioned in config.yaml:
 hasura console --endpoint "<endpoint>"
+
+# Connect to HGE instance running in a container when running CLI inside another container:
+hasura console --endpoint <container network endpoint, like: http://host.docker.internal:8080> --no-browser --address 0.0.0.0 --console-hge-endpoint http://0.0.0.0:8080
 ```
 
 ## Options
@@ -49,6 +52,7 @@ hasura console --endpoint "<endpoint>"
     --api-port string                port for serving migrate api (default "9693")
     --browser string                 open console in a specific browser
     --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
+    --console-hge-endpoint string    endpoint on which the CLI Console should reach the HGE Server
     --console-port string            port for serving console (default "9695")
     --endpoint string                http(s) endpoint for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ENDPOINT")
 -h, --help                           help for console

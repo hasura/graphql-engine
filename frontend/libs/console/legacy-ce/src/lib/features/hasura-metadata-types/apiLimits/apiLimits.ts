@@ -1,4 +1,4 @@
-import { Nullable } from '@/components/Common/utils/tsUtils';
+import { Nullable } from '../../../components/Common/utils/tsUtils';
 
 type APILimit<T> = {
   global: T;

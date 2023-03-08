@@ -34,6 +34,8 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common (SourceName)
 import Hasura.RQL.Types.Subscription (SubscriptionType (..))
+import Hasura.SQL.Backend (BackendType (..), PostgresKind (Vanilla))
+import Hasura.SQL.Tag (backendTag, reify)
 import Hasura.SQL.Value (TxtEncodedVal (..))
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -244,8 +246,9 @@ pollStreamingQuery ::
   G.Name ->
   SubscriptionPostPollHook ->
   Maybe (IO ()) -> -- Optional IO action to make this function (pollStreamingQuery) testable
+  ResolvedConnectionTemplate b ->
   IO ()
-pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap rootFieldName postPollHook testActionMaybe = do
+pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap rootFieldName postPollHook testActionMaybe resolvedConnectionTemplate = do
   (totalTime, (snapshotTime, batchesDetailsAndProcessedCohorts)) <- withElapsedTime $ do
     -- snapshot the current cohorts and split them into batches
     -- This STM transaction is a read only transaction i.e. it doesn't mutate any state
@@ -264,9 +267,11 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
     -- concurrently process each batch and also get the processed cohort with the new updated cohort key
     batchesDetailsAndProcessedCohorts <- A.forConcurrently cohortBatches $ \(batchId, cohorts) -> do
       (queryExecutionTime, mxRes) <-
-        runDBStreamingSubscription @b sourceConfig query $
-          over (each . _2) C._csVariables $
-            fmap (fmap fst) cohorts
+        runDBStreamingSubscription @b
+          sourceConfig
+          query
+          (over (each . _2) C._csVariables $ fmap (fmap fst) cohorts)
+          resolvedConnectionTemplate
       let lqMeta = SubscriptionMetadata $ convertDuration queryExecutionTime
           operations = getCohortOperations cohorts mxRes
           -- batch response size is the sum of the response sizes of the cohorts
@@ -298,8 +303,17 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
                   }
           pure (cohortExecutionDetails, (currentCohortKey, (cohort, updatedCohortKey, snapshottedNewSubs)))
       let processedCohortBatch = snd <$> cohortsExecutionDetails
+
+          -- Note: We want to keep the '_bedPgExecutionTime' field for backwards
+          -- compatibility reason, which will be 'Nothing' for non-PG backends.
+          -- See https://hasurahq.atlassian.net/browse/GS-329
+          pgExecutionTime = case reify (backendTag @b) of
+            Postgres Vanilla -> Just queryExecutionTime
+            _ -> Nothing
+
           batchExecDetails =
             BatchExecutionDetails
+              pgExecutionTime
               queryExecutionTime
               pushTime
               batchId
@@ -312,6 +326,7 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
   let pollDetails =
         PollDetails
           { _pdPollerId = pollerId,
+            _pdKind = Streaming,
             _pdGeneratedSql = toTxt query,
             _pdSnapshotTime = snapshotTime,
             _pdBatches = fst <$> batchesDetailsAndProcessedCohorts,

@@ -13,6 +13,7 @@ module Harness.GraphqlEngine
     postMetadata_,
     postMetadata,
     postMetadataWithStatus,
+    postMetadataWithStatusAndHeaders,
     postExplain,
     exportMetadata,
     reloadMetadata,
@@ -45,29 +46,33 @@ where
 
 import Control.Concurrent.Async qualified as Async
 import Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
--- import Hasura.RQL.Types.Metadata (emptyMetadataDefaults)
-import Data.Aeson (Value, fromJSON, object, (.=))
+import Data.Aeson (Value (String), encode, fromJSON, object, (.=))
 import Data.Aeson.Encode.Pretty as AP
 import Data.Aeson.Types (Pair)
+import Data.ByteString (ByteString)
+import Data.CaseInsensitive (original)
 import Data.Environment qualified as Env
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as T
+import Data.Text.Encoding (decodeUtf8)
 import Data.Time (getCurrentTime)
 import Harness.Constants qualified as Constants
 import Harness.Exceptions (bracket, withFrozenCallStack)
 import Harness.Http qualified as Http
 import Harness.Logging
 import Harness.Quoter.Yaml (fromYaml, yaml)
-import Harness.TestEnvironment (Server (..), TestEnvironment (..), getServer, serverUrl, testLogMessage)
+import Harness.TestEnvironment (Protocol (..), Server (..), TestEnvironment (..), getServer, requestProtocol, serverUrl, testLogMessage)
+import Harness.WebSockets (responseListener)
 import Hasura.App qualified as App
 import Hasura.Logging (Hasura)
 import Hasura.Prelude
-import Hasura.Server.App (Loggers (..), ServerCtx (..))
 import Hasura.Server.Init (PostgresConnInfo (..), ServeOptions (..), unsafePort)
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
 import Hasura.Tracing (sampleAlways)
 import Network.Socket qualified as Socket
 import Network.Wai.Handler.Warp qualified as Warp
+import Network.WebSockets qualified as WS
 import System.Metrics qualified as EKG
 import Test.Hspec
 
@@ -116,13 +121,47 @@ postWithHeadersStatus ::
 postWithHeadersStatus statusCode testEnv@(getServer -> Server {urlPrefix, port}) path headers requestBody = do
   testLogMessage testEnv $ LogHGERequest (T.pack path) requestBody
 
-  let headers' = case testingRole testEnv of
+  let headers' :: Http.RequestHeaders
+      headers' = case testingRole testEnv of
         Just role -> ("X-Hasura-Role", txtToBs role) : headers
         Nothing -> headers
 
-  responseBody <- withFrozenCallStack $ Http.postValueWithStatus statusCode (urlPrefix ++ ":" ++ show port ++ path) headers' requestBody
+  responseBody <- withFrozenCallStack case requestProtocol (globalEnvironment testEnv) of
+    WebSocket connection -> postWithHeadersStatusViaWebSocket connection headers' requestBody
+    HTTP -> Http.postValueWithStatus statusCode (urlPrefix ++ ":" ++ show port ++ path) headers' requestBody
+
   testLogMessage testEnv $ LogHGEResponse (T.pack path) responseBody
   pure responseBody
+
+-- | Post some JSON to graphql-engine, getting back more JSON, via websockets.
+--
+-- This will be used by 'postWithHeadersStatus' if the 'TestEnvironment' sets
+-- the 'requestProtocol' to 'WebSocket'.
+postWithHeadersStatusViaWebSocket :: WS.Connection -> Http.RequestHeaders -> Value -> IO Value
+postWithHeadersStatusViaWebSocket connection headers requestBody = do
+  let preparedHeaders :: HashMap Text ByteString
+      preparedHeaders =
+        HashMap.fromList
+          [ (decodeUtf8 (original key), value)
+            | (key, value) <- headers
+          ]
+
+  WS.sendTextDatas
+    connection
+    [ encode $
+        object
+          [ "type" .= String "connection_init",
+            "payload" .= object ["headers" .= preparedHeaders]
+          ],
+      encode $
+        object
+          [ "id" .= String "some-request-id",
+            "type" .= String "start",
+            "payload" .= requestBody
+          ]
+    ]
+
+  responseListener connection \_ _ payload -> pure payload
 
 -- | Post some JSON to graphql-engine, getting back more JSON.
 --
@@ -195,20 +234,35 @@ postExplain testEnvironment value =
             query: *value
         |]
 
+-- | Metadata requests don't work over websockets. This overrides the HGE
+-- request protocol.
+withHTTP :: TestEnvironment -> TestEnvironment
+withHTTP testEnvironment =
+  testEnvironment
+    { globalEnvironment =
+        (globalEnvironment testEnvironment)
+          { requestProtocol = HTTP
+          }
+    }
+
 -- | Same as 'post_', but defaults to the @"v1/metadata"@ endpoint.
 --
 -- @headers@ are mostly irrelevant for the admin endpoint @v1/metadata@.
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postMetadata_ :: HasCallStack => TestEnvironment -> Value -> IO ()
-postMetadata_ testEnvironment = withFrozenCallStack $ post_ testEnvironment "/v1/metadata"
+postMetadata_ testEnvironment = withFrozenCallStack $ post_ (withHTTP testEnvironment) "/v1/metadata"
 
 postMetadata :: HasCallStack => TestEnvironment -> Value -> IO Value
-postMetadata testEnvironment = withFrozenCallStack $ post testEnvironment "/v1/metadata"
+postMetadata testEnvironment = withFrozenCallStack $ post (withHTTP testEnvironment) "/v1/metadata"
 
 postMetadataWithStatus :: HasCallStack => Int -> TestEnvironment -> Value -> IO Value
 postMetadataWithStatus statusCode testEnvironment v =
-  withFrozenCallStack $ postWithHeadersStatus statusCode testEnvironment "/v1/metadata" mempty v
+  withFrozenCallStack $ postWithHeadersStatus statusCode (withHTTP testEnvironment) "/v1/metadata" mempty v
+
+postMetadataWithStatusAndHeaders :: HasCallStack => Int -> TestEnvironment -> Http.RequestHeaders -> Value -> IO Value
+postMetadataWithStatusAndHeaders statusCode testEnvironment =
+  withFrozenCallStack $ postWithHeadersStatus statusCode (withHTTP testEnvironment) "/v1/metadata"
 
 -- | Resets metadata, removing all sources or remote schemas.
 --
@@ -285,7 +339,7 @@ startServerThread = do
           dataconnector:
             foobar:
               display_name: FOOBARDB
-              uri: "http://localhost:65007" |]
+              uri: "http://localhost:65005" |]
   thread <-
     Async.async
       ( runApp
@@ -295,7 +349,7 @@ startServerThread = do
             }
       )
   let server = Server {port = fromIntegral port, urlPrefix, thread}
-  Http.healthCheck (serverUrl server)
+  Http.healthCheck (serverUrl server <> "/healthz")
   pure server
 
 -------------------------------------------------------------------------------
@@ -308,32 +362,29 @@ runApp serveOptions = do
           { _pciDatabaseConn = Nothing,
             _pciRetries = Nothing
           }
-      metadataDbUrl = Just $ Constants.postgresqlMetadataConnectionString
+      metadataDbUrl = Just Constants.postgresqlMetadataConnectionString
   env <- Env.getEnvironment
   initTime <- liftIO getCurrentTime
   globalCtx <- App.initGlobalCtx env metadataDbUrl rci
-  do
-    (ekgStore, serverMetrics) <-
-      liftIO $ do
-        store <- EKG.newStore @TestMetricsSpec
-        serverMetrics <-
-          liftIO $ createServerMetrics $ EKG.subset ServerSubset store
-        pure (EKG.subset EKG.emptyOf store, serverMetrics)
-    prometheusMetrics <- makeDummyPrometheusMetrics
-    runManagedT (App.initialiseServerCtx env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways) $ \serverCtx@ServerCtx {..} ->
-      do
-        let Loggers _ _ pgLogger = scLoggers
-        flip App.runPGMetadataStorageAppT (scMetadataDbPool, pgLogger)
-          . lowerManagedT
-          $ do
-            App.runHGEServer
-              (const $ pure ())
-              env
-              serveOptions
-              serverCtx
-              initTime
-              Nothing
-              ekgStore
+  (ekgStore, serverMetrics) <-
+    liftIO $ do
+      store <- EKG.newStore @TestMetricsSpec
+      serverMetrics <-
+        liftIO $ createServerMetrics $ EKG.subset ServerSubset store
+      pure (EKG.subset EKG.emptyOf store, serverMetrics)
+  prometheusMetrics <- makeDummyPrometheusMetrics
+  let managedServerCtx = App.initialiseContext env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways
+  runManagedT managedServerCtx \(appCtx, appEnv) -> do
+    flip App.runPGMetadataStorageAppT (appCtx, appEnv)
+      . lowerManagedT
+      $ do
+        App.runHGEServer
+          (const $ pure ())
+          appCtx
+          appEnv
+          initTime
+          Nothing
+          ekgStore
 
 -- | Used only for 'runApp' above.
 data TestMetricsSpec name metricType tags

@@ -1,9 +1,9 @@
 import {
   modifyViolationType,
   MSSqlFk,
-} from '@/components/Services/Data/mergeData';
-import { useMetadataTables, useMetadataVersion } from '@/features/MetadataAPI';
-import { dataSourceSqlQueries } from '@/features/SqlQueries';
+} from '../components/Services/Data/mergeData';
+import { useMetadataTables, useMetadataVersion } from '../features/MetadataAPI';
+import { dataSourceSqlQueries } from '../features/SqlQueries';
 import { ForeignKeyConstraint } from './../dataSources/types';
 import { QualifiedTable, TableEntry } from './../metadata/types';
 import { Driver } from '../dataSources';

@@ -1,7 +1,8 @@
 import React, { ChangeEvent, Dispatch } from 'react';
 import { FaCheckCircle, FaInfoCircle } from 'react-icons/fa';
-import { IconTooltip } from '@/new-components/Tooltip';
-import globals from '@/Globals';
+import { IconTooltip } from '../../../../new-components/Tooltip';
+import globals from '../../../../Globals';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 
 import { ConnectDBActions, ConnectDBState, connectionTypes } from './state';
 import { LabeledInput } from '../../../Common/LabeledInput';
@@ -169,15 +170,10 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
       >
         {title ?? defaultTitle}
         <IconTooltip message="Environment variable recommended" />
-        <a
+        <LearnMoreLink
           href="https://hasura.io/docs/latest/graphql/cloud/projects/create.html#existing-database"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <span className={`${styles.fontStyleItalic} ${styles.knowMoreLink}`}>
-            (Know More)
-          </span>
-        </a>
+          className="font-normal"
+        />
       </p>
       <div
         className={styles.connect_db_radios}

@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from '../../Metrics.module.scss';
-import cross from '../../images/x-circle.svg';
+import cross from '../../images/x-circle-metrics.svg';
 
 const FilterBadge = props => {
   const { onClick, text } = props;

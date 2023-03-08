@@ -14,15 +14,16 @@ import Data.Text.Conversions (convertText)
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Clock.POSIX (getPOSIXTime)
 import Database.PG.Query qualified as PG
+import GHC.Debug.Stub
 import GHC.TypeLits (Symbol)
 import Hasura.App
+import Hasura.App.State
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Connection.Settings
 import Hasura.GC qualified as GC
 import Hasura.Logging (Hasura, LogLevel (..), defaultEnabledEngineLogTypes)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema
-import Hasura.Server.App (Loggers (..), ServerCtx (..))
 import Hasura.Server.Init
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Migrate (downgradeCatalog)
@@ -30,18 +31,28 @@ import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
 import Hasura.Server.Version
 import Hasura.ShutdownLatch
 import Hasura.Tracing (sampleAlways)
+import System.Environment (getEnvironment, lookupEnv, unsetEnv)
 import System.Exit qualified as Sys
 import System.Metrics qualified as EKG
 import System.Posix.Signals qualified as Signals
 
+{-# ANN main ("HLINT: ignore Use env_from_function_argument" :: String) #-}
 main :: IO ()
-main =
+main = maybeWithGhcDebug $ do
   catch
     do
-      args <- parseArgs
       env <- Env.getEnvironment
+      clearEnvironment
+      args <- parseArgs env
       runApp env args
     (\(ExitException _code msg) -> BC.putStrLn msg >> Sys.exitFailure)
+  where
+    -- Since the handling of environment variables works differently between the
+    -- Cloud version and the OSSS version we clear the process environment to
+    -- avoid accidentally reading directly from the operating system environment
+    -- variables.
+    clearEnvironment :: IO ()
+    clearEnvironment = getEnvironment >>= traverse_ \(v, _) -> unsetEnv v
 
 runApp :: Env.Environment -> HGEOptions (ServeOptions Hasura) -> IO ()
 runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
@@ -67,8 +78,8 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
 
       -- It'd be nice if we didn't have to call runManagedT twice here, but
       -- there is a data dependency problem since the call to runPGMetadataStorageApp
-      -- below depends on serverCtx.
-      runManagedT (initialiseServerCtx env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways) $ \serverCtx@ServerCtx {..} -> do
+      -- below depends on appCtx.
+      runManagedT (initialiseContext env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways) $ \(appCtx, appEnv) -> do
         -- Catches the SIGTERM signal and initiates a graceful shutdown.
         -- Graceful shutdown for regular HTTP requests is already implemented in
         -- Warp, and is triggered by invoking the 'closeSocket' callback.
@@ -76,17 +87,17 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
         -- once again, we terminate the process immediately.
 
         liftIO $ do
-          void $ Signals.installHandler Signals.sigTERM (Signals.CatchOnce (shutdownGracefully scShutdownLatch)) Nothing
-          void $ Signals.installHandler Signals.sigINT (Signals.CatchOnce (shutdownGracefully scShutdownLatch)) Nothing
+          void $ Signals.installHandler Signals.sigTERM (Signals.CatchOnce (shutdownGracefully $ appEnvShutdownLatch appEnv)) Nothing
+          void $ Signals.installHandler Signals.sigINT (Signals.CatchOnce (shutdownGracefully $ appEnvShutdownLatch appEnv)) Nothing
 
-        let Loggers _ logger pgLogger = scLoggers
+        let Loggers _ logger _ = appEnvLoggers appEnv
 
         _idleGCThread <-
           C.forkImmortal "ourIdleGC" logger $
             GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 
-        flip runPGMetadataStorageAppT (scMetadataDbPool, pgLogger) . lowerManagedT $ do
-          runHGEServer (const $ pure ()) env serveOptions serverCtx initTime Nothing ekgStore
+        flip runPGMetadataStorageAppT (appCtx, appEnv) . lowerManagedT $ do
+          runHGEServer (const $ pure ()) appCtx appEnv initTime Nothing ekgStore
     HCExport -> do
       GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo fetchMetadataFromCatalog
@@ -108,7 +119,7 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
                       False
                       PG.ReadCommitted
                       Nothing
-               in PostgresConnConfiguration pgSourceConnInfo Nothing defaultPostgresExtensionsSchema
+               in PostgresConnConfiguration pgSourceConnInfo Nothing defaultPostgresExtensionsSchema Nothing mempty
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo $ downgradeCatalog defaultSourceConfig opts initTime
       either (throwErrJExit DowngradeProcessError) (liftIO . print) res
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ convertText currentVersion
@@ -138,3 +149,17 @@ data
     AppMetricsSpec name metricType tags
   ServerTimestampMs ::
     AppMetricsSpec "ekg.server_timestamp_ms" 'EKG.CounterType ()
+
+-- | 'withGhcDebug' but conditional on the environment variable
+-- @HASURA_GHC_DEBUG=true@. When this is set a debug socket will be opened,
+-- otherwise the server will start normally.  This must only be called once and
+-- it's argument should be the program's @main@
+maybeWithGhcDebug :: IO a -> IO a
+maybeWithGhcDebug theMain = do
+  lookupEnv "HASURA_GHC_DEBUG" >>= \case
+    Just "true" -> do
+      putStrLn "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      putStrLn "!!!!!    Opening a ghc-debug socket    !!!!!"
+      putStrLn "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      withGhcDebug theMain
+    _ -> theMain

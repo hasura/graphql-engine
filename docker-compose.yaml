@@ -29,6 +29,8 @@
 
 version: "3.6"
 
+name: hge-manual-tests
+
 services:
   mariadb:
     extends:

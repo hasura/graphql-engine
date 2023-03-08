@@ -14,6 +14,11 @@ module Hasura.Backends.Postgres.Connection.Settings
     CertData (..),
     SSLMode (..),
     DefaultPostgresPoolSettings (..),
+    ConnectionTemplate (..),
+    PostgresConnectionSetMemberName (..),
+    PostgresConnectionSet (..),
+    PostgresConnectionSetMember (..),
+    KritiTemplate (..),
     getDefaultPGPoolSettingIfNotExists,
     defaultPostgresPoolSettings,
     defaultPostgresExtensionsSchema,
@@ -26,6 +31,8 @@ module Hasura.Backends.Postgres.Connection.Settings
     psciUsePreparedStatements,
     psciIsolationLevel,
     psciSslConfiguration,
+    pccConnectionTemplate,
+    pccConnectionSet,
   )
 where
 
@@ -34,15 +41,22 @@ import Autodocodec qualified as AC
 import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.Aeson.Casing (aesonDrop)
+import Data.Aeson.Extended (mapWithJSONPath)
 import Data.Aeson.TH
 import Data.Bifoldable
 import Data.Bifunctor
 import Data.Bitraversable
 import Data.Char (toLower)
+import Data.HashMap.Strict.NonEmpty qualified as NEMap
+import Data.Hashable (hashWithSalt)
+import Data.List.Extended qualified as L (uniques)
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Semigroup (Max (..))
 import Data.Text (unpack)
 import Data.Text qualified as T
+import Data.Text.Encoding qualified as T
+import Data.Text.Extended (ToTxt (toTxt), dquoteList)
+import Data.Text.NonEmpty
 import Data.Time
 import Data.Time.Clock.Compat ()
 import Database.PG.Query qualified as PG
@@ -51,6 +65,8 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Common (UrlConf (..))
 import Hasura.SQL.Types (ExtensionsSchema (..))
 import Hasura.Server.Utils (parseConnLifeTime, readIsoLevel)
+import Kriti qualified
+import Kriti.Parser qualified as Kriti
 import Test.QuickCheck.Instances.Semigroup ()
 import Test.QuickCheck.Instances.Time ()
 
@@ -360,10 +376,138 @@ instance FromJSON PostgresSourceConnInfo where
 defaultPostgresExtensionsSchema :: ExtensionsSchema
 defaultPostgresExtensionsSchema = ExtensionsSchema "public"
 
+-- | `kriti-lang` template.
+data KritiTemplate = KritiTemplate
+  { -- TODO: There is redundency here, we should remove the templateSrc field once the renderPretty bug is resolved
+    -- (https://github.com/hasura/kriti-lang/issues/77)
+
+    -- | Raw kriti template
+    _ktSource :: Text,
+    -- | Parsed kriti template
+    _ktParsedAST :: Kriti.ValueExt
+  }
+  deriving (Show, Eq, Generic)
+
+instance Hashable KritiTemplate where
+  hashWithSalt salt (KritiTemplate templateSrc _) = hashWithSalt salt templateSrc
+
+instance NFData KritiTemplate
+
+instance ToJSON KritiTemplate where
+  toJSON (KritiTemplate templateSrc _) = String templateSrc
+
+instance FromJSON KritiTemplate where
+  parseJSON = withText "KritiTemplate" $ \templateSrc ->
+    KritiTemplate templateSrc
+      <$> Kriti.parser (T.encodeUtf8 templateSrc)
+      `onLeft` \err ->
+        fail $ "Kriti template parsing failed - " <> show err
+
+instance HasCodec KritiTemplate where
+  codec = codecViaAeson "KritiTemplate"
+
+-- | Connection template for the dynamic DB connection.
+data ConnectionTemplate = ConnectionTemplate
+  { -- | Version for the connection template. Please read more about this in the dynamic DB connection RFC (Metadata API > Versioning).
+    _ctVersion :: Int,
+    -- | `kriti-lang` template for the dynamic DB connection.
+    _ctTemplate :: KritiTemplate
+  }
+  deriving (Show, Eq, Generic)
+
+instance Hashable ConnectionTemplate
+
+instance NFData ConnectionTemplate
+
+-- | All the supported versions for the dynamic DB connection template.
+supportedConnectionTemplateVersions :: [Int]
+supportedConnectionTemplateVersions = [1]
+
+instance FromJSON ConnectionTemplate where
+  parseJSON = withObject "ConnectionTemplate" $ \o -> do
+    version <- o .:? "version" .!= 1
+    when (version `notElem` supportedConnectionTemplateVersions) $
+      fail $
+        "Supported versions are " <> show supportedConnectionTemplateVersions
+    ConnectionTemplate version
+      <$> o .: "template"
+
+instance ToJSON ConnectionTemplate where
+  toJSON ConnectionTemplate {..} =
+    object
+      [ "version" .= _ctVersion,
+        "template" .= _ctTemplate
+      ]
+
+instance HasCodec ConnectionTemplate where
+  codec =
+    CommentCodec "https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconnectiontemplate" $
+      AC.object "ConnectionTemplate" $
+        ConnectionTemplate
+          <$> optionalFieldWithOmittedDefault "version" 1 ctVersionInfoDoc AC..= _ctVersion
+          <*> requiredField "template" ctTemplateInfoDoc AC..= _ctTemplate
+    where
+      ctVersionInfoDoc = "Optional connection template version (supported versions: [1], default: 1)"
+      ctTemplateInfoDoc = "Connection kriti template (read more in the docs)"
+
+-- | Name of the member of a connection set.
+newtype PostgresConnectionSetMemberName = PostgresConnectionSetMemberName {getPostgresConnectionSetMemberName :: NonEmptyText}
+  deriving (Show, Eq, Generic, Ord, ToTxt)
+
+instance Hashable PostgresConnectionSetMemberName
+
+instance NFData PostgresConnectionSetMemberName
+
+instance ToJSON PostgresConnectionSetMemberName where
+  toJSON (PostgresConnectionSetMemberName sName) = toJSON sName
+
+instance FromJSON PostgresConnectionSetMemberName where
+  parseJSON val = PostgresConnectionSetMemberName <$> parseJSON val
+
+data PostgresConnectionSetMember = PostgresConnectionSetMember
+  { _pscmName :: PostgresConnectionSetMemberName,
+    _pscmConnectionInfo :: PostgresSourceConnInfo
+  }
+  deriving (Show, Eq, Generic)
+
+$(deriveJSON hasuraJSON {omitNothingFields = True} ''PostgresConnectionSetMember)
+
+instance Hashable PostgresConnectionSetMember
+
+instance NFData PostgresConnectionSetMember
+
+-- | HashMap of the connection set. This is used for the dynamic DB connection feature.
+newtype PostgresConnectionSet = PostgresConnectionSet {getPostgresConnectionSet :: NEMap.NEHashMap PostgresConnectionSetMemberName PostgresConnectionSetMember}
+  deriving (Show, Eq, Generic, Semigroup)
+
+instance Hashable PostgresConnectionSet
+
+instance NFData PostgresConnectionSet
+
+instance FromJSON PostgresConnectionSet where
+  parseJSON = withArray "PostgresConnectionSet" \arr -> do
+    connectionSet <- mapWithJSONPath parseJSON (toList arr)
+    let connectionSetMemberNames = map _pscmName connectionSet
+        duplicateConnSetMemberNames = connectionSetMemberNames \\ (L.uniques connectionSetMemberNames)
+    -- check if members with same name are present in connection set
+    unless (null duplicateConnSetMemberNames) $ do
+      fail $ "connection set members with duplicate names are not allowed: " ++ unpack (dquoteList (map toTxt duplicateConnSetMemberNames))
+    let connectionSetTuples = map (_pscmName &&& id) connectionSet
+    connectionSetHashMap <- NEMap.fromList connectionSetTuples `onNothing` fail "connection set cannot be empty"
+    pure $ PostgresConnectionSet connectionSetHashMap
+
+instance ToJSON PostgresConnectionSet where
+  toJSON (PostgresConnectionSet connSet) = toJSON $ NEMap.elems connSet
+
+instance HasCodec PostgresConnectionSet where
+  codec = codecViaAeson "PostgresConnectionSet"
+
 data PostgresConnConfiguration = PostgresConnConfiguration
   { _pccConnectionInfo :: PostgresSourceConnInfo,
     _pccReadReplicas :: Maybe (NonEmpty PostgresSourceConnInfo),
-    _pccExtensionsSchema :: ExtensionsSchema
+    _pccExtensionsSchema :: ExtensionsSchema,
+    _pccConnectionTemplate :: Maybe ConnectionTemplate,
+    _pccConnectionSet :: Maybe PostgresConnectionSet
   }
   deriving (Show, Eq, Generic)
 
@@ -372,11 +516,13 @@ instance Hashable PostgresConnConfiguration
 instance NFData PostgresConnConfiguration
 
 instance FromJSON PostgresConnConfiguration where
-  parseJSON = withObject "PostgresConnConfiguration" $ \o ->
+  parseJSON = withObject "PostgresConnConfiguration" $ \o -> do
     PostgresConnConfiguration
       <$> o .: "connection_info"
       <*> o .:? "read_replicas"
       <*> o .:? "extensions_schema" .!= defaultPostgresExtensionsSchema
+      <*> o .:? "connection_template"
+      <*> o .:? "connection_set"
 
 instance ToJSON PostgresConnConfiguration where
   toJSON PostgresConnConfiguration {..} =
@@ -384,6 +530,8 @@ instance ToJSON PostgresConnConfiguration where
       ["connection_info" .= _pccConnectionInfo]
         <> maybe mempty (\readReplicas -> ["read_replicas" .= readReplicas]) _pccReadReplicas
         <> bool mempty (["extensions_schema" .= _pccExtensionsSchema]) (_pccExtensionsSchema /= defaultPostgresExtensionsSchema)
+        <> maybe mempty (\connTemplate -> ["connection_template" .= connTemplate]) _pccConnectionTemplate
+        <> maybe mempty (\connSet -> ["connection_set" .= NEMap.elems (getPostgresConnectionSet connSet)]) _pccConnectionSet
 
 instance HasCodec PostgresConnConfiguration where
   codec =
@@ -393,10 +541,14 @@ instance HasCodec PostgresConnConfiguration where
           <$> requiredField "connection_info" connectionInfoDoc .== _pccConnectionInfo
           <*> optionalFieldOrNull "read_replicas" readReplicasDoc .== _pccReadReplicas
           <*> optionalFieldWithOmittedDefault "extensions_schema" defaultPostgresExtensionsSchema extensionsSchemaDoc .== _pccExtensionsSchema
+          <*> optionalFieldOrNull "connection_template" connectionTemplateDoc .== _pccConnectionTemplate
+          <*> optionalFieldOrNull "connection_set" connectionSetDoc .== _pccConnectionSet
     where
       connectionInfoDoc = "Connection parameters for the source"
       readReplicasDoc = "Optional list of read replica configuration (supported only in cloud/enterprise versions)"
       extensionsSchemaDoc = "Name of the schema where the graphql-engine will install database extensions (default: public)"
+      connectionTemplateDoc = "Optional connection template (supported only for cloud/enterprise edition)"
+      connectionSetDoc = "connection set used for connection template (supported only for cloud/enterprise edition)"
       infix 8 .==
       (.==) = (AC..=)
 

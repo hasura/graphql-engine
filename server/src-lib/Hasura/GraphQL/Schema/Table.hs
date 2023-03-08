@@ -19,6 +19,7 @@ where
 import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
+import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Base.Error (QErr)
@@ -106,10 +107,12 @@ tableSelectColumnsEnum tableInfo = do
     Nothing -> pure Nothing
     Just columnDefinitions ->
       Just
-        <$> ( P.memoizeOn 'tableSelectColumnsEnum (enumName, description, columns) $
-                pure $
-                  P.enum enumName description columnDefinitions
-            )
+        <$> P.memoizeOn
+          'tableSelectColumnsEnum
+          (enumName, description, columns)
+          ( pure $
+              P.enum enumName description columnDefinitions
+          )
   where
     define name =
       P.Definition name (Just $ G.Description "column name") Nothing [] P.EnumValueInfo
@@ -126,19 +129,21 @@ tableSelectColumnsPredEnum ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   (ColumnType b -> Bool) ->
-  G.Name ->
+  GQLNameIdentifier ->
   TableInfo b ->
   SchemaT r m (Maybe (Parser 'Both n (Column b)))
 tableSelectColumnsPredEnum columnPredicate predName tableInfo = do
   customization <- retrieve $ _siCustomization @b
-  let mkTypename = runMkTypename $ _rscTypeNames customization
-  tableGQLName <- getTableGQLName @b tableInfo
+  let tCase = _rscNamingConvention customization
+      mkTypename = runMkTypename $ _rscTypeNames customization
+      predName' = applyFieldNameCaseIdentifier tCase predName
+  tableGQLName <- getTableIdentifierName @b tableInfo
   columns <- filter (columnPredicate . ciType) <$> tableSelectColumns tableInfo
-  let enumName = mkTypename $ tableGQLName <> Name.__select_column <> Name.__ <> predName
+  let enumName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkSelectColumnPredTypeName tableGQLName predName
       description =
         Just $
           G.Description $
-            "select \"" <> G.unName predName <> "\" columns of table " <>> tableInfoName tableInfo
+            "select \"" <> G.unName predName' <> "\" columns of table " <>> tableInfoName tableInfo
   pure $
     P.enum enumName description
       <$> nonEmpty

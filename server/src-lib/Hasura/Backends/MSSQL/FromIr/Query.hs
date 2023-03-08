@@ -202,6 +202,7 @@ fromSelectRows annSelectG = do
       IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
       IR.FromIdentifier identifier -> pure $ FromIdentifier $ IR.unFIIdentifier identifier
       IR.FromFunction {} -> refute $ pure FunctionNotSupported
+      IR.FromLogicalModel {} -> refute $ pure LogicalModelNotSupported
   Args
     { argsOrderBy,
       argsWhere,
@@ -340,6 +341,7 @@ fromSelectAggregate
         IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
         IR.FromIdentifier identifier -> pure $ FromIdentifier $ IR.unFIIdentifier identifier
         IR.FromFunction {} -> refute $ pure FunctionNotSupported
+        IR.FromLogicalModel {} -> refute $ pure LogicalModelNotSupported
       -- Below: When we're actually a RHS of a query (of CROSS APPLY),
       -- then we'll have a LHS table that we're joining on. So we get the
       -- conditions expressions from the field mappings. The LHS table is
@@ -923,7 +925,7 @@ unfurlAnnotatedOrderByElement =
               (const (fromAlias selectFrom))
               ( case annAggregateOrderBy of
                   IR.AAOCount -> pure (CountAggregate StarCountable)
-                  IR.AAOOp text columnInfo -> do
+                  IR.AAOOp text _resultType columnInfo -> do
                     fieldName <- fromColumnInfo columnInfo
                     pure (OpAggregate text (pure (ColumnExpression fieldName)))
               )

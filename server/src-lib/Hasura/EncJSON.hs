@@ -74,6 +74,13 @@ removeSOH uncons bs =
         else bs
     Nothing -> bs
 
+-- NB: this is somewhat wasteful, because the design of the `FromJSON` type
+-- class forces that the incoming `ByteString` value is first parsed to an
+-- `aeson` `Value`. But we then immediately re-serialize it here into an
+-- `EncJSON`.
+instance J.FromJSON EncJSON where
+  parseJSON = pure . encJFromJValue
+
 -- No other instances for `EncJSON`. In particular, because:
 --
 -- - Having a `Semigroup` or `Monoid` instance allows constructing semantically

@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { useServerConfig } from '@/hooks';
-import endpoints from '@/Endpoints';
+import { useServerConfig } from '../../hooks';
+import endpoints from '../../Endpoints';
 import { PrometheusSettingsForm } from './PrometheusSettingsForm';
 
 export const extractPrometheusUrl = (prometheusUrl: string) => {

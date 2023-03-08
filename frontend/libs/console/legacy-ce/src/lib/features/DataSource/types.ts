@@ -10,12 +10,13 @@ import {
   SourceToSourceRelationship,
   SupportedDrivers,
   Table,
-} from '@/features/hasura-metadata-types';
+} from '../hasura-metadata-types';
 
-import { NetworkArgs } from './api';
+import type { NetworkArgs } from './api';
+import { SchemaTable } from './utils';
 
 export type { BigQueryTable } from './bigquery';
-export { NetworkArgs };
+export type { NetworkArgs };
 
 export type AllowedTableRelationships =
   /**
@@ -55,8 +56,18 @@ export type IntrospectedTable = {
 };
 
 export type TableColumn = {
+  /**
+   * Name of the column as defined in the DB
+   */
   name: string;
+  /**
+   * dataType of the column as defined in the DB
+   */
   dataType: string;
+  /**
+   * console data type: the dataType property is group into one of these types and console uses this internally
+   */
+  consoleDataType: 'string' | 'text' | 'json' | 'number' | 'boolean';
   nullable?: boolean;
   isPrimaryKey?: boolean;
   graphQLProperties?: {
@@ -94,9 +105,10 @@ export type TableFkRelationships = {
 
 export type GetTablesListAsTreeProps = {
   dataSourceName: string;
+  releaseName?: ReleaseType;
 } & NetworkArgs;
 
-type ReleaseType = 'GA' | 'Beta' | 'disabled';
+export type ReleaseType = 'GA' | 'Beta' | 'Alpha' | 'disabled';
 
 export type DriverInfoResponse = {
   name: SupportedDrivers;
@@ -122,7 +134,10 @@ type columnName = string;
 export type SelectColumn = string | { name: string; columns: SelectColumn[] };
 export type WhereClause = Record<
   columnName,
-  Record<validOperators, string | number | boolean>
+  Record<
+    validOperators,
+    string | number | boolean | string[] | number[] | boolean[]
+  >
 >;
 export type OrderByType = 'asc' | 'desc';
 export type OrderByNulls = 'first' | 'last';
@@ -138,3 +153,15 @@ export type Operator = {
   defaultValue?: string;
 };
 export type GetSupportedOperatorsProps = NetworkArgs;
+
+export type InsertRowArgs = {
+  dataSourceName: string;
+  httpClient: NetworkArgs['httpClient'];
+  rowValues: Record<string, unknown>;
+  table: Table;
+};
+
+export type GetDefaultQueryRootProps = {
+  dataSourceName: string;
+  table: Table;
+};

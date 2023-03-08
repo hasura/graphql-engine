@@ -3,10 +3,13 @@ module Hasura.Server.API.Metadata
   )
 where
 
+import Hasura.LogicalModel.API qualified as LogicalModels
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
+import Hasura.RQL.DDL.ConnectionTemplate
 import Hasura.RQL.DDL.DataConnector
 import Hasura.RQL.DDL.EventTrigger
+import Hasura.RQL.DDL.FeatureFlag
 import Hasura.RQL.DDL.Metadata
 import Hasura.RQL.DDL.Permission
 import Hasura.RQL.DDL.QueryTags
@@ -82,6 +85,14 @@ data RQLMetadataV1
   | -- Computed fields
     RMAddComputedField !(AnyBackend AddComputedField)
   | RMDropComputedField !(AnyBackend DropComputedField)
+  | -- Connection template
+    RMTestConnectionTemplate !(AnyBackend TestConnectionTemplate)
+  | -- Logical Models
+    RMGetLogicalModel !(AnyBackend LogicalModels.GetLogicalModel)
+  | RMTrackLogicalModel !(AnyBackend LogicalModels.TrackLogicalModel)
+  | RMUntrackLogicalModel !(AnyBackend LogicalModels.UntrackLogicalModel)
+  | RMCreateSelectLogicalModelPermission !(AnyBackend (LogicalModels.CreateLogicalModelPermission SelPerm))
+  | RMDropSelectLogicalModelPermission !(AnyBackend LogicalModels.DropLogicalModelPermission)
   | -- Tables event triggers
     RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)
@@ -165,6 +176,8 @@ data RQLMetadataV1
   | RMGetCatalogState !GetCatalogState
   | RMSetCatalogState !SetCatalogState
   | RMTestWebhookTransform !(Unvalidated TestWebhookTransform)
+  | -- Feature Flags
+    RMGetFeatureFlag !GetFeatureFlag
   | -- Bulk metadata queries
     RMBulk [RQLMetadataRequest]
 

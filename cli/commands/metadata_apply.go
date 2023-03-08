@@ -22,7 +22,7 @@ Further reading:
 - https://hasura.io/docs/latest/migrations-metadata-seeds/manage-metadata/
 - https://hasura.io/docs/latest/migrations-metadata-seeds/metadata-format/
 `,
-		Example: `  # Apply Hasura GraphQL engine metadata present in metadata.[yaml|json] file:
+		Example: `  # Apply Hasura GraphQL Engine metadata present in metadata.[yaml|json] file:
   hasura metadata apply
 
   # Use with admin secret:

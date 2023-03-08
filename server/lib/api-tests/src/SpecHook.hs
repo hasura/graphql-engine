@@ -18,7 +18,7 @@ import Harness.GraphqlEngine (startServerThread)
 import Harness.Logging
 import Harness.Services.Composed (mkTestServicesConfig)
 import Harness.Test.BackendType (BackendType (..))
-import Harness.TestEnvironment (GlobalTestEnvironment (..), TestingMode (..), stopServer)
+import Harness.TestEnvironment (GlobalTestEnvironment (..), Protocol (..), TestingMode (..), stopServer)
 import Hasura.Prelude
 import System.Directory
 import System.Environment (getEnvironment)
@@ -75,7 +75,7 @@ setupTestEnvironment :: TestingMode -> Logger -> IO GlobalTestEnvironment
 setupTestEnvironment testingMode logger = do
   server <- startServerThread
   servicesConfig <- mkTestServicesConfig
-  pure GlobalTestEnvironment {..}
+  pure GlobalTestEnvironment {requestProtocol = HTTP, ..}
 
 -- | tear down the shared server
 teardownTestEnvironment :: GlobalTestEnvironment -> IO ()

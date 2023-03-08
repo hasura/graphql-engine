@@ -133,7 +133,7 @@ General guidelines for modeling roles in Hasura.
 Roles are typically modelled in two ways:
 
 1.  **Hierarchical roles**: Access scopes are nested depending on available roles.
-    [Roles in GitHub for organisations](https://help.github.com/en/articles/managing-peoples-access-to-your-organization-with-roles)
+    [Roles in GitHub for organizations](https://help.github.com/en/articles/managing-peoples-access-to-your-organization-with-roles)
     is a great example of such modeling where access scopes are inherited by deeper roles:
 
 <Thumbnail src="/img/auth/github-org-hierarchical-roles.png" alt="Hierarchical roles" />
@@ -172,7 +172,7 @@ and_ `select` _operation_):
 </tr>
 <tr>
 <td>org-member</td>
-<td><p>Allow access to personally created repositories and the organisation's repositories</p></td>
+<td><p>Allow access to personally created repositories and the organization's repositories</p></td>
 <td>
 
 ```json
@@ -218,7 +218,7 @@ database or not.
 
 Let's take a closer look at the permission rule for the `org-member` rule in the example from the previous section. The
 rule reads as "_allow access to this repository if it was created by this user or if this user is a member of the
-organisation that this repository belongs to_".
+organization that this repository belongs to_".
 
 The crucial piece of user information that is presumed to be available in the same database and that makes this an
 effective rule, is the mapping of users (_members_) to organizations.
@@ -233,7 +233,7 @@ When this user information is not available in the database that Hasura is confi
 only avenue to pass this information to a permission rule. In our example, the mapping of users (members) to
 organizations may not have been available in the same database.
 
-To convey this information, a session variable, say `X-Hasura-Allowed-Organisations` can be used by the configured
+To convey this information, a session variable, say `X-Hasura-Allowed-Organizations` can be used by the configured
 authentication to relay this information. We can then check for the following condition to emulate the same rule: _is
 the organization that this repository belongs to part of the list of the organizations the user is a member of_.
 
@@ -249,7 +249,7 @@ The permission for `org-member` role changes to this:
     },
     {
       "organization_id": {
-        "_in": "X-Hasura-Allowed-Organisations"
+        "_in": "X-Hasura-Allowed-Organizations"
       }
     }
   ]
@@ -272,10 +272,10 @@ suggestion to remove the brackets and set your session variable in its place.
 Session variables are currently expected to be Strings and should be encoded as Postgres's literals for the relevant
 type.
 
-For example, in the above example, let's say `creator_id` and `organisation_id` columns are of type `integer`, then the
-values of `X-Hasura-User-Id` and `X-Hasura-Allowed-Organisations` should be of type `integer` and `integer[]` (an
+For example, in the above example, let's say `creator_id` and `organization_id` columns are of type `integer`, then the
+values of `X-Hasura-User-Id` and `X-Hasura-Allowed-Organizations` should be of type `integer` and `integer[]` (an
 integer array) respectively. To pass say a value `1` for `X-Hasura-User-Id`, it'll be "`1`" and if the allowed
-organisations are `1`, `2` and `3`, then `X-Hasura-Allowed-Organisations` will be "`{1,2,3}`". `{}` is the syntax for
+organizations are `1`, `2` and `3`, then `X-Hasura-Allowed-Organizations` will be "`{1,2,3}`". `{}` is the syntax for
 specifying [arrays in Postgres](https://www.postgresql.org/docs/current/arrays.html#ARRAYS-INPUT).
 
 The types and their formats are detailed [here](https://www.postgresql.org/docs/current/datatype.html). When in doubt

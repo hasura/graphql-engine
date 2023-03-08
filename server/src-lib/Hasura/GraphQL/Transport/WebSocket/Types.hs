@@ -13,6 +13,7 @@ where
 import Control.Concurrent.STM qualified as STM
 import Data.Time.Clock qualified as TC
 import Hasura.GraphQL.Execute qualified as E
+import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Execute.Subscription.State qualified as ES
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.GraphQL.Transport.Instances ()
@@ -23,7 +24,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.Cors
-import Hasura.Server.Init.Config (KeepAliveDelay (..))
+import Hasura.Server.Init.Config (AllowListStatus, KeepAliveDelay (..))
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (ReadOnlyMode (..))
@@ -75,6 +76,8 @@ data WSConnData = WSConnData
 data WSServerEnv = WSServerEnv
   { _wseLogger :: !(L.Logger L.Hasura),
     _wseSubscriptionState :: !ES.SubscriptionsState,
+    _wseLiveQueriesOption :: !ES.LiveQueriesOptions,
+    _wseStreamQueriesOptions :: !ES.StreamQueriesOptions,
     -- | an action that always returns the latest version of the schema cache. See 'SchemaCacheRef'.
     _wseGCtxMap :: !(IO (SchemaCache, SchemaCacheVer)),
     _wseHManager :: !HTTP.Manager,
@@ -82,7 +85,7 @@ data WSServerEnv = WSServerEnv
     _wseSQLCtx :: !SQLGenCtx,
     _wseReadOnlyMode :: ReadOnlyMode,
     _wseServer :: !WSServer,
-    _wseEnableAllowlist :: !Bool,
+    _wseEnableAllowlist :: !AllowListStatus,
     _wseKeepAliveDelay :: !KeepAliveDelay,
     _wseServerMetrics :: !ServerMetrics,
     _wsePrometheusMetrics :: !PrometheusMetrics,

@@ -19,6 +19,7 @@ import Data.Text.Extended (ToTxt (..))
 import Data.Time as Time
 import Hasura.Backends.MSSQL.Types.Internal
 import Hasura.Base.ErrorValue qualified as ErrorValue
+import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 import Language.Haskell.TH.Syntax
 import Hasura.Base.ToErrorValue
@@ -280,3 +281,6 @@ instance ToJSON a => ToJSONKeyValue (BooleanOperators a) where
     ASTOverlaps a -> ("_st_overlaps", toJSON a)
     ASTTouches a -> ("_st_touches", toJSON a)
     ASTWithin a -> ("_st_within", toJSON a)
+
+instance HasCodec ScalarType where
+  codec = AC.named "ScalarType" placeholderCodecViaJSON

@@ -66,11 +66,11 @@ include the `X-Hasura-Admin-Secret` header. You can
 
 :::
 
-## Managers of an organisation in a multi-tenant app
+## Managers of an organization in a multi-tenant app
 
-Suppose you have a multi-tenant application where managers of a particular organisation can see all of the data that
-belongs to the organisation. In this case, your data models will probably have an `org_id` column that denotes the
-organisation either in the same table or via a related table.
+Suppose you have a multi-tenant application where managers of a particular organization can see all of the data that
+belongs to the organization. In this case, your data models will probably have an `org_id` column that denotes the
+organization either in the same table or via a related table.
 
 - Create a role called `manager`.
 - Create a permission for select, which has the condition: `org_id: {_eq: "X-Hasura-Org-Id"}`.
@@ -79,7 +79,7 @@ organisation either in the same table or via a related table.
 
 <Thumbnail
   src="/img/auth/org-manager-graphiql.png"
-  alt="Access control for a manager of an organisation"
+  alt="Access control for a manager of an organization"
   width="1300px"
   className="no-shadow"
 />

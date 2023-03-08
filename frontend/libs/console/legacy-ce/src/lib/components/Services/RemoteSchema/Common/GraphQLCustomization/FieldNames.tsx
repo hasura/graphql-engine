@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { IconTooltip } from '@/new-components/Tooltip';
-import { Button } from '@/new-components/Button';
+import { IconTooltip } from '../../../../../new-components/Tooltip';
+import { Button } from '../../../../../new-components/Button';
 import TypeMapping from './TypeMapping';
 import { inputStyles } from '../../constants';
 
@@ -47,7 +47,7 @@ const SelectOne = ({
     data-test={label}
   >
     <option value="">Select Type ...</option>
-    {options.map((op, i) => (
+    {[...options].sort().map((op, i) => (
       <option value={op} key={i}>
         {op}
       </option>

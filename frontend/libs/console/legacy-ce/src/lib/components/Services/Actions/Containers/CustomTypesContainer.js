@@ -1,6 +1,6 @@
 import React from 'react';
 import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import tabInfo from './customTypesTabs';
 import { appPrefix } from '../constants';
 import styles from '../Actions.module.scss';

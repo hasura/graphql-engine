@@ -22,7 +22,7 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Lens
 import Data.List.NonEmpty qualified as NE
 import Data.Vector qualified as Vector
-import Harness.Backend.DataConnector.Chinook (ChinookTestEnv)
+import Harness.Backend.DataConnector.Chinook (ChinookTestEnv, NameFormatting (..))
 import Harness.Backend.DataConnector.Chinook qualified as Chinook
 import Harness.Backend.DataConnector.Chinook.Reference qualified as Reference
 import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
@@ -47,15 +47,15 @@ spec = do
   Fixture.runWithLocalTestEnvironmentSingleSetup
     ( NE.fromList
         [ Fixture
-            { name = Fixture.Backend Reference.backendTypeMetadata,
-              mkLocalTestEnvironment = \_ -> pure $ Chinook.ChinookTestEnv Reference.sourceConfiguration id id id,
+            { name = Fixture.Backend Reference.backendTypeConfig,
+              mkLocalTestEnvironment = Reference.mkChinookStaticTestEnvironment,
               setupTeardown = \(testEnv, _localEnv) ->
                 [emptySetupAction testEnv],
               customOptions = Nothing
             },
           Fixture
-            { name = Fixture.Backend Sqlite.backendTypeMetadata,
-              mkLocalTestEnvironment = \_ -> pure $ Chinook.ChinookTestEnv Sqlite.sourceConfiguration id id Sqlite.formatForeignKeyName,
+            { name = Fixture.Backend Sqlite.backendTypeConfig,
+              mkLocalTestEnvironment = Sqlite.mkChinookCloneTestEnvironment,
               setupTeardown = \(testEnv, _localEnv) ->
                 [emptySetupAction testEnv],
               customOptions = Nothing
@@ -66,20 +66,8 @@ spec = do
 
   Fixture.runWithLocalTestEnvironmentSingleSetup
     ( NE.fromList
-        [ Fixture
-            { name = Fixture.Backend Reference.backendTypeMetadata,
-              mkLocalTestEnvironment = \_ -> pure $ Chinook.ChinookTestEnv Reference.sourceConfiguration id id id,
-              setupTeardown = \(testEnv, _localEnv) ->
-                [Chinook.setupAction Chinook.referenceSourceConfig Reference.agentConfig testEnv],
-              customOptions = Nothing
-            },
-          Fixture
-            { name = Fixture.Backend Sqlite.backendTypeMetadata,
-              mkLocalTestEnvironment = \_ -> pure $ Chinook.ChinookTestEnv Sqlite.sourceConfiguration id id Sqlite.formatForeignKeyName,
-              setupTeardown = \(testEnv, _localEnv) ->
-                [Chinook.setupAction Chinook.sqliteSourceConfig Sqlite.agentConfig testEnv],
-              customOptions = Nothing
-            }
+        [ Reference.chinookFixture,
+          Sqlite.chinookFixture
         ]
     )
     schemaInspectionTests
@@ -89,7 +77,7 @@ spec = do
 schemaInspectionTests :: Fixture.Options -> SpecWith (TestEnvironment, ChinookTestEnv)
 schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
   describe "get_source_tables" $ do
-    it "success" $ \(testEnvironment, Chinook.ChinookTestEnv {..}) -> do
+    it "success" $ \(testEnvironment, Chinook.ChinookTestEnv {nameFormatting = NameFormatting {..}}) -> do
       let sortYamlArray :: J.Value -> IO J.Value
           sortYamlArray (J.Array a) = pure $ J.Array (Vector.fromList (sort (Vector.toList a)))
           sortYamlArray _ = fail "Should return Array"
@@ -97,17 +85,17 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
       case BackendType.backendSourceName <$> getBackendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend not found for testEnvironment"
         Just sourceString -> do
-          let album = formatTableName ["Album"]
-              artist = formatTableName ["Artist"]
-              customer = formatTableName ["Customer"]
-              employee = formatTableName ["Employee"]
-              genre = formatTableName ["Genre"]
-              invoice = formatTableName ["Invoice"]
-              invoiceLine = formatTableName ["InvoiceLine"]
-              mediaType = formatTableName ["MediaType"]
-              playlist = formatTableName ["Playlist"]
-              playlistTrack = formatTableName ["PlaylistTrack"]
-              track = formatTableName ["Track"]
+          let album = _nfFormatTableName ["Album"]
+              artist = _nfFormatTableName ["Artist"]
+              customer = _nfFormatTableName ["Customer"]
+              employee = _nfFormatTableName ["Employee"]
+              genre = _nfFormatTableName ["Genre"]
+              invoice = _nfFormatTableName ["Invoice"]
+              invoiceLine = _nfFormatTableName ["InvoiceLine"]
+              mediaType = _nfFormatTableName ["MediaType"]
+              playlist = _nfFormatTableName ["Playlist"]
+              playlistTrack = _nfFormatTableName ["PlaylistTrack"]
+              track = _nfFormatTableName ["Track"]
           shouldReturnYamlF
             sortYamlArray
             opts
@@ -134,7 +122,7 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
             |]
 
   describe "get_table_info" $ do
-    it "success" $ \(testEnvironment@TestEnvironment {}, Chinook.ChinookTestEnv {..}) -> do
+    it "success" $ \(testEnvironment@TestEnvironment {}, Chinook.ChinookTestEnv {nameFormatting = NameFormatting {..}}) -> do
       let removeDescriptions (J.Object o) = J.Object (KM.delete "description" (removeDescriptions <$> o))
           removeDescriptions (J.Array a) = J.Array (removeDescriptions <$> a)
           removeDescriptions x = x
@@ -153,11 +141,12 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
       case BackendType.backendSourceName <$> getBackendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend not found for testEnvironment"
         Just sourceString -> do
-          let album = formatTableName ["Album"]
-              albumId = formatColumnName "AlbumId"
-              artistId = formatColumnName "ArtistId"
-              title = formatColumnName "Title"
-              artistForeignKeys = formatForeignKeyName "Artist"
+          let album = _nfFormatTableName ["Album"]
+              artist = _nfFormatTableName ["Artist"]
+              albumId = _nfFormatColumnName "AlbumId"
+              artistId = _nfFormatColumnName "ArtistId"
+              title = _nfFormatColumnName "Title"
+              artistForeignKeys = _nfFormatForeignKeyName "Artist"
           shouldReturnYamlF
             (pure . removeDescriptions)
             opts
@@ -180,7 +169,7 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
                 nullable: false
                 type: number
                 insertable: *supportsInserts
-                updatable: *supportsUpdates
+                updatable: false
               - name: *artistId
                 nullable: false
                 type: number
@@ -200,10 +189,9 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
               deletable: *supportsDeletes
               foreign_keys:
                 *artistForeignKeys:
-                  foreign_table:
-                    - Artist
+                  foreign_table: *artist
                   column_mapping:
-                    ArtistId: ArtistId
+                    *artistId: *artistId
             |]
                 & applyWhen (columnNullability == API.OnlyNullableColumns) (Lens.set (key "columns" . _Array . Lens.each . key "nullable") (J.Bool True))
                 & Lens.over (atKey "primary_key") (maybe Nothing (\value -> bool Nothing (Just value) supportsPrimaryKeys))
@@ -230,15 +218,16 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
               ) -- Note: These fields are backend specific so we ignore their values and just verify their shapes:
                 <&> Lens.set (key "config_schema_response" . key "other_schemas") J.Null
                 <&> Lens.set (key "config_schema_response" . key "config_schema") J.Null
+                <&> Lens.set (key "capabilities" . _Object . Lens.at "datasets") Nothing
                 <&> Lens.set (key "options" . key "uri") J.Null
-                <&> Lens.set (_Object . Lens.at "display_name") (Just J.Null)
+                <&> Lens.set (_Object . Lens.at "display_name") Nothing
+                <&> Lens.set (_Object . Lens.at "release_name") Nothing
             )
             [yaml|
             capabilities: *backendCapabilities
             config_schema_response:
               config_schema: null
               other_schemas: null
-            display_name: null
             options:
               uri: null
             |]
@@ -270,9 +259,26 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
 
   describe "list_source_kinds" $ do
     it "success" $ \(testEnvironment, _) -> do
-      case (backendTypeString &&& backendDisplayNameString) <$> getBackendTypeConfig testEnvironment of
+      case (backendTypeString &&& backendDisplayNameString &&& backendReleaseNameString) <$> getBackendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
-        Just (backendString, backendDisplayName) -> do
+        Just (backendString, (backendDisplayName, backendReleaseName)) -> do
+          let dataConnectorSource =
+                if isJust backendReleaseName
+                  then
+                    [yaml|
+                    builtin: false
+                    kind: *backendString
+                    display_name: *backendDisplayName
+                    release_name: *backendReleaseName
+                    available: true
+                  |]
+                  else
+                    [yaml|
+                    builtin: false
+                    kind: *backendString
+                    display_name: *backendDisplayName
+                    available: true
+                  |]
           shouldReturnYaml
             opts
             ( GraphqlEngine.postMetadata
@@ -287,27 +293,32 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
               - builtin: true
                 kind: pg
                 display_name: pg
+                available: true
               - builtin: true
                 kind: citus
                 display_name: citus
+                available: true
               - builtin: true
                 kind: cockroach
                 display_name: cockroach
+                available: true
               - builtin: true
                 kind: mssql
                 display_name: mssql
+                available: true
               - builtin: true
                 kind: bigquery
                 display_name: bigquery
+                available: true
               - builtin: true
                 kind: mysql
                 display_name: mysql
+                available: true
+              - *dataConnectorSource
               - builtin: false
-                kind: *backendString
-                display_name: *backendDisplayName
-              - builtin: false
-                display_name: "FOOBARDB (foobar)"
+                display_name: "FOOBARDB"
                 kind: foobar
+                available: true
             |]
 
   describe "<kind>_add_source" $ do
@@ -333,12 +344,12 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
             |]
 
   describe "<kind>_track_table" $ do
-    it "success" $ \(testEnvironment, Chinook.ChinookTestEnv {..}) -> do
+    it "success" $ \(testEnvironment, Chinook.ChinookTestEnv {nameFormatting = NameFormatting {..}}) -> do
       case (backendTypeString &&& backendSourceName) <$> TestEnvironment.getBackendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
         Just (backendType, sourceName) -> do
           let actionType = backendType <> "_track_table"
-              album = formatTableName ["Album"]
+              album = _nfFormatTableName ["Album"]
           shouldReturnYaml
             opts
             ( GraphqlEngine.postMetadata
@@ -355,15 +366,15 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
             |]
 
   describe "<kind>_create_object_relationship" $ do
-    it "success" $ \(testEnvironment@TestEnvironment {}, Chinook.ChinookTestEnv {..}) -> do
+    it "success" $ \(testEnvironment@TestEnvironment {}, Chinook.ChinookTestEnv {nameFormatting = NameFormatting {..}}) -> do
       let foreignKeySupport = (getBackendTypeConfig testEnvironment >>= BackendType.parseCapabilities) <&> API._dscSupportsForeignKeys . API._cDataSchema
       case (backendTypeString &&& backendSourceName) <$> getBackendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
         Just (backendType, sourceName) -> do
           let actionType = backendType <> "_track_table"
-              artistTable = formatTableName ["Artist"]
-              albumTable = formatTableName ["Album"]
-              artistId = formatColumnName "ArtistId"
+              artistTable = _nfFormatTableName ["Artist"]
+              albumTable = _nfFormatTableName ["Album"]
+              artistId = _nfFormatColumnName "ArtistId"
           GraphqlEngine.postMetadata_
             testEnvironment
             [yaml|
@@ -398,7 +409,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
             |]
 
   describe "<kind>_create_array_relationship" $ do
-    it "success" $ \(testEnvironment@TestEnvironment {}, Chinook.ChinookTestEnv {..}) -> do
+    it "success" $ \(testEnvironment@TestEnvironment {}, Chinook.ChinookTestEnv {nameFormatting = NameFormatting {..}}) -> do
       let foreignKeySupport = (getBackendTypeConfig testEnvironment >>= BackendType.parseCapabilities) <&> API._dscSupportsForeignKeys . API._cDataSchema
       when
         (foreignKeySupport == Just False)
@@ -407,8 +418,9 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
         Just (backendType, sourceName) -> do
           let actionType = backendType <> "_create_array_relationship"
-              albumTable = formatTableName ["Album"]
-              artistTable = formatTableName ["Artist"]
+              albumTable = _nfFormatTableName ["Album"]
+              artistTable = _nfFormatTableName ["Artist"]
+              artistId = _nfFormatColumnName "ArtistId"
           shouldReturnYaml
             opts
             ( GraphqlEngine.postMetadata
@@ -423,7 +435,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
                     foreign_key_constraint_on:
                       table: *albumTable
                       columns:
-                        - ArtistId
+                        - *artistId
               |]
             )
             [yaml|
@@ -431,13 +443,14 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
             |]
 
   describe "export_metadata" $ do
-    it "produces the expected metadata structure" $ \(testEnvironment@TestEnvironment {}, Chinook.ChinookTestEnv {..}) -> do
+    it "produces the expected metadata structure" $ \(testEnvironment@TestEnvironment {}, Chinook.ChinookTestEnv {nameFormatting = NameFormatting {..}, ..}) -> do
       case ((fold . backendServerUrl) &&& backendTypeString &&& backendSourceName) <$> TestEnvironment.getBackendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
         Just (agentUrl, (backendType, sourceName)) -> do
           let foreignKeySupport = (getBackendTypeConfig testEnvironment >>= BackendType.parseCapabilities) <&> API._dscSupportsForeignKeys . API._cDataSchema
-              albumTable = formatTableName ["Album"]
-              artistTable = formatTableName ["Artist"]
+              albumTable = _nfFormatTableName ["Album"]
+              artistTable = _nfFormatTableName ["Artist"]
+              artistId = _nfFormatColumnName "ArtistId"
           shouldReturnYaml
             opts
             ( GraphqlEngine.postMetadata
@@ -462,13 +475,13 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
                   - object_relationships:
                     - name: Artist
                       using:
-                        foreign_key_constraint_on: ArtistId
+                        foreign_key_constraint_on: *artistId
                     table: *albumTable
                   - array_relationships:
                     - name: Albums
                       using:
                         foreign_key_constraint_on:
-                          column: ArtistId
+                          column: *artistId
                           table: *albumTable
                     table: *artistTable
                 version: 3
@@ -490,7 +503,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
               |]
 
   describe "<kind>_drop_relationship" $ do
-    it "success" $ \(testEnvironment@TestEnvironment {}, Chinook.ChinookTestEnv {..}) -> do
+    it "success" $ \(testEnvironment@TestEnvironment {}, Chinook.ChinookTestEnv {nameFormatting = NameFormatting {..}}) -> do
       let foreignKeySupport = (getBackendTypeConfig testEnvironment >>= BackendType.parseCapabilities) <&> API._dscSupportsForeignKeys . API._cDataSchema
       when
         (foreignKeySupport == Just False)
@@ -499,7 +512,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
         Just (backendType, sourceName) -> do
           let actionType = backendType <> "_drop_relationship"
-              artistTable = formatTableName ["Artist"]
+              artistTable = _nfFormatTableName ["Artist"]
           shouldReturnYaml
             opts
             ( GraphqlEngine.postMetadata
@@ -517,7 +530,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
             |]
 
   describe "<kind>_untrack_table" $ do
-    it "success" $ \(testEnvironment@TestEnvironment {}, Chinook.ChinookTestEnv {..}) -> do
+    it "success" $ \(testEnvironment@TestEnvironment {}, Chinook.ChinookTestEnv {nameFormatting = NameFormatting {..}}) -> do
       let foreignKeySupport = (getBackendTypeConfig testEnvironment >>= BackendType.parseCapabilities) <&> API._dscSupportsForeignKeys . API._cDataSchema
       when
         (foreignKeySupport == Just False)
@@ -526,7 +539,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
         Just (backendType, sourceName) -> do
           let actionType = backendType <> "_untrack_table"
-              artistTable = formatTableName ["Artist"]
+              artistTable = _nfFormatTableName ["Artist"]
           shouldReturnYaml
             opts
             ( GraphqlEngine.postMetadata

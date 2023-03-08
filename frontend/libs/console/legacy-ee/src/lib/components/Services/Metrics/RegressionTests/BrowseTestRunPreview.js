@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@apollo/react-hooks';
 
-import { tableScss } from '@hasura/console-oss';
+import { tableScss } from '@hasura/console-legacy-ce';
 import { fetchRunTestPreview } from './graphql.queries';
 import styles from '../Metrics.module.scss';
 
@@ -23,7 +23,7 @@ export const BrowseRunTestsPreview = props => {
       testSuiteId,
       projectId,
     },
-    fetchPolicy: 'network-only'
+    fetchPolicy: 'network-only',
   });
 
   if (loading) {
@@ -45,11 +45,11 @@ export const BrowseRunTestsPreview = props => {
 
   const rows = data.results
     ? data.results.map(({ name, role }) => ({
-      status: null,
-      name,
-      role,
-      message: undefined,
-    }))
+        status: null,
+        name,
+        role,
+        message: undefined,
+      }))
     : [];
 
   return (

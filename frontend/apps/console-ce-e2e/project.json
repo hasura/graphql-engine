@@ -1,4 +1,5 @@
 {
+  "name": "console-ce-e2e",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/console-ce-e2e/src",
   "projectType": "application",
@@ -13,6 +14,10 @@
       "configurations": {
         "production": {
           "devServerTarget": "console-ce:serve:production"
+        },
+        "ci": {
+          "parallel": true,
+          "record": true
         }
       }
     },

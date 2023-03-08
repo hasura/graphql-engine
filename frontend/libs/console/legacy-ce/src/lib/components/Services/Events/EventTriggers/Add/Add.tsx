@@ -1,7 +1,12 @@
+/* eslint-disable no-underscore-dangle */
 import React, { useState, useEffect, useReducer } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import Helmet from 'react-helmet';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+} from '../../../../../features/Analytics';
+import { isProConsole } from '../../../../../utils';
 import {
   getEventRequestTransformDefaultState,
   requestTransformReducer,
@@ -20,25 +25,26 @@ import {
   setRequestContentType,
   setRequestUrlTransform,
   setRequestPayloadTransform,
-} from '@/components/Common/ConfigureTransformation/requestTransformState';
-import { showErrorNotification } from '@/components/Services/Common/Notification';
+} from '../../../../Common/ConfigureTransformation/requestTransformState';
+import { showErrorNotification } from '../../../Common/Notification';
 import {
+  QueryParams,
   RequestTransformContentType,
   RequestTransformMethod,
-} from '@/metadata/types';
+} from '../../../../../metadata/types';
 import {
   KeyValuePair,
   RequestTransformStateBody,
-} from '@/components/Common/ConfigureTransformation/stateDefaults';
-import ConfigureTransformation from '@/components/Common/ConfigureTransformation/ConfigureTransformation';
+} from '../../../../Common/ConfigureTransformation/stateDefaults';
+import ConfigureTransformation from '../../../../Common/ConfigureTransformation/ConfigureTransformation';
 import {
   getValidateTransformOptions,
   parseValidateApiData,
-} from '@/components/Common/ConfigureTransformation/utils';
-import { isEmpty } from '@/components/Common/utils/jsUtils';
-import requestAction from '@/utils/requestAction';
-import Endpoints from '@/Endpoints';
-import { Button } from '@/new-components/Button';
+} from '../../../../Common/ConfigureTransformation/utils';
+import { isEmpty } from '../../../../Common/utils/jsUtils';
+import requestAction from '../../../../../utils/requestAction';
+import Endpoints from '../../../../../Endpoints';
+import { Button } from '../../../../../new-components/Button';
 import { MapStateToProps } from '../../../../../types';
 import { useEventTrigger } from '../state';
 import { Header } from '../../../../Common/Headers/Headers';
@@ -58,6 +64,7 @@ import {
   RetryConf,
   EventTriggerAutoCleanup,
 } from '../../types';
+import { useDebouncedEffect } from '../../../../../hooks/useDebounceEffect';
 
 interface Props extends InjectedProps {}
 
@@ -143,7 +150,7 @@ const Add: React.FC<Props> = props => {
     transformDispatch(setRequestUrlPreview(requestUrlPreview));
   };
 
-  const requestQueryParamsOnChange = (requestQueryParams: KeyValuePair[]) => {
+  const requestQueryParamsOnChange = (requestQueryParams: QueryParams) => {
     transformDispatch(setRequestQueryParams(requestQueryParams));
   };
 
@@ -226,49 +233,53 @@ const Add: React.FC<Props> = props => {
     transformState.sessionVars,
   ]);
 
-  useEffect(() => {
-    requestBodyErrorOnChange('');
-    requestTransformedBodyOnChange('');
-    const onResponse = (data: Record<string, any>) => {
-      parseValidateApiData(
-        data,
-        requestBodyErrorOnChange,
-        undefined,
-        requestTransformedBodyOnChange
-      );
-    };
-    const options = getValidateTransformOptions({
-      version: transformState.version,
-      inputPayloadString: transformState.requestSampleInput,
-      webhookUrl: webhook.value,
-      envVarsFromContext: transformState.envVars,
-      sessionVarsFromContext: transformState.sessionVars,
-      transformerBody: transformState.requestBody,
-      isEnvVar: webhook.type === 'env',
-    });
-    if (!webhook.value) {
-      requestBodyErrorOnChange(
-        'Please configure your webhook handler to generate request body transform'
-      );
-    } else if (transformState.requestBody && webhook.value) {
-      dispatch(
-        requestAction(
-          Endpoints.metadata,
-          options,
+  useDebouncedEffect(
+    () => {
+      requestBodyErrorOnChange('');
+      requestTransformedBodyOnChange('');
+      const onResponse = (data: Record<string, any>) => {
+        parseValidateApiData(
+          data,
+          requestBodyErrorOnChange,
           undefined,
-          undefined,
-          true,
-          true
-        )
-      ).then(onResponse, onResponse); // parseValidateApiData will parse both success and error
-    }
-  }, [
-    transformState.requestSampleInput,
-    transformState.requestBody,
-    webhook,
-    transformState.envVars,
-    transformState.sessionVars,
-  ]);
+          requestTransformedBodyOnChange
+        );
+      };
+      const options = getValidateTransformOptions({
+        version: transformState.version,
+        inputPayloadString: transformState.requestSampleInput,
+        webhookUrl: webhook.value,
+        envVarsFromContext: transformState.envVars,
+        sessionVarsFromContext: transformState.sessionVars,
+        transformerBody: transformState.requestBody,
+        isEnvVar: webhook.type === 'env',
+      });
+      if (!webhook.value) {
+        requestBodyErrorOnChange(
+          'Please configure your webhook handler to generate request body transform'
+        );
+      } else if (transformState.requestBody && webhook.value) {
+        dispatch(
+          requestAction(
+            Endpoints.metadata,
+            options,
+            undefined,
+            undefined,
+            true,
+            true
+          )
+        ).then(onResponse, onResponse); // parseValidateApiData will parse both success and error
+      }
+    },
+    1000,
+    [
+      transformState.requestSampleInput,
+      transformState.requestBody,
+      webhook,
+      transformState.envVars,
+      transformState.sessionVars,
+    ]
+  );
 
   const createBtnText = 'Create Event Trigger';
 
@@ -289,7 +300,22 @@ const Add: React.FC<Props> = props => {
       return;
     }
 
-    dispatch(createEventTrigger(state, transformState));
+    const newState = { ...state };
+
+    /* don't cleanup_config if console type is oss */
+    if (!isProConsole(window.__env)) {
+      delete newState?.cleanupConfig;
+    }
+
+    /* don't pass cleanup config if it's empty or just have only paused*/
+    if (
+      JSON.stringify(newState?.cleanupConfig) === '{}' ||
+      JSON.stringify(newState?.cleanupConfig) === '{"paused":true}'
+    ) {
+      delete newState?.cleanupConfig;
+    }
+
+    dispatch(createEventTrigger(newState, transformState));
   };
 
   const handleTriggerNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {

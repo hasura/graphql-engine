@@ -1,5 +1,5 @@
 import { configSchema } from "./config"
-import { METRICS, MUTATIONS } from "./environment"
+import { DATASETS, METRICS, MUTATIONS } from "./environment"
 
 import { CapabilitiesResponse, ScalarTypeCapabilities } from "@hasura/dc-api-types"
 
@@ -13,40 +13,13 @@ export type ScalarTypeKey
   | 'bool'
   ;
 
-// TODO: Should we prefix operators with _ like _eq, or just for symbolic operators?
-// TODO: How to model ISNULL, NOTNULL, IN
-// TODO: How to apply functions to column arguments? E.g. a.bits = b.bits & b.mask
-// TODO: How to reuse operators such as = across different types without enumerating them all?
-// TODO: Other operators. See: https://www.tutorialspoint.com/sqlite/sqlite_operators.htm
-//       Should we explicitly include the default included operators?
-// NOTE: See `function bop_op` for most query processing of these operators
-// 
-function standardOperators(t: string): Record<string, string> {
-  return {
-    _eq: t,  // ==	Checks if the values of two operands are equal or not, if yes then the condition becomes true.	(a == b) is not true.
-    // =	Checks if the values of two operands are equal or not, if yes then the condition becomes true.	(a = b) is not true.
-    _gt: t,  // >	Checks if the values of the left operand is greater than the value of the right operand, if yes then the condition becomes true.	(a > b) is not true.
-    _gte: t, // >=	Checks if the value of the left operand is greater than or equal to the value of the right operand, if yes then the condition becomes true.	(a >= b) is not true.
-    // TODO: _in
-    // TODO: _is_null
-    _lt: t,  // <	Checks if the values of the left operand is less than the value of the right operand, if yes then the condition becomes true.	(a < b) is true.
-    _lte: t, // <=	Checks if the value of the left operand is less than or equal to the value of the right operand, if yes then the condition becomes true.	(a <= b) is true.
-    _neq: t, // !=	Checks if the values of two operands are equal or not, if the values are not equal, then the condition becomes true.	(a != b) is true.
-    // <>	Checks if the values of two operands are equal or not, if the values are not equal, then the condition becomes true.	(a <> b) is true.
-
-    // TODO: The following operators are listed in the documentation but throw errors when used...
-    // _nlt: t, // !<	Checks if the value of the left operand is not less than the value of the right operand, if yes then the condition becomes true.	(a !< b) is false.
-    // _ngt: t  // !>	Checks if the value of the left operand is not greater than the value of the right operand, if yes then the condition becomes true.
-  }
-}
-
 // TODO: How can we ensure that we have covered all of the operator keys in the query module?
 const scalar_types: Record<ScalarTypeKey, ScalarTypeCapabilities> = {
   DateTime: {
     comparison_operators: {
-      _in_year: 'int',
-      ...standardOperators('DateTime')
-    }
+      _in_year: 'int'
+    },
+    graphql_type: "String",
   },
   string: {
     comparison_operators: {
@@ -54,31 +27,60 @@ const scalar_types: Record<ScalarTypeKey, ScalarTypeCapabilities> = {
       _like: 'string',
       _glob: 'string',
       // _regexp: 'string', // TODO: Detect if REGEXP is supported
-      ...standardOperators('string')
-    }
+    },
+    aggregate_functions: {
+      max: 'string',
+      min: 'string'
+    },
+    graphql_type: "String"
   },
   // TODO: Why do we need a seperate 'decimal' type?
   decimal: {
     comparison_operators: {
-      _modulus_is_zero: 'number',
-      ...standardOperators('number')
-    }
+      _modulus_is_zero: 'decimal',
+    },
+    aggregate_functions: {
+      max: 'decimal',
+      min: 'decimal',
+      sum: 'decimal'
+    },
+    update_column_operators: {
+      inc: {
+        argument_type: 'decimal'
+      },
+      dec: {
+        argument_type: 'decimal'
+      }
+    },
+    graphql_type: "Float"
   },
   number: {
     comparison_operators: {
       _modulus_is_zero: 'number',
-      ...standardOperators('number')
-    }
+    },
+    aggregate_functions: {
+      max: 'number',
+      min: 'number',
+      sum: 'number'
+    },
+    update_column_operators: {
+      inc: {
+        argument_type: 'number'
+      },
+      dec: {
+        argument_type: 'number'
+      }
+    },
+    graphql_type: "Float"
   },
   bool: {
     comparison_operators: {
-      // TODO: Should we include the standard boolean operators for column comparisons?
       _and: 'bool',
       _or: 'bool',
       _nand: 'bool',
       _xor: 'bool',
-      ...standardOperators('bool')
-    }
+    },
+    graphql_type: "Boolean"
   }
 };
 
@@ -93,7 +95,9 @@ export const capabilitiesResponse: CapabilitiesResponse = {
       column_nullability: "nullable_and_non_nullable",
     },
     scalar_types,
-    queries: {},
+    queries: {
+      foreach: {}
+    },
     relationships: {},
     comparisons: {
       subquery: {
@@ -115,6 +119,7 @@ export const capabilitiesResponse: CapabilitiesResponse = {
     ),
     explain: {},
     raw: {},
+    ... (DATASETS ? { datasets: {} } : {}),
     ... (METRICS ? { metrics: {} } : {})
   },
 }

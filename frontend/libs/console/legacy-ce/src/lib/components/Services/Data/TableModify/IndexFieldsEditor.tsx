@@ -2,7 +2,7 @@ import React, { useEffect, useReducer, useState } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import Select, { ValueType } from 'react-select';
 
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import { Index, IndexType, Table } from '../../../../dataSources/types';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 import { removeIndex, saveIndex } from './ModifyActions';

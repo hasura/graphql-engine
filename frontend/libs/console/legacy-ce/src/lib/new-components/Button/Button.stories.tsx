@@ -2,7 +2,7 @@ import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 
-import { Button } from '@/new-components/Button';
+import { Button } from '.';
 import { FiSearch } from 'react-icons/fi';
 
 export default {

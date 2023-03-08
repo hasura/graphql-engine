@@ -46,10 +46,10 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.SQL.Backend
 import Hasura.Server.Types
+import Hasura.Services
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as GQL
-import Network.HTTP.Client qualified as HTTP
 
 data RQLQuery
   = RQInsert !InsertQuery
@@ -86,7 +86,10 @@ instance FromJSON RQLQuery where
       "update" -> RQUpdate <$> args
       "delete" -> RQDelete <$> args
       "count" -> RQCount <$> args
+      -- Optionally, we can specify a `pg_` prefix. This primarily makes some
+      -- string interpolation easier in the cross-backend tests.
       "run_sql" -> RQRunSql <$> args
+      "pg_run_sql" -> RQRunSql <$> args
       "mssql_run_sql" -> RQMssqlRunSql <$> args
       "citus_run_sql" -> RQCitusRunSql <$> args
       "cockroach_run_sql" -> RQCockroachRunSql <$> args
@@ -101,24 +104,25 @@ instance FromJSON RQLQuery where
 runQuery ::
   ( MonadIO m,
     MonadBaseControl IO m,
+    MonadError QErr m,
     Tracing.MonadTrace m,
     MonadMetadataStorage m,
     MonadResolveSource m,
-    MonadQueryTags m
+    MonadQueryTags m,
+    ProvidesHasuraServices m
   ) =>
   Env.Environment ->
   InstanceId ->
   UserInfo ->
   RebuildableSchemaCache ->
-  HTTP.Manager ->
   ServerConfigCtx ->
   RQLQuery ->
   m (EncJSON, RebuildableSchemaCache)
-runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuery = do
+runQuery env instanceId userInfo schemaCache serverConfigCtx rqlQuery = do
   when ((_sccReadOnlyMode serverConfigCtx == ReadOnlyModeEnabled) && queryModifiesUserDB rqlQuery) $
     throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
-  (metadata, currentResourceVersion) <- Tracing.trace "fetchMetadata" fetchMetadata
+  (metadata, currentResourceVersion) <- Tracing.trace "fetchMetadata" $ liftEitherM fetchMetadata
   result <-
     runQueryM env rqlQuery & \x -> do
       ((js, meta), rsc, ci) <-
@@ -127,12 +131,10 @@ runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuer
           & runMetadataT metadata (_sccMetadataDefaults serverConfigCtx)
           & runCacheRWT schemaCache
           & peelRun runCtx
-          & runExceptT
-          & liftEitherM
       pure (js, rsc, ci, meta)
   withReload currentResourceVersion result
   where
-    runCtx = RunCtx userInfo httpManager serverConfigCtx
+    runCtx = RunCtx userInfo serverConfigCtx
 
     withReload currentResourceVersion (result, updatedCache, invalidations, updatedMetadata) = do
       when (queryModifiesSchema rqlQuery) $ do
@@ -141,10 +143,12 @@ runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuer
             -- set modified metadata in storage
             newResourceVersion <-
               Tracing.trace "setMetadata" $
-                setMetadata currentResourceVersion updatedMetadata
+                liftEitherM $
+                  setMetadata currentResourceVersion updatedMetadata
             -- notify schema cache sync
             Tracing.trace "notifySchemaCacheSync" $
-              notifySchemaCacheSync newResourceVersion instanceId invalidations
+              liftEitherM $
+                notifySchemaCacheSync newResourceVersion instanceId invalidations
           MaintenanceModeEnabled () ->
             throw500 "metadata cannot be modified in maintenance mode"
       pure (result, updatedCache)

@@ -91,7 +91,7 @@ conflictObjectParser tableInfo maybeUpdatePerms constraints = do
       mkTypename = runMkTypename $ _rscTypeNames customization
   updateColumnsEnum <- updateColumnsPlaceholderParser tableInfo
   constraintParser <- conflictConstraint constraints tableInfo
-  whereExpParser <- boolExp tableInfo
+  whereExpParser <- tableBoolExp tableInfo
   tableGQLName <- getTableIdentifierName tableInfo
   let objectName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkOnConflictTypeName tableGQLName
       objectDesc = G.Description $ "on_conflict condition type for table " <>> tableName
@@ -104,7 +104,7 @@ conflictObjectParser tableInfo maybeUpdatePerms constraints = do
   pure $
     P.object objectName (Just objectDesc) do
       constraintField <- P.field Name._constraint Nothing constraintParser
-      let updateColumnsField = P.fieldWithDefault Name._update_columns Nothing (G.VList []) (P.list updateColumnsEnum)
+      let updateColumnsField = P.fieldWithDefault (applyFieldNameCaseIdentifier tCase updateColumnsFieldName) Nothing (G.VList []) (P.list updateColumnsEnum)
 
       whereExp <- P.fieldOptional Name._where Nothing whereExpParser
 

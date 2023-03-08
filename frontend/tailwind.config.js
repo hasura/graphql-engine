@@ -1,6 +1,32 @@
 const colors = require('tailwindcss/colors');
+const plugin = require('tailwindcss/plugin');
 
-/** @type {import('tailwindcss').Config} */
+function dataStateVariant(state, { addVariant, e }) {
+  addVariant(`data-state-${state}`, ({ modifySelectors, separator }) => {
+    modifySelectors(({ className }) => {
+      return `.${e(
+        `data-state-${state}${separator}${className}`
+      )}[data-state='${state}']`;
+    });
+  });
+
+  addVariant(`group-data-state-${state}`, ({ modifySelectors, separator }) => {
+    modifySelectors(({ className }) => {
+      return `.group[data-state='${state}'] .${e(
+        `group-data-state-${state}${separator}${className}`
+      )}`;
+    });
+  });
+
+  addVariant(`peer-data-state-${state}`, ({ modifySelectors, separator }) => {
+    modifySelectors(({ className }) => {
+      return `.peer[data-state='${state}'] ~ .${e(
+        `peer-data-state-${state}${separator}${className}`
+      )}`;
+    });
+  });
+}
+
 module.exports = {
   safelist: {
     standard: /background$/,
@@ -9,12 +35,12 @@ module.exports = {
   theme: {
     fontFamily: {
       sans: ['Gudea', 'ui-sans-serif', 'system-ui'],
-    },
-    flex: {
-      grow220px: '1 0 220px',
-      grow320px: '1 0 320px',
+      mono: ['"Overpass Mono"', 'ui-monospace', 'monospace'],
     },
     extend: {
+      boxShadow: {
+        eq: 'rgb(0 0 0) 0px 0px 2px',
+      },
       colors: {
         current: 'currentColor',
         yellow: colors.amber,
@@ -39,7 +65,8 @@ module.exports = {
           DEFAULT: '#f8fafb',
         },
         muted: {
-          DEFAULT: '#475569',
+          DEFAULT: '#64748B',
+          dark: '#64748B',
         },
       },
       spacing: {
@@ -95,10 +122,97 @@ module.exports = {
             height: '0',
           },
         },
+        slideUpAndFade: {
+          from: {
+            opacity: `0`,
+            transform: `translateY(2px)`,
+          },
+          to: {
+            opacity: `1`,
+            transform: `translateY(0)`,
+          },
+        },
+        slideRightAndFade: {
+          from: {
+            opacity: `0`,
+            transform: `translateX(-2px)`,
+          },
+          to: {
+            opacity: `1`,
+            transform: `translateX(0)`,
+          },
+        },
+        slideDownAndFade: {
+          from: {
+            opacity: `0`,
+            transform: `translateY(-2px)`,
+          },
+          to: {
+            opacity: `1`,
+            transform: `translateY(0)`,
+          },
+        },
+        slideLeftAndFade: {
+          from: {
+            opacity: `0`,
+            transform: `translateX(2px)`,
+          },
+          to: {
+            opacity: `1`,
+            transform: `translateX(0)`,
+          },
+        },
+        notificationOpen: {
+          from: {
+            opacity: `0`,
+            transform: `translateX(100%)`,
+          },
+          to: {
+            opacity: `1`,
+            transform: `translateX(0)`,
+          },
+        },
+        notificationClose: {
+          from: {
+            opacity: `1`,
+            transform: `translateY(0)`,
+          },
+          to: {
+            opacity: `0`,
+            transform: `translateY(-100%)`,
+          },
+        },
+        dropdownMenuContentOpen: {
+          from: {
+            opacity: '0',
+          },
+          to: {
+            opacity: '1',
+          },
+        },
+        dropdownMenuContentClose: {
+          from: {
+            opacity: '1',
+          },
+          to: {
+            opacity: '0',
+          },
+        },
       },
       animation: {
         collapsibleContentOpen: 'collapsibleContentOpen 300ms ease-out',
         collapsibleContentClose: 'collapsibleContentClose 300ms ease-out',
+        slideUpAndFade: 'slideUpAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+        slideRightAndFade:
+          'slideRightAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+        slideDownAndFade:
+          'slideDownAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+        slideLeftAndFade:
+          'slideLeftAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+        notificationOpen: 'notificationOpen 300ms ease-in-out',
+        notificationClose: 'notificationClose 300ms ease-in-out',
+        dropdownMenuContentOpen: 'dropdownMenuContentOpen 100ms ease-in',
+        dropdownMenuContentClose: 'dropdownMenuContentClose 100ms ease-out',
       },
     },
   },
@@ -106,5 +220,13 @@ module.exports = {
     require('@tailwindcss/typography'),
     require('@tailwindcss/forms'),
     require('tailwindcss-radix')(),
+    plugin(helpers => {
+      // variants that help styling Radix-UI components
+      dataStateVariant('open', helpers);
+      dataStateVariant('closed', helpers);
+      dataStateVariant('on', helpers);
+      dataStateVariant('checked', helpers);
+      dataStateVariant('unchecked', helpers);
+    }),
   ],
 };

@@ -4,7 +4,7 @@ import ReactTable, {
   ComponentPropsGetter0,
 } from 'react-table';
 import 'react-table/react-table.css';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../../new-components/Button';
 import { FilterTableProps, GridHeadingProps } from './types';
 import { Dispatch } from '../../../../../types';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';

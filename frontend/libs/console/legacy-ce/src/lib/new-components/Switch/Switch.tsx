@@ -1,4 +1,3 @@
-import React from 'react';
 import * as RadixSwitch from '@radix-ui/react-switch';
 import clsx from 'clsx';
 

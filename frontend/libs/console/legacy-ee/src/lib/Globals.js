@@ -1,4 +1,4 @@
-import { globals } from '@hasura/console-oss';
+import { globals } from '@hasura/console-legacy-ce';
 import { isEmpty } from './utils/validation';
 
 const stripTrailingSlash = url => url.replace(/\/$/, '');

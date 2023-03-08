@@ -1,4 +1,5 @@
 {
+  "//": "Some of the tests use node.js to run web servers. See the directories below for details.",
   "name": "hasura-server-tests-py",
   "version": "1.0.0",
   "author": "Hasura, Inc.",

@@ -18,7 +18,9 @@
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "spellcheck": "./spell_check.sh",
+    "spelladd": "./spell_add.sh"
   },
   "dependencies": {
     "@docusaurus/core": "^2.2.0",
@@ -27,6 +29,7 @@
     "algoliasearch": "^4.14.2",
     "algoliasearch-helper": "^3.7.4",
     "clsx": "^1.2.1",
+    "cspell": "^6.18.1",
     "docusaurus-plugin-sass": "^0.2.2",
     "graphiql": "^1.5.1",
     "graphql": "^15.7.2",

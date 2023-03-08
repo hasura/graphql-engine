@@ -1,6 +1,6 @@
-import { useIsUnmounted } from '@/components/Services/Data';
-import { DataSource, getTableName } from '@/features/DataSource';
-import { useHttpClient } from '@/features/Network';
+import { useIsUnmounted } from '../../../../../components/Services/Data/Common/tsUtils';
+import { DataSource, getTableName } from '../../../../DataSource';
+import { useHttpClient } from '../../../../Network';
 import { useState, useEffect } from 'react';
 
 type UseTableNameProps = {

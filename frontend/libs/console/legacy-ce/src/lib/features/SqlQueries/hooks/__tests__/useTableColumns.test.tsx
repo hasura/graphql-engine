@@ -95,29 +95,29 @@ describe('The useTableColumns hook', () => {
       (result.current as UseQueryResult<Record<string, unknown>, Error>).status
     ).toBe('success');
     expect(result.current.data).toMatchInlineSnapshot(`
-      Array [
-        Array [
+      [
+        [
           "database",
           "table_schema",
           "table_name",
           "column_name",
           "data_type",
         ],
-        Array [
+        [
           "chinook",
           "public",
           "Album",
           "AlbumId",
           "integer",
         ],
-        Array [
+        [
           "chinook",
           "public",
           "Album",
           "Title",
           "character varying",
         ],
-        Array [
+        [
           "chinook",
           "public",
           "Album",

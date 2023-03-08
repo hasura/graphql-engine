@@ -1,5 +1,5 @@
-import type { GlobalWindowHeap } from '@/features/Analytics';
-import { parseSentryDsn } from '@/features/Analytics';
+import type { GlobalWindowHeap } from './features/Analytics';
+import { parseSentryDsn } from './features/Analytics';
 
 /* eslint no-underscore-dangle: 0 */
 import { getFeaturesCompatibility } from './helpers/versionUtils';
@@ -74,11 +74,13 @@ type CloudServerEnv = {
   consoleId: string; // e.g. "40d778e7-1324-4500-bf69-5f9e58f70803_console"
   consolePath: string;
   dataApiUrl: string; // e.g. "https://rich-jackass-37.hasura.app"
+  enableTelemetry: boolean;
   eeMode: string;
   herokuOAuthClientId: UUID;
   isAdminSecretSet: boolean;
   luxDataHost: string; // e.g. "data.pro.hasura.io"
   projectID: UUID;
+  projectName: string;
   serverVersion: string;
   tenantID: UUID;
   urlPrefix: string;
@@ -144,6 +146,7 @@ export type EnvVars = {
   cliUUID?: string;
   tenantID?: UUID;
   projectID?: UUID;
+  projectName?: string;
   cloudRootDomain?: string;
   herokuOAuthClientId?: string;
   luxDataHost?: string;
@@ -180,7 +183,6 @@ declare global {
 /* initialize globals */
 
 const isProduction = window.__env?.nodeEnv !== 'development';
-
 const globals = {
   apiHost: window.__env?.apiHost,
   apiPort: window.__env?.apiPort,
@@ -194,7 +196,7 @@ const globals = {
     false,
   consoleMode: window.__env?.consoleMode || SERVER_CONSOLE_MODE,
   enableTelemetry: window.__env?.enableTelemetry,
-  telemetryTopic: isProduction ? 'console' : 'console_test',
+  telemetryTopic: isProduction ? 'console-v2' : 'console-test-v2', // updated to v2 to ignore legacy redux based events from earlier console versions
   assetsPath: window.__env?.assetsPath,
   serverVersion: window.__env?.serverVersion || '',
   consoleAssetVersion: CONSOLE_ASSET_VERSION, // set during console build
@@ -208,6 +210,7 @@ const globals = {
   herokuOAuthClientId: window.__env?.herokuOAuthClientId,
   hasuraCloudTenantId: window.__env?.tenantID,
   hasuraCloudProjectId: window.__env?.projectID,
+  hasuraCloudProjectName: window.__env?.projectName,
   neonOAuthClientId: window.__env?.neonOAuthClientId,
   neonRootDomain: window.__env?.neonRootDomain,
   allowedLuxFeatures: window.__env?.allowedLuxFeatures || [],

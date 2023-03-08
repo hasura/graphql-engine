@@ -1,11 +1,11 @@
 import React from 'react';
 import { CgSpinner } from 'react-icons/cg';
 
-import { Button } from '@/new-components/Button';
-import { Switch } from '@/new-components/Switch';
-import { MetadataSelector, useMetadata } from '@/features/MetadataAPI';
-import { useFireNotification } from '@/new-components/Notifications';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { Button } from '../../../../new-components/Button';
+import { Switch } from '../../../../new-components/Switch';
+import { MetadataSelector, useMetadata } from '../../../MetadataAPI';
+import { useFireNotification } from '../../../../new-components/Notifications';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 
 import { FaCheck, FaPlusCircle } from 'react-icons/fa';
 import { useSetRoleToAllowListPermission } from '../../hooks/AllowListPermissions/useSetRoleToAllowListPermissions';

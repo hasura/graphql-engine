@@ -1,17 +1,18 @@
-import { BrowseRowsContainer } from '@/features/BrowseRows';
-import { DatabaseRelationships } from '@/features/DatabaseRelationships';
-import { getTableName } from '@/features/DataSource';
-import { PermissionsTab } from '@/features/PermissionsTab';
-import { Table } from '@/features/hasura-metadata-types';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
-import { Tabs } from '@/new-components/Tabs';
-import { getRoute } from '@/features/Data';
+import { BrowseRowsContainer } from '../../BrowseRows';
+import { DatabaseRelationships } from '../../DatabaseRelationships';
+import { getTableName } from '../../DataSource';
+import { PermissionsTab } from '../../Permissions';
+import { Table } from '../../hasura-metadata-types';
+import { IndicatorCard } from '../../../new-components/IndicatorCard';
+import { Tabs } from '../../../new-components/Tabs';
+import { getRoute } from '..';
 import React from 'react';
 import { useDispatch } from 'react-redux';
 import { useDatabaseHierarchy, useTableDefinition } from '../hooks';
 import { ModifyTable } from '../ModifyTable/ModifyTable';
 import { Breadcrumbs, TableName } from './parts';
 import _push from '../../../components/Services/Data/push';
+import { InsertRowFormContainer } from '../../InsertRow/InsertRowFormContainer';
 
 type AllowedTabs = 'modify' | 'browse' | 'relationship' | 'permissions';
 export interface ManageTableProps {
@@ -32,6 +33,14 @@ const availableTabs = (
       <BrowseRowsContainer dataSourceName={dataSourceName} table={table} />
     ),
   },
+  // NOTE: uncomment this part to enable the new Insert Row tab
+  /* {
+    value: 'insert-row',
+    label: 'Insert Row',
+    content: (
+      <InsertRowFormContainer dataSourceName={dataSourceName} table={table} />
+    ),
+  }, */
   {
     value: 'modify',
     label: 'Modify',

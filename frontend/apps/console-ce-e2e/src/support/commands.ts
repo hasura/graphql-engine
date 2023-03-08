@@ -25,12 +25,7 @@
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
 import '@testing-library/cypress/add-commands';
+import 'cypress-plugin-snapshots/commands';
 
-import './visitEmptyPage';
 import './clearConsoleTextarea';
 import './notifications';
-import './contractIntercept';
-
-Cypress.Commands.add('getBySel', (selector, ...args) => {
-  return cy.get(`[data-test=${selector}]`, ...args);
-});

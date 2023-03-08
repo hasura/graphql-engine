@@ -9,7 +9,6 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Endpoint
@@ -18,9 +17,9 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache.Build
 
 runCreateEndpoint ::
-  ( CacheRWM m,
-    MetadataM m,
-    MonadMetadataStorageQueryAPI m
+  ( MonadError QErr m,
+    CacheRWM m,
+    MetadataM m
   ) =>
   CreateEndpoint ->
   m EncJSON
@@ -38,9 +37,9 @@ runCreateEndpoint endpoint@EndpointMetadata {..} = do
   return successMsg
 
 runDropEndpoint ::
-  ( CacheRWM m,
-    MetadataM m,
-    MonadMetadataStorageQueryAPI m
+  ( MonadError QErr m,
+    CacheRWM m,
+    MetadataM m
   ) =>
   DropEndpoint ->
   m EncJSON

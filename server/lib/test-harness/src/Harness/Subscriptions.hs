@@ -17,6 +17,7 @@ module Harness.Subscriptions
     SubscriptionHandle,
     withSubscriptions,
     withSubscriptions',
+    withSubscriptionsHeaders,
     getNextResponse,
   )
 where
@@ -26,13 +27,12 @@ where
 import Control.Concurrent (MVar, newEmptyMVar, putMVar, takeMVar)
 import Control.Concurrent.Async qualified as Async
 import Control.Concurrent.STM (atomically, newTVarIO, readTVar, writeTVar)
-import Control.Lens (preview)
 import Data.Aeson
-import Data.Aeson.Lens (key, _String)
-import Data.Aeson.QQ.Simple
+import Data.Aeson.QQ
 import Data.Aeson.Types (Pair)
 import Data.IORef (IORef, atomicModifyIORef', newIORef, readIORef)
 import Data.Map.Strict qualified as Map
+import Data.Text qualified as T
 import Harness.Exceptions (throw, withFrozenCallStack)
 import Harness.Logging.Messages
 import Harness.TestEnvironment
@@ -41,25 +41,26 @@ import Harness.TestEnvironment
     TestEnvironment (..),
     testLogMessage,
   )
+import Harness.WebSockets (responseListener)
 import Hasura.Prelude
 import Network.WebSockets qualified as WS
 import System.Timeout (timeout)
 import Test.Hspec
 
 -- | A subscription's connection initiation message.
-initMessage :: Value
-initMessage =
+initMessage :: [(T.Text, T.Text)] -> Value
+initMessage headers =
   [aesonQQ|
   {
     "type": "connection_init",
     "payload": {
-      "headers": {
-        "content-type": "application/json"
-      },
+      "headers": #{hdrs},
       "lazy": true
     }
   }
   |]
+  where
+    hdrs = mkInitMessageHeaders headers
 
 -- | A subscription's start query message.
 startQueryMessage :: Int -> Value -> [Pair] -> Value
@@ -99,7 +100,10 @@ newtype SubscriptionHandle = SubscriptionHandle {unSubscriptionHandle :: MVar Va
 -- >         actual = getNextResponse query
 -- >     actual `shouldBe` expected
 withSubscriptions :: SpecWith (Value -> [Pair] -> IO SubscriptionHandle, TestEnvironment) -> SpecWith TestEnvironment
-withSubscriptions = withSubscriptions' id
+withSubscriptions = withSubscriptionsHeaders []
+
+withSubscriptionsHeaders :: [(T.Text, T.Text)] -> SpecWith (Value -> [Pair] -> IO SubscriptionHandle, TestEnvironment) -> SpecWith TestEnvironment
+withSubscriptionsHeaders headers = withSubscriptionsHeaders' headers id
 
 -- | A composable @'withSubscriptions'. Helpful in writing tests involving multiple websocket clients.
 -- Example usage:
@@ -107,7 +111,7 @@ withSubscriptions = withSubscriptions' id
 -- > spec :: SpecWith (TestEnvironment)
 -- > spec = do
 -- >   describe "subscriptions multiple clients" $
--- >     withSubscriptions' id (withSubscriptons' snd subscriptionsSpec)
+-- >     withSubscriptions' [] id (withSubscriptons' snd subscriptionsSpec)
 --
 -- > subscriptionsSpec :: SpecWith (Value -> [Pair] -> IO SubscriptionHandle, (Value -> [Pair] -> IO SubscriptionHandle, TestEnvironment))
 -- > subscriptionsSpec = do
@@ -129,7 +133,10 @@ withSubscriptions = withSubscriptions' id
 -- >         actual2 = getNextResponse query2
 -- >     actual2 `shouldBe` expected
 withSubscriptions' :: (a -> TestEnvironment) -> SpecWith (Value -> [Pair] -> IO SubscriptionHandle, a) -> SpecWith a
-withSubscriptions' getTestEnvironment = aroundAllWith \actionWithSubAndTest a -> do
+withSubscriptions' = withSubscriptionsHeaders' []
+
+withSubscriptionsHeaders' :: [(T.Text, T.Text)] -> (a -> TestEnvironment) -> SpecWith (Value -> [Pair] -> IO SubscriptionHandle, a) -> SpecWith a
+withSubscriptionsHeaders' headers getTestEnvironment = aroundAllWith \actionWithSubAndTest a -> do
   let testEnvironment = getTestEnvironment a
   WS.runClient "127.0.0.1" (fromIntegral $ port $ server $ globalEnvironment testEnvironment) "/v1/graphql" \conn -> do
     -- CAVE: loads of stuff still outstanding:
@@ -138,7 +145,7 @@ withSubscriptions' getTestEnvironment = aroundAllWith \actionWithSubAndTest a ->
     --  * timeouts on blocking operations, NDAT-230
 
     -- send initialization message
-    WS.sendTextData conn (encode initMessage)
+    WS.sendTextData conn (encode $ initMessage headers)
 
     -- Open communication channel with responses.
     --
@@ -155,44 +162,18 @@ withSubscriptions' getTestEnvironment = aroundAllWith \actionWithSubAndTest a ->
         atomicModify :: IORef x -> (x -> x) -> IO ()
         atomicModify ref f = atomicModifyIORef' ref \x -> (f x, ())
 
-        -- Is this an actual message or client/server busywork?
-        isInteresting :: Value -> Bool
-        isInteresting res =
-          preview (key "type") res
-            `notElem` [ Just "ka", -- keep alive
-                        Just "connection_ack" -- connection acknowledged
-                      ]
-
         -- listens for server responses and populates @handlers@ with the new
         -- response. It will only read one message at a time because it is
         -- blocked by reading/writing to the MVar. Will throw an exception to
         -- the other thread if it encounters an error.
-        responseListener :: IO ()
-        responseListener = do
-          msgBytes <- WS.receiveData conn
-          case eitherDecode msgBytes of
-            Left err -> do
-              throw $ userError (unlines ["Subscription decode failed: " <> err, "Payload: " <> show msgBytes])
-            Right msg -> do
-              when (isInteresting msg) do
-                testLogMessage testEnvironment $ LogSubscriptionResponse msg
+        listener :: IO ()
+        listener = responseListener conn \identifier _ payload -> do
+          readIORef handlers >>= \mvars ->
+            case Map.lookup identifier mvars of
+              Just mvar -> putMVar mvar payload
+              Nothing -> fail "Unexpected handler identifier"
 
-                let maybePayload :: Maybe Value
-                    maybePayload = preview (key "payload") msg
-
-                    maybeIdentifier :: Maybe Text
-                    maybeIdentifier = preview (key "id" . _String) msg
-
-                case liftA2 (,) maybePayload maybeIdentifier of
-                  Nothing -> do
-                    throw $ userError ("Unable to parse message: " ++ show msg)
-                  Just (payload, identifier) ->
-                    readIORef handlers >>= \mvars ->
-                      case Map.lookup identifier mvars of
-                        Just mvar -> putMVar mvar payload
-                        Nothing -> throw (userError "Unexpected handler identifier")
-
-              responseListener
+          listener
 
         -- Create a subscription over this websocket connection. Will be used
         -- by the user to create new subscriptions. The handled can be used to
@@ -223,9 +204,9 @@ withSubscriptions' getTestEnvironment = aroundAllWith \actionWithSubAndTest a ->
               "Subscription exceeded the allotted time of: " <> show time
             Just _ -> pure ()
 
-    -- @withAsync@ will take care of cancelling the 'responseListener' thread
+    -- @withAsync@ will take care of cancelling the 'listener' thread
     -- for us once the test has been executed.
-    Async.withAsync (handleExceptionsAndTimeout responseListener) \_ -> do
+    Async.withAsync (handleExceptionsAndTimeout listener) \_ -> do
       actionWithSubAndTest (mkSub, a)
 
 -- | Get the next response received on a subscription.
@@ -238,3 +219,6 @@ getNextResponse handle = do
 
 subscriptionsTimeoutTime :: Seconds
 subscriptionsTimeoutTime = 20
+
+mkInitMessageHeaders :: [(T.Text, T.Text)] -> Value
+mkInitMessageHeaders hdrs = (toJSON $ Map.fromList $ [("content-type", "application/json")] <> hdrs)

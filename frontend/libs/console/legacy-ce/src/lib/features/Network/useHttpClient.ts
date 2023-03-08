@@ -1,5 +1,5 @@
-import { baseUrl as baseURL } from '@/Endpoints';
-import { ReduxState } from '@/types';
+import { baseUrl as baseURL } from '../../Endpoints';
+import { ReduxState } from '../../types';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 

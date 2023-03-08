@@ -1,5 +1,5 @@
 import React from 'react';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
 import { Link } from 'react-router';
 
 type InconsistentBadgeProps = {

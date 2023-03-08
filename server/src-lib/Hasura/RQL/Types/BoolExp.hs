@@ -5,7 +5,6 @@ module Hasura.RQL.Types.BoolExp
 where
 
 import Hasura.RQL.IR.BoolExp
-import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
@@ -22,8 +21,8 @@ data BoolExpRHSParser (b :: BackendType) m v = BoolExpRHSParser
 newtype BoolExpResolver b m v = BoolExpResolver
   { getBoolExpResolver ::
       BoolExpRHSParser b m v ->
-      TableName b ->
-      FieldInfoMap (FieldInfo b) ->
+      FieldInfoMap (FieldInfo b) -> -- The root table's FieldInfoMap
+      FieldInfoMap (FieldInfo b) -> -- The FieldInfoMap of the table currently "in focus"
       GBoolExp b ColExp ->
       m (AnnBoolExp b v)
   }
