@@ -27,7 +27,7 @@ const HasuraConBanner = props => {
           <div className={styles['content-div']}>
             <h3>Combining Snowflake and PostgreSQL to build low-latency apps on historical data insights</h3>
             <div className={styles['hasura-con-register'] + ' ' + styles['hasura-con-register-mobile-hide']}>
-              Register Now
+              View Recording
               <ArrowRight />
             </div>
           </div>
