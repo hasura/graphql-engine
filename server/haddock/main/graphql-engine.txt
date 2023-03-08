@@ -1032,8 +1032,8 @@ _PGTransactionRollback :: Prism' PGErrorType (Maybe (PGErrorCode PGTransactionRo
 _PGSyntaxErrorOrAccessRuleViolation :: Prism' PGErrorType (Maybe (PGErrorCode PGSyntaxErrorOrAccessRuleViolation))
 _PGIntegrityConstraintViolation :: Prism' PGErrorType (Maybe (PGErrorCode PGIntegrityConstraintViolation))
 _PGDataException :: Prism' PGErrorType (Maybe (PGErrorCode PGDataException))
-_PGErrorSpecific :: forall a_a11Zq a_a11C0. Prism (PGErrorCode a_a11Zq) (PGErrorCode a_a11C0) a_a11Zq a_a11C0
-_PGErrorGeneric :: forall a_a11C0. Prism' (PGErrorCode a_a11C0) ()
+_PGErrorSpecific :: forall a_a11ZG a_a11Cg. Prism (PGErrorCode a_a11ZG) (PGErrorCode a_a11Cg) a_a11ZG a_a11Cg
+_PGErrorGeneric :: forall a_a11Cg. Prism' (PGErrorCode a_a11Cg) ()
 pgErrorType :: PGStmtErrDetail -> Maybe PGErrorType
 instance GHC.Base.Functor Hasura.Backends.Postgres.SQL.Error.PGErrorCode
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Hasura.Backends.Postgres.SQL.Error.PGErrorCode a)
@@ -4610,8 +4610,8 @@ RemoteSchemaTypeRelationships :: Name -> RemoteRelationships r -> RemoteSchemaTy
 [_rstrsName] :: RemoteSchemaTypeRelationships r -> Name
 [_rstrsRelationships] :: RemoteSchemaTypeRelationships r -> RemoteRelationships r
 type SchemaRemoteRelationships r = InsOrdHashMap Name (RemoteSchemaTypeRelationships r)
-rstrsRelationships :: forall r_a54UY r_a55Fs. Lens (RemoteSchemaTypeRelationships r_a54UY) (RemoteSchemaTypeRelationships r_a55Fs) (RemoteRelationships r_a54UY) (RemoteRelationships r_a55Fs)
-rstrsName :: forall r_a54UY. Lens' (RemoteSchemaTypeRelationships r_a54UY) Name
+rstrsRelationships :: forall r_a54Ve r_a55FI. Lens (RemoteSchemaTypeRelationships r_a54Ve) (RemoteSchemaTypeRelationships r_a55FI) (RemoteRelationships r_a54Ve) (RemoteRelationships r_a55FI)
+rstrsName :: forall r_a54Ve. Lens' (RemoteSchemaTypeRelationships r_a54Ve) Name
 trrdRemoteSchema :: Lens' ToSchemaRelationshipDef RemoteSchemaName
 trrdRemoteField :: Lens' ToSchemaRelationshipDef RemoteFields
 trrdLhsFields :: Lens' ToSchemaRelationshipDef (HashSet FieldName)
@@ -4843,7 +4843,7 @@ qrCollectionName :: Lens' QueryReference CollectionName
 data EndpointDef query
 EndpointDef :: query -> EndpointDef query
 [_edQuery] :: EndpointDef query -> query
-edQuery :: forall query_a5vqX query_a5vEI. Iso (EndpointDef query_a5vqX) (EndpointDef query_a5vEI) query_a5vqX query_a5vEI
+edQuery :: forall query_a5vrd query_a5vEY. Iso (EndpointDef query_a5vrd) (EndpointDef query_a5vEY) query_a5vrd query_a5vEY
 type EndpointTrie query = MultiMapPathTrie Text EndpointMethod (EndpointMetadata query)
 buildEndpointsTrie :: Ord query => [EndpointMetadata query] -> EndpointTrie query
 
@@ -4859,11 +4859,11 @@ EndpointMetadata :: EndpointName -> EndpointUrl -> NonEmpty EndpointMethod -> En
 [_ceMethods] :: EndpointMetadata query -> NonEmpty EndpointMethod
 [_ceDefinition] :: EndpointMetadata query -> EndpointDef query
 [_ceComment] :: EndpointMetadata query -> Maybe Text
-ceUrl :: forall query_a5vEW. Lens' (EndpointMetadata query_a5vEW) EndpointUrl
-ceName :: forall query_a5vEW. Lens' (EndpointMetadata query_a5vEW) EndpointName
-ceMethods :: forall query_a5vEW. Lens' (EndpointMetadata query_a5vEW) (NonEmpty EndpointMethod)
-ceDefinition :: forall query_a5vEW query_a5w5x. Lens (EndpointMetadata query_a5vEW) (EndpointMetadata query_a5w5x) (EndpointDef query_a5vEW) (EndpointDef query_a5w5x)
-ceComment :: forall query_a5vEW. Lens' (EndpointMetadata query_a5vEW) (Maybe Text)
+ceUrl :: forall query_a5vFc. Lens' (EndpointMetadata query_a5vFc) EndpointUrl
+ceName :: forall query_a5vFc. Lens' (EndpointMetadata query_a5vFc) EndpointName
+ceMethods :: forall query_a5vFc. Lens' (EndpointMetadata query_a5vFc) (NonEmpty EndpointMethod)
+ceDefinition :: forall query_a5vFc query_a5w5N. Lens (EndpointMetadata query_a5vFc) (EndpointMetadata query_a5w5N) (EndpointDef query_a5vFc) (EndpointDef query_a5w5N)
+ceComment :: forall query_a5vFc. Lens' (EndpointMetadata query_a5vFc) (Maybe Text)
 data DropEndpoint
 DropEndpoint :: EndpointName -> DropEndpoint
 [_deName] :: DropEndpoint -> EndpointName
@@ -5515,7 +5515,7 @@ resizeSourcePools :: Backend b => SourceConfig b -> ServerReplicas -> IO ()
 --   Setting this to <tt>Nothing</tt> will disable event trigger
 --   configuration in the metadata.
 defaultTriggerOnReplication :: Backend b => Maybe (XEventTriggers b, TriggerOnReplication)
-_ReturnsTable :: forall b_a6Z1j. Prism' (ComputedFieldReturnType b_a6Z1j) (TableName b_a6Z1j)
+_ReturnsTable :: forall b_a6Z1z. Prism' (ComputedFieldReturnType b_a6Z1z) (TableName b_a6Z1z)
 
 module Hasura.RQL.Types.Relationships.ToSource
 
@@ -5580,9 +5580,9 @@ RelDef :: RelName -> a -> Maybe Text -> RelDef a
 [_rdName] :: RelDef a -> RelName
 [_rdUsing] :: RelDef a -> a
 [_rdComment] :: RelDef a -> Maybe Text
-rdUsing :: forall a_a7bD3 a_a7bLU. Lens (RelDef a_a7bD3) (RelDef a_a7bLU) a_a7bD3 a_a7bLU
-rdName :: forall a_a7bD3. Lens' (RelDef a_a7bD3) RelName
-rdComment :: forall a_a7bD3. Lens' (RelDef a_a7bD3) (Maybe Text)
+rdUsing :: forall a_a7bDj a_a7bMa. Lens (RelDef a_a7bDj) (RelDef a_a7bMa) a_a7bDj a_a7bMa
+rdName :: forall a_a7bDj. Lens' (RelDef a_a7bDj) RelName
+rdComment :: forall a_a7bDj. Lens' (RelDef a_a7bDj) (Maybe Text)
 data RelManualConfig (b :: BackendType)
 RelManualConfig :: TableName b -> HashMap (Column b) (Column b) -> Maybe InsertOrder -> RelManualConfig (b :: BackendType)
 [rmTable] :: RelManualConfig (b :: BackendType) -> TableName b
@@ -8652,8 +8652,8 @@ FunctionArgName :: Text -> FunctionArgName
 data InputArgument a
 IAUserProvided :: a -> InputArgument a
 IASessionVariables :: FunctionArgName -> InputArgument a
-_IASessionVariables :: forall a_ac1PR. Prism' (InputArgument a_ac1PR) FunctionArgName
-_IAUserProvided :: forall a_ac2mX a_ac1PR. Prism (InputArgument a_ac2mX) (InputArgument a_ac1PR) a_ac2mX a_ac1PR
+_IASessionVariables :: forall a_ac1Q7. Prism' (InputArgument a_ac1Q7) FunctionArgName
+_IAUserProvided :: forall a_ac2nd a_ac1Q7. Prism (InputArgument a_ac2nd) (InputArgument a_ac1Q7) a_ac2nd a_ac1Q7
 type FunctionInputArgument b = InputArgument (FunctionArgument b)
 
 -- | Indicates whether the user requested the corresponding function to be
@@ -8710,19 +8710,19 @@ FunctionInfo :: FunctionName b -> Name -> Name -> Name -> SystemDefined -> Funct
 [_fiPermissions] :: FunctionInfo (b :: BackendType) -> FunctionPermissionsMap
 [_fiJsonAggSelect] :: FunctionInfo (b :: BackendType) -> JsonAggSelect
 [_fiComment] :: FunctionInfo (b :: BackendType) -> Maybe Text
-fiVolatility :: forall b_ac2Ih. Lens' (FunctionInfo b_ac2Ih) FunctionVolatility
-fiSystemDefined :: forall b_ac2Ih. Lens' (FunctionInfo b_ac2Ih) SystemDefined
-fiSQLName :: forall b_ac2Ih. Lens' (FunctionInfo b_ac2Ih) (FunctionName b_ac2Ih)
-fiReturnType :: forall b_ac2Ih. Lens' (FunctionInfo b_ac2Ih) (TableName b_ac2Ih)
-fiPermissions :: forall b_ac2Ih. Lens' (FunctionInfo b_ac2Ih) FunctionPermissionsMap
-fiJsonAggSelect :: forall b_ac2Ih. Lens' (FunctionInfo b_ac2Ih) JsonAggSelect
-fiInputArgs :: forall b_ac2Ih. Lens' (FunctionInfo b_ac2Ih) (Seq (FunctionInputArgument b_ac2Ih))
-fiGQLName :: forall b_ac2Ih. Lens' (FunctionInfo b_ac2Ih) Name
-fiGQLArgsName :: forall b_ac2Ih. Lens' (FunctionInfo b_ac2Ih) Name
-fiGQLAggregateName :: forall b_ac2Ih. Lens' (FunctionInfo b_ac2Ih) Name
-fiExposedAs :: forall b_ac2Ih. Lens' (FunctionInfo b_ac2Ih) FunctionExposedAs
-fiDescription :: forall b_ac2Ih. Lens' (FunctionInfo b_ac2Ih) (Maybe Text)
-fiComment :: forall b_ac2Ih. Lens' (FunctionInfo b_ac2Ih) (Maybe Text)
+fiVolatility :: forall b_ac2Ix. Lens' (FunctionInfo b_ac2Ix) FunctionVolatility
+fiSystemDefined :: forall b_ac2Ix. Lens' (FunctionInfo b_ac2Ix) SystemDefined
+fiSQLName :: forall b_ac2Ix. Lens' (FunctionInfo b_ac2Ix) (FunctionName b_ac2Ix)
+fiReturnType :: forall b_ac2Ix. Lens' (FunctionInfo b_ac2Ix) (TableName b_ac2Ix)
+fiPermissions :: forall b_ac2Ix. Lens' (FunctionInfo b_ac2Ix) FunctionPermissionsMap
+fiJsonAggSelect :: forall b_ac2Ix. Lens' (FunctionInfo b_ac2Ix) JsonAggSelect
+fiInputArgs :: forall b_ac2Ix. Lens' (FunctionInfo b_ac2Ix) (Seq (FunctionInputArgument b_ac2Ix))
+fiGQLName :: forall b_ac2Ix. Lens' (FunctionInfo b_ac2Ix) Name
+fiGQLArgsName :: forall b_ac2Ix. Lens' (FunctionInfo b_ac2Ix) Name
+fiGQLAggregateName :: forall b_ac2Ix. Lens' (FunctionInfo b_ac2Ix) Name
+fiExposedAs :: forall b_ac2Ix. Lens' (FunctionInfo b_ac2Ix) FunctionExposedAs
+fiDescription :: forall b_ac2Ix. Lens' (FunctionInfo b_ac2Ix) (Maybe Text)
+fiComment :: forall b_ac2Ix. Lens' (FunctionInfo b_ac2Ix) (Maybe Text)
 
 -- | Apply function name customization to function arguments, as detailed
 --   in 'rfcs/function-root-field-customisation.md'. We want the different
@@ -9183,11 +9183,11 @@ ComputedFieldInfo :: XComputedField b -> ComputedFieldName -> ComputedFieldFunct
 [_cfiFunction] :: ComputedFieldInfo (b :: BackendType) -> ComputedFieldFunction b
 [_cfiReturnType] :: ComputedFieldInfo (b :: BackendType) -> ComputedFieldReturn b
 [_cfiDescription] :: ComputedFieldInfo (b :: BackendType) -> Maybe Text
-cfiXComputedFieldInfo :: forall b_acN3C. Lens' (ComputedFieldInfo b_acN3C) (XComputedField b_acN3C)
-cfiReturnType :: forall b_acN3C. Lens' (ComputedFieldInfo b_acN3C) (ComputedFieldReturn b_acN3C)
-cfiName :: forall b_acN3C. Lens' (ComputedFieldInfo b_acN3C) ComputedFieldName
-cfiFunction :: forall b_acN3C. Lens' (ComputedFieldInfo b_acN3C) (ComputedFieldFunction b_acN3C)
-cfiDescription :: forall b_acN3C. Lens' (ComputedFieldInfo b_acN3C) (Maybe Text)
+cfiXComputedFieldInfo :: forall b_acN3S. Lens' (ComputedFieldInfo b_acN3S) (XComputedField b_acN3S)
+cfiReturnType :: forall b_acN3S. Lens' (ComputedFieldInfo b_acN3S) (ComputedFieldReturn b_acN3S)
+cfiName :: forall b_acN3S. Lens' (ComputedFieldInfo b_acN3S) ComputedFieldName
+cfiFunction :: forall b_acN3S. Lens' (ComputedFieldInfo b_acN3S) (ComputedFieldFunction b_acN3S)
+cfiDescription :: forall b_acN3S. Lens' (ComputedFieldInfo b_acN3S) (Maybe Text)
 
 -- | Filter computed fields not returning rows of existing table
 removeComputedFieldsReturningExistingTable :: forall backend. Backend backend => [ComputedFieldInfo backend] -> [ComputedFieldInfo backend]
@@ -9256,8 +9256,8 @@ ColumnScalar :: ScalarType b -> ColumnType (b :: BackendType)
 --   distinguish this case, since we treat it <i>completely</i> differently
 --   in the GraphQL schema.
 ColumnEnumReference :: EnumReference b -> ColumnType (b :: BackendType)
-_ColumnEnumReference :: forall b_acTOV. Prism' (ColumnType b_acTOV) (EnumReference b_acTOV)
-_ColumnScalar :: forall b_acTOV. Prism' (ColumnType b_acTOV) (ScalarType b_acTOV)
+_ColumnEnumReference :: forall b_acTPb. Prism' (ColumnType b_acTPb) (EnumReference b_acTPb)
+_ColumnScalar :: forall b_acTPb. Prism' (ColumnType b_acTPb) (ScalarType b_acTPb)
 
 -- | A parser to parse a json value with enforcing column type
 type ValueParser b m v = CollectableType (ColumnType b) -> Value -> m v
@@ -9751,8 +9751,8 @@ data GExists (backend :: BackendType) field
 GExists :: TableName backend -> GBoolExp backend field -> GExists (backend :: BackendType) field
 [_geTable] :: GExists (backend :: BackendType) field -> TableName backend
 [_geWhere] :: GExists (backend :: BackendType) field -> GBoolExp backend field
-geWhere :: forall backend_adCM8 field_adCM9 field_adFzA. Lens (GExists backend_adCM8 field_adCM9) (GExists backend_adCM8 field_adFzA) (GBoolExp backend_adCM8 field_adCM9) (GBoolExp backend_adCM8 field_adFzA)
-geTable :: forall backend_adCM8 field_adCM9. Lens' (GExists backend_adCM8 field_adCM9) (TableName backend_adCM8)
+geWhere :: forall backend_adCMo field_adCMp field_adFzQ. Lens (GExists backend_adCMo field_adCMp) (GExists backend_adCMo field_adFzQ) (GBoolExp backend_adCMo field_adCMp) (GBoolExp backend_adCMo field_adFzQ)
+geTable :: forall backend_adCMo field_adCMp. Lens' (GExists backend_adCMo field_adCMp) (TableName backend_adCMo)
 
 -- | We don't allow conditions across relationships in permissions: the
 --   type we use as the terms in GBoolExp is this one, ColExp, which only
@@ -9768,7 +9768,7 @@ ColExp :: FieldName -> Value -> ColExp
 newtype BoolExp (b :: BackendType)
 BoolExp :: GBoolExp b ColExp -> BoolExp (b :: BackendType)
 [unBoolExp] :: BoolExp (b :: BackendType) -> GBoolExp b ColExp
-_BoolExists :: forall backend_adCMa field_adCMb. Prism' (GBoolExp backend_adCMa field_adCMb) (GExists backend_adCMa field_adCMb)
+_BoolExists :: forall backend_adCMq field_adCMr. Prism' (GBoolExp backend_adCMq field_adCMr) (GExists backend_adCMq field_adCMr)
 
 -- | Permissions get translated into boolean expressions that are threaded
 --   throuhgout the parsers. For the leaf values of those permissions, we
@@ -10143,9 +10143,9 @@ UpdPerm :: PermColSpec b -> Maybe (ColumnValues b Value) -> BoolExp b -> Maybe (
 [ucCheck] :: UpdPerm (b :: BackendType) -> Maybe (BoolExp b)
 [ucBackendOnly] :: UpdPerm (b :: BackendType) -> Bool
 type UpdPermDef b = PermDef b UpdPerm
-pdRole :: forall b_aeucl perm_aeucm. Lens' (PermDef b_aeucl perm_aeucm) RoleName
-pdPermission :: forall b_aeucl perm_aeucm b_aeBhr perm_aeBhs. Lens (PermDef b_aeucl perm_aeucm) (PermDef b_aeBhr perm_aeBhs) (PermDefPermission b_aeucl perm_aeucm) (PermDefPermission b_aeBhr perm_aeBhs)
-pdComment :: forall b_aeucl perm_aeucm. Lens' (PermDef b_aeucl perm_aeucm) (Maybe Text)
+pdRole :: forall b_aeucB perm_aeucC. Lens' (PermDef b_aeucB perm_aeucC) RoleName
+pdPermission :: forall b_aeucB perm_aeucC b_aeBhH perm_aeBhI. Lens (PermDef b_aeucB perm_aeucC) (PermDef b_aeBhH perm_aeBhI) (PermDefPermission b_aeucB perm_aeucC) (PermDefPermission b_aeBhH perm_aeBhI)
+pdComment :: forall b_aeucB perm_aeucC. Lens' (PermDef b_aeucB perm_aeucC) (Maybe Text)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.Types.Permission.PermDef b Hasura.RQL.Types.Permission.SelPerm)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.Types.Permission.PermDef b Hasura.RQL.Types.Permission.InsPerm)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.Types.Permission.PermDef b Hasura.RQL.Types.Permission.UpdPerm)
@@ -11923,12 +11923,12 @@ WithLogicalModel :: SourceName -> LogicalModelName -> a -> WithLogicalModel a
 
 -- | extract all of the `{{ variable }}` inside our query string
 parseInterpolatedQuery :: Text -> Either Text (InterpolatedQuery LogicalModelArgumentName)
-lmmSelectPermissions :: forall b_ajjLs. Lens' (LogicalModelMetadata b_ajjLs) (InsOrdHashMap RoleName (SelPermDef b_ajjLs))
-lmmRootFieldName :: forall b_ajjLs. Lens' (LogicalModelMetadata b_ajjLs) LogicalModelName
-lmmReturns :: forall b_ajjLs. Lens' (LogicalModelMetadata b_ajjLs) (CustomReturnType b_ajjLs)
-lmmDescription :: forall b_ajjLs. Lens' (LogicalModelMetadata b_ajjLs) (Maybe Text)
-lmmCode :: forall b_ajjLs. Lens' (LogicalModelMetadata b_ajjLs) (InterpolatedQuery LogicalModelArgumentName)
-lmmArguments :: forall b_ajjLs. Lens' (LogicalModelMetadata b_ajjLs) (HashMap LogicalModelArgumentName (NullableScalarType b_ajjLs))
+lmmSelectPermissions :: forall b_ajjLI. Lens' (LogicalModelMetadata b_ajjLI) (InsOrdHashMap RoleName (SelPermDef b_ajjLI))
+lmmRootFieldName :: forall b_ajjLI. Lens' (LogicalModelMetadata b_ajjLI) LogicalModelName
+lmmReturns :: forall b_ajjLI. Lens' (LogicalModelMetadata b_ajjLI) (CustomReturnType b_ajjLI)
+lmmDescription :: forall b_ajjLI. Lens' (LogicalModelMetadata b_ajjLI) (Maybe Text)
+lmmCode :: forall b_ajjLI. Lens' (LogicalModelMetadata b_ajjLI) (InterpolatedQuery LogicalModelArgumentName)
+lmmArguments :: forall b_ajjLI. Lens' (LogicalModelMetadata b_ajjLI) (HashMap LogicalModelArgumentName (NullableScalarType b_ajjLI))
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.LogicalModel.Metadata.RawQuery
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.LogicalModel.Metadata.RawQuery
 instance GHC.Show.Show Hasura.LogicalModel.Metadata.RawQuery
@@ -12852,7 +12852,7 @@ module Hasura.GraphQL.Execute.Subscription.Plan
 newtype ValidatedVariables f
 ValidatedVariables :: f TxtEncodedVal -> ValidatedVariables f
 [_unValidatedVariables] :: ValidatedVariables f -> f TxtEncodedVal
-unValidatedVariables :: forall f_al2FM f_al2NT. Iso (ValidatedVariables f_al2FM) (ValidatedVariables f_al2NT) (f_al2FM TxtEncodedVal) (f_al2NT TxtEncodedVal)
+unValidatedVariables :: forall f_al2G2 f_al2O9. Iso (ValidatedVariables f_al2G2) (ValidatedVariables f_al2O9) (f_al2G2 TxtEncodedVal) (f_al2O9 TxtEncodedVal)
 type ValidatedQueryVariables = ValidatedVariables (HashMap Name)
 type ValidatedSyntheticVariables = ValidatedVariables []
 type ValidatedCursorVariables = ValidatedVariables (HashMap Name)
@@ -14009,11 +14009,11 @@ RemoteSchemaMetadata :: RemoteSchemaName -> RemoteSchemaDef -> Maybe Text -> [Re
 [_rsmComment] :: RemoteSchemaMetadataG r -> Maybe Text
 [_rsmPermissions] :: RemoteSchemaMetadataG r -> [RemoteSchemaPermissionMetadata]
 [_rsmRemoteRelationships] :: RemoteSchemaMetadataG r -> SchemaRemoteRelationships r
-rsmRemoteRelationships :: forall r_amiEP r_amiYv. Lens (RemoteSchemaMetadataG r_amiEP) (RemoteSchemaMetadataG r_amiYv) (SchemaRemoteRelationships r_amiEP) (SchemaRemoteRelationships r_amiYv)
-rsmPermissions :: forall r_amiEP. Lens' (RemoteSchemaMetadataG r_amiEP) [RemoteSchemaPermissionMetadata]
-rsmName :: forall r_amiEP. Lens' (RemoteSchemaMetadataG r_amiEP) RemoteSchemaName
-rsmDefinition :: forall r_amiEP. Lens' (RemoteSchemaMetadataG r_amiEP) RemoteSchemaDef
-rsmComment :: forall r_amiEP. Lens' (RemoteSchemaMetadataG r_amiEP) (Maybe Text)
+rsmRemoteRelationships :: forall r_amiF5 r_amiYL. Lens (RemoteSchemaMetadataG r_amiF5) (RemoteSchemaMetadataG r_amiYL) (SchemaRemoteRelationships r_amiF5) (SchemaRemoteRelationships r_amiYL)
+rsmPermissions :: forall r_amiF5. Lens' (RemoteSchemaMetadataG r_amiF5) [RemoteSchemaPermissionMetadata]
+rsmName :: forall r_amiF5. Lens' (RemoteSchemaMetadataG r_amiF5) RemoteSchemaName
+rsmDefinition :: forall r_amiF5. Lens' (RemoteSchemaMetadataG r_amiF5) RemoteSchemaDef
+rsmComment :: forall r_amiF5. Lens' (RemoteSchemaMetadataG r_amiF5) (Maybe Text)
 instance GHC.Generics.Generic (Hasura.RemoteSchema.Metadata.Core.RemoteSchemaMetadataG r)
 instance GHC.Classes.Eq r => GHC.Classes.Eq (Hasura.RemoteSchema.Metadata.Core.RemoteSchemaMetadataG r)
 instance GHC.Show.Show r => GHC.Show.Show (Hasura.RemoteSchema.Metadata.Core.RemoteSchemaMetadataG r)
@@ -14185,12 +14185,12 @@ RemoteSchemaFieldInfo :: RelName -> HashMap Name RemoteSchemaInputValueDefinitio
 --   function is cleaned up
 [_rrfiLHSIdentifier] :: RemoteSchemaFieldInfo -> LHSIdentifier
 graphQLValueToJSON :: Value Void -> Value
-rscRemoteRelationships :: forall remoteFieldInfo_amo7C remoteFieldInfo_amq5h. Lens (RemoteSchemaCtxG remoteFieldInfo_amo7C) (RemoteSchemaCtxG remoteFieldInfo_amq5h) (RemoteSchemaRelationshipsG remoteFieldInfo_amo7C) (RemoteSchemaRelationshipsG remoteFieldInfo_amq5h)
-rscRawIntrospectionResult :: forall remoteFieldInfo_amo7C. Lens' (RemoteSchemaCtxG remoteFieldInfo_amo7C) ByteString
-rscPermissions :: forall remoteFieldInfo_amo7C. Lens' (RemoteSchemaCtxG remoteFieldInfo_amo7C) (HashMap RoleName IntrospectionResult)
-rscName :: forall remoteFieldInfo_amo7C. Lens' (RemoteSchemaCtxG remoteFieldInfo_amo7C) RemoteSchemaName
-rscIntroOriginal :: forall remoteFieldInfo_amo7C. Lens' (RemoteSchemaCtxG remoteFieldInfo_amo7C) IntrospectionResult
-rscInfo :: forall remoteFieldInfo_amo7C. Lens' (RemoteSchemaCtxG remoteFieldInfo_amo7C) RemoteSchemaInfo
+rscRemoteRelationships :: forall remoteFieldInfo_amo7S remoteFieldInfo_amq5x. Lens (RemoteSchemaCtxG remoteFieldInfo_amo7S) (RemoteSchemaCtxG remoteFieldInfo_amq5x) (RemoteSchemaRelationshipsG remoteFieldInfo_amo7S) (RemoteSchemaRelationshipsG remoteFieldInfo_amq5x)
+rscRawIntrospectionResult :: forall remoteFieldInfo_amo7S. Lens' (RemoteSchemaCtxG remoteFieldInfo_amo7S) ByteString
+rscPermissions :: forall remoteFieldInfo_amo7S. Lens' (RemoteSchemaCtxG remoteFieldInfo_amo7S) (HashMap RoleName IntrospectionResult)
+rscName :: forall remoteFieldInfo_amo7S. Lens' (RemoteSchemaCtxG remoteFieldInfo_amo7S) RemoteSchemaName
+rscIntroOriginal :: forall remoteFieldInfo_amo7S. Lens' (RemoteSchemaCtxG remoteFieldInfo_amo7S) IntrospectionResult
+rscInfo :: forall remoteFieldInfo_amo7S. Lens' (RemoteSchemaCtxG remoteFieldInfo_amo7S) RemoteSchemaInfo
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RemoteSchema.SchemaCache.Types.RemoteSchemaInfo
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RemoteSchema.SchemaCache.Types.RemoteSchemaInfo
 instance Data.Aeson.Types.ToJSON.ToJSON remoteFieldInfo => Data.Aeson.Types.ToJSON.ToJSON (Hasura.RemoteSchema.SchemaCache.Types.RemoteSchemaCtxG remoteFieldInfo)
@@ -14363,15 +14363,15 @@ RemoteSchemaSelect :: [RemoteFieldArgument] -> ResultCustomizer -> SelectionSet 
 --   field in the selection set.
 convertSelectionSet :: forall var. Eq var => SelectionSet Void var -> SelectionSet NoFragments var
 convertGraphQLField :: Eq var => GraphQLField Void var -> Field NoFragments var
-_FieldRemote :: forall r_amDUa var_amDUb. Prism' (Field r_amDUa var_amDUb) (SchemaRemoteRelationshipSelect r_amDUa)
-_FieldGraphQL :: forall r_amDUa var_amFo9 var_amDUb. Prism (Field r_amDUa var_amFo9) (Field r_amDUa var_amDUb) (GraphQLField r_amDUa var_amFo9) (GraphQLField r_amDUa var_amDUb)
-fSelectionSet :: forall r_amDU8 var_amDU9 r_amFqh. Lens (GraphQLField r_amDU8 var_amDU9) (GraphQLField r_amFqh var_amDU9) (SelectionSet r_amDU8 var_amDU9) (SelectionSet r_amFqh var_amDU9)
-fName :: forall r_amDU8 var_amDU9. Lens' (GraphQLField r_amDU8 var_amDU9) Name
-fDirectives :: forall r_amDU8 var_amDU9. Lens' (GraphQLField r_amDU8 var_amDU9) [Directive var_amDU9]
-fArguments :: forall r_amDU8 var_amDU9. Lens' (GraphQLField r_amDU8 var_amDU9) (HashMap Name (Value var_amDU9))
-fAlias :: forall r_amDU8 var_amDU9. Lens' (GraphQLField r_amDU8 var_amDU9) Name
-dssMemberSelectionSets :: forall r_amDUe var_amDUf r_amFtV var_amFtW. Lens (DeduplicatedSelectionSet r_amDUe var_amDUf) (DeduplicatedSelectionSet r_amFtV var_amFtW) (HashMap Name (ObjectSelectionSet r_amDUe var_amDUf)) (HashMap Name (ObjectSelectionSet r_amFtV var_amFtW))
-dssCommonFields :: forall r_amDUe var_amDUf. Lens' (DeduplicatedSelectionSet r_amDUe var_amDUf) (HashSet Name)
+_FieldRemote :: forall r_amDUq var_amDUr. Prism' (Field r_amDUq var_amDUr) (SchemaRemoteRelationshipSelect r_amDUq)
+_FieldGraphQL :: forall r_amDUq var_amFop var_amDUr. Prism (Field r_amDUq var_amFop) (Field r_amDUq var_amDUr) (GraphQLField r_amDUq var_amFop) (GraphQLField r_amDUq var_amDUr)
+fSelectionSet :: forall r_amDUo var_amDUp r_amFqx. Lens (GraphQLField r_amDUo var_amDUp) (GraphQLField r_amFqx var_amDUp) (SelectionSet r_amDUo var_amDUp) (SelectionSet r_amFqx var_amDUp)
+fName :: forall r_amDUo var_amDUp. Lens' (GraphQLField r_amDUo var_amDUp) Name
+fDirectives :: forall r_amDUo var_amDUp. Lens' (GraphQLField r_amDUo var_amDUp) [Directive var_amDUp]
+fArguments :: forall r_amDUo var_amDUp. Lens' (GraphQLField r_amDUo var_amDUp) (HashMap Name (Value var_amDUp))
+fAlias :: forall r_amDUo var_amDUp. Lens' (GraphQLField r_amDUo var_amDUp) Name
+dssMemberSelectionSets :: forall r_amDUu var_amDUv r_amFub var_amFuc. Lens (DeduplicatedSelectionSet r_amDUu var_amDUv) (DeduplicatedSelectionSet r_amFub var_amFuc) (HashMap Name (ObjectSelectionSet r_amDUu var_amDUv)) (HashMap Name (ObjectSelectionSet r_amFub var_amFuc))
+dssCommonFields :: forall r_amDUu var_amDUv. Lens' (DeduplicatedSelectionSet r_amDUu var_amDUv) (HashSet Name)
 instance Data.Traversable.Traversable Hasura.RQL.IR.RemoteSchema.SchemaRemoteRelationshipSelect
 instance Data.Foldable.Foldable Hasura.RQL.IR.RemoteSchema.SchemaRemoteRelationshipSelect
 instance GHC.Base.Functor Hasura.RQL.IR.RemoteSchema.SchemaRemoteRelationshipSelect
@@ -14914,48 +14914,48 @@ insertFunctionArg :: FunctionArgName -> Int -> a -> FunctionArgsExpG a -> Functi
 data CountDistinct
 SelectCountDistinct :: CountDistinct
 SelectCountNonDistinct :: CountDistinct
-asnStrfyNum :: forall b_an3ie f_an3if v_an3ig. Lens' (AnnSelectG b_an3ie f_an3if v_an3ig) StringifyNumbers
-asnPerm :: forall b_an3ie f_an3if v_an3ig. Lens' (AnnSelectG b_an3ie f_an3if v_an3ig) (TablePermG b_an3ie v_an3ig)
-asnNamingConvention :: forall b_an3ie f_an3if v_an3ig. Lens' (AnnSelectG b_an3ie f_an3if v_an3ig) (Maybe NamingCase)
-asnFrom :: forall b_an3ie f_an3if v_an3ig. Lens' (AnnSelectG b_an3ie f_an3if v_an3ig) (SelectFromG b_an3ie v_an3ig)
-asnFields :: forall b_an3ie f_an3if v_an3ig f_anzGZ. Lens (AnnSelectG b_an3ie f_an3if v_an3ig) (AnnSelectG b_an3ie f_anzGZ v_an3ig) (Fields (f_an3if v_an3ig)) (Fields (f_anzGZ v_an3ig))
-asnArgs :: forall b_an3ie f_an3if v_an3ig. Lens' (AnnSelectG b_an3ie f_an3if v_an3ig) (SelectArgsG b_an3ie v_an3ig)
-aosTableFrom :: forall b_an3gF r_an3gG v_an3gH. Lens' (AnnObjectSelectG b_an3gF r_an3gG v_an3gH) (TableName b_an3gF)
-aosTableFilter :: forall b_an3gF r_an3gG v_an3gH. Lens' (AnnObjectSelectG b_an3gF r_an3gG v_an3gH) (AnnBoolExp b_an3gF v_an3gH)
-aosFields :: forall b_an3gF r_an3gG v_an3gH r_anzM0. Lens (AnnObjectSelectG b_an3gF r_an3gG v_an3gH) (AnnObjectSelectG b_an3gF r_anzM0 v_an3gH) (AnnFieldsG b_an3gF r_an3gG v_an3gH) (AnnFieldsG b_an3gF r_anzM0 v_an3gH)
-aarRelationshipName :: forall b_an3gS a_an3gT. Lens' (AnnRelationSelectG b_an3gS a_an3gT) RelName
-aarColumnMapping :: forall b_an3gS a_an3gT b_anzOs. Lens (AnnRelationSelectG b_an3gS a_an3gT) (AnnRelationSelectG b_anzOs a_an3gT) (HashMap (Column b_an3gS) (Column b_an3gS)) (HashMap (Column b_anzOs) (Column b_anzOs))
-aarAnnSelect :: forall b_an3gS a_an3gT a_anzOr. Lens (AnnRelationSelectG b_an3gS a_an3gT) (AnnRelationSelectG b_an3gS a_anzOr) a_an3gT a_anzOr
-csXRelay :: forall b_an3hW r_an3hX v_an3hY. Lens' (ConnectionSelect b_an3hW r_an3hX v_an3hY) (XRelay b_an3hW)
-csSplit :: forall b_an3hW r_an3hX v_an3hY. Lens' (ConnectionSelect b_an3hW r_an3hX v_an3hY) (Maybe (NonEmpty (ConnectionSplit b_an3hW v_an3hY)))
-csSlice :: forall b_an3hW r_an3hX v_an3hY. Lens' (ConnectionSelect b_an3hW r_an3hX v_an3hY) (Maybe ConnectionSlice)
-csSelect :: forall b_an3hW r_an3hX v_an3hY r_anzQN. Lens (ConnectionSelect b_an3hW r_an3hX v_an3hY) (ConnectionSelect b_an3hW r_anzQN v_an3hY) (AnnSelectG b_an3hW (ConnectionField b_an3hW r_an3hX) v_an3hY) (AnnSelectG b_an3hW (ConnectionField b_an3hW r_anzQN) v_an3hY)
-csPrimaryKeyColumns :: forall b_an3hW r_an3hX v_an3hY. Lens' (ConnectionSelect b_an3hW r_an3hX v_an3hY) (PrimaryKeyColumns b_an3hW)
-saWhere :: forall b_an3hM v_an3hN. Lens' (SelectArgsG b_an3hM v_an3hN) (Maybe (AnnBoolExp b_an3hM v_an3hN))
-saOrderBy :: forall b_an3hM v_an3hN. Lens' (SelectArgsG b_an3hM v_an3hN) (Maybe (NonEmpty (AnnotatedOrderByItemG b_an3hM v_an3hN)))
-saOffset :: forall b_an3hM v_an3hN. Lens' (SelectArgsG b_an3hM v_an3hN) (Maybe Int64)
-saLimit :: forall b_an3hM v_an3hN. Lens' (SelectArgsG b_an3hM v_an3hN) (Maybe Int)
-saDistinct :: forall b_an3hM v_an3hN. Lens' (SelectArgsG b_an3hM v_an3hN) (Maybe (NonEmpty (Column b_an3hM)))
-_AFExpression :: forall b_an3hv r_an3hw v_an3hx. Prism' (AnnFieldG b_an3hv r_an3hw v_an3hx) Text
-_AFNodeId :: forall b_an3hv r_an3hw v_an3hx. Prism' (AnnFieldG b_an3hv r_an3hw v_an3hx) (XRelay b_an3hv, SourceName, TableName b_an3hv, PrimaryKeyColumns b_an3hv)
-_AFRemote :: forall b_an3hv r_an3hw v_an3hx. Prism' (AnnFieldG b_an3hv r_an3hw v_an3hx) (RemoteRelationshipSelect b_an3hv r_an3hw)
-_AFComputedField :: forall b_an3hv r_an3hw v_an3hx. Prism' (AnnFieldG b_an3hv r_an3hw v_an3hx) (XComputedField b_an3hv, ComputedFieldName, ComputedFieldSelect b_an3hv r_an3hw v_an3hx)
-_AFArrayRelation :: forall b_an3hv r_an3hw v_an3hx. Prism' (AnnFieldG b_an3hv r_an3hw v_an3hx) (ArraySelectG b_an3hv r_an3hw v_an3hx)
-_AFObjectRelation :: forall b_an3hv r_an3hw v_an3hx. Prism' (AnnFieldG b_an3hv r_an3hw v_an3hx) (ObjectRelationSelectG b_an3hv r_an3hw v_an3hx)
-_AFColumn :: forall b_an3hv r_an3hw v_an3hx. Prism' (AnnFieldG b_an3hv r_an3hw v_an3hx) (AnnColumnField b_an3hv v_an3hx)
-_AOCComputedField :: forall b_an3hF v_an3hG. Prism' (AnnotatedOrderByElement b_an3hF v_an3hG) (ComputedFieldOrderBy b_an3hF v_an3hG)
-_AOCArrayAggregation :: forall b_an3hF v_an3hG. Prism' (AnnotatedOrderByElement b_an3hF v_an3hG) (RelInfo b_an3hF, AnnBoolExp b_an3hF v_an3hG, AnnotatedAggregateOrderBy b_an3hF)
-_AOCObjectRelation :: forall b_an3hF v_an3hG. Prism' (AnnotatedOrderByElement b_an3hF v_an3hG) (RelInfo b_an3hF, AnnBoolExp b_an3hF v_an3hG, AnnotatedOrderByElement b_an3hF v_an3hG)
-_AOCColumn :: forall b_an3hF v_an3hG. Prism' (AnnotatedOrderByElement b_an3hF v_an3hG) (ColumnInfo b_an3hF)
-_TAFExp :: forall b_an3hq r_an3hr v_an3hs. Prism' (TableAggregateFieldG b_an3hq r_an3hr v_an3hs) Text
-_TAFNodes :: forall b_an3hq r_anAb6 v_anAb7 r_an3hr v_an3hs. Prism (TableAggregateFieldG b_an3hq r_anAb6 v_anAb7) (TableAggregateFieldG b_an3hq r_an3hr v_an3hs) (XNodesAgg b_an3hq, AnnFieldsG b_an3hq r_anAb6 v_anAb7) (XNodesAgg b_an3hq, AnnFieldsG b_an3hq r_an3hr v_an3hs)
-_TAFAgg :: forall b_an3hq r_an3hr v_an3hs. Prism' (TableAggregateFieldG b_an3hq r_an3hr v_an3hs) (AggregateFields b_an3hq)
-_ConnectionEdges :: forall b_anAf0 r_anAf1 v_anAf2 b_an3ha r_an3hb v_an3hc. Prism (ConnectionField b_anAf0 r_anAf1 v_anAf2) (ConnectionField b_an3ha r_an3hb v_an3hc) (EdgeFields b_anAf0 r_anAf1 v_anAf2) (EdgeFields b_an3ha r_an3hb v_an3hc)
-_ConnectionPageInfo :: forall b_an3ha r_an3hb v_an3hc. Prism' (ConnectionField b_an3ha r_an3hb v_an3hc) PageInfoFields
-_ConnectionTypename :: forall b_an3ha r_an3hb v_an3hc. Prism' (ConnectionField b_an3ha r_an3hb v_an3hc) Text
-_EdgeNode :: forall b_anAiF r_anAiG v_anAiH b_an3h7 r_an3h8 v_an3h9. Prism (EdgeField b_anAiF r_anAiG v_anAiH) (EdgeField b_an3h7 r_an3h8 v_an3h9) (AnnFieldsG b_anAiF r_anAiG v_anAiH) (AnnFieldsG b_an3h7 r_an3h8 v_an3h9)
-_EdgeCursor :: forall b_an3h7 r_an3h8 v_an3h9. Prism' (EdgeField b_an3h7 r_an3h8 v_an3h9) ()
-_EdgeTypename :: forall b_an3h7 r_an3h8 v_an3h9. Prism' (EdgeField b_an3h7 r_an3h8 v_an3h9) Text
+asnStrfyNum :: forall b_an3iu f_an3iv v_an3iw. Lens' (AnnSelectG b_an3iu f_an3iv v_an3iw) StringifyNumbers
+asnPerm :: forall b_an3iu f_an3iv v_an3iw. Lens' (AnnSelectG b_an3iu f_an3iv v_an3iw) (TablePermG b_an3iu v_an3iw)
+asnNamingConvention :: forall b_an3iu f_an3iv v_an3iw. Lens' (AnnSelectG b_an3iu f_an3iv v_an3iw) (Maybe NamingCase)
+asnFrom :: forall b_an3iu f_an3iv v_an3iw. Lens' (AnnSelectG b_an3iu f_an3iv v_an3iw) (SelectFromG b_an3iu v_an3iw)
+asnFields :: forall b_an3iu f_an3iv v_an3iw f_anzHf. Lens (AnnSelectG b_an3iu f_an3iv v_an3iw) (AnnSelectG b_an3iu f_anzHf v_an3iw) (Fields (f_an3iv v_an3iw)) (Fields (f_anzHf v_an3iw))
+asnArgs :: forall b_an3iu f_an3iv v_an3iw. Lens' (AnnSelectG b_an3iu f_an3iv v_an3iw) (SelectArgsG b_an3iu v_an3iw)
+aosTableFrom :: forall b_an3gV r_an3gW v_an3gX. Lens' (AnnObjectSelectG b_an3gV r_an3gW v_an3gX) (TableName b_an3gV)
+aosTableFilter :: forall b_an3gV r_an3gW v_an3gX. Lens' (AnnObjectSelectG b_an3gV r_an3gW v_an3gX) (AnnBoolExp b_an3gV v_an3gX)
+aosFields :: forall b_an3gV r_an3gW v_an3gX r_anzMg. Lens (AnnObjectSelectG b_an3gV r_an3gW v_an3gX) (AnnObjectSelectG b_an3gV r_anzMg v_an3gX) (AnnFieldsG b_an3gV r_an3gW v_an3gX) (AnnFieldsG b_an3gV r_anzMg v_an3gX)
+aarRelationshipName :: forall b_an3h8 a_an3h9. Lens' (AnnRelationSelectG b_an3h8 a_an3h9) RelName
+aarColumnMapping :: forall b_an3h8 a_an3h9 b_anzOI. Lens (AnnRelationSelectG b_an3h8 a_an3h9) (AnnRelationSelectG b_anzOI a_an3h9) (HashMap (Column b_an3h8) (Column b_an3h8)) (HashMap (Column b_anzOI) (Column b_anzOI))
+aarAnnSelect :: forall b_an3h8 a_an3h9 a_anzOH. Lens (AnnRelationSelectG b_an3h8 a_an3h9) (AnnRelationSelectG b_an3h8 a_anzOH) a_an3h9 a_anzOH
+csXRelay :: forall b_an3ic r_an3id v_an3ie. Lens' (ConnectionSelect b_an3ic r_an3id v_an3ie) (XRelay b_an3ic)
+csSplit :: forall b_an3ic r_an3id v_an3ie. Lens' (ConnectionSelect b_an3ic r_an3id v_an3ie) (Maybe (NonEmpty (ConnectionSplit b_an3ic v_an3ie)))
+csSlice :: forall b_an3ic r_an3id v_an3ie. Lens' (ConnectionSelect b_an3ic r_an3id v_an3ie) (Maybe ConnectionSlice)
+csSelect :: forall b_an3ic r_an3id v_an3ie r_anzR3. Lens (ConnectionSelect b_an3ic r_an3id v_an3ie) (ConnectionSelect b_an3ic r_anzR3 v_an3ie) (AnnSelectG b_an3ic (ConnectionField b_an3ic r_an3id) v_an3ie) (AnnSelectG b_an3ic (ConnectionField b_an3ic r_anzR3) v_an3ie)
+csPrimaryKeyColumns :: forall b_an3ic r_an3id v_an3ie. Lens' (ConnectionSelect b_an3ic r_an3id v_an3ie) (PrimaryKeyColumns b_an3ic)
+saWhere :: forall b_an3i2 v_an3i3. Lens' (SelectArgsG b_an3i2 v_an3i3) (Maybe (AnnBoolExp b_an3i2 v_an3i3))
+saOrderBy :: forall b_an3i2 v_an3i3. Lens' (SelectArgsG b_an3i2 v_an3i3) (Maybe (NonEmpty (AnnotatedOrderByItemG b_an3i2 v_an3i3)))
+saOffset :: forall b_an3i2 v_an3i3. Lens' (SelectArgsG b_an3i2 v_an3i3) (Maybe Int64)
+saLimit :: forall b_an3i2 v_an3i3. Lens' (SelectArgsG b_an3i2 v_an3i3) (Maybe Int)
+saDistinct :: forall b_an3i2 v_an3i3. Lens' (SelectArgsG b_an3i2 v_an3i3) (Maybe (NonEmpty (Column b_an3i2)))
+_AFExpression :: forall b_an3hL r_an3hM v_an3hN. Prism' (AnnFieldG b_an3hL r_an3hM v_an3hN) Text
+_AFNodeId :: forall b_an3hL r_an3hM v_an3hN. Prism' (AnnFieldG b_an3hL r_an3hM v_an3hN) (XRelay b_an3hL, SourceName, TableName b_an3hL, PrimaryKeyColumns b_an3hL)
+_AFRemote :: forall b_an3hL r_an3hM v_an3hN. Prism' (AnnFieldG b_an3hL r_an3hM v_an3hN) (RemoteRelationshipSelect b_an3hL r_an3hM)
+_AFComputedField :: forall b_an3hL r_an3hM v_an3hN. Prism' (AnnFieldG b_an3hL r_an3hM v_an3hN) (XComputedField b_an3hL, ComputedFieldName, ComputedFieldSelect b_an3hL r_an3hM v_an3hN)
+_AFArrayRelation :: forall b_an3hL r_an3hM v_an3hN. Prism' (AnnFieldG b_an3hL r_an3hM v_an3hN) (ArraySelectG b_an3hL r_an3hM v_an3hN)
+_AFObjectRelation :: forall b_an3hL r_an3hM v_an3hN. Prism' (AnnFieldG b_an3hL r_an3hM v_an3hN) (ObjectRelationSelectG b_an3hL r_an3hM v_an3hN)
+_AFColumn :: forall b_an3hL r_an3hM v_an3hN. Prism' (AnnFieldG b_an3hL r_an3hM v_an3hN) (AnnColumnField b_an3hL v_an3hN)
+_AOCComputedField :: forall b_an3hV v_an3hW. Prism' (AnnotatedOrderByElement b_an3hV v_an3hW) (ComputedFieldOrderBy b_an3hV v_an3hW)
+_AOCArrayAggregation :: forall b_an3hV v_an3hW. Prism' (AnnotatedOrderByElement b_an3hV v_an3hW) (RelInfo b_an3hV, AnnBoolExp b_an3hV v_an3hW, AnnotatedAggregateOrderBy b_an3hV)
+_AOCObjectRelation :: forall b_an3hV v_an3hW. Prism' (AnnotatedOrderByElement b_an3hV v_an3hW) (RelInfo b_an3hV, AnnBoolExp b_an3hV v_an3hW, AnnotatedOrderByElement b_an3hV v_an3hW)
+_AOCColumn :: forall b_an3hV v_an3hW. Prism' (AnnotatedOrderByElement b_an3hV v_an3hW) (ColumnInfo b_an3hV)
+_TAFExp :: forall b_an3hG r_an3hH v_an3hI. Prism' (TableAggregateFieldG b_an3hG r_an3hH v_an3hI) Text
+_TAFNodes :: forall b_an3hG r_anAbm v_anAbn r_an3hH v_an3hI. Prism (TableAggregateFieldG b_an3hG r_anAbm v_anAbn) (TableAggregateFieldG b_an3hG r_an3hH v_an3hI) (XNodesAgg b_an3hG, AnnFieldsG b_an3hG r_anAbm v_anAbn) (XNodesAgg b_an3hG, AnnFieldsG b_an3hG r_an3hH v_an3hI)
+_TAFAgg :: forall b_an3hG r_an3hH v_an3hI. Prism' (TableAggregateFieldG b_an3hG r_an3hH v_an3hI) (AggregateFields b_an3hG)
+_ConnectionEdges :: forall b_anAfg r_anAfh v_anAfi b_an3hq r_an3hr v_an3hs. Prism (ConnectionField b_anAfg r_anAfh v_anAfi) (ConnectionField b_an3hq r_an3hr v_an3hs) (EdgeFields b_anAfg r_anAfh v_anAfi) (EdgeFields b_an3hq r_an3hr v_an3hs)
+_ConnectionPageInfo :: forall b_an3hq r_an3hr v_an3hs. Prism' (ConnectionField b_an3hq r_an3hr v_an3hs) PageInfoFields
+_ConnectionTypename :: forall b_an3hq r_an3hr v_an3hs. Prism' (ConnectionField b_an3hq r_an3hr v_an3hs) Text
+_EdgeNode :: forall b_anAiV r_anAiW v_anAiX b_an3hn r_an3ho v_an3hp. Prism (EdgeField b_anAiV r_anAiW v_anAiX) (EdgeField b_an3hn r_an3ho v_an3hp) (AnnFieldsG b_anAiV r_anAiW v_anAiX) (AnnFieldsG b_an3hn r_an3ho v_an3hp)
+_EdgeCursor :: forall b_an3hn r_an3ho v_an3hp. Prism' (EdgeField b_an3hn r_an3ho v_an3hp) ()
+_EdgeTypename :: forall b_an3hn r_an3ho v_an3hp. Prism' (EdgeField b_an3hn r_an3ho v_an3hp) Text
 instance Data.Hashable.Class.Hashable Hasura.RQL.IR.Select.ConnectionSlice
 instance GHC.Generics.Generic Hasura.RQL.IR.Select.ConnectionSlice
 instance GHC.Classes.Eq Hasura.RQL.IR.Select.ConnectionSlice
@@ -15141,9 +15141,9 @@ type MutationOutput b = MutationOutputG b Void (SQLExpression b)
 type MutFlds b = MutFldsG b Void (SQLExpression b)
 buildEmptyMutResp :: MutationOutput backend -> EncJSON
 hasNestedFld :: MutationOutputG backend r a -> Bool
-_MRet :: forall b_aorfA r_aorfB v_aorfC b_aopjW r_aopjX v_aopjY. Prism (MutFldG b_aorfA r_aorfB v_aorfC) (MutFldG b_aopjW r_aopjX v_aopjY) (AnnFieldsG b_aorfA r_aorfB v_aorfC) (AnnFieldsG b_aopjW r_aopjX v_aopjY)
-_MExp :: forall b_aopjW r_aopjX v_aopjY. Prism' (MutFldG b_aopjW r_aopjX v_aopjY) Text
-_MCount :: forall b_aopjW r_aopjX v_aopjY. Prism' (MutFldG b_aopjW r_aopjX v_aopjY) ()
+_MRet :: forall b_aorfQ r_aorfR v_aorfS b_aopkc r_aopkd v_aopke. Prism (MutFldG b_aorfQ r_aorfR v_aorfS) (MutFldG b_aopkc r_aopkd v_aopke) (AnnFieldsG b_aorfQ r_aorfR v_aorfS) (AnnFieldsG b_aopkc r_aopkd v_aopke)
+_MExp :: forall b_aopkc r_aopkd v_aopke. Prism' (MutFldG b_aopkc r_aopkd v_aopke) Text
+_MCount :: forall b_aopkc r_aopkd v_aopke. Prism' (MutFldG b_aopkc r_aopkd v_aopke) ()
 instance Hasura.RQL.Types.Backend.Backend b => Data.Traversable.Traversable (Hasura.RQL.IR.Returning.MutFldG b r)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Foldable.Foldable (Hasura.RQL.IR.Returning.MutFldG b r)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Base.Functor (Hasura.RQL.IR.Returning.MutFldG b r)
@@ -15168,13 +15168,13 @@ AnnotatedUpdateG :: TableName b -> AnnBoolExp b v -> AnnBoolExp b v -> UpdateVar
 [_auAllCols] :: AnnotatedUpdateG (b :: BackendType) (r :: Type) v -> [ColumnInfo b]
 [_auNamingConvention] :: AnnotatedUpdateG (b :: BackendType) (r :: Type) v -> Maybe NamingCase
 type AnnotatedUpdate b = AnnotatedUpdateG b Void (SQLExpression b)
-auUpdateVariant :: forall b_aouQF r_aouQG v_aouQH. Lens' (AnnotatedUpdateG b_aouQF r_aouQG v_aouQH) (UpdateVariant b_aouQF v_aouQH)
-auUpdatePermissions :: forall b_aouQF r_aouQG v_aouQH. Lens' (AnnotatedUpdateG b_aouQF r_aouQG v_aouQH) (AnnBoolExp b_aouQF v_aouQH)
-auTable :: forall b_aouQF r_aouQG v_aouQH. Lens' (AnnotatedUpdateG b_aouQF r_aouQG v_aouQH) (TableName b_aouQF)
-auOutput :: forall b_aouQF r_aouQG v_aouQH r_aovOB. Lens (AnnotatedUpdateG b_aouQF r_aouQG v_aouQH) (AnnotatedUpdateG b_aouQF r_aovOB v_aouQH) (MutationOutputG b_aouQF r_aouQG v_aouQH) (MutationOutputG b_aouQF r_aovOB v_aouQH)
-auNamingConvention :: forall b_aouQF r_aouQG v_aouQH. Lens' (AnnotatedUpdateG b_aouQF r_aouQG v_aouQH) (Maybe NamingCase)
-auCheck :: forall b_aouQF r_aouQG v_aouQH. Lens' (AnnotatedUpdateG b_aouQF r_aouQG v_aouQH) (AnnBoolExp b_aouQF v_aouQH)
-auAllCols :: forall b_aouQF r_aouQG v_aouQH. Lens' (AnnotatedUpdateG b_aouQF r_aouQG v_aouQH) [ColumnInfo b_aouQF]
+auUpdateVariant :: forall b_aouQV r_aouQW v_aouQX. Lens' (AnnotatedUpdateG b_aouQV r_aouQW v_aouQX) (UpdateVariant b_aouQV v_aouQX)
+auUpdatePermissions :: forall b_aouQV r_aouQW v_aouQX. Lens' (AnnotatedUpdateG b_aouQV r_aouQW v_aouQX) (AnnBoolExp b_aouQV v_aouQX)
+auTable :: forall b_aouQV r_aouQW v_aouQX. Lens' (AnnotatedUpdateG b_aouQV r_aouQW v_aouQX) (TableName b_aouQV)
+auOutput :: forall b_aouQV r_aouQW v_aouQX r_aovOR. Lens (AnnotatedUpdateG b_aouQV r_aouQW v_aouQX) (AnnotatedUpdateG b_aouQV r_aovOR v_aouQX) (MutationOutputG b_aouQV r_aouQW v_aouQX) (MutationOutputG b_aouQV r_aovOR v_aouQX)
+auNamingConvention :: forall b_aouQV r_aouQW v_aouQX. Lens' (AnnotatedUpdateG b_aouQV r_aouQW v_aouQX) (Maybe NamingCase)
+auCheck :: forall b_aouQV r_aouQW v_aouQX. Lens' (AnnotatedUpdateG b_aouQV r_aouQW v_aouQX) (AnnBoolExp b_aouQV v_aouQX)
+auAllCols :: forall b_aouQV r_aouQW v_aouQX. Lens' (AnnotatedUpdateG b_aouQV r_aouQW v_aouQX) [ColumnInfo b_aouQV]
 instance Hasura.RQL.Types.Backend.Backend b => Data.Traversable.Traversable (Hasura.RQL.IR.Update.AnnotatedUpdateG b r)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Foldable.Foldable (Hasura.RQL.IR.Update.AnnotatedUpdateG b r)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Base.Functor (Hasura.RQL.IR.Update.AnnotatedUpdateG b r)
@@ -15281,14 +15281,14 @@ InsertQueryP1 :: TableName b -> [Column b] -> [[SQLExpression b]] -> Maybe (OnCo
 [iqp1CheckCond] :: InsertQueryP1 (b :: BackendType) -> (AnnBoolExpSQL b, Maybe (AnnBoolExpSQL b))
 [iqp1Output] :: InsertQueryP1 (b :: BackendType) -> MutationOutput b
 [iqp1AllCols] :: InsertQueryP1 (b :: BackendType) -> [ColumnInfo b]
-aiOutput :: forall b_aoytk r_aoytl v_aoytm r_aoBxS. Lens (AnnotatedInsert b_aoytk r_aoytl v_aoytm) (AnnotatedInsert b_aoytk r_aoBxS v_aoytm) (MutationOutputG b_aoytk r_aoytl v_aoytm) (MutationOutputG b_aoytk r_aoBxS v_aoytm)
-aiNamingConvention :: forall b_aoytk r_aoytl v_aoytm. Lens' (AnnotatedInsert b_aoytk r_aoytl v_aoytm) (Maybe NamingCase)
-aiIsSingle :: forall b_aoytk r_aoytl v_aoytm. Lens' (AnnotatedInsert b_aoytk r_aoytl v_aoytm) Bool
-aiFieldName :: forall b_aoytk r_aoytl v_aoytm. Lens' (AnnotatedInsert b_aoytk r_aoytl v_aoytm) Text
-aiData :: forall b_aoytk r_aoytl v_aoytm. Lens' (AnnotatedInsert b_aoytk r_aoytl v_aoytm) (MultiObjectInsert b_aoytk v_aoytm)
-_AIArrayRelationship :: forall b_aoyta v_aoytb. Prism' (AnnotatedInsertField b_aoyta v_aoytb) (XNestedInserts b_aoyta, ArrayRelationInsert b_aoyta v_aoytb)
-_AIObjectRelationship :: forall b_aoyta v_aoytb. Prism' (AnnotatedInsertField b_aoyta v_aoytb) (XNestedInserts b_aoyta, ObjectRelationInsert b_aoyta v_aoytb)
-_AIColumn :: forall b_aoyta v_aoytb. Prism' (AnnotatedInsertField b_aoyta v_aoytb) (Column b_aoyta, v_aoytb)
+aiOutput :: forall b_aoytA r_aoytB v_aoytC r_aoBy8. Lens (AnnotatedInsert b_aoytA r_aoytB v_aoytC) (AnnotatedInsert b_aoytA r_aoBy8 v_aoytC) (MutationOutputG b_aoytA r_aoytB v_aoytC) (MutationOutputG b_aoytA r_aoBy8 v_aoytC)
+aiNamingConvention :: forall b_aoytA r_aoytB v_aoytC. Lens' (AnnotatedInsert b_aoytA r_aoytB v_aoytC) (Maybe NamingCase)
+aiIsSingle :: forall b_aoytA r_aoytB v_aoytC. Lens' (AnnotatedInsert b_aoytA r_aoytB v_aoytC) Bool
+aiFieldName :: forall b_aoytA r_aoytB v_aoytC. Lens' (AnnotatedInsert b_aoytA r_aoytB v_aoytC) Text
+aiData :: forall b_aoytA r_aoytB v_aoytC. Lens' (AnnotatedInsert b_aoytA r_aoytB v_aoytC) (MultiObjectInsert b_aoytA v_aoytC)
+_AIArrayRelationship :: forall b_aoytq v_aoytr. Prism' (AnnotatedInsertField b_aoytq v_aoytr) (XNestedInserts b_aoytq, ArrayRelationInsert b_aoytq v_aoytr)
+_AIObjectRelationship :: forall b_aoytq v_aoytr. Prism' (AnnotatedInsertField b_aoytq v_aoytr) (XNestedInserts b_aoytq, ObjectRelationInsert b_aoytq v_aoytr)
+_AIColumn :: forall b_aoytq v_aoytr. Prism' (AnnotatedInsertField b_aoytq v_aoytr) (Column b_aoytq, v_aoytr)
 getInsertColumns :: AnnotatedInsertRow b v -> [(Column b, v)]
 getInsertObjectRelationships :: AnnotatedInsertRow b v -> [ObjectRelationInsert b v]
 getInsertArrayRelationships :: AnnotatedInsertRow b v -> [ArrayRelationInsert b v]
@@ -15319,11 +15319,11 @@ AnnDel :: TableName b -> (AnnBoolExp b v, AnnBoolExp b v) -> MutationOutputG b r
 [_adAllCols] :: AnnDelG (b :: BackendType) (r :: Type) v -> [ColumnInfo b]
 [_adNamingConvention] :: AnnDelG (b :: BackendType) (r :: Type) v -> Maybe NamingCase
 type AnnDel b = AnnDelG b Void (SQLExpression b)
-adWhere :: forall b_aoInh r_aoIni v_aoInj. Lens' (AnnDelG b_aoInh r_aoIni v_aoInj) (AnnBoolExp b_aoInh v_aoInj, AnnBoolExp b_aoInh v_aoInj)
-adTable :: forall b_aoInh r_aoIni v_aoInj. Lens' (AnnDelG b_aoInh r_aoIni v_aoInj) (TableName b_aoInh)
-adOutput :: forall b_aoInh r_aoIni v_aoInj r_aoJbO. Lens (AnnDelG b_aoInh r_aoIni v_aoInj) (AnnDelG b_aoInh r_aoJbO v_aoInj) (MutationOutputG b_aoInh r_aoIni v_aoInj) (MutationOutputG b_aoInh r_aoJbO v_aoInj)
-adNamingConvention :: forall b_aoInh r_aoIni v_aoInj. Lens' (AnnDelG b_aoInh r_aoIni v_aoInj) (Maybe NamingCase)
-adAllCols :: forall b_aoInh r_aoIni v_aoInj. Lens' (AnnDelG b_aoInh r_aoIni v_aoInj) [ColumnInfo b_aoInh]
+adWhere :: forall b_aoInx r_aoIny v_aoInz. Lens' (AnnDelG b_aoInx r_aoIny v_aoInz) (AnnBoolExp b_aoInx v_aoInz, AnnBoolExp b_aoInx v_aoInz)
+adTable :: forall b_aoInx r_aoIny v_aoInz. Lens' (AnnDelG b_aoInx r_aoIny v_aoInz) (TableName b_aoInx)
+adOutput :: forall b_aoInx r_aoIny v_aoInz r_aoJc4. Lens (AnnDelG b_aoInx r_aoIny v_aoInz) (AnnDelG b_aoInx r_aoJc4 v_aoInz) (MutationOutputG b_aoInx r_aoIny v_aoInz) (MutationOutputG b_aoInx r_aoJc4 v_aoInz)
+adNamingConvention :: forall b_aoInx r_aoIny v_aoInz. Lens' (AnnDelG b_aoInx r_aoIny v_aoInz) (Maybe NamingCase)
+adAllCols :: forall b_aoInx r_aoIny v_aoInz. Lens' (AnnDelG b_aoInx r_aoIny v_aoInz) [ColumnInfo b_aoInx]
 instance Hasura.RQL.Types.Backend.Backend b => Data.Traversable.Traversable (Hasura.RQL.IR.Delete.AnnDelG b r)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Foldable.Foldable (Hasura.RQL.IR.Delete.AnnDelG b r)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Base.Functor (Hasura.RQL.IR.Delete.AnnDelG b r)
@@ -16040,10 +16040,10 @@ FIColumn :: ColumnInfo b -> FieldInfo (b :: BackendType)
 FIRelationship :: RelInfo b -> FieldInfo (b :: BackendType)
 FIComputedField :: ComputedFieldInfo b -> FieldInfo (b :: BackendType)
 FIRemoteRelationship :: RemoteFieldInfo (DBJoinField b) -> FieldInfo (b :: BackendType)
-_FIRemoteRelationship :: forall b_apSVb. Prism' (FieldInfo b_apSVb) (RemoteFieldInfo (DBJoinField b_apSVb))
-_FIComputedField :: forall b_apSVb. Prism' (FieldInfo b_apSVb) (ComputedFieldInfo b_apSVb)
-_FIRelationship :: forall b_apSVb. Prism' (FieldInfo b_apSVb) (RelInfo b_apSVb)
-_FIColumn :: forall b_apSVb. Prism' (FieldInfo b_apSVb) (ColumnInfo b_apSVb)
+_FIRemoteRelationship :: forall b_apSVr. Prism' (FieldInfo b_apSVr) (RemoteFieldInfo (DBJoinField b_apSVr))
+_FIComputedField :: forall b_apSVr. Prism' (FieldInfo b_apSVr) (ComputedFieldInfo b_apSVr)
+_FIRelationship :: forall b_apSVr. Prism' (FieldInfo b_apSVr) (RelInfo b_apSVr)
+_FIColumn :: forall b_apSVr. Prism' (FieldInfo b_apSVr) (ColumnInfo b_apSVr)
 type FieldInfoMap = HashMap FieldName
 fieldInfoName :: forall b. Backend b => FieldInfo b -> FieldName
 fieldInfoGraphQLName :: FieldInfo b -> Maybe Name
@@ -16126,10 +16126,10 @@ RolePermInfo :: Maybe (InsPermInfo b) -> Maybe (SelPermInfo b) -> Maybe (UpdPerm
 [_permSel] :: RolePermInfo (b :: BackendType) -> Maybe (SelPermInfo b)
 [_permUpd] :: RolePermInfo (b :: BackendType) -> Maybe (UpdPermInfo b)
 [_permDel] :: RolePermInfo (b :: BackendType) -> Maybe (DelPermInfo b)
-permUpd :: forall b_apTOB. Lens' (RolePermInfo b_apTOB) (Maybe (UpdPermInfo b_apTOB))
-permSel :: forall b_apTOB. Lens' (RolePermInfo b_apTOB) (Maybe (SelPermInfo b_apTOB))
-permIns :: forall b_apTOB. Lens' (RolePermInfo b_apTOB) (Maybe (InsPermInfo b_apTOB))
-permDel :: forall b_apTOB. Lens' (RolePermInfo b_apTOB) (Maybe (DelPermInfo b_apTOB))
+permUpd :: forall b_apTOR. Lens' (RolePermInfo b_apTOR) (Maybe (UpdPermInfo b_apTOR))
+permSel :: forall b_apTOR. Lens' (RolePermInfo b_apTOR) (Maybe (SelPermInfo b_apTOR))
+permIns :: forall b_apTOR. Lens' (RolePermInfo b_apTOR) (Maybe (InsPermInfo b_apTOR))
+permDel :: forall b_apTOR. Lens' (RolePermInfo b_apTOR) (Maybe (DelPermInfo b_apTOR))
 type RolePermInfoMap b = HashMap RoleName (RolePermInfo b)
 data ViewInfo
 ViewInfo :: Bool -> Bool -> Bool -> ViewInfo
@@ -16147,10 +16147,10 @@ TableConfig :: TableCustomRootFields -> HashMap (Column b) ColumnConfig -> Maybe
 [_tcColumnConfig] :: TableConfig b -> HashMap (Column b) ColumnConfig
 [_tcCustomName] :: TableConfig b -> Maybe Name
 [_tcComment] :: TableConfig b -> Comment
-tcCustomRootFields :: forall b_apXiX. Lens' (TableConfig b_apXiX) TableCustomRootFields
-tcCustomName :: forall b_apXiX. Lens' (TableConfig b_apXiX) (Maybe Name)
-tcComment :: forall b_apXiX. Lens' (TableConfig b_apXiX) Comment
-tcColumnConfig :: forall b_apXiX b_apXUl. Lens (TableConfig b_apXiX) (TableConfig b_apXUl) (HashMap (Column b_apXiX) ColumnConfig) (HashMap (Column b_apXUl) ColumnConfig)
+tcCustomRootFields :: forall b_apXjd. Lens' (TableConfig b_apXjd) TableCustomRootFields
+tcCustomName :: forall b_apXjd. Lens' (TableConfig b_apXjd) (Maybe Name)
+tcComment :: forall b_apXjd. Lens' (TableConfig b_apXjd) Comment
+tcColumnConfig :: forall b_apXjd b_apXUB. Lens (TableConfig b_apXjd) (TableConfig b_apXUB) (HashMap (Column b_apXjd) ColumnConfig) (HashMap (Column b_apXUB) ColumnConfig)
 emptyTableConfig :: TableConfig b
 data Constraint (b :: BackendType)
 Constraint :: ConstraintName b -> OID -> Constraint (b :: BackendType)
@@ -16160,8 +16160,8 @@ data PrimaryKey (b :: BackendType) a
 PrimaryKey :: Constraint b -> NESeq a -> PrimaryKey (b :: BackendType) a
 [_pkConstraint] :: PrimaryKey (b :: BackendType) a -> Constraint b
 [_pkColumns] :: PrimaryKey (b :: BackendType) a -> NESeq a
-pkConstraint :: forall b_apXUX a_apXUY b_aq00u. Lens (PrimaryKey b_apXUX a_apXUY) (PrimaryKey b_aq00u a_apXUY) (Constraint b_apXUX) (Constraint b_aq00u)
-pkColumns :: forall b_apXUX a_apXUY a_aq00t. Lens (PrimaryKey b_apXUX a_apXUY) (PrimaryKey b_apXUX a_aq00t) (NESeq a_apXUY) (NESeq a_aq00t)
+pkConstraint :: forall b_apXVd a_apXVe b_aq00K. Lens (PrimaryKey b_apXVd a_apXVe) (PrimaryKey b_aq00K a_apXVe) (Constraint b_apXVd) (Constraint b_aq00K)
+pkColumns :: forall b_apXVd a_apXVe a_aq00J. Lens (PrimaryKey b_apXVd a_apXVe) (PrimaryKey b_apXVd a_aq00J) (NESeq a_apXVe) (NESeq a_aq00J)
 
 -- | Data type modelling uniqueness constraints. Occasionally this will
 --   include primary keys, although those are tracked separately in
@@ -16204,17 +16204,17 @@ TableCoreInfo :: TableName b -> Maybe PGDescription -> FieldInfoMap field -> May
 [_tciCustomConfig] :: TableCoreInfoG (b :: BackendType) field primaryKeyColumn -> TableConfig b
 [_tciExtraTableMetadata] :: TableCoreInfoG (b :: BackendType) field primaryKeyColumn -> ExtraTableMetadata b
 [_tciApolloFederationConfig] :: TableCoreInfoG (b :: BackendType) field primaryKeyColumn -> Maybe ApolloFederationConfig
-tciViewInfo :: forall b_aq011 field_aq012 primaryKeyColumn_aq013. Lens' (TableCoreInfoG b_aq011 field_aq012 primaryKeyColumn_aq013) (Maybe ViewInfo)
-tciUniqueConstraints :: forall b_aq011 field_aq012 primaryKeyColumn_aq013. Lens' (TableCoreInfoG b_aq011 field_aq012 primaryKeyColumn_aq013) (HashSet (UniqueConstraint b_aq011))
-tciPrimaryKey :: forall b_aq011 field_aq012 primaryKeyColumn_aq013 primaryKeyColumn_aq25f. Lens (TableCoreInfoG b_aq011 field_aq012 primaryKeyColumn_aq013) (TableCoreInfoG b_aq011 field_aq012 primaryKeyColumn_aq25f) (Maybe (PrimaryKey b_aq011 primaryKeyColumn_aq013)) (Maybe (PrimaryKey b_aq011 primaryKeyColumn_aq25f))
-tciName :: forall b_aq011 field_aq012 primaryKeyColumn_aq013. Lens' (TableCoreInfoG b_aq011 field_aq012 primaryKeyColumn_aq013) (TableName b_aq011)
-tciForeignKeys :: forall b_aq011 field_aq012 primaryKeyColumn_aq013. Lens' (TableCoreInfoG b_aq011 field_aq012 primaryKeyColumn_aq013) (HashSet (ForeignKey b_aq011))
-tciFieldInfoMap :: forall b_aq011 field_aq012 primaryKeyColumn_aq013 field_aq25e. Lens (TableCoreInfoG b_aq011 field_aq012 primaryKeyColumn_aq013) (TableCoreInfoG b_aq011 field_aq25e primaryKeyColumn_aq013) (FieldInfoMap field_aq012) (FieldInfoMap field_aq25e)
-tciExtraTableMetadata :: forall b_aq011 field_aq012 primaryKeyColumn_aq013. Lens' (TableCoreInfoG b_aq011 field_aq012 primaryKeyColumn_aq013) (ExtraTableMetadata b_aq011)
-tciEnumValues :: forall b_aq011 field_aq012 primaryKeyColumn_aq013. Lens' (TableCoreInfoG b_aq011 field_aq012 primaryKeyColumn_aq013) (Maybe EnumValues)
-tciDescription :: forall b_aq011 field_aq012 primaryKeyColumn_aq013. Lens' (TableCoreInfoG b_aq011 field_aq012 primaryKeyColumn_aq013) (Maybe PGDescription)
-tciCustomConfig :: forall b_aq011 field_aq012 primaryKeyColumn_aq013. Lens' (TableCoreInfoG b_aq011 field_aq012 primaryKeyColumn_aq013) (TableConfig b_aq011)
-tciApolloFederationConfig :: forall b_aq011 field_aq012 primaryKeyColumn_aq013. Lens' (TableCoreInfoG b_aq011 field_aq012 primaryKeyColumn_aq013) (Maybe ApolloFederationConfig)
+tciViewInfo :: forall b_aq01h field_aq01i primaryKeyColumn_aq01j. Lens' (TableCoreInfoG b_aq01h field_aq01i primaryKeyColumn_aq01j) (Maybe ViewInfo)
+tciUniqueConstraints :: forall b_aq01h field_aq01i primaryKeyColumn_aq01j. Lens' (TableCoreInfoG b_aq01h field_aq01i primaryKeyColumn_aq01j) (HashSet (UniqueConstraint b_aq01h))
+tciPrimaryKey :: forall b_aq01h field_aq01i primaryKeyColumn_aq01j primaryKeyColumn_aq25v. Lens (TableCoreInfoG b_aq01h field_aq01i primaryKeyColumn_aq01j) (TableCoreInfoG b_aq01h field_aq01i primaryKeyColumn_aq25v) (Maybe (PrimaryKey b_aq01h primaryKeyColumn_aq01j)) (Maybe (PrimaryKey b_aq01h primaryKeyColumn_aq25v))
+tciName :: forall b_aq01h field_aq01i primaryKeyColumn_aq01j. Lens' (TableCoreInfoG b_aq01h field_aq01i primaryKeyColumn_aq01j) (TableName b_aq01h)
+tciForeignKeys :: forall b_aq01h field_aq01i primaryKeyColumn_aq01j. Lens' (TableCoreInfoG b_aq01h field_aq01i primaryKeyColumn_aq01j) (HashSet (ForeignKey b_aq01h))
+tciFieldInfoMap :: forall b_aq01h field_aq01i primaryKeyColumn_aq01j field_aq25u. Lens (TableCoreInfoG b_aq01h field_aq01i primaryKeyColumn_aq01j) (TableCoreInfoG b_aq01h field_aq25u primaryKeyColumn_aq01j) (FieldInfoMap field_aq01i) (FieldInfoMap field_aq25u)
+tciExtraTableMetadata :: forall b_aq01h field_aq01i primaryKeyColumn_aq01j. Lens' (TableCoreInfoG b_aq01h field_aq01i primaryKeyColumn_aq01j) (ExtraTableMetadata b_aq01h)
+tciEnumValues :: forall b_aq01h field_aq01i primaryKeyColumn_aq01j. Lens' (TableCoreInfoG b_aq01h field_aq01i primaryKeyColumn_aq01j) (Maybe EnumValues)
+tciDescription :: forall b_aq01h field_aq01i primaryKeyColumn_aq01j. Lens' (TableCoreInfoG b_aq01h field_aq01i primaryKeyColumn_aq01j) (Maybe PGDescription)
+tciCustomConfig :: forall b_aq01h field_aq01i primaryKeyColumn_aq01j. Lens' (TableCoreInfoG b_aq01h field_aq01i primaryKeyColumn_aq01j) (TableConfig b_aq01h)
+tciApolloFederationConfig :: forall b_aq01h field_aq01i primaryKeyColumn_aq01j. Lens' (TableCoreInfoG b_aq01h field_aq01i primaryKeyColumn_aq01j) (Maybe ApolloFederationConfig)
 
 -- | Fully-processed table info that includes non-column fields.
 type TableCoreInfo b = TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
@@ -16225,10 +16225,10 @@ TableInfo :: TableCoreInfo b -> RolePermInfoMap b -> EventTriggerInfoMap b -> Ro
 [_tiRolePermInfoMap] :: TableInfo (b :: BackendType) -> RolePermInfoMap b
 [_tiEventTriggerInfoMap] :: TableInfo (b :: BackendType) -> EventTriggerInfoMap b
 [_tiAdminRolePermInfo] :: TableInfo (b :: BackendType) -> RolePermInfo b
-tiRolePermInfoMap :: forall b_aq27S. Lens' (TableInfo b_aq27S) (RolePermInfoMap b_aq27S)
-tiEventTriggerInfoMap :: forall b_aq27S. Lens' (TableInfo b_aq27S) (EventTriggerInfoMap b_aq27S)
-tiCoreInfo :: forall b_aq27S. Lens' (TableInfo b_aq27S) (TableCoreInfo b_aq27S)
-tiAdminRolePermInfo :: forall b_aq27S. Lens' (TableInfo b_aq27S) (RolePermInfo b_aq27S)
+tiRolePermInfoMap :: forall b_aq288. Lens' (TableInfo b_aq288) (RolePermInfoMap b_aq288)
+tiEventTriggerInfoMap :: forall b_aq288. Lens' (TableInfo b_aq288) (EventTriggerInfoMap b_aq288)
+tiCoreInfo :: forall b_aq288. Lens' (TableInfo b_aq288) (TableCoreInfo b_aq288)
+tiAdminRolePermInfo :: forall b_aq288. Lens' (TableInfo b_aq288) (RolePermInfo b_aq288)
 tiName :: Lens' (TableInfo b) (TableName b)
 tableInfoName :: TableInfo b -> TableName b
 tableArrayRelationships :: TableInfo b -> [RelInfo b]
@@ -16838,12 +16838,12 @@ LogicalModelInfo :: LogicalModelName -> InterpolatedQuery LogicalModelArgumentNa
 [_lmiArguments] :: LogicalModelInfo (b :: BackendType) -> HashMap LogicalModelArgumentName (NullableScalarType b)
 [_lmiPermissions] :: LogicalModelInfo (b :: BackendType) -> RolePermInfoMap b
 [_lmiDescription] :: LogicalModelInfo (b :: BackendType) -> Maybe Text
-lmiRootFieldName :: forall b_arjIA. Lens' (LogicalModelInfo b_arjIA) LogicalModelName
-lmiReturns :: forall b_arjIA. Lens' (LogicalModelInfo b_arjIA) (CustomReturnType b_arjIA)
-lmiPermissions :: forall b_arjIA. Lens' (LogicalModelInfo b_arjIA) (RolePermInfoMap b_arjIA)
-lmiDescription :: forall b_arjIA. Lens' (LogicalModelInfo b_arjIA) (Maybe Text)
-lmiCode :: forall b_arjIA. Lens' (LogicalModelInfo b_arjIA) (InterpolatedQuery LogicalModelArgumentName)
-lmiArguments :: forall b_arjIA. Lens' (LogicalModelInfo b_arjIA) (HashMap LogicalModelArgumentName (NullableScalarType b_arjIA))
+lmiRootFieldName :: forall b_arjIQ. Lens' (LogicalModelInfo b_arjIQ) LogicalModelName
+lmiReturns :: forall b_arjIQ. Lens' (LogicalModelInfo b_arjIQ) (CustomReturnType b_arjIQ)
+lmiPermissions :: forall b_arjIQ. Lens' (LogicalModelInfo b_arjIQ) (RolePermInfoMap b_arjIQ)
+lmiDescription :: forall b_arjIQ. Lens' (LogicalModelInfo b_arjIQ) (Maybe Text)
+lmiCode :: forall b_arjIQ. Lens' (LogicalModelInfo b_arjIQ) (InterpolatedQuery LogicalModelArgumentName)
+lmiArguments :: forall b_arjIQ. Lens' (LogicalModelInfo b_arjIQ) (HashMap LogicalModelArgumentName (NullableScalarType b_arjIQ))
 instance GHC.Generics.Generic (Hasura.LogicalModel.Cache.LogicalModelInfo b)
 instance (Hasura.RQL.Types.Backend.Backend b, Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.Types.Table.RolePermInfoMap b)) => Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.Cache.LogicalModelInfo b)
 
@@ -16857,13 +16857,13 @@ SourceInfo :: SourceName -> TableCache b -> FunctionCache b -> LogicalModelCache
 [_siConfiguration] :: SourceInfo b -> ~SourceConfig b
 [_siQueryTagsConfig] :: SourceInfo b -> Maybe QueryTagsConfig
 [_siCustomization] :: SourceInfo b -> ResolvedSourceCustomization
-siTables :: forall b_arlpO. Lens' (SourceInfo b_arlpO) (TableCache b_arlpO)
-siQueryTagsConfig :: forall b_arlpO. Lens' (SourceInfo b_arlpO) (Maybe QueryTagsConfig)
-siName :: forall b_arlpO. Lens' (SourceInfo b_arlpO) SourceName
-siLogicalModels :: forall b_arlpO. Lens' (SourceInfo b_arlpO) (LogicalModelCache b_arlpO)
-siFunctions :: forall b_arlpO. Lens' (SourceInfo b_arlpO) (FunctionCache b_arlpO)
-siCustomization :: forall b_arlpO. Lens' (SourceInfo b_arlpO) ResolvedSourceCustomization
-siConfiguration :: forall b_arlpO. Lens' (SourceInfo b_arlpO) (SourceConfig b_arlpO)
+siTables :: forall b_arlq4. Lens' (SourceInfo b_arlq4) (TableCache b_arlq4)
+siQueryTagsConfig :: forall b_arlq4. Lens' (SourceInfo b_arlq4) (Maybe QueryTagsConfig)
+siName :: forall b_arlq4. Lens' (SourceInfo b_arlq4) SourceName
+siLogicalModels :: forall b_arlq4. Lens' (SourceInfo b_arlq4) (LogicalModelCache b_arlq4)
+siFunctions :: forall b_arlq4. Lens' (SourceInfo b_arlq4) (FunctionCache b_arlq4)
+siCustomization :: forall b_arlq4. Lens' (SourceInfo b_arlq4) ResolvedSourceCustomization
+siConfiguration :: forall b_arlq4. Lens' (SourceInfo b_arlq4) (SourceConfig b_arlq4)
 type BackendSourceInfo = AnyBackend SourceInfo
 type SourceCache = HashMap SourceName BackendSourceInfo
 unsafeSourceInfo :: forall b. HasTag b => BackendSourceInfo -> Maybe (SourceInfo b)
@@ -17492,15 +17492,15 @@ amPermissions :: Lens' ActionMetadata [ActionPermissionMetadata]
 amName :: Lens' ActionMetadata ActionName
 amDefinition :: Lens' ActionMetadata ActionDefinitionInput
 amComment :: Lens' ActionMetadata (Maybe Text)
-adType :: forall arg_asuaL webhook_asuaM. Lens' (ActionDefinition arg_asuaL webhook_asuaM) ActionType
-adTimeout :: forall arg_asuaL webhook_asuaM. Lens' (ActionDefinition arg_asuaL webhook_asuaM) Timeout
-adResponseTransform :: forall arg_asuaL webhook_asuaM. Lens' (ActionDefinition arg_asuaL webhook_asuaM) (Maybe MetadataResponseTransform)
-adRequestTransform :: forall arg_asuaL webhook_asuaM. Lens' (ActionDefinition arg_asuaL webhook_asuaM) (Maybe RequestTransform)
-adOutputType :: forall arg_asuaL webhook_asuaM. Lens' (ActionDefinition arg_asuaL webhook_asuaM) GraphQLType
-adHeaders :: forall arg_asuaL webhook_asuaM. Lens' (ActionDefinition arg_asuaL webhook_asuaM) [HeaderConf]
-adHandler :: forall arg_asuaL webhook_asuaM webhook_aswLS. Lens (ActionDefinition arg_asuaL webhook_asuaM) (ActionDefinition arg_asuaL webhook_aswLS) webhook_asuaM webhook_aswLS
-adForwardClientHeaders :: forall arg_asuaL webhook_asuaM. Lens' (ActionDefinition arg_asuaL webhook_asuaM) Bool
-adArguments :: forall arg_asuaL webhook_asuaM arg_aswLR. Lens (ActionDefinition arg_asuaL webhook_asuaM) (ActionDefinition arg_aswLR webhook_asuaM) [ArgumentDefinition arg_asuaL] [ArgumentDefinition arg_aswLR]
+adType :: forall arg_asub1 webhook_asub2. Lens' (ActionDefinition arg_asub1 webhook_asub2) ActionType
+adTimeout :: forall arg_asub1 webhook_asub2. Lens' (ActionDefinition arg_asub1 webhook_asub2) Timeout
+adResponseTransform :: forall arg_asub1 webhook_asub2. Lens' (ActionDefinition arg_asub1 webhook_asub2) (Maybe MetadataResponseTransform)
+adRequestTransform :: forall arg_asub1 webhook_asub2. Lens' (ActionDefinition arg_asub1 webhook_asub2) (Maybe RequestTransform)
+adOutputType :: forall arg_asub1 webhook_asub2. Lens' (ActionDefinition arg_asub1 webhook_asub2) GraphQLType
+adHeaders :: forall arg_asub1 webhook_asub2. Lens' (ActionDefinition arg_asub1 webhook_asub2) [HeaderConf]
+adHandler :: forall arg_asub1 webhook_asub2 webhook_aswM8. Lens (ActionDefinition arg_asub1 webhook_asub2) (ActionDefinition arg_asub1 webhook_aswM8) webhook_asub2 webhook_aswM8
+adForwardClientHeaders :: forall arg_asub1 webhook_asub2. Lens' (ActionDefinition arg_asub1 webhook_asub2) Bool
+adArguments :: forall arg_asub1 webhook_asub2 arg_aswM7. Lens (ActionDefinition arg_asub1 webhook_asub2) (ActionDefinition arg_aswM7 webhook_asub2) [ArgumentDefinition arg_asub1] [ArgumentDefinition arg_aswM7]
 aiPermissions :: Lens' ActionInfo (HashMap RoleName ActionPermissionInfo)
 aiOutputType :: Lens' ActionInfo (GType, AnnotatedOutputType)
 aiName :: Lens' ActionInfo ActionName
@@ -17902,19 +17902,19 @@ TableMetadata :: TableName b -> Bool -> TableConfig b -> Relationships (ObjRelDe
 [_tmDeletePermissions] :: TableMetadata b -> Permissions (DelPermDef b)
 [_tmEventTriggers] :: TableMetadata b -> EventTriggers b
 [_tmApolloFederationConfig] :: TableMetadata b -> Maybe ApolloFederationConfig
-tmUpdatePermissions :: forall b_atfGy. Lens' (TableMetadata b_atfGy) (Permissions (UpdPermDef b_atfGy))
-tmTable :: forall b_atfGy. Lens' (TableMetadata b_atfGy) (TableName b_atfGy)
-tmSelectPermissions :: forall b_atfGy. Lens' (TableMetadata b_atfGy) (Permissions (SelPermDef b_atfGy))
-tmRemoteRelationships :: forall b_atfGy. Lens' (TableMetadata b_atfGy) RemoteRelationships
-tmObjectRelationships :: forall b_atfGy. Lens' (TableMetadata b_atfGy) (Relationships (ObjRelDef b_atfGy))
-tmIsEnum :: forall b_atfGy. Lens' (TableMetadata b_atfGy) Bool
-tmInsertPermissions :: forall b_atfGy. Lens' (TableMetadata b_atfGy) (Permissions (InsPermDef b_atfGy))
-tmEventTriggers :: forall b_atfGy. Lens' (TableMetadata b_atfGy) (EventTriggers b_atfGy)
-tmDeletePermissions :: forall b_atfGy. Lens' (TableMetadata b_atfGy) (Permissions (DelPermDef b_atfGy))
-tmConfiguration :: forall b_atfGy. Lens' (TableMetadata b_atfGy) (TableConfig b_atfGy)
-tmComputedFields :: forall b_atfGy. Lens' (TableMetadata b_atfGy) (ComputedFields b_atfGy)
-tmArrayRelationships :: forall b_atfGy. Lens' (TableMetadata b_atfGy) (Relationships (ArrRelDef b_atfGy))
-tmApolloFederationConfig :: forall b_atfGy. Lens' (TableMetadata b_atfGy) (Maybe ApolloFederationConfig)
+tmUpdatePermissions :: forall b_atfGO. Lens' (TableMetadata b_atfGO) (Permissions (UpdPermDef b_atfGO))
+tmTable :: forall b_atfGO. Lens' (TableMetadata b_atfGO) (TableName b_atfGO)
+tmSelectPermissions :: forall b_atfGO. Lens' (TableMetadata b_atfGO) (Permissions (SelPermDef b_atfGO))
+tmRemoteRelationships :: forall b_atfGO. Lens' (TableMetadata b_atfGO) RemoteRelationships
+tmObjectRelationships :: forall b_atfGO. Lens' (TableMetadata b_atfGO) (Relationships (ObjRelDef b_atfGO))
+tmIsEnum :: forall b_atfGO. Lens' (TableMetadata b_atfGO) Bool
+tmInsertPermissions :: forall b_atfGO. Lens' (TableMetadata b_atfGO) (Permissions (InsPermDef b_atfGO))
+tmEventTriggers :: forall b_atfGO. Lens' (TableMetadata b_atfGO) (EventTriggers b_atfGO)
+tmDeletePermissions :: forall b_atfGO. Lens' (TableMetadata b_atfGO) (Permissions (DelPermDef b_atfGO))
+tmConfiguration :: forall b_atfGO. Lens' (TableMetadata b_atfGO) (TableConfig b_atfGO)
+tmComputedFields :: forall b_atfGO. Lens' (TableMetadata b_atfGO) (ComputedFields b_atfGO)
+tmArrayRelationships :: forall b_atfGO. Lens' (TableMetadata b_atfGO) (Relationships (ArrRelDef b_atfGO))
+tmApolloFederationConfig :: forall b_atfGO. Lens' (TableMetadata b_atfGO) (Maybe ApolloFederationConfig)
 mkTableMeta :: TableName b -> Bool -> TableConfig b -> TableMetadata b
 data FunctionMetadata b
 FunctionMetadata :: FunctionName b -> FunctionConfig -> [FunctionPermissionInfo] -> Maybe Text -> FunctionMetadata b
@@ -17922,10 +17922,10 @@ FunctionMetadata :: FunctionName b -> FunctionConfig -> [FunctionPermissionInfo]
 [_fmConfiguration] :: FunctionMetadata b -> FunctionConfig
 [_fmPermissions] :: FunctionMetadata b -> [FunctionPermissionInfo]
 [_fmComment] :: FunctionMetadata b -> Maybe Text
-fmPermissions :: forall b_athjJ. Lens' (FunctionMetadata b_athjJ) [FunctionPermissionInfo]
-fmFunction :: forall b_athjJ b_ati8b. Lens (FunctionMetadata b_athjJ) (FunctionMetadata b_ati8b) (FunctionName b_athjJ) (FunctionName b_ati8b)
-fmConfiguration :: forall b_athjJ. Lens' (FunctionMetadata b_athjJ) FunctionConfig
-fmComment :: forall b_athjJ. Lens' (FunctionMetadata b_athjJ) (Maybe Text)
+fmPermissions :: forall b_athjZ. Lens' (FunctionMetadata b_athjZ) [FunctionPermissionInfo]
+fmFunction :: forall b_athjZ b_ati8r. Lens (FunctionMetadata b_athjZ) (FunctionMetadata b_ati8r) (FunctionName b_athjZ) (FunctionName b_ati8r)
+fmConfiguration :: forall b_athjZ. Lens' (FunctionMetadata b_athjZ) FunctionConfig
+fmComment :: forall b_athjZ. Lens' (FunctionMetadata b_athjZ) (Maybe Text)
 type RemoteSchemaMetadata = RemoteSchemaMetadataG RemoteRelationshipDefinition
 type RemoteSchemas = InsOrdHashMap RemoteSchemaName RemoteSchemaMetadata
 type Tables b = InsOrdHashMap (TableName b) (TableMetadata b)
@@ -17949,15 +17949,15 @@ SourceMetadata :: SourceName -> BackendSourceKind b -> Tables b -> Functions b -
 [_smQueryTags] :: SourceMetadata b -> Maybe QueryTagsConfig
 [_smCustomization] :: SourceMetadata b -> SourceCustomization
 [_smHealthCheckConfig] :: SourceMetadata b -> Maybe (HealthCheckConfig b)
-smTables :: forall b_ati8Y. Lens' (SourceMetadata b_ati8Y) (Tables b_ati8Y)
-smQueryTags :: forall b_ati8Y. Lens' (SourceMetadata b_ati8Y) (Maybe QueryTagsConfig)
-smName :: forall b_ati8Y. Lens' (SourceMetadata b_ati8Y) SourceName
-smLogicalModels :: forall b_ati8Y. Lens' (SourceMetadata b_ati8Y) (LogicalModels b_ati8Y)
-smKind :: forall b_ati8Y. Lens' (SourceMetadata b_ati8Y) (BackendSourceKind b_ati8Y)
-smHealthCheckConfig :: forall b_ati8Y. Lens' (SourceMetadata b_ati8Y) (Maybe (HealthCheckConfig b_ati8Y))
-smFunctions :: forall b_ati8Y. Lens' (SourceMetadata b_ati8Y) (Functions b_ati8Y)
-smCustomization :: forall b_ati8Y. Lens' (SourceMetadata b_ati8Y) SourceCustomization
-smConfiguration :: forall b_ati8Y. Lens' (SourceMetadata b_ati8Y) (SourceConnConfiguration b_ati8Y)
+smTables :: forall b_ati9e. Lens' (SourceMetadata b_ati9e) (Tables b_ati9e)
+smQueryTags :: forall b_ati9e. Lens' (SourceMetadata b_ati9e) (Maybe QueryTagsConfig)
+smName :: forall b_ati9e. Lens' (SourceMetadata b_ati9e) SourceName
+smLogicalModels :: forall b_ati9e. Lens' (SourceMetadata b_ati9e) (LogicalModels b_ati9e)
+smKind :: forall b_ati9e. Lens' (SourceMetadata b_ati9e) (BackendSourceKind b_ati9e)
+smHealthCheckConfig :: forall b_ati9e. Lens' (SourceMetadata b_ati9e) (Maybe (HealthCheckConfig b_ati9e))
+smFunctions :: forall b_ati9e. Lens' (SourceMetadata b_ati9e) (Functions b_ati9e)
+smCustomization :: forall b_ati9e. Lens' (SourceMetadata b_ati9e) SourceCustomization
+smConfiguration :: forall b_ati9e. Lens' (SourceMetadata b_ati9e) (SourceConnConfiguration b_ati9e)
 backendSourceMetadataCodec :: JSONCodec BackendSourceMetadata
 mkSourceMetadata :: forall (b :: BackendType). Backend b => SourceName -> BackendSourceKind b -> SourceConnConfiguration b -> SourceCustomization -> Maybe (HealthCheckConfig b) -> BackendSourceMetadata
 
@@ -18792,10 +18792,10 @@ ActionRemoteRelationshipSelect :: HashMap FieldName Name -> r -> ActionRemoteRel
 --   an execution tree is constructed so that a backend is absolved of
 --   dealing with remote relationships.
 [_arrsRelationship] :: ActionRemoteRelationshipSelect r -> r
-_ACFNestedObject :: forall r_auxCW. Prism' (ActionFieldG r_auxCW) (Name, ActionFieldsG r_auxCW)
-_ACFExpression :: forall r_auxCW. Prism' (ActionFieldG r_auxCW) Text
-_ACFRemote :: forall r_auxCW. Prism' (ActionFieldG r_auxCW) (ActionRemoteRelationshipSelect r_auxCW)
-_ACFScalar :: forall r_auxCW. Prism' (ActionFieldG r_auxCW) Name
+_ACFNestedObject :: forall r_auxDc. Prism' (ActionFieldG r_auxDc) (Name, ActionFieldsG r_auxDc)
+_ACFExpression :: forall r_auxDc. Prism' (ActionFieldG r_auxDc) Text
+_ACFRemote :: forall r_auxDc. Prism' (ActionFieldG r_auxDc) (ActionRemoteRelationshipSelect r_auxDc)
+_ACFScalar :: forall r_auxDc. Prism' (ActionFieldG r_auxDc) Name
 data AnnActionExecution (r :: Type)
 AnnActionExecution :: ActionName -> GraphQLType -> ActionFieldsG r -> Value -> ActionOutputFields -> EnvRecord ResolvedWebhook -> [HeaderConf] -> Bool -> Timeout -> Maybe RequestTransform -> Maybe MetadataResponseTransform -> AnnActionExecution (r :: Type)
 [_aaeName] :: AnnActionExecution (r :: Type) -> ActionName
@@ -18849,30 +18849,30 @@ ASINoSource :: ActionSourceInfo b
 
 -- | All relationships refer to tables in one source
 ASISource :: SourceName -> SourceConfig b -> ActionSourceInfo b
-aaaqStringifyNum :: forall b_auy0t r_auy0u. Lens' (AnnActionAsyncQuery b_auy0t r_auy0u) StringifyNumbers
-aaaqSource :: forall b_auy0t r_auy0u. Lens' (AnnActionAsyncQuery b_auy0t r_auy0u) (ActionSourceInfo b_auy0t)
-aaaqOutputType :: forall b_auy0t r_auy0u. Lens' (AnnActionAsyncQuery b_auy0t r_auy0u) GraphQLType
-aaaqName :: forall b_auy0t r_auy0u. Lens' (AnnActionAsyncQuery b_auy0t r_auy0u) ActionName
-aaaqForwardClientHeaders :: forall b_auy0t r_auy0u. Lens' (AnnActionAsyncQuery b_auy0t r_auy0u) Bool
-aaaqFields :: forall b_auy0t r_auy0u r_auyzz. Lens (AnnActionAsyncQuery b_auy0t r_auy0u) (AnnActionAsyncQuery b_auy0t r_auyzz) (AsyncActionQueryFieldsG r_auy0u) (AsyncActionQueryFieldsG r_auyzz)
-aaaqDefinitionList :: forall b_auy0t r_auy0u. Lens' (AnnActionAsyncQuery b_auy0t r_auy0u) [(Column b_auy0t, ScalarType b_auy0t)]
-aaaqActionId :: forall b_auy0t r_auy0u. Lens' (AnnActionAsyncQuery b_auy0t r_auy0u) ActionId
-aaeWebhook :: forall r_auy0x. Lens' (AnnActionExecution r_auy0x) (EnvRecord ResolvedWebhook)
-aaeTimeOut :: forall r_auy0x. Lens' (AnnActionExecution r_auy0x) Timeout
-aaeResponseTransform :: forall r_auy0x. Lens' (AnnActionExecution r_auy0x) (Maybe MetadataResponseTransform)
-aaeRequestTransform :: forall r_auy0x. Lens' (AnnActionExecution r_auy0x) (Maybe RequestTransform)
-aaePayload :: forall r_auy0x. Lens' (AnnActionExecution r_auy0x) Value
-aaeOutputType :: forall r_auy0x. Lens' (AnnActionExecution r_auy0x) GraphQLType
-aaeOutputFields :: forall r_auy0x. Lens' (AnnActionExecution r_auy0x) ActionOutputFields
-aaeName :: forall r_auy0x. Lens' (AnnActionExecution r_auy0x) ActionName
-aaeHeaders :: forall r_auy0x. Lens' (AnnActionExecution r_auy0x) [HeaderConf]
-aaeForwardClientHeaders :: forall r_auy0x. Lens' (AnnActionExecution r_auy0x) Bool
-aaeFields :: forall r_auy0x r_auyGk. Lens (AnnActionExecution r_auy0x) (AnnActionExecution r_auyGk) (ActionFieldsG r_auy0x) (ActionFieldsG r_auyGk)
-_AsyncErrors :: forall r_auy0w. Prism' (AsyncActionQueryFieldG r_auy0w) ()
-_AsyncCreatedAt :: forall r_auy0w. Prism' (AsyncActionQueryFieldG r_auy0w) ()
-_AsyncId :: forall r_auy0w. Prism' (AsyncActionQueryFieldG r_auy0w) ()
-_AsyncOutput :: forall r_auyPn r_auy0w. Prism (AsyncActionQueryFieldG r_auyPn) (AsyncActionQueryFieldG r_auy0w) (ActionFieldsG r_auyPn) (ActionFieldsG r_auy0w)
-_AsyncTypename :: forall r_auy0w. Prism' (AsyncActionQueryFieldG r_auy0w) Text
+aaaqStringifyNum :: forall b_auy0J r_auy0K. Lens' (AnnActionAsyncQuery b_auy0J r_auy0K) StringifyNumbers
+aaaqSource :: forall b_auy0J r_auy0K. Lens' (AnnActionAsyncQuery b_auy0J r_auy0K) (ActionSourceInfo b_auy0J)
+aaaqOutputType :: forall b_auy0J r_auy0K. Lens' (AnnActionAsyncQuery b_auy0J r_auy0K) GraphQLType
+aaaqName :: forall b_auy0J r_auy0K. Lens' (AnnActionAsyncQuery b_auy0J r_auy0K) ActionName
+aaaqForwardClientHeaders :: forall b_auy0J r_auy0K. Lens' (AnnActionAsyncQuery b_auy0J r_auy0K) Bool
+aaaqFields :: forall b_auy0J r_auy0K r_auyzP. Lens (AnnActionAsyncQuery b_auy0J r_auy0K) (AnnActionAsyncQuery b_auy0J r_auyzP) (AsyncActionQueryFieldsG r_auy0K) (AsyncActionQueryFieldsG r_auyzP)
+aaaqDefinitionList :: forall b_auy0J r_auy0K. Lens' (AnnActionAsyncQuery b_auy0J r_auy0K) [(Column b_auy0J, ScalarType b_auy0J)]
+aaaqActionId :: forall b_auy0J r_auy0K. Lens' (AnnActionAsyncQuery b_auy0J r_auy0K) ActionId
+aaeWebhook :: forall r_auy0N. Lens' (AnnActionExecution r_auy0N) (EnvRecord ResolvedWebhook)
+aaeTimeOut :: forall r_auy0N. Lens' (AnnActionExecution r_auy0N) Timeout
+aaeResponseTransform :: forall r_auy0N. Lens' (AnnActionExecution r_auy0N) (Maybe MetadataResponseTransform)
+aaeRequestTransform :: forall r_auy0N. Lens' (AnnActionExecution r_auy0N) (Maybe RequestTransform)
+aaePayload :: forall r_auy0N. Lens' (AnnActionExecution r_auy0N) Value
+aaeOutputType :: forall r_auy0N. Lens' (AnnActionExecution r_auy0N) GraphQLType
+aaeOutputFields :: forall r_auy0N. Lens' (AnnActionExecution r_auy0N) ActionOutputFields
+aaeName :: forall r_auy0N. Lens' (AnnActionExecution r_auy0N) ActionName
+aaeHeaders :: forall r_auy0N. Lens' (AnnActionExecution r_auy0N) [HeaderConf]
+aaeForwardClientHeaders :: forall r_auy0N. Lens' (AnnActionExecution r_auy0N) Bool
+aaeFields :: forall r_auy0N r_auyGA. Lens (AnnActionExecution r_auy0N) (AnnActionExecution r_auyGA) (ActionFieldsG r_auy0N) (ActionFieldsG r_auyGA)
+_AsyncErrors :: forall r_auy0M. Prism' (AsyncActionQueryFieldG r_auy0M) ()
+_AsyncCreatedAt :: forall r_auy0M. Prism' (AsyncActionQueryFieldG r_auy0M) ()
+_AsyncId :: forall r_auy0M. Prism' (AsyncActionQueryFieldG r_auy0M) ()
+_AsyncOutput :: forall r_auyPD r_auy0M. Prism (AsyncActionQueryFieldG r_auyPD) (AsyncActionQueryFieldG r_auy0M) (ActionFieldsG r_auyPD) (ActionFieldsG r_auy0M)
+_AsyncTypename :: forall r_auy0M. Prism' (AsyncActionQueryFieldG r_auy0M) Text
 instance Data.Traversable.Traversable Hasura.RQL.IR.Action.AnnActionExecution
 instance Data.Foldable.Foldable Hasura.RQL.IR.Action.AnnActionExecution
 instance GHC.Base.Functor Hasura.RQL.IR.Action.AnnActionExecution
@@ -22453,6 +22453,10 @@ buildComputedFieldBooleanExp :: (BackendMetadata b, MonadError QErr m, TableCore
 prepareCatalog :: (BackendMetadata b, MonadIO m, MonadBaseControl IO m) => SourceConfig b -> ExceptT QErr m (RecreateEventTriggers, SourceCatalogMigrationState)
 validateLogicalModel :: (BackendMetadata b, MonadIO m, MonadError QErr m) => Environment -> SourceConnConfiguration b -> LogicalModelMetadata b -> m ()
 
+-- | Allows the backend to control whether or not a particular source
+--   supports being the target of remote relationships or not
+supportsBeingRemoteRelationshipTarget :: BackendMetadata b => SourceConfig b -> Bool
+
 
 -- | This module provides an API for suggesting relationships so that the
 --   console (or client) does not need to construct and submit relationship
@@ -23319,22 +23323,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aDtTM. Lens' (CreateEventTriggerQuery b_aDtTM) TriggerOnReplication
-cteqCleanupConfig :: forall b_aDtTM. Lens' (CreateEventTriggerQuery b_aDtTM) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aDtTM. Lens' (CreateEventTriggerQuery b_aDtTM) (Maybe Text)
-cetqWebhook :: forall b_aDtTM. Lens' (CreateEventTriggerQuery b_aDtTM) (Maybe InputWebhook)
-cetqUpdate :: forall b_aDtTM. Lens' (CreateEventTriggerQuery b_aDtTM) (Maybe (SubscribeOpSpec b_aDtTM))
-cetqTable :: forall b_aDtTM. Lens' (CreateEventTriggerQuery b_aDtTM) (TableName b_aDtTM)
-cetqSource :: forall b_aDtTM. Lens' (CreateEventTriggerQuery b_aDtTM) SourceName
-cetqRetryConf :: forall b_aDtTM. Lens' (CreateEventTriggerQuery b_aDtTM) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aDtTM. Lens' (CreateEventTriggerQuery b_aDtTM) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aDtTM. Lens' (CreateEventTriggerQuery b_aDtTM) (Maybe RequestTransform)
-cetqReplace :: forall b_aDtTM. Lens' (CreateEventTriggerQuery b_aDtTM) Bool
-cetqName :: forall b_aDtTM. Lens' (CreateEventTriggerQuery b_aDtTM) TriggerName
-cetqInsert :: forall b_aDtTM. Lens' (CreateEventTriggerQuery b_aDtTM) (Maybe (SubscribeOpSpec b_aDtTM))
-cetqHeaders :: forall b_aDtTM. Lens' (CreateEventTriggerQuery b_aDtTM) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aDtTM. Lens' (CreateEventTriggerQuery b_aDtTM) (Maybe Bool)
-cetqDelete :: forall b_aDtTM. Lens' (CreateEventTriggerQuery b_aDtTM) (Maybe (SubscribeOpSpec b_aDtTM))
+cteqTriggerOnReplication :: forall b_aDu0T. Lens' (CreateEventTriggerQuery b_aDu0T) TriggerOnReplication
+cteqCleanupConfig :: forall b_aDu0T. Lens' (CreateEventTriggerQuery b_aDu0T) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aDu0T. Lens' (CreateEventTriggerQuery b_aDu0T) (Maybe Text)
+cetqWebhook :: forall b_aDu0T. Lens' (CreateEventTriggerQuery b_aDu0T) (Maybe InputWebhook)
+cetqUpdate :: forall b_aDu0T. Lens' (CreateEventTriggerQuery b_aDu0T) (Maybe (SubscribeOpSpec b_aDu0T))
+cetqTable :: forall b_aDu0T. Lens' (CreateEventTriggerQuery b_aDu0T) (TableName b_aDu0T)
+cetqSource :: forall b_aDu0T. Lens' (CreateEventTriggerQuery b_aDu0T) SourceName
+cetqRetryConf :: forall b_aDu0T. Lens' (CreateEventTriggerQuery b_aDu0T) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aDu0T. Lens' (CreateEventTriggerQuery b_aDu0T) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aDu0T. Lens' (CreateEventTriggerQuery b_aDu0T) (Maybe RequestTransform)
+cetqReplace :: forall b_aDu0T. Lens' (CreateEventTriggerQuery b_aDu0T) Bool
+cetqName :: forall b_aDu0T. Lens' (CreateEventTriggerQuery b_aDu0T) TriggerName
+cetqInsert :: forall b_aDu0T. Lens' (CreateEventTriggerQuery b_aDu0T) (Maybe (SubscribeOpSpec b_aDu0T))
+cetqHeaders :: forall b_aDu0T. Lens' (CreateEventTriggerQuery b_aDu0T) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aDu0T. Lens' (CreateEventTriggerQuery b_aDu0T) (Maybe Bool)
+cetqDelete :: forall b_aDu0T. Lens' (CreateEventTriggerQuery b_aDu0T) (Maybe (SubscribeOpSpec b_aDu0T))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
