@@ -9,6 +9,7 @@ module Harness.TestEnvironment
     Server (..),
     TestingMode (..),
     UniqueTestId (..),
+    debugger,
     getServer,
     getTestingMode,
     getBackendTypeConfig,
@@ -36,6 +37,7 @@ import Harness.Test.BackendType
 import Harness.Test.FixtureName
 import Hasura.Prelude
 import Network.WebSockets qualified as WS
+import System.Process (readProcess)
 import Text.Pretty.Simple
 
 newtype UniqueTestId = UniqueTestId {getUniqueTestId :: UUID}
@@ -137,6 +139,16 @@ instance Has Services.PostgresServerUrl TestEnvironment where
 instance Show TestEnvironment where
   show TestEnvironment {globalEnvironment} =
     "<TestEnvironment: " ++ urlPrefix (server globalEnvironment) ++ ":" ++ show (port (server globalEnvironment)) ++ " >"
+
+debugger :: TestEnvironment -> IO ()
+debugger TestEnvironment {globalEnvironment} = do
+  putStrLn "Test run paused. See the state of the world here:"
+  print globalEnvironment
+
+  _ <- readProcess "open" [serverUrl (server globalEnvironment)] ""
+  putStrLn "Press enter to continue testing..."
+
+  void getLine
 
 -- | the `BackendTypeConfig` is used to decide which schema name to use
 -- and for data connector capabilities
