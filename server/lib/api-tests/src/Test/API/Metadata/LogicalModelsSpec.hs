@@ -10,9 +10,10 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml (yaml)
 import Harness.Quoter.Yaml.InterpolateYaml
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -26,29 +27,31 @@ featureFlagForLogicalModels :: String
 featureFlagForLogicalModels = "HASURA_FF_LOGICAL_MODEL_INTERFACE"
 
 spec :: SpecWith GlobalTestEnvironment
-spec =
-  Fixture.hgeWithEnv [(featureFlagForLogicalModels, "True")] $
-    Fixture.run
-      ( NE.fromList
+spec = do
+  let fixtures =
+        NE.fromList
           [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
               { Fixture.setupTeardown = \(testEnv, _) ->
                   [ Postgres.setupTablesAction schema testEnv
                   ]
               }
           ]
-      )
-      tests
+
+  Fixture.hgeWithEnv [(featureFlagForLogicalModels, "True")] do
+    -- do not need to run isolated
+    traverse_
+      (Fixture.run fixtures)
+      [testAdminAccess, testValidation, testPermissionFailures]
+    -- need to run isolated
+    traverse_
+      (Fixture.runClean fixtures)
+      [testImplementation, testPermissions]
 
 -- ** Setup and teardown
 
 schema :: [Schema.Table]
 schema =
-  [ (Schema.table "already_tracked_return_type")
-      { Schema.tableColumns =
-          [ Schema.column "divided" Schema.TInt
-          ]
-      },
-    (Schema.table "stuff")
+  [ (Schema.table "stuff")
       { Schema.tableColumns =
           [ Schema.column "thing" Schema.TInt,
             Schema.column "date" Schema.TUTCTime
@@ -56,90 +59,100 @@ schema =
       }
   ]
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
+testAdminAccess :: Fixture.Options -> SpecWith TestEnvironment
+testAdminAccess opts = do
+  let query :: Text
+      query = "SELECT thing / {{denominator}} AS divided FROM stuff WHERE date = {{target_date}}"
+
+  describe "Admin access" do
+    it "Fails to track a Logical Model without admin access" $
+      \testEnv -> do
+        shouldReturnYaml
+          opts
+          ( GraphqlEngine.postMetadataWithStatusAndHeaders
+              400
+              testEnv
+              [ ("X-Hasura-Role", "not-admin")
+              ]
+              [yaml|
+                type: pg_track_logical_model
+                args:
+                  type: query
+                  source: postgres
+                  root_field_name: divided_stuff
+                  code: *query
+                  arguments:
+                    denominator:
+                      type: integer
+                    target_date:
+                      type: date
+                  returns:
+                    columns:
+                      divided:
+                        type: integer
+                        description: "a divided thing"
+              |]
+          )
+          [yaml|
+            code: access-denied
+            error: "restricted access : admin only"
+            path: "$.args"
+          |]
+
+    it "Fails to untrack a Logical Model without admin access" $
+      \testEnv -> do
+        shouldReturnYaml
+          opts
+          ( GraphqlEngine.postMetadataWithStatusAndHeaders
+              400
+              testEnv
+              [ ("X-Hasura-Role", "not-admin")
+              ]
+              [yaml|
+                type: pg_untrack_logical_model
+                args:
+                  root_field_name: divided_stuff
+                  source: postgres
+              |]
+          )
+          [yaml|
+            code: access-denied
+            error: "restricted access : admin only"
+            path: "$.args"
+          |]
+
+    it "Fails to list a Logical Model without admin access" $
+      \testEnv -> do
+        shouldReturnYaml
+          opts
+          ( GraphqlEngine.postMetadataWithStatusAndHeaders
+              400
+              testEnv
+              [ ("X-Hasura-Role", "not-admin")
+              ]
+              [yaml|
+                type: pg_get_logical_model
+                args:
+                  source: postgres
+              |]
+          )
+          [yaml|
+            code: access-denied
+            error: "restricted access : admin only"
+            path: "$.args"
+          |]
+
+-------------------------
+-- Test implementation --
+-------------------------
+
+testImplementation :: Fixture.Options -> SpecWith TestEnvironment
+testImplementation opts = do
   let simpleQuery :: Text
       simpleQuery = "SELECT thing / 2 AS divided FROM stuff"
 
   let query :: Text
       query = "SELECT thing / {{denominator}} AS divided FROM stuff WHERE date = {{target_date}}"
-
-  it "Fails to track a Logical Model without admin access" $
-    \testEnv -> do
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postMetadataWithStatusAndHeaders
-            400
-            testEnv
-            [ ("X-Hasura-Role", "not-admin")
-            ]
-            [yaml|
-              type: pg_track_logical_model
-              args:
-                type: query
-                source: postgres
-                root_field_name: divided_stuff
-                code: *query
-                arguments:
-                  denominator:
-                    type: integer
-                  target_date:
-                    type: date
-                returns:
-                  columns:
-                    divided:
-                      type: integer
-                      description: "a divided thing"
-            |]
-        )
-        [yaml|
-          code: access-denied
-          error: "restricted access : admin only"
-          path: "$.args"
-        |]
-  it
-    "Fails to untrack a Logical Model without admin access"
-    $ \testEnv -> do
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postMetadataWithStatusAndHeaders
-            400
-            testEnv
-            [ ("X-Hasura-Role", "not-admin")
-            ]
-            [yaml|
-              type: pg_untrack_logical_model
-              args:
-                root_field_name: divided_stuff
-                source: postgres
-            |]
-        )
-        [yaml|
-          code: access-denied
-          error: "restricted access : admin only"
-          path: "$.args"
-        |]
-  it
-    "Fails to list a Logical Model without admin access"
-    $ \testEnv -> do
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postMetadataWithStatusAndHeaders
-            400
-            testEnv
-            [ ("X-Hasura-Role", "not-admin")
-            ]
-            [yaml|
-              type: pg_get_logical_model
-              args:
-                source: postgres
-            |]
-        )
-        [yaml|
-          code: access-denied
-          error: "restricted access : admin only"
-          path: "$.args"
-        |]
 
   describe "Implementation" $ do
     it "Adds a simple logical model of a function with no arguments and returns a 200" $ \testEnv -> do
@@ -200,6 +213,8 @@ tests opts = do
         |]
 
     it "Checks for the logical model of a function" $ \testEnv -> do
+      let rootfield :: String
+          rootfield = "divided_stuff2"
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
@@ -209,7 +224,7 @@ tests opts = do
               args:
                 type: query
                 source: postgres
-                root_field_name: divided_stuff
+                root_field_name: *rootfield
                 code: *query
                 arguments:
                   denominator:
@@ -238,7 +253,7 @@ tests opts = do
             |]
         )
         [yaml|
-          - root_field_name: divided_stuff
+          - root_field_name: *rootfield
             code: *query
             arguments:
               denominator:
@@ -432,6 +447,15 @@ tests opts = do
 
       actual `shouldBeYaml` expected
 
+---------------------
+-- Test validation --
+---------------------
+
+testValidation :: Fixture.Options -> SpecWith TestEnvironment
+testValidation opts = do
+  let simpleQuery :: Text
+      simpleQuery = "SELECT thing / 2 AS divided FROM stuff"
+
   describe "Validation fails on untrack a logical model" do
     it "when a logical model does not exist" $
       \testEnv -> do
@@ -453,8 +477,8 @@ tests opts = do
           path: "$.args"
         |]
 
-  describe "Validation fails on track a logical model when query" do
-    it "has a syntax error" $
+  describe "Validation fails on track a logical model" do
+    it "when the query has a syntax error" $
       \testEnv -> do
         let spicyQuery :: Text
             spicyQuery = "query bad"
@@ -498,7 +522,7 @@ tests opts = do
               path: "$.args"
           |]
 
-    it "refers to non existing table" $
+    it "when the query refers to non existing table" $
       \testEnv -> do
         let spicyQuery :: Text
             spicyQuery = "SELECT thing / {{denominator}} AS divided FROM does_not_exist WHERE date = {{target_date}}"
@@ -541,6 +565,158 @@ tests opts = do
                 statement: "PREPARE _logimo_vali_divided_stuff AS SELECT thing / $1 AS divided FROM does_not_exist WHERE date = $2"
               path: "$.args"
           |]
+
+    it "when the logical model has the same name as an already tracked table" $
+      \testEnv -> do
+        let spicyQuery :: Text
+            spicyQuery = "select * from stuff"
+            backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnv
+            source = BackendType.backendSourceName backendTypeMetadata
+            schemaName = Schema.getSchemaName testEnv
+
+        shouldReturnYaml
+          opts
+          ( GraphqlEngine.postMetadataWithStatus
+              500
+              testEnv
+              [interpolateYaml|
+                type: pg_track_logical_model
+                args:
+                  type: query
+                  source: #{source}
+                  root_field_name: #{schemaName}_stuff
+                  code: #{spicyQuery}
+                  arguments:
+                    denominator:
+                      type: integer
+                    target_date:
+                      type: date
+                  returns:
+                    columns:
+                      thing:
+                        type: integer
+                      date:
+                        type: date
+              |]
+          )
+          [yaml|
+              code: unexpected
+              error: Encountered conflicting definitions in the selection set for 'subscription_root' for field 'hasura_stuff' defined in [table hasura.stuff in source postgres, logical_model hasura_stuff in source postgres]. Fields must not be defined more than once across all sources.
+              path: $.args
+          |]
+
+    it "when the logical model has the same name as an already tracked logical model" $
+      \testEnv -> do
+        let spicyQuery :: Text
+            spicyQuery = "select * from stuff"
+            backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnv
+            source = BackendType.backendSourceName backendTypeMetadata
+            schemaName = Schema.getSchemaName testEnv
+
+            trackLogimoReq =
+              [interpolateYaml|
+                type: pg_track_logical_model
+                args:
+                  type: query
+                  source: #{source}
+                  root_field_name: #{schemaName}_stuff_exist
+                  code: #{spicyQuery}
+                  arguments:
+                    denominator:
+                      type: integer
+                    target_date:
+                      type: date
+                  returns:
+                    columns:
+                      thing:
+                        type: integer
+                      date:
+                        type: date
+              |]
+
+        shouldReturnYaml
+          opts
+          ( GraphqlEngine.postMetadata
+              testEnv
+              trackLogimoReq
+          )
+          [yaml|
+              message: success
+          |]
+
+        shouldReturnYaml
+          opts
+          ( GraphqlEngine.postMetadataWithStatus
+              400
+              testEnv
+              trackLogimoReq
+          )
+          [yaml|
+              code: already-tracked
+              error: Logical model 'hasura_stuff_exist' is already tracked.
+              path: $.args
+          |]
+
+  describe "Validation succeeds" do
+    it "when tracking then untracking then re-tracking a logical model" $
+      \testEnv -> do
+        shouldReturnYaml
+          opts
+          ( GraphqlEngine.postMetadata
+              testEnv
+              [yaml|
+                type: bulk
+                args:
+                  - type: pg_track_logical_model
+                    args:
+                      type: query
+                      source: postgres
+                      root_field_name: divided_stuff2
+                      code: *simpleQuery
+                      arguments:
+                        denominator:
+                          type: integer
+                        target_date:
+                          type: date
+                      returns:
+                        columns:
+                          divided:
+                            type: integer
+                  - type: pg_untrack_logical_model
+                    args:
+                      root_field_name: divided_stuff2
+                      source: postgres
+                  - type: pg_track_logical_model
+                    args:
+                      type: query
+                      source: postgres
+                      root_field_name: divided_stuff2
+                      code: *simpleQuery
+                      arguments:
+                        denominator:
+                          type: integer
+                        target_date:
+                          type: date
+                      returns:
+                        columns:
+                          divided:
+                            type: integer
+            |]
+          )
+          [yaml|
+            - message: success
+            - message: success
+            - message: success
+          |]
+
+----------------------
+-- Test permissions --
+----------------------
+
+testPermissions :: Fixture.Options -> SpecWith TestEnvironment
+testPermissions opts = do
+  let simpleQuery :: Text
+      simpleQuery = "SELECT thing / 2 AS divided FROM stuff"
 
   describe "Permissions" do
     it "Adds a simple logical model function with no arguments a select permission and returns a 200" $ \testEnv -> do
@@ -612,6 +788,80 @@ tests opts = do
                   type: integer
         |]
 
+    it "Adds a logical model, removes it, and returns 200" $ \testEnv -> do
+      let rootfield :: String
+          rootfield = "divided_stuff1231"
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnv
+            [yaml|
+              type: bulk
+              args:
+                - type: pg_track_logical_model
+                  args:
+                    type: query
+                    source: postgres
+                    root_field_name: *rootfield
+                    code: *simpleQuery
+                    arguments:
+                      unused:
+                        type: integer
+                    returns:
+                      columns:
+                        divided:
+                          type: integer
+                          description: "a divided thing"
+                - type: pg_create_logical_model_select_permission
+                  args:
+                    source: postgres
+                    root_field_name: *rootfield
+                    role: "test"
+                    permission:
+                      columns:
+                        - divided
+                      filter: {}
+                - type: pg_drop_logical_model_select_permission
+                  args:
+                    source: postgres
+                    root_field_name: *rootfield
+                    role: "test"
+            |]
+        )
+        [yaml|
+          - message: success
+          - message: success
+          - message: success
+        |]
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnv
+            [yaml|
+              type: pg_get_logical_model
+              args:
+                source: postgres
+            |]
+        )
+        [yaml|
+          - root_field_name: *rootfield
+            code: *simpleQuery
+            arguments:
+              unused:
+                type: integer
+                nullable: false
+            returns:
+              columns:
+                divided:
+                  description: a divided thing
+                  nullable: false
+                  type: integer
+        |]
+
+testPermissionFailures :: Fixture.Options -> SpecWith TestEnvironment
+testPermissionFailures opts = do
+  describe "Permission failures" do
     it "Fails to adds a select permission to a nonexisting source" $ \testEnv -> do
       shouldReturnYaml
         opts
@@ -664,75 +914,6 @@ tests opts = do
           path: "$.args[0].args"
         |]
 
-    it "Adds a logical model, removes it, and returns 200" $ \testEnv -> do
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postMetadata
-            testEnv
-            [yaml|
-              type: bulk
-              args:
-                - type: pg_track_logical_model
-                  args:
-                    type: query
-                    source: postgres
-                    root_field_name: divided_stuff
-                    code: *simpleQuery
-                    arguments:
-                      unused:
-                        type: integer
-                    returns:
-                      columns:
-                        divided:
-                          type: integer
-                          description: "a divided thing"
-                - type: pg_create_logical_model_select_permission
-                  args:
-                    source: postgres
-                    root_field_name: divided_stuff
-                    role: "test"
-                    permission:
-                      columns:
-                        - divided
-                      filter: {}
-                - type: pg_drop_logical_model_select_permission
-                  args:
-                    source: postgres
-                    root_field_name: divided_stuff
-                    role: "test"
-            |]
-        )
-        [yaml|
-          - message: success
-          - message: success
-          - message: success
-        |]
-
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postMetadata
-            testEnv
-            [yaml|
-              type: pg_get_logical_model
-              args:
-                source: postgres
-            |]
-        )
-        [yaml|
-          - root_field_name: divided_stuff
-            code: *simpleQuery
-            arguments:
-              unused:
-                type: integer
-                nullable: false
-            returns:
-              columns:
-                divided:
-                  description: a divided thing
-                  nullable: false
-                  type: integer
-        |]
-
     it "Fails to drop a select permission on a nonexisting source" $ \testEnv -> do
       shouldReturnYaml
         opts
@@ -776,55 +957,3 @@ tests opts = do
           error: "Logical model \"made_up_logical_model\" not found in source \"postgres\"."
           path: "$.args"
         |]
-
-  describe "Validation succeeds" do
-    it "when tracking then untracking then re-tracking a logical model" $
-      \testEnv -> do
-        shouldReturnYaml
-          opts
-          ( GraphqlEngine.postMetadata
-              testEnv
-              [yaml|
-                type: bulk
-                args:
-                  - type: pg_track_logical_model
-                    args:
-                      type: query
-                      source: postgres
-                      root_field_name: divided_stuff2
-                      code: *simpleQuery
-                      arguments:
-                        denominator:
-                          type: integer
-                        target_date:
-                          type: date
-                      returns:
-                        columns:
-                          divided:
-                            type: integer
-                  - type: pg_untrack_logical_model
-                    args:
-                      root_field_name: divided_stuff2
-                      source: postgres
-                  - type: pg_track_logical_model
-                    args:
-                      type: query
-                      source: postgres
-                      root_field_name: divided_stuff2
-                      code: *simpleQuery
-                      arguments:
-                        denominator:
-                          type: integer
-                        target_date:
-                          type: date
-                      returns:
-                        columns:
-                          divided:
-                            type: integer
-            |]
-          )
-          [yaml|
-            - message: success
-            - message: success
-            - message: success
-          |]

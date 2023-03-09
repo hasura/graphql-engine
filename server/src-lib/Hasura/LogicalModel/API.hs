@@ -23,7 +23,7 @@ import Control.Lens (Traversal', has, preview, (^?))
 import Data.Aeson
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
-import Data.Text.Extended ((<<>))
+import Data.Text.Extended (toTxt, (<<>))
 import Hasura.Base.Error
 import Hasura.CustomReturnType (CustomReturnType)
 import Hasura.EncJSON
@@ -177,10 +177,11 @@ runTrackLogicalModel ::
 runTrackLogicalModel env trackLogicalModelRequest = do
   throwIfFeatureDisabled
 
-  sourceConnConfig <-
+  sourceMetadata <-
     maybe (throw400 NotFound $ "Source " <> sourceNameToText source <> " not found.") pure
-      . preview (metaSources . ix source . toSourceMetadata @b . smConfiguration)
+      . preview (metaSources . ix source . toSourceMetadata @b)
       =<< getMetadata
+  let sourceConnConfig = _smConfiguration sourceMetadata
 
   (metadata :: LogicalModelMetadata b) <- do
     liftIO (runExceptT (logicalModelTrackToMetadata @b env sourceConnConfig trackLogicalModelRequest))
@@ -191,6 +192,10 @@ runTrackLogicalModel env trackLogicalModelRequest = do
         MOSourceObjId source $
           AB.mkAnyBackend $
             SMOLogicalModel @b fieldName
+      existingLogicalModels = OMap.keys (_smLogicalModels sourceMetadata)
+
+  when (fieldName `elem` existingLogicalModels) do
+    throw400 AlreadyTracked $ "Logical model '" <> toTxt fieldName <> "' is already tracked."
 
   buildSchemaCacheFor metadataObj $
     MetadataModifier $
