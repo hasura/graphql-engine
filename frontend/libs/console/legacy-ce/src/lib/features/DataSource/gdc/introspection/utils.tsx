@@ -61,15 +61,15 @@ export function adaptAgentDataType(
   const DataTypeToSQLTypeMap: Record<TableColumn['dataType'], string[]> = {
     bool: ['bool'],
     string: ['string'],
-    number: ['number'],
-    datetime: [],
-    timestamp: [],
-    xml: [],
-    json: [],
+    number: ['number', 'integer', 'float'],
+    datetime: ['datetime'],
+    timestamp: ['timestamp'],
+    xml: ['xml'],
+    json: ['json', 'jsonb'],
   };
 
   const [dataType] = getEntries(DataTypeToSQLTypeMap).find(([, value]) =>
-    value.includes(sqlDataType)
+    value.includes(sqlDataType.toLowerCase())
   ) ?? ['string', []];
 
   return dataType;

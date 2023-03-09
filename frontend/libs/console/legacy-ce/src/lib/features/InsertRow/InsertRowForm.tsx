@@ -4,6 +4,7 @@ import { InsertRowArgs } from '../DataSource';
 import { ColumnRow } from './components/ColumnRow';
 import { FormData } from '../Data/hooks/useInsertRow';
 import Skeleton from 'react-loading-skeleton';
+import { convertTableValue } from './InsertRowForm.utils';
 import { ListAllTableColumn } from '../Data/hooks/useListAllTableColumns';
 
 export type InsertRowFormProps = {
@@ -23,10 +24,22 @@ export const InsertRowForm: React.VFC<InsertRowFormProps> = ({
 
   const onInsert = () => {
     const adaptedValues = values.reduce<FormData>((acc, value) => {
+      const columnName = Object.keys(value)[0];
+      const columnValue = Object.values(value)[0];
+
+      const columnDefinition = columns.find(
+        column => column.name === columnName
+      );
+
+      const finalColumnValue = convertTableValue(
+        columnValue,
+        columnDefinition?.dataType
+      );
+
       const formData: FormData = {
-        [Object.keys(value)[0]]: {
+        [columnName]: {
           option: 'value',
-          value: Object.values(value)[0],
+          value: finalColumnValue,
         },
       };
 
