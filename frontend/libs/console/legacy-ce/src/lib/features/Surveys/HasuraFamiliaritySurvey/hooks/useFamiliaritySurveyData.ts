@@ -23,7 +23,7 @@ export function useFamiliaritySurveyData(): {
   onSkip: () => void;
   onOptionClick: (optionValue: string) => void;
 } {
-  const [showFamiliaritySurvey, setShowFamiliaritySurvey] = useState(false);
+  const [showFamiliaritySurvey, setShowFamiliaritySurvey] = useState(true);
 
   const { isLoading, isError, data } = useQuery<SurveysResponseData, APIError>(
     surveysQueryKey,
