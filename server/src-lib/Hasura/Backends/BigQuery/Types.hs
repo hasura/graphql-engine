@@ -913,6 +913,14 @@ instance Hashable ComputedFieldDefinition
 
 instance NFData ComputedFieldDefinition
 
+instance HasCodec ComputedFieldDefinition where
+  codec =
+    AC.object "BigQueryComputedFieldDefinition" $
+      ComputedFieldDefinition
+        <$> requiredField' "function" AC..= _bqcfdFunction
+        <*> optionalField' "return_table" AC..= _bqcfdReturnTable
+        <*> requiredField' "argument_mapping" AC..= _bqcfdArgumentMapping
+
 instance ToJSON ComputedFieldDefinition where
   toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
 

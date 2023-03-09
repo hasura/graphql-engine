@@ -109,6 +109,7 @@ class
     FromJSONKey (Column b),
     HasCodec (BackendSourceKind b),
     HasCodec (Column b),
+    HasCodec (ComputedFieldDefinition b),
     HasCodec (FunctionName b),
     HasCodec (ScalarType b),
     HasCodec (TableName b),

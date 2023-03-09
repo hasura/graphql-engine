@@ -13,6 +13,8 @@ module Hasura.Backends.Postgres.Types.ComputedField
   )
 where
 
+import Autodocodec (HasCodec, optionalField', requiredField')
+import Autodocodec qualified as AC
 import Control.Lens.TH (makePrisms)
 import Data.Aeson.Casing
 import Data.Aeson.Extended
@@ -31,6 +33,14 @@ data ComputedFieldDefinition = ComputedFieldDefinition
 instance NFData ComputedFieldDefinition
 
 instance Hashable ComputedFieldDefinition
+
+instance HasCodec ComputedFieldDefinition where
+  codec =
+    AC.object "PostgresComputedFieldDefinition" $
+      ComputedFieldDefinition
+        <$> requiredField' "function" AC..= _cfdFunction
+        <*> optionalField' "table_argument" AC..= _cfdTableArgument
+        <*> optionalField' "session_argument" AC..= _cfdSessionArgument
 
 instance ToJSON ComputedFieldDefinition where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}

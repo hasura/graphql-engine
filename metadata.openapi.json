@@ -350,6 +350,27 @@
                 ],
                 "type": "object"
             },
+            "BigQueryComputedFieldDefinition": {
+                "properties": {
+                    "argument_mapping": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object"
+                    },
+                    "function": {
+                        "$ref": "#/components/schemas/BigQueryFunctionName"
+                    },
+                    "return_table": {
+                        "$ref": "#/components/schemas/BigQueryTableName"
+                    }
+                },
+                "required": [
+                    "function",
+                    "argument_mapping"
+                ],
+                "type": "object"
+            },
             "BigQueryConnSourceConfig": {
                 "properties": {
                     "datasets": {
@@ -558,8 +579,7 @@
                         "type": "string"
                     },
                     "definition": {
-                        "additionalProperties": true,
-                        "description": "value with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        "$ref": "#/components/schemas/BigQueryComputedFieldDefinition"
                     },
                     "name": {
                         "type": "string"
@@ -1274,8 +1294,7 @@
                         "type": "string"
                     },
                     "definition": {
-                        "additionalProperties": true,
-                        "description": "value with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        "$ref": "#/components/schemas/PostgresComputedFieldDefinition"
                     },
                     "name": {
                         "type": "string"
@@ -2128,8 +2147,7 @@
                         "type": "string"
                     },
                     "definition": {
-                        "additionalProperties": true,
-                        "description": "value with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        "$ref": "#/components/schemas/PostgresComputedFieldDefinition"
                     },
                     "name": {
                         "type": "string"
@@ -3157,8 +3175,10 @@
                         "type": "string"
                     },
                     "definition": {
-                        "additionalProperties": true,
-                        "description": "value with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        "items": {
+                            "type": "null"
+                        },
+                        "type": "array"
                     },
                     "name": {
                         "type": "string"
@@ -4432,8 +4452,7 @@
                         "type": "string"
                     },
                     "definition": {
-                        "additionalProperties": true,
-                        "description": "value with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        "additionalProperties": true
                     },
                     "name": {
                         "type": "string"
@@ -5343,8 +5362,7 @@
                         "type": "string"
                     },
                     "definition": {
-                        "additionalProperties": true,
-                        "description": "value with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        "additionalProperties": true
                     },
                     "name": {
                         "type": "string"
@@ -6160,6 +6178,31 @@
             "PostgresBoolExp": {
                 "additionalProperties": true
             },
+            "PostgresComputedFieldDefinition": {
+                "properties": {
+                    "function": {
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PostgresQualified_FunctionName"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "session_argument": {
+                        "type": "string"
+                    },
+                    "table_argument": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "function"
+                ],
+                "type": "object"
+            },
             "PostgresComputedFieldMetadata": {
                 "properties": {
                     "comment": {
@@ -6168,8 +6211,7 @@
                         "type": "string"
                     },
                     "definition": {
-                        "additionalProperties": true,
-                        "description": "value with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        "$ref": "#/components/schemas/PostgresComputedFieldDefinition"
                     },
                     "name": {
                         "type": "string"

@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 module Autodocodec.Extended
   ( caseInsensitiveHashMapCodec,
     caseInsensitiveTextCodec,
@@ -16,6 +18,7 @@ module Autodocodec.Extended
     optionalFieldOrIncludedNullWith',
     refinedCodec,
     refinedCodecWith,
+    unitCodec,
   )
 where
 
@@ -36,6 +39,9 @@ import Language.GraphQL.Draft.Printer qualified as GPrinter
 import Language.GraphQL.Draft.Syntax qualified as G
 import Refined qualified as R
 import Text.Builder qualified as TB
+
+instance HasCodec () where
+  codec = unitCodec
 
 -- | Like 'hashMapCodec', but with case-insensitive keys.
 caseInsensitiveHashMapCodec ::
@@ -245,3 +251,7 @@ refinedCodecWith underlyingCodec = bimapCodec dec enc underlyingCodec
   where
     dec = mapLeft show . R.refine
     enc = R.unrefine
+
+-- | Serializes () the same way that the stock Aeson instance does
+unitCodec :: JSONCodec ()
+unitCodec = dimapCodec (const ()) (const []) (listCodec nullCodec)

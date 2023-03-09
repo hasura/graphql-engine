@@ -82,7 +82,6 @@ import Data.Maybe (fromJust)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..), LogicalModelName)
-import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
@@ -147,12 +146,9 @@ instance Backend b => HasCodec (ComputedFieldMetadata b) where
   codec =
     AC.object (codecNamePrefix @b <> "ComputedFieldMetadata") $
       ComputedFieldMetadata
-        <$> requiredField' "name"
-          AC..= _cfmName
-        <*> requiredFieldWith' "definition" placeholderCodecViaJSON
-          AC..= _cfmDefinition
-        <*> optionalFieldWithOmittedDefault' "comment" Automatic
-          AC..= _cfmComment
+        <$> requiredField' "name" AC..= _cfmName
+        <*> requiredField' "definition" AC..= _cfmDefinition
+        <*> optionalFieldWithOmittedDefault' "comment" Automatic AC..= _cfmComment
 
 instance (Backend b) => ToJSON (ComputedFieldMetadata b) where
   toJSON ComputedFieldMetadata {..} =
