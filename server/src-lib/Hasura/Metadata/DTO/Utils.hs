@@ -4,6 +4,7 @@ module Hasura.Metadata.DTO.Utils
     boundedEnumCodec,
     codecNamePrefix,
     discriminatorField,
+    discriminatorBoolField,
     fromEnvCodec,
     optionalVersionField,
     typeableName,
@@ -74,11 +75,20 @@ optionalVersionField v =
     n = fromInteger v
 
 -- | Useful in an object codec for a field that indicates the type of the
--- object within a union.
+-- object within a union. This version assumes that the type of the
+-- discriminator field is @Text@.
 discriminatorField :: Text -> Text -> ObjectCodec a ()
 discriminatorField name value =
   dimapCodec (const ()) (const value) $
     requiredFieldWith' name (literalTextCodec value)
+
+-- | Useful in an object codec for a field that indicates the type of the
+-- object within a union. This version assumes that the type of the
+-- discriminator field is @Bool@.
+discriminatorBoolField :: Text -> Bool -> ObjectCodec a ()
+discriminatorBoolField name value =
+  dimapCodec (const ()) (const value) $
+    requiredFieldWith' name (EqCodec value boolCodec)
 
 -- | Provides a title-cased name for a database kind, inferring the appropriate
 -- database kind from type context.

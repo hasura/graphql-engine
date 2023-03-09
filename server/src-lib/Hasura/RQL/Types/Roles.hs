@@ -8,6 +8,9 @@ module Hasura.RQL.Types.Roles
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec, requiredField')
+import Autodocodec qualified as AC
+import Autodocodec.Extended (hashSetCodec)
 import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.TH
@@ -18,6 +21,9 @@ newtype ParentRoles = ParentRoles {_unParentRoles :: HashSet RoleName}
   deriving (Show, Eq, ToJSON, FromJSON, Generic)
 
 instance Hashable ParentRoles
+
+instance HasCodec ParentRoles where
+  codec = dimapCodec ParentRoles _unParentRoles hashSetCodec
 
 -- | The `Role` type represents a role by
 --   containing its name and the names of its parent roles.
@@ -34,6 +40,13 @@ data Role = Role
   deriving (Show, Eq, Generic)
 
 instance Hashable Role
+
+instance HasCodec Role where
+  codec =
+    AC.object "Role" $
+      Role
+        <$> requiredField' "role_name" AC..= _rRoleName
+        <*> requiredField' "role_set" AC..= _rParentRoles
 
 instance ToJSON Role where
   toJSON (Role roleName parentRoles) =

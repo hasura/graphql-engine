@@ -19,6 +19,8 @@ module Hasura.RQL.Types.Allowlist
   )
 where
 
+import Autodocodec (HasCodec, bimapCodec, disjointEitherCodec, optionalFieldWithDefault', requiredField')
+import Autodocodec qualified as AC
 import Data.Aeson
 import Data.Aeson.TH (deriveJSON, deriveToJSON)
 import Data.HashMap.Strict.Extended qualified as M
@@ -26,6 +28,7 @@ import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.HashSet qualified as S
 import Data.Text.Extended ((<<>))
 import Hasura.GraphQL.Parser.Name qualified as GName
+import Hasura.Metadata.DTO.Utils (discriminatorBoolField)
 import Hasura.Prelude
 import Hasura.RQL.Types.QueryCollection
 import Hasura.Session (RoleName)
@@ -42,6 +45,24 @@ data AllowlistScope
   = AllowlistScopeGlobal
   | AllowlistScopeRoles (NonEmpty RoleName)
   deriving (Show, Eq, Generic)
+
+instance HasCodec AllowlistScope where
+  codec = bimapCodec dec enc $ disjointEitherCodec global scopeRoles
+    where
+      global = AC.object "AllowlistScopeGlobal" $ discriminatorBoolField "global" True
+      scopeRoles =
+        AC.object "AllowlistScopeRoles" $
+          void (discriminatorBoolField "global" False)
+            *> requiredField' "roles"
+
+      dec (Left _) = Right AllowlistScopeGlobal
+      dec (Right roles)
+        | hasDups roles = Left "duplicate roles are not allowed"
+        | otherwise = Right $ AllowlistScopeRoles roles
+      enc AllowlistScopeGlobal = Left ()
+      enc (AllowlistScopeRoles roles) = Right roles
+
+      hasDups xs = length xs /= length (S.fromList (toList xs))
 
 instance FromJSON AllowlistScope where
   parseJSON = withObject "AllowlistScope" $ \o -> do
@@ -68,6 +89,13 @@ data AllowlistEntry = AllowlistEntry
     aeScope :: AllowlistScope
   }
   deriving (Show, Eq, Generic)
+
+instance HasCodec AllowlistEntry where
+  codec =
+    AC.object "AllowlistEntry" $
+      AllowlistEntry
+        <$> requiredField' "collection" AC..= aeCollection
+        <*> optionalFieldWithDefault' "scope" AllowlistScopeGlobal AC..= aeScope
 
 $(deriveToJSON hasuraJSON ''AllowlistEntry)
 

@@ -220,6 +220,65 @@
                 },
                 "type": "object"
             },
+            "AllowlistEntry": {
+                "properties": {
+                    "collection": {
+                        "type": "string"
+                    },
+                    "scope": {
+                        "default": {
+                            "global": true
+                        },
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/AllowlistScopeGlobal"
+                            },
+                            {
+                                "$ref": "#/components/schemas/AllowlistScopeRoles"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "collection"
+                ],
+                "type": "object"
+            },
+            "AllowlistScopeGlobal": {
+                "properties": {
+                    "global": {
+                        "enum": [
+                            true
+                        ],
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "global"
+                ],
+                "type": "object"
+            },
+            "AllowlistScopeRoles": {
+                "properties": {
+                    "global": {
+                        "enum": [
+                            false
+                        ],
+                        "type": "boolean"
+                    },
+                    "roles": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "global",
+                    "roles"
+                ],
+                "type": "object"
+            },
             "ApolloFederationConfig": {
                 "nullable": true,
                 "properties": {
@@ -4205,9 +4264,10 @@
                         "type": "array"
                     },
                     "allowlist": {
-                        "description": "safe GraphQL operations - when allow lists are enabled only these operations are allowed\n\n\narray of values of unspecified type - this is a placeholder that will eventually be replaced with a more detailed description",
+                        "default": [],
+                        "description": "safe GraphQL operations - when allow lists are enabled only these operations are allowed",
                         "items": {
-                            "additionalProperties": true
+                            "$ref": "#/components/schemas/AllowlistEntry"
                         },
                         "type": "array"
                     },
@@ -4235,15 +4295,15 @@
                         "description": "TODO\n\n\nobject with unspecified properties - this is a placeholder that will eventually be replaced with a more detailed description"
                     },
                     "inherited_roles": {
-                        "description": "an inherited role is a way to create a new role which inherits permissions from two or more roles\n\n\narray of values of unspecified type - this is a placeholder that will eventually be replaced with a more detailed description",
+                        "default": [],
+                        "description": "an inherited role is a way to create a new role which inherits permissions from two or more roles",
                         "items": {
-                            "additionalProperties": true
+                            "$ref": "#/components/schemas/Role"
                         },
                         "type": "array"
                     },
                     "metrics_config": {
-                        "additionalProperties": true,
-                        "description": "TODO\n\n\nobject with unspecified properties - this is a placeholder that will eventually be replaced with a more detailed description"
+                        "$ref": "#/components/schemas/MetricsConfig"
                     },
                     "network": {
                         "additionalProperties": true,
@@ -4294,6 +4354,21 @@
                 "required": [
                     "version",
                     "sources"
+                ],
+                "type": "object"
+            },
+            "MetricsConfig": {
+                "properties": {
+                    "analyze_query_variables": {
+                        "type": "boolean"
+                    },
+                    "analyze_response_body": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "analyze_query_variables",
+                    "analyze_response_body"
                 ],
                 "type": "object"
             },
@@ -8118,6 +8193,24 @@
                 "required": [
                     "num_retries",
                     "interval_sec"
+                ],
+                "type": "object"
+            },
+            "Role": {
+                "properties": {
+                    "role_name": {
+                        "type": "string"
+                    },
+                    "role_set": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "role_name",
+                    "role_set"
                 ],
                 "type": "object"
             },

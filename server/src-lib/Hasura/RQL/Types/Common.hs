@@ -560,6 +560,13 @@ data MetricsConfig = MetricsConfig
   }
   deriving (Show, Eq, Generic)
 
+instance HasCodec MetricsConfig where
+  codec =
+    AC.object "MetricsConfig" $
+      MetricsConfig
+        <$> requiredField' "analyze_query_variables" AC..= _mcAnalyzeQueryVariables
+        <*> requiredField' "analyze_response_body" AC..= _mcAnalyzeResponseBody
+
 instance FromJSON MetricsConfig where
   parseJSON = J.withObject "MetricsConfig" $ \o -> do
     _mcAnalyzeQueryVariables <- o .: "analyze_query_variables"

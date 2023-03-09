@@ -1,6 +1,10 @@
+{-# LANGUAGE OverloadedLists #-}
+
 module Hasura.RQL.Types.AllowlistSpec (spec) where
 
+import Autodocodec (parseJSONViaCodec, toJSONViaCodec)
 import Data.Aeson qualified as Aeson
+import Data.Aeson.Types (parseEither)
 import Data.Aeson.Types qualified as Aeson
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.HashSet qualified as S
@@ -109,6 +113,14 @@ spec = do
             ("role_3", "query_2"),
             ("role_4", "query_2")
           ]
+
+    it "round-trips roles when serializing via codecs" do
+      let expected =
+            maybeToEither "nonempty" $
+              AllowlistScopeRoles <$> traverse mkRoleName ["viewer", "admin"]
+      let json = toJSONViaCodec <$> expected
+      let actual = parseEither parseJSONViaCodec =<< json
+      actual `shouldBe` expected
 
 mustJSON :: Aeson.FromJSON a => Aeson.Value -> a
 mustJSON v = case Aeson.parseEither Aeson.parseJSON v of
