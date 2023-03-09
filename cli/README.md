@@ -54,5 +54,3 @@ hasura console
 ## Contributing
 
 Checkout the [contributing guide](CONTRIBUTING.md).
-
-<!-- testing if shadowing is stopped -->
