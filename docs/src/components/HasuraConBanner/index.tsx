@@ -53,7 +53,7 @@ const HasuraConBanner = props => {
           <div className={styles['content-div']}>
             <h3>Best Practices for API Observability with Hasura</h3>
             <div className={styles['hasura-con-register'] + ' ' + styles['hasura-con-register-mobile-hide']}>
-              Register Now
+              View Recording
               <ArrowRight />
             </div>
           </div>
