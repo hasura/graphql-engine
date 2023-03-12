@@ -102,6 +102,11 @@ articleTable =
             Schema.VStr "Article 3 Title",
             Schema.VStr "Article 3 by Author 2, has search keyword",
             Schema.VInt 2
+          ],
+          [ Schema.VInt 4,
+            Schema.VStr "Article 4 Title",
+            Schema.VStr "Article 4 by unknown author",
+            Schema.VInt 3
           ]
         ]
     }
@@ -112,6 +117,7 @@ postgresSetupFunctions :: TestEnvironment -> [Fixture.SetupAction]
 postgresSetupFunctions testEnv =
   let schemaName = Schema.getSchemaName testEnv
       articleTableSQL = unSchemaName schemaName <> ".article"
+      authorTableSQL = unSchemaName schemaName <> ".author"
    in [ Fixture.SetupAction
           { Fixture.setupAction =
               Postgres.run_ testEnv $
@@ -137,6 +143,34 @@ postgresSetupFunctions testEnv =
                     SELECT *
                     FROM #{ articleTableSQL }
                     WHERE author_id = author_row.id
+                  $$ LANGUAGE sql STABLE;
+                |],
+            Fixture.teardownAction = \_ -> pure ()
+          },
+        Fixture.SetupAction
+          { Fixture.setupAction =
+              Postgres.run_ testEnv $
+                [i|
+                  CREATE FUNCTION #{ fetch_author schemaName }(article_row article, filter_author_id int)
+                  RETURNS author AS $$
+                    SELECT *
+                    FROM #{ authorTableSQL }
+                    WHERE id = article_row.author_id AND id = filter_author_id
+                    LIMIT 1
+                  $$ LANGUAGE sql STABLE;
+                |],
+            Fixture.teardownAction = \_ -> pure ()
+          },
+        Fixture.SetupAction
+          { Fixture.setupAction =
+              Postgres.run_ testEnv $
+                [i|
+                  CREATE FUNCTION #{ fetch_author_no_user_args schemaName }(article_row article)
+                  RETURNS author AS $$
+                    SELECT *
+                    FROM #{ authorTableSQL }
+                    WHERE id = article_row.author_id
+                    LIMIT 1
                   $$ LANGUAGE sql STABLE;
                 |],
             Fixture.teardownAction = \_ -> pure ()
@@ -185,6 +219,14 @@ fetch_articles_no_user_args :: SchemaName -> T.Text
 fetch_articles_no_user_args schemaName =
   unSchemaName schemaName <> ".fetch_articles_no_user_args"
 
+fetch_author :: SchemaName -> T.Text
+fetch_author schemaName =
+  unSchemaName schemaName <> ".fetch_author"
+
+fetch_author_no_user_args :: SchemaName -> T.Text
+fetch_author_no_user_args schemaName =
+  unSchemaName schemaName <> ".fetch_author_no_user_args"
+
 setupMetadata :: TestEnvironment -> [Fixture.SetupAction]
 setupMetadata testEnvironment =
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -203,9 +245,9 @@ setupMetadata testEnvironment =
                 "search_articles"
                 [yaml| a_id: id |]
                 [yaml|
-                name: article
-                dataset: *schemaName
-              |]
+                  name: article
+                  dataset: *schemaName
+                |]
                 testEnvironment,
             Fixture.teardownAction = \_ -> pure ()
           },
@@ -261,6 +303,36 @@ setupMetadata testEnvironment =
                       selectPermissionRole = "user_2",
                       selectPermissionColumns = (["id", "name"] :: [Text])
                     },
+            Fixture.teardownAction = \_ -> pure ()
+          },
+        Fixture.SetupAction
+          { Fixture.setupAction =
+              Schema.trackComputedField
+                source
+                articleTable
+                "fetch_author"
+                "author"
+                [yaml| a_id: id |]
+                [yaml|
+                  name: author
+                  dataset: *schemaName
+                |]
+                testEnvironment,
+            Fixture.teardownAction = \_ -> pure ()
+          },
+        Fixture.SetupAction
+          { Fixture.setupAction =
+              Schema.trackComputedField
+                source
+                articleTable
+                "fetch_author_no_user_args"
+                "author_no_args"
+                [yaml| a_id: id |]
+                [yaml|
+                  name: author
+                  dataset: *schemaName
+                |]
+                testEnvironment,
             Fixture.teardownAction = \_ -> pure ()
           }
       ]
@@ -472,4 +544,68 @@ tests opts = do
               content: Article 2 by Author 2
               id: 2
               title: Article 2 Title
+      |]
+
+  it "Query single nullable value for non-SETOF function" $ \testEnv -> do
+    let schemaName = Schema.getSchemaName testEnv
+
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphql
+          testEnv
+          [graphql|
+            query {
+              #{schemaName}_article(order_by: {id: desc} limit: 2) {
+                id
+                title
+                author(args: {filter_author_id: 1}) {
+                  id
+                  name
+                }
+              }
+            }
+          |]
+      )
+      [interpolateYaml|
+        data:
+          #{schemaName}_article:
+          - id: 4
+            title: Article 4 Title
+            author: null
+          - id: 3
+            title: Article 3 Title
+            author: null
+      |]
+
+  it "Query single nullable value for non-SETOF function without arguments" $ \testEnv -> do
+    let schemaName = Schema.getSchemaName testEnv
+
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphql
+          testEnv
+          [graphql|
+            query {
+              #{schemaName}_article(order_by: {id: desc} limit: 2) {
+                id
+                title
+                author_no_args {
+                  id
+                  name
+                }
+              }
+            }
+          |]
+      )
+      [interpolateYaml|
+        data:
+          #{schemaName}_article:
+          - id: 4
+            title: Article 4 Title
+            author_no_args: null
+          - id: 3
+            title: Article 3 Title
+            author_no_args:
+              id: 2
+              name: Author 2
       |]
