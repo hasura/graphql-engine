@@ -16,6 +16,7 @@ import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
+import Harness.Test.FixtureName (backendTypesForFixture)
 import Harness.Test.Permissions (Permission (SelectPermission), SelectPermissionDetails (..), selectPermission)
 import Harness.Test.Permissions qualified as Permission
 import Harness.Test.Schema (SchemaName (..), Table (..), table)
@@ -181,6 +182,7 @@ bigquerySetupFunctions :: TestEnvironment -> [Fixture.SetupAction]
 bigquerySetupFunctions testEnv =
   let schemaName = Schema.getSchemaName testEnv
       articleTableSQL = unSchemaName schemaName <> ".article"
+      authorTableSQL = unSchemaName schemaName <> ".author"
    in [ Fixture.SetupAction
           { Fixture.setupAction =
               BigQuery.run_ $
@@ -205,6 +207,39 @@ bigquerySetupFunctions testEnv =
                   (
                     SELECT t.* FROM #{ articleTableSQL } AS t
                     WHERE t.author_id = a_id
+                  )
+                |],
+            Fixture.teardownAction = \_ -> pure ()
+          },
+        Fixture.SetupAction
+          { Fixture.setupAction =
+              BigQuery.run_ $
+                [i|
+                  CREATE TABLE FUNCTION
+                  #{ fetch_author schemaName }(a_id INT64, filter_author_id INT64)
+                  AS
+                  (
+                    SELECT au.*
+                    FROM #{ authorTableSQL } as au
+                    JOIN #{ articleTableSQL } as ar
+                    ON ar.author_id = au.id
+                    WHERE ar.id = a_id AND au.id = filter_author_id
+                  )
+                |],
+            Fixture.teardownAction = \_ -> pure ()
+          },
+        Fixture.SetupAction
+          { Fixture.setupAction =
+              BigQuery.run_ $
+                [i|
+                  CREATE TABLE FUNCTION
+                  #{ fetch_author_no_user_args schemaName }(a_id INT64)
+                  AS
+                  (
+                    SELECT au.* FROM #{ authorTableSQL } AS au
+                    JOIN #{ articleTableSQL } as ar
+                    ON ar.author_id = au.id
+                    WHERE ar.id = a_id
                   )
                 |],
             Fixture.teardownAction = \_ -> pure ()
@@ -548,6 +583,7 @@ tests opts = do
 
   it "Query single nullable value for non-SETOF function" $ \testEnv -> do
     let schemaName = Schema.getSchemaName testEnv
+        TestEnvironment { fixtureName } = testEnv
 
     shouldReturnYaml
       opts
@@ -566,19 +602,32 @@ tests opts = do
             }
           |]
       )
-      [interpolateYaml|
-        data:
-          #{schemaName}_article:
-          - id: 4
-            title: Article 4 Title
-            author: null
-          - id: 3
-            title: Article 3 Title
-            author: null
-      |]
+      if Fixture.Postgres `elem` backendTypesForFixture fixtureName then
+        [interpolateYaml|
+          data:
+            #{schemaName}_article:
+            - id: 4
+              title: Article 4 Title
+              author: null
+            - id: 3
+              title: Article 3 Title
+              author: null
+        |]
+      else
+        [interpolateYaml|
+          data:
+            #{schemaName}_article:
+            - id: 4
+              title: Article 4 Title
+              author: []
+            - id: 3
+              title: Article 3 Title
+              author: []
+        |]
 
   it "Query single nullable value for non-SETOF function without arguments" $ \testEnv -> do
     let schemaName = Schema.getSchemaName testEnv
+        TestEnvironment { fixtureName } = testEnv
 
     shouldReturnYaml
       opts
@@ -597,15 +646,29 @@ tests opts = do
             }
           |]
       )
-      [interpolateYaml|
-        data:
-          #{schemaName}_article:
-          - id: 4
-            title: Article 4 Title
-            author_no_args: null
-          - id: 3
-            title: Article 3 Title
-            author_no_args:
-              id: 2
-              name: Author 2
-      |]
+      if Fixture.Postgres `elem` backendTypesForFixture fixtureName then
+        [interpolateYaml|
+          data:
+            #{schemaName}_article:
+            - id: 4
+              title: Article 4 Title
+              author_no_args: null
+            - id: 3
+              title: Article 3 Title
+              author_no_args:
+                id: 2
+                name: Author 2
+        |]
+      else
+        [interpolateYaml|
+          data:
+            #{schemaName}_article:
+            - id: 4
+              title: Article 4 Title
+              author_no_args: []
+            - id: 3
+              title: Article 3 Title
+              author_no_args:
+              - id: 2
+                name: Author 2
+        |]
