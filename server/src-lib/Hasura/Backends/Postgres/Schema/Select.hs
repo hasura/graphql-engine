@@ -243,7 +243,7 @@ computedFieldPG ComputedFieldInfo {..} parentTable tableInfo = runMaybeT do
     Postgres.CFRTable tableName -> do
       otherTableInfo <- lift $ askTableInfo tableName
       remotePerms <- hoistMaybe $ tableSelectPermissions roleName otherTableInfo
-      selectionSetParser <- MaybeT (fmap P.nonNullableParser <$> tableSelectionSet otherTableInfo)
+      selectionSetParser <- MaybeT $ tableSelectionSet otherTableInfo
       let fieldArgsParser = functionArgsParser
       pure $
         P.subselection fieldName fieldDescription fieldArgsParser selectionSetParser
@@ -261,7 +261,7 @@ computedFieldPG ComputedFieldInfo {..} parentTable tableInfo = runMaybeT do
     Postgres.CFRSetofTable tableName -> do
       otherTableInfo <- lift $ askTableInfo tableName
       remotePerms <- hoistMaybe $ tableSelectPermissions roleName otherTableInfo
-      selectionSetParser <- MaybeT (fmap (P.multiple . P.nonNullableParser) <$> tableSelectionSet otherTableInfo)
+      selectionSetParser <- MaybeT (fmap (P.nonNullableParser . P.multiple . P.nonNullableParser) <$> tableSelectionSet otherTableInfo)
       selectArgsParser <- lift $ tableArguments otherTableInfo
       let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
       pure $
