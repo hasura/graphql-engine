@@ -23,6 +23,7 @@ import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.Action
+import Hasura.RQL.DDL.ApiLimit
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.CustomTypes
 import Hasura.RQL.DDL.Endpoint
@@ -182,7 +183,8 @@ runQuery ::
     MonadResolveSource m,
     MonadQueryTags m,
     MonadEventLogCleanup m,
-    ProvidesHasuraServices m
+    ProvidesHasuraServices m,
+    MonadGetApiTimeLimit m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
@@ -402,7 +404,8 @@ runQueryM ::
     MonadError QErr m,
     Has (L.Logger L.Hasura) r,
     MonadEventLogCleanup m,
-    ProvidesHasuraServices m
+    ProvidesHasuraServices m,
+    MonadGetApiTimeLimit m
   ) =>
   Env.Environment ->
   RQLQuery ->

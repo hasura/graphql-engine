@@ -47,6 +47,7 @@ import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.Action
+import Hasura.RQL.DDL.ApiLimit (MonadGetApiTimeLimit (..))
 import Hasura.RQL.DDL.CustomTypes
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..), buildEventTriggerInfo)
 import Hasura.RQL.DDL.InheritedRoles (resolveInheritedRole)
@@ -183,6 +184,9 @@ instance (MonadEventLogCleanup m) => MonadEventLogCleanup (CacheRWT m) where
   runLogCleaner conf = lift $ runLogCleaner conf
   generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
   updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
+
+instance (MonadGetApiTimeLimit m) => MonadGetApiTimeLimit (CacheRWT m) where
+  runGetApiTimeLimit = lift $ runGetApiTimeLimit
 
 runCacheRWT ::
   Functor m =>

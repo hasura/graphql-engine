@@ -11,6 +11,7 @@ import Control.Monad.Trans
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Hasura.Metadata.Class
 import Hasura.Prelude
+import Hasura.RQL.DDL.ApiLimit (MonadGetApiTimeLimit (..))
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..))
 import Hasura.RQL.Types.Source
 import Hasura.Server.Types
@@ -56,6 +57,9 @@ instance (MonadEventLogCleanup m) => MonadEventLogCleanup (RunT m) where
   runLogCleaner conf = lift $ runLogCleaner conf
   generateCleanupSchedules sInfo tName cConf = lift $ generateCleanupSchedules sInfo tName cConf
   updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
+
+instance (MonadGetApiTimeLimit m) => MonadGetApiTimeLimit (RunT m) where
+  runGetApiTimeLimit = RunT . lift $ runGetApiTimeLimit
 
 peelRun ::
   RunCtx ->

@@ -99,6 +99,13 @@ In the above metadata spec:
 5.  For `rate_limit` if no `unique_params` are provided then, the requests will be rate-limited on the `role_name` i.e
     the `X-HASURA-ROLE` that is used to issue the request
 
+:::info Note
+
+The API will throw a warning if the configured `time_limit` is greater than the Cloud time limit. The Cloud time limit
+will be used in such cases.
+
+:::
+
 ## remove_api_limits {#metadata-remove-api-limits}
 
 You can remove **all** the api limits that have been set using `remove_api_limit` API.

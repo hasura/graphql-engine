@@ -64,6 +64,7 @@ import Hasura.HTTP
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude hiding (get, put)
+import Hasura.RQL.DDL.ApiLimit (MonadGetApiTimeLimit)
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup)
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.Types.Endpoint as EP
@@ -141,7 +142,8 @@ newtype Handler m a = Handler (ReaderT HandlerCtx (ExceptT QErr m) a)
       MonadMetadataApiAuthorization,
       MonadMetadataStorage,
       MonadMetadataStorageQueryAPI,
-      ProvidesNetwork
+      ProvidesNetwork,
+      MonadGetApiTimeLimit
     )
 
 instance MonadTrans Handler where
@@ -404,7 +406,8 @@ v1QueryHandler ::
     MonadResolveSource m,
     EB.MonadQueryTags m,
     MonadEventLogCleanup m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    MonadGetApiTimeLimit m
   ) =>
   RQLQuery ->
   m (HttpResponse EncJSON)
@@ -455,7 +458,8 @@ v1MetadataHandler ::
     MonadResolveSource m,
     MonadMetadataApiAuthorization m,
     MonadEventLogCleanup m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    MonadGetApiTimeLimit m
   ) =>
   RQLMetadata ->
   m (HttpResponse EncJSON)
@@ -760,7 +764,8 @@ mkWaiApp ::
     MonadResolveSource m,
     EB.MonadQueryTags m,
     MonadEventLogCleanup m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    MonadGetApiTimeLimit m
   ) =>
   (AppContext -> Spock.SpockT m ()) ->
   AppContext ->
@@ -825,7 +830,8 @@ httpApp ::
     MonadResolveSource m,
     EB.MonadQueryTags m,
     MonadEventLogCleanup m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    MonadGetApiTimeLimit m
   ) =>
   (AppContext -> Spock.SpockT m ()) ->
   AppContext ->

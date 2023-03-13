@@ -44,6 +44,7 @@ import Hasura.LogicalModel.API
 import Hasura.Metadata.Class
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
+import Hasura.RQL.DDL.ApiLimit
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.CustomTypes
 import Hasura.RQL.DDL.Endpoint
@@ -123,7 +124,8 @@ runClearMetadata ::
     MonadReader r m,
     MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    MonadGetApiTimeLimit m
   ) =>
   ClearMetadata ->
   m EncJSON
@@ -193,7 +195,8 @@ runReplaceMetadata ::
     MonadReader r m,
     MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    MonadGetApiTimeLimit m
   ) =>
   ReplaceMetadata ->
   m EncJSON
@@ -210,7 +213,8 @@ runReplaceMetadataV1 ::
     MonadReader r m,
     MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    MonadGetApiTimeLimit m
   ) =>
   ReplaceMetadataV1 ->
   m EncJSON
@@ -227,7 +231,8 @@ runReplaceMetadataV2 ::
     MonadReader r m,
     MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    MonadGetApiTimeLimit m
   ) =>
   ReplaceMetadataV2 ->
   m EncJSON
@@ -251,7 +256,8 @@ runReplaceMetadataV2' ::
     MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
     MonadEventLogCleanup m,
-    MonadWarnings m
+    MonadWarnings m,
+    MonadGetApiTimeLimit m
   ) =>
   ReplaceMetadataV2 ->
   m [InconsistentMetadata]
@@ -324,6 +330,13 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
 
           unless (null newIllegalTriggerNamesInNewMetadata) $ do
             traverse_ (warn . mkIllegalEventTriggerNameWarning) newIllegalTriggerNamesInNewMetadata
+
+  -- Throw a warning if the API time limit exceeds the system limit
+  let userTimeLimitAPILimit = _lGlobal <$> _alTimeLimit (_metaApiLimits metadata)
+  warningResultEither <- compareTimeLimitWith userTimeLimitAPILimit
+  case warningResultEither of
+    Left warning -> warn warning
+    Right _ -> pure ()
 
   let cacheInvalidations =
         CacheInvalidations

@@ -386,7 +386,8 @@ runMetadataQuery ::
     MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     MonadEventLogCleanup m,
-    ProvidesHasuraServices m
+    ProvidesHasuraServices m,
+    MonadGetApiTimeLimit m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
@@ -604,7 +605,8 @@ runMetadataQueryM ::
     Has (L.Logger L.Hasura) r,
     MonadError QErr m,
     MonadEventLogCleanup m,
-    ProvidesHasuraServices m
+    ProvidesHasuraServices m,
+    MonadGetApiTimeLimit m
   ) =>
   Env.Environment ->
   MetadataResourceVersion ->
@@ -635,7 +637,8 @@ runMetadataQueryV1M ::
     Has (L.Logger L.Hasura) r,
     MonadError QErr m,
     MonadEventLogCleanup m,
-    ProvidesHasuraServices m
+    ProvidesHasuraServices m,
+    MonadGetApiTimeLimit m
   ) =>
   Env.Environment ->
   MetadataResourceVersion ->
@@ -804,7 +807,8 @@ runMetadataQueryV2M ::
     MonadReader r m,
     Has (L.Logger L.Hasura) r,
     MonadError QErr m,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    MonadGetApiTimeLimit m
   ) =>
   MetadataResourceVersion ->
   RQLMetadataV2 ->

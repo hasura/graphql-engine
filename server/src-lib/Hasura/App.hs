@@ -110,6 +110,7 @@ import Hasura.Metadata.Class
 import Hasura.PingSources
 import Hasura.Prelude
 import Hasura.QueryTags
+import Hasura.RQL.DDL.ApiLimit (MonadGetApiTimeLimit (..))
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..))
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -662,7 +663,8 @@ runHGEServer ::
     MonadResolveSource m,
     EB.MonadQueryTags m,
     MonadEventLogCleanup m,
-    ProvidesHasuraServices m
+    ProvidesHasuraServices m,
+    MonadGetApiTimeLimit m
   ) =>
   (AppContext -> Spock.SpockT m ()) ->
   AppContext ->
@@ -752,7 +754,8 @@ mkHGEServer ::
     MonadResolveSource m,
     EB.MonadQueryTags m,
     MonadEventLogCleanup m,
-    ProvidesHasuraServices m
+    ProvidesHasuraServices m,
+    MonadGetApiTimeLimit m
   ) =>
   (AppContext -> Spock.SpockT m ()) ->
   AppContext ->
@@ -1180,6 +1183,9 @@ instance (Monad m) => MonadEventLogCleanup (PGMetadataStorageAppT m) where
   runLogCleaner _ = pure $ throw400 NotSupported "Event log cleanup feature is enterprise edition only"
   generateCleanupSchedules _ _ _ = pure $ Right ()
   updateTriggerCleanupSchedules _ _ _ _ = pure $ Right ()
+
+instance (Monad m) => MonadGetApiTimeLimit (PGMetadataStorageAppT m) where
+  runGetApiTimeLimit = pure $ Nothing
 
 runInSeparateTx ::
   (MonadIO m) =>
