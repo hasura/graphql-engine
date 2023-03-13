@@ -11,6 +11,7 @@ import {
   getSupportedOperators,
 } from './introspection';
 import { getTableRows } from './query';
+import { postgresCapabilities } from '../common/capabilities';
 
 export type CitusTable = { name: string; schema: string };
 
@@ -25,6 +26,7 @@ export const citus: Database = {
     getDatabaseConfiguration: async () => {
       return Feature.NotImplemented;
     },
+    getDriverCapabilities: async () => Promise.resolve(postgresCapabilities),
     getTrackableTables: async ({
       dataSourceName,
       httpClient,

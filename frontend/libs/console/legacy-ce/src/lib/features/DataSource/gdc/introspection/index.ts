@@ -1,4 +1,5 @@
 export { getDatabaseConfiguration } from './getDatabaseConfiguration';
+export { getDriverCapabilities } from './getDriverCapabilities';
 export { getSupportedOperators } from './getSupportedOperators';
 export { getTableColumns } from './getTableColumns';
 export { getFKRelationships } from './getFKRelationships';

@@ -1,5 +1,5 @@
 import { Table } from '../../hasura-metadata-types';
-import { Database } from '..';
+import { Database, Feature } from '..';
 import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 import {
   getDatabaseConfiguration,
@@ -10,6 +10,7 @@ import {
   getSupportedOperators,
 } from '../postgres/introspection';
 import { getTableRows } from '../postgres/query';
+import { postgresCapabilities } from '../common/capabilities';
 
 export type AlloyDbTable = { name: string; schema: string };
 
@@ -22,6 +23,7 @@ export const alloy: Database = {
       release: 'GA',
     }),
     getDatabaseConfiguration,
+    getDriverCapabilities: async () => Promise.resolve(postgresCapabilities),
     getTrackableTables,
     getDatabaseHierarchy: async () => {
       return ['schema', 'name'];

@@ -8,6 +8,7 @@ export const defaultDatabaseProps: Database = {
   introspection: {
     getDriverInfo: async () => Feature.NotImplemented,
     getDatabaseConfiguration: async () => Feature.NotImplemented,
+    getDriverCapabilities: async () => Feature.NotImplemented,
     getTrackableTables: async () => Feature.NotImplemented,
     getDatabaseHierarchy: async () => Feature.NotImplemented,
     getTableColumns: async () => Feature.NotImplemented,

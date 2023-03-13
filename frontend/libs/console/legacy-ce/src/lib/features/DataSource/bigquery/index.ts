@@ -8,6 +8,7 @@ import {
   getSupportedOperators,
 } from './introspection';
 import { getTableRows } from './query';
+import { Capabilities } from '@hasura/dc-api-types';
 
 export type BigQueryTable = { name: string; dataset: string };
 
@@ -21,6 +22,12 @@ export const bigquery: Database = {
     }),
     getDatabaseConfiguration: async () => {
       return Feature.NotImplemented;
+    },
+    getDriverCapabilities: async () => {
+      const bigQueryCapabilities: Capabilities = {
+        queries: {},
+      };
+      return Promise.resolve(bigQueryCapabilities);
     },
     getTrackableTables,
     getDatabaseHierarchy: async () => {

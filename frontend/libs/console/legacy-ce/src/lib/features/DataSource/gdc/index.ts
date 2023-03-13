@@ -8,6 +8,7 @@ import {
   getDatabaseConfiguration,
   getSupportedOperators,
   getFKRelationships,
+  getDriverCapabilities,
 } from './introspection';
 import { getTableRows } from './query';
 
@@ -23,6 +24,7 @@ export const gdc: Database = {
   introspection: {
     getDriverInfo: async () => Feature.NotImplemented,
     getDatabaseConfiguration,
+    getDriverCapabilities,
     getTrackableTables,
     getDatabaseHierarchy: async () => Feature.NotImplemented,
     getTableColumns,

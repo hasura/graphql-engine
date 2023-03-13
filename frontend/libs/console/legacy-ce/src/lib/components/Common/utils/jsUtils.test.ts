@@ -1,4 +1,8 @@
-import { encodeFileContent } from './jsUtils';
+import {
+  encodeFileContent,
+  isTypedObject,
+  TypedObjectValidator,
+} from './jsUtils';
 
 describe('encodeFileContent', () => {
   it('encodes #', () => {
@@ -25,5 +29,44 @@ describe('encodeFileContent', () => {
 
   it('encodes carriage return', () => {
     expect(encodeFileContent('sentence\rnewline')).toBe('sentence%0Dnewline');
+  });
+});
+
+type CustomType = {
+  value: string;
+};
+
+type MyCustomDataset = {
+  dataset: string;
+};
+
+describe('isTypedObject', () => {
+  it('return true if it matches the typed object', () => {
+    const myObject: unknown = {
+      value: '1',
+    };
+
+    const validator: TypedObjectValidator = _object => 'value' in _object;
+    const isMyObject = isTypedObject<CustomType>(myObject, validator);
+
+    expect(isMyObject).toBe(true);
+
+    if (isMyObject) {
+      // The type of myObject is CustomType
+      // TS provides autocompletion on myObject
+      expect(myObject.value).toBe('1');
+    }
+  });
+
+  it("return false if it doesn't match the typed object", () => {
+    const myObject: unknown = {
+      schema: '1',
+    };
+
+    const validator: TypedObjectValidator = _object => 'dataset' in _object;
+    const isDataset = isTypedObject<MyCustomDataset>(myObject, validator);
+
+    expect(isDataset).toBe(false);
+    // The type of myObject is still unknown
   });
 });

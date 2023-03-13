@@ -10,6 +10,7 @@ import {
   getSupportedOperators,
 } from './introspection';
 import { getTableRows } from './query';
+import { postgresCapabilities } from '../common/capabilities';
 
 export type PostgresTable = { name: string; schema: string };
 
@@ -22,6 +23,7 @@ export const postgres: Database = {
       release: 'GA',
     }),
     getDatabaseConfiguration,
+    getDriverCapabilities: async () => Promise.resolve(postgresCapabilities),
     getTrackableTables,
     getDatabaseHierarchy: async () => {
       return ['schema', 'name'];

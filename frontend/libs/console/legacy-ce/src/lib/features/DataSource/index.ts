@@ -1,5 +1,5 @@
 import { Source, SupportedDrivers, Table } from '../hasura-metadata-types';
-import { OpenApiSchema } from '@hasura/dc-api-types';
+import { Capabilities, OpenApiSchema } from '@hasura/dc-api-types';
 import { DataNode } from 'antd/lib/tree';
 import { AxiosInstance } from 'axios';
 import { z } from 'zod';
@@ -84,6 +84,10 @@ export type Database = {
         }
       | Feature.NotImplemented
     >;
+    getDriverCapabilities: (
+      httpClient: AxiosInstance,
+      driver?: string
+    ) => Promise<Capabilities | Feature>;
     getTrackableTables: (
       props: GetTrackableTablesProps
     ) => Promise<IntrospectedTable[] | Feature.NotImplemented>;
@@ -452,6 +456,16 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     const database = await getDatabaseMethods({ dataSourceName, httpClient });
 
     return database.config.getSupportedQueryTypes(table);
+  },
+  getDriverCapabilities: async (driver: string) => {
+    const driverName = (
+      nativeDrivers.includes(driver) ? driver : 'gdc'
+    ) as SupportedDrivers;
+
+    return drivers[driverName].introspection?.getDriverCapabilities(
+      httpClient,
+      driver
+    );
   },
 });
 

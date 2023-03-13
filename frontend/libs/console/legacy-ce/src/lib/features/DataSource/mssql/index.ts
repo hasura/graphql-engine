@@ -10,6 +10,7 @@ import {
   getSupportedOperators,
 } from './introspection';
 import { getTableRows } from './query';
+import { postgresCapabilities } from '../common/capabilities';
 
 export type MssqlTable = { schema: string; name: string };
 
@@ -24,6 +25,7 @@ export const mssql: Database = {
     getDatabaseConfiguration: async () => {
       return Feature.NotImplemented;
     },
+    getDriverCapabilities: async () => Promise.resolve(postgresCapabilities),
     getTrackableTables: async ({
       dataSourceName,
       httpClient,
