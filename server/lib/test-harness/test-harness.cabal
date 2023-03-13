@@ -62,6 +62,7 @@ library
     , text
     , th-lift
     , th-lift-instances
+    , these
     , time
     , typed-process
     , unordered-containers

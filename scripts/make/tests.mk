@@ -133,6 +133,7 @@ test-integration-postgres: remove-tix-file
 .PHONY: test-logical-models
 ## test-logical-models: run all tests for the Logical Model feature
 test-logical-models:
+	cabal build exe:graphql-engine
 	docker compose up -d --wait postgres
 	HSPEC_MATCH=LogicalModels make test-unit
 	HASURA_TEST_BACKEND_TYPE=Postgres \

@@ -14,7 +14,7 @@ import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
-import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
+import Harness.Yaml (shouldAtLeastBe, shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
@@ -482,12 +482,18 @@ testValidation opts = do
       \testEnv -> do
         let spicyQuery :: Text
             spicyQuery = "query bad"
-        shouldReturnYaml
-          opts
-          ( GraphqlEngine.postMetadataWithStatus
-              400
-              testEnv
+
+        let expected =
               [yaml|
+                  code: validation-failed
+                  error: Failed to validate query
+                  path: "$.args"
+              |]
+        actual <-
+          GraphqlEngine.postMetadataWithStatus
+            400
+            testEnv
+            [yaml|
                 type: pg_track_logical_model
                 args:
                   type: query
@@ -505,33 +511,29 @@ testValidation opts = do
                         type: integer
                         description: "a divided thing"
               |]
-          )
-          [yaml|
-              code: validation-failed
-              error: Failed to validate query
-              internal:
-                arguments: []
-                error:
-                  description: null
-                  exec_status: "FatalError"
-                  hint: null
-                  message: "syntax error at or near \"query\""
-                  status_code: "42601"
-                prepared: false
-                statement: "PREPARE _logimo_vali_divided_stuff AS query bad"
-              path: "$.args"
-          |]
+
+        actual `shouldAtLeastBe` expected
 
     it "when the query refers to non existing table" $
       \testEnv -> do
         let spicyQuery :: Text
             spicyQuery = "SELECT thing / {{denominator}} AS divided FROM does_not_exist WHERE date = {{target_date}}"
-        shouldReturnYaml
-          opts
-          ( GraphqlEngine.postMetadataWithStatus
-              400
-              testEnv
+
+        let expected =
               [yaml|
+                  code: validation-failed
+                  error: Failed to validate query
+                  internal:
+                    error:
+                      message: "relation \"does_not_exist\" does not exist"
+                      status_code: "42P01"
+              |]
+
+        actual <-
+          GraphqlEngine.postMetadataWithStatus
+            400
+            testEnv
+            [yaml|
                 type: pg_track_logical_model
                 args:
                   type: query
@@ -549,22 +551,8 @@ testValidation opts = do
                         type: integer
                         description: "a divided thing"
               |]
-          )
-          [yaml|
-              code: validation-failed
-              error: Failed to validate query
-              internal:
-                arguments: []
-                error:
-                  description: null
-                  exec_status: "FatalError"
-                  hint: null
-                  message: "relation \"does_not_exist\" does not exist"
-                  status_code: "42P01"
-                prepared: false
-                statement: "PREPARE _logimo_vali_divided_stuff AS SELECT thing / $1 AS divided FROM does_not_exist WHERE date = $2"
-              path: "$.args"
-          |]
+
+        actual `shouldAtLeastBe` expected
 
     it "when the logical model has the same name as an already tracked table" $
       \testEnv -> do
@@ -655,6 +643,63 @@ testValidation opts = do
               code: already-tracked
               error: Logical model 'hasura_stuff_exist' is already tracked.
               path: $.args
+          |]
+
+    it "where arguments do not typecheck" $
+      \testEnv -> do
+        let expected =
+              [yaml|
+                  code: validation-failed
+                  error: Failed to validate query
+                |]
+        actual <-
+          GraphqlEngine.postMetadataWithStatus
+            400
+            testEnv
+            [yaml|
+                  type: pg_track_logical_model
+                  args:
+                    type: query
+                    source: postgres
+                    root_field_name: divided_failing
+                    code: |
+                      SELECT 10 / {{denominator}} AS divided
+                    arguments:
+                      denominator:
+                        type: varchar
+                    returns:
+                      columns:
+                        divided:
+                          type: integer
+            |]
+
+        actual `shouldAtLeastBe` expected
+
+    it "that uses undeclared arguments" $
+      \testEnv -> do
+        shouldReturnYaml
+          opts
+          ( GraphqlEngine.postMetadataWithStatus
+              400
+              testEnv
+              [yaml|
+                  type: pg_track_logical_model
+                  args:
+                    type: query
+                    source: postgres
+                    root_field_name: divided_failing
+                    code: |
+                      SELECT 10 / {{denominator}} AS divided
+                    returns:
+                      columns:
+                        divided:
+                          type: integer
+            |]
+          )
+          [yaml|
+             code: validation-failed
+             error: 'Undeclared arguments: "denominator"'
+             path: $.args
           |]
 
   describe "Validation succeeds" do

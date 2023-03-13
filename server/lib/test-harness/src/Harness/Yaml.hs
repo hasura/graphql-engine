@@ -9,6 +9,7 @@ module Harness.Yaml
     shouldReturnYamlF,
     shouldReturnOneOfYaml,
     shouldBeYaml,
+    shouldAtLeastBe,
   )
 where
 
@@ -24,13 +25,14 @@ import Data.Set qualified as Set
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8With)
 import Data.Text.Encoding.Error qualified as TE
+import Data.These
 import Data.Vector qualified as V
 import Data.Vector qualified as Vector
 import Data.Yaml qualified
 import Harness.Test.Fixture qualified as Fixture (Options (..))
 import Hasura.Prelude
 import Instances.TH.Lift ()
-import Test.Hspec (HasCallStack, shouldBe, shouldContain)
+import Test.Hspec (HasCallStack, expectationFailure, shouldBe, shouldContain)
 
 fromObject :: Value -> Object
 fromObject (Object x) = x
@@ -165,6 +167,43 @@ shouldReturnOneOfYaml Fixture.Options {stringifyNumbers} actualIO candidates = d
 shouldBeYaml :: HasCallStack => Value -> Value -> IO ()
 shouldBeYaml actual expected = do
   shouldBe (Visual actual) (Visual expected)
+
+-- | Assert that the expected json value should be a subset of the actual value, in the sense of 'jsonSubsetOf'.
+shouldAtLeastBe :: HasCallStack => Value -> Value -> IO ()
+shouldAtLeastBe actual expected | expected `jsonSubsetOf` actual = return ()
+shouldAtLeastBe actual expected =
+  expectationFailure $ "The expected value:\n\n" <> show (Visual expected) <> "\nis not a subset of the actual value:\n\n" <> show (Visual actual)
+
+-- | Compute whether one json value 'sub' is a subset of another value 'sup', in the sense that:
+--
+-- * For arrays, there is a contiguous segment in 'sup' in which all elements are subset-related with 'sub' in order
+-- * For objects, the keys of 'sub' are a subset of those of 'sup', and all their associated values are also subset-related
+-- * Leaf values are identical
+jsonSubsetOf :: Aeson.Value -> Aeson.Value -> Bool
+jsonSubsetOf (Aeson.Array sub) (Aeson.Array sup) = sub `subarrayOf` sup
+jsonSubsetOf (Aeson.Object sub) (Aeson.Object sup) = sub `subobjectOf` sup
+jsonSubsetOf (Aeson.String sub) (Aeson.String sup) = sub == sup
+jsonSubsetOf (Aeson.Number sub) (Aeson.Number sup) = sub == sup
+jsonSubsetOf (Aeson.Bool sub) (Aeson.Bool sup) = sub == sup
+jsonSubsetOf Aeson.Null Aeson.Null = True
+jsonSubsetOf _sub _sup = False
+
+subobjectOf :: KM.KeyMap Aeson.Value -> KM.KeyMap Aeson.Value -> Bool
+subobjectOf sub sup =
+  KM.foldr (&&) True $
+    KM.alignWith
+      ( \case
+          This _ -> False -- key is only in the sub
+          That _ -> True -- key is only in sup
+          These l r -> l `jsonSubsetOf` r
+      )
+      sub
+      sup
+
+subarrayOf :: V.Vector Aeson.Value -> V.Vector Aeson.Value -> Bool
+subarrayOf sub sup | V.length sub > V.length sup = False
+subarrayOf sub sup | V.and $ V.zipWith jsonSubsetOf sub sup = True
+subarrayOf sub sup = subarrayOf sub (V.tail sup)
 
 -- | For the test suite: diff structural, but display in a readable
 -- way.
