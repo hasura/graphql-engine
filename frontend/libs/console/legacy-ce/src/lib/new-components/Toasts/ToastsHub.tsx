@@ -40,6 +40,7 @@ export const ToastsHub = ({ className = '' }: { className?: string }) => {
               position: 'absolute',
               transition: 'all 0.3s ease-out',
               opacity: toast.visible ? 1 : 0,
+              pointerEvents: toast.visible ? 'all' : 'none',
               transform: `translate(-100%, ${offset}px)`,
               zIndex: toast.visible ? 9999 : 9998,
             }}
