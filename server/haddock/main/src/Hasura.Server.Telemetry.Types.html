@@ -50,7 +50,7 @@
 </span><span id="line-49"></span><span>    </span><span id="_rmAuto"><span class="annot"><span class="annottext">RelationshipMetric -&gt; Int
 </span><a href="Hasura.Server.Telemetry.Types.html#_rmAuto"><span class="hs-identifier hs-var hs-var">_rmAuto</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
 </span><span id="line-50"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-51"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690852988"><span id="local-6989586621690852990"><span id="local-6989586621690852997"><span class="annot"><span class="annottext">Int -&gt; RelationshipMetric -&gt; ShowS
+</span><span id="line-51"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690858327"><span id="local-6989586621690858329"><span id="local-6989586621690858336"><span class="annot"><span class="annottext">Int -&gt; RelationshipMetric -&gt; ShowS
 [RelationshipMetric] -&gt; ShowS
 RelationshipMetric -&gt; String
 forall a.
@@ -61,7 +61,7 @@ show :: RelationshipMetric -&gt; String
 $cshow :: RelationshipMetric -&gt; String
 showsPrec :: Int -&gt; RelationshipMetric -&gt; ShowS
 $cshowsPrec :: Int -&gt; RelationshipMetric -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690852980"><span id="local-6989586621690852985"><span class="annot"><span class="annottext">RelationshipMetric -&gt; RelationshipMetric -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690858319"><span id="local-6989586621690858324"><span class="annot"><span class="annottext">RelationshipMetric -&gt; RelationshipMetric -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: RelationshipMetric -&gt; RelationshipMetric -&gt; Bool
 $c/= :: RelationshipMetric -&gt; RelationshipMetric -&gt; Bool
@@ -69,7 +69,7 @@ $c/= :: RelationshipMetric -&gt; RelationshipMetric -&gt; Bool
 $c== :: RelationshipMetric -&gt; RelationshipMetric -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-52"></span><span>
-</span><span id="line-53"></span><span class="hs-special">$</span><span id="local-6989586621690852953"><span id="local-6989586621690852955"><span id="local-6989586621690852964"><span id="local-6989586621690852977"><span class="hs-special">(</span><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RelationshipMetric</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-53"></span><span class="hs-special">$</span><span id="local-6989586621690858292"><span id="local-6989586621690858294"><span id="local-6989586621690858303"><span id="local-6989586621690858316"><span class="hs-special">(</span><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RelationshipMetric</span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-54"></span><span>
 </span><span id="line-55"></span><span class="hs-keyword">data</span><span> </span><span id="PermissionMetric"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#PermissionMetric"><span class="hs-identifier hs-var">PermissionMetric</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PermissionMetric"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#PermissionMetric"><span class="hs-identifier hs-var">PermissionMetric</span></a></span></span><span>
 </span><span id="line-56"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_pmSelect"><span class="annot"><span class="annottext">PermissionMetric -&gt; Int
@@ -83,7 +83,7 @@ $c== :: RelationshipMetric -&gt; RelationshipMetric -&gt; Bool
 </span><span id="line-60"></span><span>    </span><span id="_pmRoles"><span class="annot"><span class="annottext">PermissionMetric -&gt; Int
 </span><a href="Hasura.Server.Telemetry.Types.html#_pmRoles"><span class="hs-identifier hs-var hs-var">_pmRoles</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
 </span><span id="line-61"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-62"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690852919"><span id="local-6989586621690852921"><span id="local-6989586621690852929"><span class="annot"><span class="annottext">Int -&gt; PermissionMetric -&gt; ShowS
+</span><span id="line-62"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690858258"><span id="local-6989586621690858260"><span id="local-6989586621690858268"><span class="annot"><span class="annottext">Int -&gt; PermissionMetric -&gt; ShowS
 [PermissionMetric] -&gt; ShowS
 PermissionMetric -&gt; String
 forall a.
@@ -94,7 +94,7 @@ show :: PermissionMetric -&gt; String
 $cshow :: PermissionMetric -&gt; String
 showsPrec :: Int -&gt; PermissionMetric -&gt; ShowS
 $cshowsPrec :: Int -&gt; PermissionMetric -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690852910"><span id="local-6989586621690852917"><span class="annot"><span class="annottext">PermissionMetric -&gt; PermissionMetric -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690858249"><span id="local-6989586621690858256"><span class="annot"><span class="annottext">PermissionMetric -&gt; PermissionMetric -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: PermissionMetric -&gt; PermissionMetric -&gt; Bool
 $c/= :: PermissionMetric -&gt; PermissionMetric -&gt; Bool
@@ -102,7 +102,7 @@ $c/= :: PermissionMetric -&gt; PermissionMetric -&gt; Bool
 $c== :: PermissionMetric -&gt; PermissionMetric -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-63"></span><span>
-</span><span id="line-64"></span><span class="hs-special">$</span><span id="local-6989586621690852875"><span id="local-6989586621690852877"><span id="local-6989586621690852890"><span id="local-6989586621690852908"><span class="hs-special">(</span><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PermissionMetric</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-64"></span><span class="hs-special">$</span><span id="local-6989586621690858214"><span id="local-6989586621690858216"><span id="local-6989586621690858229"><span id="local-6989586621690858247"><span class="hs-special">(</span><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PermissionMetric</span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-65"></span><span>
 </span><span id="line-66"></span><span class="hs-keyword">data</span><span> </span><span id="ActionMetric"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#ActionMetric"><span class="hs-identifier hs-var">ActionMetric</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionMetric"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#ActionMetric"><span class="hs-identifier hs-var">ActionMetric</span></a></span></span><span>
 </span><span id="line-67"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_amSynchronous"><span class="annot"><span class="annottext">ActionMetric -&gt; Int
@@ -116,7 +116,7 @@ $c== :: PermissionMetric -&gt; PermissionMetric -&gt; Bool
 </span><span id="line-71"></span><span>    </span><span id="_amCustomTypes"><span class="annot"><span class="annottext">ActionMetric -&gt; Int
 </span><a href="Hasura.Server.Telemetry.Types.html#_amCustomTypes"><span class="hs-identifier hs-var hs-var">_amCustomTypes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
 </span><span id="line-72"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-73"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690852840"><span id="local-6989586621690852842"><span id="local-6989586621690852850"><span class="annot"><span class="annottext">Int -&gt; ActionMetric -&gt; ShowS
+</span><span id="line-73"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690858179"><span id="local-6989586621690858181"><span id="local-6989586621690858189"><span class="annot"><span class="annottext">Int -&gt; ActionMetric -&gt; ShowS
 [ActionMetric] -&gt; ShowS
 ActionMetric -&gt; String
 forall a.
@@ -127,7 +127,7 @@ show :: ActionMetric -&gt; String
 $cshow :: ActionMetric -&gt; String
 showsPrec :: Int -&gt; ActionMetric -&gt; ShowS
 $cshowsPrec :: Int -&gt; ActionMetric -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690852831"><span id="local-6989586621690852838"><span class="annot"><span class="annottext">ActionMetric -&gt; ActionMetric -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690858170"><span id="local-6989586621690858177"><span class="annot"><span class="annottext">ActionMetric -&gt; ActionMetric -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: ActionMetric -&gt; ActionMetric -&gt; Bool
 $c/= :: ActionMetric -&gt; ActionMetric -&gt; Bool
@@ -135,7 +135,7 @@ $c/= :: ActionMetric -&gt; ActionMetric -&gt; Bool
 $c== :: ActionMetric -&gt; ActionMetric -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-74"></span><span>
-</span><span id="line-75"></span><span class="hs-special">$</span><span id="local-6989586621690852796"><span id="local-6989586621690852798"><span id="local-6989586621690852811"><span id="local-6989586621690852829"><span class="hs-special">(</span><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionMetric</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-75"></span><span class="hs-special">$</span><span id="local-6989586621690858135"><span id="local-6989586621690858137"><span id="local-6989586621690858150"><span id="local-6989586621690858168"><span class="hs-special">(</span><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionMetric</span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-76"></span><span>
 </span><span id="line-77"></span><span class="hs-keyword">data</span><span> </span><span id="LogicalModelsMetrics"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#LogicalModelsMetrics"><span class="hs-identifier hs-var">LogicalModelsMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="LogicalModelsMetrics"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#LogicalModelsMetrics"><span class="hs-identifier hs-var">LogicalModelsMetrics</span></a></span></span><span>
 </span><span id="line-78"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_lmmWithParameters"><span class="annot"><span class="annottext">LogicalModelsMetrics -&gt; Int
@@ -143,7 +143,7 @@ $c== :: ActionMetric -&gt; ActionMetric -&gt; Bool
 </span><span id="line-79"></span><span>    </span><span id="_lmmWithoutParameters"><span class="annot"><span class="annottext">LogicalModelsMetrics -&gt; Int
 </span><a href="Hasura.Server.Telemetry.Types.html#_lmmWithoutParameters"><span class="hs-identifier hs-var hs-var">_lmmWithoutParameters</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
 </span><span id="line-80"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-81"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690852767"><span id="local-6989586621690852769"><span id="local-6989586621690852774"><span class="annot"><span class="annottext">Int -&gt; LogicalModelsMetrics -&gt; ShowS
+</span><span id="line-81"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690858106"><span id="local-6989586621690858108"><span id="local-6989586621690858113"><span class="annot"><span class="annottext">Int -&gt; LogicalModelsMetrics -&gt; ShowS
 [LogicalModelsMetrics] -&gt; ShowS
 LogicalModelsMetrics -&gt; String
 forall a.
@@ -154,7 +154,7 @@ show :: LogicalModelsMetrics -&gt; String
 $cshow :: LogicalModelsMetrics -&gt; String
 showsPrec :: Int -&gt; LogicalModelsMetrics -&gt; ShowS
 $cshowsPrec :: Int -&gt; LogicalModelsMetrics -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690852761"><span id="local-6989586621690852765"><span class="annot"><span class="annottext">LogicalModelsMetrics -&gt; LogicalModelsMetrics -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690858100"><span id="local-6989586621690858104"><span class="annot"><span class="annottext">LogicalModelsMetrics -&gt; LogicalModelsMetrics -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: LogicalModelsMetrics -&gt; LogicalModelsMetrics -&gt; Bool
 $c/= :: LogicalModelsMetrics -&gt; LogicalModelsMetrics -&gt; Bool
@@ -162,35 +162,35 @@ $c/= :: LogicalModelsMetrics -&gt; LogicalModelsMetrics -&gt; Bool
 $c== :: LogicalModelsMetrics -&gt; LogicalModelsMetrics -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-82"></span><span>
-</span><span id="line-83"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690852756"><span id="local-6989586621690852758"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Semigroup</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#LogicalModelsMetrics"><span class="hs-identifier hs-type">LogicalModelsMetrics</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-84"></span><span>  </span><span id="local-6989586621690852751"><span class="annot"><span class="annottext">LogicalModelsMetrics
-</span><a href="#local-6989586621690852751"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621690852750"><span class="annot"><span class="annottext">&lt;&gt; :: LogicalModelsMetrics
+</span><span id="line-83"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690858095"><span id="local-6989586621690858097"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Semigroup</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#LogicalModelsMetrics"><span class="hs-identifier hs-type">LogicalModelsMetrics</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-84"></span><span>  </span><span id="local-6989586621690858090"><span class="annot"><span class="annottext">LogicalModelsMetrics
+</span><a href="#local-6989586621690858090"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621690858089"><span class="annot"><span class="annottext">&lt;&gt; :: LogicalModelsMetrics
 -&gt; LogicalModelsMetrics -&gt; LogicalModelsMetrics
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></a></span></span><span> </span><span id="local-6989586621690852749"><span class="annot"><span class="annottext">LogicalModelsMetrics
-</span><a href="#local-6989586621690852749"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></a></span></span><span> </span><span id="local-6989586621690858088"><span class="annot"><span class="annottext">LogicalModelsMetrics
+</span><a href="#local-6989586621690858088"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-85"></span><span>    </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; LogicalModelsMetrics
 </span><a href="Hasura.Server.Telemetry.Types.html#LogicalModelsMetrics"><span class="hs-identifier hs-var">LogicalModelsMetrics</span></a></span><span>
 </span><span id="line-86"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogicalModelsMetrics -&gt; Int
 </span><a href="Hasura.Server.Telemetry.Types.html#_lmmWithParameters"><span class="hs-identifier hs-var">_lmmWithParameters</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelsMetrics
-</span><a href="#local-6989586621690852751"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690858090"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelsMetrics -&gt; Int
 </span><a href="Hasura.Server.Telemetry.Types.html#_lmmWithParameters"><span class="hs-identifier hs-var">_lmmWithParameters</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelsMetrics
-</span><a href="#local-6989586621690852749"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690858088"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-87"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogicalModelsMetrics -&gt; Int
 </span><a href="Hasura.Server.Telemetry.Types.html#_lmmWithoutParameters"><span class="hs-identifier hs-var">_lmmWithoutParameters</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelsMetrics
-</span><a href="#local-6989586621690852751"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690858090"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelsMetrics -&gt; Int
 </span><a href="Hasura.Server.Telemetry.Types.html#_lmmWithoutParameters"><span class="hs-identifier hs-var">_lmmWithoutParameters</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelsMetrics
-</span><a href="#local-6989586621690852749"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690858088"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-88"></span><span>
-</span><span id="line-89"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690852741"><span id="local-6989586621690852743"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Monoid</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#LogicalModelsMetrics"><span class="hs-identifier hs-type">LogicalModelsMetrics</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-90"></span><span>  </span><span id="local-6989586621690852739"><span class="annot"><span class="annottext">mempty :: LogicalModelsMetrics
+</span><span id="line-89"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690858080"><span id="local-6989586621690858082"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Monoid</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#LogicalModelsMetrics"><span class="hs-identifier hs-type">LogicalModelsMetrics</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-90"></span><span>  </span><span id="local-6989586621690858078"><span class="annot"><span class="annottext">mempty :: LogicalModelsMetrics
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; LogicalModelsMetrics
 </span><a href="Hasura.Server.Telemetry.Types.html#LogicalModelsMetrics"><span class="hs-identifier hs-var">LogicalModelsMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span>
 </span><span id="line-91"></span><span>
-</span><span id="line-92"></span><span class="hs-special">$</span><span id="local-6989586621690852719"><span id="local-6989586621690852721"><span id="local-6989586621690852728"><span id="local-6989586621690852737"><span class="hs-special">(</span><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">LogicalModelsMetrics</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-92"></span><span class="hs-special">$</span><span id="local-6989586621690858058"><span id="local-6989586621690858060"><span id="local-6989586621690858067"><span id="local-6989586621690858076"><span class="hs-special">(</span><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">LogicalModelsMetrics</span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-93"></span><span>
 </span><span id="line-94"></span><span class="hs-keyword">data</span><span> </span><span id="Metrics"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#Metrics"><span class="hs-identifier hs-var">Metrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Metrics"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#Metrics"><span class="hs-identifier hs-var">Metrics</span></a></span></span><span>
 </span><span id="line-95"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_mtTables"><span class="annot"><span class="annottext">Metrics -&gt; Int
@@ -216,7 +216,7 @@ $c== :: LogicalModelsMetrics -&gt; LogicalModelsMetrics -&gt; Bool
 </span><span id="line-105"></span><span>    </span><span id="_mtLogicalModels"><span class="annot"><span class="annottext">Metrics -&gt; LogicalModelsMetrics
 </span><a href="Hasura.Server.Telemetry.Types.html#_mtLogicalModels"><span class="hs-identifier hs-var hs-var">_mtLogicalModels</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#LogicalModelsMetrics"><span class="hs-identifier hs-type">LogicalModelsMetrics</span></a></span><span>
 </span><span id="line-106"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-107"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690852678"><span id="local-6989586621690852680"><span id="local-6989586621690852697"><span class="annot"><span class="annottext">Int -&gt; Metrics -&gt; ShowS
+</span><span id="line-107"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690858017"><span id="local-6989586621690858019"><span id="local-6989586621690858036"><span class="annot"><span class="annottext">Int -&gt; Metrics -&gt; ShowS
 [Metrics] -&gt; ShowS
 Metrics -&gt; String
 forall a.
@@ -227,7 +227,7 @@ show :: Metrics -&gt; String
 $cshow :: Metrics -&gt; String
 showsPrec :: Int -&gt; Metrics -&gt; ShowS
 $cshowsPrec :: Int -&gt; Metrics -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690852659"><span id="local-6989586621690852675"><span class="annot"><span class="annottext">Metrics -&gt; Metrics -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690857998"><span id="local-6989586621690858014"><span class="annot"><span class="annottext">Metrics -&gt; Metrics -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: Metrics -&gt; Metrics -&gt; Bool
 $c/= :: Metrics -&gt; Metrics -&gt; Bool
@@ -235,7 +235,7 @@ $c/= :: Metrics -&gt; Metrics -&gt; Bool
 $c== :: Metrics -&gt; Metrics -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-108"></span><span>
-</span><span id="line-109"></span><span class="hs-special">$</span><span id="local-6989586621690852588"><span id="local-6989586621690852590"><span id="local-6989586621690852617"><span id="local-6989586621690852656"><span class="hs-special">(</span><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Metrics</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-109"></span><span class="hs-special">$</span><span id="local-6989586621690857927"><span id="local-6989586621690857929"><span id="local-6989586621690857956"><span id="local-6989586621690857995"><span class="hs-special">(</span><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Metrics</span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-110"></span><span>
 </span><span id="line-111"></span><span class="hs-keyword">data</span><span> </span><span id="SourceMetadata"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#SourceMetadata"><span class="hs-identifier hs-var">SourceMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SourceMetadata"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#SourceMetadata"><span class="hs-identifier hs-var">SourceMetadata</span></a></span></span><span>
 </span><span id="line-112"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_smDbUid"><span class="annot"><span class="annottext">SourceMetadata -&gt; Maybe DbUid
@@ -245,7 +245,7 @@ $c== :: Metrics -&gt; Metrics -&gt; Bool
 </span><span id="line-114"></span><span>    </span><span id="_smDbVersion"><span class="annot"><span class="annottext">SourceMetadata -&gt; Maybe DbVersion
 </span><a href="Hasura.Server.Telemetry.Types.html#_smDbVersion"><span class="hs-identifier hs-var hs-var">_smDbVersion</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#DbVersion"><span class="hs-identifier hs-type">DbVersion</span></a></span><span>
 </span><span id="line-115"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-116"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690852535"><span id="local-6989586621690852537"><span id="local-6989586621690852546"><span class="annot"><span class="annottext">Int -&gt; SourceMetadata -&gt; ShowS
+</span><span id="line-116"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690857874"><span id="local-6989586621690857876"><span id="local-6989586621690857885"><span class="annot"><span class="annottext">Int -&gt; SourceMetadata -&gt; ShowS
 [SourceMetadata] -&gt; ShowS
 SourceMetadata -&gt; String
 forall a.
@@ -256,7 +256,7 @@ show :: SourceMetadata -&gt; String
 $cshow :: SourceMetadata -&gt; String
 showsPrec :: Int -&gt; SourceMetadata -&gt; ShowS
 $cshowsPrec :: Int -&gt; SourceMetadata -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690852523"><span id="local-6989586621690852531"><span class="annot"><span class="annottext">SourceMetadata -&gt; SourceMetadata -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690857862"><span id="local-6989586621690857870"><span class="annot"><span class="annottext">SourceMetadata -&gt; SourceMetadata -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: SourceMetadata -&gt; SourceMetadata -&gt; Bool
 $c/= :: SourceMetadata -&gt; SourceMetadata -&gt; Bool
@@ -264,7 +264,7 @@ $c/= :: SourceMetadata -&gt; SourceMetadata -&gt; Bool
 $c== :: SourceMetadata -&gt; SourceMetadata -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-117"></span><span>
-</span><span id="line-118"></span><span class="hs-special">$</span><span id="local-6989586621690852491"><span id="local-6989586621690852493"><span id="local-6989586621690852504"><span id="local-6989586621690852519"><span class="hs-special">(</span><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SourceMetadata</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-118"></span><span class="hs-special">$</span><span id="local-6989586621690857830"><span id="local-6989586621690857832"><span id="local-6989586621690857843"><span id="local-6989586621690857858"><span class="hs-special">(</span><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SourceMetadata</span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-119"></span><span>
 </span><span id="line-120"></span><span class="hs-keyword">data</span><span> </span><span id="HasuraTelemetry"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#HasuraTelemetry"><span class="hs-identifier hs-var">HasuraTelemetry</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HasuraTelemetry"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#HasuraTelemetry"><span class="hs-identifier hs-var">HasuraTelemetry</span></a></span></span><span>
 </span><span id="line-121"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_htMetadataDbUid"><span class="annot"><span class="annottext">HasuraTelemetry -&gt; MetadataDbId
@@ -282,7 +282,7 @@ $c== :: SourceMetadata -&gt; SourceMetadata -&gt; Bool
 </span><span id="line-127"></span><span>    </span><span id="_htExperimentalFeatures"><span class="annot"><span class="annottext">HasuraTelemetry -&gt; HashSet ExperimentalFeature
 </span><a href="Hasura.Server.Telemetry.Types.html#_htExperimentalFeatures"><span class="hs-identifier hs-var hs-var">_htExperimentalFeatures</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashSet</span></span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#ExperimentalFeature"><span class="hs-identifier hs-type">ExperimentalFeature</span></a></span><span>
 </span><span id="line-128"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-129"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690852450"><span id="local-6989586621690852452"><span id="local-6989586621690852468"><span class="annot"><span class="annottext">Int -&gt; HasuraTelemetry -&gt; ShowS
+</span><span id="line-129"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690857789"><span id="local-6989586621690857791"><span id="local-6989586621690857807"><span class="annot"><span class="annottext">Int -&gt; HasuraTelemetry -&gt; ShowS
 [HasuraTelemetry] -&gt; ShowS
 HasuraTelemetry -&gt; String
 forall a.
@@ -295,12 +295,12 @@ showsPrec :: Int -&gt; HasuraTelemetry -&gt; ShowS
 $cshowsPrec :: Int -&gt; HasuraTelemetry -&gt; ShowS
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-130"></span><span>
-</span><span id="line-131"></span><span class="hs-special">$</span><span id="local-6989586621690852395"><span id="local-6989586621690852397"><span id="local-6989586621690852416"><span id="local-6989586621690852446"><span class="hs-special">(</span><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">HasuraTelemetry</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-131"></span><span class="hs-special">$</span><span id="local-6989586621690857734"><span id="local-6989586621690857736"><span id="local-6989586621690857755"><span id="local-6989586621690857785"><span class="hs-special">(</span><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">HasuraTelemetry</span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-132"></span><span>
 </span><span id="line-133"></span><span class="hs-comment">-- | The telemetry table to which we'll add telemetry.</span><span>
 </span><span id="line-134"></span><span class="hs-keyword">newtype</span><span> </span><span id="Topic"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#Topic"><span class="hs-identifier hs-var">Topic</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Topic"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#Topic"><span class="hs-identifier hs-var">Topic</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getTopic"><span class="annot"><span class="annottext">Topic -&gt; Text
 </span><a href="Hasura.Server.Telemetry.Types.html#getTopic"><span class="hs-identifier hs-var hs-var">getTopic</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-135"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690852359"><span id="local-6989586621690852361"><span id="local-6989586621690852366"><span class="annot"><span class="annottext">Int -&gt; Topic -&gt; ShowS
+</span><span id="line-135"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690857698"><span id="local-6989586621690857700"><span id="local-6989586621690857705"><span class="annot"><span class="annottext">Int -&gt; Topic -&gt; ShowS
 [Topic] -&gt; ShowS
 Topic -&gt; String
 forall a.
@@ -311,13 +311,13 @@ show :: Topic -&gt; String
 $cshow :: Topic -&gt; String
 showsPrec :: Int -&gt; Topic -&gt; ShowS
 $cshowsPrec :: Int -&gt; Topic -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690852352"><span id="local-6989586621690852357"><span class="annot"><span class="annottext">Topic -&gt; Topic -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690857691"><span id="local-6989586621690857696"><span class="annot"><span class="annottext">Topic -&gt; Topic -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: Topic -&gt; Topic -&gt; Bool
 $c/= :: Topic -&gt; Topic -&gt; Bool
 == :: Topic -&gt; Topic -&gt; Bool
 $c== :: Topic -&gt; Topic -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690852334"><span id="local-6989586621690852338"><span id="local-6989586621690852342"><span id="local-6989586621690852347"><span class="annot"><span class="annottext">[Topic] -&gt; Value
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690857673"><span id="local-6989586621690857677"><span id="local-6989586621690857681"><span id="local-6989586621690857686"><span class="annot"><span class="annottext">[Topic] -&gt; Value
 [Topic] -&gt; Encoding
 Topic -&gt; Value
 Topic -&gt; Encoding
@@ -335,7 +335,7 @@ toEncoding :: Topic -&gt; Encoding
 $ctoEncoding :: Topic -&gt; Encoding
 toJSON :: Topic -&gt; Value
 $ctoJSON :: Topic -&gt; Value
-</span><a href="#local-6989586621690852334"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">A.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690852324"><span id="local-6989586621690852329"><span class="annot"><span class="annottext">Value -&gt; Parser [Topic]
+</span><a href="#local-6989586621690857673"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">A.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690857663"><span id="local-6989586621690857668"><span class="annot"><span class="annottext">Value -&gt; Parser [Topic]
 Value -&gt; Parser Topic
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -351,7 +351,7 @@ $cparseJSON :: Value -&gt; Parser Topic
 </span><span id="line-139"></span><span>    </span><span id="_tpData"><span class="annot"><span class="annottext">TelemetryPayload -&gt; HasuraTelemetry
 </span><a href="Hasura.Server.Telemetry.Types.html#_tpData"><span class="hs-identifier hs-var hs-var">_tpData</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#HasuraTelemetry"><span class="hs-identifier hs-type">HasuraTelemetry</span></a></span><span>
 </span><span id="line-140"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-141"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690852308"><span id="local-6989586621690852310"><span id="local-6989586621690852315"><span class="annot"><span class="annottext">Int -&gt; TelemetryPayload -&gt; ShowS
+</span><span id="line-141"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690857647"><span id="local-6989586621690857649"><span id="local-6989586621690857654"><span class="annot"><span class="annottext">Int -&gt; TelemetryPayload -&gt; ShowS
 [TelemetryPayload] -&gt; ShowS
 TelemetryPayload -&gt; String
 forall a.
@@ -364,5 +364,5 @@ showsPrec :: Int -&gt; TelemetryPayload -&gt; ShowS
 $cshowsPrec :: Int -&gt; TelemetryPayload -&gt; ShowS
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-142"></span><span>
-</span><span id="line-143"></span><span class="hs-special">$</span><span id="local-6989586621690852288"><span id="local-6989586621690852290"><span id="local-6989586621690852297"><span id="local-6989586621690852306"><span class="hs-special">(</span><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">TelemetryPayload</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-143"></span><span class="hs-special">$</span><span id="local-6989586621690857627"><span id="local-6989586621690857629"><span id="local-6989586621690857636"><span id="local-6989586621690857645"><span class="hs-special">(</span><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">TelemetryPayload</span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-144"></span></pre></body></html>

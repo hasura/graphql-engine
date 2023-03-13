@@ -1,6 +1,6 @@
-This note is in [Hasura.RQL.DDL.Schema.Cache](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache.hs#L275).
+This note is in [Hasura.RQL.DDL.Schema.Cache](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache.hs#L279).
 It is referenced at:
-  - line 420 of [Hasura.RQL.DDL.Schema.Cache](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache.hs#L420)
+  - line 424 of [Hasura.RQL.DDL.Schema.Cache](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache.hs#L424)
   - line 241 of [Hasura.RQL.DDL.Schema.Cache.Common](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache/Common.hs#L241)
   - line 281 of [Hasura.RQL.DDL.Schema.Cache.Dependencies](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache/Dependencies.hs#L281)
 

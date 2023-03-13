@@ -19482,8 +19482,17 @@ instance GHC.Classes.Eq Hasura.RQL.DDL.CustomTypes.CustomTypeValidationError
 instance GHC.Show.Show Hasura.RQL.DDL.CustomTypes.CustomTypeValidationError
 
 module Hasura.RQL.DDL.ApiLimit
-runSetApiLimits :: (MonadError QErr m, MetadataM m, CacheRWM m) => ApiLimit -> m EncJSON
+runSetApiLimits :: (MonadError QErr m, MetadataM m, CacheRWM m, MonadGetApiTimeLimit m) => ApiLimit -> m EncJSON
+compareTimeLimitWith :: MonadGetApiTimeLimit m => Maybe MaxTime -> m (Either MetadataWarning ())
+warningMessage :: MaxTime -> MaxTime -> MetadataWarning
 runRemoveApiLimits :: (MonadError QErr m, MetadataM m, CacheRWM m) => m EncJSON
+class Monad m => MonadGetApiTimeLimit m
+runGetApiTimeLimit :: MonadGetApiTimeLimit m => m (Maybe MaxTime)
+instance Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit m => Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit (Control.Monad.Trans.Reader.ReaderT r m)
+instance Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit m => Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit (Hasura.RQL.Types.SchemaCache.Build.MetadataT m)
+instance Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit m => Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit (Hasura.Tracing.TraceT m)
+instance Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit m => Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit (Control.Monad.Trans.Except.ExceptT e m)
+instance Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit m => Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit (Control.Monad.Trans.State.Strict.StateT w m)
 
 
 -- | This module defines the schema dependency gathering aspect of the
@@ -23340,22 +23349,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aDwxM. Lens' (CreateEventTriggerQuery b_aDwxM) TriggerOnReplication
-cteqCleanupConfig :: forall b_aDwxM. Lens' (CreateEventTriggerQuery b_aDwxM) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aDwxM. Lens' (CreateEventTriggerQuery b_aDwxM) (Maybe Text)
-cetqWebhook :: forall b_aDwxM. Lens' (CreateEventTriggerQuery b_aDwxM) (Maybe InputWebhook)
-cetqUpdate :: forall b_aDwxM. Lens' (CreateEventTriggerQuery b_aDwxM) (Maybe (SubscribeOpSpec b_aDwxM))
-cetqTable :: forall b_aDwxM. Lens' (CreateEventTriggerQuery b_aDwxM) (TableName b_aDwxM)
-cetqSource :: forall b_aDwxM. Lens' (CreateEventTriggerQuery b_aDwxM) SourceName
-cetqRetryConf :: forall b_aDwxM. Lens' (CreateEventTriggerQuery b_aDwxM) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aDwxM. Lens' (CreateEventTriggerQuery b_aDwxM) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aDwxM. Lens' (CreateEventTriggerQuery b_aDwxM) (Maybe RequestTransform)
-cetqReplace :: forall b_aDwxM. Lens' (CreateEventTriggerQuery b_aDwxM) Bool
-cetqName :: forall b_aDwxM. Lens' (CreateEventTriggerQuery b_aDwxM) TriggerName
-cetqInsert :: forall b_aDwxM. Lens' (CreateEventTriggerQuery b_aDwxM) (Maybe (SubscribeOpSpec b_aDwxM))
-cetqHeaders :: forall b_aDwxM. Lens' (CreateEventTriggerQuery b_aDwxM) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aDwxM. Lens' (CreateEventTriggerQuery b_aDwxM) (Maybe Bool)
-cetqDelete :: forall b_aDwxM. Lens' (CreateEventTriggerQuery b_aDwxM) (Maybe (SubscribeOpSpec b_aDwxM))
+cteqTriggerOnReplication :: forall b_aDxnA. Lens' (CreateEventTriggerQuery b_aDxnA) TriggerOnReplication
+cteqCleanupConfig :: forall b_aDxnA. Lens' (CreateEventTriggerQuery b_aDxnA) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aDxnA. Lens' (CreateEventTriggerQuery b_aDxnA) (Maybe Text)
+cetqWebhook :: forall b_aDxnA. Lens' (CreateEventTriggerQuery b_aDxnA) (Maybe InputWebhook)
+cetqUpdate :: forall b_aDxnA. Lens' (CreateEventTriggerQuery b_aDxnA) (Maybe (SubscribeOpSpec b_aDxnA))
+cetqTable :: forall b_aDxnA. Lens' (CreateEventTriggerQuery b_aDxnA) (TableName b_aDxnA)
+cetqSource :: forall b_aDxnA. Lens' (CreateEventTriggerQuery b_aDxnA) SourceName
+cetqRetryConf :: forall b_aDxnA. Lens' (CreateEventTriggerQuery b_aDxnA) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aDxnA. Lens' (CreateEventTriggerQuery b_aDxnA) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aDxnA. Lens' (CreateEventTriggerQuery b_aDxnA) (Maybe RequestTransform)
+cetqReplace :: forall b_aDxnA. Lens' (CreateEventTriggerQuery b_aDxnA) Bool
+cetqName :: forall b_aDxnA. Lens' (CreateEventTriggerQuery b_aDxnA) TriggerName
+cetqInsert :: forall b_aDxnA. Lens' (CreateEventTriggerQuery b_aDxnA) (Maybe (SubscribeOpSpec b_aDxnA))
+cetqHeaders :: forall b_aDxnA. Lens' (CreateEventTriggerQuery b_aDxnA) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aDxnA. Lens' (CreateEventTriggerQuery b_aDxnA) (Maybe Bool)
+cetqDelete :: forall b_aDxnA. Lens' (CreateEventTriggerQuery b_aDxnA) (Maybe (SubscribeOpSpec b_aDxnA))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
@@ -23437,6 +23446,7 @@ instance GHC.Base.Monad m => Hasura.Session.UserInfoM (Hasura.RQL.Types.Run.RunT
 instance GHC.Base.Monad m => Hasura.Server.Types.HasServerConfigCtx (Hasura.RQL.Types.Run.RunT m)
 instance Hasura.RQL.Types.Source.MonadResolveSource m => Hasura.RQL.Types.Source.MonadResolveSource (Hasura.RQL.Types.Run.RunT m)
 instance Hasura.RQL.DDL.EventTrigger.MonadEventLogCleanup m => Hasura.RQL.DDL.EventTrigger.MonadEventLogCleanup (Hasura.RQL.Types.Run.RunT m)
+instance Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit m => Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit (Hasura.RQL.Types.Run.RunT m)
 
 
 -- | <h1>Scheduled Triggers</h1>
@@ -24694,6 +24704,7 @@ instance GHC.Generics.Generic (Hasura.RQL.DDL.Schema.Cache.BackendInfoAndSourceM
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.RQL.DDL.Schema.Cache.BackendInfoAndSourceMetadata b)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.RQL.DDL.Schema.Cache.BackendInfoAndSourceMetadata b)
 instance Hasura.RQL.DDL.EventTrigger.MonadEventLogCleanup m => Hasura.RQL.DDL.EventTrigger.MonadEventLogCleanup (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+instance Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit m => Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
 instance Control.Monad.Trans.Class.MonadTrans Hasura.RQL.DDL.Schema.Cache.CacheRWT
 instance GHC.Base.Monad m => Hasura.RQL.Types.SchemaCache.CacheRM (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
 instance (Control.Monad.IO.Class.MonadIO m, Control.Monad.Error.Class.MonadError Hasura.Base.Error.QErr m, Hasura.Services.Network.ProvidesNetwork m, Hasura.RQL.Types.Source.MonadResolveSource m, Hasura.Server.Types.HasServerConfigCtx m) => Hasura.RQL.Types.SchemaCache.Build.CacheRWM (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
@@ -26243,12 +26254,12 @@ instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Schema.Source.RenameS
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Extended.FromJSONWithContext (Hasura.SQL.Backend.BackendSourceKind b) (Hasura.RQL.DDL.Schema.Source.AddSource b)
 
 module Hasura.RQL.DDL.Metadata
-runClearMetadata :: forall m r. (MonadIO m, CacheRWM m, MetadataM m, MonadMetadataStorageQueryAPI m, MonadBaseControl IO m, MonadReader r m, MonadError QErr m, Has (Logger Hasura) r, MonadEventLogCleanup m) => ClearMetadata -> m EncJSON
+runClearMetadata :: forall m r. (MonadIO m, CacheRWM m, MetadataM m, MonadMetadataStorageQueryAPI m, MonadBaseControl IO m, MonadReader r m, MonadError QErr m, Has (Logger Hasura) r, MonadEventLogCleanup m, MonadGetApiTimeLimit m) => ClearMetadata -> m EncJSON
 
 -- | Replace the 'current metadata' with the 'new metadata' The 'new
 --   metadata' might come via the 'Import Metadata' in console
-runReplaceMetadata :: (CacheRWM m, MetadataM m, MonadIO m, MonadBaseControl IO m, MonadMetadataStorageQueryAPI m, MonadReader r m, MonadError QErr m, Has (Logger Hasura) r, MonadEventLogCleanup m) => ReplaceMetadata -> m EncJSON
-runReplaceMetadataV2 :: forall m r. (CacheRWM m, MetadataM m, MonadIO m, MonadBaseControl IO m, MonadMetadataStorageQueryAPI m, MonadReader r m, MonadError QErr m, Has (Logger Hasura) r, MonadEventLogCleanup m) => ReplaceMetadataV2 -> m EncJSON
+runReplaceMetadata :: (CacheRWM m, MetadataM m, MonadIO m, MonadBaseControl IO m, MonadMetadataStorageQueryAPI m, MonadReader r m, MonadError QErr m, Has (Logger Hasura) r, MonadEventLogCleanup m, MonadGetApiTimeLimit m) => ReplaceMetadata -> m EncJSON
+runReplaceMetadataV2 :: forall m r. (CacheRWM m, MetadataM m, MonadIO m, MonadBaseControl IO m, MonadMetadataStorageQueryAPI m, MonadReader r m, MonadError QErr m, Has (Logger Hasura) r, MonadEventLogCleanup m, MonadGetApiTimeLimit m) => ReplaceMetadataV2 -> m EncJSON
 runExportMetadata :: forall m. (QErrM m, MetadataM m) => ExportMetadata -> m EncJSON
 runExportMetadataV2 :: forall m. (QErrM m, MetadataM m) => MetadataResourceVersion -> ExportMetadata -> m EncJSON
 runReloadMetadata :: (QErrM m, CacheRWM m, MetadataM m) => ReloadMetadata -> m EncJSON
@@ -26265,7 +26276,7 @@ runTestWebhookTransform :: QErrM m => TestWebhookTransform -> m EncJSON
 -- | The RQL query ('<i>v1</i>query')
 module Hasura.Server.API.Query
 data RQLQuery
-runQuery :: (MonadIO m, MonadError QErr m, MonadTrace m, MonadBaseControl IO m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m) => Environment -> Logger Hasura -> InstanceId -> UserInfo -> RebuildableSchemaCache -> ServerConfigCtx -> RQLQuery -> m (EncJSON, RebuildableSchemaCache)
+runQuery :: (MonadIO m, MonadError QErr m, MonadTrace m, MonadBaseControl IO m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m, MonadGetApiTimeLimit m) => Environment -> Logger Hasura -> InstanceId -> UserInfo -> RebuildableSchemaCache -> ServerConfigCtx -> RQLQuery -> m (EncJSON, RebuildableSchemaCache)
 
 -- | A predicate that determines whether the given query might
 --   modify/rebuild the schema cache. If so, it needs to acquire the global
@@ -26402,7 +26413,7 @@ RMBulk :: [RQLMetadataRequest] -> RQLMetadataV1
 --   
 --   <a>https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index/</a>
 data RQLMetadata
-runMetadataQuery :: (MonadIO m, MonadError QErr m, MonadBaseControl IO m, MonadTrace m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadEventLogCleanup m, ProvidesHasuraServices m) => Environment -> Logger Hasura -> InstanceId -> UserInfo -> ServerConfigCtx -> SchemaCacheRef -> RQLMetadata -> m (EncJSON, RebuildableSchemaCache)
+runMetadataQuery :: (MonadIO m, MonadError QErr m, MonadBaseControl IO m, MonadTrace m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadEventLogCleanup m, ProvidesHasuraServices m, MonadGetApiTimeLimit m) => Environment -> Logger Hasura -> InstanceId -> UserInfo -> ServerConfigCtx -> SchemaCacheRef -> RQLMetadata -> m (EncJSON, RebuildableSchemaCache)
 instance GHC.Generics.Generic Hasura.Server.API.Metadata.RQLMetadataV2
 instance GHC.Generics.Generic Hasura.Server.API.Metadata.RQLMetadataV1
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Metadata.RQLMetadata
@@ -27398,7 +27409,8 @@ renderHtmlTemplate :: Template -> Value -> Either String Text
 configApiGetHandler :: forall m. (MonadIO m, MonadBaseControl IO m, UserAuthentication (TraceT m), HttpLog m, HasReporter m, HasResourceLimits m) => AppContext -> AppEnv -> SpockCtxT () m ()
 data HasuraApp
 HasuraApp :: !Application -> !SchemaCacheRef -> !AsyncActionSubscriptionState -> !IO () -> HasuraApp
-mkWaiApp :: forall m. (MonadIO m, MonadFix m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, MonadVersionAPIWithExtraData m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, HasReporter m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesNetwork m) => (AppContext -> SpockT m ()) -> AppContext -> AppEnv -> Store EmptyMetrics -> m HasuraApp
+mkWaiApp :: forall m. (MonadIO m, MonadFix m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, MonadVersionAPIWithExtraData m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, HasReporter m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesNetwork m, MonadGetApiTimeLimit m) => (AppContext -> SpockT m ()) -> AppContext -> AppEnv -> Store EmptyMetrics -> m HasuraApp
+instance Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit m => Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit (Hasura.Server.App.Handler m)
 instance Hasura.Services.Network.ProvidesNetwork m => Hasura.Services.Network.ProvidesNetwork (Hasura.Server.App.Handler m)
 instance Hasura.Metadata.Class.MonadMetadataStorageQueryAPI m => Hasura.Metadata.Class.MonadMetadataStorageQueryAPI (Hasura.Server.App.Handler m)
 instance Hasura.Metadata.Class.MonadMetadataStorage m => Hasura.Metadata.Class.MonadMetadataStorage (Hasura.Server.App.Handler m)
@@ -27513,12 +27525,12 @@ flushLogger :: MonadIO m => LoggerCtx impl -> m ()
 --   last, so that we retain as many "thread stopping" log messages as
 --   possible. The order in which the finalizers is run is determined by
 --   the order in which they are introduced in the code.
-runHGEServer :: forall m. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m) => (AppContext -> SpockT m ()) -> AppContext -> AppEnv -> UTCTime -> Maybe (IO ()) -> Store EmptyMetrics -> ManagedT m ()
+runHGEServer :: forall m. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m, MonadGetApiTimeLimit m) => (AppContext -> SpockT m ()) -> AppContext -> AppEnv -> UTCTime -> Maybe (IO ()) -> Store EmptyMetrics -> ManagedT m ()
 
 -- | Part of a factorization of <a>runHGEServer</a> to expose the
 --   constructed WAI application for testing purposes. See
 --   <a>runHGEServer</a> for documentation.
-mkHGEServer :: forall m. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m) => (AppContext -> SpockT m ()) -> AppContext -> AppEnv -> Store EmptyMetrics -> ManagedT m Application
+mkHGEServer :: forall m. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m, MonadGetApiTimeLimit m) => (AppContext -> SpockT m ()) -> AppContext -> AppEnv -> Store EmptyMetrics -> ManagedT m Application
 accessDeniedErrMsg :: Text
 notifySchemaCacheSyncTx :: MetadataResourceVersion -> InstanceId -> CacheInvalidations -> TxE QErr ()
 getCatalogStateTx :: TxE QErr CatalogState
@@ -27556,6 +27568,7 @@ instance Control.Monad.IO.Class.MonadIO m => Hasura.GraphQL.Transport.WebSocket.
 instance GHC.Base.Monad m => Hasura.RQL.Types.Source.MonadResolveSource (Hasura.App.PGMetadataStorageAppT m)
 instance GHC.Base.Monad m => Hasura.GraphQL.Execute.Backend.MonadQueryTags (Hasura.App.PGMetadataStorageAppT m)
 instance GHC.Base.Monad m => Hasura.RQL.DDL.EventTrigger.MonadEventLogCleanup (Hasura.App.PGMetadataStorageAppT m)
+instance GHC.Base.Monad m => Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit (Hasura.App.PGMetadataStorageAppT m)
 instance Control.Monad.IO.Class.MonadIO m => Hasura.Metadata.Class.MonadMetadataStorage (Hasura.App.PGMetadataStorageAppT m)
 instance Control.Monad.IO.Class.MonadIO m => Hasura.Metadata.Class.MonadMetadataStorageQueryAPI (Hasura.App.PGMetadataStorageAppT m)
 instance GHC.Exception.Type.Exception Hasura.App.ExitException
