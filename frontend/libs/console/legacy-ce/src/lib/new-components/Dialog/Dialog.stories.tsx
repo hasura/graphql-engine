@@ -2,6 +2,7 @@ import React from 'react';
 import { ComponentMeta, Story } from '@storybook/react';
 import { RiPlayFill } from 'react-icons/ri';
 import { Dialog, DialogProps, FooterProps } from './Dialog';
+import { hasuraToast } from '../Toasts';
 
 export default {
   title: 'components/Dialog',
@@ -71,4 +72,41 @@ CustomFooter.args = {
   hasBackdrop: true,
   isLoading: false,
   footer: <div>custom footer</div>,
+};
+
+export const CollisionWithToast: Story<DialogProps & FooterProps> = args => (
+  <Dialog
+    hasBackdrop={args.hasBackdrop}
+    title={args.title}
+    description={args.description}
+    onClose={args.onClose}
+  >
+    <>
+      <div>I am the body!</div>
+      <Dialog.Footer
+        callToDeny={args.callToDeny}
+        callToAction={args.callToAction}
+        callToActionIconPosition="start"
+        callToActionIcon={<RiPlayFill />}
+        onClose={args.onClose}
+        onSubmit={() =>
+          hasuraToast({
+            type: 'error',
+            title: 'The toast title',
+            message: 'The toast message',
+          })
+        }
+        isLoading={args.isLoading}
+      />
+    </>
+  </Dialog>
+);
+
+CollisionWithToast.args = {
+  title: 'Title',
+  description: 'Description',
+  callToDeny: 'Cancel',
+  callToAction: 'Show toast',
+  hasBackdrop: true,
+  isLoading: false,
 };
