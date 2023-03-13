@@ -196,7 +196,7 @@ function pg_launch_container(){
     --expose="$PG_PORT" \
     --env POSTGRES_PASSWORD="$PG_PASSWORD" \
     $DOCKER_NETWORK_HOST_MODE \
-     postgis/postgis:15-3.3-alpine \
+     circleci/postgres:11.5-alpine-postgis \
     $CONF_FLAGS
 }
 
