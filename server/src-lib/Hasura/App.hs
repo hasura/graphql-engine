@@ -1150,7 +1150,8 @@ instance (Monad m) => ConsoleRenderer (PGMetadataStorageAppT m) where
     return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn
 
 instance (Monad m) => MonadVersionAPIWithExtraData (PGMetadataStorageAppT m) where
-  getExtraDataForVersionAPI = return []
+  -- we always default to CE as the `server_type` in this codebase
+  getExtraDataForVersionAPI = return ["server_type" A..= ("ce" :: Text)]
 
 instance (Monad m) => MonadGQLExecutionCheck (PGMetadataStorageAppT m) where
   checkGQLExecution userInfo _ enableAL sc query _ = runExceptT $ do
