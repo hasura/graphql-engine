@@ -1,4 +1,4 @@
-This note is in [Hasura.Eventing.ScheduledTrigger](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Eventing/ScheduledTrigger.hs#L490).
+This note is in [Hasura.Eventing.ScheduledTrigger](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Eventing/ScheduledTrigger.hs#L485).
 
 # Scheduled event lifecycle
 

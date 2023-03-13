@@ -45,3 +45,4 @@
   - [Disable query printing for metadata queries](disable-query-printing-for-metadata-queries.md)
   - [Schema Cache Sync](schema-cache-sync.md)
   - [Services](services.md)
+  - [Tracing](tracing.md)
