@@ -14,7 +14,7 @@ import Hasura.Base.Error
 import Hasura.HTTP qualified
 import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
-import Hasura.Tracing (MonadTrace, tracedHttpRequest)
+import Hasura.Tracing (MonadTrace, traceHTTPRequest)
 import Network.HTTP.Client (Manager)
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.Transformable qualified as TransformableHTTP
@@ -57,7 +57,8 @@ runRequestAcceptStatus' acceptStatus req = do
         transformableReq &~ do
           for _accResponseTimeout \x -> TransformableHTTP.timeout .= HTTP.responseTimeoutMicro x
 
-  (tracedReq, responseOrException) <- tracedHttpRequest transformableReq' (\tracedReq -> fmap (tracedReq,) . liftIO . try @HTTP.HttpException $ TransformableHTTP.performRequest tracedReq _accHttpManager)
+  (tracedReq, responseOrException) <- traceHTTPRequest transformableReq' \tracedReq ->
+    fmap (tracedReq,) . liftIO . try @HTTP.HttpException $ TransformableHTTP.performRequest tracedReq _accHttpManager
   logAgentRequest _accLogger tracedReq responseOrException
   case responseOrException of
     -- throwConnectionError is used here in order to avoid a metadata inconsistency error

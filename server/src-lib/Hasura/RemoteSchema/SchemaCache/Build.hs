@@ -8,7 +8,7 @@ where
 
 import Control.Arrow.Extended
 import Control.Arrow.Interpret
-import Control.Monad.Trans.Control (MonadBaseControl)
+import Control.Monad.Trans.Control
 import Data.Aeson
 import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
@@ -93,7 +93,8 @@ buildRemoteSchemas env =
 
     -- TODO continue propagating MonadTrace up calls so that we can get tracing
     -- for remote schema introspection. This will require modifying CacheBuild.
-    noopTrace = Tracing.runTraceTWithReporter Tracing.noReporter Tracing.sampleNever "buildSchemaCacheRule"
+    -- TODO(Antoine): do this when changing CacheBuild to be on top of the app's m.
+    noopTrace = Tracing.ignoreTraceT
 
     mkRemoteSchemaMetadataObject remoteSchema =
       MetadataObject (MORemoteSchema (_rsmName remoteSchema)) (toJSON remoteSchema)

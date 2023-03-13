@@ -67,8 +67,8 @@ logAgentRequest (Logger writeLog) req responseOrError = do
         Right response -> Just . statusCode $ responseStatus response
         Left httpExn -> Hasura.HTTP.getHTTPExceptionStatus $ Hasura.HTTP.HttpException httpExn
       _aclError = either (Just . Hasura.HTTP.serializeHTTPExceptionMessageForDebugging) (const Nothing) responseOrError
-      _aclTraceId = bsToTxt $ traceIdToHex $ Tracing.tcCurrentTrace traceCtx
-      _aclSpanId = bsToTxt $ spanIdToHex $ Tracing.tcCurrentSpan traceCtx
+      _aclTraceId = maybe "" (bsToTxt . traceIdToHex . Tracing.tcCurrentTrace) traceCtx
+      _aclSpanId = maybe "" (bsToTxt . spanIdToHex . Tracing.tcCurrentSpan) traceCtx
   writeLog AgentCommunicationLog {..}
 
 extractRequestLogInfoFromClientRequest :: Request -> RequestLogInfo
@@ -88,8 +88,8 @@ logClientError (Logger writeLog) clientError = do
         _ -> Nothing
       _aclRequest = extractRequestLogInfoFromClientInfo clientError
       _aclError = Just $ Hasura.HTTP.serializeServantClientErrorMessageForDebugging clientError
-      _aclTraceId = bsToTxt $ traceIdToHex $ Tracing.tcCurrentTrace traceCtx
-      _aclSpanId = bsToTxt $ spanIdToHex $ Tracing.tcCurrentSpan traceCtx
+      _aclTraceId = maybe "" (bsToTxt . traceIdToHex . Tracing.tcCurrentTrace) traceCtx
+      _aclSpanId = maybe "" (bsToTxt . spanIdToHex . Tracing.tcCurrentSpan) traceCtx
   writeLog AgentCommunicationLog {..}
 
 extractRequestLogInfoFromClientInfo :: ClientError -> Maybe RequestLogInfo

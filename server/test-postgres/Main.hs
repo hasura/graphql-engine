@@ -15,11 +15,12 @@ import Data.Time.Clock (getCurrentTime)
 import Data.URL.Template
 import Database.PG.Query qualified as PG
 import Hasura.App
-  ( PGMetadataStorageAppT (..),
+  ( PGMetadataStorageAppT,
     initGlobalCtx,
     initialiseContext,
     mkMSSQLSourceResolver,
     mkPgSourceResolver,
+    runPGMetadataStorageAppT,
   )
 import Hasura.Backends.Postgres.Connection.Settings
 import Hasura.Backends.Postgres.Execute.Types
@@ -132,7 +133,7 @@ main = do
         let run :: ExceptT QErr (PGMetadataStorageAppT CacheBuild) a -> IO a
             run =
               runExceptT
-                >>> flip runPGMetadataStorageAppT (appCtx, appEnv)
+                >>> runPGMetadataStorageAppT (appCtx, appEnv)
                 >>> runCacheBuild cacheBuildParams
                 >>> runExceptT
                 >=> flip onLeft printErrJExit

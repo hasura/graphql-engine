@@ -4,8 +4,6 @@ module Hasura.Server.AuthSpec (spec) where
 
 import Control.Concurrent.Extended (ForkableMonadIO)
 import Control.Lens hiding ((.=))
-import Control.Monad.Trans.Control
-import Control.Monad.Trans.Managed
 import Crypto.JOSE.JWK qualified as Jose
 import Crypto.JWT qualified as JWT
 import Data.Aeson ((.=))
@@ -24,7 +22,6 @@ import Hasura.Server.Auth hiding (getUserInfoWithExpTime, processJwt)
 import Hasura.Server.Auth.JWT hiding (processJwt)
 import Hasura.Server.Utils
 import Hasura.Session
-import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Test.Hspec
@@ -626,16 +623,8 @@ mkRoleNameE = fromMaybe (error "fixme") . mkRoleName
 mkJSONPathE :: Text -> J.JSONPath
 mkJSONPathE = either (error . T.unpack) id . parseJSONPath
 
-newtype NoReporter a = NoReporter {runNoReporter :: IO a}
-  deriving newtype (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO)
-
-instance Tracing.HasReporter NoReporter
-
-instance Tracing.HasReporter (ManagedT NoReporter)
-
 setupAuthMode' ::
-  ( Tracing.HasReporter m,
-    ForkableMonadIO m
+  ( ForkableMonadIO m
   ) =>
   Maybe (HashSet AdminSecretHash) ->
   Maybe AuthHook ->
@@ -644,19 +633,15 @@ setupAuthMode' ::
   m (Either () AuthMode)
 setupAuthMode' mAdminSecretHash mWebHook jwtSecrets mUnAuthRole = do
   httpManager <- liftIO $ HTTP.newManager HTTP.defaultManagerSettings
-  -- just throw away the error message for ease of testing:
-  fmap (either (const $ Left ()) Right) $
-    liftIO $
-      runNoReporter $
-        lowerManagedT $
-          runExceptT $
-            setupAuthMode
-              (fromMaybe Set.empty mAdminSecretHash)
-              mWebHook
-              jwtSecrets
-              mUnAuthRole
-              (Logger $ void . return)
-              httpManager
+  fmap (mapLeft $ const ()) $
+    runExceptT $
+      setupAuthMode
+        (fromMaybe Set.empty mAdminSecretHash)
+        mWebHook
+        jwtSecrets
+        mUnAuthRole
+        (Logger $ void . return)
+        httpManager
 
 mkClaimsSetWithUnregisteredClaims :: J.Object -> JWT.ClaimsSet
 mkClaimsSetWithUnregisteredClaims unregisteredClaims =

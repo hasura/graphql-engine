@@ -336,7 +336,7 @@ invokeRequest reqDetails@RequestDetails {..} respTransform' sessionVars logger =
       reqBody = fromMaybe J.Null $ view HTTP.body finalReq >>= J.decode @J.Value
   manager <- asks getter
   -- Perform the HTTP Request
-  eitherResp <- tracedHttpRequest finalReq $ runHTTP manager
+  eitherResp <- traceHTTPRequest finalReq $ runHTTP manager
   -- Log the result along with the pre/post transformation Request data
   logger eitherResp reqDetails
   resp <- eitherResp `onLeft` (throwError . HTTPError reqBody)

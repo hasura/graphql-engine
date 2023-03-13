@@ -109,7 +109,7 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
               mutationOutput
               columnInfos
           rowCount = tshow . length $ IR._aiInsertObject multiObjIns
-      Tracing.trace ("Insert (" <> rowCount <> ") " <> qualifiedObjectToText table) do
+      Tracing.newSpan ("Insert (" <> rowCount <> ") " <> qualifiedObjectToText table) do
         Tracing.attachMetadata [("count", rowCount)]
         PGE.execInsertQuery stringifyNum tCase userInfo (insertQuery, planVars)
 
@@ -146,28 +146,29 @@ insertObject ::
   Options.StringifyNumbers ->
   Maybe NamingCase ->
   m (Int, Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal))
-insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase = Tracing.trace ("Insert " <> qualifiedObjectToText table) do
-  validateInsert (Map.keys columns) (map IR._riRelationInfo objectRels) (Map.keys additionalColumns)
+insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase =
+  Tracing.newSpan ("Insert " <> qualifiedObjectToText table) do
+    validateInsert (Map.keys columns) (map IR._riRelationInfo objectRels) (Map.keys additionalColumns)
 
-  -- insert all object relations and fetch this insert dependent column values
-  objInsRes <- forM beforeInsert $ insertObjRel planVars userInfo stringifyNum tCase
+    -- insert all object relations and fetch this insert dependent column values
+    objInsRes <- forM beforeInsert $ insertObjRel planVars userInfo stringifyNum tCase
 
-  -- prepare final insert columns
-  let objRelAffRows = sum $ map fst objInsRes
-      objRelDeterminedCols = Map.fromList $ concatMap snd objInsRes
-      finalInsCols = presetValues <> columns <> objRelDeterminedCols <> additionalColumns
+    -- prepare final insert columns
+    let objRelAffRows = sum $ map fst objInsRes
+        objRelDeterminedCols = Map.fromList $ concatMap snd objInsRes
+        finalInsCols = presetValues <> columns <> objRelDeterminedCols <> additionalColumns
 
-  let cte = mkInsertQ table onConflict finalInsCols checkCond
+    let cte = mkInsertQ table onConflict finalInsCols checkCond
 
-  PGE.MutateResp affRows colVals <-
-    liftTx $
-      PGE.mutateAndFetchCols @pgKind table allColumns (PGT.MCCheckConstraint cte, planVars) stringifyNum tCase
-  colValM <- asSingleObject colVals
+    PGE.MutateResp affRows colVals <-
+      liftTx $
+        PGE.mutateAndFetchCols @pgKind table allColumns (PGT.MCCheckConstraint cte, planVars) stringifyNum tCase
+    colValM <- asSingleObject colVals
 
-  arrRelAffRows <- bool (withArrRels colValM) (return 0) $ null allAfterInsertRels
-  let totAffRows = objRelAffRows + affRows + arrRelAffRows
+    arrRelAffRows <- bool (withArrRels colValM) (return 0) $ null allAfterInsertRels
+    let totAffRows = objRelAffRows + affRows + arrRelAffRows
 
-  return (totAffRows, colValM)
+    return (totAffRows, colValM)
   where
     IR.AnnotatedInsertData (IR.Single annObj) table checkCond allColumns presetValues (BackendInsert onConflict) = singleObjIns
     columns = Map.fromList $ IR.getInsertColumns annObj

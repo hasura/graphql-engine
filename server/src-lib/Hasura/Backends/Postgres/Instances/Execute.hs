@@ -491,7 +491,7 @@ mkCurPlanTx userInfo ps@(PreparedSql q prepMap) =
       -- WARNING: this quietly assumes the intmap keys are contiguous
       prepArgs = fst <$> IntMap.elems args
    in (,Just ps) $ OnBaseMonad do
-        Tracing.trace "Postgres" $
+        Tracing.newSpan "Postgres" $
           runIdentity . PG.getRow
             <$> PG.rawQE dmlTxErrorHandler q prepArgs True
 

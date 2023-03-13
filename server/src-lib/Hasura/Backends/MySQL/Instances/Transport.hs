@@ -49,7 +49,7 @@ runQuery ::
 runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql _ = do
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId
   withElapsedTime $
-    trace ("MySQL Query for root field " <>> fieldName) $
+    newSpan ("MySQL Query for root field " <>> fieldName) $
       run tx
 
 runQueryExplain ::

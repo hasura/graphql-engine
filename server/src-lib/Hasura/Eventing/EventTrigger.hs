@@ -55,6 +55,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as Key
 import Data.Aeson.KeyMap qualified as KeyMap
+import Data.Aeson.Lens qualified as JL
 import Data.Aeson.TH
 import Data.Has
 import Data.HashMap.Strict qualified as M
@@ -280,10 +281,10 @@ logFetchedEventsStatistics logger backendEvents =
 processEventQueue ::
   forall m.
   ( MonadIO m,
-    Tracing.HasReporter m,
     MonadBaseControl IO m,
     LA.Forall (LA.Pure m),
-    MonadMask m
+    MonadMask m,
+    Tracing.MonadTrace m
   ) =>
   L.Logger L.Hasura ->
   FetchedEventsStatsLogger ->
@@ -418,16 +419,31 @@ processEventQueue logger statsLogger httpMgr getSchemaCache EventEngineCtx {..} 
                       "It looks like the events processor is keeping up again."
               return (eventsNext, 0, False)
 
+    -- \| Extract a trace context from an event trigger payload.
+    extractEventContext :: forall io. MonadIO io => J.Value -> io (Maybe Tracing.TraceContext)
+    extractEventContext e = do
+      let traceIdMaybe =
+            Tracing.traceIdFromHex . txtToBs
+              =<< e ^? JL.key "trace_context" . JL.key "trace_id" . JL._String
+      for traceIdMaybe $ \traceId -> do
+        freshSpanId <- Tracing.randomSpanId
+        let parentSpanId =
+              Tracing.spanIdFromHex . txtToBs
+                =<< e ^? JL.key "trace_context" . JL.key "span_id" . JL._String
+            samplingState =
+              Tracing.samplingStateFromHeader $
+                e ^? JL.key "trace_context" . JL.key "sampling_state" . JL._String
+        pure $ Tracing.TraceContext traceId freshSpanId parentSpanId samplingState
+
     processEvent ::
       forall io r b.
       ( MonadIO io,
         MonadReader r io,
         Has HTTP.Manager r,
         Has (L.Logger L.Hasura) r,
-        Tracing.HasReporter io,
         MonadMask io,
-        MonadBaseControl IO io,
-        BackendEventTrigger b
+        BackendEventTrigger b,
+        Tracing.MonadTrace io
       ) =>
       EventWithSource b ->
       io ()
@@ -441,11 +457,11 @@ processEventQueue logger statsLogger httpMgr getSchemaCache EventEngineCtx {..} 
 
       cache <- liftIO getSchemaCache
 
-      tracingCtx <- liftIO (Tracing.extractEventContext (eEvent e))
+      trace <-
+        extractEventContext (eEvent e) <&> \case
+          Nothing -> Tracing.newTrace Tracing.sampleAlways
+          Just ctx -> Tracing.newTraceWith ctx Tracing.sampleAlways
       let spanName eti = "Event trigger: " <> unNonEmptyText (unTriggerName (etiName eti))
-          runTraceT =
-            (maybe Tracing.runTraceT Tracing.runTraceTInContext tracingCtx)
-              Tracing.sampleAlways
 
       maintenanceModeVersionEither :: Either QErr (MaintenanceMode MaintenanceModeVersion) <-
         case maintenanceMode of
@@ -468,7 +484,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache EventEngineCtx {..} 
               -- For such an event, we unlock the event and retry after a minute
               runExceptT (setRetry sourceConfig e (addUTCTime 60 currentTime) maintenanceModeVersion)
                 >>= flip onLeft logQErr
-            Right eti -> runTraceT (spanName eti) do
+            Right eti -> trace (spanName eti) do
               eventExecutionStartTime <- liftIO getCurrentTime
               let webhook = wciCachedValue $ etiWebhookInfo eti
                   retryConf = etiRetryConf eti

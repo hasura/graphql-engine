@@ -4,7 +4,7 @@
 module Hasura.Backends.DataConnector.Adapter.Metadata () where
 
 import Control.Arrow.Extended
-import Control.Monad.Trans.Control (MonadBaseControl)
+import Control.Monad.Trans.Control
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
@@ -76,6 +76,7 @@ instance BackendMetadata 'DataConnector where
   supportsBeingRemoteRelationshipTarget = supportsBeingRemoteRelationshipTarget'
 
 resolveBackendInfo' ::
+  forall arr m.
   ( ArrowChoice arr,
     Inc.ArrowCache m arr,
     Inc.ArrowDistribute arr,
@@ -97,14 +98,6 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
   returnA -< HashMap.catMaybes maybeDataConnectorCapabilities
   where
     getDataConnectorCapabilitiesIfNeeded ::
-      forall arr m.
-      ( ArrowChoice arr,
-        Inc.ArrowCache m arr,
-        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
-        MonadIO m,
-        MonadBaseControl IO m,
-        ProvidesNetwork m
-      ) =>
       (Inc.Dependency (Maybe (HashMap DC.DataConnectorName Inc.InvalidationKey)), DC.DataConnectorName, DC.DataConnectorOptions) `arr` Maybe DC.DataConnectorInfo
     getDataConnectorCapabilitiesIfNeeded = Inc.cache proc (invalidationKeys, dataConnectorName, dataConnectorOptions) -> do
       let metadataObj = MetadataObject (MODataConnectorAgent dataConnectorName) $ J.toJSON dataConnectorName
@@ -117,7 +110,6 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
         |) metadataObj
 
     getDataConnectorCapabilities ::
-      (MonadIO m, MonadBaseControl IO m) =>
       DC.DataConnectorOptions ->
       HTTP.Manager ->
       m (Either QErr DC.DataConnectorInfo)
@@ -133,7 +125,9 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
       capabilitiesCase defaultAction capabilitiesAction errorAction capabilitiesU
 
 resolveSourceConfig' ::
-  (MonadIO m, MonadBaseControl IO m) =>
+  ( MonadIO m,
+    MonadBaseControl IO m
+  ) =>
   Logger Hasura ->
   SourceName ->
   DC.ConnSourceConfig ->

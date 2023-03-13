@@ -35,6 +35,7 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Types qualified as J
 import Data.ByteString.Builder qualified as BB
 import Data.ByteString.Char8 qualified as B8
+import Data.ByteString.Char8 qualified as Char8
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.HashMap.Strict qualified as M
@@ -96,6 +97,7 @@ import Hasura.Server.Utils
 import Hasura.Server.Version
 import Hasura.Services
 import Hasura.Session
+import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Types qualified as HTTP
 import Network.Mime (defaultMimeLookup)
@@ -129,8 +131,7 @@ newtype Handler m a = Handler (ReaderT HandlerCtx (ExceptT QErr m) a)
       MonadBaseControl b,
       MonadReader HandlerCtx,
       MonadError QErr,
-      -- Tracing.HasReporter,
-      Tracing.MonadTrace,
+      MonadTrace,
       HasResourceLimits,
       MonadResolveSource,
       HasServerConfigCtx,
@@ -271,10 +272,10 @@ mkSpockAction ::
   ( MonadIO m,
     MonadBaseControl IO m,
     FromJSON a,
-    UserAuthentication (Tracing.TraceT m),
+    UserAuthentication m,
     HttpLog m,
-    Tracing.HasReporter m,
-    HasResourceLimits m
+    HasResourceLimits m,
+    MonadTrace m
   ) =>
   AppContext ->
   AppEnv ->
@@ -282,7 +283,7 @@ mkSpockAction ::
   (Bool -> QErr -> Value) ->
   -- | `QErr` modifier
   (QErr -> QErr) ->
-  APIHandler (Tracing.TraceT m) a ->
+  APIHandler m a ->
   Spock.ActionT m ()
 mkSpockAction appCtx@AppContext {..} appEnv@AppEnv {..} qErrEncoder qErrModifier apiHandler = do
   req <- Spock.request
@@ -294,19 +295,35 @@ mkSpockAction appCtx@AppContext {..} appEnv@AppEnv {..} qErrEncoder qErrModifier
   (ioWaitTime, reqBody) <- withElapsedTime $ liftIO $ Wai.strictRequestBody req
 
   (requestId, headers) <- getRequestId origHeaders
-  tracingCtx <- liftIO $ Tracing.extractB3HttpContext headers
+  tracingCtx <- liftIO do
+    -- B3 TraceIds can have a length of either 64 bits (16 hex chars) or 128 bits
+    -- (32 hex chars). For 64-bit TraceIds, we pad them with zeros on the left to
+    -- make them 128 bits long.
+    let traceIdMaybe =
+          lookup "X-B3-TraceId" headers >>= \rawTraceId ->
+            if
+                | Char8.length rawTraceId == 32 ->
+                    Tracing.traceIdFromHex rawTraceId
+                | Char8.length rawTraceId == 16 ->
+                    Tracing.traceIdFromHex $ Char8.replicate 16 '0' <> rawTraceId
+                | otherwise ->
+                    Nothing
+    for traceIdMaybe $ \traceId -> do
+      freshSpanId <- Tracing.randomSpanId
+      let parentSpanId = Tracing.spanIdFromHex =<< lookup "X-B3-SpanId" headers
+          samplingState = Tracing.samplingStateFromHeader $ lookup "X-B3-Sampled" headers
+      pure $ Tracing.TraceContext traceId freshSpanId parentSpanId samplingState
 
-  let runTraceT ::
+  let runTrace ::
         forall m1 a1.
-        (MonadIO m1, MonadBaseControl IO m1, Tracing.HasReporter m1) =>
-        Tracing.TraceT m1 a1 ->
+        (MonadIO m1, MonadTrace m1) =>
+        m1 a1 ->
         m1 a1
-      runTraceT = do
-        (maybe Tracing.runTraceT Tracing.runTraceTInContext tracingCtx)
-          appEnvTraceSamplingPolicy
-          (fromString (B8.unpack pathInfo))
+      runTrace = case tracingCtx of
+        Nothing -> Tracing.newTrace appEnvTraceSamplingPolicy (fromString (B8.unpack pathInfo))
+        Just ctx -> Tracing.newTraceWith ctx appEnvTraceSamplingPolicy (fromString (B8.unpack pathInfo))
 
-      getInfo parsedRequest = do
+  let getInfo parsedRequest = do
         authenticationResp <- lift (resolveUserInfo (_lsLogger appEnvLoggers) appEnvManager headers acAuthMode parsedRequest)
         authInfo <- onLeft authenticationResp (logErrorAndResp Nothing requestId req (reqBody, Nothing) False origHeaders (ExtraUserInfo Nothing) . qErrModifier)
         let (userInfo, _, authHeaders, extraUserInfo) = authInfo
@@ -318,7 +335,7 @@ mkSpockAction appCtx@AppContext {..} appEnv@AppEnv {..} qErrEncoder qErrModifier
             extraUserInfo
           )
 
-  mapActionT runTraceT $ do
+  mapActionT runTrace do
     -- Add the request ID to the tracing metadata so that we
     -- can correlate requests and traces
     lift $ Tracing.attachMetadata [("request_id", unRequestId requestId)]
@@ -400,7 +417,7 @@ v1QueryHandler ::
     MonadError QErr m,
     MonadBaseControl IO m,
     MonadMetadataApiAuthorization m,
-    Tracing.MonadTrace m,
+    MonadTrace m,
     MonadReader HandlerCtx m,
     MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
@@ -453,7 +470,7 @@ v1MetadataHandler ::
     MonadError QErr m,
     MonadBaseControl IO m,
     MonadReader HandlerCtx m,
-    Tracing.MonadTrace m,
+    MonadTrace m,
     MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     MonadMetadataApiAuthorization m,
@@ -463,7 +480,7 @@ v1MetadataHandler ::
   ) =>
   RQLMetadata ->
   m (HttpResponse EncJSON)
-v1MetadataHandler query = Tracing.trace "Metadata" $ do
+v1MetadataHandler query = Tracing.newSpan "Metadata" $ do
   (liftEitherM . authorizeV1MetadataApi query) =<< ask
   userInfo <- asks hcUser
   AppContext {..} <- asks hcAppContext
@@ -505,7 +522,7 @@ v2QueryHandler ::
     MonadError QErr m,
     MonadBaseControl IO m,
     MonadMetadataApiAuthorization m,
-    Tracing.MonadTrace m,
+    MonadTrace m,
     MonadReader HandlerCtx m,
     MonadMetadataStorage m,
     MonadResolveSource m,
@@ -514,7 +531,7 @@ v2QueryHandler ::
   ) =>
   V2Q.RQLQuery ->
   m (HttpResponse EncJSON)
-v2QueryHandler query = Tracing.trace "v2 Query" $ do
+v2QueryHandler query = Tracing.newSpan "v2 Query" $ do
   (liftEitherM . authorizeV2QueryApi query) =<< ask
   scRef <- asks (acCacheRef . hcAppContext)
   logger <- asks (_lsLogger . appEnvLoggers . hcAppEnv)
@@ -553,7 +570,7 @@ v1Alpha1GQHandler ::
     MonadBaseControl IO m,
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
-    Tracing.MonadTrace m,
+    MonadTrace m,
     GH.MonadExecuteQuery m,
     MonadError QErr m,
     MonadReader HandlerCtx m,
@@ -595,7 +612,7 @@ v1GQHandler ::
     MonadBaseControl IO m,
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
-    Tracing.MonadTrace m,
+    MonadTrace m,
     GH.MonadExecuteQuery m,
     MonadError QErr m,
     MonadReader HandlerCtx m,
@@ -613,7 +630,7 @@ v1GQRelayHandler ::
     MonadBaseControl IO m,
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
-    Tracing.MonadTrace m,
+    MonadTrace m,
     GH.MonadExecuteQuery m,
     MonadError QErr m,
     MonadReader HandlerCtx m,
@@ -634,7 +651,7 @@ gqlExplainHandler ::
     MonadReader HandlerCtx m,
     MonadMetadataStorage m,
     EB.MonadQueryTags m,
-    Tracing.MonadTrace m
+    MonadTrace m
   ) =>
   GE.GQLExplain ->
   m (HttpResponse EncJSON)
@@ -712,7 +729,13 @@ renderHtmlTemplate template jVal =
 -- | Default implementation of the 'MonadConfigApiHandler'
 configApiGetHandler ::
   forall m.
-  (MonadIO m, MonadBaseControl IO m, UserAuthentication (Tracing.TraceT m), HttpLog m, Tracing.HasReporter m, HasResourceLimits m) =>
+  ( MonadIO m,
+    MonadBaseControl IO m,
+    UserAuthentication m,
+    HttpLog m,
+    HasResourceLimits m,
+    MonadTrace m
+  ) =>
   AppContext ->
   AppEnv ->
   Spock.SpockCtxT () m ()
@@ -751,13 +774,13 @@ mkWaiApp ::
     ConsoleRenderer m,
     MonadVersionAPIWithExtraData m,
     HttpLog m,
-    UserAuthentication (Tracing.TraceT m),
+    UserAuthentication m,
     MonadMetadataApiAuthorization m,
     E.MonadGQLExecutionCheck m,
     MonadConfigApiHandler m,
     MonadQueryLog m,
     WS.MonadWSLog m,
-    Tracing.HasReporter m,
+    MonadTrace m,
     GH.MonadExecuteQuery m,
     HasResourceLimits m,
     MonadMetadataStorageQueryAPI m,
@@ -818,12 +841,12 @@ httpApp ::
     ConsoleRenderer m,
     MonadVersionAPIWithExtraData m,
     HttpLog m,
-    UserAuthentication (Tracing.TraceT m),
+    UserAuthentication m,
     MonadMetadataApiAuthorization m,
     E.MonadGQLExecutionCheck m,
     MonadConfigApiHandler m,
     MonadQueryLog m,
-    Tracing.HasReporter m,
+    MonadTrace m,
     GH.MonadExecuteQuery m,
     MonadMetadataStorageQueryAPI m,
     HasResourceLimits m,
@@ -908,10 +931,11 @@ httpApp setupHook appCtx@AppContext {..} appEnv@AppEnv {..} ekgStore = do
           MonadMetadataStorage n,
           EB.MonadQueryTags n,
           HasResourceLimits n,
-          ProvidesNetwork n
+          ProvidesNetwork n,
+          MonadTrace n
         ) =>
         RestRequest Spock.SpockMethod ->
-        Handler (Tracing.TraceT n) (HttpLogGraphQLInfo, APIResp)
+        Handler n (HttpLogGraphQLInfo, APIResp)
       customEndpointHandler restReq = do
         endpoints <- liftIO $ scEndpoints <$> getSchemaCache acCacheRef
         execCtx <- mkExecutionContext
@@ -1077,14 +1101,14 @@ httpApp setupHook appCtx@AppContext {..} appEnv@AppEnv {..} ekgStore = do
       ( FromJSON a,
         MonadIO n,
         MonadBaseControl IO n,
-        UserAuthentication (Tracing.TraceT n),
+        UserAuthentication n,
         HttpLog n,
-        Tracing.HasReporter n,
+        MonadTrace n,
         HasResourceLimits n
       ) =>
       (Bool -> QErr -> Value) ->
       (QErr -> QErr) ->
-      APIHandler (Tracing.TraceT n) a ->
+      APIHandler n a ->
       Spock.ActionT n ()
     spockAction qErrEncoder qErrModifier apiHandler = mkSpockAction appCtx appEnv qErrEncoder qErrModifier apiHandler
 

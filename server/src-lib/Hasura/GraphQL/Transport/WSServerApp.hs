@@ -54,16 +54,16 @@ createWSServerApp ::
   ( MonadIO m,
     MC.MonadBaseControl IO m,
     LA.Forall (LA.Pure m),
-    UserAuthentication (Tracing.TraceT m),
+    UserAuthentication m,
     E.MonadGQLExecutionCheck m,
     WS.MonadWSLog m,
     MonadQueryLog m,
-    Tracing.HasReporter m,
     MonadExecuteQuery m,
     MonadMetadataStorage m,
     EB.MonadQueryTags m,
     HasResourceLimits m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    Tracing.MonadTrace m
   ) =>
   Env.Environment ->
   HashSet (L.EngineLogType L.Hasura) ->

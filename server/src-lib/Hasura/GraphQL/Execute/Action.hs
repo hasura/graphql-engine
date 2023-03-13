@@ -432,9 +432,9 @@ asyncActionsProcessor ::
   ( MonadIO m,
     MonadBaseControl IO m,
     LA.Forall (LA.Pure m),
-    Tracing.HasReporter m,
     MonadMetadataStorage m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    Tracing.MonadTrace m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
@@ -469,51 +469,51 @@ asyncActionsProcessor env logger getSCFromRef' lockedActionEvents prometheusMetr
         liftIO $ sleep $ milliseconds sleepTime
   where
     callHandler :: ActionCache -> ActionLogItem -> m ()
-    callHandler actionCache actionLogItem = Tracing.runTraceT Tracing.sampleAlways "async actions processor" do
-      httpManager <- askHTTPManager
-      let ActionLogItem
-            actionId
-            actionName
-            reqHeaders
-            sessionVariables
-            inputPayload = actionLogItem
-      case Map.lookup actionName actionCache of
-        Nothing -> return ()
-        Just actionInfo -> do
-          let definition = _aiDefinition actionInfo
-              outputFields = IR.getActionOutputFields $ snd $ _aiOutputType actionInfo
-              webhookUrl = _adHandler definition
-              forwardClientHeaders = _adForwardClientHeaders definition
-              confHeaders = _adHeaders definition
-              timeout = _adTimeout definition
-              outputType = _adOutputType definition
-              actionContext = ActionContext actionName
-              metadataRequestTransform = _adRequestTransform definition
-              metadataResponseTransform = _adResponseTransform definition
-          eitherRes <-
-            runExceptT $
-              -- TODO: do we need to add the logger as a reader? can't we just give it as an argument?
-              flip runReaderT logger $
-                callWebhook
-                  env
-                  httpManager
-                  prometheusMetrics
-                  outputType
-                  outputFields
-                  reqHeaders
-                  confHeaders
-                  forwardClientHeaders
-                  webhookUrl
-                  (ActionWebhookPayload actionContext sessionVariables inputPayload gqlQueryText)
-                  timeout
-                  metadataRequestTransform
-                  metadataResponseTransform
-          resE <-
-            setActionStatus actionId $ case eitherRes of
-              Left e -> AASError e
-              Right (responsePayload, _) -> AASCompleted $ J.toJSON responsePayload
-          removeEventFromLockedEvents (EventId (actionIdToText actionId)) lockedActionEvents
-          liftIO $ onLeft resE mempty
+    callHandler actionCache actionLogItem =
+      Tracing.newTrace Tracing.sampleAlways "async actions processor" do
+        httpManager <- askHTTPManager
+        let ActionLogItem
+              actionId
+              actionName
+              reqHeaders
+              sessionVariables
+              inputPayload = actionLogItem
+        case Map.lookup actionName actionCache of
+          Nothing -> return ()
+          Just actionInfo -> do
+            let definition = _aiDefinition actionInfo
+                outputFields = IR.getActionOutputFields $ snd $ _aiOutputType actionInfo
+                webhookUrl = _adHandler definition
+                forwardClientHeaders = _adForwardClientHeaders definition
+                confHeaders = _adHeaders definition
+                timeout = _adTimeout definition
+                outputType = _adOutputType definition
+                actionContext = ActionContext actionName
+                metadataRequestTransform = _adRequestTransform definition
+                metadataResponseTransform = _adResponseTransform definition
+            eitherRes <-
+              runExceptT $
+                flip runReaderT logger $
+                  callWebhook
+                    env
+                    httpManager
+                    prometheusMetrics
+                    outputType
+                    outputFields
+                    reqHeaders
+                    confHeaders
+                    forwardClientHeaders
+                    webhookUrl
+                    (ActionWebhookPayload actionContext sessionVariables inputPayload gqlQueryText)
+                    timeout
+                    metadataRequestTransform
+                    metadataResponseTransform
+            resE <-
+              setActionStatus actionId $ case eitherRes of
+                Left e -> AASError e
+                Right (responsePayload, _) -> AASCompleted $ J.toJSON responsePayload
+            removeEventFromLockedEvents (EventId (actionIdToText actionId)) lockedActionEvents
+            liftIO $ onLeft resE mempty
 
 callWebhook ::
   forall m r.
@@ -593,7 +593,7 @@ callWebhook
         actualSize = fromMaybe requestBodySize transformedReqSize
 
     httpResponse <-
-      Tracing.tracedHttpRequest actualReq $ \request ->
+      Tracing.traceHTTPRequest actualReq $ \request ->
         liftIO . try $ HTTP.performRequest request manager
 
     let requestInfo = ActionRequestInfo webhookEnvName postPayload (confHeaders <> toHeadersConf clientHeaders) transformedReq

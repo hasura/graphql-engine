@@ -57,7 +57,7 @@ runDBQuery' ::
 runDBQuery' requestId query fieldName _userInfo logger SourceConfig {..} action queryRequest _ = do
   void $ HGL.logQueryLog logger $ mkQueryLog query fieldName queryRequest requestId
   withElapsedTime
-    . Tracing.trace ("Data Connector backend query for root field " <>> fieldName)
+    . Tracing.newSpan ("Data Connector backend query for root field " <>> fieldName)
     . flip runAgentClientT (AgentClientContext logger _scEndpoint _scManager _scTimeoutMicroseconds)
     . runOnBaseMonad
     $ action
@@ -108,7 +108,7 @@ runDBMutation' ::
 runDBMutation' requestId query fieldName _userInfo logger SourceConfig {..} action queryRequest _ = do
   void $ HGL.logQueryLog logger $ mkQueryLog query fieldName queryRequest requestId
   withElapsedTime
-    . Tracing.trace ("Data Connector backend mutation for root field " <>> fieldName)
+    . Tracing.newSpan ("Data Connector backend mutation for root field " <>> fieldName)
     . flip runAgentClientT (AgentClientContext logger _scEndpoint _scManager _scTimeoutMicroseconds)
     . runOnBaseMonad
     $ action

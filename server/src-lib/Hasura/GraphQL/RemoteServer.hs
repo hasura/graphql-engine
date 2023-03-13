@@ -164,7 +164,7 @@ execRemoteGQ env userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
           & set HTTP.timeout (HTTP.responseTimeoutMicro (timeout * 1000000))
 
   manager <- askHTTPManager
-  Tracing.tracedHttpRequest req \req' -> do
+  Tracing.traceHTTPRequest req \req' -> do
     (time, res) <- withElapsedTime $ liftIO $ try $ HTTP.performRequest req' manager
     resp <- onLeft res (throwRemoteSchemaHttp webhookEnvRecord)
     pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)

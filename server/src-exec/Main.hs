@@ -30,7 +30,7 @@ import Hasura.Server.Migrate (downgradeCatalog)
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
 import Hasura.Server.Version
 import Hasura.ShutdownLatch
-import Hasura.Tracing (sampleAlways)
+import Hasura.Tracing (ignoreTraceT, sampleAlways)
 import System.Environment (getEnvironment, lookupEnv, unsetEnv)
 import System.Exit qualified as Sys
 import System.Metrics qualified as EKG
@@ -55,7 +55,7 @@ main = maybeWithGhcDebug $ do
     clearEnvironment = getEnvironment >>= traverse_ \(v, _) -> unsetEnv v
 
 runApp :: Env.Environment -> HGEOptions (ServeOptions Hasura) -> IO ()
-runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
+runApp env (HGEOptions rci metadataDbUrl hgeCmd) = ignoreTraceT do
   initTime <- liftIO getCurrentTime
 
   case hgeCmd of
@@ -74,7 +74,7 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
 
         pure (EKG.subset EKG.emptyOf store, serverMetrics)
 
-      prometheusMetrics <- makeDummyPrometheusMetrics
+      prometheusMetrics <- lift makeDummyPrometheusMetrics
 
       -- It'd be nice if we didn't have to call runManagedT twice here, but
       -- there is a data dependency problem since the call to runPGMetadataStorageApp
@@ -93,11 +93,13 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
         let Loggers _ logger _ = appEnvLoggers appEnv
 
         _idleGCThread <-
-          C.forkImmortal "ourIdleGC" logger $
-            GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
+          lift $
+            C.forkImmortal "ourIdleGC" logger $
+              GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 
-        flip runPGMetadataStorageAppT (appCtx, appEnv) . lowerManagedT $ do
-          runHGEServer (const $ pure ()) appCtx appEnv initTime Nothing ekgStore
+        runPGMetadataStorageAppT (appCtx, appEnv) $
+          lowerManagedT $
+            runHGEServer (const $ pure ()) appCtx appEnv initTime Nothing ekgStore
     HCExport -> do
       GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo fetchMetadataFromCatalog

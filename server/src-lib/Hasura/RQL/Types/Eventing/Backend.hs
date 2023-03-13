@@ -38,7 +38,7 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     TriggerName ->
     Value ->
     UserInfo ->
-    Tracing.TraceContext ->
+    Maybe Tracing.TraceContext ->
     m EventId
 
   -- | @fetchUndeliveredEvents@ fetches the undelivered events from the source

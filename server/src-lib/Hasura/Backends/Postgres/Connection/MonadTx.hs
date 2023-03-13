@@ -137,19 +137,18 @@ sessionInfoJsonExp = S.SELit . encodeToStrictText
 withUserInfo :: (MonadIO m) => UserInfo -> PG.TxET QErr m a -> PG.TxET QErr m a
 withUserInfo uInfo tx = setHeadersTx (_uiSession uInfo) >> tx
 
-setTraceContextInTx :: (MonadIO m) => Tracing.TraceContext -> PG.TxET QErr m ()
-setTraceContextInTx traceCtx = PG.unitQE defaultTxErrorHandler sql () False
-  where
-    sql =
-      PG.fromText $
-        "SET LOCAL \"hasura.tracecontext\" = "
-          <> toSQLTxt (S.SELit . encodeToStrictText . Tracing.injectEventContext $ traceCtx)
+setTraceContextInTx :: (MonadIO m) => Maybe Tracing.TraceContext -> PG.TxET QErr m ()
+setTraceContextInTx = \case
+  Nothing -> pure ()
+  Just ctx -> do
+    let sql = PG.fromText $ "SET LOCAL \"hasura.tracecontext\" = " <> toSQLTxt (S.SELit . encodeToStrictText . toJSON $ ctx)
+    PG.unitQE defaultTxErrorHandler sql () False
 
 -- | Inject the trace context as a transaction-local variable,
 -- so that it can be picked up by any triggers (including event triggers).
 withTraceContext ::
   (MonadIO m) =>
-  Tracing.TraceContext ->
+  Maybe (Tracing.TraceContext) ->
   PG.TxET QErr m a ->
   PG.TxET QErr m a
 withTraceContext ctx tx = setTraceContextInTx ctx >> tx

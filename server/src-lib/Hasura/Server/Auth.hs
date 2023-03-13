@@ -45,7 +45,6 @@ import Hasura.Server.Auth.JWT hiding (processJwt_)
 import Hasura.Server.Auth.WebHook
 import Hasura.Server.Utils
 import Hasura.Session
-import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 
@@ -106,9 +105,9 @@ data AuthMode
 --
 -- This must only be run once, on launch.
 setupAuthMode ::
-  ( Tracing.HasReporter m,
-    MonadError Text m,
-    MonadIO m
+  ( MonadError Text m,
+    MonadIO m,
+    MonadBaseControl IO m
   ) =>
   Set.HashSet AdminSecretHash ->
   Maybe AuthHook ->
@@ -147,7 +146,7 @@ setupAuthMode adminSecretHashSet mWebHook mJwtSecrets mUnAuthRole logger httpMan
       " requires --admin-secret (HASURA_GRAPHQL_ADMIN_SECRET) or "
         <> " --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
 
-    mkJwtCtx :: (MonadIO m, MonadError Text m) => JWTConfig -> m JWTCtx
+    mkJwtCtx :: (MonadIO m, MonadBaseControl IO m, MonadError Text m) => JWTConfig -> m JWTCtx
     mkJwtCtx JWTConfig {..} = do
       (jwkUri, jwkKeyConfig) <- case jcKeyOrUrl of
         Left jwk -> do
@@ -157,16 +156,15 @@ setupAuthMode adminSecretHashSet mWebHook mJwtSecrets mUnAuthRole logger httpMan
         -- which will be populated by the 'updateJWKCtx' poller thread
         Right uri -> do
           -- fetch JWK initially and throw error if it fails
-          void $ liftEitherM $ liftIO $ runExceptT $ withJwkError $ Tracing.runTraceT Tracing.sampleAlways "jwk init" $ fetchJwk logger httpManager uri
+          void $ withJwkError $ fetchJwk logger httpManager uri
           jwkRef <- liftIO $ newIORef (JWKSet [], Nothing)
           return (Just uri, jwkRef)
       let jwtHeader = fromMaybe JHAuthorization jcHeader
       return $ JWTCtx jwkUri jwkKeyConfig jcAudience jcIssuer jcClaims jcAllowedSkew jwtHeader
 
-    withJwkError :: ExceptT JwkFetchError IO (JWKSet, HTTP.ResponseHeaders) -> ExceptT Text IO (JWKSet, HTTP.ResponseHeaders)
-    withJwkError act = do
-      res <- lift $ runExceptT act
-      onLeft res $ \case
+    withJwkError a = do
+      res <- runExceptT a
+      onLeft res \case
         -- when fetching JWK initially, except expiry parsing error, all errors are critical
         JFEHttpException _ msg -> throwError msg
         JFEHttpError _ _ _ e -> throwError e
@@ -176,7 +174,8 @@ setupAuthMode adminSecretHashSet mWebHook mJwtSecrets mUnAuthRole logger httpMan
 -- | Core logic to fork a poller thread to update the JWK based on the
 -- expiry time specified in @Expires@ header or @Cache-Control@ header
 updateJwkCtx ::
-  (MonadIO m, Tracing.HasReporter m) =>
+  forall m.
+  (MonadIO m, MonadBaseControl IO m) =>
   AuthMode ->
   HTTP.Manager ->
   Logger Hasura ->
@@ -187,10 +186,7 @@ updateJwkCtx authMode httpManager logger = forever $ do
     _ -> pure ()
   liftIO $ sleep $ seconds 1
   where
-    updateJwkFromUrl ::
-      (Tracing.HasReporter m, MonadIO m) =>
-      JWTCtx ->
-      m ()
+    updateJwkFromUrl :: JWTCtx -> m ()
     updateJwkFromUrl (JWTCtx url ref _ _ _ _ _) =
       for_ url \uri -> do
         (jwkSet, jwkExpiry) <- liftIO $ readIORef ref
@@ -208,7 +204,7 @@ updateJwkCtx authMode httpManager logger = forever $ do
 -- | Authenticate the request using the headers and the configured 'AuthMode'.
 getUserInfoWithExpTime ::
   forall m.
-  (MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m) =>
+  (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
   Logger Hasura ->
   HTTP.Manager ->
   [HTTP.Header] ->

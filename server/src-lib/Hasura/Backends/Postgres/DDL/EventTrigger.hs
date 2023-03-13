@@ -112,7 +112,7 @@ insertManualEvent ::
   TriggerName ->
   Value ->
   UserInfo ->
-  Tracing.TraceContext ->
+  Maybe Tracing.TraceContext ->
   m EventId
 insertManualEvent sourceConfig tableName triggerName payload userInfo traceCtx =
   -- NOTE: The methods `setTraceContextInTx` and `setHeadersTx` are being used

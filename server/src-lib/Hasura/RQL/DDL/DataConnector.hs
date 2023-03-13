@@ -14,7 +14,7 @@ where
 --------------------------------------------------------------------------------
 
 import Control.Monad.Except
-import Control.Monad.Trans.Control (MonadBaseControl)
+import Control.Monad.Trans.Control
 import Data.Aeson (FromJSON, ToJSON, (.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as Aeson
 import Data.Has
@@ -85,9 +85,9 @@ runAddDataConnectorAgent ::
     SC.Build.CacheRWM m,
     Has (L.Logger L.Hasura) r,
     MonadReader r m,
-    MonadBaseControl IO m,
     MonadError Error.QErr m,
-    MonadIO m
+    MonadIO m,
+    MonadBaseControl IO m
   ) =>
   DCAddAgent ->
   m EncJSON

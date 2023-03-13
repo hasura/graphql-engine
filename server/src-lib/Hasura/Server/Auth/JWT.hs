@@ -99,7 +99,6 @@ import Hasura.Server.Utils
     userRoleHeader,
   )
 import Hasura.Session
-import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.HTTP.Types as N
 import Network.URI (URI)
@@ -310,18 +309,14 @@ $(J.deriveJSON hasuraJSON ''HasuraClaims)
 -- | An action that fetches the JWKs and updates the expiry time and JWKs in the
 -- IORef
 fetchAndUpdateJWKs ::
-  (MonadIO m) =>
+  (MonadIO m, MonadBaseControl IO m) =>
   Logger Hasura ->
   HTTP.Manager ->
   URI ->
   IORef (Jose.JWKSet, Maybe UTCTime) ->
   m ()
 fetchAndUpdateJWKs logger httpManager url jwkRef = do
-  res <-
-    liftIO $
-      runExceptT $
-        Tracing.runTraceT Tracing.sampleAlways "jwk fetch" $
-          fetchJwk logger httpManager url
+  res <- runExceptT $ fetchJwk logger httpManager url
   case res of
     -- As this 'fetchJwk' is going to happen always in background thread, we are
     -- not going to throw fatal error(s). If there is any error fetching JWK -
@@ -352,8 +347,7 @@ fetchAndUpdateJWKs logger httpManager url jwkRef = do
 fetchJwk ::
   ( MonadIO m,
     MonadBaseControl IO m,
-    MonadError JwkFetchError m,
-    Tracing.MonadTrace m
+    MonadError JwkFetchError m
   ) =>
   Logger Hasura ->
   HTTP.Manager ->
@@ -366,9 +360,7 @@ fetchJwk (Logger logger) manager url = do
   res <- try $ do
     req <- liftIO $ HTTP.mkRequestThrow $ tshow url
     let req' = req & over HTTP.headers addDefaultHeaders
-
-    Tracing.tracedHttpRequest req' \req'' -> do
-      liftIO $ HTTP.performRequest req'' manager
+    liftIO $ HTTP.performRequest req' manager
   resp <- onLeft res logAndThrowHttp
   let status = resp ^. Wreq.responseStatus
       respBody = resp ^. Wreq.responseBody

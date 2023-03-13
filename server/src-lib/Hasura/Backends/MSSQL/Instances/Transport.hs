@@ -74,7 +74,7 @@ runQuery ::
 runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql _ = do
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId
   withElapsedTime $
-    trace ("MSSQL Query for root field " <>> fieldName) $
+    newSpan ("MSSQL Query for root field " <>> fieldName) $
       run tx
 
 runQueryExplain ::
@@ -109,7 +109,7 @@ runMutation ::
 runMutation reqId query fieldName _userInfo logger _sourceConfig tx _genSql _ = do
   logQueryLog logger $ mkQueryLog query fieldName Nothing reqId
   withElapsedTime $
-    trace ("MSSQL Mutation for root field " <>> fieldName) $
+    newSpan ("MSSQL Mutation for root field " <>> fieldName) $
       run tx
 
 runSubscription ::

@@ -112,7 +112,7 @@ insertManualEvent ::
   TriggerName ->
   J.Value ->
   UserInfo ->
-  Tracing.TraceContext ->
+  Maybe Tracing.TraceContext ->
   m EventId
 insertManualEvent sourceConfig tableName triggerName payload _userInfo _traceCtx =
   liftEitherM $

@@ -478,7 +478,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
   (parameterizedQueryHash, execPlan) <- onLeft execPlanE (withComplete . preExecErr requestId (Just gqlOpType))
 
   case execPlan of
-    E.QueryExecutionPlan queryPlan asts dirMap -> Tracing.trace "Query" $ do
+    E.QueryExecutionPlan queryPlan asts dirMap -> Tracing.newSpan "Query" $ do
       let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
           cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
           remoteSchemas =
@@ -499,7 +499,10 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
 
       -- We ignore the response headers (containing TTL information) because
       -- WebSockets don't support them.
-      (_responseHeaders, cachedValue) <- Tracing.interpTraceT (withExceptT mempty) $ cacheLookup remoteSchemas actionsInfo cacheKey cachedDirective
+      cachedValue <-
+        cacheLookup remoteSchemas actionsInfo cacheKey cachedDirective >>= \case
+          Right (_responseHeaders, cachedValue) -> pure cachedValue
+          Left _err -> throwError ()
       case cachedValue of
         Just cachedResponseData -> do
           logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindCached
@@ -554,9 +557,8 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
               -- Note: The result of cacheStore is ignored here since we can't ensure that
               --       the WS client will respond correctly to multiple messages.
               void $
-                Tracing.interpTraceT (withExceptT mempty) $
-                  cacheStore cacheKey cachedDirective $
-                    encodeAnnotatedResponseParts results
+                cacheStore cacheKey cachedDirective $
+                  encodeAnnotatedResponseParts results
 
       liftIO $ sendCompleted (Just requestId) (Just parameterizedQueryHash)
     E.MutationExecutionPlan mutationPlan -> do
@@ -1000,16 +1002,16 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
 
 onMessage ::
   ( MonadIO m,
-    UserAuthentication (Tracing.TraceT m),
+    UserAuthentication m,
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
-    Tracing.HasReporter m,
     MonadExecuteQuery m,
     MC.MonadBaseControl IO m,
     MonadMetadataStorage m,
     EB.MonadQueryTags m,
     HasResourceLimits m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    Tracing.MonadTrace m
   ) =>
   Env.Environment ->
   HashSet (L.EngineLogType L.Hasura) ->
@@ -1019,36 +1021,37 @@ onMessage ::
   LBS.ByteString ->
   WS.WSActions WSConnData ->
   m ()
-onMessage env enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions = Tracing.runTraceT (_wseTraceSamplingPolicy serverEnv) "websocket" do
-  case J.eitherDecode msgRaw of
-    Left e -> do
-      let err = ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
-      logWSEvent logger wsConn $ EConnErr err
-      liftIO $ onErrAction wsConn err WS.ClientMessageParseFailed
-    Right msg -> case msg of
-      -- common to both protocols
-      CMConnInit params ->
-        onConnInit
-          logger
-          (_wseHManager serverEnv)
-          wsConn
-          authMode
-          params
-          onErrAction
-          keepAliveMessageAction
-      CMStart startMsg -> do
-        schemaCache <- liftIO $ fst <$> _wseGCtxMap serverEnv
-        let shouldCaptureVariables =
-              if _mcAnalyzeQueryVariables (scMetricsConfig schemaCache)
-                then CaptureQueryVariables
-                else DoNotCaptureQueryVariables
-        onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables startMsg onMessageActions
-      CMStop stopMsg -> onStop serverEnv wsConn stopMsg
-      -- specfic to graphql-ws
-      CMPing mPayload -> onPing wsConn mPayload
-      CMPong _mPayload -> pure ()
-      -- specific to apollo clients
-      CMConnTerm -> liftIO $ WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
+onMessage env enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions =
+  Tracing.newTrace (_wseTraceSamplingPolicy serverEnv) "websocket" do
+    case J.eitherDecode msgRaw of
+      Left e -> do
+        let err = ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
+        logWSEvent logger wsConn $ EConnErr err
+        liftIO $ onErrAction wsConn err WS.ClientMessageParseFailed
+      Right msg -> case msg of
+        -- common to both protocols
+        CMConnInit params ->
+          onConnInit
+            logger
+            (_wseHManager serverEnv)
+            wsConn
+            authMode
+            params
+            onErrAction
+            keepAliveMessageAction
+        CMStart startMsg -> do
+          schemaCache <- liftIO $ fst <$> _wseGCtxMap serverEnv
+          let shouldCaptureVariables =
+                if _mcAnalyzeQueryVariables (scMetricsConfig schemaCache)
+                  then CaptureQueryVariables
+                  else DoNotCaptureQueryVariables
+          onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables startMsg onMessageActions
+        CMStop stopMsg -> onStop serverEnv wsConn stopMsg
+        -- specfic to graphql-ws
+        CMPing mPayload -> onPing wsConn mPayload
+        CMPong _mPayload -> pure ()
+        -- specific to apollo clients
+        CMConnTerm -> liftIO $ WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
   where
     logger = _wseLogger serverEnv
     onErrAction = WS._wsaOnErrorMessageAction onMessageActions
@@ -1096,7 +1099,7 @@ stopOperation serverEnv wsConn opId logWhenOpNotExist = do
     opDet n = OperationDetails opId Nothing n ODStopped Nothing Nothing
 
 onConnInit ::
-  (MonadIO m, UserAuthentication (Tracing.TraceT m)) =>
+  (MonadIO m, UserAuthentication m) =>
   L.Logger L.Hasura ->
   HTTP.Manager ->
   WSConn ->
@@ -1106,7 +1109,7 @@ onConnInit ::
   WS.WSOnErrorMessageAction WSConnData ->
   -- | this is the message handler for handling "keep-alive" messages to the client
   WS.WSKeepAliveMessageAction WSConnData ->
-  Tracing.TraceT m ()
+  m ()
 onConnInit logger manager wsConn authMode connParamsM onConnInitErrAction keepAliveMessageAction = do
   -- TODO(from master): what should be the behaviour of connection_init message when a
   -- connection is already iniatilized? Currently, we seem to be doing

@@ -13,7 +13,8 @@ module Hasura.App
     ExitException (ExitException),
     GlobalCtx (..),
     AppContext (..),
-    PGMetadataStorageAppT (runPGMetadataStorageAppT),
+    PGMetadataStorageAppT,
+    runPGMetadataStorageAppT,
     accessDeniedErrMsg,
     flushLogger,
     getCatalogStateTx,
@@ -154,7 +155,7 @@ import Hasura.Server.Version
 import Hasura.Services
 import Hasura.Session
 import Hasura.ShutdownLatch
-import Hasura.Tracing qualified as Tracing
+import Hasura.Tracing
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.Blocklisting (Blocklist)
 import Network.HTTP.Client.CreateManager (mkHttpManager)
@@ -279,8 +280,8 @@ initGlobalCtx env metadataDbUrl defaultPgConnInfo = do
       mkGlobalCtx mdConnInfo (Just (dbUrl, srcConnInfo))
 
 -- | An application with Postgres database as a metadata storage
-newtype PGMetadataStorageAppT m a = PGMetadataStorageAppT {runPGMetadataStorageAppT :: (AppContext, AppEnv) -> m a}
-  deriving
+newtype PGMetadataStorageAppT m a = PGMetadataStorageAppT (ReaderT (AppContext, AppEnv) (TraceT m) a)
+  deriving newtype
     ( Functor,
       Applicative,
       Monad,
@@ -289,19 +290,28 @@ newtype PGMetadataStorageAppT m a = PGMetadataStorageAppT {runPGMetadataStorageA
       MonadCatch,
       MonadThrow,
       MonadMask,
-      HasServerConfigCtx,
       MonadReader (AppContext, AppEnv),
       MonadBase b,
       MonadBaseControl b
     )
-    via (ReaderT (AppContext, AppEnv) m)
-  deriving
-    ( MonadTrans
-    )
-    via (ReaderT (AppContext, AppEnv))
+
+instance (MonadIO m, MonadBaseControl IO m) => MonadTrace (PGMetadataStorageAppT m) where
+  newTraceWith c p n (PGMetadataStorageAppT a) = PGMetadataStorageAppT $ newTraceWith c p n a
+  newSpanWith i n (PGMetadataStorageAppT a) = PGMetadataStorageAppT $ newSpanWith i n a
+  currentContext = PGMetadataStorageAppT currentContext
+  attachMetadata = PGMetadataStorageAppT . attachMetadata
+
+instance MonadTrans PGMetadataStorageAppT where
+  lift = PGMetadataStorageAppT . lift . lift
 
 instance Monad m => ProvidesNetwork (PGMetadataStorageAppT m) where
   askHTTPManager = appEnvManager <$> asks snd
+
+instance HasServerConfigCtx m => HasServerConfigCtx (PGMetadataStorageAppT m) where
+  askServerConfigCtx = lift askServerConfigCtx
+
+runPGMetadataStorageAppT :: (AppContext, AppEnv) -> PGMetadataStorageAppT m a -> m a
+runPGMetadataStorageAppT c (PGMetadataStorageAppT a) = ignoreTraceT $ runReaderT a c
 
 resolvePostgresConnInfo ::
   (MonadIO m) => Env.Environment -> UrlConf -> Maybe Int -> m PG.ConnInfo
@@ -314,7 +324,7 @@ resolvePostgresConnInfo env dbUrlConf maybeRetries = do
     retries = fromMaybe 1 maybeRetries
 
 initAuthMode ::
-  (C.ForkableMonadIO m, Tracing.HasReporter m) =>
+  (C.ForkableMonadIO m) =>
   HashSet AdminSecretHash ->
   Maybe AuthHook ->
   [JWTConfig] ->
@@ -337,7 +347,7 @@ initAuthMode adminSecret authHook jwtSecret unAuthRole httpManager logger = do
   -- forking a dedicated polling thread to dynamically get the latest JWK settings
   -- set by the user and update the JWK accordingly. This will help in applying the
   -- updates without restarting HGE.
-  _ <- C.forkImmortal "update JWK" logger $ updateJwkCtx authMode httpManager logger
+  void $ C.forkImmortal "update JWK" logger $ updateJwkCtx authMode httpManager logger
   return authMode
 
 initSubscriptionsState ::
@@ -414,7 +424,7 @@ initialiseContext ::
   Maybe ES.SubscriptionPostPollHook ->
   ServerMetrics ->
   PrometheusMetrics ->
-  Tracing.SamplingPolicy ->
+  SamplingPolicy ->
   ManagedT m (AppContext, AppEnv)
 initialiseContext env GlobalCtx {..} serveOptions@ServeOptions {..} liveQueryHook serverMetrics prometheusMetrics traceSamplingPolicy = do
   instanceId <- liftIO generateInstanceId
@@ -647,7 +657,7 @@ runHGEServer ::
     MonadMask m,
     MonadStateless IO m,
     LA.Forall (LA.Pure m),
-    UserAuthentication (Tracing.TraceT m),
+    UserAuthentication m,
     HttpLog m,
     ConsoleRenderer m,
     MonadVersionAPIWithExtraData m,
@@ -657,13 +667,13 @@ runHGEServer ::
     MonadQueryLog m,
     WS.MonadWSLog m,
     MonadExecuteQuery m,
-    Tracing.HasReporter m,
     HasResourceLimits m,
     MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     EB.MonadQueryTags m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
+    MonadTrace m,
     MonadGetApiTimeLimit m
   ) =>
   (AppContext -> Spock.SpockT m ()) ->
@@ -738,7 +748,7 @@ mkHGEServer ::
     MonadMask m,
     MonadStateless IO m,
     LA.Forall (LA.Pure m),
-    UserAuthentication (Tracing.TraceT m),
+    UserAuthentication m,
     HttpLog m,
     ConsoleRenderer m,
     MonadVersionAPIWithExtraData m,
@@ -748,13 +758,13 @@ mkHGEServer ::
     MonadQueryLog m,
     WS.MonadWSLog m,
     MonadExecuteQuery m,
-    Tracing.HasReporter m,
     HasResourceLimits m,
     MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     EB.MonadQueryTags m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
+    MonadTrace m,
     MonadGetApiTimeLimit m
   ) =>
   (AppContext -> Spock.SpockT m ()) ->
@@ -1089,8 +1099,6 @@ mkHGEServer setupHook appCtx@AppContext {..} appEnv@AppEnv {..} ekgStore = do
           (getSchemaCache cacheRef)
           lockedEventsCtx
 
-instance (Monad m) => Tracing.HasReporter (PGMetadataStorageAppT m)
-
 instance (Monad m) => HasResourceLimits (PGMetadataStorageAppT m) where
   askHTTPHandlerLimit = pure $ ResourceLimits id
   askGraphqlOperationLimit _ _ _ = pure $ ResourceLimits id
@@ -1113,10 +1121,10 @@ instance (MonadIO m) => HttpLog (PGMetadataStorageAppT m) where
         mkHttpAccessLogContext userInfoM loggingSettings reqId waiReq reqBody (BL.length response) compressedResponse qTime cType headers rb batchQueryOpLogs
 
 instance (Monad m) => MonadExecuteQuery (PGMetadataStorageAppT m) where
-  cacheLookup _ _ _ _ = pure ([], Nothing)
-  cacheStore _ _ _ = pure (Right CacheStoreSkipped)
+  cacheLookup _ _ _ _ = pure $ Right ([], Nothing)
+  cacheStore _ _ _ = pure $ Right (Right CacheStoreSkipped)
 
-instance (MonadIO m, MonadBaseControl IO m) => UserAuthentication (Tracing.TraceT (PGMetadataStorageAppT m)) where
+instance (MonadIO m, MonadBaseControl IO m) => UserAuthentication (PGMetadataStorageAppT m) where
   resolveUserInfo logger manager headers authMode reqs =
     runExceptT $ do
       (a, b, c) <- getUserInfoWithExpTime logger manager headers authMode reqs

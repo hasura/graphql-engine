@@ -124,7 +124,6 @@ where
 import Control.Concurrent.Extended (Forever (..), sleep)
 import Control.Concurrent.STM
 import Control.Lens (view)
-import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Environment qualified as Env
 import Data.Has
@@ -230,9 +229,8 @@ generateCronEventsFrom startTime CronTriggerInfo {..} =
 
 processCronEvents ::
   ( MonadIO m,
-    MonadBaseControl IO m,
-    Tracing.HasReporter m,
-    MonadMetadataStorage m
+    MonadMetadataStorage m,
+    Tracing.MonadTrace m
   ) =>
   L.Logger L.Hasura ->
   HTTP.Manager ->
@@ -284,8 +282,7 @@ processCronEvents logger httpMgr prometheusMetrics cronEvents getSC lockedCronEv
 
 processOneOffScheduledEvents ::
   ( MonadIO m,
-    MonadBaseControl IO m,
-    Tracing.HasReporter m,
+    Tracing.MonadTrace m,
     MonadMetadataStorage m
   ) =>
   Env.Environment ->
@@ -332,8 +329,7 @@ processOneOffScheduledEvents
 
 processScheduledTriggers ::
   ( MonadIO m,
-    MonadBaseControl IO m,
-    Tracing.HasReporter m,
+    Tracing.MonadTrace m,
     MonadMetadataStorage m
   ) =>
   Env.Environment ->
@@ -367,8 +363,7 @@ processScheduledEvent ::
     Has HTTP.Manager r,
     Has (L.Logger L.Hasura) r,
     MonadIO m,
-    MonadBaseControl IO m,
-    Tracing.HasReporter m,
+    Tracing.MonadTrace m,
     MonadMetadataStorage m,
     MonadError QErr m
   ) =>
@@ -381,7 +376,7 @@ processScheduledEvent ::
   ScheduledEventType ->
   m ()
 processScheduledEvent prometheusMetrics eventId eventHeaders retryCtx payload webhookUrl type' =
-  Tracing.runTraceT Tracing.sampleAlways traceNote do
+  Tracing.newTrace Tracing.sampleAlways traceNote do
     currentTime <- liftIO getCurrentTime
     let retryConf = _rctxConf retryCtx
         scheduledTime = sewpScheduledTime payload

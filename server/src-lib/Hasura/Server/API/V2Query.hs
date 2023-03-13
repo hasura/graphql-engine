@@ -122,7 +122,7 @@ runQuery env instanceId userInfo schemaCache serverConfigCtx rqlQuery = do
   when ((_sccReadOnlyMode serverConfigCtx == ReadOnlyModeEnabled) && queryModifiesUserDB rqlQuery) $
     throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
-  (metadata, currentResourceVersion) <- Tracing.trace "fetchMetadata" $ liftEitherM fetchMetadata
+  (metadata, currentResourceVersion) <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
   result <-
     runQueryM env rqlQuery & \x -> do
       ((js, meta), rsc, ci) <-
@@ -142,11 +142,11 @@ runQuery env instanceId userInfo schemaCache serverConfigCtx rqlQuery = do
           MaintenanceModeDisabled -> do
             -- set modified metadata in storage
             newResourceVersion <-
-              Tracing.trace "setMetadata" $
+              Tracing.newSpan "setMetadata" $
                 liftEitherM $
                   setMetadata currentResourceVersion updatedMetadata
             -- notify schema cache sync
-            Tracing.trace "notifySchemaCacheSync" $
+            Tracing.newSpan "notifySchemaCacheSync" $
               liftEitherM $
                 notifySchemaCacheSync newResourceVersion instanceId invalidations
           MaintenanceModeEnabled () ->
@@ -185,7 +185,7 @@ runQueryM ::
   Env.Environment ->
   RQLQuery ->
   m EncJSON
-runQueryM env rq = Tracing.trace (T.pack $ constrName rq) $ case rq of
+runQueryM env rq = Tracing.newSpan (T.pack $ constrName rq) $ case rq of
   RQInsert q -> runInsert q
   RQSelect q -> runSelect q
   RQUpdate q -> runUpdate q

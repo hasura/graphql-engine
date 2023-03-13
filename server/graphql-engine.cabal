@@ -748,6 +748,15 @@ library
                      , Hasura.LogicalModel.Schema
                      , Hasura.LogicalModel.Types
 
+                     , Hasura.Tracing
+                     , Hasura.Tracing.Class
+                     , Hasura.Tracing.Context
+                     , Hasura.Tracing.Monad
+                     , Hasura.Tracing.Reporter
+                     , Hasura.Tracing.Sampling
+                     , Hasura.Tracing.TraceId
+                     , Hasura.Tracing.Utils
+
                      , Hasura.Server.Auth.WebHook
                      , Hasura.Server.Middleware
                      , Hasura.Server.Cors
@@ -988,8 +997,6 @@ library
                      , Hasura.SQL.Types
                      , Hasura.SQL.Value
                      , Hasura.SQL.WKT
-                     , Hasura.Tracing
-                     , Hasura.Tracing.TraceId
                      , Hasura.QueryTags
                      , Network.HTTP.Client.Transformable
                      , Network.HTTP.Client.DynamicTlsPermissions

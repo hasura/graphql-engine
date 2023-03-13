@@ -374,10 +374,9 @@ runApp serveOptions = do
       pure (EKG.subset EKG.emptyOf store, serverMetrics)
   prometheusMetrics <- makeDummyPrometheusMetrics
   let managedServerCtx = App.initialiseContext env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways
-  runManagedT managedServerCtx \(appCtx, appEnv) -> do
-    flip App.runPGMetadataStorageAppT (appCtx, appEnv)
-      . lowerManagedT
-      $ do
+  runManagedT managedServerCtx \(appCtx, appEnv) ->
+    App.runPGMetadataStorageAppT (appCtx, appEnv) $
+      lowerManagedT $
         App.runHGEServer
           (const $ pure ())
           appCtx

@@ -458,7 +458,10 @@ lookupDataConnectorOptions dcName bmap =
         `onNothing` (Error.throw400 Error.DataConnectorError ("Data connector named " <> Text.E.toTxt dcName <> " was not found in the data connector backend config"))
 
 querySourceSchema ::
-  (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
+  ( MonadIO m,
+    MonadBaseControl IO m,
+    MonadError QErr m
+  ) =>
   L.Logger L.Hasura ->
   HTTP.Manager ->
   Maybe DC.Types.SourceTimeout ->
