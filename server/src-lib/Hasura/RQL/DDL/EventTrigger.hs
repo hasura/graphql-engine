@@ -11,7 +11,9 @@ module Hasura.RQL.DDL.EventTrigger
     InvokeEventTriggerQuery,
     runInvokeEventTrigger,
     -- TODO(from master): review
+    ResolveHeaderError (..),
     getHeaderInfosFromConf,
+    getHeaderInfosFromConfEither,
     getWebhookInfoFromConf,
     buildEventTriggerInfo,
     getSourceTableAndTriggers,
@@ -46,6 +48,7 @@ where
 
 import Control.Lens (ifor_, makeLenses, (.~))
 import Data.Aeson
+import Data.Either.Combinators
 import Data.Environment qualified as Env
 import Data.Has (Has)
 import Data.HashMap.Strict qualified as HM
@@ -452,6 +455,12 @@ askEventTriggerInfo sourceName triggerName = do
 maxTriggerNameLength :: Int
 maxTriggerNameLength = 42
 
+-- Consists of a list of environment variables with invalid/missing values
+newtype ResolveHeaderError = ResolveHeaderError {unResolveHeaderError :: [Text]} deriving (Show)
+
+instance ToTxt ResolveHeaderError where
+  toTxt = commaSeparated . unResolveHeaderError
+
 getHeaderInfosFromConf ::
   QErrM m =>
   Env.Environment ->
@@ -465,6 +474,24 @@ getHeaderInfosFromConf env = mapM getHeader
       (HeaderConf _ (HVEnv val)) -> do
         envVal <- getEnv env val
         return $ EventHeaderInfo hconf envVal
+
+-- This is similar to `getHeaderInfosFromConf` but it doesn't fail when an env var is invalid
+getHeaderInfosFromConfEither ::
+  Env.Environment ->
+  [HeaderConf] ->
+  Either ResolveHeaderError [EventHeaderInfo]
+getHeaderInfosFromConfEither env hConfList =
+  if isHeaderError
+    then Left (ResolveHeaderError $ lefts headerInfoList)
+    else Right (rights headerInfoList)
+  where
+    isHeaderError = any isLeft headerInfoList
+    headerInfoList = map getHeader hConfList
+    getHeader :: HeaderConf -> Either Text EventHeaderInfo
+    getHeader hconf = case hconf of
+      (HeaderConf _ (HVValue val)) -> Right $ EventHeaderInfo hconf val
+      (HeaderConf _ (HVEnv val)) ->
+        (Right . EventHeaderInfo hconf) =<< getEnvEither env val
 
 getWebhookInfoFromConf ::
   QErrM m =>

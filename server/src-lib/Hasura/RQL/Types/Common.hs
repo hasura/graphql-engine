@@ -19,12 +19,15 @@ module Hasura.RQL.Types.Common
     failureMsg,
     InputWebhook (..),
     ResolvedWebhook (..),
+    ResolveWebhookError (..),
     resolveWebhook,
+    resolveWebhookEither,
     Timeout (..),
     defaultActionTimeoutSecs,
     UrlConf (..),
     resolveUrlConf,
     getEnv,
+    getEnvEither,
     SourceName (..),
     defaultSource,
     sourceNameToText,
@@ -341,13 +344,20 @@ instance PG.FromCol InputWebhook where
     urlTemplate <- parseURLTemplate <$> PG.fromCol bs
     bimap (\e -> "Parsing URL template failed: " <> T.pack e) InputWebhook urlTemplate
 
+-- Consists of the environment variable name with missing/invalid value
+newtype ResolveWebhookError = ResolveWebhookError {unResolveWebhookError :: Text} deriving (Show, ToTxt)
+
 resolveWebhook :: QErrM m => Env.Environment -> InputWebhook -> m ResolvedWebhook
-resolveWebhook env (InputWebhook urlTemplate) = do
-  let eitherRenderedTemplate = renderURLTemplate env urlTemplate
-  either
-    (throw400 Unexpected . T.pack)
-    (pure . ResolvedWebhook)
+resolveWebhook env inputWebhook = do
+  let eitherRenderedTemplate = resolveWebhookEither env inputWebhook
+  onLeft
     eitherRenderedTemplate
+    (throw400 Unexpected . ("Value for environment variables not found: " <>) . unResolveWebhookError)
+
+-- This is similar to `resolveWebhook` but it doesn't fail when an env var is invalid
+resolveWebhookEither :: Env.Environment -> InputWebhook -> Either ResolveWebhookError ResolvedWebhook
+resolveWebhookEither env (InputWebhook urlTemplate) =
+  bimap ResolveWebhookError ResolvedWebhook (renderURLTemplate env urlTemplate)
 
 newtype Timeout = Timeout {unTimeout :: Int}
   deriving (Show, Eq, ToJSON, Generic, NFData)
@@ -546,10 +556,17 @@ resolveUrlConf env = \case
 
 getEnv :: QErrM m => Env.Environment -> Text -> m Text
 getEnv env k = do
-  let mEnv = Env.lookupEnv env (T.unpack k)
-  case mEnv of
-    Nothing -> throw400 NotFound $ "environment variable '" <> k <> "' not set"
-    Just envVal -> return (T.pack envVal)
+  let eitherEnv = getEnvEither env k
+  onLeft
+    eitherEnv
+    (\_ -> throw400 NotFound $ "environment variable '" <> k <> "' not set")
+
+-- This is similar to `getEnv` but it doesn't fail when the env var is invalid
+getEnvEither :: Env.Environment -> Text -> Either Text Text
+getEnvEither env k =
+  case Env.lookupEnv env (T.unpack k) of
+    Nothing -> Left k
+    Just envVal -> Right (T.pack envVal)
 
 -- | Various user-controlled configuration for metrics used by Pro
 data MetricsConfig = MetricsConfig

@@ -132,7 +132,9 @@ import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
 import Data.SerializableBlob qualified as SB
 import Data.Set qualified as Set
-import Data.Text.Extended ((<<>))
+import Data.Text qualified as T
+import Data.Text.Extended (ToTxt (..), (<<>))
+import Data.These
 import Data.Time.Clock
 import Data.URL.Template (printURLTemplate)
 import Database.PG.Query qualified as PG
@@ -147,7 +149,7 @@ import Hasura.HTTP (getHTTPExceptionStatus)
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
-import Hasura.RQL.DDL.EventTrigger (getHeaderInfosFromConf)
+import Hasura.RQL.DDL.EventTrigger (ResolveHeaderError, getHeaderInfosFromConfEither)
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.Types.Common
@@ -305,9 +307,6 @@ processOneOffScheduledEvents
     saveLockedEvents (map _ooseId oneOffEvents) lockedOneOffScheduledEvents
     for_ oneOffEvents $ \OneOffScheduledEvent {..} -> do
       (either logInternalError pure) =<< runExceptT do
-        webhookInfo <- resolveWebhook env _ooseWebhookConf
-        headerInfo <- getHeaderInfosFromConf env _ooseHeaderConf
-
         let payload =
               ScheduledEventWebhookPayload
                 _ooseId
@@ -319,13 +318,43 @@ processOneOffScheduledEvents
                 _ooseRequestTransform
                 _ooseResponseTransform
             retryCtx = RetryContext _ooseTries _ooseRetryConf
-            webhookEnvRecord = EnvRecord (getTemplateFromUrl _ooseWebhookConf) webhookInfo
-        flip runReaderT (logger, httpMgr) $
-          processScheduledEvent prometheusMetrics _ooseId headerInfo retryCtx payload webhookEnvRecord OneOff
-        removeEventFromLockedEvents _ooseId lockedOneOffScheduledEvents
+            resolvedWebhookInfoEither = resolveWebhookEither env _ooseWebhookConf
+            resolvedHeaderInfoEither = getHeaderInfosFromConfEither env _ooseHeaderConf
+            -- `webhookAndHeaderInfo` returns webhook and header info (and errors)
+            webhookAndHeaderInfo = case (resolvedWebhookInfoEither, resolvedHeaderInfoEither) of
+              (Right resolvedEventWebhookInfo, Right resolvedEventHeaderInfo) -> do
+                let resolvedWebhookEnvRecord = EnvRecord (getTemplateFromUrl _ooseWebhookConf) resolvedEventWebhookInfo
+                Right (resolvedWebhookEnvRecord, resolvedEventHeaderInfo)
+              (Left eventWebhookErrorVars, Right _) -> Left $ This eventWebhookErrorVars
+              (Right _, Left eventHeaderErrorVars) -> Left $ That eventHeaderErrorVars
+              (Left eventWebhookErrors, Left eventHeaderErrorVars) -> Left $ These eventWebhookErrors eventHeaderErrorVars
+        case webhookAndHeaderInfo of
+          Right (webhookEnvRecord, eventHeaderInfo) -> do
+            flip runReaderT (logger, httpMgr) $
+              processScheduledEvent prometheusMetrics _ooseId eventHeaderInfo retryCtx payload webhookEnvRecord OneOff
+            removeEventFromLockedEvents _ooseId lockedOneOffScheduledEvents
+          Left envVarError ->
+            processError
+              _ooseId
+              retryCtx
+              []
+              OneOff
+              (mkErrorObject $ mkInvalidEnvVarErrMsg envVarError)
+              (HOther $ T.unpack $ qeError (err400 NotFound (mkInvalidEnvVarErrMsg envVarError)))
     where
       logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
       getTemplateFromUrl url = printURLTemplate $ unInputWebhook url
+      mkInvalidEnvVarErrMsg envVarErrorValues = "The value for environment variables not found: " <> (getInvalidEnvVarText envVarErrorValues)
+      mkErrorObject envVarNameText =
+        J.object
+          [ "error"
+              J..= ( "Error creating the request. " <> envVarNameText
+                   )
+          ]
+      getInvalidEnvVarText :: These ResolveWebhookError ResolveHeaderError -> Text
+      getInvalidEnvVarText (This a) = toTxt a
+      getInvalidEnvVarText (That b) = toTxt b
+      getInvalidEnvVarText (These a b) = toTxt a <> ", " <> toTxt b
 
 processScheduledTriggers ::
   ( MonadIO m,

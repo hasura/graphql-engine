@@ -66,15 +66,11 @@ parseURLTemplate t = parseOnly parseTemplate t
     parseVariable =
       string "{{" *> (Variable . T.pack <$> manyTill anyChar (string "}}"))
 
-renderURLTemplate :: Env.Environment -> URLTemplate -> Either String Text
+renderURLTemplate :: Env.Environment -> URLTemplate -> Either Text Text
 renderURLTemplate env template =
   case errorVariables of
     [] -> Right $ T.concat $ rights eitherResults
-    _ ->
-      Left $
-        T.unpack $
-          "Value for environment variables not found: "
-            <> commaSeparated errorVariables
+    _ -> Left (commaSeparated errorVariables)
   where
     eitherResults = map renderTemplateItem $ unURLTemplate template
     errorVariables = lefts eitherResults
