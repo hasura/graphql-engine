@@ -1917,8 +1917,8 @@ scheduledTriggerProcessLogType :: EngineLogType Hasura
 cronEventGeneratorProcessType :: EngineLogType Hasura
 sourceCatalogMigrationLogType :: EngineLogType Hasura
 
--- | A logger useful for accumulating stats, evaluated in forever running
---   loops, over a period of time and log them only once. Use
+-- | A logger useful for accumulating and logging stats, in tight polling
+--   loops. It also debounces to not flood with excessive logs. Use
 --   @<a>logStats</a> to record statistics for logging.
 createStatsLogger :: forall m stats impl. (MonadIO m, ToEngineLog stats impl, Monoid stats) => Logger impl -> m (Trigger stats stats)
 

@@ -34,7 +34,7 @@
 </span><span id="line-34"></span><span>    </span><span class="annot"><a href="Hasura.Logging.html#readLogTypes"><span class="hs-identifier">readLogTypes</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-35"></span><span>    </span><span class="annot"><a href="Hasura.Logging.html#getFormattedTime"><span class="hs-identifier">getFormattedTime</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Debounce logger</span></span><span>
+</span><span id="line-37"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Debounced stats logger</span></span><span>
 </span><span id="line-38"></span><span>    </span><span class="annot"><a href="Hasura.Logging.html#createStatsLogger"><span class="hs-identifier">createStatsLogger</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-39"></span><span>    </span><span class="annot"><a href="Hasura.Logging.html#closeStatsLogger"><span class="hs-identifier">closeStatsLogger</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-40"></span><span>    </span><span class="annot"><a href="Hasura.Logging.html#logStats"><span class="hs-identifier">logStats</span></a></span><span class="hs-special">,</span><span>
@@ -861,8 +861,8 @@ FormattedTime
 </span><a href="Hasura.Logging.html#ELTInternal"><span class="hs-identifier hs-var">ELTInternal</span></a></span><span> </span><span class="annot"><span class="annottext">InternalLogTypes
 </span><a href="Hasura.Logging.html#ILTSourceCatalogMigration"><span class="hs-identifier hs-var">ILTSourceCatalogMigration</span></a></span><span>
 </span><span id="line-343"></span><span>
-</span><span id="line-344"></span><span class="hs-comment">-- | A logger useful for accumulating stats, evaluated in forever running loops, over a</span><span>
-</span><span id="line-345"></span><span class="hs-comment">-- period of time and log them only once. Use @'logStats' to record statistics for logging.</span><span>
+</span><span id="line-344"></span><span class="hs-comment">-- | A logger useful for accumulating  and logging stats, in tight polling loops. It also</span><span>
+</span><span id="line-345"></span><span class="hs-comment">-- debounces to not flood with excessive logs. Use @'logStats' to record statistics for logging.</span><span>
 </span><span id="line-346"></span><span class="annot"><a href="Hasura.Logging.html#createStatsLogger"><span class="hs-identifier hs-type">createStatsLogger</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-347"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690533838"><span class="annot"><a href="#local-6989586621690533838"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621690533837"><span class="annot"><a href="#local-6989586621690533837"><span class="hs-identifier hs-type">stats</span></a></span></span><span> </span><span id="local-6989586621690533836"><span class="annot"><a href="#local-6989586621690533836"><span class="hs-identifier hs-type">impl</span></a></span></span><span class="hs-operator">.</span><span>
 </span><span id="line-348"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690533838"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
