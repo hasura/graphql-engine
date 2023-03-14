@@ -107,7 +107,7 @@ msDBQueryPlan userInfo _env sourceName sourceConfig qrf _ _ = do
   where
     runSelectQuery queryPrinter = OnBaseMonad do
       let queryTx = encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat queryPrinter)
-      mssqlRunReadOnly (_mscExecCtx sourceConfig) queryTx
+      mssqlRunReadOnly (_mscExecCtx sourceConfig) (fmap withNoStatistics queryTx)
 
 runShowplan ::
   MonadIO m =>
@@ -141,13 +141,13 @@ msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf _ _ = do
           (_mscExecCtx sourceConfig)
           do
             showplan <- runShowplan query
-            pure
-              ( encJFromJValue $
+            pure $
+              withNoStatistics $
+                encJFromJValue $
                   ExplainPlan
                     fieldName
                     (Just queryString)
                     (Just showplan)
-              )
   pure $
     AB.mkAnyBackend $
       DBStepInfo @'MSSQL sourceName sourceConfig Nothing odbcQuery ()
@@ -260,7 +260,7 @@ msDBMutationPlan userInfo _environment stringifyNum sourceName sourceConfig mrf 
     MDBUpdate annUpdate -> executeUpdate userInfo stringifyNum sourceConfig annUpdate
     MDBFunction {} -> throw400 NotSupported "function mutations are not supported in MSSQL"
   where
-    go v = DBStepInfo @'MSSQL sourceName sourceConfig Nothing v ()
+    go v = DBStepInfo @'MSSQL sourceName sourceConfig Nothing (fmap withNoStatistics v) ()
 
 -- * Subscription
 
@@ -459,4 +459,4 @@ msDBRemoteRelationshipPlan _env userInfo sourceName sourceConfig lhs lhsSchema a
   where
     runSelectQuery queryPrinter = OnBaseMonad do
       let queryTx = encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat queryPrinter)
-      mssqlRunReadOnly (_mscExecCtx sourceConfig) queryTx
+      mssqlRunReadOnly (_mscExecCtx sourceConfig) (fmap withNoStatistics queryTx)

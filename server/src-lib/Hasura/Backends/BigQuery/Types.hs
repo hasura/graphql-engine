@@ -15,6 +15,7 @@ module Hasura.Backends.BigQuery.Types
     Datetime (..),
     Decimal (..),
     EntityAlias (..),
+    ExecutionStatistics (..),
     Expression (..),
     FieldName (..),
     FieldOrigin (..),
@@ -23,6 +24,7 @@ module Hasura.Backends.BigQuery.Types
     SelectFromFunction (..),
     Geography (Geography),
     Int64 (Int64),
+    Job (..),
     Join (..),
     JoinProvenance (ArrayAggregateJoinProvenance, ArrayJoinProvenance, ObjectJoinProvenance, OrderByJoinProvenance),
     JoinSource (..),
@@ -94,11 +96,11 @@ import Hasura.Base.Error
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
-import Hasura.Prelude
+import Hasura.Prelude hiding (state)
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Function (FunctionArgName)
 import Language.GraphQL.Draft.Syntax qualified as G
-import Language.Haskell.TH.Syntax
+import Language.Haskell.TH.Syntax hiding (location)
 import Text.ParserCombinators.ReadP (eof, readP_to_S)
 
 data Select = Select
@@ -1115,3 +1117,46 @@ projectionAlias =
     EntityProjection a -> pure (aliasedAlias a)
     ArrayEntityProjection _ a -> pure (aliasedAlias a)
     WindowProjection a -> pure (aliasedAlias a)
+
+data Job = Job
+  { state :: Text,
+    jobId :: Text,
+    location :: Text
+  }
+  deriving (Show)
+
+instance FromJSON Job where
+  parseJSON =
+    J.withObject
+      "Job"
+      ( \o -> do
+          kind <- o J..: "kind"
+          if kind == ("bigquery#job" :: Text)
+            then do
+              state <- do
+                status <- o J..: "status"
+                status J..: "state"
+              (jobId, location) <- do
+                ref <- o J..: "jobReference"
+                -- 'location' is needed in addition to 'jobId' to query a job's
+                -- status
+                (,) <$> ref J..: "jobId" <*> ref J..: "location"
+              pure Job {state, jobId, location}
+            else fail ("Invalid kind: " <> show kind)
+      )
+
+instance ToJSON Job where
+  toJSON Job {..} =
+    J.object
+      [ "id" J..= jobId,
+        "location" J..= location,
+        "state" J..= state
+      ]
+
+data ExecutionStatistics = ExecutionStatistics
+  { _esJob :: Job
+  }
+  deriving stock (Generic)
+
+instance ToJSON ExecutionStatistics where
+  toJSON = J.genericToJSON hasuraJSON

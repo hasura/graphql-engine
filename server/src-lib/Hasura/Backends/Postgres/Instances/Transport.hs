@@ -70,7 +70,7 @@ runPGQuery ::
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig ('Postgres pgKind) ->
-  OnBaseMonad (PG.TxET QErr) EncJSON ->
+  OnBaseMonad (PG.TxET QErr) (Maybe (AB.AnyBackend ExecutionStats), EncJSON) ->
   Maybe EQ.PreparedSql ->
   ResolvedConnectionTemplate ('Postgres pgKind) ->
   -- | Also return the time spent in the PG query; for telemetry.
@@ -81,7 +81,7 @@ runPGQuery reqId query fieldName _userInfo logger sourceConfig tx genSql resolve
   withElapsedTime $
     newSpan ("Postgres Query for root field " <>> fieldName) $
       runQueryTx (_pscExecCtx sourceConfig) (GraphQLQuery resolvedConnectionTemplate) $
-        runOnBaseMonad tx
+        fmap snd (runOnBaseMonad tx)
 
 runPGMutation ::
   ( MonadIO m,
@@ -145,7 +145,7 @@ runPGQueryExplain ::
   m EncJSON
 runPGQueryExplain (DBStepInfo _ sourceConfig _ action resolvedConnectionTemplate) =
   runQueryTx (_pscExecCtx sourceConfig) (GraphQLQuery resolvedConnectionTemplate) $
-    runOnBaseMonad action
+    fmap arResult (runOnBaseMonad action)
 
 mkQueryLog ::
   GQLReqUnparsed ->
@@ -155,7 +155,7 @@ mkQueryLog ::
   Maybe (ResolvedConnectionTemplate ('Postgres pgKind)) ->
   QueryLog
 mkQueryLog gqlQuery fieldName preparedSql requestId resolvedConnectionTemplate =
-  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId (QueryLogKindDatabase (mkBackendResolvedConnectionTemplate <$> resolvedConnectionTemplate))
+  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId (QueryLogKindDatabase (mkBackendResolvedConnectionTemplate <$> resolvedConnectionTemplate)) Nothing
   where
     mkBackendResolvedConnectionTemplate ::
       ResolvedConnectionTemplate ('Postgres pgKind) ->
@@ -190,5 +190,6 @@ runPGMutationTransaction reqId query userInfo logger sourceConfig resolvedConnec
     runTxWithCtxAndUserInfo userInfo (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) (GraphQLQuery resolvedConnectionTemplate) $
       flip OMap.traverseWithKey mutations \fieldName dbsi ->
         newSpan ("Postgres Mutation for root field " <>> fieldName) $
-          runOnBaseMonad $
-            dbsiAction dbsi
+          fmap arResult $
+            runOnBaseMonad $
+              dbsiAction dbsi

@@ -15,6 +15,7 @@ module Hasura.Backends.BigQuery.Execute
     Execute,
     ExecuteProblem (..),
     FieldNameText (..),
+    Job (..),
     OutputValue (..),
     RecordSet (..),
     ShowDetails (..),
@@ -246,23 +247,23 @@ bigQueryProjectUrl projectId =
 runExecute ::
   MonadIO m =>
   BigQuerySourceConfig ->
-  Execute RecordSet ->
-  m (Either ExecuteProblem RecordSet)
+  Execute (BigQuery.Job, RecordSet) ->
+  m (Either ExecuteProblem (BigQuery.Job, RecordSet))
 runExecute sourceConfig m =
   liftIO
     ( runExceptT
         ( runReaderT
-            (unExecute (m >>= getFinalRecordSet))
+            (unExecute (m >>= traverse getFinalRecordSet))
             (ExecuteReader {sourceConfig})
         )
     )
 
-executeSelect :: Select -> Execute RecordSet
+executeSelect :: Select -> Execute (BigQuery.Job, RecordSet)
 executeSelect select = do
   conn <- asks (_scConnection . sourceConfig)
-  recordSet <-
+  (job, recordSet) <-
     streamBigQuery conn (selectToBigQuery select) >>= liftEither
-  pure recordSet {wantedFields = selectFinalWantedFields select}
+  pure (job, recordSet {wantedFields = selectFinalWantedFields select})
 
 -- | This is needed to strip out unneeded fields (join keys) in the
 -- final query.  This is a relic of the data loader approach. A later
@@ -384,7 +385,7 @@ valueToBigQueryJson = go
 -- response. Until that test has been done, we should consider this a
 -- preliminary implementation.
 streamBigQuery ::
-  (MonadIO m) => BigQueryConnection -> BigQuery -> m (Either ExecuteProblem RecordSet)
+  (MonadIO m) => BigQueryConnection -> BigQuery -> m (Either ExecuteProblem (BigQuery.Job, RecordSet))
 streamBigQuery conn bigquery = do
   jobResult <- runExceptT $ createQueryJob conn bigquery
   case jobResult of
@@ -407,7 +408,7 @@ streamBigQuery conn bigquery = do
                         Just recordSet@RecordSet {rows} ->
                           (recordSet {rows = rows <> rows'})
                 case mpageToken' of
-                  Nothing -> pure (Right extendedRecordSet)
+                  Nothing -> pure (Right (job, extendedRecordSet))
                   Just pageToken' ->
                     loop (pure pageToken') (pure extendedRecordSet)
             Right JobIncomplete {} -> do
@@ -488,7 +489,7 @@ data Fetch = Fetch
 getJobResults ::
   (MonadIO m) =>
   BigQueryConnection ->
-  Job ->
+  BigQuery.Job ->
   Fetch ->
   m (Either ExecuteProblem JobResultsResponse)
 getJobResults conn Job {jobId, location} Fetch {pageToken} = runExceptT $ do
@@ -530,33 +531,6 @@ getJobResults conn Job {jobId, location} Fetch {pageToken} = runExceptT $ do
 
 --------------------------------------------------------------------------------
 -- Creating jobs
-
-data Job = Job
-  { state :: Text,
-    jobId :: Text,
-    location :: Text
-  }
-  deriving (Show)
-
-instance Aeson.FromJSON Job where
-  parseJSON =
-    Aeson.withObject
-      "Job"
-      ( \o -> do
-          kind <- o .: "kind"
-          if kind == ("bigquery#job" :: Text)
-            then do
-              state <- do
-                status <- o .: "status"
-                status .: "state"
-              (jobId, location) <- do
-                ref <- o .: "jobReference"
-                -- 'location' is needed in addition to 'jobId' to query a job's
-                -- status
-                (,) <$> ref .: "jobId" <*> ref .: "location"
-              pure Job {state, jobId, location}
-            else fail ("Invalid kind: " <> show kind)
-      )
 
 -- | Make a Request return `JSON`
 jsonRequestHeader :: Request -> Request

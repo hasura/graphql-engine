@@ -37,6 +37,7 @@ instance Backend 'BigQuery where
   type FunctionArgumentExp 'BigQuery = BigQuery.ArgumentExp
   type ComputedFieldImplicitArguments 'BigQuery = BigQuery.ComputedFieldImplicitArguments
   type ComputedFieldReturn 'BigQuery = BigQuery.ComputedFieldReturn
+  type ExecutionStatistics 'BigQuery = BigQuery.ExecutionStatistics
 
   type XStreamingSubscription 'BigQuery = XDisable
   type XComputedField 'BigQuery = XEnable

@@ -1,6 +1,8 @@
 module Hasura.GraphQL.Execute.Backend
   ( BackendExecute (..),
     DBStepInfo (..),
+    ActionResult (..),
+    withNoStatistics,
     ExecutionPlan,
     ExecutionStep (..),
     ExplainPlan (..),
@@ -238,9 +240,18 @@ data DBStepInfo b = DBStepInfo
   { dbsiSourceName :: SourceName,
     dbsiSourceConfig :: SourceConfig b,
     dbsiPreparedQuery :: Maybe (PreparedQuery b),
-    dbsiAction :: OnBaseMonad (ExecutionMonad b) EncJSON,
+    dbsiAction :: OnBaseMonad (ExecutionMonad b) (ActionResult b),
     dbsiResolvedConnectionTemplate :: ResolvedConnectionTemplate b
   }
+
+data ActionResult b = ActionResult
+  { arStatistics :: Maybe (ExecutionStatistics b),
+    arResult :: EncJSON
+  }
+
+-- | Lift a result from the database into an 'ActionResult'.
+withNoStatistics :: EncJSON -> ActionResult b
+withNoStatistics arResult = ActionResult {arStatistics = Nothing, arResult}
 
 -- | Provides an abstraction over the base monad in which a computation runs.
 --
@@ -265,8 +276,11 @@ data DBStepInfo b = DBStepInfo
 -- be able to create new spans as part of the execution, and several use
 -- @MonadBaseControl IO@ to use 'try' in their error handling.
 newtype OnBaseMonad t a = OnBaseMonad
-  { runOnBaseMonad :: forall m. (MonadIO m, MonadBaseControl IO m, MonadTrace m, MonadError QErr m) => t m a
+  { runOnBaseMonad :: forall m. (Functor (t m), MonadIO m, MonadBaseControl IO m, MonadTrace m, MonadError QErr m) => t m a
   }
+
+instance Functor (OnBaseMonad t) where
+  fmap f (OnBaseMonad xs) = OnBaseMonad (fmap f xs)
 
 -- | The result of an explain query: for a given root field (denoted by its name): the generated SQL
 -- query, and the detailed explanation obtained from the database (if any). We mostly use this type

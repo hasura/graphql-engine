@@ -24,7 +24,7 @@ import Hasura.Backends.DataConnector.Plan.QueryPlan qualified as Plan
 import Hasura.Backends.DataConnector.Plan.RemoteRelationshipPlan qualified as Plan
 import Hasura.Base.Error (Code (..), QErr, throw400, throw400WithDetail)
 import Hasura.EncJSON (EncJSON, encJFromBuilder, encJFromJValue)
-import Hasura.GraphQL.Execute.Backend (BackendExecute (..), DBStepInfo (..), ExplainPlan (..), OnBaseMonad (..))
+import Hasura.GraphQL.Execute.Backend (BackendExecute (..), DBStepInfo (..), ExplainPlan (..), OnBaseMonad (..), withNoStatistics)
 import Hasura.GraphQL.Namespace qualified as GQL
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as RQL
@@ -63,7 +63,7 @@ instance BackendExecute 'DataConnector where
         { dbsiSourceName = sourceName,
           dbsiSourceConfig = transformedSourceConfig,
           dbsiPreparedQuery = Just $ QueryRequest _pRequest,
-          dbsiAction = OnBaseMonad $ buildQueryAction sourceName transformedSourceConfig queryPlan,
+          dbsiAction = OnBaseMonad $ fmap withNoStatistics (buildQueryAction sourceName transformedSourceConfig queryPlan),
           dbsiResolvedConnectionTemplate = ()
         }
 
@@ -76,7 +76,7 @@ instance BackendExecute 'DataConnector where
           { dbsiSourceName = sourceName,
             dbsiSourceConfig = transformedSourceConfig,
             dbsiPreparedQuery = Just $ QueryRequest _pRequest,
-            dbsiAction = OnBaseMonad $ buildExplainAction fieldName sourceName transformedSourceConfig queryPlan,
+            dbsiAction = OnBaseMonad $ fmap withNoStatistics (buildExplainAction fieldName sourceName transformedSourceConfig queryPlan),
             dbsiResolvedConnectionTemplate = ()
           }
 
@@ -88,7 +88,7 @@ instance BackendExecute 'DataConnector where
         { dbsiSourceName = sourceName,
           dbsiSourceConfig = transformedSourceConfig,
           dbsiPreparedQuery = Just $ MutationRequest _pRequest,
-          dbsiAction = OnBaseMonad $ buildMutationAction sourceName transformedSourceConfig mutationPlan,
+          dbsiAction = OnBaseMonad $ fmap withNoStatistics (buildMutationAction sourceName transformedSourceConfig mutationPlan),
           dbsiResolvedConnectionTemplate = ()
         }
 
@@ -106,7 +106,7 @@ instance BackendExecute 'DataConnector where
         { dbsiSourceName = sourceName,
           dbsiSourceConfig = transformedSourceConfig,
           dbsiPreparedQuery = Just $ QueryRequest _pRequest,
-          dbsiAction = OnBaseMonad $ buildQueryAction sourceName transformedSourceConfig remoteRelationshipPlan,
+          dbsiAction = OnBaseMonad $ fmap withNoStatistics (buildQueryAction sourceName transformedSourceConfig remoteRelationshipPlan),
           dbsiResolvedConnectionTemplate = ()
         }
 

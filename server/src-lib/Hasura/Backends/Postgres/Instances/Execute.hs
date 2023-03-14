@@ -50,6 +50,7 @@ import Hasura.GraphQL.Execute.Backend
     ExplainPlan (..),
     OnBaseMonad (..),
     convertRemoteSourceRelationship,
+    withNoStatistics,
   )
 import Hasura.GraphQL.Execute.Subscription.Plan
   ( CohortId,
@@ -149,7 +150,8 @@ pgDBQueryPlan userInfo _env sourceName sourceConfig qrf reqHeaders operationName
           QueryOperationType G.OperationTypeQuery
   let preparedSQLWithQueryTags = appendPreparedSQLWithQueryTags (irToRootFieldPlan planVals preparedQuery) queryTagsComment
   let (action, preparedSQL) = mkCurPlanTx userInfo preparedSQLWithQueryTags
-  pure $ DBStepInfo @('Postgres pgKind) sourceName sourceConfig preparedSQL action resolvedConnectionTemplate
+
+  pure $ DBStepInfo @('Postgres pgKind) sourceName sourceConfig preparedSQL (fmap withNoStatistics action) resolvedConnectionTemplate
 
 pgDBQueryExplain ::
   forall pgKind m.
@@ -174,7 +176,7 @@ pgDBQueryExplain fieldName userInfo sourceName sourceConfig rootSelection reqHea
       withExplain = "EXPLAIN " <> textSQL
   let action = OnBaseMonad do
         PG.withQE dmlTxErrorHandler (PG.fromText withExplain) () True <&> \planList ->
-          encJFromJValue $ ExplainPlan fieldName (Just textSQL) (Just $ map runIdentity planList)
+          withNoStatistics $ encJFromJValue $ ExplainPlan fieldName (Just textSQL) (Just $ map runIdentity planList)
   resolvedConnectionTemplate <-
     applyConnectionTemplateResolverNonAdmin (_pscConnectionTemplateResolver sourceConfig) userInfo reqHeaders $
       Just $
@@ -326,7 +328,14 @@ pgDBMutationPlan userInfo _environment stringifyNum sourceName sourceConfig mrf 
     MDBDelete s -> convertDelete userInfo s stringifyNum
     MDBFunction returnsSet s -> convertFunction userInfo returnsSet s
   where
-    go resolvedConnectionTemplate v = DBStepInfo @('Postgres pgKind) sourceName sourceConfig Nothing v resolvedConnectionTemplate
+    go resolvedConnectionTemplate v =
+      DBStepInfo
+        { dbsiSourceName = sourceName,
+          dbsiSourceConfig = sourceConfig,
+          dbsiPreparedQuery = Nothing,
+          dbsiAction = fmap withNoStatistics v,
+          dbsiResolvedConnectionTemplate = resolvedConnectionTemplate
+        }
 
 -- subscription
 

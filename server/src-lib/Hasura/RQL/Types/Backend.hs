@@ -116,6 +116,7 @@ class
     ToJSON (BackendConfig b),
     ToJSON (Column b),
     ToJSON (ConstraintName b),
+    ToJSON (ExecutionStatistics b),
     ToJSON (FunctionArgument b),
     ToJSON (FunctionName b),
     ToJSON (ScalarType b),
@@ -310,6 +311,12 @@ class
 
   resolveConnectionTemplate :: SourceConfig b -> ConnectionTemplateRequestContext b -> Either QErr EncJSON
   resolveConnectionTemplate _ _ = Left (err400 (NotSupported) "connection template is not implemented")
+
+  -- | Information about the query execution that may be useful for debugging
+  -- or reporting.
+  type ExecutionStatistics b :: Type
+
+  type ExecutionStatistics b = ()
 
   -- functions on types
   isComparableType :: ScalarType b -> Bool
