@@ -1,3 +1,4 @@
+{-# LANGUAGE NumericUnderscores #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -32,10 +33,17 @@ module Hasura.Logging
     isEngineLogTypeEnabled,
     readLogTypes,
     getFormattedTime,
+
+    -- * Debounce logger
+    createStatsLogger,
+    closeStatsLogger,
+    logStats,
   )
 where
 
 import Control.AutoUpdate qualified as Auto
+import Control.Exception (catch)
+import Control.FoldDebounce qualified as FDebounce
 import Control.Monad.Trans.Control
 import Control.Monad.Trans.Managed (ManagedT (..), allocate)
 import Data.Aeson qualified as J
@@ -332,3 +340,51 @@ cronEventGeneratorProcessType = ELTInternal ILTCronEventGeneratorProcess
 
 sourceCatalogMigrationLogType :: EngineLogType Hasura
 sourceCatalogMigrationLogType = ELTInternal ILTSourceCatalogMigration
+
+-- | A logger useful for accumulating stats, evaluated in forever running loops, over a
+-- period of time and log them only once. Use @'logStats' to record statistics for logging.
+createStatsLogger ::
+  forall m stats impl.
+  ( MonadIO m,
+    ToEngineLog stats impl,
+    Monoid stats
+  ) =>
+  Logger impl ->
+  m (FDebounce.Trigger stats stats)
+createStatsLogger hasuraLogger =
+  liftIO $ FDebounce.new debounceArgs debounceOpts
+  where
+    logDelay :: Int
+    logDelay =
+      -- Accumulate stats occurred within 10 minutes and log once.
+      10 * 60 * 1000_000 -- 10 minutes
+    debounceArgs :: FDebounce.Args stats stats
+    debounceArgs =
+      FDebounce.Args
+        { FDebounce.cb = unLogger hasuraLogger, -- Log using the Hasura logger
+          FDebounce.fold = (<>),
+          FDebounce.init = mempty
+        }
+
+    debounceOpts :: FDebounce.Opts stats stats
+    debounceOpts = FDebounce.def {FDebounce.delay = logDelay}
+
+-- Orphan instance. Required for @'closeStatsLogger'.
+instance (EnabledLogTypes impl) => ToEngineLog (FDebounce.OpException, EngineLogType impl) impl where
+  toEngineLog (opException, logType) =
+    let errorMessage :: Text
+        errorMessage = case opException of
+          FDebounce.AlreadyClosedException -> "already closed"
+          FDebounce.UnexpectedClosedException _someException -> "closed unexpectedly"
+     in (LevelWarn, logType, J.object ["message" J..= ("cannot close fetched events stats logger: " <> errorMessage)])
+
+-- | Safely close the statistics logger. When occurred, exception is logged.
+closeStatsLogger :: (MonadIO m, EnabledLogTypes impl) => EngineLogType impl -> Logger impl -> FDebounce.Trigger stats stats -> m ()
+closeStatsLogger logType (Logger hasuraLogger) debounceLogger =
+  liftIO $ catch (FDebounce.close debounceLogger) $ \(e :: FDebounce.OpException) -> hasuraLogger (e, logType)
+
+-- | This won't log the given stats immediately.
+-- The stats are accumulated over the specific timeframe and logged only once.
+-- See @'createStatsLogger' for more details.
+logStats :: (MonadIO m) => FDebounce.Trigger stats stats -> stats -> m ()
+logStats debounceTrigger = liftIO . FDebounce.send debounceTrigger

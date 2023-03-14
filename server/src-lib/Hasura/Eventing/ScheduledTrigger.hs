@@ -1098,12 +1098,12 @@ getScheduledEventsInvocationsQuery eventTables (GetScheduledEventInvocations inv
 -- | Logger to accumulate stats of fetched scheduled events over a period of time and log once using @'L.Logger L.Hasura'.
 -- See @'createStatsLogger' for more details.
 createFetchedScheduledEventsStatsLogger :: (MonadIO m) => L.Logger L.Hasura -> m FetchedScheduledEventsStatsLogger
-createFetchedScheduledEventsStatsLogger = createStatsLogger
+createFetchedScheduledEventsStatsLogger = L.createStatsLogger
 
 -- | Close the fetched scheduled events stats logger.
 closeFetchedScheduledEventsStatsLogger ::
   (MonadIO m) => L.Logger L.Hasura -> FetchedScheduledEventsStatsLogger -> m ()
-closeFetchedScheduledEventsStatsLogger = closeStatsLogger L.scheduledTriggerProcessLogType
+closeFetchedScheduledEventsStatsLogger = L.closeStatsLogger L.scheduledTriggerProcessLogType
 
 -- | Log statistics of fetched scheduled events. See @'logStats' for more details.
 logFetchedScheduledEventsStats ::
@@ -1113,18 +1113,18 @@ logFetchedScheduledEventsStats ::
   OneOffScheduledEventsCount ->
   m ()
 logFetchedScheduledEventsStats logger cron oneOff =
-  logStats logger (FetchedScheduledEventsStats cron oneOff 1)
+  L.logStats logger (FetchedScheduledEventsStats cron oneOff 1)
 
 -- | Logger to accumulate stats of fetched cron triggers, for generating cron events, over a period of time and
 -- log once using @'L.Logger L.Hasura'.
 -- See @'createStatsLogger' for more details.
 createFetchedCronTriggerStatsLogger :: (MonadIO m) => L.Logger L.Hasura -> m FetchedCronTriggerStatsLogger
-createFetchedCronTriggerStatsLogger = createStatsLogger
+createFetchedCronTriggerStatsLogger = L.createStatsLogger
 
 -- | Close the fetched cron trigger stats logger.
 closeFetchedCronTriggersStatsLogger ::
   (MonadIO m) => L.Logger L.Hasura -> FetchedCronTriggerStatsLogger -> m ()
-closeFetchedCronTriggersStatsLogger = closeStatsLogger L.cronEventGeneratorProcessType
+closeFetchedCronTriggersStatsLogger = L.closeStatsLogger L.cronEventGeneratorProcessType
 
 -- | Log statistics of fetched cron triggers. See @'logStats' for more details.
 logFetchedCronTriggersStats ::
@@ -1133,4 +1133,4 @@ logFetchedCronTriggersStats ::
   [CronTriggerStats] ->
   m ()
 logFetchedCronTriggersStats logger cronTriggerStats =
-  logStats logger (FetchedCronTriggerStats cronTriggerStats 1)
+  L.logStats logger (FetchedCronTriggerStats cronTriggerStats 1)

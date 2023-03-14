@@ -247,11 +247,11 @@ type FetchedEventsStatsLogger = FDebounce.Trigger FetchedEventsStats FetchedEven
 -- | Logger to accumulate stats of fetched events over a period of time and log once using @'L.Logger L.Hasura'.
 -- See @'createStatsLogger' for more details.
 createFetchedEventsStatsLogger :: (MonadIO m) => L.Logger L.Hasura -> m FetchedEventsStatsLogger
-createFetchedEventsStatsLogger = createStatsLogger
+createFetchedEventsStatsLogger = L.createStatsLogger
 
 -- | Close the fetched events stats logger.
 closeFetchedEventsStatsLogger :: (MonadIO m) => L.Logger L.Hasura -> FetchedEventsStatsLogger -> m ()
-closeFetchedEventsStatsLogger = closeStatsLogger L.eventTriggerProcessLogType
+closeFetchedEventsStatsLogger = L.closeStatsLogger L.eventTriggerProcessLogType
 
 -- | Log statistics of fetched events. See @'logStats' for more details.
 logFetchedEventsStatistics ::
@@ -260,7 +260,7 @@ logFetchedEventsStatistics ::
   [BackendEventWithSource] ->
   m ()
 logFetchedEventsStatistics logger backendEvents =
-  logStats logger (FetchedEventsStats numEventsFetchedPerSource 1)
+  L.logStats logger (FetchedEventsStats numEventsFetchedPerSource 1)
   where
     numEventsFetchedPerSource =
       let sourceNames = flip map backendEvents $
