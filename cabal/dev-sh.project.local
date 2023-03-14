@@ -73,16 +73,16 @@ package dc-api
 package graphql-parser
   ghc-options: -j -Werror
 
-package hasura-error-message
+package error-message
   ghc-options: -j -Werror
 
-package hasura-incremental
+package incremental
   ghc-options: -j -Werror
 
 package hasura-prelude
   ghc-options: -j -Werror
 
-package hasura-schema-parsers
+package schema-parsers
   ghc-options: -j -Werror
 
 package pg-client
