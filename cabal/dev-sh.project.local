@@ -19,6 +19,10 @@ package *
     -j2
     +RTS -A64m -n2m -RTS
 
+  -- This guarantees that -Wredundant-contraints will properly fire, even with
+  -- optimizations disabled. See https://gitlab.haskell.org/ghc/ghc/-/issues/16932
+  ghc-options: -fsolve-constant-dicts
+
 -- NOTE: new-build may report a misleading 'Build profile: -O1'
 -- See:https://github.com/haskell/cabal/issues/6221
 flags: -optimize-hasura
