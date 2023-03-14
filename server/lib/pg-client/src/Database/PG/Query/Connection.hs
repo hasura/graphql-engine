@@ -35,7 +35,6 @@ module Database.PG.Query.Connection
     PrepArg,
     prepare,
     execMulti,
-    execCmd,
     execQuery,
     lenientDecodeUtf8,
     PGErrInternal (..),
@@ -529,7 +528,6 @@ instance ToJSON PGErrInternal where
   toJSON (PGIUnexpected msg) = toJSON msg
   toJSON (PGIStatement errDetail) = toJSON errDetail
 
-{-# INLINE execQuery #-}
 execQuery ::
   PGConn ->
   PGQuery a ->
@@ -555,7 +553,6 @@ execQuery pgConn pgQuery = do
       mRes <- run $ PQ.execPrepared conn rk vl PQ.Binary
       checkResult conn mRes
 
-{-# INLINE execMulti #-}
 execMulti ::
   PGConn ->
   Template ->
@@ -568,19 +565,5 @@ execMulti pgConn (Template t) convF = do
         PQ.exec conn t
     checkResult conn mRes
   withExceptT PGIUnexpected $ convF resOk
-  where
-    PGConn conn _ cancelable _ _ _ _ _ _ = pgConn
-
-{-# INLINE execCmd #-}
-execCmd ::
-  PGConn ->
-  Template ->
-  ExceptT PGErrInternal IO ()
-execCmd pgConn (Template t) =
-  retryOnConnErr pgConn $ do
-    mRes <-
-      bool lift (cancelOnAsync conn) cancelable $
-        PQ.execParams conn t [] PQ.Binary
-    assertResCmd conn mRes
   where
     PGConn conn _ cancelable _ _ _ _ _ _ = pgConn

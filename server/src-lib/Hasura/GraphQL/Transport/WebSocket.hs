@@ -22,6 +22,7 @@ where
 
 import Control.Concurrent.Extended (sleep)
 import Control.Concurrent.STM qualified as STM
+import Control.Monad.Morph (hoist)
 import Control.Monad.Trans.Control qualified as MC
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
@@ -772,7 +773,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
       (telemTimeIO_DT, _respHdrs, resp) <-
         doQErr $
           E.execRemoteGQ env userInfo reqHdrs (rsDef rsi) gqlReq
-      value <- mapExceptT lift $ extractFieldFromResponse fieldName resultCustomizer resp
+      value <- hoist lift $ extractFieldFromResponse fieldName resultCustomizer resp
       finalResponse <-
         doQErr $
           RJ.processRemoteJoins

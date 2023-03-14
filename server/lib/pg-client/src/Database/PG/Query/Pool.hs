@@ -13,18 +13,13 @@ module Database.PG.Query.Pool
     pgPoolStats,
     PGPoolStats (..),
     getInUseConnections,
-    withExpiringPGconn,
     defaultConnParams,
     initPGPool,
     resizePGPool,
     destroyPGPool,
     withConn,
-    beginTx,
-    abortTx,
-    commitTx,
     runTx,
     runTx',
-    catchConnErr,
     sql,
     sqlFromFile,
     PGExecErr (..),
@@ -44,7 +39,7 @@ import Control.Monad (when)
 import Control.Monad.Except (MonadError (catchError, throwError))
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.Trans.Control (MonadBaseControl, control)
-import Control.Monad.Trans.Except (ExceptT, withExceptT)
+import Control.Monad.Trans.Except (ExceptT)
 import Data.Aeson (ToJSON (toJSON))
 import Data.ByteString qualified as BS
 import Data.HashTable.IO qualified as HIO
@@ -163,25 +158,31 @@ instance FromPGTxErr PGExecErr where
 instance FromPGConnErr PGExecErr where
   fromPGConnErr = PGExecErrConn
 
+instance FromPGTxErr PGTxErr where
+  fromPGTxErr = id
+
+instance FromPGConnErr PGConnErr where
+  fromPGConnErr = id
+
 instance Show PGExecErr where
   show (PGExecErrConn pce) = show pce
   show (PGExecErrTx txe) = show txe
 
-beginTx :: (MonadIO m) => TxMode -> TxT m ()
+beginTx :: (MonadIO m, FromPGTxErr e) => TxMode -> TxET e m ()
 beginTx (i, w) =
-  unitQ query () True
+  unitQE fromPGTxErr query () True
   where
     query =
       fromText . Text.pack $
         ("BEGIN " <> show i <> " " <> maybe "" show w)
 
-commitTx :: (MonadIO m) => TxT m ()
+commitTx :: (MonadIO m, FromPGTxErr e) => TxET e m ()
 commitTx =
-  unitQ "COMMIT" () True
+  unitQE fromPGTxErr "COMMIT" () True
 
-abortTx :: (MonadIO m) => TxT m ()
+abortTx :: (MonadIO m, FromPGTxErr e) => TxET e m ()
 abortTx =
-  unitQ "ABORT" () True
+  unitQE fromPGTxErr "ABORT" () True
 
 class FromPGTxErr e where
   fromPGTxErr :: PGTxErr -> e
@@ -197,15 +198,15 @@ asTransaction ::
   ExceptT e m a
 asTransaction txm f pgConn = do
   -- Begin the transaction. If there is an error, you shouldn't call abort
-  withExceptT fromPGTxErr $ execTx pgConn $ beginTx txm
+  execTx pgConn $ beginTx txm
   -- Run the actual transaction and commit. If there is an error, abort
   flip catchError abort $ do
     a <- f pgConn
-    withExceptT fromPGTxErr $ execTx pgConn commitTx
+    execTx pgConn commitTx
     return a
   where
     abort e = do
-      withExceptT fromPGTxErr $ execTx pgConn abortTx
+      execTx pgConn abortTx
       throwError e
 
 -- | Run a command using the postgres pool.
@@ -215,11 +216,12 @@ asTransaction txm f pgConn = do
 withConn ::
   ( MonadIO m,
     MonadBaseControl IO m,
+    MonadError e m,
     FromPGConnErr e
   ) =>
   PGPool ->
-  (PGConn -> ExceptT e m a) ->
-  ExceptT e m a
+  (PGConn -> m a) ->
+  m a
 withConn pool f =
   catchConnErr $ withExpiringPGconn pool f
 
@@ -231,23 +233,16 @@ catchConnErr ::
 catchConnErr action =
   control $ \runInIO ->
     runInIO action
-      `Exc.catches` [ Handler (runInIO . handler),
+      `Exc.catches` [ Handler (runInIO . handlePGConnErr),
                       Handler (runInIO . handleTimeout)
                     ]
   where
-    handler = mkConnExHandler action fromPGConnErr
+    handlePGConnErr :: PGConnErr -> m a
+    handlePGConnErr = throwError . fromPGConnErr
 
     handleTimeout :: RP.TimeoutException -> m a
-    handleTimeout _ =
+    handleTimeout RP.TimeoutException =
       throwError (fromPGConnErr $ PGConnErr "connection acquisition timeout expired")
-
-{-# INLINE mkConnExHandler #-}
-mkConnExHandler ::
-  (MonadError e m) =>
-  m a ->
-  (PGConnErr -> e) ->
-  (PGConnErr -> m a)
-mkConnExHandler _ ef = throwError . ef
 
 -- | Run a command on the given pool wrapped in a transaction.
 runTx ::

@@ -142,9 +142,8 @@ migrateCatalog maybeDefaultSourceConfig extensionsSchema maintenanceMode migrati
     initialize :: Bool -> m MigrationResult
     initialize createSchema = do
       liftTx $
-        PG.catchE defaultTxErrorHandler $
-          when createSchema $
-            PG.unitQ "CREATE SCHEMA hdb_catalog" () False
+        when createSchema $
+          PG.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
       enablePgcryptoExtension extensionsSchema
       multiQ $(makeRelativeToProject "src-rsr/initialise.sql" >>= PG.sqlFromFile)
       updateCatalogVersion

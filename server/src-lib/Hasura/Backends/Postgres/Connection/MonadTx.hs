@@ -258,8 +258,7 @@ enablePgcryptoExtension (ExtensionsSchema extensionsSchema) = do
 dropHdbCatalogSchema :: (MonadTx m) => m ()
 dropHdbCatalogSchema =
   liftTx $
-    PG.catchE defaultTxErrorHandler $
-      -- This is where
-      -- 1. Metadata storage:- Metadata and its stateful information stored
-      -- 2. Postgres source:- Table event trigger related stuff & insert permission check function stored
-      PG.unitQ "DROP SCHEMA IF EXISTS hdb_catalog CASCADE" () False
+    -- This is where
+    -- 1. Metadata storage:- Metadata and its stateful information stored
+    -- 2. Postgres source:- Table event trigger related stuff & insert permission check function stored
+    PG.unitQE defaultTxErrorHandler "DROP SCHEMA IF EXISTS hdb_catalog CASCADE" () False

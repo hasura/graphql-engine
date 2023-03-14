@@ -35,25 +35,27 @@ getCatalogVersion = do
     \err -> throw500 $ "Unexpected: couldn't convert read catalog version " <> versionText <> ", err:" <> tshow err
 
 from3To4 :: forall m. (Backend ('Postgres 'Vanilla), MonadTx m) => m ()
-from3To4 = liftTx $
-  PG.catchE defaultTxErrorHandler $ do
-    PG.unitQ
-      [PG.sql|
+from3To4 = liftTx do
+  PG.unitQE
+    defaultTxErrorHandler
+    [PG.sql|
       ALTER TABLE hdb_catalog.event_triggers
       ADD COLUMN configuration JSON |]
-      ()
-      False
-    eventTriggers <-
-      map uncurryEventTrigger
-        <$> PG.withQ
-          [PG.sql|
+    ()
+    False
+  eventTriggers <-
+    map uncurryEventTrigger
+      <$> PG.withQE
+        defaultTxErrorHandler
+        [PG.sql|
       SELECT e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval, e.headers::json
       FROM hdb_catalog.event_triggers e |]
-          ()
-          False
-    forM_ eventTriggers updateEventTrigger3To4
-    PG.unitQ
-      [PG.sql|
+        ()
+        False
+  forM_ eventTriggers updateEventTrigger3To4
+  PG.unitQE
+    defaultTxErrorHandler
+    [PG.sql|
       ALTER TABLE hdb_catalog.event_triggers
       DROP COLUMN definition,
       DROP COLUMN query,
@@ -62,8 +64,8 @@ from3To4 = liftTx $
       DROP COLUMN retry_interval,
       DROP COLUMN headers,
       DROP COLUMN metadataTransform|]
-      ()
-      False
+    ()
+    False
   where
     uncurryEventTrigger ::
       ( TriggerName,
@@ -77,7 +79,8 @@ from3To4 = liftTx $
     uncurryEventTrigger (trn, PG.ViaJSON tDef, w, nr, rint, PG.ViaJSON headers) =
       EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint Nothing) headers Nothing Nothing Nothing TORDisableTrigger
     updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _ _ _ _ _) =
-      PG.unitQ
+      PG.unitQE
+        defaultTxErrorHandler
         [PG.sql|
                                             UPDATE hdb_catalog.event_triggers
                                             SET

@@ -399,7 +399,7 @@ parseLegacyRemoteRelationshipDefinition =
 
 fetchMetadataFromHdbTables :: MonadTx m => m MetadataNoSources
 fetchMetadataFromHdbTables = liftTx do
-  tables <- PG.catchE defaultTxErrorHandler fetchTables
+  tables <- fetchTables
   let tableMetaMap = OMap.fromList . flip map tables $
         \(schema, name, isEnum, maybeConfig) ->
           let qualifiedName = QualifiedObject schema name
@@ -407,13 +407,13 @@ fetchMetadataFromHdbTables = liftTx do
            in (qualifiedName, mkTableMeta qualifiedName isEnum configuration)
 
   -- Fetch all the relationships
-  relationships <- PG.catchE defaultTxErrorHandler fetchRelationships
+  relationships <- fetchRelationships
 
   objRelDefs <- mkRelDefs ObjRel relationships
   arrRelDefs <- mkRelDefs ArrRel relationships
 
   -- Fetch all the permissions
-  permissions <- PG.catchE defaultTxErrorHandler fetchPermissions
+  permissions <- fetchPermissions
 
   -- Parse all the permissions
   insPermDefs <- mkPermDefs PTInsert permissions
@@ -422,14 +422,14 @@ fetchMetadataFromHdbTables = liftTx do
   delPermDefs <- mkPermDefs PTDelete permissions
 
   -- Fetch all event triggers
-  eventTriggers :: [(SchemaName, Postgres.TableName, PG.ViaJSON Value)] <- PG.catchE defaultTxErrorHandler fetchEventTriggers
+  eventTriggers :: [(SchemaName, Postgres.TableName, PG.ViaJSON Value)] <- fetchEventTriggers
   triggerMetaDefs <- mkTriggerMetaDefs eventTriggers
 
   -- Fetch all computed fields
   computedFields <- fetchComputedFields
 
   -- Fetch all remote relationships
-  remoteRelationshipsRaw <- PG.catchE defaultTxErrorHandler fetchRemoteRelationships
+  remoteRelationshipsRaw <- fetchRemoteRelationships
   remoteRelationships <- for remoteRelationshipsRaw $ \(table, relationshipName, definitionValue) -> do
     definition <- parseLegacyRemoteRelationshipDefinition definitionValue
     pure $ (table, RemoteRelationship relationshipName definition)
@@ -445,7 +445,7 @@ fetchMetadataFromHdbTables = liftTx do
         modMetaMap tmComputedFields _cfmName computedFields
         modMetaMap tmRemoteRelationships _rrName remoteRelationships
 
-  functions <- PG.catchE defaultTxErrorHandler fetchFunctions
+  functions <- fetchFunctions
   remoteSchemas <- oMapFromL _rsmName <$> fetchRemoteSchemas
   collections <- oMapFromL _ccName <$> fetchCollections
   allowlist <- oMapFromL aeCollection <$> fetchAllowlist
@@ -487,7 +487,8 @@ fetchMetadataFromHdbTables = liftTx do
       return (QualifiedObject sn tn, conf)
 
     fetchTables =
-      PG.withQ
+      PG.withQE
+        defaultTxErrorHandler
         [PG.sql|
                 SELECT table_schema, table_name, is_enum, configuration::json
                 FROM hdb_catalog.hdb_table
@@ -498,7 +499,8 @@ fetchMetadataFromHdbTables = liftTx do
         False
 
     fetchRelationships =
-      PG.withQ
+      PG.withQE
+        defaultTxErrorHandler
         [PG.sql|
                 SELECT table_schema, table_name, rel_name, rel_type, rel_def::json, comment
                   FROM hdb_catalog.hdb_relationship
@@ -509,7 +511,8 @@ fetchMetadataFromHdbTables = liftTx do
         False
 
     fetchPermissions =
-      PG.withQ
+      PG.withQE
+        defaultTxErrorHandler
         [PG.sql|
                 SELECT table_schema, table_name, role_name, perm_type, perm_def::json, comment
                   FROM hdb_catalog.hdb_permission
@@ -520,7 +523,8 @@ fetchMetadataFromHdbTables = liftTx do
         False
 
     fetchEventTriggers =
-      PG.withQ
+      PG.withQE
+        defaultTxErrorHandler
         [PG.sql|
               SELECT e.schema_name, e.table_name, e.configuration::json
                FROM hdb_catalog.event_triggers e
@@ -531,7 +535,8 @@ fetchMetadataFromHdbTables = liftTx do
 
     fetchFunctions = do
       l <-
-        PG.withQ
+        PG.withQE
+          defaultTxErrorHandler
           [PG.sql|
                 SELECT function_schema, function_name, configuration::json
                 FROM hdb_catalog.hdb_function
@@ -690,7 +695,8 @@ fetchMetadataFromHdbTables = liftTx do
 
     fetchRemoteRelationships = do
       r <-
-        PG.withQ
+        PG.withQE
+          defaultTxErrorHandler
           [PG.sql|
                 SELECT table_schema, table_name,
                        remote_relationship_name, definition::json

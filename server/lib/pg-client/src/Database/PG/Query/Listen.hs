@@ -3,6 +3,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Use onLeft" #-}
@@ -22,12 +23,7 @@ where
 
 import Control.Concurrent (threadWaitRead)
 import Control.Exception.Safe (displayException, try)
-import Control.Monad (forever, unless)
-import Control.Monad.Except (MonadError (throwError))
-import Control.Monad.IO.Class (MonadIO (liftIO))
-import Control.Monad.Trans.Class (lift)
-import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad.Trans.Except (ExceptT, runExceptT)
+import Control.Monad.Except
 import Data.Foldable
 import Data.String (IsString)
 import Data.Text qualified as T
@@ -55,47 +51,41 @@ listen ::
   ( FromPGConnErr e,
     FromPGTxErr e,
     MonadError e m,
-    MonadIO m,
-    MonadBaseControl IO m
+    MonadIO m
   ) =>
   PGPool ->
   PGChannel ->
   NotifyHandler ->
   m ()
-listen pool channel handler = catchConnErr $
-  withExpiringPGconn pool $ \pgConn -> do
-    let conn = pgPQConn pgConn
+listen pool channel handler = (>>= liftEither) $ liftIO $ runExceptT $ withConn pool $ \pgConn -> do
+  let conn = pgPQConn pgConn
 
-    -- Issue listen command
-    eRes <-
-      liftIO $
-        runExceptT $
-          execMulti pgConn (mkTemplate listenCmd) $
-            const $
-              return ()
-    either throwTxErr return eRes
-    -- Emit onStart event
-    liftIO $ handler PNEOnStart
-    forever $ do
-      -- Make postgres connection ready for reading
-      r <- liftIO $ runExceptT $ waitForReadReadiness conn
-      either (throwError . fromPGConnErr) return r
-      -- Check for input
-      success <- liftIO $ PQ.consumeInput conn
-      unless success $ throwConsumeFailed conn
-      liftIO $ processNotifs conn
+  -- Issue listen command
+  withExceptT (fromPGTxErr . handleTxErr) $
+    execMulti pgConn (mkTemplate listenCmd) $
+      const $
+        return ()
+  -- Emit onStart event
+  lift $ handler PNEOnStart
+  forever $ withExceptT fromPGConnErr $ do
+    -- Make postgres connection ready for reading
+    waitForReadReadiness conn
+    -- Check for input
+    success <- lift $ PQ.consumeInput conn
+    unless success $ throwConsumeFailed conn
+    lift $ processNotifs conn
   where
     listenCmd = "LISTEN  " <> getChannelTxt channel <> ";"
-    throwTxErr =
-      throwError . fromPGTxErr . PGTxErr listenCmd [] False
+    handleTxErr =
+      PGTxErr listenCmd [] False
     throwConsumeFailed conn = do
-      msg <- liftIO $ readConnErr conn
-      throwError $ fromPGConnErr $ PGConnErr msg
+      msg <- lift $ readConnErr conn
+      throwError $ PGConnErr msg
 
     processNotifs conn = do
-      -- Collect notification
+      -- Collect a notification
       mNotify <- PQ.notifies conn
-      for_ mNotify $ \n -> do
+      for_ @Maybe mNotify $ \n -> do
         -- Apply notify handler on arrived notification
         handler $ PNEPQNotify n
         -- Process remaining notifications if any
@@ -107,8 +97,7 @@ waitForReadReadiness conn = do
   mFd <- lift $ PQ.socket conn
   fd <- maybe (throwError $ PGConnErr "connection is not currently open") pure mFd
   -- Wait for the socket to be ready for reading
-  waitResult <- lift . try $ threadWaitRead fd
-  either (throwError . ioErrorToPGConnErr) return waitResult
+  withExceptT ioErrorToPGConnErr $ ExceptT $ try $ threadWaitRead fd
   where
     ioErrorToPGConnErr :: IOError -> PGConnErr
     ioErrorToPGConnErr = PGConnErr . T.pack . displayException

@@ -25,9 +25,9 @@ where
 
 import Control.Concurrent.Async.Lifted.Safe qualified as LA
 import Control.Exception (IOException, try)
+import Control.Monad.Morph (hoist)
 import Control.Monad.Stateless
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad.Trans.Control qualified as MTC
 import Data.Aeson hiding (json)
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
@@ -260,13 +260,6 @@ class Monad m => MonadConfigApiHandler m where
     AppEnv ->
     Spock.SpockCtxT () m ()
 
-mapActionT ::
-  (Monad m, Monad n) =>
-  (m (MTC.StT (Spock.ActionCtxT ()) a) -> n (MTC.StT (Spock.ActionCtxT ()) a)) ->
-  Spock.ActionT m a ->
-  Spock.ActionT n a
-mapActionT f tma = MTC.restoreT . pure =<< MTC.liftWith (\run -> f (run tma))
-
 mkSpockAction ::
   forall m a.
   ( MonadIO m,
@@ -335,7 +328,7 @@ mkSpockAction appCtx@AppContext {..} appEnv@AppEnv {..} qErrEncoder qErrModifier
             extraUserInfo
           )
 
-  mapActionT runTrace do
+  hoist runTrace do
     -- Add the request ID to the tracing metadata so that we
     -- can correlate requests and traces
     lift $ Tracing.attachMetadata [("request_id", unRequestId requestId)]
@@ -378,8 +371,8 @@ mkSpockAction appCtx@AppContext {..} appEnv@AppEnv {..} qErrEncoder qErrModifier
         logSuccessAndResp (Just userInfo) requestId req (reqBody, queryJSON) res (Just (ioWaitTime, serviceTime)) origHeaders authHeaders httpLogMetadata
   where
     logErrorAndResp ::
-      forall m3 a3 ctx.
-      (MonadIO m3, HttpLog m3) =>
+      forall n a3 ctx.
+      (MonadIO n, HttpLog n) =>
       Maybe UserInfo ->
       RequestId ->
       Wai.Request ->
@@ -388,9 +381,9 @@ mkSpockAction appCtx@AppContext {..} appEnv@AppEnv {..} qErrEncoder qErrModifier
       [HTTP.Header] ->
       ExtraUserInfo ->
       QErr ->
-      Spock.ActionCtxT ctx m3 a3
+      Spock.ActionCtxT ctx n a3
     logErrorAndResp userInfo reqId waiReq req includeInternal headers extraUserInfo qErr = do
-      let httpLogMetadata = buildHttpLogMetadata @m3 emptyHttpLogGraphQLInfo extraUserInfo
+      let httpLogMetadata = buildHttpLogMetadata @n emptyHttpLogGraphQLInfo extraUserInfo
           jsonResponse = J.encode $ qErrEncoder includeInternal qErr
           contentLength = ("Content-Length", B8.toStrict $ BB.toLazyByteString $ BB.int64Dec $ BL.length jsonResponse)
           allHeaders = [contentLength, jsonHeader]

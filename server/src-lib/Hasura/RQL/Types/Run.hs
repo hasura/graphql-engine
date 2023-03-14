@@ -24,12 +24,11 @@ data RunCtx = RunCtx
     _rcServerConfigCtx :: ServerConfigCtx
   }
 
-newtype RunT m a = RunT {unRunT :: ReaderT RunCtx m a}
+newtype RunT m a = RunT {unRunT :: RunCtx -> m a}
   deriving
     ( Functor,
       Applicative,
       Monad,
-      MonadReader RunCtx,
       MonadError e,
       MonadIO,
       Tracing.MonadTrace,
@@ -37,32 +36,22 @@ newtype RunT m a = RunT {unRunT :: ReaderT RunCtx m a}
       MonadBaseControl b,
       MonadMetadataStorage,
       MonadMetadataStorageQueryAPI,
-      ProvidesNetwork
+      ProvidesNetwork,
+      MonadResolveSource,
+      MonadEventLogCleanup,
+      MonadGetApiTimeLimit
     )
-
-instance MonadTrans RunT where
-  lift = RunT . lift
+    via (ReaderT RunCtx m)
+  deriving (MonadTrans) via (ReaderT RunCtx)
 
 instance (Monad m) => UserInfoM (RunT m) where
-  askUserInfo = asks _rcUserInfo
+  askUserInfo = RunT $ pure . _rcUserInfo
 
 instance (Monad m) => HasServerConfigCtx (RunT m) where
-  askServerConfigCtx = asks _rcServerConfigCtx
-
-instance (MonadResolveSource m) => MonadResolveSource (RunT m) where
-  getPGSourceResolver = lift getPGSourceResolver
-  getMSSQLSourceResolver = lift getMSSQLSourceResolver
-
-instance (MonadEventLogCleanup m) => MonadEventLogCleanup (RunT m) where
-  runLogCleaner conf = lift $ runLogCleaner conf
-  generateCleanupSchedules sInfo tName cConf = lift $ generateCleanupSchedules sInfo tName cConf
-  updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
-
-instance (MonadGetApiTimeLimit m) => MonadGetApiTimeLimit (RunT m) where
-  runGetApiTimeLimit = RunT . lift $ runGetApiTimeLimit
+  askServerConfigCtx = RunT $ pure . _rcServerConfigCtx
 
 peelRun ::
   RunCtx ->
   RunT m a ->
   m a
-peelRun runCtx (RunT m) = runReaderT m runCtx
+peelRun = flip unRunT

@@ -8,11 +8,8 @@
 {-# HLINT ignore "Use onLeft" #-}
 
 module Database.PG.Query.Class
-  ( WithCount (..),
-    WithReturning (..),
-    FromCol (..),
+  ( FromCol (..),
     fromColHelper,
-    FromRow (..),
     FromRes (..),
     ToPrepArg (..),
     toPrepValHelper,
@@ -34,7 +31,6 @@ import Control.Monad.Identity (Identity (..))
 import Control.Monad.Trans.Except (ExceptT (..))
 import Data.Aeson (FromJSON, ToJSON, Value, encode, parseJSON)
 import Data.Aeson.Types (parseEither)
-import Data.Attoparsec.ByteString.Char8 qualified as Atto
 import Data.Bifunctor (first)
 import Data.ByteString (ByteString, uncons)
 import Data.ByteString.Lazy qualified as Lazy (ByteString)
@@ -58,17 +54,6 @@ import PostgreSQL.Binary.Encoding qualified as PE
 import Prelude
 
 -------------------------------------------------------------------------------
-
-data WithCount a = WithCount
-  { wcCount :: Word64,
-    wcValue :: a
-  }
-  deriving stock (Eq, Show)
-
-data WithReturning a = WithReturning
-  { wrCount :: Word64,
-    wrResults :: Maybe a
-  }
 
 newtype SingleRow a = SingleRow
   { getRow :: a
@@ -182,36 +167,6 @@ instance FromRes Discard where
 
 newtype Discard = Discard ()
   deriving stock (Eq, Show)
-
-parseWord64 :: ByteString -> Either Text Word64
-parseWord64 b = either buildE return parsed
-  where
-    parsed = Atto.parseOnly (Atto.decimal <* Atto.endOfInput) b
-    buildE e = Left $ "Couldn't parse Word64: " <> fromString e
-
-extractCount :: PQ.Result -> ExceptT Text IO Word64
-extractCount r = do
-  cmd <- liftIO $ PQ.cmdTuples r
-  case cmd of
-    Just "" -> throwError "Affected rows information not found"
-    Nothing -> throwError "Affected rows information not found"
-    Just bs -> ExceptT $ return $ parseWord64 bs
-
-instance FromRes a => FromRes (WithReturning a) where
-  fromRes (ResultOkEmpty res) = do
-    c <- extractCount res
-    return $ WithReturning c Nothing
-  fromRes rs@(ResultOkData res) = do
-    c <- extractCount res
-    r <- fromRes rs
-    return $ WithReturning c $ Just r
-
-instance FromRes a => FromRes (WithCount a) where
-  fromRes resOk = do
-    let res = getPQRes resOk
-    a <- fromRes resOk
-    c <- extractCount res
-    return $ WithCount c a
 
 type ResultMatrix = V.Vector ResultRow
 
