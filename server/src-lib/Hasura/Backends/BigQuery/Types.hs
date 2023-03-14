@@ -1126,24 +1126,20 @@ data Job = Job
   deriving (Show)
 
 instance FromJSON Job where
-  parseJSON =
-    J.withObject
-      "Job"
-      ( \o -> do
-          kind <- o J..: "kind"
-          if kind == ("bigquery#job" :: Text)
-            then do
-              state <- do
-                status <- o J..: "status"
-                status J..: "state"
-              (jobId, location) <- do
-                ref <- o J..: "jobReference"
-                -- 'location' is needed in addition to 'jobId' to query a job's
-                -- status
-                (,) <$> ref J..: "jobId" <*> ref J..: "location"
-              pure Job {state, jobId, location}
-            else fail ("Invalid kind: " <> show kind)
-      )
+  parseJSON = J.withObject "Job" \o -> do
+    kind <- o J..: "kind"
+    if kind == ("bigquery#job" :: Text)
+      then do
+        state <- do
+          status <- o J..: "status"
+          status J..: "state"
+        (jobId, location) <- do
+          ref <- o J..: "jobReference"
+          -- 'location' is needed in addition to 'jobId' to query a job's
+          -- status
+          (,) <$> ref J..: "jobId" <*> ref J..: "location"
+        pure Job {state, jobId, location}
+      else fail ("Invalid kind: " <> show kind)
 
 instance ToJSON Job where
   toJSON Job {..} =
