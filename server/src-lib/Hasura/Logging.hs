@@ -34,7 +34,7 @@ module Hasura.Logging
     readLogTypes,
     getFormattedTime,
 
-    -- * Debounce logger
+    -- * Debounced stats logger
     createStatsLogger,
     closeStatsLogger,
     logStats,
@@ -341,8 +341,8 @@ cronEventGeneratorProcessType = ELTInternal ILTCronEventGeneratorProcess
 sourceCatalogMigrationLogType :: EngineLogType Hasura
 sourceCatalogMigrationLogType = ELTInternal ILTSourceCatalogMigration
 
--- | A logger useful for accumulating stats, evaluated in forever running loops, over a
--- period of time and log them only once. Use @'logStats' to record statistics for logging.
+-- | A logger useful for accumulating  and logging stats, in tight polling loops. It also
+-- debounces to not flood with excessive logs. Use @'logStats' to record statistics for logging.
 createStatsLogger ::
   forall m stats impl.
   ( MonadIO m,
