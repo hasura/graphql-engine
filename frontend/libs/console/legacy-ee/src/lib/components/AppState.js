@@ -1,21 +1,20 @@
+import {
+  getLSItem,
+  setLSItem,
+  removeLSItem,
+  LS_KEYS,
+} from '@hasura/console-legacy-ce';
+
 export * from '@hasura/console-legacy-ce';
 
-const CONSOLE_PERSONAL_ACCESS_TOKEN = 'PERSONAL_ACCESS_TOKEN';
-
-const loadPATState = () =>
-  window.localStorage.getItem(CONSOLE_PERSONAL_ACCESS_TOKEN);
+const loadPATState = () => getLSItem(LS_KEYS.consolePersonalAccessToken);
 
 const savePATState = state => {
-  window.localStorage.setItem(CONSOLE_PERSONAL_ACCESS_TOKEN, state);
+  setLSItem(LS_KEYS.consolePersonalAccessToken, state);
 };
 
 const clearPATState = () => {
-  window.localStorage.removeItem(CONSOLE_PERSONAL_ACCESS_TOKEN);
+  removeLSItem(LS_KEYS.consolePersonalAccessToken);
 };
 
-export {
-  loadPATState,
-  savePATState,
-  clearPATState,
-  CONSOLE_PERSONAL_ACCESS_TOKEN,
-};
+export { loadPATState, savePATState, clearPATState };

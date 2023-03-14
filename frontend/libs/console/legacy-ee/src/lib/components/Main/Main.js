@@ -54,7 +54,12 @@ import {
   loadLuxProjectEntitlements,
 } from './Actions';
 import './NotificationOverrides.css';
-import { clearPersistedGraphiQLHeaders } from '../../utils/localstorage';
+import {
+  LS_KEYS,
+  removeLSItem,
+  getLSItem,
+  setLSItem,
+} from '@hasura/console-legacy-ce';
 
 import { moduleName, relativeModulePath } from '../Services/Metrics/constants';
 
@@ -68,11 +73,10 @@ import {
   checkAccess,
   defaultAccessState,
 } from '../../utils/computeAccess';
-
 import { restrictedPathsMetadata } from '../../utils/redirectUtils';
 import extendedGlobals from '../../Globals';
-import { appcuesIdentify } from '../../utils/appCues';
 
+import { appcuesIdentify } from '../../utils/appCues';
 import styles from './Main.module.scss';
 import logo from './images/white-logo.svg';
 import logoutIcon from './images/log-out.svg';
@@ -117,7 +121,7 @@ class Main extends React.Component {
     // clear graphiql headers from localstorage on team console unload for non-admin user
     if (window.__env.userRole === 'user' && !!globals.tenantID) {
       window.addEventListener('unload', () => {
-        clearPersistedGraphiQLHeaders();
+        removeLSItem(LS_KEYS.apiExplorerConsoleGraphQLHeaders);
       });
     }
 
@@ -175,7 +179,7 @@ class Main extends React.Component {
     const { latestServerVersion, serverVersion } = this.props;
 
     try {
-      const isClosedBefore = window.localStorage.getItem(
+      const isClosedBefore = getLSItem(
         latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
       );
 
@@ -250,10 +254,7 @@ class Main extends React.Component {
 
   closeUpdateBanner() {
     const { latestServerVersion } = this.props;
-    window.localStorage.setItem(
-      latestServerVersion + '_BANNER_NOTIFICATION_CLOSED',
-      'true'
-    );
+    setLSItem(latestServerVersion + '_BANNER_NOTIFICATION_CLOSED', 'true');
     this.setState({ showUpdateNotification: false });
   }
   closeDropDown = () => {

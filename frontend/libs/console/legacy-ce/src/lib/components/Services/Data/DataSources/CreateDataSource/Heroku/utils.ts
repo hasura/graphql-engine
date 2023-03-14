@@ -13,6 +13,12 @@ import { Dispatch } from '../../../../../../types';
 import { showErrorNotification } from '../../../../Common/Notification';
 import Endpoints from '../../../../../../Endpoints';
 import Globals from '../../../../../../Globals';
+import {
+  getLSItem,
+  LS_KEYS,
+  removeLSItem,
+  setLSItem,
+} from '../../../../../../utils/localStorage';
 
 export {
   getEnvVars,
@@ -242,17 +248,16 @@ export const exchangeHerokuCode = (code: string) => {
     });
 };
 
-const HEROKU_CALLBACK_SEARCH = 'HEROKU_CALLBACK_SEARCH';
 export const clearPersistedHerokuCallbackSearch = () => {
-  window.localStorage.removeItem(HEROKU_CALLBACK_SEARCH);
+  removeLSItem(LS_KEYS.herokuCallbackSearch);
 };
 
 export const persistHerokuCallbackSearch = (value: string) => {
-  window.localStorage.setItem(HEROKU_CALLBACK_SEARCH, value);
+  setLSItem(LS_KEYS.herokuCallbackSearch, value);
 };
 
 export const getPersistedHerokuCallbackSearch = () => {
-  return window.localStorage.getItem(HEROKU_CALLBACK_SEARCH);
+  return getLSItem(LS_KEYS.herokuCallbackSearch);
 };
 
 export const startHerokuDBURLSync = (

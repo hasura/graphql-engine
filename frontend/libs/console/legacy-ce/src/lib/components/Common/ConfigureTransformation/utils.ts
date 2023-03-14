@@ -90,7 +90,7 @@ export const setEnvVarsToLS = (envVars: KeyValuePair[]) => {
   const validEnvVars = envVars.filter(
     e => !isEmpty(e.name) && !isEmpty(e.value)
   );
-  setLSItem(`${LS_KEYS.webhookTransformEnvVars}`, JSON.stringify(validEnvVars));
+  setLSItem(LS_KEYS.webhookTransformEnvVars, JSON.stringify(validEnvVars));
 };
 
 export const getArrayFromServerPairObject = (

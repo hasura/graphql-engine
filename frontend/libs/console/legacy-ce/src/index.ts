@@ -148,4 +148,11 @@ export * from './lib/components/AppState';
 export * from './lib/components/App/Actions';
 export { default as progressBarReducer } from './lib/components/App/Actions';
 
+export {
+  LS_KEYS,
+  setLSItem,
+  getLSItem,
+  removeLSItem,
+} from './lib/utils/localStorage';
+
 export { default as App } from './lib/components/App/App';

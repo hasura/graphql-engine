@@ -64,7 +64,7 @@ export const getItemWithExpiry = (key: string) => {
   const now = new Date();
 
   if (now.getTime() > item.expiry) {
-    window.localStorage.removeItem(key);
+    removeLSItem(key);
     return null;
   }
 
@@ -89,6 +89,7 @@ export const LS_KEYS = {
   derivedActions: 'actions:derivedActions',
   graphiqlQuery: 'graphiql:query',
   graphiqlVariables: 'graphiql:variables',
+  graphiqlVariablesHeight: 'graphiql:variableEditorHeight',
   loveConsent: 'console:loveIcon',
   oneGraphExplorerCodeExporterOpen: 'graphiql:codeExporterOpen',
   oneGraphExplorerOpen: 'graphiql:explorerOpen',
@@ -104,12 +105,17 @@ export const LS_KEYS = {
   permissionConfirmationModalStatus:
     'console:permissionConfirmationModalStatus',
   neonCallbackSearch: 'neon:authCallbackSearch',
+  herokuCallbackSearch: 'HEROKU_CALLBACK_SEARCH',
+  consolePersonalAccessToken: 'PERSONAL_ACCESS_TOKEN',
+  notificationsData: 'notifications:data',
+  notificationsLastSeen: 'notifications:lastSeen',
+  authState: 'AUTH_STATE',
 };
 
 export const clearGraphiqlLS = () => {
   Object.values(LS_KEYS).forEach(lsKey => {
     if (lsKey.startsWith('graphiql:')) {
-      window.localStorage.removeItem(lsKey);
+      removeLSItem(lsKey);
     }
   });
 };

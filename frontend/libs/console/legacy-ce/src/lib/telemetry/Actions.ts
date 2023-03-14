@@ -16,6 +16,7 @@ import {
   getSetConsoleStateQuery,
 } from '../metadata/queryUtils';
 import { GetReduxState, ReduxState } from '../types';
+import { setLSItem, LS_KEYS } from '../utils/localStorage';
 import requestAction from '../utils/requestAction';
 import { ConsoleState, defaultConsoleState, NotificationsState } from './state';
 import { isUpdateIDsEqual } from './utils';
@@ -301,8 +302,8 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
               };
               // update the localStorage var with all the notifications
               // since all the notifications were clicked on read state
-              window.localStorage.setItem(
-                'notifications:data',
+              setLSItem(
+                LS_KEYS.notificationsData,
                 JSON.stringify(currentNotifications)
               );
             }

@@ -1,21 +1,19 @@
-const loveConsentState = 'console:loveIcon';
+import { getLSItem, setLSItem, LS_KEYS } from '@hasura/console-legacy-ce';
+
 const defaultState = {
   isDismissed: false,
 };
 
 const setLoveConsentState = stateData => {
-  window.localStorage.setItem(loveConsentState, JSON.stringify(stateData));
+  setLSItem(LS_KEYS.loveConsent, JSON.stringify(stateData));
 };
 
 const getLoveConsentState = stateData => {
-  const s = window.localStorage.getItem(
-    loveConsentState,
-    JSON.stringify(stateData)
-  );
+  const s = getLSItem(LS_KEYS.loveConsent);
   if (s) {
     return JSON.parse(s);
   }
-  window.localStorage.setItem(loveConsentState, JSON.stringify(defaultState));
+  setLoveConsentState(defaultState);
   return defaultState;
 };
 

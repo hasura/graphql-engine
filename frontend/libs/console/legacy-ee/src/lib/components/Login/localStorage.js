@@ -1,4 +1,4 @@
-export const AUTH_STATE = 'AUTH_STATE';
+import { getLSItem, setLSItem, LS_KEYS } from '@hasura/console-legacy-ce';
 
 const getCurrentDate = () => new Date().toISOString();
 
@@ -9,16 +9,16 @@ const initialState = {
 };
 
 export const initLS = () => {
-  localStorage.setItem(AUTH_STATE, JSON.stringify(initialState));
+  setLSItem(LS_KEYS.authState, JSON.stringify(initialState));
 };
 
 export const getFromLS = () => {
   try {
-    return JSON.parse(localStorage.getItem(AUTH_STATE));
+    return JSON.parse(getLSItem(LS_KEYS.authState));
   } catch (e) {
     console.error(e);
     initLS();
-    return JSON.parse(localStorage.getItem(AUTH_STATE));
+    return JSON.parse(getLSItem(LS_KEYS.authState));
   }
 };
 
@@ -29,8 +29,8 @@ export const getKeyFromLS = key => {
 
 export const modifyKey = (key, value) => {
   const newState = {
-    ...getFromLS(AUTH_STATE),
+    ...getFromLS(LS_KEYS.authState),
     [key]: value,
   };
-  localStorage.setItem(AUTH_STATE, JSON.stringify(newState));
+  setLSItem(LS_KEYS.authState, JSON.stringify(newState));
 };
