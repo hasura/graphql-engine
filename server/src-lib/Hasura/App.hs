@@ -174,14 +174,12 @@ data ExitCode
     InvalidEnvironmentVariableOptionsError
   | InvalidDatabaseConnectionParamsError
   | AuthConfigurationError
-  | EventSubSystemError
   | DatabaseMigrationError
   | -- | used by MT because it initialises the schema cache only
     -- these are used in app/Main.hs:
     SchemaCacheInitError
   | MetadataExportError
   | MetadataCleanError
-  | ExecuteProcessError
   | DowngradeProcessError
   deriving (Show)
 
