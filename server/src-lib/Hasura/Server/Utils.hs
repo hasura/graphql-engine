@@ -34,6 +34,7 @@ module Hasura.Server.Utils
     useBackendOnlyPermissionsHeader,
     userIdHeader,
     userRoleHeader,
+    contentLengthHeader,
     sessionVariablePrefix,
   )
 where
@@ -91,6 +92,9 @@ userIdHeader = "x-hasura-user-id"
 
 requestIdHeader :: IsString a => a
 requestIdHeader = "x-request-id"
+
+contentLengthHeader :: IsString a => a
+contentLengthHeader = "Content-Length"
 
 useBackendOnlyPermissionsHeader :: IsString a => a
 useBackendOnlyPermissionsHeader = "x-hasura-use-backend-only-permissions"

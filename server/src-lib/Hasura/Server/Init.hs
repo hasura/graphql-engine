@@ -236,7 +236,7 @@ mkConnParams ConnParamsRaw {..} = do
 -- | Fetch 'Auth.AuthHook' components from the environment and merge
 -- with the values consumed by the arg parser in 'AuthHookRaw'.
 mkAuthHook :: Monad m => AuthHookRaw -> WithEnvT m (Maybe Auth.AuthHook)
-mkAuthHook (AuthHookRaw mUrl mType) = do
+mkAuthHook (AuthHookRaw mUrl mType mSendRequestBody) = do
   mUrlEnv <- withOption mUrl authHookOption
   -- Also support HASURA_GRAPHQL_AUTH_HOOK_TYPE
   -- TODO (from master):- drop this in next major update <--- (NOTE: This comment is from 2020-08-21)
@@ -247,7 +247,18 @@ mkAuthHook (AuthHookRaw mUrl mType) = do
           <$> considerEnvs
             [_envVar authHookModeOption, "HASURA_GRAPHQL_AUTH_HOOK_TYPE"]
       )
-  pure $ (`Auth.AuthHook` authMode) <$> mUrlEnv
+  -- if authMode is `GET` then authSendRequestBody is set to `False`, otherwise we check for the config value
+  authSendRequestBody <-
+    case authMode of
+      Auth.AHTGet -> pure False
+      Auth.AHTPost ->
+        onNothing
+          mSendRequestBody
+          ( fromMaybe (_default authHookSendRequestBodyOption)
+              <$> considerEnvs
+                [_envVar authHookSendRequestBodyOption]
+          )
+  pure $ (\url -> Auth.AuthHook url authMode authSendRequestBody) <$> mUrlEnv
 
 -- | Fetch 'Cors.CorsConfig' settings from the environment and merge
 -- with the settings consumed by the arg parser.

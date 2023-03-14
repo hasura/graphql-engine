@@ -53,7 +53,7 @@ emptyServeOptionsRaw =
           },
       rsoTxIso = Nothing,
       rsoAdminSecret = Nothing,
-      rsoAuthHook = UUT.AuthHookRaw Nothing Nothing,
+      rsoAuthHook = UUT.AuthHookRaw Nothing Nothing Nothing,
       rsoJwtSecret = Nothing,
       rsoUnAuthRole = Nothing,
       rsoCorsConfig = Nothing,
@@ -308,7 +308,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTGet))
+        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTGet False))
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -321,11 +321,11 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTPost))
+        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTPost True))
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAuthHook = UUT.AuthHookRaw (Just "http://auth.hook.com") (Just Auth.AHTGet)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAuthHook = UUT.AuthHookRaw (Just "http://auth.hook.com") (Just Auth.AHTGet) Nothing}
             -- When
             env =
               [ (UUT._envVar UUT.authHookOption, "http://auth.hook.com"),
@@ -334,7 +334,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTGet))
+        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTGet False))
 
     Hspec.describe "soJwtSecret" $ do
       Hspec.it "Env > Nothing" $ do

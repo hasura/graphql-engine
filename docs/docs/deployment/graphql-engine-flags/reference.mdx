@@ -177,6 +177,19 @@ requests.
 | **Default**         | `GET`                            |
 | **Supported in**    | CE, EE, Cloud                    |
 
+### Send Request Body to Auth Hook
+
+Whether or not to send the request body (graphql request/variables) to the auth hook in `POST` mode.
+
+|                     |                                                 |
+| ------------------- | ----------------------------------------------- |
+| **Flag**            | `--auth-hook-send-request-body <true-or-false>` |
+| **Env var**         | `HASURA_GRAPHQL_AUTH_HOOK_SEND_REQUEST_BODY`    |
+| **Accepted values** | Boolean                                         |
+| **Options**         | `true` or `false`                               |
+| **Default**         | `true`                                          |
+| **Supported in**    | CE, EE, Cloud                                   |
+
 ### BigQuery String Numeric Input
 
 Stringify certain

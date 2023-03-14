@@ -2,6 +2,7 @@ module Hasura.HTTP
   ( wreqOptions,
     HttpException (..),
     hdrsToText,
+    textToHdrs,
     addDefaultHeaders,
     defaultHeaders,
     HttpResponse (..),
@@ -18,7 +19,7 @@ import Control.Exception (Exception (..), fromException)
 import Control.Lens hiding ((.=))
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
-import Data.CaseInsensitive (original)
+import Data.CaseInsensitive (mk, original)
 import Data.HashMap.Strict qualified as M
 import Data.Text qualified as T
 import Data.Text.Conversions (UTF8 (..), convertText)
@@ -37,6 +38,12 @@ import Servant.Client qualified as Servant
 hdrsToText :: [HTTP.Header] -> [(Text, Text)]
 hdrsToText hdrs =
   [ (bsToTxt $ original hdrName, bsToTxt hdrVal)
+    | (hdrName, hdrVal) <- hdrs
+  ]
+
+textToHdrs :: [(Text, Text)] -> [HTTP.Header]
+textToHdrs hdrs =
+  [ (mk (txtToBs hdrName), TE.encodeUtf8 hdrVal)
     | (hdrName, hdrVal) <- hdrs
   ]
 

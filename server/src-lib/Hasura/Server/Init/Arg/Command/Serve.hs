@@ -19,6 +19,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     accessKeyOption,
     authHookOption,
     authHookModeOption,
+    authHookSendRequestBodyOption,
     jwtSecretOption,
     unAuthRoleOption,
     corsDomainOption,
@@ -360,7 +361,7 @@ accessKeyOption =
 
 parseAuthHook :: Opt.Parser Config.AuthHookRaw
 parseAuthHook =
-  Config.AuthHookRaw <$> url <*> urlType
+  Config.AuthHookRaw <$> url <*> urlType <*> sendRequestBody
   where
     url =
       Opt.optional $
@@ -377,6 +378,14 @@ parseAuthHook =
               <> Opt.metavar "<GET|POST>"
               <> Opt.help (Config._helpMessage authHookModeOption)
           )
+    sendRequestBody :: Opt.Parser (Maybe Bool) =
+      Opt.optional $
+        Opt.option
+          (Opt.eitherReader Env.fromEnv)
+          ( Opt.long "auth-hook-send-request-body"
+              <> Opt.metavar "<true|false>"
+              <> Opt.help (Config._helpMessage authHookSendRequestBodyOption)
+          )
 
 authHookOption :: Config.Option ()
 authHookOption =
@@ -392,6 +401,14 @@ authHookModeOption =
     { Config._default = Auth.AHTGet,
       Config._envVar = "HASURA_GRAPHQL_AUTH_HOOK_MODE",
       Config._helpMessage = "HTTP method to use for authorization webhook (default: GET)"
+    }
+
+authHookSendRequestBodyOption :: Config.Option Bool
+authHookSendRequestBodyOption =
+  Config.Option
+    { Config._default = True,
+      Config._envVar = "HASURA_GRAPHQL_AUTH_HOOK_SEND_REQUEST_BODY",
+      Config._helpMessage = "Send request body in POST method (default: true)"
     }
 
 parseJwtSecret :: Opt.Parser (Maybe Auth.JWTConfig)
@@ -1183,6 +1200,7 @@ serveCmdFooter =
         Config.optionPP accessKeyOption,
         Config.optionPP authHookOption,
         Config.optionPP authHookModeOption,
+        Config.optionPP authHookSendRequestBodyOption,
         Config.optionPP jwtSecretOption,
         Config.optionPP unAuthRoleOption,
         Config.optionPP corsDomainOption,

@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.Session
   ( RoleName,
     mkRoleName,
@@ -32,6 +34,7 @@ where
 
 import Autodocodec (HasCodec (codec), dimapCodec)
 import Data.Aeson
+import Data.Aeson.TH qualified as J
 import Data.Aeson.Types (Parser, toJSONKeyText)
 import Data.CaseInsensitive qualified as CI
 import Data.HashMap.Strict qualified as Map
@@ -178,6 +181,8 @@ data BackendOnlyFieldAccess
   | BOFADisallowed
   deriving (Show, Eq, Generic)
 
+$(J.deriveJSON hasuraJSON ''BackendOnlyFieldAccess)
+
 instance Hashable BackendOnlyFieldAccess
 
 data UserInfo = UserInfo
@@ -188,6 +193,8 @@ data UserInfo = UserInfo
   deriving (Show, Eq, Generic)
 
 instance Hashable UserInfo
+
+$(J.deriveJSON hasuraJSON ''UserInfo)
 
 class (Monad m) => UserInfoM m where
   askUserInfo :: m UserInfo

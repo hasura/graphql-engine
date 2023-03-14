@@ -498,7 +498,8 @@ instance Hashable API
 
 data AuthHookRaw = AuthHookRaw
   { ahrUrl :: Maybe Text,
-    ahrType :: Maybe Auth.AuthHookType
+    ahrType :: Maybe Auth.AuthHookType,
+    ahrSendRequestBody :: Maybe Bool
   }
 
 -- | Sleep time interval for recurring activities such as (@'asyncActionsProcessor')

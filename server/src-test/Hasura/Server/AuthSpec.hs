@@ -615,7 +615,7 @@ fakeJWTConfig =
    in JWTConfig {..}
 
 fakeAuthHook :: AuthHook
-fakeAuthHook = AuthHook "http://fake" AHTGet
+fakeAuthHook = AuthHook "http://fake" AHTGet False
 
 mkRoleNameE :: Text -> RoleName
 mkRoleNameE = fromMaybe (error "fixme") . mkRoleName

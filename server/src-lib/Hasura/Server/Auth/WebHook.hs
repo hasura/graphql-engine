@@ -38,7 +38,9 @@ instance Show AuthHookType where
 
 data AuthHook = AuthHook
   { ahUrl :: Text,
-    ahType :: AuthHookType
+    ahType :: AuthHookType,
+    -- | Whether to send the request body to the auth hook
+    ahSendRequestBody :: Bool
   }
   deriving (Show, Eq)
 
@@ -86,7 +88,16 @@ userInfoFromAuthHook logger manager hook reqHeaders reqs = do
                   req
                     & set HTTP.method "POST"
                     & set HTTP.headers (addDefaultHeaders [contentType])
-                    & set HTTP.body (Just $ J.encode $ object ["headers" J..= headersPayload, "request" J..= reqs])
+                    & set
+                      HTTP.body
+                      ( Just $
+                          J.encode $
+                            object
+                              ( ["headers" J..= headersPayload]
+                                  -- We will only send the request if `ahSendRequestBody` is set to true
+                                  <> ["request" J..= reqs | ahSendRequestBody hook]
+                              )
+                      )
             HTTP.performRequest req' manager
 
     logAndThrow :: HTTP.HttpException -> m a
