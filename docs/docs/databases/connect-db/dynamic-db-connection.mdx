@@ -30,15 +30,6 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
   Available on: Cloud Professional, Cloud Enterprise, Self-hosted Enterprise
 </div>
 
-:::caution Dynamic DB Connection Routing Availability
-
-The Dynamic DB Connection Routing feature is currently available in `beta` only via the API and the CLI without any
-usage limits in both the Cloud Professional and Cloud Enterprise plans. We will soon add the functionality to configure
-dynamic database routing on the Console and, along with that, introduce usage limits for this feature in the Cloud
-Professional plan. Cloud Enterprise customers will be able to continue using the feature without limits.
-
-:::
-
 ## Introduction
 
 Hasura Cloud and Enterprise customers can leverage dynamic routing to implement different kinds of database topology
@@ -235,7 +226,31 @@ Explanation:
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-Console support will be added soon. Please use either the CLI or API for configuring dynamic DB connection routing.
+To access Dynamic DB Routing, navigate to the `Dynamic DB Routing` tab in the Edit Data Source page.
+
+Select the template you want to use from the list of available templates, or click on `Custom Template` to create your
+own template.
+
+<Thumbnail
+  src="/img/databases/postgres/dynamic-db-routing/edit-connection-template.png"
+  alt="Dynamic DB routing"
+  max-width="543px"
+/>
+
+To add a new database connection, click on the `Add Connection` button. Enter the necessary connection details in the
+modal that opens up.
+
+You can also edit or delete an existing connection by clicking on the `Edit Connection` or `Remove` button next to the
+connection.
+
+<Thumbnail
+  src="/img/databases/postgres/dynamic-db-routing/add-connection.png"
+  alt="Dynamic DB routing"
+  max-width="543px"
+/>
+
+Adjust the connection template settings to suit your needs, then click `Update Connection Template` to save the
+changes.
 
 </TabItem>
 <TabItem value="cli" label="CLI">

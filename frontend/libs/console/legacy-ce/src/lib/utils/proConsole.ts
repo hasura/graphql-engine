@@ -60,3 +60,4 @@ export const isEnvironmentSupportMultiTenantConnectionPooling = (
 };
 
 export const isImportFromOpenAPIEnabled = isProConsole;
+export const isDynamicDBRoutingEnabled = isProConsole;

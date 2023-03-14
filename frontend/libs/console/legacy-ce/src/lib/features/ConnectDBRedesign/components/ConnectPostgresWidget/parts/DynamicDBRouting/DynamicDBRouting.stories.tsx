@@ -20,9 +20,12 @@ export const Default: ComponentStory<typeof DynamicDBRouting> = () => (
 Default.play = async ({ args, canvasElement }) => {
   const canvas = within(canvasElement);
 
-  await waitFor(() => {
-    expect(canvas.getByLabelText('Database Tenancy')).toBeInTheDocument();
-  });
+  await waitFor(
+    () => {
+      expect(canvas.getByLabelText('Database Tenancy')).toBeInTheDocument();
+    },
+    { timeout: 2000 }
+  );
 
   // click on Database Tenancy
   const radioTenancy = canvas.getByLabelText('Database Tenancy');
@@ -43,6 +46,6 @@ Default.play = async ({ args, canvasElement }) => {
   userEvent.type(inputDatabaseUrl, 'test');
 
   // click on submit
-  const buttonSubmit = canvas.getByText('Submit');
+  const buttonSubmit = canvas.getAllByText('Add Connection')[1];
   userEvent.click(buttonSubmit);
 };

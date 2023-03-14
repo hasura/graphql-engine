@@ -9,6 +9,7 @@ import { adaptPostgresConnectionInfo } from '../../utils/adaptResponse';
 import { useDynamicDbRouting } from './hooks/useDynamicDbRouting';
 import { ConnectionSet } from '../../../../../../metadata/types';
 import { PostgresConfiguration } from '../../../../../hasura-metadata-types';
+import { hasuraToast } from '../../../../../../new-components/Toasts';
 
 const schema = z.object({
   connection_template: z.string().optional(),
@@ -52,8 +53,6 @@ export const DynamicDBRouting = (props: DynamicDBRoutingProps) => {
     return null;
   }
 
-  console.log('template', connectionTemplate);
-
   return (
     <>
       {isModalOpen && (
@@ -69,7 +68,21 @@ export const DynamicDBRouting = (props: DynamicDBRoutingProps) => {
                 values,
               }).details.configuration.connection_info,
             } as ConnectionSet;
-            addConnection(payload);
+            addConnection(payload, {
+              onSuccess: () => {
+                hasuraToast({
+                  type: 'success',
+                  title: 'Connection added',
+                });
+              },
+              onError: e => {
+                hasuraToast({
+                  type: 'error',
+                  title: 'Failed to add connection',
+                  message: e.message,
+                });
+              },
+            });
             setIsModalOpen(false);
           }}
           onClose={() => setIsModalOpen(false)}
@@ -77,20 +90,38 @@ export const DynamicDBRouting = (props: DynamicDBRoutingProps) => {
       )}
       {editingConnectionSetMember && (
         <ConnectPostgresModal
-          alreadyUseNames={connectionSetMembers.map(
-            connection => connection.name
-          )}
+          alreadyUseNames={connectionSetMembers
+            .map(connection => connection.name)
+            .filter(name => name !== editingConnectionSetMember)}
           defaultValues={connectionSetMembers.find(
             connection => connection.name === editingConnectionSetMember
           )}
           onSubmit={values => {
-            updateConnection(editingConnectionSetMember, {
-              name: values.name,
-              connection_info: generatePostgresRequestPayload({
-                driver: 'postgres',
-                values,
-              }).details.configuration.connection_info,
-            } as ConnectionSet);
+            updateConnection(
+              editingConnectionSetMember,
+              {
+                name: values.name,
+                connection_info: generatePostgresRequestPayload({
+                  driver: 'postgres',
+                  values,
+                }).details.configuration.connection_info,
+              } as ConnectionSet,
+              {
+                onSuccess: () => {
+                  hasuraToast({
+                    type: 'success',
+                    title: 'Connection updated',
+                  });
+                },
+                onError: e => {
+                  hasuraToast({
+                    type: 'error',
+                    title: 'Failed to update connection',
+                    message: e.message,
+                  });
+                },
+              }
+            );
 
             setEditingConnectionSetMember(undefined);
           }}
@@ -99,7 +130,21 @@ export const DynamicDBRouting = (props: DynamicDBRoutingProps) => {
       )}
       <SimpleForm
         onSubmit={values => {
-          updateConnectionTemplate(values.connection_template);
+          updateConnectionTemplate(values.connection_template, {
+            onSuccess: () => {
+              hasuraToast({
+                type: 'success',
+                title: 'Connection template updated',
+              });
+            },
+            onError: e => {
+              hasuraToast({
+                type: 'error',
+                title: 'Failed to update connection template',
+                message: e.message,
+              });
+            },
+          });
         }}
         schema={schema}
         options={{
@@ -115,9 +160,23 @@ export const DynamicDBRouting = (props: DynamicDBRoutingProps) => {
             setEditingConnectionSetMember(connectionName);
           }}
           onRemoveConnection={connectionName => {
-            removeConnection(connectionName);
+            removeConnection(connectionName, {
+              onSuccess: () => {
+                hasuraToast({
+                  type: 'success',
+                  title: 'Connection removed',
+                });
+              },
+              onError: e => {
+                hasuraToast({
+                  type: 'error',
+                  title: 'Failed to remove connection',
+                  message: e.message,
+                });
+              },
+            });
           }}
-          isLoading={isLoading}
+          isLoading={isLoading || isMetadaLoading}
           connectionTemplate={connectionTemplate}
         />
       </SimpleForm>

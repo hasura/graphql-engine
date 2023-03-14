@@ -36,6 +36,10 @@ import ReadReplicaForm from './ReadReplicaForm';
 import EditDataSource from './EditDataSource';
 import DataSourceFormWrapper from './DataSourceFormWrapper';
 import { getSupportedDrivers } from '../../../../dataSources';
+import { Tabs } from '../../../../new-components/Tabs';
+import { DynamicDBRouting } from '../../../../features/ConnectDBRedesign/components/ConnectPostgresWidget/parts/DynamicDBRouting';
+import { isProConsole } from '../../../../utils';
+import { isDynamicDBRoutingEnabled } from '../../../../utils/proConsole';
 
 interface ConnectDatabaseProps extends InjectedProps {}
 
@@ -385,37 +389,62 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
   };
 
   if (isEditState) {
+    const connectionDetails = (
+      <DataSourceFormWrapper
+        connectionDBState={connectDBInputState}
+        connectionDBStateDispatch={connectDBDispatch}
+        connectionTypeState={connectionType}
+        updateConnectionTypeRadio={onChangeConnectionType}
+        changeConnectionType={changeConnectionType}
+        isEditState={isEditState}
+        loading={loading}
+        onSubmit={onSubmit}
+        title="Edit Data Source"
+      >
+        {/* Should be rendered only on Pro and Cloud Console */}
+        {getSupportedDrivers('connectDbForm.read_replicas.edit').includes(
+          connectDBInputState.dbType
+        ) &&
+          canAccessReadReplica(connectDBInputState.dbType) && (
+            <ReadReplicaForm
+              readReplicaState={readReplicasState}
+              readReplicaDispatch={readReplicaDispatch}
+              connectDBState={connectDBStateForReadReplica}
+              connectDBStateDispatch={connectDBReadReplicaDispatch}
+              readReplicaConnectionType={readReplicaConnectionType}
+              updateReadReplicaConnectionType={updateRadioForReadReplica}
+              onClickAddReadReplicaCb={onClickAddReadReplica}
+              onClickCancelOnReadReplicaCb={onClickCancelOnReadReplicaForm}
+              onClickSaveReadReplicaCb={onClickSaveReadReplicaForm}
+            />
+          )}
+      </DataSourceFormWrapper>
+    );
     return (
       <EditDataSource>
-        <DataSourceFormWrapper
-          connectionDBState={connectDBInputState}
-          connectionDBStateDispatch={connectDBDispatch}
-          connectionTypeState={connectionType}
-          updateConnectionTypeRadio={onChangeConnectionType}
-          changeConnectionType={changeConnectionType}
-          isEditState={isEditState}
-          loading={loading}
-          onSubmit={onSubmit}
-          title="Edit Data Source"
-        >
-          {/* Should be rendered only on Pro and Cloud Console */}
-          {getSupportedDrivers('connectDbForm.read_replicas.edit').includes(
-            connectDBInputState.dbType
-          ) &&
-            canAccessReadReplica(connectDBInputState.dbType) && (
-              <ReadReplicaForm
-                readReplicaState={readReplicasState}
-                readReplicaDispatch={readReplicaDispatch}
-                connectDBState={connectDBStateForReadReplica}
-                connectDBStateDispatch={connectDBReadReplicaDispatch}
-                readReplicaConnectionType={readReplicaConnectionType}
-                updateReadReplicaConnectionType={updateRadioForReadReplica}
-                onClickAddReadReplicaCb={onClickAddReadReplica}
-                onClickCancelOnReadReplicaCb={onClickCancelOnReadReplicaForm}
-                onClickSaveReadReplicaCb={onClickSaveReadReplicaForm}
-              />
-            )}
-        </DataSourceFormWrapper>
+        {currentSourceInfo?.kind === 'postgres' &&
+        isDynamicDBRoutingEnabled(window.__env) ? (
+          <Tabs
+            items={[
+              {
+                value: 'connection-details',
+                label: 'Connection Details',
+                content: <div className="pt-8">{connectionDetails}</div>,
+              },
+              {
+                value: 'dynamic-db-routing',
+                label: 'Dynamic DB Connection Routing',
+                content: (
+                  <div className="px-4 pt-8">
+                    <DynamicDBRouting sourceName={editSourceName} />
+                  </div>
+                ),
+              },
+            ]}
+          />
+        ) : (
+          connectionDetails
+        )}
       </EditDataSource>
     );
   }
