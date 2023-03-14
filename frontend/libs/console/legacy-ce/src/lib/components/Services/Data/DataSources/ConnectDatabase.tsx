@@ -402,7 +402,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
           {getSupportedDrivers('connectDbForm.read_replicas.edit').includes(
             connectDBInputState.dbType
           ) &&
-            canAccessReadReplica() && (
+            canAccessReadReplica(connectDBInputState.dbType) && (
               <ReadReplicaForm
                 readReplicaState={readReplicasState}
                 readReplicaDispatch={readReplicaDispatch}
@@ -436,7 +436,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
         {getSupportedDrivers('connectDbForm.read_replicas.create').includes(
           connectDBInputState.dbType
         ) &&
-          canAccessReadReplica() && (
+          canAccessReadReplica(connectDBInputState.dbType) && (
             <ReadReplicaForm
               readReplicaState={readReplicasState}
               readReplicaDispatch={readReplicaDispatch}
