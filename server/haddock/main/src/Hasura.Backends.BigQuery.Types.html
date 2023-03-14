@@ -11792,45 +11792,42 @@ $cshowsPrec :: Int -&gt; Job -&gt; ShowS
 </span><span id="line-1127"></span><span>
 </span><span id="line-1128"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690658311"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Job"><span class="hs-identifier hs-type">Job</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-1129"></span><span>  </span><span id="local-6989586621690658281"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Job
-</span><a href="#local-6989586621690658281"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-1130"></span><span>    </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">J.withObject</span></span><span>
-</span><span id="line-1131"></span><span>      </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;Job&quot;</span></span><span>
-</span><span id="line-1132"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690658280"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690658281"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><span class="hs-identifier hs-var">J.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Job&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690658280"><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690658280"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-1133"></span><span>          </span><span id="local-6989586621690658279"><span class="annot"><span class="annottext">Text
+</span><span id="line-1130"></span><span>    </span><span id="local-6989586621690658279"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690658279"><span class="hs-identifier hs-var">kind</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690658280"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;kind&quot;</span></span><span>
-</span><span id="line-1134"></span><span>          </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-1131"></span><span>    </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690658279"><span class="hs-identifier hs-var">kind</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;bigquery#job&quot;</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span>
-</span><span id="line-1135"></span><span>            </span><span class="hs-keyword">then</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-1136"></span><span>              </span><span id="local-6989586621690658278"><span class="annot"><span class="annottext">Text
+</span><span id="line-1132"></span><span>      </span><span class="hs-keyword">then</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-1133"></span><span>        </span><span id="local-6989586621690658278"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690658278"><span class="hs-identifier hs-var">state</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-1137"></span><span>                </span><span id="local-6989586621690658277"><span class="annot"><span class="annottext">Object
+</span><span id="line-1134"></span><span>          </span><span id="local-6989586621690658277"><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690658277"><span class="hs-identifier hs-var">status</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690658280"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;status&quot;</span></span><span>
-</span><span id="line-1138"></span><span>                </span><span class="annot"><span class="annottext">Object
+</span><span id="line-1135"></span><span>          </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690658277"><span class="hs-identifier hs-var">status</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;state&quot;</span></span><span>
-</span><span id="line-1139"></span><span>              </span><span class="hs-special">(</span><span id="local-6989586621690658276"><span class="annot"><span class="annottext">Text
+</span><span id="line-1136"></span><span>        </span><span class="hs-special">(</span><span id="local-6989586621690658276"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690658276"><span class="hs-identifier hs-var">jobId</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690658275"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690658275"><span class="hs-identifier hs-var">location</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-1140"></span><span>                </span><span id="local-6989586621690658274"><span class="annot"><span class="annottext">Object
+</span><span id="line-1137"></span><span>          </span><span id="local-6989586621690658274"><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690658274"><span class="hs-identifier hs-var">ref</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690658280"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;jobReference&quot;</span></span><span>
-</span><span id="line-1141"></span><span>                </span><span class="hs-comment">-- 'location' is needed in addition to 'jobId' to query a job's</span><span>
-</span><span id="line-1142"></span><span>                </span><span class="hs-comment">-- status</span><span>
-</span><span id="line-1143"></span><span>                </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-1138"></span><span>          </span><span class="hs-comment">-- 'location' is needed in addition to 'jobId' to query a job's</span><span>
+</span><span id="line-1139"></span><span>          </span><span class="hs-comment">-- status</span><span>
+</span><span id="line-1140"></span><span>          </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690658274"><span class="hs-identifier hs-var">ref</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Key
@@ -11839,7 +11836,7 @@ $cshowsPrec :: Int -&gt; Job -&gt; ShowS
 </span><a href="#local-6989586621690658274"><span class="hs-identifier hs-var">ref</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;location&quot;</span></span><span>
-</span><span id="line-1144"></span><span>              </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-1141"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Job"><span class="hs-identifier hs-type">Job</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Text
 state :: Text
 $sel:state:Job :: Text
@@ -11850,16 +11847,15 @@ $sel:jobId:Job :: Text
 location :: Text
 $sel:location:Job :: Text
 </span><a href="#local-6989586621690658275"><span class="hs-identifier hs-var hs-var">location</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-1145"></span><span>            </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span id="line-1142"></span><span>      </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Invalid kind: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Show a =&gt; a -&gt; String
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">show</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690658279"><span class="hs-identifier hs-var">kind</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-1146"></span><span>      </span><span class="hs-special">)</span><span>
-</span><span id="line-1147"></span><span>
-</span><span id="line-1148"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690658267"><span id="local-6989586621690658269"><span id="local-6989586621690658271"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Job"><span class="hs-identifier hs-type">Job</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-1149"></span><span>  </span><span id="local-6989586621690658255"><span class="annot"><span class="annottext">toJSON :: Job -&gt; Value
+</span><span id="line-1143"></span><span>
+</span><span id="line-1144"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690658267"><span id="local-6989586621690658269"><span id="local-6989586621690658271"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Job"><span class="hs-identifier hs-type">Job</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-1145"></span><span>  </span><span id="local-6989586621690658255"><span class="annot"><span class="annottext">toJSON :: Job -&gt; Value
 </span><a href="#local-6989586621690658255"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Job"><span class="hs-identifier hs-type">Job</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690658252"><span id="local-6989586621690658253"><span id="local-6989586621690658254"><span class="annot"><span class="annottext">Text
 location :: Text
 jobId :: Text
@@ -11868,39 +11864,39 @@ $sel:location:Job :: Job -&gt; Text
 $sel:jobId:Job :: Job -&gt; Text
 $sel:state:Job :: Job -&gt; Text
 </span><a href="#local-6989586621690658252"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-1150"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span id="line-1146"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span>
-</span><span id="line-1151"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span id="line-1147"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;id&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690658253"><span class="hs-identifier hs-var">jobId</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-1152"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span id="line-1148"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;location&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690658252"><span class="hs-identifier hs-var">location</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-1153"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span id="line-1149"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;state&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690658254"><span class="hs-identifier hs-var">state</span></a></span><span>
-</span><span id="line-1154"></span><span>      </span><span class="hs-special">]</span><span>
-</span><span id="line-1155"></span><span>
-</span><span id="line-1156"></span><span id="local-6989586621690658250"><span id="local-6989586621690658251"></span></span><span class="hs-keyword">data</span><span> </span><span id="ExecutionStatistics"><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ExecutionStatistics"><span class="hs-identifier hs-var">ExecutionStatistics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ExecutionStatistics"><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ExecutionStatistics"><span class="hs-identifier hs-var">ExecutionStatistics</span></a></span></span><span>
-</span><span id="line-1157"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="%24sel%3A_esJob%3AExecutionStatistics"><span class="annot"><span class="annottext">ExecutionStatistics -&gt; Job
+</span><span id="line-1150"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-1151"></span><span>
+</span><span id="line-1152"></span><span id="local-6989586621690658250"><span id="local-6989586621690658251"></span></span><span class="hs-keyword">data</span><span> </span><span id="ExecutionStatistics"><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ExecutionStatistics"><span class="hs-identifier hs-var">ExecutionStatistics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ExecutionStatistics"><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ExecutionStatistics"><span class="hs-identifier hs-var">ExecutionStatistics</span></a></span></span><span>
+</span><span id="line-1153"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="%24sel%3A_esJob%3AExecutionStatistics"><span class="annot"><span class="annottext">ExecutionStatistics -&gt; Job
 </span><a href="Hasura.Backends.BigQuery.Types.html#%24sel%3A_esJob%3AExecutionStatistics"><span class="hs-identifier hs-var hs-var">_esJob</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Job"><span class="hs-identifier hs-type">Job</span></a></span><span>
-</span><span id="line-1158"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-1159"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall x. Rep ExecutionStatistics x -&gt; ExecutionStatistics
+</span><span id="line-1154"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-1155"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall x. Rep ExecutionStatistics x -&gt; ExecutionStatistics
 forall x. ExecutionStatistics -&gt; Rep ExecutionStatistics x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep ExecutionStatistics x -&gt; ExecutionStatistics
 $cfrom :: forall x. ExecutionStatistics -&gt; Rep ExecutionStatistics x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-1160"></span><span>
-</span><span id="line-1161"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690658238"><span id="local-6989586621690658240"><span id="local-6989586621690658242"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ExecutionStatistics"><span class="hs-identifier hs-type">ExecutionStatistics</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-1162"></span><span>  </span><span id="local-6989586621690658192"><span class="annot"><span class="annottext">toJSON :: ExecutionStatistics -&gt; Value
+</span><span id="line-1156"></span><span>
+</span><span id="line-1157"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690658238"><span id="local-6989586621690658240"><span id="local-6989586621690658242"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ExecutionStatistics"><span class="hs-identifier hs-type">ExecutionStatistics</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-1158"></span><span>  </span><span id="local-6989586621690658192"><span class="annot"><span class="annottext">toJSON :: ExecutionStatistics -&gt; Value
 </span><a href="#local-6989586621690658192"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
-</span><span id="line-1163"></span></pre></body></html>
+</span><span id="line-1159"></span></pre></body></html>
