@@ -1,4 +1,4 @@
-import { NeonBanner } from '../CloudOnboarding/OnboardingWizard/components/NeonConnectBanner/NeonBanner';
+import { NeonBanner } from '../../components/Services/Data/DataSources/CreateDataSource/Neon/components/Neon/NeonBanner';
 import { DatabaseKind } from './types';
 import { Button } from '../../new-components/Button';
 import React from 'react';
@@ -34,7 +34,6 @@ export const SelectDatabase: React.VFC = () => {
             }
             status={{ status: 'default' }}
             buttonText="Create a Neon Database"
-            setStepperIndex={() => {}}
           />
         </div>
       )}

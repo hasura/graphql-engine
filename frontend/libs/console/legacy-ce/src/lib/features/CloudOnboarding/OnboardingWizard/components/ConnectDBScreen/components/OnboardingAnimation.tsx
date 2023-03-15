@@ -8,8 +8,8 @@ export function OnboardingAnimation() {
         <HasuraOnboarding />
       </div>
       <div className="font-normal text-sm text-gray-600 mt-md">
-        We recommend connecting a Postgres database to instantly explore your{' '}
-        <b>Hasura GraphQL API</b>
+        We recommend connecting a database to instantly explore the
+        auto-generated <b>Hasura GraphQL API</b>
       </div>
     </div>
   );
