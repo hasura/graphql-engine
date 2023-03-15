@@ -10,6 +10,7 @@ import 'react-date-range/dist/theme/default.css'; // theme css file
 import { Button } from '@hasura/console-legacy-ce';
 
 import styles from '../Metrics.module.scss';
+import clsx from 'clsx';
 
 const DatePickerModal = props => {
   const selectionRange = {
@@ -44,7 +45,7 @@ const DatePickerModal = props => {
       id="dateModal"
       onHide={onHide}
       show={show}
-      className={styles.datePickerModalWrapper}
+      className={clsx(styles.datePickerModalWrapper, '!pointer-events-auto')}
     >
       <BootstrapModal.Header className={styles.modalHeader} closeButton>
         <BootstrapModal.Title className={styles.title}>
