@@ -345,6 +345,49 @@ BooleanArrayTypeRoot.play = async ({ canvasElement }) => {
   ).toBeInTheDocument();
 };
 
+export const NumericValue: ComponentStory<
+  typeof RowPermissionsInput
+> = args => (
+  <RowPermissionsInput
+    onPermissionsChange={action('onPermissionsChange')}
+    table={['Album']}
+    tables={tables}
+    comparators={comparators}
+    permissions={{ id: { _eq: '' } }}
+  />
+);
+
+NumericValue.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  expect(
+    canvas.getByTestId('id._eq-value-input-x-hasura-user-id')
+  ).toBeInTheDocument();
+};
+
+export const NumericIntValue: ComponentStory<
+  typeof RowPermissionsInput
+> = args => (
+  <RowPermissionsInput
+    onPermissionsChange={action('onPermissionsChange')}
+    table={['Album']}
+    tables={tables}
+    comparators={comparators}
+    permissions={{ id: { _eq: 0 } }}
+  />
+);
+
+export const NumericFloatValue: ComponentStory<
+  typeof RowPermissionsInput
+> = args => (
+  <RowPermissionsInput
+    onPermissionsChange={action('onPermissionsChange')}
+    table={['Album']}
+    tables={tables}
+    comparators={comparators}
+    permissions={{ id: { _eq: 0.9 } }}
+  />
+);
+
 SetRootLevelPermission.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
   await userEvent.click(canvas.getByTestId('-operator'));

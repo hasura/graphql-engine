@@ -70,15 +70,17 @@ export const ValueInput = ({ value, path }: { value: any; path: string[] }) => {
         value={value}
         comparatorType={comparator?.type}
       />
-      {inputType === 'text' && isComparator(comparatorName) && (
-        <Button
-          disabled={comparatorName === '_where' && isEmpty(table)}
-          onClick={() => setValue(path, 'X-Hasura-User-Id')}
-          mode="default"
-        >
-          [x-hasura-user-id]
-        </Button>
-      )}
+      {(inputType === 'text' || inputType === 'number') &&
+        isComparator(comparatorName) && (
+          <Button
+            disabled={comparatorName === '_where' && isEmpty(table)}
+            onClick={() => setValue(path, 'X-Hasura-User-Id')}
+            data-testid={`${componentLevelId}-x-hasura-user-id`}
+            mode="default"
+          >
+            [x-hasura-user-id]
+          </Button>
+        )}
     </>
   );
 };

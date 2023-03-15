@@ -120,9 +120,7 @@ export function graphQLTypeToJsType(
   if (!isScalarType(type)) {
     return value;
   }
-  if (type.name === 'Int' || type.name === 'ID' || type.name === 'Float') {
-    return Number(value);
-  } else if (type.name === 'Boolean') {
+  if (type.name === 'Boolean') {
     return Boolean(value);
   }
 
