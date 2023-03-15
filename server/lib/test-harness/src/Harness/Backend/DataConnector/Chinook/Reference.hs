@@ -14,7 +14,7 @@ where
 
 import Control.Monad.Managed (Managed)
 import Data.Aeson qualified as Aeson
-import Harness.Backend.DataConnector.Chinook (ChinookTestEnv, NameFormatting (..))
+import Harness.Backend.DataConnector.Chinook (ChinookTestEnv, NameFormatting (..), ScalarTypes (..))
 import Harness.Backend.DataConnector.Chinook qualified as Chinook
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType qualified as BackendType
@@ -83,10 +83,18 @@ backendTypeConfig =
 --------------------------------------------------------------------------------
 
 mkChinookStaticTestEnvironment :: TestEnvironment -> Managed ChinookTestEnv
-mkChinookStaticTestEnvironment = Chinook.mkChinookStaticTestEnvironment nameFormatting sourceConfiguration
+mkChinookStaticTestEnvironment = Chinook.mkChinookStaticTestEnvironment nameFormatting scalarTypes sourceConfiguration
 
 nameFormatting :: NameFormatting
 nameFormatting = NameFormatting id id id
+
+scalarTypes :: ScalarTypes
+scalarTypes =
+  ScalarTypes
+    { _stFloatType = "number",
+      _stIntegerType = "number",
+      _stStringType = "string"
+    }
 
 -- | Reference Agent specific @sources@ entry @configuration@ field.
 sourceConfiguration :: Aeson.Value
