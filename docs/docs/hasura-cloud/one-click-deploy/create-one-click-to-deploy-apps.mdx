@@ -117,6 +117,7 @@ Adding a `hasura-cloud-deploy-config.yaml` is optional if the app doesn't need a
 Hasura Cloud automatically detects environment variables used for database connection strings from the app metadata and
 prompts users to set them even if a `hasura-cloud-deploy-config.yaml` file is not added.
 
+Hasura Cloud also automatically sets the `HASURA_GRAPHQL_ADMIN_SECRET` environment variable to secure the project.
 :::
 
 ## Step 3: Add a sample-requests.graphql file (optional)
