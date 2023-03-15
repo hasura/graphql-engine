@@ -9,7 +9,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.Subscription.Plan
-import Hasura.GraphQL.Logging (ExecutionStats, MonadQueryLog)
+import Hasura.GraphQL.Logging (ExecutionStats, MonadExecutionLog, MonadQueryLog)
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging qualified as L
@@ -30,6 +30,7 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
       MonadBaseControl IO m,
       MonadError QErr m,
       MonadQueryLog m,
+      MonadExecutionLog m,
       MonadTrace m
     ) =>
     RequestId ->

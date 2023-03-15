@@ -55,7 +55,7 @@ import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Execute.Backend qualified as EB
 import Hasura.GraphQL.Execute.Subscription.State qualified as ES
 import Hasura.GraphQL.Explain qualified as GE
-import Hasura.GraphQL.Logging (MonadQueryLog)
+import Hasura.GraphQL.Logging (MonadExecutionLog, MonadQueryLog)
 import Hasura.GraphQL.Transport.HTTP qualified as GH
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.GraphQL.Transport.WSServerApp qualified as WS
@@ -136,6 +136,7 @@ newtype Handler m a = Handler (ReaderT HandlerCtx (ExceptT QErr m) a)
       E.MonadGQLExecutionCheck,
       MonadEventLogCleanup,
       MonadQueryLog,
+      MonadExecutionLog,
       EB.MonadQueryTags,
       GH.MonadExecuteQuery,
       MonadMetadataApiAuthorization,
@@ -550,6 +551,7 @@ v1Alpha1GQHandler ::
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
     Tracing.MonadTrace m,
+    MonadExecutionLog m,
     GH.MonadExecuteQuery m,
     MonadError QErr m,
     MonadReader HandlerCtx m,
@@ -592,6 +594,7 @@ v1GQHandler ::
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
     Tracing.MonadTrace m,
+    MonadExecutionLog m,
     GH.MonadExecuteQuery m,
     MonadError QErr m,
     MonadReader HandlerCtx m,
@@ -610,6 +613,7 @@ v1GQRelayHandler ::
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
     Tracing.MonadTrace m,
+    MonadExecutionLog m,
     GH.MonadExecuteQuery m,
     MonadError QErr m,
     MonadReader HandlerCtx m,
@@ -754,6 +758,7 @@ mkWaiApp ::
     E.MonadGQLExecutionCheck m,
     MonadConfigApiHandler m,
     MonadQueryLog m,
+    MonadExecutionLog m,
     WS.MonadWSLog m,
     Tracing.HasReporter m,
     GH.MonadExecuteQuery m,
@@ -821,6 +826,7 @@ httpApp ::
     MonadConfigApiHandler m,
     MonadQueryLog m,
     Tracing.HasReporter m,
+    MonadExecutionLog m,
     GH.MonadExecuteQuery m,
     MonadMetadataStorageQueryAPI m,
     HasResourceLimits m,
@@ -900,6 +906,7 @@ httpApp setupHook appCtx@AppContext {..} appEnv@AppEnv {..} ekgStore = do
           MonadBaseControl IO n,
           E.MonadGQLExecutionCheck n,
           MonadQueryLog n,
+          MonadExecutionLog n,
           GH.MonadExecuteQuery n,
           MonadMetadataStorage n,
           EB.MonadQueryTags n,

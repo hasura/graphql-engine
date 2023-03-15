@@ -76,6 +76,7 @@ data instance EngineLogType Hasura
   | ELTWebsocketLog
   | ELTWebhookLog
   | ELTQueryLog
+  | ELTExecutionLog
   | ELTStartup
   | ELTLivequeryPollerLog
   | ELTActionHandler
@@ -93,6 +94,7 @@ instance Witch.From (EngineLogType Hasura) Text where
     ELTWebsocketLog -> "websocket-log"
     ELTWebhookLog -> "webhook-log"
     ELTQueryLog -> "query-log"
+    ELTExecutionLog -> "execution-log"
     ELTStartup -> "startup"
     ELTLivequeryPollerLog -> "livequery-poller-log"
     ELTActionHandler -> "action-handler-log"
@@ -183,6 +185,7 @@ userAllowedLogTypes =
     ELTWebhookLog,
     ELTWebsocketLog,
     ELTQueryLog,
+    ELTExecutionLog,
     ELTLivequeryPollerLog,
     ELTActionHandler,
     ELTDataConnectorLog,

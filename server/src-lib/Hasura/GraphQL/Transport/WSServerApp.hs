@@ -59,6 +59,7 @@ createWSServerApp ::
     WS.MonadWSLog m,
     MonadQueryLog m,
     Tracing.HasReporter m,
+    MonadExecutionLog m,
     MonadExecuteQuery m,
     MonadMetadataStorage m,
     EB.MonadQueryTags m,

@@ -18,7 +18,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Execute.Backend qualified as EB
-import Hasura.GraphQL.Logging (MonadQueryLog)
+import Hasura.GraphQL.Logging (MonadExecutionLog, MonadQueryLog)
 import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHashList (..))
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Transport.HTTP qualified as GH
@@ -98,6 +98,7 @@ runCustomEndpoint ::
     MonadBaseControl IO m,
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
+    MonadExecutionLog m,
     GH.MonadExecuteQuery m,
     MonadMetadataStorage m,
     EB.MonadQueryTags m,

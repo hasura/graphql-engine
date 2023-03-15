@@ -404,6 +404,7 @@ onStart ::
   ( MonadIO m,
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
+    MonadExecutionLog m,
     Tracing.MonadTrace m,
     MonadExecuteQuery m,
     MC.MonadBaseControl IO m,
@@ -502,7 +503,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
       (_responseHeaders, cachedValue) <- Tracing.interpTraceT (withExceptT mempty) $ cacheLookup remoteSchemas actionsInfo cacheKey cachedDirective
       case cachedValue of
         Just cachedResponseData -> do
-          logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindCached Nothing
+          logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindCached
           let reportedExecutionTime = 0
           liftIO $ recordGQLQuerySuccess reportedExecutionTime gqlOpType
           sendSuccResp cachedResponseData opName parameterizedQueryHash $ ES.SubscriptionMetadata reportedExecutionTime
@@ -530,10 +531,10 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
                           RJ.processRemoteJoins requestId logger env reqHdrs userInfo resp remoteJoins q
                         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
                       E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
-                        logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema Nothing
+                        logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
                         runRemoteGQ requestId q fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins
                       E.ExecStepAction actionExecPlan _ remoteJoins -> do
-                        logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction Nothing
+                        logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
                         (time, (resp, _)) <- doQErr $ do
                           (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                           finalResponse <-
@@ -541,7 +542,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
                           pure (time, (finalResponse, hdrs))
                         pure $ AnnotatedResponsePart time Telem.Empty resp []
                       E.ExecStepRaw json -> do
-                        logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection Nothing
+                        logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection
                         buildRaw json
                       E.ExecStepMulti lst -> do
                         allResponses <- traverse getResponse lst
@@ -608,7 +609,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
                           RJ.processRemoteJoins requestId logger env reqHdrs userInfo resp remoteJoins q
                         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
                       E.ExecStepAction actionExecPlan _ remoteJoins -> do
-                        logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction Nothing
+                        logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
                         (time, (resp, hdrs)) <- doQErr $ do
                           (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                           finalResponse <-
@@ -616,10 +617,10 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
                           pure (time, (finalResponse, hdrs))
                         pure $ AnnotatedResponsePart time Telem.Empty resp $ fromMaybe [] hdrs
                       E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
-                        logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema Nothing
+                        logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
                         runRemoteGQ requestId q fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins
                       E.ExecStepRaw json -> do
-                        logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection Nothing
+                        logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection
                         buildRaw json
                       E.ExecStepMulti lst -> do
                         allResponses <- traverse getResponse lst
@@ -630,7 +631,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
     E.SubscriptionExecutionPlan subExec -> do
       case subExec of
         E.SEAsyncActionsWithNoRelationships actions -> do
-          logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction Nothing
+          logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
           liftIO do
             let allActionIds = map fst $ toList actions
             case NE.nonEmpty allActionIds of
@@ -674,11 +675,11 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
           -- Update async action query subscription state
           case NE.nonEmpty (toList actionIds) of
             Nothing -> do
-              logQueryLog logger $ QueryLog q Nothing requestId (QueryLogKindDatabase Nothing) Nothing
+              logQueryLog logger $ QueryLog q Nothing requestId (QueryLogKindDatabase Nothing)
               -- No async action query fields present, do nothing.
               pure ()
             Just nonEmptyActionIds -> do
-              logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction Nothing
+              logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
               liftIO $ do
                 let asyncActionQueryLive =
                       ES.LAAQOnSourceDB $
@@ -1004,6 +1005,7 @@ onMessage ::
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
     Tracing.HasReporter m,
+    MonadExecutionLog m,
     MonadExecuteQuery m,
     MC.MonadBaseControl IO m,
     MonadMetadataStorage m,

@@ -728,6 +728,8 @@ library
                      , Hasura.EncJSON
                      , Hasura.GraphQL.Execute.Query
                      , Hasura.GraphQL.Logging
+                     , Hasura.GraphQL.Logging.QueryLog
+                     , Hasura.GraphQL.Logging.ExecutionLog
                      , Hasura.RQL.DML.Select
                      , Hasura.RQL.Types.Run
                      , Hasura.Session

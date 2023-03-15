@@ -97,7 +97,7 @@ import Hasura.GraphQL.Execute.Action.Subscription
 import Hasura.GraphQL.Execute.Backend qualified as EB
 import Hasura.GraphQL.Execute.Subscription.Poll qualified as ES
 import Hasura.GraphQL.Execute.Subscription.State qualified as ES
-import Hasura.GraphQL.Logging (MonadQueryLog (..))
+import Hasura.GraphQL.Logging (MonadExecutionLog (..), MonadQueryLog (..))
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Transport.HTTP
   ( CacheStoreSuccess (CacheStoreSkipped),
@@ -654,6 +654,7 @@ runHGEServer ::
     MonadGQLExecutionCheck m,
     MonadConfigApiHandler m,
     MonadQueryLog m,
+    MonadExecutionLog m,
     WS.MonadWSLog m,
     MonadExecuteQuery m,
     Tracing.HasReporter m,
@@ -744,6 +745,7 @@ mkHGEServer ::
     MonadGQLExecutionCheck m,
     MonadConfigApiHandler m,
     MonadQueryLog m,
+    MonadExecutionLog m,
     WS.MonadWSLog m,
     MonadExecuteQuery m,
     Tracing.HasReporter m,
@@ -1165,6 +1167,9 @@ instance (MonadIO m, MonadBaseControl IO m) => MonadConfigApiHandler (PGMetadata
 
 instance (MonadIO m) => MonadQueryLog (PGMetadataStorageAppT m) where
   logQueryLog logger = unLogger logger
+
+instance (MonadIO m) => MonadExecutionLog (PGMetadataStorageAppT m) where
+  logExecutionLog logger = unLogger logger
 
 instance (MonadIO m) => WS.MonadWSLog (PGMetadataStorageAppT m) where
   logWSLog logger = unLogger logger

@@ -47,7 +47,8 @@ import Hasura.GraphQL.Execute.Action qualified as EA
 import Hasura.GraphQL.Execute.Backend qualified as EB
 import Hasura.GraphQL.Execute.RemoteJoin qualified as RJ
 import Hasura.GraphQL.Logging
-  ( MonadQueryLog (logQueryLog),
+  ( MonadExecutionLog,
+    MonadQueryLog (logQueryLog),
     QueryLog (..),
     QueryLogKind (..),
     statsToAnyBackend,
@@ -304,6 +305,7 @@ runGQ ::
     MonadReader E.ExecutionCtx m,
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
+    MonadExecutionLog m,
     MonadTrace m,
     MonadExecuteQuery m,
     MonadMetadataStorage m,
@@ -397,7 +399,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         case fmap decodeGQResp cachedValue of
           -- If we get a cache hit, annotate the response with metadata and return it.
           Just cachedResponseData -> do
-            logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindCached Nothing
+            logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindCached
             pure $
               AnnotatedResponse
                 { arQueryType = Telem.Query,
@@ -476,10 +478,10 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
           RJ.processRemoteJoins reqId logger env reqHeaders userInfo resp remoteJoins reqUnparsed
         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
       E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
-        logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema Nothing
+        logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
         runRemoteGQ fieldName rsi resultCustomizer gqlReq remoteJoins
       E.ExecStepAction aep _ remoteJoins -> do
-        logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction Nothing
+        logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
         (time, resp) <- doQErr $ do
           (time, (resp, _)) <- EA.runActionExecution userInfo aep
           finalResponse <-
@@ -487,7 +489,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
           pure (time, finalResponse)
         pure $ AnnotatedResponsePart time Telem.Empty resp []
       E.ExecStepRaw json -> do
-        logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindIntrospection Nothing
+        logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindIntrospection
         buildRaw json
       -- For `ExecStepMulti`, execute all steps and then concat them in a list
       E.ExecStepMulti lst -> do
@@ -509,10 +511,10 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
           RJ.processRemoteJoins reqId logger env reqHeaders userInfo resp remoteJoins reqUnparsed
         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse responseHeaders
       E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
-        logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema Nothing
+        logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
         runRemoteGQ fieldName rsi resultCustomizer gqlReq remoteJoins
       E.ExecStepAction aep _ remoteJoins -> do
-        logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction Nothing
+        logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
         (time, (resp, hdrs)) <- doQErr $ do
           (time, (resp, hdrs)) <- EA.runActionExecution userInfo aep
           finalResponse <-
@@ -520,7 +522,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
           pure (time, (finalResponse, hdrs))
         pure $ AnnotatedResponsePart time Telem.Empty resp $ fromMaybe [] hdrs
       E.ExecStepRaw json -> do
-        logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindIntrospection Nothing
+        logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindIntrospection
         buildRaw json
       -- For `ExecStepMulti`, execute all steps and then concat them in a list
       E.ExecStepMulti lst -> do
@@ -732,6 +734,7 @@ runGQBatched ::
     MonadReader E.ExecutionCtx m,
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
+    MonadExecutionLog m,
     MonadTrace m,
     MonadExecuteQuery m,
     MonadMetadataStorage m,
