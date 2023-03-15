@@ -59,6 +59,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     metadataDBExtensionsSchemaOption,
     parseMetadataDefaults,
     metadataDefaultsOption,
+    apolloFederationStatusOption,
 
     -- * Pretty Printer
     serveCmdFooter,
@@ -143,6 +144,7 @@ serveCommandParser =
     <*> parseDefaultNamingConvention
     <*> parseExtensionsSchema
     <*> parseMetadataDefaults
+    <*> parseApolloFederationStatus
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -1004,7 +1006,7 @@ experimentalFeaturesOption =
           <> "transformations for permission filters. "
           <> "inherited_roles: ignored; inherited roles cannot be switched off"
           <> "naming_convention: apply naming convention (graphql-default/hasura-default) based on source customization"
-          <> "apollo_federation: use hasura as a subgraph in an Apollo gateway"
+          <> "apollo_federation: use hasura as a subgraph in an Apollo gateway (deprecated)"
           <> "streaming_subscriptions: A streaming subscription streams the response according to the cursor provided by the user"
     }
 
@@ -1139,6 +1141,22 @@ metadataDBExtensionsSchemaOption =
         "Name of the schema where Hasura can install database extensions. Default: public"
     }
 
+apolloFederationStatusOption :: Config.Option (Maybe Types.ApolloFederationStatus)
+apolloFederationStatusOption =
+  Config.Option
+    { Config._default = Nothing,
+      Config._envVar = "HASURA_GRAPHQL_ENABLE_APOLLO_FEDERATION",
+      Config._helpMessage = "Enable Apollo Federation (default: false). This will allow hasura to be used as a subgraph in an Apollo gateway"
+    }
+
+parseApolloFederationStatus :: Opt.Parser (Maybe Types.ApolloFederationStatus)
+parseApolloFederationStatus =
+  (bool Nothing (Just Types.ApolloFederationEnabled))
+    <$> Opt.switch
+      ( Opt.long "enable-apollo-federation"
+          <> Opt.help (Config._helpMessage apolloFederationStatusOption)
+      )
+
 --------------------------------------------------------------------------------
 -- Pretty Printer
 
@@ -1236,6 +1254,7 @@ serveCmdFooter =
         Config.optionPP webSocketConnectionInitTimeoutOption,
         Config.optionPP enableMetadataQueryLoggingOption,
         Config.optionPP defaultNamingConventionOption,
-        Config.optionPP metadataDBExtensionsSchemaOption
+        Config.optionPP metadataDBExtensionsSchemaOption,
+        Config.optionPP apolloFederationStatusOption
       ]
     eventEnvs = [Config.optionPP graphqlEventsHttpPoolSizeOption, Config.optionPP graphqlEventsFetchIntervalOption]

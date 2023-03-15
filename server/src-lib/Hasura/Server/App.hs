@@ -449,6 +449,7 @@ v1QueryHandler query = do
               acDefaultNamingConvention
               acMetadataDefaults
               checkFeatureFlag
+              acApolloFederationStatus
       runQuery
         acEnvironment
         logger
@@ -495,6 +496,7 @@ v1MetadataHandler query = Tracing.newSpan "Metadata" $ do
           acDefaultNamingConvention
           acMetadataDefaults
           checkFeatureFlag
+          acApolloFederationStatus
   r <-
     withSchemaCacheUpdate
       acCacheRef
@@ -555,6 +557,7 @@ v2QueryHandler query = Tracing.newSpan "v2 Query" $ do
               acDefaultNamingConvention
               acMetadataDefaults
               checkFeatureFlag
+              acApolloFederationStatus
 
       V2Q.runQuery acEnvironment instanceId userInfo schemaCache serverConfigCtx query
 

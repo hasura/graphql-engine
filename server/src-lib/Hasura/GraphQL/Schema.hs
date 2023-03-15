@@ -142,6 +142,7 @@ buildGQLContext ServerConfigCtx {..} sources allRemoteSchemas allActions customT
                 role
                 _sccRemoteSchemaPermsCtx
                 _sccExperimentalFeatures
+                _sccApolloFederationStatus
             )
             ( buildRelayRoleContext
                 (_sccSQLGenCtx, _sccFunctionPermsCtx)
@@ -214,12 +215,13 @@ buildRoleContext ::
   RoleName ->
   Options.RemoteSchemaPermissions ->
   Set.HashSet ExperimentalFeature ->
+  ApolloFederationStatus ->
   m
     ( RoleContext GQLContext,
       HashSet InconsistentMetadata,
       G.SchemaIntrospection
     )
-buildRoleContext options sources remotes actions customTypes role remoteSchemaPermsCtx expFeatures = do
+buildRoleContext options sources remotes actions customTypes role remoteSchemaPermsCtx expFeatures apolloFederationStatus = do
   let schemaOptions = buildSchemaOptions options expFeatures
       schemaContext =
         SchemaContext
@@ -247,7 +249,7 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
     let remotesQueryFields = concatMap piQuery remoteSchemaFields
         remotesMutationFields = concat $ mapMaybe piMutation remoteSchemaFields
         remotesSubscriptionFields = concat $ mapMaybe piSubscription remoteSchemaFields
-        apolloQueryFields = apolloRootFields expFeatures apolloFedTableParsers
+        apolloQueryFields = apolloRootFields apolloFederationStatus apolloFedTableParsers
 
     -- build all actions
     -- we use the source context due to how async query relationships are implemented

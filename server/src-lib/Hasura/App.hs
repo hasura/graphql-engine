@@ -409,7 +409,8 @@ initialiseAppContext httpManager ServeOptions {..} env schemaCacheRef logger sql
             acEventsFetchInterval = soEventsFetchInterval,
             acAsyncActionsFetchInterval = soAsyncActionsFetchInterval,
             acSchemaPollInterval = soSchemaPollInterval,
-            acEventsFetchBatchSize = soEventsFetchBatchSize
+            acEventsFetchBatchSize = soEventsFetchBatchSize,
+            acApolloFederationStatus = soApolloFederationStatus
           }
   return appCtx
 
@@ -475,6 +476,7 @@ initialiseContext env GlobalCtx {..} serveOptions@ServeOptions {..} liveQueryHoo
           soDefaultNamingConvention
           soMetadataDefaults
           checkFeatureFlag'
+          soApolloFederationStatus
 
   rebuildableSchemaCache <-
     lift . flip onException (flushLogger loggerCtx) $
@@ -802,6 +804,7 @@ mkHGEServer setupHook appCtx@AppContext {..} appEnv@AppEnv {..} ekgStore = do
           acDefaultNamingConvention
           acMetadataDefaults
           appEnvCheckFeatureFlag
+          acApolloFederationStatus
 
   -- Log Warning if deprecated environment variables are used
   sources <- scSources <$> liftIO (getSchemaCache cacheRef)

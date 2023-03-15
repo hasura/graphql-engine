@@ -17,6 +17,8 @@ module Hasura.Server.Types
     HasServerConfigCtx (..),
     askMetadataDefaults,
     getRequestId,
+    ApolloFederationStatus (..),
+    isApolloFederationEnabled,
   )
 where
 
@@ -149,7 +151,8 @@ data ServerConfigCtx = ServerConfigCtx
     -- | stores global default naming convention
     _sccDefaultNamingConvention :: NamingCase,
     _sccMetadataDefaults :: MetadataDefaults,
-    _sccCheckFeatureFlag :: FeatureFlag -> IO Bool
+    _sccCheckFeatureFlag :: FeatureFlag -> IO Bool,
+    _sccApolloFederationStatus :: ApolloFederationStatus
   }
 
 askMetadataDefaults :: HasServerConfigCtx m => m MetadataDefaults
@@ -168,3 +171,22 @@ instance HasServerConfigCtx m => HasServerConfigCtx (ExceptT e m) where
 
 instance HasServerConfigCtx m => HasServerConfigCtx (StateT s m) where
   askServerConfigCtx = lift askServerConfigCtx
+
+-- | Whether or not to enable apollo federation fields.
+data ApolloFederationStatus = ApolloFederationEnabled | ApolloFederationDisabled
+  deriving stock (Show, Eq, Ord, Generic)
+
+instance NFData ApolloFederationStatus
+
+instance Hashable ApolloFederationStatus
+
+instance FromJSON ApolloFederationStatus where
+  parseJSON = fmap (bool ApolloFederationDisabled ApolloFederationEnabled) . parseJSON
+
+isApolloFederationEnabled :: ApolloFederationStatus -> Bool
+isApolloFederationEnabled = \case
+  ApolloFederationEnabled -> True
+  ApolloFederationDisabled -> False
+
+instance ToJSON ApolloFederationStatus where
+  toJSON = toJSON . isApolloFederationEnabled

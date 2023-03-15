@@ -31,6 +31,7 @@ import Data.Text qualified as Text
 import Database.PG.Query qualified as Query
 import Hasura.Backends.Postgres.Connection qualified as Connection
 import Hasura.Base.Error qualified as Error
+import Hasura.GraphQL.ApolloFederation (getApolloFederationStatus)
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
@@ -208,7 +209,9 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
   soDefaultNamingConvention <- withOptionDefault rsoDefaultNamingConvention defaultNamingConventionOption
   soMetadataDefaults <- withOptionDefault rsoMetadataDefaults metadataDefaultsOption
   soExtensionsSchema <- withOptionDefault rsoExtensionsSchema metadataDBExtensionsSchemaOption
-
+  soApolloFederationStatus <- do
+    apolloFederationStatusOptionM <- withOptionDefault (pure <$> rsoApolloFederationStatus) apolloFederationStatusOption
+    pure $ getApolloFederationStatus soExperimentalFeatures apolloFederationStatusOptionM
   pure ServeOptions {..}
 
 -- | Fetch Postgres 'Query.ConnParams' components from the environment

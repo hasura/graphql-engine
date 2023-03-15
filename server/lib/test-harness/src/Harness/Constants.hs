@@ -54,7 +54,8 @@ import Hasura.Server.Init
 import Hasura.Server.Init qualified as Init
 import Hasura.Server.Logging (MetadataQueryLoggingMode (MetadataQueryLoggingDisabled))
 import Hasura.Server.Types
-  ( EventingMode (EventingEnabled),
+  ( ApolloFederationStatus (ApolloFederationDisabled),
+    EventingMode (EventingEnabled),
     ExperimentalFeature (..),
     MaintenanceMode (MaintenanceModeDisabled),
     ReadOnlyMode (ReadOnlyModeDisabled),
@@ -306,7 +307,8 @@ serveOptions =
       soEnableMetadataQueryLogging = MetadataQueryLoggingDisabled,
       soDefaultNamingConvention = Init._default Init.defaultNamingConventionOption,
       soExtensionsSchema = ExtensionsSchema "public",
-      soMetadataDefaults = emptyMetadataDefaults
+      soMetadataDefaults = emptyMetadataDefaults,
+      soApolloFederationStatus = ApolloFederationDisabled
     }
 
 -- | What log level should be used by the engine; this is not exported, and

@@ -121,7 +121,8 @@ data AppContext = AppContext
     acEventsFetchInterval :: Refined NonNegative Milliseconds,
     acEventsFetchBatchSize :: Refined NonNegative Int,
     acAsyncActionsFetchInterval :: OptionalInterval,
-    acSchemaPollInterval :: OptionalInterval
+    acSchemaPollInterval :: OptionalInterval,
+    acApolloFederationStatus :: ApolloFederationStatus
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger

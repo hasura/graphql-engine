@@ -312,6 +312,20 @@ Restrict requests allowed to be executed by the GraphQL Engine to those that are
 | **Default**         | `false`                              |
 | **Supported in**    | CE, EE, Cloud                        |
 
+### Enable Apollo Federation
+
+Enables the [Apollo Federation](data-federation/apollo-federation.mdx) feature. This allows Hasura to be connected as a
+subgraph in an Apollo supergraph.
+
+|                     |                                           |
+| ------------------- | ----------------------------------------- |
+| **Flag**            | `--enable-apollo-federation`              |
+| **Env var**         | `HASURA_GRAPHQL_ENABLE_APOLLO_FEDERATION` |
+| **Accepted values** | Boolean                                   |
+| **Options**         | `true` or `false`                         |
+| **Default**         | `false`                                   |
+| **Supported in**    | CE, EE, Cloud                             |
+
 ### Enable Console
 
 Enable the Hasura Console (served by the server on `/` and `/console`).

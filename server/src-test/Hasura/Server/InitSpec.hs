@@ -90,7 +90,8 @@ emptyServeOptionsRaw =
       rsoEnableMetadataQueryLoggingEnv = Logging.MetadataQueryLoggingDisabled,
       rsoDefaultNamingConvention = Nothing,
       rsoExtensionsSchema = Nothing,
-      rsoMetadataDefaults = Nothing
+      rsoMetadataDefaults = Nothing,
+      rsoApolloFederationStatus = Nothing
     }
 
 mkServeOptionsSpec :: Hspec.Spec

@@ -2083,3 +2083,16 @@ serveParserSpec =
               let o = overrideMetadataDefaults md (MetadataDefaults mdd)
                in o == mde
             _ -> False
+
+    Hspec.it "It accepts '--enable-apollo-federation'" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--enable-apollo-federation"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      fmap UUT.rsoApolloFederationStatus result `Hspec.shouldSatisfy` \case
+        Opt.Success enableApolloFederation -> enableApolloFederation == (Just Types.ApolloFederationEnabled)
+        Opt.Failure _pf -> False
+        Opt.CompletionInvoked _cr -> False

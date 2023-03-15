@@ -319,7 +319,8 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     -- | stores global default naming convention
     rsoDefaultNamingConvention :: Maybe NamingCase,
     rsoExtensionsSchema :: Maybe MonadTx.ExtensionsSchema,
-    rsoMetadataDefaults :: Maybe MetadataDefaults
+    rsoMetadataDefaults :: Maybe MetadataDefaults,
+    rsoApolloFederationStatus :: Maybe Server.Types.ApolloFederationStatus
   }
 
 -- | Whether or not to serve Console assets.
@@ -616,7 +617,8 @@ data ServeOptions impl = ServeOptions
     soEnableMetadataQueryLogging :: Server.Logging.MetadataQueryLoggingMode,
     soDefaultNamingConvention :: NamingCase,
     soExtensionsSchema :: MonadTx.ExtensionsSchema,
-    soMetadataDefaults :: MetadataDefaults
+    soMetadataDefaults :: MetadataDefaults,
+    soApolloFederationStatus :: Server.Types.ApolloFederationStatus
   }
 
 -- | 'ResponseInternalErrorsConfig' represents the encoding of the

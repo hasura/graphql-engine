@@ -356,3 +356,6 @@ instance FromEnv Cache.CacheSize where
 
 instance FromEnv ExtensionsSchema where
   fromEnv = Right . MonadTx.ExtensionsSchema . Text.pack
+
+instance FromEnv Server.Types.ApolloFederationStatus where
+  fromEnv = fmap (bool Server.Types.ApolloFederationDisabled Server.Types.ApolloFederationEnabled) . fromEnv @Bool

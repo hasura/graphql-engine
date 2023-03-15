@@ -116,6 +116,7 @@ main = do
                 (_default defaultNamingConventionOption)
                 emptyMetadataDefaults
                 (FF.checkFeatureFlag mempty)
+                ApolloFederationDisabled
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver serverConfigCtx
 
         (appCtx, appEnv) <- runManagedT

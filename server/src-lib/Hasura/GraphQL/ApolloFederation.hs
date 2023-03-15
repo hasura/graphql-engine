@@ -1,11 +1,10 @@
 -- | Tools for generating fields for Apollo federation
 module Hasura.GraphQL.ApolloFederation
   ( -- * Field Parser generators
-    mkEntityUnionFieldParser,
-    mkServiceField,
     apolloRootFields,
     ApolloFederationParserFunction (..),
     convertToApolloFedParserFunc,
+    getApolloFederationStatus,
   )
 where
 
@@ -17,7 +16,6 @@ import Data.Aeson.Ordered qualified as JO
 import Data.Bifunctor (Bifunctor (bimap))
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
-import Data.HashSet qualified as Set
 import Data.Text qualified as T
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
@@ -163,10 +161,10 @@ mkServiceField = serviceFieldParser
         pure \schemaIntrospection -> RFRaw . JO.fromOrderedHashMap $ (partialValue ?? schemaIntrospection)
 
 apolloRootFields ::
-  Set.HashSet ExperimentalFeature ->
+  ApolloFederationStatus ->
   [(G.Name, Parser 'Output P.Parse (ApolloFederationParserFunction P.Parse))] ->
   [FieldParser P.Parse (G.SchemaIntrospection -> QueryRootField UnpreparedValue)]
-apolloRootFields expFeatures apolloFedTableParsers =
+apolloRootFields apolloFederationStatus apolloFedTableParsers =
   let -- generate the `_service` field parser
       serviceField = mkServiceField
 
@@ -177,13 +175,20 @@ apolloRootFields expFeatures apolloFedTableParsers =
       -- `serviceField` is essential to connect hasura to gateway, `entityField`
       -- is essential only if we have types that has @key directive
       if
-          | EFApolloFederation `elem` expFeatures && not (null apolloFedTableParsers) ->
+          | isApolloFederationEnabled apolloFederationStatus && not (null apolloFedTableParsers) ->
               [serviceField, entityField]
-          | EFApolloFederation `elem` expFeatures ->
+          | isApolloFederationEnabled apolloFederationStatus ->
               [serviceField]
           | otherwise -> []
 
 -- helpers
+
+-- | Check if the Apollo Federation feature is enabled or not. If the user has explicitly set the Apollo Federation
+--   status, then we use that else we fallback to the experimental feature flag
+getApolloFederationStatus :: HashSet ExperimentalFeature -> Maybe ApolloFederationStatus -> ApolloFederationStatus
+getApolloFederationStatus experimentalFeatures Nothing =
+  bool ApolloFederationDisabled ApolloFederationEnabled (EFApolloFederation `elem` experimentalFeatures)
+getApolloFederationStatus _ (Just apolloFederationStatus) = apolloFederationStatus
 
 -- | Generate sdl from the schema introspection
 generateSDL :: G.SchemaIntrospection -> Text
