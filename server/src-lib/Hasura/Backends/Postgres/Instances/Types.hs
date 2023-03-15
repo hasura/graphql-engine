@@ -155,7 +155,7 @@ instance
   getTableIdentifier = Postgres.getIdentifierQualifiedObject
   namingConventionSupport = Postgres.namingConventionSupport
 
-  resizeSourcePools sourceConfig serverReplicas = (Postgres._pecRunAction (Postgres._pscExecCtx sourceConfig)) (Postgres.ResizePoolMode serverReplicas)
+  resizeSourcePools sourceConfig serverReplicas = (Postgres._pecResizePools (Postgres._pscExecCtx sourceConfig)) serverReplicas
 
   defaultTriggerOnReplication = Just ((), TORDisableTrigger)
 

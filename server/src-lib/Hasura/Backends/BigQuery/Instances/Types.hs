@@ -12,7 +12,7 @@ import Hasura.Backends.BigQuery.Types qualified as BigQuery
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.ResizePool (ServerReplicas)
+import Hasura.RQL.Types.ResizePool (ServerReplicas, SourceResizePoolSummary, noPoolsResizedSummary)
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -108,10 +108,10 @@ instance Backend 'BigQuery where
     -- We don't have to generate arguments expression from implicit arguments.
     []
 
-  resizeSourcePools :: SourceConfig 'BigQuery -> ServerReplicas -> IO ()
+  resizeSourcePools :: SourceConfig 'BigQuery -> ServerReplicas -> IO SourceResizePoolSummary
   resizeSourcePools _sourceConfig _serverReplicas =
     -- BigQuery does not posses connection pooling
-    pure ()
+    pure noPoolsResizedSummary
 
   defaultTriggerOnReplication = Nothing
 

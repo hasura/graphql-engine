@@ -497,7 +497,7 @@ postDropSourceHook sourceConfig tableTriggersMap = do
               dropHdbCatalogSchema
 
   -- Destory postgres source connection
-  liftIO $ _pecRunAction (_pscExecCtx sourceConfig) DestroyConnMode
+  liftIO $ _pecDestroyConnections (_pscExecCtx sourceConfig)
 
   -- Run other drop hooks configured at source creation time
   liftIO $ _pscPostDropHook sourceConfig

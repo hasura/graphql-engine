@@ -11,7 +11,7 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers ()
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.ResizePool (ServerReplicas, getServerReplicasInt)
+import Hasura.RQL.Types.ResizePool
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -128,7 +128,7 @@ instance Backend 'MySQL where
   fromComputedFieldImplicitArguments :: v -> ComputedFieldImplicitArguments 'MySQL -> [FunctionArgumentExp 'MySQL v]
   fromComputedFieldImplicitArguments = error "fromComputedFieldImplicitArguments: MySQL backend does not support this operation yet"
 
-  resizeSourcePools :: SourceConfig 'MySQL -> ServerReplicas -> IO ()
+  resizeSourcePools :: SourceConfig 'MySQL -> ServerReplicas -> IO SourceResizePoolSummary
   resizeSourcePools sourceConfig serverReplicas = do
     -- As of writing this, the MySQL isn't generally available (GA).
     -- However, implementing the pool resize logic.
@@ -143,6 +143,13 @@ instance Backend 'MySQL where
     Pool.resizePool pool (maxConnections `div` getServerReplicasInt serverReplicas)
     -- Trim pool by destroying excess resources, if any
     Pool.tryTrimPool pool
+    -- Return the summary. Only the primary pool is resized
+    pure $
+      SourceResizePoolSummary
+        { _srpsPrimaryResized = True,
+          _srpsReadReplicasResized = False,
+          _srpsConnectionSet = []
+        }
 
   defaultTriggerOnReplication = Nothing
 

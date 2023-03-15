@@ -10,6 +10,8 @@ module Hasura.RQL.Types.ResizePool
     ResizePoolStrategy (..),
     getServerReplicasInt,
     safeServerReplicas,
+    SourceResizePoolSummary (..),
+    noPoolsResizedSummary,
 
     -- * exporting for tests
     unsafeServerReplicas,
@@ -47,3 +49,15 @@ data ResizePoolStrategy
     NeverResizePool
   | -- | Resize the pool by using provided total maximum connections
     ResizePool Int
+
+-- | Summary of a source's pools resize. Predominantly used to log.
+data SourceResizePoolSummary = SourceResizePoolSummary
+  { _srpsPrimaryResized :: Bool,
+    _srpsReadReplicasResized :: Bool,
+    _srpsConnectionSet :: [Text]
+  }
+  deriving (Eq, Show)
+
+noPoolsResizedSummary :: SourceResizePoolSummary
+noPoolsResizedSummary =
+  SourceResizePoolSummary False False []

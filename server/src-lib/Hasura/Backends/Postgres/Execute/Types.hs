@@ -5,7 +5,6 @@
 module Hasura.Backends.Postgres.Execute.Types
   ( PGExecCtx (..),
     PGExecFrom (..),
-    PGExecActionMode (..),
     PGExecCtxInfo (..),
     PGExecTxType (..),
     mkPGExecCtx,
@@ -38,7 +37,7 @@ import Hasura.Backends.Postgres.SQL.Error
 import Hasura.Base.Error
 import Hasura.EncJSON (EncJSON, encJFromJValue)
 import Hasura.Prelude
-import Hasura.RQL.Types.ResizePool (ResizePoolStrategy (..), ServerReplicas, getServerReplicasInt)
+import Hasura.RQL.Types.ResizePool
 import Hasura.SQL.Types (ExtensionsSchema)
 import Hasura.Session
 import Network.HTTP.Types qualified as HTTP
@@ -50,8 +49,10 @@ type RunTx =
 data PGExecCtx = PGExecCtx
   { -- | Run a PG transaction using the information provided by PGExecCtxInfo
     _pecRunTx :: PGExecCtxInfo -> RunTx,
-    -- | Run an action on the database resources created by Pool library
-    _pecRunAction :: PGExecActionMode -> IO ()
+    -- | Destroy connection pools
+    _pecDestroyConnections :: IO (),
+    -- | Resize pools based on number of server instances and return the summary
+    _pecResizePools :: ServerReplicas -> IO SourceResizePoolSummary
   }
 
 -- | Holds the information required to exceute a PG transaction
@@ -72,13 +73,6 @@ data PGExecTxType
     --  "Nothing" is provided for isolation level.
     Tx PG.TxAccess (Maybe PG.TxIsolation)
 
--- | The action to run on the database resources created by Pool library
-data PGExecActionMode
-  = -- | Destroys connection pools
-    DestroyConnMode
-  | -- | Resize pools based on number of server instances
-    ResizePoolMode ServerReplicas
-
 -- | The level from where the transaction is being run
 data PGExecFrom
   = -- | transaction initated via a GraphQLRequest
@@ -96,14 +90,14 @@ data PGExecFrom
 mkPGExecCtx :: PG.TxIsolation -> PG.PGPool -> ResizePoolStrategy -> PGExecCtx
 mkPGExecCtx defaultIsoLevel pool resizeStrategy =
   PGExecCtx
-    { _pecRunAction = \case
+    { _pecDestroyConnections =
         -- \| Destroys connection pools
-        DestroyConnMode -> PG.destroyPGPool pool
+        PG.destroyPGPool pool,
+      _pecResizePools = \serverReplicas ->
         -- \| Resize pools based on number of server instances
-        ResizePoolMode serverReplicas ->
-          case resizeStrategy of
-            NeverResizePool -> pure ()
-            ResizePool maxConnections -> resizePostgresPool pool maxConnections serverReplicas,
+        case resizeStrategy of
+          NeverResizePool -> pure noPoolsResizedSummary
+          ResizePool maxConnections -> resizePostgresPool' maxConnections serverReplicas,
       _pecRunTx = \case
         -- \| Run a read only statement without an explicit transaction block
         (PGExecCtxInfo NoTxRead _) -> PG.runTx' pool
@@ -111,6 +105,17 @@ mkPGExecCtx defaultIsoLevel pool resizeStrategy =
         (PGExecCtxInfo (Tx txAccess (Just isolationLevel)) _) -> PG.runTx pool (isolationLevel, Just txAccess)
         (PGExecCtxInfo (Tx txAccess Nothing) _) -> PG.runTx pool (defaultIsoLevel, Just txAccess)
     }
+  where
+    resizePostgresPool' maxConnections serverReplicas = do
+      -- Resize the pool
+      resizePostgresPool pool maxConnections serverReplicas
+      -- Return the summary. Only the primary pool is resized
+      pure $
+        SourceResizePoolSummary
+          { _srpsPrimaryResized = True,
+            _srpsReadReplicasResized = False,
+            _srpsConnectionSet = []
+          }
 
 -- | Resize Postgres pool by setting the number of connections equal to
 -- allowed maximum connections across all server instances divided by

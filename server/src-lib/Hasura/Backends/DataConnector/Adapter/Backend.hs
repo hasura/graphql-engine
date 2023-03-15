@@ -25,7 +25,7 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, HasSourceConfiguration (..), SupportedNamingCase (..), XDisable, XEnable)
 import Hasura.RQL.Types.Column (ColumnType (..))
-import Hasura.RQL.Types.ResizePool (ServerReplicas)
+import Hasura.RQL.Types.ResizePool
 import Hasura.SQL.Backend (BackendType (DataConnector))
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -149,10 +149,10 @@ instance Backend 'DataConnector where
   namingConventionSupport :: SupportedNamingCase
   namingConventionSupport = OnlyHasuraCase
 
-  resizeSourcePools :: SourceConfig 'DataConnector -> ServerReplicas -> IO ()
+  resizeSourcePools :: SourceConfig 'DataConnector -> ServerReplicas -> IO SourceResizePoolSummary
   resizeSourcePools _sourceConfig _serverReplicas =
     -- Data connectors do not have concept of connection pools
-    pure ()
+    pure noPoolsResizedSummary
 
   defaultTriggerOnReplication = Nothing
 

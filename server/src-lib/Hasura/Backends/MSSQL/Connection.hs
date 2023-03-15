@@ -42,7 +42,7 @@ import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Base.Error
 import Hasura.Metadata.DTO.Utils (fromEnvCodec)
 import Hasura.Prelude
-import Hasura.RQL.Types.ResizePool (ResizePoolStrategy (..), ServerReplicas, getServerReplicasInt)
+import Hasura.RQL.Types.ResizePool
 
 class MonadError QErr m => MonadMSSQLTx m where
   liftMSSQLTx :: MSTx.TxE QErr a -> m a
@@ -224,8 +224,8 @@ data MSSQLExecCtx = MSSQLExecCtx
     mssqlRunSerializableTx :: MSSQLRunTx,
     -- | Destroys connection pools
     mssqlDestroyConn :: IO (),
-    -- | Resize pools based on number of server instances,
-    mssqlResizePools :: ServerReplicas -> IO ()
+    -- | Resize pools based on number of server instances
+    mssqlResizePools :: ServerReplicas -> IO SourceResizePoolSummary
   }
 
 -- | Creates a MSSQL execution context for a single primary pool
@@ -238,9 +238,20 @@ mkMSSQLExecCtx pool resizeStrategy =
       mssqlDestroyConn = MSPool.drainMSSQLPool pool,
       mssqlResizePools =
         case resizeStrategy of
-          NeverResizePool -> const $ pure ()
-          ResizePool maxConnections -> resizeMSSQLPool pool maxConnections
+          NeverResizePool -> const $ pure noPoolsResizedSummary
+          ResizePool maxConnections -> resizeMSSQLPool' maxConnections
     }
+  where
+    resizeMSSQLPool' maxConnections serverReplicas = do
+      -- Resize the primary pool
+      resizeMSSQLPool pool maxConnections serverReplicas
+      -- Return the summary. Only the primary pool is resized
+      pure $
+        SourceResizePoolSummary
+          { _srpsPrimaryResized = True,
+            _srpsReadReplicasResized = False,
+            _srpsConnectionSet = []
+          }
 
 -- | Resize MSSQL pool by setting the number of connections equal to
 -- allowed maximum connections across all server instances divided by
