@@ -20,13 +20,11 @@ endef
 
 define run_ghcid_main_tests
 	@if [[ $$(uname -p) == 'arm' ]]; then \
-		HASURA_TEST_BACKEND_TYPE="$(3)" ghcid -c "DYLD_LIBRARY_PATH=$${DYLD_LIBRARY_PATH:-} cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
-			--test "main" \
-			--setup ":set args $(2)"; \
+		ghcid -c "DYLD_LIBRARY_PATH=$${DYLD_LIBRARY_PATH:-} cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+			--test "main"; \
 	else \
-  	HASURA_TEST_BACKEND_TYPE="$(3)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
-  		--test "main" \
-			--setup ":set args $(2)"; \
+		ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+			--test "main"; \
 	fi
 endef
 
@@ -111,4 +109,4 @@ ghcid-library-pro:
 .PHONY: ghcid-test-unit
 ## ghcid-test-unit: build and run unit tests in ghcid
 ghcid-test-unit: remove-tix-file
-	$(call run_ghcid_main_tests,graphql-engine:graphql-engine-tests,unit)
+	$(call run_ghcid_main_tests,graphql-engine:graphql-engine-tests)
