@@ -279,6 +279,30 @@
                 ],
                 "type": "object"
             },
+            "ApiLimit": {
+                "properties": {
+                    "batch_limit": {
+                        "$ref": "#/components/schemas/Limit_MaxBatchSize"
+                    },
+                    "depth_limit": {
+                        "$ref": "#/components/schemas/Limit_MaxDepth"
+                    },
+                    "disabled": {
+                        "default": false,
+                        "type": "boolean"
+                    },
+                    "node_limit": {
+                        "$ref": "#/components/schemas/Limit_MaxNodes"
+                    },
+                    "rate_limit": {
+                        "$ref": "#/components/schemas/Limit_RateLimitConfig"
+                    },
+                    "time_limit": {
+                        "$ref": "#/components/schemas/Limit_MaxTime"
+                    }
+                },
+                "type": "object"
+            },
             "ApolloFederationConfig": {
                 "nullable": true,
                 "properties": {
@@ -4062,6 +4086,112 @@
                 ],
                 "type": "object"
             },
+            "Limit_MaxBatchSize": {
+                "properties": {
+                    "global": {
+                        "maximum": 9223372036854775807,
+                        "minimum": 0,
+                        "type": "number"
+                    },
+                    "per_role": {
+                        "additionalProperties": {
+                            "maximum": 9223372036854775807,
+                            "minimum": 0,
+                            "type": "number"
+                        },
+                        "default": {},
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "global"
+                ],
+                "type": "object"
+            },
+            "Limit_MaxDepth": {
+                "properties": {
+                    "global": {
+                        "maximum": 9223372036854775807,
+                        "minimum": 0,
+                        "type": "number"
+                    },
+                    "per_role": {
+                        "additionalProperties": {
+                            "maximum": 9223372036854775807,
+                            "minimum": 0,
+                            "type": "number"
+                        },
+                        "default": {},
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "global"
+                ],
+                "type": "object"
+            },
+            "Limit_MaxNodes": {
+                "properties": {
+                    "global": {
+                        "maximum": 9223372036854775807,
+                        "minimum": 0,
+                        "type": "number"
+                    },
+                    "per_role": {
+                        "additionalProperties": {
+                            "maximum": 9223372036854775807,
+                            "minimum": 0,
+                            "type": "number"
+                        },
+                        "default": {},
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "global"
+                ],
+                "type": "object"
+            },
+            "Limit_MaxTime": {
+                "properties": {
+                    "global": {
+                        "maximum": 1.79769313486231590772930519078902473361797697894230657273430081157732675805500963132708477322407536021120113879871393357658789768814416622492847430639474124377767893424865485276302219601246094119453082952085005768838150682342462881473913110540827237163350510684586298239947245938479716304835356329624224137216e308,
+                        "minimum": 0,
+                        "type": "number"
+                    },
+                    "per_role": {
+                        "additionalProperties": {
+                            "maximum": 1.79769313486231590772930519078902473361797697894230657273430081157732675805500963132708477322407536021120113879871393357658789768814416622492847430639474124377767893424865485276302219601246094119453082952085005768838150682342462881473913110540827237163350510684586298239947245938479716304835356329624224137216e308,
+                            "minimum": 0,
+                            "type": "number"
+                        },
+                        "default": {},
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "global"
+                ],
+                "type": "object"
+            },
+            "Limit_RateLimitConfig": {
+                "properties": {
+                    "global": {
+                        "$ref": "#/components/schemas/RateLimitConfig"
+                    },
+                    "per_role": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/RateLimitConfig"
+                        },
+                        "default": {},
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "global"
+                ],
+                "type": "object"
+            },
             "ListedQuery": {
                 "properties": {
                     "name": {
@@ -4292,8 +4422,7 @@
                         "type": "array"
                     },
                     "api_limits": {
-                        "additionalProperties": true,
-                        "description": "limts to depth and/or rate of API requests\n\n\nobject with unspecified properties - this is a placeholder that will eventually be replaced with a more detailed description"
+                        "$ref": "#/components/schemas/ApiLimit"
                     },
                     "backend_configs": {
                         "additionalProperties": true,
@@ -7500,6 +7629,37 @@
                 },
                 "required": [
                     "foreign_key_constraint_on"
+                ],
+                "type": "object"
+            },
+            "RateLimitConfig": {
+                "properties": {
+                    "max_reqs_per_min": {
+                        "maximum": 9223372036854775807,
+                        "minimum": 0,
+                        "type": "number"
+                    },
+                    "unique_params": {
+                        "description": "This would be either fixed value \"IP\" or a list of Session variables",
+                        "oneOf": [
+                            {
+                                "enum": [
+                                    "IP",
+                                    "ip"
+                                ],
+                                "type": "string"
+                            },
+                            {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "max_reqs_per_min"
                 ],
                 "type": "object"
             },

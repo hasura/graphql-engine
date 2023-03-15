@@ -11,11 +11,17 @@ module Autodocodec.Extended
     graphQLSchemaDocumentCodec,
     hashSetCodec,
     hashSetCodecWith,
+    integralWithBoundsCodec,
+    integralWithLowerBoundCodec,
+    integralWithUpperBoundCodec,
     integerCodec,
     optionalFieldOrIncludedNull,
     optionalFieldOrIncludedNull',
     optionalFieldOrIncludedNullWith,
     optionalFieldOrIncludedNullWith',
+    realFracWithBoundsCodec,
+    realFracWithLowerBoundCodec,
+    realFracWithUpperBoundCodec,
     refinedCodec,
     refinedCodecWith,
     unitCodec,
@@ -28,6 +34,7 @@ import Data.CaseInsensitive qualified as CI
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as HashSet
 import Data.Scientific (Scientific (base10Exponent), floatingOrInteger)
+import Data.Scientific qualified as Scientific
 import Data.Text qualified as T
 import Data.Typeable (Typeable)
 import Hasura.Metadata.DTO.Utils (typeableName)
@@ -141,6 +148,27 @@ hashSetCodecWith elemCodec =
   dimapCodec HashSet.fromList HashSet.toList $
     listCodec elemCodec
 
+-- | Codec for integral numbers with specified lower and upper bounds.
+integralWithBoundsCodec :: (Integral i, Bounded i) => NumberBounds -> JSONCodec i
+integralWithBoundsCodec bounds =
+  bimapCodec go fromIntegral $ scientificWithBoundsCodec bounds
+  where
+    go s = case Scientific.toBoundedInteger s of
+      Nothing -> Left $ "Number did not fit into given bounds: " <> show s
+      Just i -> Right i
+
+-- | Codec for integral numbers with specified lower bound.
+integralWithLowerBoundCodec :: forall i. (Integral i, Bounded i) => i -> JSONCodec i
+integralWithLowerBoundCodec minInt =
+  integralWithBoundsCodec $
+    NumberBounds (fromIntegral minInt) (fromIntegral (maxBound @i))
+
+-- | Codec for integral numbers with specified lower bound.
+integralWithUpperBoundCodec :: forall i. (Integral i, Bounded i) => i -> JSONCodec i
+integralWithUpperBoundCodec maxInt =
+  integralWithBoundsCodec $
+    NumberBounds (fromIntegral (minBound @i)) (fromIntegral maxInt)
+
 -- | Codec for integer with a generous bounds check that matches the behavior of
 -- aeson integer deserialization.
 integerCodec :: JSONCodec Integer
@@ -234,6 +262,23 @@ orIncludedNullHelper = dimapCodec dec enc
     enc = \case
       Nothing -> Just Nothing -- This is the case that differs from the stock `orNullHelper`
       Just a -> Just (Just a)
+
+-- | Codec for fractional numeric type with specified lower and upper bounds.
+realFracWithBoundsCodec :: (Real r, Fractional r) => NumberBounds -> JSONCodec r
+realFracWithBoundsCodec bounds =
+  dimapCodec realToFrac realToFrac $ scientificWithBoundsCodec bounds
+
+-- | Codec for fractional numeric type with specified lower bound.
+realFracWithLowerBoundCodec :: forall r. (Real r, Fractional r) => Scientific -> JSONCodec r
+realFracWithLowerBoundCodec minReal = realFracWithBoundsCodec @r $ NumberBounds minReal infinity
+  where
+    infinity = realToFrac (1 / 0 :: Double)
+
+-- | Codec for fractional numeric type with specified upper bound.
+realFracWithUpperBoundCodec :: forall r. (Real r, Fractional r) => Scientific -> JSONCodec r
+realFracWithUpperBoundCodec maxReal = realFracWithBoundsCodec @r $ NumberBounds negInfinity maxReal
+  where
+    negInfinity = realToFrac (-1 / 0 :: Double)
 
 -- | Codec for values wrapped with a type-level predicate using the refined
 -- package.

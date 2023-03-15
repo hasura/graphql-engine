@@ -538,7 +538,7 @@ metadataToDTO
         metaV3CustomTypes = customTypes,
         metaV3CronTriggers = cronTriggers,
         metaV3RestEndpoints = endpoints,
-        metaV3ApiLimits = placeholder . objectFromOrdJSON <$> apiLimitsToOrdJSON apiLimits,
+        metaV3ApiLimits = apiLimits,
         metaV3MetricsConfig = metricsConfig,
         metaV3InheritedRoles = inheritedRoles,
         metaV3GraphqlSchemaIntrospection = placeholder . objectFromOrdJSON <$> introspectionDisabledRolesToOrdJSON introspectionDisabledRoles,
