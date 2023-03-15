@@ -295,10 +295,7 @@ function aggregates_query(
     wLimit: number | null,
     wOffset: number | null,
     wOrder: OrderBy | null,
-  ): string[] {
-  if (isEmptyObject(aggregates))
-    return [];
-
+  ): string {
   const tableAlias = generateTableAlias(tableName);
 
   const orderByInfo = orderBy(ts, wOrder, tableName, tableAlias);
@@ -323,7 +320,7 @@ function aggregates_query(
     }
   }).join(', ');
 
-  return [`'aggregates', (SELECT JSON_OBJECT(${aggregate_pairs}) FROM (${sourceSubquery}))`];
+  return `'aggregates', (SELECT JSON_OBJECT(${aggregate_pairs}) FROM (${sourceSubquery}))`;
 }
 
 type RelationshipJoinInfo = {
@@ -335,20 +332,20 @@ function table_query(
     ts: TableRelationships[],
     tableName: TableName,
     joinInfo: RelationshipJoinInfo | null,
-    fields: Fields,
-    aggregates: Aggregates,
+    fields: Fields | null,
+    aggregates: Aggregates | null,
     wWhere: Expression | null,
     wLimit: number | null,
     wOffset: number | null,
     wOrder: OrderBy | null,
   ): string {
   const tableAlias      = generateTableAlias(tableName);
-  const aggregateSelect = aggregates_query(ts, tableName, joinInfo, aggregates, wWhere, wLimit, wOffset, wOrder);
+  const aggregateSelect = aggregates ? [aggregates_query(ts, tableName, joinInfo, aggregates, wWhere, wLimit, wOffset, wOrder)] : [];
   // The use of the JSON function inside JSON_GROUP_ARRAY is necessary from SQLite 3.39.0 due to breaking changes in
   // SQLite. See https://sqlite.org/forum/forumpost/e3b101fb3234272b for more details. This approach still works fine
   // for older versions too.
-  const fieldSelect     = isEmptyObject(fields) ? [] : [`'rows', JSON_GROUP_ARRAY(JSON(j))`];
-  const fieldFrom       = isEmptyObject(fields) ? '' : (() => {
+  const fieldSelect     = fields === null ? [] : [`'rows', JSON_GROUP_ARRAY(JSON(j))`];
+  const fieldFrom       = fields === null ? '' : (() => {
     const whereClause = where(ts, wWhere, joinInfo, tableName, tableAlias);
     // NOTE: The reuse of the 'j' identifier should be safe due to scoping. This is confirmed in testing.
     if(wOrder === null || wOrder.elements.length < 1) {
@@ -386,8 +383,8 @@ function relationship(ts: TableRelationships[], r: Relationship, field: Relation
     ts,
     r.target_table,
     relationshipJoinInfo,
-    coerceUndefinedOrNullToEmptyRecord(field.query.fields),
-    coerceUndefinedOrNullToEmptyRecord(field.query.aggregates),
+    coerceUndefinedToNull(field.query.fields),
+    coerceUndefinedToNull(field.query.aggregates),
     coerceUndefinedToNull(field.query.where),
     limit,
     coerceUndefinedToNull(field.query.offset),
@@ -657,8 +654,8 @@ function query(request: QueryRequest): string {
     request.table_relationships,
     request.table,
     null,
-    coerceUndefinedOrNullToEmptyRecord(request.query.fields),
-    coerceUndefinedOrNullToEmptyRecord(request.query.aggregates),
+    coerceUndefinedToNull(request.query.fields),
+    coerceUndefinedToNull(request.query.aggregates),
     coerceUndefinedToNull(request.query.where),
     coerceUndefinedToNull(request.query.limit),
     coerceUndefinedToNull(request.query.offset),
@@ -738,7 +735,7 @@ function foreach_query(foreachIds: Record<string, ScalarValue>[], request: Query
     foreachTableName,
     null,
     foreachQueryFields,
-    {},
+    null,
     null,
     null,
     null,

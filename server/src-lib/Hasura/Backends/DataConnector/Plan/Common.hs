@@ -354,11 +354,8 @@ translateOp sessionVariables columnName columnType opExp = do
 mkRelationshipName :: RelName -> API.RelationshipName
 mkRelationshipName relName = API.RelationshipName $ toTxt relName
 
-mapFieldNameHashMap :: Eq v => HashMap FieldName v -> Maybe (HashMap API.FieldName v)
-mapFieldNameHashMap = memptyToNothing . HashMap.mapKeys (API.FieldName . getFieldNameTxt)
-
-memptyToNothing :: (Monoid m, Eq m) => m -> Maybe m
-memptyToNothing m = if m == mempty then Nothing else Just m
+mapFieldNameHashMap :: HashMap FieldName v -> HashMap API.FieldName v
+mapFieldNameHashMap = HashMap.mapKeys (API.FieldName . getFieldNameTxt)
 
 --------------------------------------------------------------------------------
 

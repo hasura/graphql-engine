@@ -42,8 +42,8 @@ import Witch qualified
 --------------------------------------------------------------------------------
 
 data FieldsAndAggregates = FieldsAndAggregates
-  { _faaFields :: HashMap FieldName API.Field,
-    _faaAggregates :: HashMap FieldName API.Aggregate
+  { _faaFields :: Maybe (HashMap FieldName API.Field),
+    _faaAggregates :: Maybe (HashMap FieldName API.Aggregate)
   }
   deriving stock (Show, Eq)
 
@@ -54,7 +54,7 @@ instance Semigroup FieldsAndAggregates where
       (_faaAggregates left <> _faaAggregates right)
 
 instance Monoid FieldsAndAggregates where
-  mempty = FieldsAndAggregates mempty mempty
+  mempty = FieldsAndAggregates Nothing Nothing
 
 --------------------------------------------------------------------------------
 
@@ -144,8 +144,8 @@ translateAnnSelect sessionVariables translateFieldsAndAggregates tableName selec
   orderBy <- traverse (translateOrderBy sessionVariables tableName) (_saOrderBy $ _asnArgs selectG)
   pure
     API.Query
-      { _qFields = mapFieldNameHashMap _faaFields,
-        _qAggregates = mapFieldNameHashMap _faaAggregates,
+      { _qFields = mapFieldNameHashMap <$> _faaFields,
+        _qAggregates = mapFieldNameHashMap <$> _faaAggregates,
         _qLimit =
           fmap getMin $
             foldMap
@@ -258,7 +258,7 @@ translateAnnFieldsWithNoAggregates ::
   AnnFieldsG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   CPS.WriterT writerOutput m FieldsAndAggregates
 translateAnnFieldsWithNoAggregates sessionVariables fieldNamePrefix sourceTableName fields =
-  (\fields' -> FieldsAndAggregates fields' mempty) <$> translateAnnFields sessionVariables fieldNamePrefix sourceTableName fields
+  (\fields' -> FieldsAndAggregates (Just fields') Nothing) <$> translateAnnFields sessionVariables fieldNamePrefix sourceTableName fields
 
 translateAnnFields ::
   ( Has TableRelationships writerOutput,
@@ -307,7 +307,7 @@ translateAnnField sessionVariables sourceTableName = \case
       API.RelationshipField
         relationshipName
         ( API.Query
-            { _qFields = mapFieldNameHashMap fields,
+            { _qFields = Just $ mapFieldNameHashMap fields,
               _qAggregates = mempty,
               _qWhere = whereClause,
               _qLimit = Nothing,
@@ -382,8 +382,8 @@ translateTableAggregateField sessionVariables sourceTableName fieldName = \case
     translatedAggregateFields <- lift $ mconcat <$> traverse (uncurry (translateAggregateField fieldNamePrefix)) aggregateFields
     pure $
       FieldsAndAggregates
-        mempty
-        translatedAggregateFields
+        Nothing
+        (Just translatedAggregateFields)
   TAFNodes _ fields ->
     translateAnnFieldsWithNoAggregates sessionVariables (prefixWith fieldName) sourceTableName fields
   TAFExp _txt ->

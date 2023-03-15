@@ -87,7 +87,7 @@ mkRemoteRelationshipPlan sessionVariables _sourceConfig joinIds joinIdsSchema ar
             _qrTableRelationships = apiTableRelationships,
             _qrQuery =
               API.Query
-                { _qFields = mapFieldNameHashMap fields,
+                { _qFields = Just $ mapFieldNameHashMap fields,
                   _qAggregates = Nothing,
                   _qLimit = Nothing,
                   _qOffset = Nothing,

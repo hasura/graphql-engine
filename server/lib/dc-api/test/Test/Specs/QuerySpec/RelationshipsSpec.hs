@@ -34,6 +34,20 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
+  it "perform an object relationship query by joining artist to albums but with zero artist fields" $ do
+    let query = albumsWithArtistQuery (qFields ?~ mempty)
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
+
+    let joinInArtist (album :: HashMap FieldName FieldValue) =
+          let artist = (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>= \artistId -> _tdArtistsRowsById ^? ix artistId
+              artistPropVal = Data.filterColumns [] $ maybeToList artist
+           in Data.insertField "Artist" (Data.mkSubqueryRowsFieldValue artistPropVal) album
+    let removeArtistId = Data.deleteField "ArtistId"
+
+    let expectedAlbums = (removeArtistId . joinInArtist) <$> _tdAlbumsRows
+    Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+    _qrAggregates receivedAlbums `jsonShouldBe` Nothing
+
   it "perform an array relationship query by joining albums to artists" $ do
     let query = artistsWithAlbumsQuery id
     receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded query
@@ -43,6 +57,21 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
               albumFilter artistId' album = album ^? Data.field "ArtistId" . Data._ColumnFieldNumber == Just artistId'
               albums = maybe [] (\artistId' -> filter (albumFilter artistId') _tdAlbumsRows) artistId
               albums' = Data.deleteField "ArtistId" <$> albums
+           in Data.insertField "Albums" (Data.mkSubqueryRowsFieldValue albums') artist
+
+    let expectedAlbums = joinInAlbums <$> _tdArtistsRows
+    Data.responseRows receivedArtists `rowsShouldBe` expectedAlbums
+    _qrAggregates receivedArtists `jsonShouldBe` Nothing
+
+  it "perform an array relationship query by joining albums to artists but with zero album fields" $ do
+    let query = artistsWithAlbumsQuery (qFields ?~ mempty)
+    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded query
+
+    let joinInAlbums (artist :: HashMap FieldName FieldValue) =
+          let artistId = artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
+              albumFilter artistId' album = album ^? Data.field "ArtistId" . Data._ColumnFieldNumber == Just artistId'
+              albums = maybe [] (\artistId' -> filter (albumFilter artistId') _tdAlbumsRows) artistId
+              albums' = Data.filterColumns [] albums
            in Data.insertField "Albums" (Data.mkSubqueryRowsFieldValue albums') artist
 
     let expectedAlbums = joinInAlbums <$> _tdArtistsRows
