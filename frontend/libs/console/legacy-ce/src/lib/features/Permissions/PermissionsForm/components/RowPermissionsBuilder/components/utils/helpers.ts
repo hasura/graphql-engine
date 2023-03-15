@@ -57,6 +57,8 @@ const getInitialValue = (key: string, type?: PermissionType) => {
       return [{}];
     case '_not':
       return {};
+    case '_is_null':
+      return false;
     case '_exists':
       return {
         _where: {},

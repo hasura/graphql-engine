@@ -270,4 +270,48 @@ describe('RowPermissionInput -> updateKey should', () => {
       permissions: { _not: { _and: {} } },
     });
   });
+
+  test('_is_null return boolean', () => {
+    const testIsNullValueType = {
+      permissionsState: {
+        operators: {
+          boolean: {
+            label: 'Bool operators',
+            items: [
+              { name: '_and', value: '_and' },
+              { name: '_not', value: '_not' },
+              { name: '_or', value: '_or' },
+            ],
+          },
+          exist: {
+            label: 'Exist operators',
+            items: [{ name: '_exists', value: '_exists' }],
+          },
+        },
+        permissions: { id: { _eq: '' } },
+      },
+      newKey: '_is_null',
+      keyPath: ['id', '_eq'],
+    };
+
+    const result = updateKey(testIsNullValueType);
+
+    expect(result).toEqual({
+      operators: {
+        boolean: {
+          label: 'Bool operators',
+          items: [
+            { name: '_and', value: '_and' },
+            { name: '_not', value: '_not' },
+            { name: '_or', value: '_or' },
+          ],
+        },
+        exist: {
+          label: 'Exist operators',
+          items: [{ name: '_exists', value: '_exists' }],
+        },
+      },
+      permissions: { id: { _is_null: false } },
+    });
+  });
 });

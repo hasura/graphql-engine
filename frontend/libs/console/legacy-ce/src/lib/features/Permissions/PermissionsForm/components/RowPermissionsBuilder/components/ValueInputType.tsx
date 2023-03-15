@@ -31,17 +31,17 @@ export const ValueInputType = ({
             data-testid={componentLevelId}
             className="border border-gray-200 rounded-md"
             value={JSON.stringify(value)}
+            defaultValue={JSON.parse(value) ?? false}
             onChange={e => {
               setValue(path, JSON.parse(e.target.value) as Table);
             }}
           >
-            <option key="true" value="true">
-              True
-            </option>
             <option key="false" value="false">
               False
             </option>
-            );
+            <option key="true" value="true">
+              True
+            </option>
           </select>
         </div>
       );
