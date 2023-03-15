@@ -22,7 +22,7 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Lens
 import Data.List.NonEmpty qualified as NE
 import Data.Vector qualified as Vector
-import Harness.Backend.DataConnector.Chinook (ChinookTestEnv, NameFormatting (..))
+import Harness.Backend.DataConnector.Chinook (ChinookTestEnv, NameFormatting (..), ScalarTypes (..))
 import Harness.Backend.DataConnector.Chinook qualified as Chinook
 import Harness.Backend.DataConnector.Chinook.Reference qualified as Reference
 import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
@@ -122,7 +122,7 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
             |]
 
   describe "get_table_info" $ do
-    it "success" $ \(testEnvironment@TestEnvironment {}, Chinook.ChinookTestEnv {nameFormatting = NameFormatting {..}}) -> do
+    it "success" $ \(testEnvironment@TestEnvironment {}, Chinook.ChinookTestEnv {nameFormatting = NameFormatting {..}, scalarTypes = ScalarTypes {..}}) -> do
       let removeDescriptions (J.Object o) = J.Object (KM.delete "description" (removeDescriptions <$> o))
           removeDescriptions (J.Array a) = J.Array (removeDescriptions <$> a)
           removeDescriptions x = x
@@ -167,17 +167,17 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
               columns:
               - name: *albumId
                 nullable: false
-                type: number
+                type: *_stIntegerType
                 insertable: *supportsInserts
                 updatable: false
               - name: *artistId
                 nullable: false
-                type: number
+                type: *_stIntegerType
                 insertable: *supportsInserts
                 updatable: *supportsUpdates
               - name: *title
                 nullable: false
-                type: string
+                type: *_stStringType
                 insertable: *supportsInserts
                 updatable: *supportsUpdates
               name: *album

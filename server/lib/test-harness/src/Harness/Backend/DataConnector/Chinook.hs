@@ -5,6 +5,7 @@
 module Harness.Backend.DataConnector.Chinook
   ( ChinookTestEnv (..),
     NameFormatting (..),
+    ScalarTypes (..),
     mkChinookCloneTestEnvironment,
     mkChinookStaticTestEnvironment,
     setupChinookSourceAction,
@@ -34,7 +35,9 @@ data ChinookTestEnv = ChinookTestEnv
     -- | Default configuration for the backend config that sets the agent configuration
     backendAgentConfig :: Aeson.Value,
     -- | Name formatting functions to correct for backend-specific naming rules
-    nameFormatting :: NameFormatting
+    nameFormatting :: NameFormatting,
+    -- | Backend-specific expected scalar types
+    scalarTypes :: ScalarTypes
   }
 
 data NameFormatting = NameFormatting
@@ -47,13 +50,19 @@ data NameFormatting = NameFormatting
     _nfFormatForeignKeyName :: Text -> Text
   }
 
+data ScalarTypes = ScalarTypes
+  { _stFloatType :: Text,
+    _stIntegerType :: Text,
+    _stStringType :: Text
+  }
+
 --------------------------------------------------------------------------------
 
 -- | Create a test environment that uses agent dataset cloning to clone a copy of the Chinook
 -- DB for the test and use that as the source config configured in HGE.
 -- This should be used with agents that support datasets.
-mkChinookCloneTestEnvironment :: NameFormatting -> TestEnvironment -> Managed ChinookTestEnv
-mkChinookCloneTestEnvironment nameFormatting testEnv = do
+mkChinookCloneTestEnvironment :: NameFormatting -> ScalarTypes -> TestEnvironment -> Managed ChinookTestEnv
+mkChinookCloneTestEnvironment nameFormatting scalarTypes testEnv = do
   backendTypeConfig <- getBackendTypeConfig testEnv `onNothing` fail "Unable to find backend type config in this test environment"
   agentUrl <- Fixture.backendServerUrl backendTypeConfig `onNothing` fail ("Backend " <> show (Fixture.backendType backendTypeConfig) <> " does not have a server url")
   cloneConfig <- API._dccrConfig <$> createManagedClone agentUrl testEnv (API.DatasetTemplateName "Chinook")
@@ -65,16 +74,16 @@ mkChinookCloneTestEnvironment nameFormatting testEnv = do
           template:
           timeout:
         |]
-  pure $ ChinookTestEnv sourceConfig agentBackendConfig nameFormatting
+  pure $ ChinookTestEnv sourceConfig agentBackendConfig nameFormatting scalarTypes
 
 -- | Create a test environment that uses the source config specified to connect to a specific DB on the agent
 -- that contains the Chinook dataset.
 -- This should be used with agents that do not support datasets.
-mkChinookStaticTestEnvironment :: NameFormatting -> Aeson.Value -> TestEnvironment -> Managed ChinookTestEnv
-mkChinookStaticTestEnvironment nameFormatting sourceConfig testEnv = do
+mkChinookStaticTestEnvironment :: NameFormatting -> ScalarTypes -> Aeson.Value -> TestEnvironment -> Managed ChinookTestEnv
+mkChinookStaticTestEnvironment nameFormatting scalarTypes sourceConfig testEnv = do
   backendTypeConfig <- getBackendTypeConfig testEnv `onNothing` fail "Unable to find backend type config in this test environment"
   let agentBackendConfig = mkAgentBackendConfig backendTypeConfig
-  pure $ ChinookTestEnv sourceConfig agentBackendConfig nameFormatting
+  pure $ ChinookTestEnv sourceConfig agentBackendConfig nameFormatting scalarTypes
 
 --------------------------------------------------------------------------------
 
