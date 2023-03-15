@@ -1,0 +1,80 @@
+---
+description: Use Hasura Cloud to host your Hasura GraphQL Engine
+title: 'Hasura Cloud'
+keywords:
+  - hasura
+  - cloud
+  - deployment
+hide_table_of_contents: true
+sidebar_position: 1
+sidebar_label: Overview
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import VersionedLink from '@site/src/components/VersionedLink';
+import Cloud from '@site/static/icons/features/cloud.svg';
+
+# <Cloud /> Hasura Cloud
+
+<div className="overview-header">
+  <div className="overview-text">
+    <p>
+      Hasura Cloud is a fully-managed version of Hasura's popular open-source GraphQL Engine that gives you a scalable,
+      highly-available, globally-distributed, secure GraphQL API over your data sources.
+      <br />
+      <br />
+      Hasura Cloud takes care of all the performance, security & reliability requirements of your API layer by adding a powerful
+      suite of production-ready features from day one.
+    </p>
+    <p>Hasura Cloud is available on Amazon Web Services (AWS) and the Google Cloud Platform (GCP), world-wide.</p>
+    <h4>Quick Links</h4>
+    <ul>
+      <li>
+        <VersionedLink to="/getting-started/getting-started-cloud/">
+          Get started with Hasura Cloud in 60 seconds.
+        </VersionedLink>
+      </li>
+      <li>
+        <VersionedLink to="/hasura-cloud/plans/">Learn more about plans and pricing.</VersionedLink>
+      </li>
+    </ul>
+  </div>
+  <iframe
+    src="https://www.youtube.com/embed/bZvaHDJf6ZM"
+    frameborder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  />
+</div>
+
+## Using Hasura Cloud
+
+<div className="overview-gallery">
+  <VersionedLink to="/hasura-cloud/one-click-deploy/index/">
+    <div className="card">
+      <h3>One Click Deployments</h3>
+      <p>
+        With One Click Deployments, you can instantly deploy a templated, functioning GraphQL API on Hasura Cloud -
+        complete with a database - in a single click.
+      </p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/hasura-cloud/ci-cd/github-integration/">
+    <div className="card">
+      <h3>GitHub Integration</h3>
+      <p>
+        Hasura Cloud integrates with GitHub to provide a seamless workflow for deploying your GraphQL API. You can
+        configure Hasura Cloud to automatically deploy your GraphQL API on every push to a GitHub branch.
+      </p>
+    </div>
+  </VersionedLink>
+  <a href="https://hasura.io/hub">
+    <div className="card">
+      <h3>Hasura Hub</h3>
+      <p>
+        Hasura Hub is a collection of pre-built templates for Hasura Cloud. You can use these templates to quickly
+        deploy a GraphQL API for your use case.
+      </p>
+    </div>
+  </a>
+</div>

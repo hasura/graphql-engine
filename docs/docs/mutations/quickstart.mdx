@@ -1,0 +1,145 @@
+---
+description: Quickstart Mutations
+title: Quickstart Mutations
+keywords:
+  - hasura
+  - docs
+  - mutations
+  - quickstart
+  - guide
+  - tutorial
+sidebar_label: Quickstart
+toc_max_heading_level: 2
+sidebar_position: 2
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+import SampleAppBlock from '@site/src/components/SampleAppBlock';
+
+# Quickstart Mutations
+
+This quickstart will help you write your first GraphQL mutation. Mutations are used to modify data in your database.
+
+<SampleAppBlock dependent />
+
+## Step 1: Open the API tab
+
+Open the `API` tab in the Hasura Console:
+
+<Thumbnail src="/img/queries/queries_api-tab_cloud2.20.0.png" alt="API tab" width="1000" />
+
+## Step 2: Write and execute an insert mutation
+
+In the GraphiQL Explorer, paste the following `InsertReview` mutation and variables. Your API should return a similar
+response to the data on the right:
+
+<GraphiQLIDE
+  query={`mutation InsertReview($rating: Int!, $text: String!, $user_id: uuid!, $product_id: uuid!) {
+  insert_reviews_one(object: {rating: $rating, text: $text, user_id: $user_id, product_id: $product_id}) {
+    id
+    text
+  }
+}
+`}
+  variables={`{
+    "rating": 5, 
+    "text": "This is a great shirt!", 
+    "user_id": "86d5fba0-65b7-11ed-b906-afb985970e2e", 
+    "product_id": "7992fdfa-65b5-11ed-8612-6a8b11ef7372" 
+}`}
+  response={`{
+  "data": {
+    "insert_reviews_one": {
+      "id": "ea2cff52-b6b4-11ed-b08b-5e39677bfd1f",
+      "text": "This is a great shirt!",
+    }
+  }
+}`}
+/>
+
+## Step 3: Write and execute an update mutation
+
+In the GraphiQL Explorer, paste the `UpdateReview` mutation and the following variables. This should return a single,
+updated review with new `text`:
+
+<GraphiQLIDE
+  query={`mutation UpdateReview($id: uuid!, $text: String!) {
+  update_reviews_by_pk(pk_columns: {id: $id}, _set: {text: $text}) {
+    id
+    text
+  }
+}
+`}
+  variables={`{
+    "id": "dc9768a4-673c-11ed-b682-7224baf239e5",  
+    "text": "Furry logos for the win! So soft, so comfy! 🤗"
+}`}
+  response={`{
+  "data": {
+    "update_reviews_by_pk": {
+      "id": "dc9768a4-673c-11ed-b682-7224baf239e5",
+      "text": "Furry logos for the win! So soft, so comfy! 🤗"
+    }
+  }
+}`}
+/>
+
+## Step 4: Write and execute a delete mutation
+
+In the GraphiQL Explorer, paste the `DeleteReview` mutation and the following variables. This should return confirmation
+that the review was deleted by providing the `id`:
+
+<GraphiQLIDE
+  query={`mutation DeleteReview($id: uuid!) {
+  delete_reviews_by_pk(id: $id) {
+    id
+  }
+}
+`}
+  variables={`{
+    "id": "dc9768a4-673c-11ed-b682-7224baf239e5"
+}`}
+  response={`{
+  "data": {
+    "delete_reviews_by_pk": {
+      "id": "dc9768a4-673c-11ed-b682-7224baf239e5"
+    }
+  }
+}`}
+/>
+
+## Recap
+
+What just happened? Well, you just wrote your first set of GraphQL mutations! They demonstrated the different ways in
+which you can modify data in your database using GraphQL. Let's break down each into a bit more detail.
+
+### Insert mutation
+
+Insertions are used to add new data to your database. In this case, we're adding a new review to the `reviews` table.
+
+The `InsertReview` mutation inserts a new review into the `reviews` table and returns the `id` of the newly inserted
+review. It takes the following arguments:
+
+- `rating`: The rating of the review, an integer between 1 and 5.
+- `text`: The text of the review, a string.
+- `user_id`: The ID of the user who wrote the review, a UUID.
+- `product_id`: The ID of the product that the review is for, a UUID.
+
+We made the different arguments required by using the `!` operator. This means that if you try to run the mutation
+without providing a value for one of these arguments, the GraphQL Engine will throw an error.
+
+### Update mutation
+
+Updates are used to modify existing data in your database.
+
+In this case, we're updating the `text` of an existing review. Since we're only updating the `text` of the review, we
+don't need to provide the other arguments. However, we do need to provide the `id` of the review we want to update, as
+this type uses the primary key of the table to identify which row to update.
+
+### Delete mutation
+
+Deletions are used to remove existing data from your database.
+
+With this example, we're deleting a review from the `reviews` table. We need to provide the `id` of the review we want
+to delete, as this type uses the primary key of the table to identify which row to delete.

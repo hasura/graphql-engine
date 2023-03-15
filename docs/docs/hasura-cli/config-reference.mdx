@@ -23,8 +23,8 @@ When using the Hasura CLI, you'll pass various values to different commands. The
 
 :::info Note
 
-The order of precedence by which the CLI processes these values is flag -> environment variables -> `.env` file
-values -> configuration file values -> default.
+The order of precedence by which the CLI processes these values is flag -> environment variables -> `.env` file values
+-> configuration file values -> default.
 
 In the sections below, we'll explain how to configure the CLI for each of these use cases.
 
@@ -103,8 +103,8 @@ defaults to `.env` if you don't provide it.
 
 It's important to note that this will not override an environment variable that already exists.
 
-As an example, the command below will read environment variables from the `production.env` file present at the
-project's root directory.
+As an example, the command below will read environment variables from the `production.env` file present at the project's
+root directory.
 
 ```bash
 hasura console --envfile production.env
@@ -130,11 +130,11 @@ the CLI:
 | `HASURA_GRAPHQL_ACCESS_KEY`                      | `access_key`                      | Access key for Hasura GraphQL Engine. Note: Deprecated. Use admin secret instead.                                                                             |
 | `HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY`        | `insecure_skip_tls_verify`        | Skip verifying SSL certificate for the Hasura endpoint. Useful if you have a self-singed certificate and don't have access to the CA cert.                    |
 | `HASURA_GRAPHQL_CERTIFICATE_AUTHORITY`           | `certificate_authority`           | Path to the CA certificate for validating the self-signed certificate for the Hasura endpoint.                                                                |
-| `HASURA_GRAPHQL_API_PATHS_QUERY`                 | `api_paths.query`                 | Schema/ Metadata API endpoint. More details at [Schema / Metadata API (Deprecated)](/api-reference/index.mdx#schema-metadata-api).                            |
-| `HASURA_GRAPHQL_API_PATHS_GRAPHQL`               | `api_paths.graphql`               | GraphQL API endpoint. More details at [GraphQL API](/api-reference/index.mdx#graphql-api).                                                                    |
-| `HASURA_GRAPHQL_API_PATHS_CONFIG`                | `api_paths.config`                | Config API endpoint. More details at [Config API](/api-reference/index.mdx#config-api)`.                                                                      |
-| `HASURA_GRAPHQL_API_PATHS_PG_DUMP`               | `api_paths.pg_dump`               | PG Dump API endpoint. More details at [pg_dump API](/api-reference/index.mdx#pg-dump-api).                                                                    |
-| `HASURA_GRAPHQL_API_PATHS_VERSION`               | `api_paths.version`               | Version API endpoint. More details at [RESTified GraphQL API](/api-reference/index.mdx#version-api).                                                          |
+| `HASURA_GRAPHQL_API_PATHS_QUERY`                 | `api_paths.query`                 | Schema/ Metadata API endpoint. More details at [Schema / Metadata API (Deprecated)](/api-reference/overview.mdx#schema-metadata-api).                         |
+| `HASURA_GRAPHQL_API_PATHS_GRAPHQL`               | `api_paths.graphql`               | GraphQL API endpoint. More details at [GraphQL API](/api-reference/overview.mdx#graphql-api).                                                                 |
+| `HASURA_GRAPHQL_API_PATHS_CONFIG`                | `api_paths.config`                | Config API endpoint. More details at [Config API](/api-reference/overview.mdx#config-api)`.                                                                   |
+| `HASURA_GRAPHQL_API_PATHS_PG_DUMP`               | `api_paths.pg_dump`               | PG Dump API endpoint. More details at [pg_dump API](/api-reference/overview.mdx#pg-dump-api).                                                                 |
+| `HASURA_GRAPHQL_API_PATHS_VERSION`               | `api_paths.version`               | Version API endpoint. More details at [RESTified GraphQL API](/api-reference/overview.mdx#version-api).                                                       |
 | `HASURA_GRAPHQL_METADATA_DIRECTORY`              | `metadata_directory`              | Defines the directory where the Metadata files were stored.                                                                                                   |
 | `HASURA_GRAPHQL_MIGRATIONS_DIRECTORY`            | `migrations_directory`            | Defines the directory where the migration files were stored.                                                                                                  |
 | `HASURA_GRAPHQL_SEEDS_DIRECTORY`                 | `seeds_directory`                 | Defines the directory where the seed files were stored.                                                                                                       |

@@ -1,0 +1,213 @@
+---
+description: Quickstart Queries
+title: Quickstart Queries
+keywords:
+  - hasura
+  - docs
+  - queries
+  - quickstart
+  - guide
+  - tutorial
+sidebar_label: Quickstart
+toc_max_heading_level: 2
+sidebar_position: 2
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+import SampleAppBlock from '@site/src/components/SampleAppBlock';
+
+# Quickstart Queries
+
+This quickstart will help you write your first GraphQL query. Queries are the most common operation type in GraphQL.
+They are used to fetch data from your database.
+
+<SampleAppBlock dependent />
+
+## Step 1: Open the API tab
+
+Open the `API` tab in the Hasura Console:
+
+<Thumbnail src="/img/queries/queries_api-tab_cloud2.20.0.png" alt="API tab" width="1000" />
+
+## Step 2: Write and execute a simple query
+
+In the GraphiQL Explorer, paste the following `AllProducts` query. Your API should return the response on the right:
+
+<GraphiQLIDE
+  query={`query AllProducts {
+  products {
+    id
+    name
+  }
+}`}
+  response={`{
+  "data": {
+    "products": [
+      {
+        "id": "7992fdfa-65b5-11ed-8612-6a8b11ef7372",
+        "name": "The Original Tee",
+        "manufacturer": "e99cbfe2-65b4-11ed-b13b-6a8b11ef7372"
+      },
+      {
+        "id": "8aa93f86-65b6-11ed-901c-f320d4e17bb2",
+        "name": "Dark Furry Logo Tee",
+        "manufacturer": "e99cbfe2-65b4-11ed-b13b-6a8b11ef7372"
+      },
+      {
+        "id": "a44eda7c-65b6-11ed-997b-53b5bdb7117e",
+        "name": "Hasuras in The Cloud Tee",
+        "manufacturer": "e99cbfe2-65b4-11ed-b13b-6a8b11ef7372"
+      },
+      {
+        "id": "cd6be51c-65b6-11ed-a2f4-4b71f0d3d70f",
+        "name": "Get Ship Done Mug",
+        "manufacturer": "ec1ea762-65b4-11ed-b13c-6a8b11ef7372"
+      },
+      {
+        "id": "e0a70b16-65b6-11ed-8788-8fa2504d64a3",
+        "name": "Sticker Sheet",
+        "manufacturer": "ec1ea762-65b4-11ed-b13c-6a8b11ef7372"
+      },
+      {
+        "id": "fef9c02c-65b6-11ed-be19-2b4fad811971",
+        "name": "Monogram Baseball Cap",
+        "manufacturer": "e5d9e8a8-65b4-11ed-b13a-6a8b11ef7372"
+      }
+    ]
+  }
+}`}
+/>
+
+## Step 3: Write and execute a query with variables
+
+In the GraphiQL Explorer, paste the `ProductByID` query in the query field, and the following variables in the variables
+field. This should return a single product from your database:
+
+<GraphiQLIDE
+  query={`query ProductById($id: uuid!) {
+  products_by_pk(id: $id) {
+    id
+    name
+  }
+}`}
+  variables={`{
+  "id": "cd6be51c-65b6-11ed-a2f4-4b71f0d3d70f"
+}`}
+  response={`{
+  "data": {
+    "products_by_pk": {
+      "id": "cd6be51c-65b6-11ed-a2f4-4b71f0d3d70f",
+      "name": "Get Ship Done Mug"
+    }
+  }
+}`}
+/>
+
+## Step 4: Write and execute a query with a relationship
+
+In the GraphiQL Explorer, paste the `ManufacturersAndProducts` query in the query field. This should return all
+manufacturers and their products:
+
+<GraphiQLIDE
+  query={`query ManufacturersAndProducts {
+  manufacturers {
+    id
+    name
+    products {
+      id
+      name
+      price
+    }
+  }
+}`}
+  response={`{
+  "data": {
+    "manufacturers": [
+      {
+        "id": "e5d9e8a8-65b4-11ed-b13a-6a8b11ef7372",
+        "name": "Hasura Hat Co.",
+        "products": [
+          {
+            "id": "fef9c02c-65b6-11ed-be19-2b4fad811971",
+            "name": "Monogram Baseball Cap",
+            "price": 1100
+          }
+        ]
+      },
+      {
+        "id": "e99cbfe2-65b4-11ed-b13b-6a8b11ef7372",
+        "name": "Hasura Tee Co.",
+        "products": [
+          {
+            "id": "7992fdfa-65b5-11ed-8612-6a8b11ef7372",
+            "name": "The Original Tee",
+            "price": 1000
+          },
+          {
+            "id": "8aa93f86-65b6-11ed-901c-f320d4e17bb2",
+            "name": "Dark Furry Logo Tee",
+            "price": 1000
+          },
+          {
+            "id": "a44eda7c-65b6-11ed-997b-53b5bdb7117e",
+            "name": "Hasuras in The Cloud Tee",
+            "price": 1000
+          }
+        ]
+      },
+      {
+        "id": "ec1ea762-65b4-11ed-b13c-6a8b11ef7372",
+        "name": "Hasura Merch Co.",
+        "products": [
+          {
+            "id": "cd6be51c-65b6-11ed-a2f4-4b71f0d3d70f",
+            "name": "Get Ship Done Mug",
+            "price": 1600
+          },
+          {
+            "id": "e0a70b16-65b6-11ed-8788-8fa2504d64a3",
+            "name": "Sticker Sheet",
+            "price": 150
+          }
+        ]
+      }
+    ]
+  }
+}`}
+/>
+
+## Recap
+
+What just happened? Well, you just wrote your first set of GraphQL queries! They increased in complexity as you went
+along, and you learned how to use variables and relationships in your queries. Let's break down each into a bit more
+detail.
+
+### Simple queries
+
+A simple query is a query that returns a single field without any filtering or special adjustments. In the `AllProducts`
+query, you queried the `products` field, which returns a list of products. As this is GraphQL, you have the option to
+query only the fields you need. In this case, you only queried the `id`, `name`, and `manufacturer` fields. This is a
+good practice to follow, as it reduces the amount of data you need to transfer over the network.
+
+### Queries with variables
+
+A query with variables is a query that uses variables to filter the results. In the `ProductByID` query, you used the
+`$id` variable to filter the results to a single product. This allows you to reuse the same query with different
+variables.
+
+### Queries with relationships
+
+A query with [relationships](/data-federation/data-federation-types.mdx) is a query that uses relationships to filter
+the results. In the `ManufacturersAndProducts` query, you used the `manufacturers` field to get a list of manufacturers.
+You then used the `products` field to get a list of products for each manufacturer. Because of this, you can fetch
+related data in a single query.
+
+:::tip Naming Operation Types
+
+It's helpful to name your operations so that you can easily identify them in the GraphiQL Explorer and in your
+application. Hasura offers a robust set of [observability tools](/observability/overview.mdx) that you can use to
+monitor your GraphQL API, namely by examining which queries are being executed, how often, and how long they take to
+execute.
+
+:::

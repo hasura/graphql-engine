@@ -1,5 +1,6 @@
 ---
 sidebar_label: Quickstart with Hasura using Docker
+title: 'Quickstart with Docker'
 sidebar_position: 3
 description: Get started with Hasura using Docker
 keywords:
@@ -103,17 +104,17 @@ CRUD GraphQL API for our Postgres database which we could then easily query, mut
 
 The Hasura CLI is a powerful tool that helps you manage your Hasura project and is recommended for the majority of
 development workflows. It helps track and manage your
-[Hasura Metadata and Migrations](/migrations-metadata-seeds/index.mdx) and commit them to version control and allows you
-to quickly move between environments like development and production.
+[Hasura Metadata and Migrations](/migrations-metadata-seeds/overview.mdx) and commit them to version control and allows
+you to quickly move between environments like development and production.
 
 ### Database operations
 
 We omitted the CLI steps in this guide for the sake of simplicity and brevity, but in a typical new project, you would
 always include the CLI setup steps.
 
-Every developer working with Hasura should have the Hasura CLI installed. You can do so by
-[following this guide](/hasura-cli/install-hasura-cli.mdx) and learn more by checking out our
-[Advanced Hasura course](https://hasura.io/learn/graphql/hasura-advanced/introduction/).
+Every developer working with Hasura should have the [Hasura CLI installed](/hasura-cli/install-hasura-cli.mdx). You can
+quickly get up and running with a new project [using the CLI quickstart](/hasura-cli/quickstart.mdx) and learn more by
+checking out our [Advanced Hasura course](https://hasura.io/learn/graphql/hasura-advanced/introduction/).
 
 :::
 
@@ -124,14 +125,14 @@ Every developer working with Hasura should have the Hasura CLI installed. You ca
 
 - There are several options for the implementation of business logic, depending on your use case.
 
-  - [Actions](/actions/index.mdx): Actions can be used if you'd like to extend your GraphQL schema by integrating with a
-    REST endpoint.
-  - [Remote Schemas](/remote-schemas/index.mdx): If you have an existing GraphQL server or if you're comfortable with
+  - [Actions](/actions/overview.mdx): Actions can be used if you'd like to extend your GraphQL schema by integrating
+    with a REST endpoint.
+  - [Remote Schemas](/remote-schemas/overview.mdx): If you have an existing GraphQL server or if you're comfortable with
     implementing one, you can use Remote Schemas.
-  - [Event Triggers](/event-triggers/index.mdx): To trigger a serverless function based on a database event, use Event
-    Triggers.
-  - [Scheduled Triggers](/scheduled-triggers/index.mdx): Scheduled Triggers are used to execute custom business logic at
-    specific points in time.
+  - [Event Triggers](/event-triggers/overview.mdx): To trigger a serverless function based on a database event, use
+    Event Triggers.
+  - [Scheduled Triggers](/scheduled-triggers/overview.mdx): Scheduled Triggers are used to execute custom business logic
+    at specific points in time.
 
 - If you're new to database modeling, check out these guides:
 
@@ -140,16 +141,9 @@ Every developer working with Hasura should have the Hasura CLI installed. You ca
   - [Querying data](/queries/postgres/index.mdx): Use GraphQL queries to query data from your GraphQL API.
   - [Inserting data](/mutations/postgres/index.mdx): Use GraphQL mutations to insert data into your GraphQL API.
 
-- **Security Announcements**: Join the [Hasura Security Announcements](https://groups.google.com/forum/#!forum/hasura-security-announce) group for
-emails about security announcements.
-
+- **Security Announcements**: Join the
+  [Hasura Security Announcements](https://groups.google.com/forum/#!forum/hasura-security-announce) group for emails
+  about security announcements.
 
 - We release new features every month. Sign up for our newsletter by using the link below. We send newsletters only once
   a month. <https://hasura.io/newsletter/>.
-
-:::info Additional Resources
-
-Get Started with Hasura today -
-[Watch video guide](https://hasura.io/events/webinar/get-started-with-hasura/?pg=docs&plcmt=body&cta=getting-started&tech=).
-
-:::

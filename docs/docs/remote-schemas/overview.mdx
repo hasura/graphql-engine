@@ -1,0 +1,75 @@
+---
+description: Hasura Remote Schemas
+title: Overview
+keywords:
+  - hasura
+  - docs
+  - remote schemas
+hide_table_of_contents: true
+sidebar_position: 1
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import VersionedLink from '@site/src/components/VersionedLink';
+import Remote from '@site/static/icons/features/remote_schema.svg';
+
+# <Remote /> Remote Schemas
+
+<div className="overview-header">
+  <div className="overview-text">
+    <p>
+      Hasura has the abilty to merge your remote GraphQL schemas and provide you with a single, unified GraphQL API. Think of it 
+      like automated schema stitching. 
+      <br />
+      <br />
+      This enables you to write queries and mutations to disparate sources, all from your single Hasura endpoint. All you 
+      need to provide is a GraphQL service - such as a CMS, payment provider, or custom GraphQL server - and 
+      connect its HTTP endpoint to Hasura; we'll take care of the rest.
+    </p>
+    <h4>Quick Links</h4>
+    <ul>
+      <li>
+        <VersionedLink to="/remote-schemas/quickstart/">Get started with Remote Schemas in 60 seconds.</VersionedLink>
+      </li>
+      <li>
+        <VersionedLink to="/remote-schemas/remote-relationships/index/">How to extend your API with remote joins.</VersionedLink>
+      </li>
+    </ul>
+
+  </div>
+ <iframe
+        src="https://www.youtube.com/embed/oNvJSRdK_7s"
+        frameborder="0"
+        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+      />
+</div>
+
+<Thumbnail
+  src="/img/remote-schemas/remote-schema-arch.png"
+  alt="Actions high level architecture"
+  className="no-shadow overview-img"
+/>
+
+## Using Remote Schemas
+
+<div className="overview-gallery">
+  <VersionedLink to="/remote-schemas/adding-schema/">
+    <div className="card">
+      <h3>Add Remote Schemas</h3>
+      <p>Create a Remote Schema to extend your GraphQL API's functionality.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/remote-schemas/auth/remote-schema-forward-auth/">
+    <div className="card">
+      <h3>Forwarding Auth Context</h3>
+      <p>Forward your Hasura Auth context to your Remote Schemas to enable granular access control.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/remote-schemas/auth/remote-schema-permissions/">
+    <div className="card">
+      <h3>Remote Schema Permissions</h3>
+      <p>Control granular access to your Remote Schemas using Hasura Permissions.</p>
+    </div>
+  </VersionedLink>
+</div>

@@ -1,0 +1,87 @@
+---
+description: Hasura Authentication and Authorization
+title: Overview
+keywords:
+  - hasura
+  - docs
+  - actions
+hide_table_of_contents: true
+sidebar_position: 1
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import VersionedLink from '@site/src/components/VersionedLink';
+import Auth from '@site/static/icons/features/auth.svg';
+
+# <Auth /> Authentication and Authorization
+
+<div className="overview-header">
+  <div className="overview-text">
+    <p>
+      Hasura gives you the power to authenticate users how you want, integrating with many popular auth services or your
+      own existing custom solution hosted elsewhere.
+      <br />
+      <br />
+      With Hasura, you can easily manage access to your data and APIs by defining roles and permissions. Hasura's fine-grained
+      access control system allows you to specify which users can access which data, Actions, and Remote Schema fields, ensuring
+      that your application is secure and robust.
+      <br />
+      <br />
+      Say goodbye to the headache of managing authentication and authorization and focus on building your application
+      with Hasura.
+    </p>
+    <h4>Quick Links</h4>
+    <ul>
+      <li>
+        <VersionedLink to="/auth/quickstart/">Get started with Auth in 60 seconds.</VersionedLink>
+      </li>
+      <li>
+        <VersionedLink to="/auth/how-it-works/">Learn how Auth works.</VersionedLink>
+      </li>
+    </ul>
+  </div>
+  <iframe
+    src="https://www.youtube.com/embed/OL_eWdwQU2I"
+    frameborder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  />
+</div>
+
+<Thumbnail
+  src="/img/auth/auth-high-level-overview-diagram.png"
+  alt="Authentication and authorization with Hasura"
+  className="no-shadow overview-img"
+/>
+
+## Using Auth
+
+<div className="overview-gallery">
+  <VersionedLink to="/auth/authentication/jwt/">
+    <div className="card">
+      <h3>JWT Mode</h3>
+      <p>
+        With JWT Mode, Hasura can easily integrate with your existing authentication service and rapidly help you
+        configure granular access to your data.
+      </p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/auth/authorization/permissions/">
+    <div className="card">
+      <h3>Configuring Permissions</h3>
+      <p>
+        Regardless of the authentication mode you choose, Hasura provides a flexible permission system to control who
+        can access your data.
+      </p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/auth/authorization/roles-variables/">
+    <div className="card">
+      <h3>Roles and Session Variables</h3>
+      <p>
+        Using defined roles based on your custom configuration, you can enable permissions for your tables and views
+        based on the role of the user.
+      </p>
+    </div>
+  </VersionedLink>
+</div>

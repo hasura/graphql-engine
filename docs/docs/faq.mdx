@@ -37,7 +37,7 @@ import FAQ from '@site/static/icons/features/faq.svg';
 
 ## What databases does Hasura support? {#faq-db}
 
-Check out the list of [compatible databases](/databases/index.mdx#supported-databases).
+Check out the list of [compatible databases](/databases/overview.mdx).
 
 ## How does Hasura work? {#faq-how-hasura-works}
 
@@ -69,7 +69,7 @@ The easiest and fastest way to get Hasura up and running quickly is by using our
 ## What does my first-time demo experience look like?
 
 Using the Hasura Console, click on the Data tab and connect up a new Postgres database from our partner company
-[Neon](/databases/connect-db/cloud-databases/neon.mdx). Then create tables, insert some demo data and test out some
+[Neon](/databases/postgres/neon.mdx). Then create tables, insert some demo data and test out some
 queries and mutations using the GraphiQL interface in the API tab. Alternatively, from your connected database in the
 Data tab, try one of our demo templates from the Template Gallery which can demonstrate key Hasura features for you
 quickly. If you already have an existing database with tables and data you can also just have Hasura connect to it,
@@ -82,9 +82,9 @@ popularity due to its unique features, benefits and advantages over REST APIs an
 
 As opposed to multiple disparate endpoints with REST APIs, GraphQL uses one `POST`-enabled endpoint which can service
 many types of data requests from the client. Queries, mutations and subscriptions are made with a simple and intuitive
-syntax which describes the shape of the resulting data, so you know exactly what you're getting back. This
-declarative syntax makes it easier to understand and reason about the code and allows for more complex, nested, joined,
-queries to be written in a simple, clear and concise way.
+syntax which describes the shape of the resulting data, so you know exactly what you're getting back. This declarative
+syntax makes it easier to understand and reason about the code and allows for more complex, nested, joined, queries to
+be written in a simple, clear and concise way.
 
 GraphQL allows developers to retrieve only the data they need and nothing more, resolving problems with over and
 under-fetching. This can lead to faster and more efficient performance and reduced network traffic.
@@ -96,8 +96,8 @@ GraphQL has a thriving ecosystem of libraries, tools, and services that make it 
 things like code generators, testing frameworks, and middleware.
 
 Overall, GraphQL is a powerful tool for building APIs that are flexible, efficient, and easy to use. Its popularity
-continues to grow, and it is likely to become an increasingly important part of more developers and businesses
-toolkits in the coming years.
+continues to grow, and it is likely to become an increasingly important part of more developers and businesses toolkits
+in the coming years.
 
 ## How do I manage my database once it's connected to Hasura?
 
@@ -134,15 +134,16 @@ or a similar CI/CD service to build a custom deployment pipeline for your Hasura
 
 ## How can I preview changes to my Hasura instance?
 
-With [Preview Apps](/hasura-cloud/ci-cd/preview-apps.mdx) on Hasura Cloud you can automatically create an app on
-Hasura Cloud for every pull request you make to your GitHub repo enabling quick and easy testing of changes as you work.
+With [Preview Apps](/hasura-cloud/ci-cd/preview-apps.mdx) on Hasura Cloud you can automatically create an app on Hasura
+Cloud for every pull request you make to your GitHub repo enabling quick and easy testing of changes as you work.
 
 ## How would I work collaboratively with my team using Hasura?
 
-Using [Projects](/hasura-cloud/projects/index.mdx) in Hasura Cloud you are able to add collaborators and assign each different access
-permissions on your instance. Since the Hasura [Metadata and Migrations](/migrations-metadata-seeds/index.mdx) can be
-committed to version control, you can also use the user permissions systems of a version control host (eg: GitHub) in
-order to control how your team collaborates on your Hasura Project.
+Using [Projects](/hasura-cloud/projects/index.mdx) in Hasura Cloud you are able to add collaborators and assign each
+different access permissions on your instance. Since the Hasura
+[Metadata and Migrations](/migrations-metadata-seeds/overview.mdx) can be committed to version control, you can also use
+the user permissions systems of a version control host (eg: GitHub) in order to control how your team collaborates on
+your Hasura Project.
 
 ## How do I connect business logic or extend the GraphQL schema? {#faq-business-logic}
 
@@ -156,7 +157,7 @@ the GraphQL schema that Hasura exposes. This is useful not just when you have le
 transactional or application logic, but also when you want to build and serve custom logic with cloud-native code
 deployed as containers or serverless functions.
 
-- Read more about [Hasura Actions](/actions/index.mdx).
+- Read more about [Hasura Actions](/actions/overview.mdx).
 
 ### Hasura Event Triggers:
 
@@ -166,7 +167,7 @@ pieces of logic to events, this is especially useful if you’re thinking about 
 applications.
 
 - Read more about this architecture at [https://3factor.app](https://3factor.app).
-- Read more about Event Triggers in the Hasura [docs](/event-triggers/index.mdx).
+- Read more about Event Triggers in the Hasura [docs](/event-triggers/overview.mdx).
 - Go through a quick tutorial on how to set Event Triggers up at [https://learn.hasura.io](https://learn.hasura.io).
 
 ### GraphQL APIs via Hasura Remote Schemas:
@@ -176,7 +177,7 @@ custom logic, or if you’d like to extend your overall GraphQL API with a “su
 may not directly own, you can use “Remote Schemas” in Hasura to bring in GraphQL services as data & logic providers to
 your GraphQL API.
 
-- Read more about [Remote Schemas](/remote-schemas/index.mdx).
+- Read more about [Remote Schemas](/remote-schemas/overview.mdx).
 
 ### Stored procedures / functions in the database:
 

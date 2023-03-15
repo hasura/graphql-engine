@@ -1,0 +1,208 @@
+---
+description: Using Hasura with an AWS RDS Aurora database
+title: 'Cloud: Using Hasura Cloud with an AWS RDS Aurora Postgres database'
+keywords:
+  - hasura
+  - docs
+  - existing database
+  - guide
+  - aws rds aurora
+sidebar_label: AWS RDS Aurora Postgres
+sidebar_position: 4
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# Connecting Hasura to an AWS RDS Aurora Postgres Database
+
+## Introduction
+
+This guide explains how to connect a new or existing [AWS RDS Aurora Postgres](https://aws.amazon.com/rds/aurora/)
+database to a Hasura instance, either on [Hasura Cloud](https://cloud.hasura.io) or via one of our
+[self-hosted](/deployment/deployment-guides/index.mdx) solutions. If you're exploring AWS RDS Aurora Postgres and are interested
+in migrating an existing Postgres database - such as from Heroku - check out their
+[docs](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.Migrating.html) before continuing
+below.
+
+:::info Note
+
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura instance and
+already have a project running, skip to [step 3](#create-pg-db-aurora).
+
+:::
+
+## Step 1: Sign up or log in to Hasura Cloud
+
+Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
+and sign up or log in.
+
+## Step 2: Create a Hasura Cloud project {#create-hasura-project-aws-rds-aurora}
+
+On the Hasura Cloud dashboard, create a new project:
+
+<Thumbnail src="/img/cloud-dbs/create-hasura-cloud-project.png" alt="Create Hasura Cloud project" width="1000px" />
+
+After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
+
+On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Hasura will prompt you for a
+Postgres Database URL. We'll create this in the next step and then come back here.
+
+<Thumbnail src="/img/cloud-dbs/existing-db-setup.png" alt="Hasura Cloud database setup" width="700px" />
+
+## Step 3: Create an Aurora DB on AWS RDS {#create-pg-db-aurora}
+
+:::info Note
+
+If you have an existing Aurora DB, you can skip this step and move on to [step 4](#connect-hasura-aws-rds-aurora).
+
+:::
+
+Log into the [AWS console](https://console.aws.amazon.com//).
+
+On the top left, click on `Services` and type "RDS" into the search field. Then click on `RDS`:
+
+<Thumbnail src="/img/cloud-dbs/aws/search-for-rds.png" alt="Navigate to RDS in AWS" width="1000px" />
+
+Click on the `Create database` button:
+
+<Thumbnail src="/img/cloud-dbs/aws/create-database.png" alt="Create database in AWS" width="1000px" />
+
+In `Engine options`, select `Amazon Aurora` as `Engine type`. Also, select `Amazon Aurora with PostgreSQL compatibility`
+as `Edition`:
+
+<Thumbnail
+  src="/img/cloud-dbs/aws/aurora/rds-select-aurora.png"
+  alt="Select Aurora for RDS instance on AWS"
+  width="600px"
+/>
+
+Scroll down to `Settings`:
+
+<Thumbnail src="/img/cloud-dbs/aws/rds-settings.png" alt="Settings for RDS instance on AWS" width="600px" />
+
+Now you can choose a `DB instance identifier` as a name for your database. The `Master username` is `postgres` by
+default. You can change that if you have to. As for the password, you can click the checkbox for AWS to auto-generate
+one for you, or you can type in a password of your choice.
+
+Scroll down and customize other database options such as `DB instance size` and `Storage`, based on your requirements.
+
+In the `Connectivity` section, expand the `Additional connectivity configuration`. Then set `Public access` to `Yes` and
+choose or add a new security group:
+
+<Thumbnail src="/img/cloud-dbs/aws/rds-connectivity.png" alt="Connectivity for RDS instance on AWS" width="600px" />
+
+When you're done, at the bottom, click the `Create database` button:
+
+<Thumbnail src="/img/cloud-dbs/aws/rds-click-create.png" alt="Create RDS instance on AWS" width="700px" />
+
+:::info Note
+
+If you're using a database user other than the default one, make sure to give it the right
+[Postgres permissions](/deployment/postgres-requirements.mdx#postgres-permissions).
+
+:::
+
+## Step 4: Allow connections to your DB from Hasura {#connect-hasura-aws-rds-aurora}
+
+On the database dashboard, click on `Connectivity & security`. On the right, click on the security group that you
+selected or added in [step 3](#create-pg-aws-rds-aurora).
+
+<Thumbnail
+  src="/img/cloud-dbs/aws/aurora/find-security-group.png"
+  alt="Find the security group on AWS RDS"
+  width="1000px"
+/>
+
+Click on the security group:
+
+<Thumbnail src="/img/cloud-dbs/aws/select-security-group.png" alt="Click on the security group" width="1000px" />
+
+Click on `Edit inbound rules`:
+
+<Thumbnail src="/img/cloud-dbs/aws/inbound-rules.png" alt="Edit inbound rules for AWS RDS database" width="1000px" />
+
+Click on `Add rule`:
+
+<Thumbnail
+  src="/img/cloud-dbs/aws/add-inbound-rule.png"
+  alt="Add an inbound rule for AWS RDS database"
+  width="1000px"
+/>
+
+If using Hasura Cloud, from your project's dashboard, copy the Hasura Cloud IP address:
+
+<Thumbnail src="/img/projects/hasura-cloud-ip.png" alt="Hasura Cloud IP field" width="1000px" />
+
+:::info Note
+
+If you're using a self-hosted solution, you'll need to determine the IP address manually depending on your hosting
+service.
+
+:::
+
+Add the Hasura IP address that you copied:
+
+<Thumbnail src="/img/cloud-dbs/aws/add-hasura-ip.png" alt="Add the Hasura IP for AWS RDS database" width="1000px" />
+
+Then click `Save rules`.
+
+## Step 5: Construct the database connection URL {#construct-db-url-aurora}
+
+The structure of the database connection URL looks as follows:
+
+```bash
+postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/<db>
+```
+
+On the database dashboard, click on `Connectivity & security`:
+
+<Thumbnail
+  src="/img/cloud-dbs/aws/aurora/get-db-connection-string.png"
+  alt="Construct the database connection string for AWS RDS"
+  width="1000px"
+/>
+
+- `user-name`: If you have a separate database user the user name will be their name. If you didn't specify a user, the
+  default user name is `postgres`.
+- `password`: If you have a separate database user, use their password. Otherwise, use the password that you chose when
+  creating the database.
+- `public-ip`: On the screenshot above, the `Endpoint` is the public IP.
+- `postgres-port`: On the screenshot above you can find it under `Port`. The default port for Postgres is `5432`.
+- `db`: The DB is `postgres` by default unless otherwise specified.
+
+## Step 6: Finish connecting the database
+
+Back on the Hasura Console, enter the database URL that we retrieved in [step 5](#construct-db-url-aurora):
+
+<Thumbnail src="/img/getting-started/connect-db-cloud.png" alt="Database setup" width="600px" />
+
+Then click `Connect Database`.
+
+:::info Note
+
+For security reasons, it is recommended to set database URLs as [env vars](/hasura-cloud/projects/env-vars.mdx) and using the env
+vars to connect to the databases in place of the raw database URLs.
+
+:::
+
+Voilà. You are ready to start developing.
+
+<Thumbnail src="/img/cloud-dbs/hasura-console.png" alt="Hasura Console" width="1100px" />
+
+## Next steps
+
+- You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+  [GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+
+- If using Hasura Cloud, you can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+  [collaborators](/hasura-cloud/projects/collaborators.mdx), [env vars](/hasura-cloud/projects/env-vars.mdx) or
+  [custom domains](/hasura-cloud/projects/domains.mdx)).
+
+<Thumbnail src="/img/getting-started/project-manage.png" alt="Project actions" width="860px" />
+
+:::info Note
+
+For more information on which Postgres features we support, check out [this page](/databases/feature-support.mdx).
+
+:::

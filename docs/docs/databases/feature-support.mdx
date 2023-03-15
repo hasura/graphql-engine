@@ -1,0 +1,121 @@
+---
+description: Database feature support
+sidebar_label: Feature Support
+keywords:
+  - hasura
+  - docs
+  - databases
+  - feature support
+sidebar_position: 1.3
+---
+
+import VersionedLink from '@site/src/components/VersionedLink';
+import PostgreSQL from '@site/static/img/databases/logos/postgresql.png';
+import SQLServer from '@site/static/img/databases/logos/sql-server.png';
+import BigQuery from '@site/static/img/databases/logos/bigquery.png';
+import MySQL from '@site/static/img/databases/logos/mysql.png';
+import Snowflake from '@site/static/img/databases/logos/snowflake.png';
+import AmazonAthena from '@site/static/img/databases/logos/amazon-athena.png';
+
+import HeadingIcon from '@site/src/components/HeadingIcon';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import ArrowRight from '@site/static/icons/arrow_right.svg';
+import Aiven from '@site/static/img/cloud-dbs/logos/aiven.png';
+import Alloy from '@site/static/img/cloud-dbs/logos/alloydb.png';
+import Aurora from '@site/static/img/cloud-dbs/logos/aws-aurora.png';
+import Azure from '@site/static/img/cloud-dbs/logos/azure.png';
+import Cosmos from '@site/static/img/cloud-dbs/logos/cosmos.png';
+import RDS from '@site/static/img/cloud-dbs/logos/aws.png';
+import RollTide from '@site/static/img/cloud-dbs/logos/crunchy.png';
+import DO from '@site/static/img/cloud-dbs/logos/DO.png';
+import Elephant from '@site/static/img/cloud-dbs/logos/elephant.png';
+import Enterprise from '@site/static/img/cloud-dbs/logos/enterprisedb.png';
+import GCP from '@site/static/img/cloud-dbs/logos/gcp.png';
+import MSSQL from '@site/static/img/cloud-dbs/logos/mssql.png';
+import Neon from '@site/static/img/cloud-dbs/logos/neon.png';
+import Railway from '@site/static/img/cloud-dbs/logos/railway.png';
+import Render from '@site/static/img/cloud-dbs/logos/render.png';
+import Supabase from '@site/static/img/cloud-dbs/logos/supabase.png';
+import Timescale from '@site/static/img/cloud-dbs/logos/timescaledb.png';
+import Yugabyte from '@site/static/img/cloud-dbs/logos/yugabyte.png';
+
+# Database Feature Support
+
+The below matrices show the database wise support for the different GraphQL features under schema, queries, mutations
+and subscriptions.
+
+:::tip Tip
+
+Each ✅ below links **directly** to the feature within a particular type of database.
+
+:::
+
+## Schema
+
+<div className="db-tables">
+
+|                      | Postgres                                              | Citus                                                                                                  | SQL Server                                                 | BigQuery                                             | CockroachDB                                                                                    | CosmosDB                                              |
+| -------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Table Relationships  | [✅](/schema/postgres/table-relationships/index.mdx)  | [✅](/schema/postgres/table-relationships/index.mdx)                                                   | [✅](/schema/ms-sql-server/table-relationships/index.mdx)  | [✅](/schema/bigquery/table-relationships/index.mdx) | [✅](/schema/postgres/table-relationships/index.mdx)                                           | [✅](/schema/postgres/table-relationships/index.mdx)  |
+| Remote Relationships | [✅](/schema/postgres/remote-relationships/index.mdx) | [✅](/schema/postgres/remote-relationships/index.mdx)                                                  | [✅](/schema/ms-sql-server/remote-relationships/index.mdx) | [✅](/schema/bigquery/index.mdx)                     | [❌](/databases/postgres/cockroachdb/hasura-cockroachdb-compatibility.mdx/#relationships)      | [✅](/schema/postgres/remote-relationships/index.mdx) |
+| Views                | [✅](/schema/postgres/views.mdx)                      | [✅](/schema/postgres/views.mdx)                                                                       | [✅](/schema/ms-sql-server/views.mdx)                      | ✅                                                   | [✅](/schema/postgres/views.mdx)                                                               | [✅](/schema/postgres/views.mdx)                      |
+| Custom Functions     | [✅](/schema/postgres/custom-functions.mdx)           | [✅](/schema/postgres/custom-functions.mdx)                                                            | ❌                                                         | ❌                                                   | [❌](/databases/postgres/cockroachdb/hasura-cockroachdb-compatibility.mdx/#functions)          | [✅](/schema/postgres/custom-functions.mdx)           |
+| Enums                | [✅](/schema/postgres/enums.mdx)                      | [✅](/schema/postgres/enums.mdx)                                                                       | ❌                                                         | ❌                                                   | [✅](/schema/postgres/enums.mdx)                                                               | ❌                                                    |
+| Computed Fields      | [✅](/schema/postgres/computed-fields.mdx)            | [❌](/databases/postgres/citus-hyperscale-postgres/hasura-citus-compatibility.mdx/#computed-fields)    | ❌                                                         | [✅](/schema/bigquery/computed-fields.mdx)           | [❌](/databases/postgres/cockroachdb/hasura-cockroachdb-compatibility.mdx/#functions)          | ❌                                                    |
+| Data Validations     | [✅](/schema/postgres/data-validations.mdx)           | [✅](/schema/postgres/data-validations.mdx)                                                            | ✅                                                         | [✅](/schema/bigquery/data-validations.mdx)          | [✅](/schema/postgres/data-validations.mdx)                                                    | [✅](/schema/postgres/data-validations.mdx)           |
+| Relay Schema         | [✅](/schema/postgres/relay-schema.mdx)               | [✅](/schema/postgres/relay-schema.mdx)                                                                | ❌                                                         | ❌                                                   | ❌                                                                                             | [✅](/schema/postgres/relay-schema.mdx)               |
+| Naming Conventions   | [✅](/schema/postgres/naming-convention.mdx)          | [❌](/databases/postgres/citus-hyperscale-postgres/hasura-citus-compatibility.mdx/#naming-conventions) | ❌                                                         | ❌                                                   | [❌](/databases/postgres/cockroachdb/hasura-cockroachdb-compatibility.mdx/#naming-conventions) | ❌                                                    |
+| Custom Fields        | [✅](/schema/postgres/custom-field-names.mdx)         | [✅](/schema/postgres/custom-field-names.mdx)                                                          | [✅](/schema/ms-sql-server/custom-field-names.mdx)         | [✅](/schema/bigquery/custom-field-names.mdx)        | [✅](/schema/postgres/custom-field-names.mdx)                                                  | [✅](/schema/postgres/custom-field-names.mdx)         |
+| Default Values       | [✅](/schema/postgres/default-values/index.mdx)       | [✅](/schema/postgres/default-values/index.mdx)                                                        | [✅](/schema/ms-sql-server/default-values/index.mdx)       | ❌                                                   | [✅](/schema/postgres/default-values/index.mdx)                                                | [✅](/schema/postgres/default-values/index.mdx)       |
+
+## Queries
+
+|                                 | Postgres                                                           | Citus                                                              | SQL Server                                                              | BigQuery                                          | CockroachDB                                                                         | CosmosDB                                                           |
+| ------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Simple                          | [✅](/queries/postgres/simple-object-queries.mdx)                  | [✅](/queries/postgres/simple-object-queries.mdx)                  | [✅](/queries/ms-sql-server/simple-object-queries.mdx)                  | [✅](/queries/bigquery/simple-object-queries.mdx) | [✅](/queries/postgres/simple-object-queries.mdx)                                   | [✅](/queries/postgres/simple-object-queries.mdx)                  |
+| Nested Object                   | [✅](/queries/postgres/nested-object-queries.mdx)                  | [✅](/queries/postgres/nested-object-queries.mdx)                  | [✅](/queries/ms-sql-server/nested-object-queries.mdx)                  | [✅](/queries/bigquery/nested-object-queries.mdx) | [✅](/queries/postgres/nested-object-queries.mdx)                                   | [✅](/queries/postgres/nested-object-queries.mdx)                  |
+| Aggregation                     | [✅](/queries/postgres/aggregation-queries.mdx)                    | [✅](/queries/postgres/aggregation-queries.mdx)                    | [✅](/queries/ms-sql-server/aggregation-queries.mdx)                    | [✅](/queries/bigquery/aggregation-queries.mdx)   | [✅](/queries/postgres/aggregation-queries.mdx)                                     | [✅](/queries/postgres/aggregation-queries.mdx)                    |
+| Filter / Search                 | [✅](/queries/postgres/query-filters.mdx)                          | [✅](/queries/postgres/query-filters.mdx)                          | [✅](/queries/ms-sql-server/query-filters.mdx)                          | [✅](/queries/bigquery/query-filters.mdx)         | [✅](/queries/postgres/query-filters.mdx)                                           | [✅](/queries/postgres/query-filters.mdx)                          |
+| Sort                            | [✅](/queries/postgres/sorting.mdx)                                | [✅](/queries/postgres/sorting.mdx)                                | [✅](/queries/ms-sql-server/sorting.mdx)                                | [✅](/queries/bigquery/index.mdx)                 | [✅](/queries/postgres/sorting.mdx)                                                 | [✅](/queries/postgres/sorting.mdx)                                |
+| Distinct                        | [✅](/queries/postgres/distinct-queries.mdx)                       | [✅](/queries/postgres/distinct-queries.mdx)                       | [✅](/queries/ms-sql-server/index.mdx)                                  | [✅](/queries/bigquery/index.mdx)                 | [❌](/databases/postgres/cockroachdb/hasura-cockroachdb-compatibility.mdx/#queries) | [✅](/queries/postgres/distinct-queries.mdx)                       |
+| Paginate                        | [✅](/queries/postgres/pagination.mdx)                             | [✅](/queries/postgres/pagination.mdx)                             | [✅](/queries/ms-sql-server/pagination.mdx)                             | [✅](/queries/bigquery/index.mdx)                 | [✅](/queries/postgres/pagination.mdx)                                              | [✅](/queries/postgres/pagination.mdx)                             |
+| Multiple Arguments              | [✅](/queries/postgres/multiple-arguments.mdx)                     | [✅](/queries/postgres/multiple-arguments.mdx)                     | [✅](/queries/ms-sql-server/multiple-arguments.mdx)                     | [✅](/queries/bigquery/index.mdx)                 | [✅](/queries/postgres/multiple-arguments.mdx)                                      | [✅](/queries/postgres/multiple-arguments.mdx)                     |
+| Multiple Queries                | [✅](/queries/postgres/multiple-queries.mdx)                       | [✅](/queries/postgres/multiple-queries.mdx)                       | [✅](/queries/ms-sql-server/multiple-queries.mdx)                       | [✅](/queries/bigquery/index.mdx)                 | [✅](/queries/postgres/multiple-queries.mdx)                                        | [✅](/queries/postgres/multiple-queries.mdx)                       |
+| Variables / Aliases / Fragments | [✅](/queries/postgres/variables-aliases-fragments-directives.mdx) | [✅](/queries/postgres/variables-aliases-fragments-directives.mdx) | [✅](/queries/ms-sql-server/variables-aliases-fragments-directives.mdx) | [✅](/queries/bigquery/index.mdx)                 | [✅](/queries/postgres/variables-aliases-fragments-directives.mdx)                  | [✅](/queries/postgres/variables-aliases-fragments-directives.mdx) |
+
+## Mutations
+
+|                      | Postgres                                         | Citus                                            | SQL Server                                | BigQuery | CockroachDB                                      | CosmosDB                                         |
+| -------------------- | ------------------------------------------------ | ------------------------------------------------ | ----------------------------------------- | -------- | ------------------------------------------------ | ------------------------------------------------ |
+| Insert               | [✅](/mutations/postgres/insert.mdx)             | [✅](/mutations/postgres/insert.mdx)             | [✅](/mutations/ms-sql-server/insert.mdx) | ❌       | [✅](/mutations/postgres/insert.mdx)             | [✅](/mutations/postgres/insert.mdx)             |
+| Upsert               | [✅](/mutations/postgres/upsert.mdx)             | [✅](/mutations/postgres/upsert.mdx)             | [✅](/mutations/ms-sql-server/upsert.mdx) | ❌       | [✅](/mutations/postgres/upsert.mdx)             | [✅](/mutations/postgres/upsert.mdx)             |
+| Update               | [✅](/mutations/postgres/update.mdx)             | [✅](/mutations/postgres/update.mdx)             | [✅](/mutations/ms-sql-server/update.mdx) | ❌       | [✅](/mutations/postgres/update.mdx)             | [✅](/mutations/postgres/update.mdx)             |
+| Delete               | [✅](/mutations/postgres/delete.mdx)             | [✅](/mutations/postgres/delete.mdx)             | [✅](/mutations/ms-sql-server/delete.mdx) | ❌       | [✅](/mutations/postgres/delete.mdx)             | [✅](/mutations/postgres/delete.mdx)             |
+| Multiple per Request | [✅](/mutations/postgres/multiple-mutations.mdx) | [✅](/mutations/postgres/multiple-mutations.mdx) | ❌                                        | ❌       | [✅](/mutations/postgres/multiple-mutations.mdx) | [✅](/mutations/postgres/multiple-mutations.mdx) |
+
+## Subscriptions
+
+|                         | Postgres                                                                   | Citus                                                                      | SQL Server                                                            | BigQuery | CockroachDB                                                                | CosmosDB                                                                   |
+| ----------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Value of Field          | [✅](/subscriptions/postgres/livequery/use-cases.mdx#pg-subscribe-field)   | [✅](/subscriptions/postgres/livequery/use-cases.mdx#pg-subscribe-field)   | [✅](/subscriptions/ms-sql-server/use-cases.mdx#pg-subscribe-field)   | ❌       | [✅](/subscriptions/postgres/livequery/use-cases.mdx#pg-subscribe-field)   | [✅](/subscriptions/postgres/livequery/use-cases.mdx#pg-subscribe-field)   |
+| Updates to Rows         | [✅](/subscriptions/postgres/livequery/use-cases.mdx#pg-subscribe-table)   | [✅](/subscriptions/postgres/livequery/use-cases.mdx#pg-subscribe-table)   | ❌                                                                    | ❌       | [✅](/subscriptions/postgres/livequery/use-cases.mdx#pg-subscribe-table)   | [✅](/subscriptions/postgres/livequery/use-cases.mdx#pg-subscribe-table)   |
+| Value of Derived Field  | [✅](/subscriptions/postgres/livequery/use-cases.mdx#pg-subscribe-derived) | [✅](/subscriptions/postgres/livequery/use-cases.mdx#pg-subscribe-derived) | [✅](/subscriptions/ms-sql-server/use-cases.mdx#pg-subscribe-derived) | ❌       | [✅](/subscriptions/postgres/livequery/use-cases.mdx#pg-subscribe-derived) | [✅](/subscriptions/postgres/livequery/use-cases.mdx#pg-subscribe-derived) |
+| Streaming Subscriptions | [✅](/subscriptions/postgres/streaming/index.mdx)                          | [✅](/subscriptions/postgres/streaming/index.mdx)                          | ❌                                                                    | ❌       | [✅](/subscriptions/postgres/streaming/index.mdx)                          | [✅](/subscriptions/postgres/streaming/index.mdx)                          |
+
+## Event Triggers
+
+|        | Postgres                           | Citus                                                                                              | SQL Server                         | BigQuery | CockroachDB                                                                                | CosmosDB |
+| ------ | ---------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------- | -------- | ------------------------------------------------------------------------------------------ | -------- |
+| INSERT | [✅](/event-triggers/overview.mdx) | [❌](/databases/postgres/citus-hyperscale-postgres/hasura-citus-compatibility.mdx/#event-triggers) | [✅](/event-triggers/overview.mdx) | ❌       | [❌](/databases/postgres/cockroachdb/hasura-cockroachdb-compatibility.mdx/#event-triggers) | ❌       |
+| UPDATE | [✅](/event-triggers/overview.mdx) | [❌](/databases/postgres/citus-hyperscale-postgres/hasura-citus-compatibility.mdx/#event-triggers) | [✅](/event-triggers/overview.mdx) | ❌       | [❌](/databases/postgres/cockroachdb/hasura-cockroachdb-compatibility.mdx/#event-triggers) | ❌       |
+| DELETE | [✅](/event-triggers/overview.mdx) | [❌](/databases/postgres/citus-hyperscale-postgres/hasura-citus-compatibility.mdx/#event-triggers) | [✅](/event-triggers/overview.mdx) | ❌       | [❌](/databases/postgres/cockroachdb/hasura-cockroachdb-compatibility.mdx/#event-triggers) | ❌       |
+| MANUAL | [✅](/event-triggers/overview.mdx) | [❌](/databases/postgres/citus-hyperscale-postgres/hasura-citus-compatibility.mdx/#event-triggers) | [✅](/event-triggers/overview.mdx) | ❌       | [❌](/databases/postgres/cockroachdb/hasura-cockroachdb-compatibility.mdx/#event-triggers) | ❌       |
+
+</div>
+
+:::info Additional Resources
+
+Get Started with Hasura today -
+[Watch video guide](https://hasura.io/events/webinar/get-started-with-hasura/?pg=docs&plcmt=body&cta=getting-started&tech=).
+
+:::

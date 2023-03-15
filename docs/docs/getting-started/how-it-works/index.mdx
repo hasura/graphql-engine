@@ -23,7 +23,7 @@ engine for powering your API.
 Given a database, the Hasura GraphQL Engine automatically generates a GraphQL schema and processes GraphQL queries,
 subscriptions and mutations.
 
-By default, Hasura supports [PostgreSQL and multiple other databases](/databases/index.mdx#supported-databases).
+By default, Hasura supports [PostgreSQL and multiple other databases](/databases/overview.mdx).
 
 ## Tracking Tables & Schema Generation
 
@@ -53,7 +53,7 @@ When you track a table in the Hasura GraphQL Engine, it automatically generates 
 
 ## Views
 
-When you track a view with a [database which supports views](/databases/index.mdx#schema) in Hasura GraphQL Engine,
+When you track a view with a [database which supports views](/databases/feature-support.mdx) in Hasura GraphQL Engine,
 it also automatically generates the same as the above but without the `_by_pk` fields. Depending on the type of
 view created, Hasura may not generate the `insert`, `update` and `delete` mutation fields.
 

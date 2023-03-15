@@ -1,4 +1,5 @@
 {
-  "label": "Hasura Cloud",
-  "position": 200
+  "label": "Hasura Cloud ☁️",
+  "position": 200,
+  "className": "cloud-icon"
 }

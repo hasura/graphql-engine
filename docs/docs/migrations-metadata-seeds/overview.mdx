@@ -1,0 +1,72 @@
+---
+description: Hasura Migrations, Metadata, and Seeds
+title: Overview
+keywords:
+  - hasura
+  - docs
+  - migrations
+  - metadata
+  - seeds
+hide_table_of_contents: true
+sidebar_position: 1
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import VersionedLink from '@site/src/components/VersionedLink';
+import MMS from '@site/static/icons/features/mms.svg';
+
+# <MMS /> Migrations, Metadata, and Seeds
+
+<div className="overview-header">
+  <div className="overview-text">
+    <p>
+      Hasura Migrations, Metadata, and Seeds are a set of tools that allow you to version control your Hasura project.
+      You can use these tools to track changes to your project and apply them to other environments. Hasura's Metadata
+      represents the configuration state of your project. Hasura Migrations are a set of SQL files representing changes
+      to your database over time, and Seeds are SQL files for populating your database with data.
+    </p>
+    <p>
+      Combined with git, you can use these tools to track changes to your project and apply them to other environments.
+    </p>
+    <h4>Quick Links</h4>
+    <ul>
+      <li>
+        <VersionedLink to="/migrations-metadata-seeds/migrations-metadata-setup">
+          Get started with Migrations & Metadata.
+        </VersionedLink>
+      </li>
+    </ul>
+  </div>
+  <iframe
+    src="https://www.youtube.com/embed/JiHGiBoFo84"
+    frameborder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  />
+</div>
+
+## Using Migrations & Metadata
+
+<div className="overview-gallery">
+  <VersionedLink to="/migrations-metadata-seeds/manage-migrations/">
+    <div className="card">
+      <h3>Manage Migrations</h3>
+      <p>Manage your Migrations using the Hasura CLI.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/migrations-metadata-seeds/manage-metadata/">
+    <div className="card">
+      <h3>Manage Metadata</h3>
+      <p>Manage your Metadata using the Hasura CLI.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/migrations-metadata-seeds/auto-apply-migrations/">
+    <div className="card">
+      <h3>Auto-apply Migrations & Metadata</h3>
+      <p>
+        You can configure Hasura to automatically apply Migrations and Metadata to your database. This is helpful for
+        CI/CD pipelines.
+      </p>
+    </div>
+  </VersionedLink>
+</div>

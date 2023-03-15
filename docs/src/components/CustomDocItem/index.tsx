@@ -43,7 +43,7 @@ const CustomDocItem = props => {
         }
       >
         {/*<PageHelpful />*/}
-        <ScrollToFeedbackButton path={props.location.pathname}/>
+        {props.location.pathname === `/docs/latest/index/` ? null : <ScrollToFeedbackButton />}
         <HasuraConBanner {...props} />
         <GraphQLWithHasuraBanner />
         <CustomFooter />

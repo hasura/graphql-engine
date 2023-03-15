@@ -1,0 +1,78 @@
+---
+description: Hasura API reference
+title: API Reference
+keywords:
+  - hasura
+  - docs
+  - API
+  - API reference
+hide_table_of_contents: true
+sidebar_position: 1
+sidebar_label: Overview
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import VersionedLink from '@site/src/components/VersionedLink';
+import APIReference from '@site/static/icons/features/api_reference.svg';
+
+# <APIReference /> API Reference
+
+<div className="overview-header">
+  <div className="overview-text">
+    <p>
+      The Hasura API reference is a comprehensive guide to the Hasura GraphQL Engine API. It is a great place to start
+      if you are building a client application that interacts with the Hasura GraphQL Engine API.
+    </p>
+    <p>
+      The API reference is divided into sections based on the type of API. Each section contains a list of API endpoints
+      and a description of the API endpoint.
+    </p>
+    <h4>Quick Links</h4>
+    <ul>
+      <li>
+        <VersionedLink to="/api-reference/graphql-api/index/">Get started with the GraphQL API.</VersionedLink>
+      </li>
+      <li>
+        <VersionedLink to="/api-reference/general-info/">Learn more about the available APIs.</VersionedLink>
+      </li>
+    </ul>
+  </div>
+  <iframe
+    src="https://www.youtube.com/embed/3RSprDf-Ckc"
+    frameborder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  />
+</div>
+
+## Using the APIs
+
+<div className="overview-gallery">
+  <VersionedLink to="/api-reference/graphql-api/query/">
+    <div className="card">
+      <h3>Query / Subscription API</h3>
+      <p>
+        Learn more about using the Query API to fetch data from the database and the Subscription API to subscribe to
+        database events.
+      </p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/api-reference/restified/">
+    <div className="card">
+      <h3>RESTified GraphQL Endpoints</h3>
+      <p>
+        See how you can use the RESTified GraphQL Endpoints API to fetch data from the database and to subscribe to
+        database events.
+      </p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/api-reference/syntax-defs/">
+    <div className="card">
+      <h3>Common Syntax Definitions</h3>
+      <p>
+        Check out our common syntax definitions for the GraphQL API, RESTified GraphQL Endpoints API, and the Metadata
+        API.
+      </p>
+    </div>
+  </VersionedLink>
+</div>

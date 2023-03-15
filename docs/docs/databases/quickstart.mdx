@@ -1,0 +1,214 @@
+---
+sidebar_label: Quickstart
+sidebar_position: 1
+description: Connect a database to Hasura
+keywords:
+  - hasura
+  - docs
+  - databases
+  - connect
+toc_max_heading_level: 2
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Connect Databases to Hasura GraphQL Engine
+
+## Introduction
+
+You can quickly and easily connect a new, existing, or demo database to Hasura GraphQL Engine in either Hasura Cloud or
+you can run Hasura Engine using Docker.
+
+:::tip Connect multiple databases
+
+You can also connect to multiple databases in order to build a unified GraphQL API.
+
+:::
+
+## Connect a database via the Hasura Console {#connect-database-v2-0}
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="cloud" label="Hasura Cloud">
+
+If you have [created your project with Hasura Cloud](/hasura-cloud/projects/create.mdx), click on the `Launch Console`
+button to open the Hasura Console in your browser.
+
+<Thumbnail src="/img/databases/project_launch-console_2-17-0.png" alt="database setup with new database" />
+
+Hasura Cloud does not host databases, but does provide integrations with which you can connect databases from many 3rd
+party managed cloud providers. Check out a [list of supported databases here](/databases/overview.mdx).
+
+To get started quickly with a Postgres database, choose `Create New Database`:
+
+<Thumbnail
+  src="/img/projects/create-database-neon-2.15.png"
+  alt="database setup with existing
+database"
+/>
+
+Follow the prompts or [check out our detailed Neon connect page](/databases/postgres/neon.mdx). Hasura Cloud will
+integrate with your Neon account and manage the initial setup of a Postgres instance. You can always upgrade the
+instance and manage options later through your Neon account.
+
+### Connect to an existing database
+
+To use an existing database, choose `Connect existing database` and enter your database connection URL and enter your
+database connection string.
+
+For help finding your particular connection string for your database provider check out our
+[databases page](/databases/overview.mdx).
+
+<Thumbnail src="/img/projects/connect-database_console_2.15.png" alt="database setup with new database" />
+
+You can connect to databases by using environment variables, the raw connection string or connection parameters. It is
+recommended to use environment variables for better security _(as connection details set via a string will be exposed as
+part of the Hasura Metadata)_ as well as to allow configuring different databases in different environments _(like
+staging or production)_ easily.
+
+A database can be connected to using the `HASURA_GRAPHQL_DATABASE_URL` environment variable as well in which case it
+gets added automatically as a database named `default`.
+
+### Allow connections from the Hasura Cloud IP {#cloud-projects-create-allow-nat-ip}
+
+When using Hasura Cloud, you may need to adjust your connection settings of your database provider to allow connections
+from the Hasura Cloud IP address.
+
+You can copy the IP address of your Hasura Engine instance from the copy icon in the `Hasura Cloud IP` field on the
+Project's details view which you can shortcut to by clicking on your Project name in the Console.
+
+<Thumbnail src="/img/databases/cloud-console_shortcut-to-project-settings_2-17-0.png" alt="Hasura Cloud IP field" />
+
+<Thumbnail src="/img/projects/project-general-ip-address_console_2.12.png" alt="Hasura Cloud IP field" />
+
+</TabItem>
+<TabItem value="docker" label="Docker">
+
+If you've [spun up the Hasura Engine with Docker](/getting-started/docker-simple.mdx), you can access the Hasura Console
+by accessing it in a browser at the URL of your Hasura Engine instance, usually `http://localhost:8080`.
+
+:::info Enable Hasura Console
+
+To access the Hasura Console via and URL and not [via the CLI](/hasura-cli/commands/hasura_console.mdx) the
+`HASURA_GRAPHQL_ENABLE_CONSOLE` [environment variable](/deployment/graphql-engine-flags/reference.mdx##database-url) or
+`--enable-console` flag must be set to `true`.
+
+:::
+
+On the Hasura Console, navigate to the `Data` tab, you will see the "Connect Database" screen.
+
+<Thumbnail
+  src="/img/databases/databases_connect-database_2-17-0.png"
+  alt="database setup with new database"
+  width="1686px"
+/>
+
+You can connect to databases by using environment variables, the raw connection string or connection parameters. It is
+recommended to use environment variables for better security _(as connection details set via a string will be exposed as
+part of the Hasura Metadata)_ as well as to allow configuring different databases in different environments _(like
+staging or production)_ easily.
+
+A database can be connected to using the `HASURA_GRAPHQL_DATABASE_URL` environment variable as well in which case it
+gets added automatically as a database named default.
+
+</TabItem>
+</Tabs>
+
+## Connect a database via the Hasura CLI or API
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="cli" label="CLI">
+
+In your `config v3` project, head to the `/metadata/databases/databases.yaml` file and add the database configuration as
+below. If you're using the `HASURA_GRAPHQL_DATABASE_URL` environment variable then the database will get automatically
+added and named default.
+
+```yaml
+- name: <db_name>
+  configuration:
+    connection_info:
+      database_url:
+        from_env: <DB_URL_ENV_VAR>
+      pool_settings:
+        idle_timeout: 180
+        max_connections: 50
+        retries: 1
+    tables: []
+    functions: []
+```
+
+Apply the Metadata by running:
+
+```bash
+hasura metadata apply
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+Depending on the type of database, you can add a database using the
+[sources Metadata API](/api-reference/metadata-api/source.mdx).
+
+For example:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_add_source",
+  "args": {
+    "name": "<db_name>",
+    "configuration": {
+      "connection_info": {
+        "database_url": {
+          "from_env": "<DB_URL_ENV_VAR>"
+        },
+        "pool_settings": {
+          "retries": 1,
+          "idle_timeout": 180,
+          "max_connections": 50
+        }
+      }
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info On-the-fly connecting and removing of databases
+
+In versions `v2.0.0` and above, databases can be connected and removed dynamically without having to restart the Hasura
+Engine instance.
+
+:::
+
+## Hasura Metadata storage
+
+When using Hasura Cloud, Metadata is stored for you in separate data storage to your connected database(s). When using
+Docker, if you want to
+[store the Hasura Metadata on a separate database](/deployment/graphql-engine-flags/reference.mdx#metadata-database-url),
+you can use the `HASURA_GRAPHQL_METADATA_DATABASE_URL` env var to specify which database to use. By default, the Hasura
+Metadata is stored on the same database as specified in the `HASURA_GRAPHQL_DATABASE_URL` environment variable.
+
+## Connect different Hasura instances to the same database
+
+You can connect different Hasura instances (i.e. instances with different Metadata) to the same database as long as
+there are no [Event Triggers](/event-triggers/overview.mdx) in any of the Metadata. Event Triggers store their data in
+the underlying database and hence different instances acting on the same data can cause undefined behavior during
+run-time. This should not be a problem if the Hasura instances have the same Metadata.
+
+To connect multiple Hasura instances to the same database, simply follow the steps above for
+[Connect to an existing database](#connect-to-an-existing-database) for each instance.
+
+## Connecting to a database not exposed over the internet
+
+[Contact us](https://hasura.io/contact-us/) for VPC peering and on-premise solutions.
+
+## More databases
+
+Support for more databases is coming soon. Stay up to date with [supported databases here](/databases/overview.mdx).

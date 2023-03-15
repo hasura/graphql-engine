@@ -1,0 +1,77 @@
+---
+title: Hasura CLI
+description: Use Hasura's command line tooling
+keywords:
+  - hasura
+  - docs
+  - CLI
+hide_table_of_contents: true
+sidebar_position: 1
+sidebar_label: Overview
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import VersionedLink from '@site/src/components/VersionedLink';
+import CLI from '@site/static/icons/features/cli.svg';
+
+# <CLI /> Hasura CLI
+
+<div className="overview-header">
+  <div className="overview-text">
+    <p>
+      We offer two primary methods for working with your Hasura instances: the Hasura Console and the Hasura CLI. While
+      the Console provides an easy-to-use GUI for interacting with your project, the CLI offers a powerful, text-based
+      interface for managing your project.
+    </p>
+    <p>
+      The Hasura CLI is a command line tool that acts as an interface to the Hasura GraphQL Engine's Metadata API,
+      providing a set of commands that you can use to create, migrate, and manage your Hasura projects.
+    </p>
+    <h4>Quick Links</h4>
+    <ul>
+      <li>
+        <VersionedLink to="/hasura-cli/quickstart/">Create a project with the Hasura CLI in 60 seconds.</VersionedLink>
+      </li>
+      <li>
+        <VersionedLink to="/hasura-cli/commands/index/">View all the available commands.</VersionedLink>
+      </li>
+    </ul>
+  </div>
+  <iframe
+    src="https://www.youtube.com/embed/MnYhMZBSY-A"
+    frameborder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  />
+</div>
+
+## Using the CLI
+
+<div className="overview-gallery">
+  <VersionedLink to="/hasura-cli/install-hasura-cli/">
+    <div className="card">
+      <h3>Install the Hasura CLI</h3>
+      <p>Learn how to install the Hasura CLI using the binaries or a package manager.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/hasura-cli/commands/hasura_console/">
+    <div className="card">
+      <h3>
+        The <code>hasura console</code> command
+      </h3>
+      <p>
+        Learn how to use the <code>hasura console</code> command to launch the Hasura Console via the CLI and track
+        Metadata changes.
+      </p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/hasura-cli/config-reference/">
+    <div className="card">
+      <h3>Configure the CLI</h3>
+      <p>
+        Learn how to configure the Hasura CLI to connect to your Hasura instance and to use the Hasura CLI with multiple
+        projects.
+      </p>
+    </div>
+  </VersionedLink>
+</div>

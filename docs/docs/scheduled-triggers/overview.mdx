@@ -1,0 +1,78 @@
+---
+description: Hasura Scheduled Triggers
+title: Overview
+keywords:
+  - hasura
+  - docs
+  - scheduled
+  - triggers
+  - cron
+  - business logic
+hide_table_of_contents: true
+sidebar_position: 1
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import VersionedLink from '@site/src/components/VersionedLink';
+import ScheduledTriggers from '@site/static/icons/features/scheduled_triggers.svg';
+
+# <ScheduledTriggers /> Scheduled Triggers
+
+<div className="overview-header">
+  <div className="overview-text">
+    <p>
+      Scheduled Triggers are a way to run custom business logic on a schedule. They are a powerful way to automate your
+      tasks and integrate with other services.
+    </p>
+    <p>
+      With Scheduled Triggers, you can create Cron Jobs that run at specified intervals, or run a one-off task at a
+      specified time, or even automate data clean to regularly keep your data and logs in order.
+    </p>
+    <h4>Quick Links</h4>
+    <ul>
+      <li>
+        <VersionedLink to="/scheduled-triggers/quickstart/">
+          Get started with Scheduled Triggers 60 seconds.
+        </VersionedLink>
+      </li>
+      <li>
+        <VersionedLink to="/scheduled-triggers/how-it-works/">Learn how Scheduled Triggers work.</VersionedLink>
+      </li>
+    </ul>
+  </div>
+  <iframe
+    src="https://www.youtube.com/embed/dQXLDGO50hE"
+    frameborder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  />
+</div>
+
+<Thumbnail
+  src="/img/scheduled-triggers/scheduled-trigger-arch.png"
+  alt="Hasura Scheduled Trigger architecture"
+  className="no-shadow overview-img"
+/>
+
+## Using Scheduled Triggers
+
+<div className="overview-gallery">
+  <VersionedLink to="/scheduled-triggers/create-cron-trigger/">
+    <div className="card">
+      <h3>Cron Triggers</h3>
+      <p>Create a Cron Trigger to run custom business logic at a specified interval.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/scheduled-triggers/create-one-off-scheduled-event/">
+    <div className="card">
+      <h3>One-off Scheduled Events</h3>
+      <p>Create a one-off scheduled event to run custom business logic at a specified time.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/scheduled-triggers/clean-up/">
+    <div className="card">
+      <h3>Clean up</h3>
+      <p>Purge your data and keep your logs tidy.</p>
+    </div>
+  </VersionedLink>
+</div>

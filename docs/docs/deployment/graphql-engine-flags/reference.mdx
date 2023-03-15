@@ -208,7 +208,7 @@ for JSON encoding-decoding.
 
 ### Connections per Read-Replica
 
-The maximum number of Postgres connections per [read-replica](databases/connect-db/read-replicas.mdx) that can be opened
+The maximum number of Postgres connections per [read-replica](databases/database-config/read-replicas.mdx) that can be opened
 per stripe. When the maximum is reached we will block until a new connection becomes available, even if there is
 capacity in other stripes.
 
@@ -242,7 +242,7 @@ List of domains, **including scheme (http/https) and port**, to allow for CORS.
 value will block requests from all other domains**.
 
 |                     |                                                                                               |
-| ------------------- | ----------------------------------------------------------------------------------------------|
+| ------------------- | --------------------------------------------------------------------------------------------- |
 | **Flag**            | `--cors-domain <DOMAINS>`                                                                     |
 | **Env var**         | `HASURA_GRAPHQL_CORS_DOMAIN`                                                                  |
 | **Accepted values** | String (comma separated list of domains)                                                      |
@@ -407,7 +407,7 @@ Setting this enables or disables [anonymous telemetry](/policies/telemetry.mdx).
 
 ### Enabled APIs
 
-List of [APIs](/api-reference/index.mdx) to be enabled on a Hasura GraphQL Engine instance.
+List of [APIs](/api-reference/overview.mdx) to be enabled on a Hasura GraphQL Engine instance.
 
 |                     |                                                      |
 | ------------------- | ---------------------------------------------------- |
@@ -483,8 +483,8 @@ List of experimental features to be enabled.
 
 ### Graceful Shutdown Timeout
 
-The timeout, expressed in seconds, to wait for in-flight events (such as [Event Triggers](/event-triggers/index.mdx) and
-[Scheduled Triggers](/scheduled-triggers/index.mdx)) and async actions to complete before the server shuts down
+The timeout, expressed in seconds, to wait for in-flight events (such as [Event Triggers](/event-triggers/overview.mdx)
+and [Scheduled Triggers](/scheduled-triggers/overview.mdx)) and async actions to complete before the server shuts down
 completely. If the in-flight events are not completed within the timeout, those events are marked as pending.
 
 |                     |                                                        |
@@ -802,7 +802,7 @@ Whether to use TLS to connect to a caching [Redis instance](/enterprise/caching.
 
 ### Read Replica URL
 
-The [URL for a read replica](/databases/connect-db/read-replicas.mdx#adding-read-replica-urls) of the database.
+The [URL for a read replica](/databases/database-config/read-replicas.mdx#adding-read-replica-urls) of the database.
 
 :::warning Notice
 
@@ -940,7 +940,7 @@ Stringify certain [Postgres numeric types](/schema/postgres/postgresql-types.mdx
 
 :::
 
-The number of stripes (connection pools) to maintain per [read replica](/databases/connect-db/read-replicas.mdx).
+The number of stripes (connection pools) to maintain per [read replica](/databases/database-config/read-replicas.mdx).
 
 |                     |                                           |
 | ------------------- | ----------------------------------------- |

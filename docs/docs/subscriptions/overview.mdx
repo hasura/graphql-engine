@@ -1,0 +1,66 @@
+---
+description: Manage subscriptions on your database with Hasura
+title: Overview
+keywords:
+  - hasura
+  - docs
+  - subscription
+hide_table_of_contents: true
+sidebar_position: 1
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import VersionedLink from '@site/src/components/VersionedLink';
+import Subscriptions from '@site/static/icons/features/subscriptions.svg';
+
+# <Subscriptions /> Subscriptions
+
+<div className="overview-header">
+  <div className="overview-text">
+    <p>
+      Subscriptions enable you to push data from your database to your clients in real-time, making them a powerful tool
+      for building reactive applications without the need for continuous server polling.
+      <br />
+      <br />
+      Just like queries and mutations, you have subscriptions on your data out of the box with the Hasura GraphQL Engine.
+    </p>
+    <h4>Quick Links</h4>
+    <ul>
+      <li>
+        <VersionedLink to="/subscriptions/quickstart/">Write your first subscription in 30 seconds.</VersionedLink>
+      </li>
+    </ul>
+  </div>
+  <iframe
+    src="https://www.youtube.com/embed/gEfVKtKbXWQ"
+    frameborder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  />
+</div>
+
+## Using Subscriptions
+
+<div className="overview-gallery">
+  <VersionedLink to="/subscriptions/postgres/streaming/index/">
+    <div className="card">
+      <h3>Streaming subscriptions with Postgres</h3>
+      <p>See only the newest data in realtime as it is inserted into your Postgres database.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/subscriptions/postgres/livequery/index/">
+    <div className="card">
+      <h3>Live queries with Postgres</h3>
+      <p>
+        Hasura live queries allow you to receive real-time updates as soon as data changes, enabling you to build
+        responsive and dynamic applications that can react instantly to user interactions.
+      </p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/subscriptions/integrations/index/">
+    <div className="card">
+      <h3>Integrations with GraphQL clients</h3>
+      <p>Learn how to integrate Hasura subscriptions with your favorite GraphQL client.</p>
+    </div>
+  </VersionedLink>
+</div>

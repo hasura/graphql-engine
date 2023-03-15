@@ -1,13 +1,13 @@
 ---
 description: Quickstart with Hasura Cloud
-title: 'Cloud: Quickstart with Hasura Cloud'
+title: 'Quickstart with Hasura Cloud'
 sidebar_position: 2
 keywords:
   - hasura
   - cloud
   - docs
   - signup
-sidebar_label: Quickstart with Hasura Cloud
+sidebar_label: Quickstart with Hasura Cloud ☁️
 sidebar_class_name: cloud-icon
 ---
 
@@ -68,28 +68,8 @@ Click `Connect Database`.
 
 <Thumbnail src="/img/getting-started/connect-db-cloud.png" alt="Enter URL for existing database" width="1000px" />
 
-If your database is hosted via any of the following managed cloud database services, check out their respective detailed
-guides to get the database connection URL and any other steps required to ensure connectivity from Hasura Cloud:
-
-- [Aiven Postgres](/databases/connect-db/cloud-databases/aiven.mdx)
-- [AlloyDB Postgres](/databases/connect-db/cloud-databases/alloy.mdx)
-- [AWS RDS Aurora Postgres](/databases/connect-db/cloud-databases/aws-aurora.mdx)
-- [AWS RDS Postgres](/databases/connect-db/cloud-databases/aws-postgres.mdx)
-- [Azure Cosmos DB](/databases/connect-db/cloud-databases/azure-cosmos.mdx)
-- [Azure MS SQL](/databases/connect-db/cloud-databases/mssql.mdx)
-- [Azure Postgres](/databases/connect-db/cloud-databases/azure.mdx)
-- [Crunchy Postgres](/databases/connect-db/cloud-databases/crunchy.mdx)
-- [DigitalOcean Postgres](/databases/connect-db/cloud-databases/digital-ocean.mdx)
-- [ElephantSQL Postgres](/databases/connect-db/cloud-databases/elephant.mdx)
-- [EnterpriseDB (BigAnimal) Postgres](/databases/connect-db/cloud-databases/enterprisedb.mdx)
-- [GCP Postgres](/databases/connect-db/cloud-databases/gcp.mdx)
-- [Heroku Postgres](/databases/connect-db/cloud-databases/heroku.mdx)
-- [Neon Postgres](/databases/connect-db/cloud-databases/neon.mdx)
-- [Railway Postgres](/databases/connect-db/cloud-databases/railway.mdx)
-- [Render Postgres](/databases/connect-db/cloud-databases/render.mdx)
-- [Supabase Postgres](/databases/connect-db/cloud-databases/supabase.mdx)
-- [TimescaleDB Cloud](/databases/connect-db/cloud-databases/timescale-cloud.mdx)
-- [YugabyteDB](/databases/connect-db/cloud-databases/yugabyte.mdx)
+Check out our [extensive list of databases](/databases/overview.mdx) that Hasura Cloud supports in order to get the
+database connection URL and for other steps required to ensure connectivity from Hasura Cloud.
 
 ## Step 4: Try out Hasura
 
@@ -142,22 +122,24 @@ For a full hands-on tour of Hasura, check out our
 
 ### Database operations
 
+- [Databases overview](/databases/overview.mdx)
 - [Database modeling](/schema/postgres/index.mdx): Learn how to model your database schema, as well as how to extend it.
 - [Querying data](/queries/postgres/index.mdx): Use GraphQL queries to query data from your GraphQL API.
 - [Inserting data](/mutations/postgres/index.mdx): Use GraphQL mutations to insert data into your GraphQL API.
+- [Postgres permissions](/deployment/postgres-requirements.mdx#managed-pg-permissions)
 
 ### Business logic
 
 There are several options for the implementation of business logic, depending on your use case.
 
-- [Actions](/actions/index.mdx): Actions can be used if you'd like to extend your GraphQL schema by integrating with a
-  REST endpoint.
-- [Remote Schemas](/remote-schemas/index.mdx): If you have an existing GraphQL server or if you're comfortable with
+- [Actions](/actions/overview.mdx): Actions can be used if you'd like to extend your GraphQL schema by integrating with
+  a REST endpoint.
+- [Remote Schemas](/remote-schemas/overview.mdx): If you have an existing GraphQL server or if you're comfortable with
   implementing one, you can use Remote Schemas.
-- [Event Triggers](/event-triggers/index.mdx): To trigger a serverless function based on a database event, use event
+- [Event Triggers](/event-triggers/overview.mdx): To trigger a serverless function based on a database event, use event
   triggers.
-- [Scheduled Triggers](/scheduled-triggers/index.mdx): Scheduled Triggers are used to execute custom business logic at
-  specific points in time.
+- [Scheduled Triggers](/scheduled-triggers/overview.mdx): Scheduled Triggers are used to execute custom business logic
+  at specific points in time.
 
 ### Manage Hasura Cloud project
 
@@ -166,13 +148,3 @@ You can click the gear icon in the Hasura Cloud dashboard to manage your Hasura 
 [custom domains](/hasura-cloud/projects/domains.mdx)).
 
 <Thumbnail src="/img/getting-started/project-manage.png" alt="Project actions" width="860px" />
-
-:::info Additional Resources
-
-Get Started with Hasura today -
-[Watch video guide](https://hasura.io/events/webinar/get-started-with-hasura/?pg=docs&plcmt=body&cta=getting-started&tech=).
-
-:::
-
-- [Cloud databases guides](/databases/connect-db/cloud-databases/index.mdx)
-- [Postgres permissions](/deployment/postgres-requirements.mdx#managed-pg-permissions)

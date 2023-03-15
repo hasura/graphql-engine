@@ -1,0 +1,81 @@
+---
+description: Documentation for Hasura Enterprise Edition
+title: 'EE: Hasura Enterprise'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+hide_table_of_contents: true
+sidebar_position: 1
+sidebar_label: Overview
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import VersionedLink from '@site/src/components/VersionedLink';
+import Enterprise from '@site/static/icons/features/enterprise.svg';
+
+# <Enterprise /> Hasura Enterprise
+
+<div className="badge badge--primary heading-badge" style={{ marginBottom: `1rem` }}>
+  Available on: Self-hosted Enterprise
+</div>
+
+<div className="overview-header">
+  <div className="overview-text">
+    <p>
+    The open-source version of Hasura is highly capable, but Hasura Enterprise Edition (EE) has additional built-in 
+    features for running Hasura in production on your own infrastructure. These features have key capabilities for observability, security, 
+    and performance.
+    </p>
+    <p>
+    Hasura Enterprise Edition is available as a self-hosted product with support from the Hasura team. You can deploy 
+    the Hasura Enterprise Edition on your own infrastructure, or on a cloud provider of your choice.
+    </p>
+    <p>
+        If you'd like to learn more, please <a href="mailto:sales@hasura.io">contact us</a>.
+    </p>
+    <h4>Quick Links</h4>
+    <ul>
+      <li>
+        <VersionedLink to="/enterprise/getting-started/quickstart-docker">
+          Quickstart with Docker.
+        </VersionedLink>
+      </li>
+      <li>
+        <VersionedLink to="/enterprise/upgrade-ce-to-ee/">
+          Upgrade from Hasura CE to Hasura Enterprise.
+        </VersionedLink>
+      </li>
+    </ul>
+
+  </div>
+ <iframe
+        src="https://www.youtube.com/embed/QE3mTzE9a3o"
+        frameborder="0"
+        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+      />
+</div>
+
+## Using Hasura Enterprise Edition
+
+<div className="overview-gallery">
+  <VersionedLink to="/enterprise/getting-started/quickstart-aws-ecs/">
+    <div className="card">
+      <h3>Quickstart with AWS ECS</h3>
+      <p>Learn how to deploy Hasura Enterprise Edition on AWS ECS.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/enterprise/caching/">
+    <div className="card">
+      <h3>GraphQL Caching</h3>
+      <p>Learn how to enable GraphQL caching in Hasura Enterprise Edition to supercharge performance.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/enterprise/metrics/">
+    <div className="card">
+      <h3>Configure Prometheus</h3>
+      <p>Learn how to configure Prometheus in Hasura Enterprise Edition to monitor your GraphQL API.</p>
+    </div>
+  </VersionedLink>
+</div>

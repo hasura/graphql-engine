@@ -21,7 +21,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 ## Introduction
 
-This guide will help you get set up with [Hasura Cloud](/hasura-cloud/index.mdx) and our MySQL integration. This is
+This guide will help you get set up with [Hasura Cloud](/hasura-cloud/overview.mdx) and our MySQL integration. This is
 the easiest way to set up Hasura Engine and the MySQL GraphQL Data Connector.
 
 :::tip Supported versions:
@@ -29,7 +29,7 @@ the easiest way to set up Hasura Engine and the MySQL GraphQL Data Connector.
 1.  Hasura GraphQL Engine `v2.19.0` onwards
 2.  MySQL version 8.0 and higher
 3.  Currently only standard implementations of MySQL are supported. PlanetScale and certain other providers are
-unsupported.
+    unsupported.
 
 :::
 
@@ -49,16 +49,20 @@ create a new Hasura Cloud account.
 
 Once you create a project on Hasura Cloud, hit the "Launch Console" button to open the Hasura Console for your project.
 
-<Thumbnail src='/img/databases/data-connector/create-project.png' alt='Connect new or existing database' width='1000px' />
+<Thumbnail
+  src="/img/databases/data-connector/create-project.png"
+  alt="Connect new or existing database"
+  width="1000px"
+/>
 
-### Step 2: Connect to a MySQL database 
+### Step 2: Connect to a MySQL database
 
 From the Console, click the `Data` tab:
 
 <Thumbnail src="/img/getting-started/connect-db-console.png" alt="Connect database" width="1000px" />
 
-Select the MySQL (Alpha) data source driver. Enter a database display name and the JDBC Connection URL for your
-MySQL instance.
+Select the MySQL (Alpha) data source driver. Enter a database display name and the JDBC Connection URL for your MySQL
+instance.
 
 The JDBC connection URL should look like this:
 
@@ -67,27 +71,26 @@ jdbc:mysql://<hostname>:<port>/<database name>?user=<username>&password=<passwor
 ```
 
 For example:
+
 ```yaml {4-6}
 jdbc:mysql://myhost.mycompany.com/mysqltest?user=abc&password=pqr  # assuming the default port 3306
 jdbc:mysql://localhost:4533/mysqltest?user=abc&password=pqr        # assuming MySQL is running on port 4533
 
 ```
 
-For more information see [MySQL Connection URL syntax](https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-jdbc-url-format.html).
-
+For more information see
+[MySQL Connection URL syntax](https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-jdbc-url-format.html).
 
 Click `Connect Database`.
 
 ### Step 7: Track tables and run GraphQL API queries
 
-Now that you have successfully connected your MySQL database to Hasura, you can track tables and use Hasura to automatically build a GraphQL API on top of it. 
-
+Now that you have successfully connected your MySQL database to Hasura, you can track tables and use Hasura to
+automatically build a GraphQL API on top of it.
 
 ## Keep up to date
 
-
-If you'd like to stay informed about the status of MySQL support, subscribe to our newsletter and join our
-discord!
+If you'd like to stay informed about the status of MySQL support, subscribe to our newsletter and join our discord!
 
 - [https://hasura.io/newsletter/](https://hasura.io/newsletter/)
 - [https://discord.com/invite/hasura](https://discord.com/invite/hasura)

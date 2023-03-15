@@ -1,0 +1,81 @@
+---
+description: Hasura Deployment
+title: Overview
+keywords:
+  - hasura
+  - docs
+  - deployment
+  - CI/CD
+  - cloud
+  - docker
+hide_table_of_contents: true
+sidebar_position: 1
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import VersionedLink from '@site/src/components/VersionedLink';
+import Deployment from '@site/static/icons/features/deployment.svg';
+
+# <Deployment /> Deploy Hasura GraphQL Engine
+
+<div className="overview-header">
+  <div className="overview-text">
+    <p>
+      To deploy the Hasura GraphQL Engine, we recommend using Hasura Cloud, which is a fully-managed, highly-optimized, production-ready, 
+      hosted option. With Hasura Cloud, you can deploy your GraphQL API in less than 60 seconds plus you get high availability,
+      automatic upgrades, and observability out of the box. Alternatively, you can deploy the Hasura GraphQL Engine to a
+      cloud provider of your choice using Docker or Kubernetes.
+    </p>
+    <p>
+      Regardless of where you deploy, the Hasura GraphQL Engine is highly configurable, allowing you to tailor
+      everything to your needs.
+    </p>
+    <h4>Quick Links</h4>
+    <ul>
+      <li>
+        <VersionedLink to="/getting-started/getting-started-cloud/">
+          Deploy to Hasura Cloud in less than 60 seconds.
+        </VersionedLink>
+      </li>
+      <li>
+        <VersionedLink to="/deployment/graphql-engine-flags/index/">Learn about configuring Hasura.</VersionedLink>
+      </li>
+    </ul>
+
+  </div>
+ <iframe
+        src="https://www.youtube.com/embed/f4Jj_sqn1ww"
+        frameborder="0"
+        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+      />
+</div>
+
+## Deployment Topics
+
+<div className="overview-gallery">
+  <VersionedLink to="/getting-started/getting-started-cloud/">
+    <div className="card">
+      <h3>Hasura Cloud</h3>
+      <p>In just a couple of clicks, connect your existing data and have a production-ready GraphQL API.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/deployment/deployment-guides/index/">
+    <div className="card">
+      <h3>Deployment Guides</h3>
+      <p>
+        Deploy Hasura GraphQL Engine to a cloud provider of your choice using one of our guides. We have guides for AWS,
+        GCP, Azure, DigitalOcean, and more.
+      </p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/deployment/deployment-guides/docker/">
+    <div className="card">
+      <h3>Self-hosted Docker</h3>
+      <p>
+        Not sure where to start? We have a guide to help you get up and running with Hasura GraphQL Engine on Docker,
+        regardless of where you want to host.
+      </p>
+    </div>
+  </VersionedLink>
+</div>

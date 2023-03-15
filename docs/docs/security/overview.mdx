@@ -1,0 +1,67 @@
+---
+description: Hasura Cloud Standard and Hasura Enterprise API Security
+title: 'Cloud & EE: API Security'
+keywords:
+  - hasura
+  - docs
+  - cloud
+  - enterprise
+  - security
+  - API security
+  - secure
+hide_table_of_contents: true
+sidebar_position: 1
+sidebar_label: Overview
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import VersionedLink from '@site/src/components/VersionedLink';
+import Security from '@site/static/icons/features/security.svg';
+
+# <Security /> Security Tools
+
+<div className="overview-header">
+  <div className="overview-text">
+    <p>
+      Hasura offers a comprehensive set of tools to secure your APIs beyond authentication and authorization. These
+      tools include an Allow List, Multiple JWT Secrets, API Limits, and more.
+    </p>
+    <h4>Quick Links</h4>
+    <ul>
+      <li>
+        <VersionedLink to="/deployment/best-practices/security">
+          Get started with Security best practices.
+        </VersionedLink>
+      </li>
+    </ul>
+  </div>
+  <iframe
+    src="https://www.youtube.com/embed/gxYnpuXITPo"
+    frameborder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  />
+</div>
+
+## Using Security Tools
+
+<div className="overview-gallery">
+  <VersionedLink to="/security/allow-list">
+    <div className="card">
+      <h3>Allow Lists</h3>
+      <p>Use the Allow List of operations to restrict the operations that can be performed by a role.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/security/multiple-jwt-secrets">
+    <div className="card">
+      <h3>Multiple JWT Secrets</h3>
+      <p>Use multiple JWT secrets to support multiple JWT issuers.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/security/api-limits">
+    <div className="card">
+      <h3>API Limits</h3>
+      <p>Use API limits to restrict the number of requests that can be made to a particular GraphQL type by a role.</p>
+    </div>
+  </VersionedLink>
+</div>

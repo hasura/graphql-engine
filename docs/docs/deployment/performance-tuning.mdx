@@ -124,8 +124,8 @@ It's recommended to monitor resource usage patterns and vertically scale up the 
 your workload, DB size etc. 4 CPUs with 8GB RAM is usually a good sweet spot to handle a wide variety of production
 workloads.
 
-Horizontal **auto-scaling** can be set up based on CPU & memory. It's advisable to start with this, monitor it for a
-few days and see if there's a need to change based on your workload.
+Horizontal **auto-scaling** can be set up based on CPU & memory. It's advisable to start with this, monitor it for a few
+days and see if there's a need to change based on your workload.
 
 However, you need to be aware of the total Postgres connections, too. The default `HASURA_GRAPHQL_PG_CONNECTIONS` value
 is `50`, meanwhile the default Postgres `max_connections` configuration is `100`. The Postgres server will easily be out
@@ -140,7 +140,7 @@ pg_max_connections >= hasura_nodes * hasura_pg_connections + event_nodes * event
 Observability tools help us track issues, alert us to errors, and allow us to monitor performance and hardware usage. It
 is critical in production. There are many open-source and commercial services. However, you may have to combine many
 tools because of the architectural complexity. For more information, check out our
-[observability section](/observability/index.mdx) and our
+[observability section](/observability/overview.mdx) and our
 [observability best practices](/deployment/best-practices/observability.mdx).
 
 ## Software architecture and best practices
@@ -198,7 +198,7 @@ Hardware has its limits. It's expensive to scale servers as well as optimize dat
 master-master replica, so it will be a bottleneck if you store all the data in one database. Therefore, you can divide
 your business logic into multiple smaller services, or microservices.
 
-Hasura encourages microservices with [Remote Schemas](/remote-schemas/index.mdx). This can act as an API Gateway that
+Hasura encourages microservices with [Remote Schemas](/remote-schemas/overview.mdx). This can act as an API Gateway that
 routes to multiple, smaller GraphQL servers.
 
 ![hasura load-balancer](/img/deployment/hasura-microservices.png)

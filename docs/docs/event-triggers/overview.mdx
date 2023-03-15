@@ -1,0 +1,72 @@
+---
+description: Hasura Event Triggers
+title: Overview
+keywords:
+  - hasura
+  - docs
+  - event triggers
+hide_table_of_contents: true
+sidebar_position: 1
+---
+
+import VersionedLink from '@site/src/components/VersionedLink';
+import EventTriggers from '@site/static/icons/features/event_triggers.svg';
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# <EventTriggers /> Event Triggers
+
+<div className="overview-header">
+  <div className="overview-text">
+    <p>
+      Hasura Event triggers are a way to automate asynchronous logic when changes are made in a connected database.
+    </p>
+    <p>
+      Event Triggers can be configured to activate when there is an <code>INSERT</code>, <code>UPDATE</code> or &nbsp;
+      <code>DELETE</code> event in a table.
+      Additionally, you can manually trigger an event through a button set up in the Hasura Console.
+    </p>
+    <h4>Quick Links</h4>
+    <ul>
+      <li>
+        <VersionedLink to="/event-triggers/quickstart">Quickstart with Event Triggers.</VersionedLink>
+      </li>
+    </ul>
+
+  </div>
+ <iframe
+        src="https://www.youtube.com/embed/9vZeQ5tHiQo"
+        frameborder="0"
+        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+      />
+</div>
+
+<Thumbnail
+  className="no-shadow overview-img"
+  src="/img/event-triggers/data-triggers-arch.png"
+  alt="Hasura Event Trigger architecture"
+  width="100%"
+/>
+
+## Event Trigger Links
+
+<div className="overview-gallery">
+  <VersionedLink to="/event-triggers/payload/">
+    <div className="card">
+      <h3>Payload structure</h3>
+      <p>Check out the format and structure of the request payload.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/event-triggers/serverless/">
+    <div className="card">
+      <h3>Call a serverless endpoint</h3>
+      <p>Call serverless functions with Event Triggers to not have to manage any dedicated infrastructure.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/event-triggers/invoke-trigger-manually/">
+    <div className="card">
+      <h3>Invoke a trigger manually</h3>
+      <p>Optionally set an Event Trigger to be invoked with a button in the Console.</p>
+    </div>
+  </VersionedLink>
+</div>

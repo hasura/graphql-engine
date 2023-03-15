@@ -1,0 +1,127 @@
+---
+description: Hasura Remote Schemas
+title: Overview
+keywords:
+  - hasura
+  - docs
+  - remote schemas
+hide_table_of_contents: true
+sidebar_position: 1
+---
+
+import VersionedLink from '@site/src/components/VersionedLink';
+import Database from '@site/static/icons/features/database.svg';
+
+import PostgreSQL from '@site/static/img/databases/logos/postgresql.png';
+import SQLServer from '@site/static/img/databases/logos/sql-server.png';
+import BigQuery from '@site/static/img/databases/logos/bigquery.png';
+import MySQL from '@site/static/img/databases/logos/mysql.png';
+import Snowflake from '@site/static/img/databases/logos/snowflake.png';
+import AmazonAthena from '@site/static/img/databases/logos/amazon-athena.png';
+
+# <Database /> Databases
+
+<div className="overview-header">
+  <div className="overview-text">
+    <p>
+      The Hasura GraphQL Engine can connect to a wide range of databases in order to generate a full featured data
+      API for you automatically, without needing to write handlers, schemas or resolvers.
+    </p>
+    <p>
+      Hasura can connect to your existing databases or you can create new databases and connect to, and manage them
+      with Hasura Engine.
+    </p>
+    <h4>Quick Links</h4>
+    <ul>
+      <li>
+        <VersionedLink to="/databases/quickstart">Get started with databases in 60 seconds.</VersionedLink>
+      </li>
+      <li>
+        <VersionedLink to="/databases/feature-support">Check Hasura feature support for databases.</VersionedLink>
+      </li>
+    </ul>
+
+  </div>
+ <iframe
+        src="https://www.youtube.com/embed/iugaSai6jr8"
+        frameborder="0"
+        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+      />
+</div>
+
+## Supported databases
+
+<div className="vendor-table">
+  <VersionedLink to="/databases/postgres/index/">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={PostgreSQL} title="PostgreSQL" alt="Connect PostgreSQL to Hasura" />
+      </div>
+      <h5>Postgres & Compatible</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/ms-sql-server/index/">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={SQLServer} title="Microsoft SQL Server" alt="Connect Microsoft SQL Server to Hasura" />
+      </div>
+      <h5>Microsoft SQL Server</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/bigquery/index/">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={BigQuery} title="Google BigQuery" alt="Connect Google BigQuery to Hasura" />
+      </div>
+      <h5>Google BigQuery</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/athena/index/">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={AmazonAthena} title="Amazon Athena" alt="Connect Amazon Athena to Hasura" />
+      </div>
+      <h5>Amazon Athena</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/snowflake/index/">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Snowflake} title="Snowflake" alt="Connect Snowflake to Hasura" />
+      </div>
+      <h5>Snowflake</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/mysql/index/">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={MySQL} title="MySQL" alt="Connect MySQL to Hasura" />
+      </div>
+      <h5>MySQL (Alpha)</h5>
+    </div>
+  </VersionedLink>
+</div>
+
+## Using Databases
+
+<div className="overview-gallery">
+  <VersionedLink to="/databases/postgres/neon">
+    <div className="card">
+      <h3>Connect to a Neon Serverless Postgres Database</h3>
+      <p>Create a database with our partners at Neon with a generous free starter tier.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/bigquery/index">
+    <div className="card">
+      <h3>Connect to a BigQuery Database</h3>
+      <p>Utilize Google's leading enterprise data warehouse platform.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/mysql/index/">
+    <div className="card">
+      <h3>Connect to a MySQL Database</h3>
+      <p>The world's most popular open source database. Currently in Alpha preview.</p>
+    </div>
+  </VersionedLink>
+</div>

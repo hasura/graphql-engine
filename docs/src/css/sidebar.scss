@@ -1,3 +1,9 @@
+// For the index restructure, this selector recreates the top-level padding / height for all sidenav elements
+[class~='menu__link'] {
+  padding-right: 0;
+  height: 30px;
+}
+
 .theme-doc-sidebar-container {
   background-color: var(--color-gray-4);
   .menu {
@@ -99,15 +105,14 @@
   }
 }
 
-
 /* Dark Mode Styles */
 
 html[data-theme='dark'] {
-
   .theme-doc-sidebar-container {
     background-color: var(--color-gray-86);
 
-    button[class*='collapseSidebarButton_'], div[class*='collapsedDocSidebar_'] {
+    button[class*='collapseSidebarButton_'],
+    div[class*='collapsedDocSidebar_'] {
       &::before {
         background: url('/icons/collapse-arrow-left-light.svg') no-repeat;
       }
@@ -119,7 +124,8 @@ html[data-theme='dark'] {
   }
 
   .theme-doc-sidebar-menu {
-    .theme-doc-sidebar-item-link-level-1.menu__list-item, .theme-doc-sidebar-item-link-level-2.menu__list-item {
+    .theme-doc-sidebar-item-link-level-1.menu__list-item,
+    .theme-doc-sidebar-item-link-level-2.menu__list-item {
       &::before {
         background: url('/icons/dot.svg') no-repeat;
       }
@@ -129,81 +135,81 @@ html[data-theme='dark'] {
       }
     }
 
-    .theme-doc-sidebar-item-category.cloud-icon {
-      .menu__list-item-collapsible {
-        .menu__link {
-          &:after {
-            background: url('/icons/cloud-light.svg') no-repeat;
-          }
-        }
-      }
-    }
+    //.theme-doc-sidebar-item-category.cloud-icon {
+    //  .menu__list-item-collapsible {
+    //    .menu__link {
+    //      &:after {
+    //        background: url('/icons/cloud-light.svg') no-repeat;
+    //      }
+    //    }
+    //  }
+    //}
 
-    .theme-doc-sidebar-item-category.enterprise-icon {
-      .menu__list-item-collapsible {
-        .menu__link {
-          &:after {
-            background: url('/icons/enterprise-light.svg') no-repeat;
-          }
-        }
-      }
-    }
+    //.theme-doc-sidebar-item-category.enterprise-icon {
+    //  .menu__list-item-collapsible {
+    //    .menu__link {
+    //      &:after {
+    //        background: url('/icons/enterprise-light.svg') no-repeat;
+    //      }
+    //    }
+    //  }
+    //}
 
-    .theme-doc-sidebar-item-link.cloud-and-enterprise-icon {
-      .menu__link {
-        position: relative;
+    //.theme-doc-sidebar-item-link.cloud-and-enterprise-icon {
+    //  .menu__link {
+    //    position: relative;
+    //
+    //    &:after {
+    //      background: url('/icons/ce_ee_light.svg') no-repeat;
+    //    }
+    //  }
+    //}
 
-        &:after {
-          background: url('/icons/ce_ee_light.svg') no-repeat;
-        }
-      }
-    }
+    //.theme-doc-sidebar-item-category.cloud-and-enterprise-icon {
+    //  .menu__list-item-collapsible {
+    //    .menu__link {
+    //      &:after {
+    //        background: url('/icons/ce_ee_light.svg') no-repeat;
+    //        margin-left: 5px;
+    //      }
+    //    }
+    //  }
+    //}
 
-    .theme-doc-sidebar-item-category.cloud-and-enterprise-icon {
-      .menu__list-item-collapsible {
-        .menu__link {
-          &:after {
-            background: url('/icons/ce_ee_light.svg') no-repeat;
-            margin-left: 5px;
-          }
-        }
-      }
-    }
+    //.theme-doc-sidebar-item-link.cloud-icon {
+    //  .menu__link {
+    //    &:after {
+    //      background: url('/icons/cloud-light.svg') no-repeat;
+    //      background-position: right center;
+    //    }
+    //
+    //    &:hover {
+    //      &:before {
+    //        background-color: var(--color-gray-74);
+    //        color: var(--color-gray-0);
+    //        box-shadow: 0px 12px 66px rgba(12, 16, 21, 0.4);
+    //      }
+    //    }
+    //  }
+    //}
 
-    .theme-doc-sidebar-item-link.cloud-icon {
-      .menu__link {
-        &:after {
-          background: url('/icons/cloud-light.svg') no-repeat;
-          background-position: right center;
-        }
-
-        &:hover {
-          &:before {
-            background-color: var(--color-gray-74);
-            color: var(--color-gray-0);
-            box-shadow: 0px 12px 66px rgba(12, 16, 21, 0.4);
-          }
-        }
-      }
-    }
-
-    .theme-doc-sidebar-item-category.cloud-icon, .theme-doc-sidebar-item-category.enterprise-icon {
-      .menu__list-item-collapsible {
-        .menu__link {
-          &:after {
-            background-position: right center;
-          }
-
-          &:hover {
-            &:before {
-              background-color: var(--color-gray-74);
-              color: var(--color-gray-0);
-              box-shadow: 0px 12px 66px rgba(12, 16, 21, 0.4);
-            }
-          }
-        }
-      }
-    }
+    //.theme-doc-sidebar-item-category.cloud-icon,
+    //.theme-doc-sidebar-item-category.enterprise-icon {
+    //  .menu__list-item-collapsible {
+    //    .menu__link {
+    //      &:after {
+    //        background-position: right center;
+    //      }
+    //
+    //      &:hover {
+    //        &:before {
+    //          background-color: var(--color-gray-74);
+    //          color: var(--color-gray-0);
+    //          box-shadow: 0px 12px 66px rgba(12, 16, 21, 0.4);
+    //        }
+    //      }
+    //    }
+    //  }
+    //}
   }
-
 }

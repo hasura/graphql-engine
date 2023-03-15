@@ -11,6 +11,7 @@
 @use 'doc';
 @use 'footer';
 @use 'introduction-page';
+@use 'overview-page';
 @use 'cloud-db-icon-gallery';
 @use 'admonitions';
 @use 'badges';
@@ -30,6 +31,24 @@
 
   h3 {
     margin-bottom: 10px;
+  }
+}
+
+.front-matter {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 40px;
+  grid-column: 1 / -1;
+
+  iframe {
+    aspect-ratio: 16 / 9;
+    height: 100%;
+    width: 100%;
+    border-radius: 8px;
+  }
+
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr;
   }
 }
 

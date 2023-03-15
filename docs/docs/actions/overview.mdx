@@ -1,0 +1,80 @@
+---
+description: Hasura Actions
+title: Overview
+keywords:
+  - hasura
+  - docs
+  - actions
+hide_table_of_contents: true
+sidebar_position: 1
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import VersionedLink from '@site/src/components/VersionedLink';
+import Actions from '@site/static/icons/features/actions.svg';
+
+# <Actions /> Actions
+
+<div className="overview-header">
+  <div className="overview-text">
+    <p>
+      Actions are a convenient and secure way to connect to REST APIs to achieve any business logic you may need,
+      directly from your GraphQL API.
+    </p>
+    <p>
+      Maybe you need to validate, process or enrich some data, call another API, or log a user in. With Actions you can
+      connect to a REST endpoint which can be your own custom server, a public API, or a serverless function.
+    </p>
+    <p>
+      You can also apply transforms to your payloads and responses and handle the response to your GraphQL client
+      asynchronously, subscribing to results as they occur.
+    </p>
+    <h4>Quick Links</h4>
+    <ul>
+      <li>
+        <VersionedLink to="/actions/quickstart/">Get started with Actions in 60 seconds.</VersionedLink>
+      </li>
+      <li>
+        <VersionedLink to="/actions/create/">Learn how Actions work.</VersionedLink>
+      </li>
+    </ul>
+  </div>
+  <iframe
+    src="https://www.youtube.com/embed/Fqb6Ar3t_C4"
+    frameborder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  />
+</div>
+
+<Thumbnail
+  src="/img/actions/actions-arch.png"
+  alt="Actions high level architecture"
+  className="no-shadow overview-img"
+/>
+
+## Using Actions
+
+<div className="overview-gallery">
+  <VersionedLink to="/actions/rest-connectors/">
+    <div className="card">
+      <h3>REST Connectors</h3>
+      <p>Integrate existing REST APIs into your GraphQL schema with Actions by applying context and transforms.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/actions/open-api/">
+    <div className="card">
+      <h3>Import OpenAPI to Actions</h3>
+      <p>
+        Upload an API written in the OpenAPI spec, select the operation you want as a Hasura Action and it will be
+        imported for you.
+      </p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/actions/async-actions/">
+    <div className="card">
+      <h3>Async Actions</h3>
+      <p>Subscribe to the result of a long-running action in order to be updated as results are processed.</p>
+    </div>
+  </VersionedLink>
+</div>

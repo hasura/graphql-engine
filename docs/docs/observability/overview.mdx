@@ -1,26 +1,72 @@
 ---
-sidebar_label: Stats Overview
-sidebar_position: 2
-description: Hasura Cloud stats overview
-title: 'Cloud: Stats Overview'
+description: Hasura Observability is a set of tools that help you monitor and debug your GraphQL API
+title: Overview
 keywords:
   - hasura
   - docs
-  - cloud
-  - overview
+  - observability
+hide_table_of_contents: true
+sidebar_position: 1
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
-import HeadingIcon from '@site/src/components/HeadingIcon';
+import VersionedLink from '@site/src/components/VersionedLink';
+import Observability from '@site/static/icons/features/observability.svg';
 
-# Stats Overview
+# <Observability /> Observability
 
-<div className="badge badge--primary heading-badge">
+<div className="badge badge--primary heading-badge" style={{ marginBottom: `1rem` }}>
   Available on: Cloud Standard, Cloud Professional, Cloud Enterprise
 </div>
 
-## Overview
+<div className="overview-header">
+  <div className="overview-text">
+    <p>
+      Hasura Observability is a set of tools that help you monitor and debug your Hasura instance. With Observability,
+      you can check on the performance of your GraphQL API, debug errors, and get insights into your GraphQL API usage.
+      Observability is a part of Hasura Cloud and is available to all paid plans.
+    </p>
+    <p>
+      We offer integrations with popular monitoring tools like Datadog, Prometheus, and OpenTelemetry and you can
+      quickly get set up with these tools using one of our guides.
+    </p>
+    <h4>Quick Links</h4>
+    <ul>
+      <li>
+        <VersionedLink to="/observability/integrations/index">Connect an integration.</VersionedLink>
+      </li>
+      <li>
+        <VersionedLink to="/observability/how-it-works">Learn how Observability works.</VersionedLink>
+      </li>
+    </ul>
+  </div>
+  <iframe
+    src="https://www.youtube.com/embed/Y9-43_KcoGY"
+    frameborder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  />
+</div>
 
-The Overview displays aggregate stats over the last hour:
+## Using Observability
 
-<Thumbnail src="/img/observability/monitoring-tab-overview.png" alt="Hasura Cloud stats monitoring" />
+<div className="overview-gallery">
+  <VersionedLink to="/observability/integrations/opentelemetry/">
+    <div className="card">
+      <h3>OpenTelemetry</h3>
+      <p>Connect your Hasura GraphQL API to OpenTelemetry-compliant services.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/observability/integrations/prometheus/">
+    <div className="card">
+      <h3>Prometheus</h3>
+      <p>Connect your Hasura GraphQL API to Prometheus.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/observability/integrations/datadog">
+    <div className="card">
+      <h3>Datadog</h3>
+      <p>Connect your Hasura GraphQL API to Datadog.</p>
+    </div>
+  </VersionedLink>
+</div>

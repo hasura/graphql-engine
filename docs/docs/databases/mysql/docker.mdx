@@ -1,7 +1,7 @@
 ---
 sidebar_label: Docker
 description: Getting Started with Docker for Hasura Enterprise Edition
-title: "MySQL: Getting Started with Docker"
+title: 'MySQL: Getting Started with Docker'
 keywords:
   - hasura
   - docs
@@ -11,8 +11,8 @@ keywords:
 sidebar_position: 1
 ---
 
-import Thumbnail from "@site/src/components/Thumbnail";
-import LatestRelease from "@site/src/components/LatestRelease";
+import Thumbnail from '@site/src/components/Thumbnail';
+import LatestRelease from '@site/src/components/LatestRelease';
 
 # Getting Started with Hasura and MySQL in Docker
 
@@ -23,8 +23,8 @@ import LatestRelease from "@site/src/components/LatestRelease";
 
 ## Introduction
 
-This guide will help you get set up with the [Enterprise Edition](/enterprise/index.mdx) of Hasura GraphQL Engine with
-our MySQL integration using Docker Compose. This is the easiest way to set up Hasura Enterprise Edition and the
+This guide will help you get set up with the [Enterprise Edition](/enterprise/overview.mdx) of Hasura GraphQL Engine
+with our MySQL integration using Docker Compose. This is the easiest way to set up Hasura Enterprise Edition and the
 MySQL GraphQL Data Connector.
 
 :::tip Supported versions:
@@ -32,7 +32,7 @@ MySQL GraphQL Data Connector.
 1.  Hasura GraphQL Engine `v2.19.0` onwards
 2.  MySQL version 8.0 and higher
 3.  Currently only standard implementations of MySQL are supported. PlanetScale and certain other providers are
-unsupported.
+    unsupported.
 
 :::
 
@@ -54,12 +54,11 @@ This tutorial assumes that the following prerequisites have been met:
   working on your machine.
 - You have access to a MySQL database for which you would like to create an API.
 
-
 ### Step 1: Get the Docker Compose file
 
 The [install manifests repo](https://github.com/hasura/graphql-engine/tree/master/install-manifests) contains all
-installation manifests required to deploy Hasura anywhere. The Docker Compose manifest also contains a Postgres
-database in order to store the Hasura metadata and a Redis instance for caching.
+installation manifests required to deploy Hasura anywhere. The Docker Compose manifest also contains a Postgres database
+in order to store the Hasura metadata and a Redis instance for caching.
 
 ```bash
 # in a new directory run
@@ -72,25 +71,25 @@ curl https://raw.githubusercontent.com/hasura/graphql-engine/master/install-mani
 
 Edit the downloaded `docker-compose.yaml` and set the license key and admin secret.
 
-An [admin secret key](/deployment/securing-graphql-endpoint.mdx) is required to make sure that your GraphQL endpoint
-and the Hasura Console are not publicly accessible.
+An [admin secret key](/deployment/securing-graphql-endpoint.mdx) is required to make sure that your GraphQL endpoint and
+the Hasura Console are not publicly accessible.
 
 #### Edit the Docker Compose file to include the license key and admin secret environment variables
 
 ```yaml {5-6}
-...
+
+---
 graphql-engine:
   image: hasura/graphql-engine:v2.12.0
   environment:
     HASURA_GRAPHQL_EE_LICENSE_KEY: <license key>
     HASURA_GRAPHQL_ADMIN_SECRET: <your secretkey>
-...
 ```
 
 :::caution Secure the admin secret
 
 The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client to the Hasura GraphQL Engine as it would give
-the client full admin rights to your Hasura instance. See [Authentication & Authorization](/auth/index.mdx) for
+the client full admin rights to your Hasura instance. See [Authentication & Authorization](/auth/overview.mdx) for
 information on setting up auth in Hasura.
 
 :::
@@ -117,17 +116,17 @@ b0b1aac0508d postgres                           ... 1m ago  Up 1m  5432/tcp ...
 
 ### Step 5: Load the Hasura Console
 
-Open the Hasura Console by navigating to `http://localhost:8080/console`. You will need to input your admin secret
-key as set in your Docker Compose file to log in.
+Open the Hasura Console by navigating to `http://localhost:8080/console`. You will need to input your admin secret key
+as set in your Docker Compose file to log in.
 
-### Step 6: Connect to a MySQL database 
+### Step 6: Connect to a MySQL database
 
 From the Console, click the `Data` tab:
 
 <Thumbnail src="/img/getting-started/connect-db-console.png" alt="Connect database" width="1000px" />
 
-Select the MySQL (Alpha) data source driver, enter in a display name for the database and set the JDBC Connection
-URL for your MySQL instance.
+Select the MySQL (Alpha) data source driver, enter in a display name for the database and set the JDBC Connection URL
+for your MySQL instance.
 
 The JDBC connection URL should look like this:
 
@@ -136,13 +135,14 @@ jdbc:mysql://<hostname>:<port>/<database name>?user=<username>&password=<passwor
 ```
 
 For example:
+
 ```yaml {4-6}
 jdbc:mysql://myhost.mycompany.com/mysqltest?user=abc&password=pqr  # assuming the default port 3306
 jdbc:mysql://localhost:4533/mysqltest?user=abc&password=pqr        # assuming MySQL is running on port 4533
 ```
 
-For more information see [MySQL Connection URL syntax](https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-jdbc-url-format.html).
-
+For more information see
+[MySQL Connection URL syntax](https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-jdbc-url-format.html).
 
 Click `Connect Database`.
 
@@ -160,21 +160,20 @@ We highly recommend using managed PostgreSQL and Redis instances especially when
 To switch to using your PostgreSQL or Redis instances, set the following environment variables:
 
 ```yaml {4-6}
-HASURA_GRAPHQL_METADATA_DATABASE_URL
-HASURA_GRAPHQL_REDIS_URL
-HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL
+HASURA_GRAPHQL_METADATA_DATABASE_URL HASURA_GRAPHQL_REDIS_URL HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL
 ```
+
 For example:
 
 ```yaml {5-7}
-...
+
+---
 graphql-engine:
   image: hasura/graphql-engine:v2.12.0
   environment:
     HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
-    HASURA_GRAPHQL_REDIS_URL: "redis://redis:6379"
-    HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL: "redis://redis:6379"
-...
+    HASURA_GRAPHQL_REDIS_URL: 'redis://redis:6379'
+    HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL: 'redis://redis:6379'
 ```
 
 ### Resources

@@ -14,6 +14,7 @@ sidebar_position: 0
 import Link from '@docusaurus/Link';
 import VersionedLink from '@site/src/components/VersionedLink';
 import ArrowRight from '@site/static/icons/arrow_right.svg';
+import Actions from '@site/static/icons/features/actions.svg';
 import Basics from '@site/static/icons/features/basics.svg';
 import GraphQL from '@site/static/icons/features/graphql.svg';
 import BusinessLogic from '@site/static/icons/features/business_logic.svg';
@@ -24,32 +25,41 @@ import Learn from '@site/static/icons/features/learn.svg';
 import Cloud from '@site/static/icons/features/cloud.svg';
 import Observability from '@site/static/icons/features/observability.svg';
 import Caching from '@site/static/icons/features/caching.svg';
-import Testing from '@site/static/icons/features/testing.svg';
+import Remote from '@site/static/icons/features/remote_schema.svg';
 import Security from '@site/static/icons/features/security.svg';
+import Testing from '@site/static/icons/features/testing.svg';
 
 # Hasura GraphQL Engine Documentation
 
 <div className="gallery">
   <div className="sub-heading">
-    <p>
-      The Hasura GraphQL Engine makes your data instantly accessible over a real-time GraphQL API, so you can build and
-      ship modern, performant apps and APIs 10x faster. Hasura connects to your databases, REST and GraphQL endpoints,
-      and third party APIs to provide a unified, connected, real-time, secured GraphQL API for all of your data.
-    </p>
-    <p>
-      <Link to="https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=hasura-cloud&tech=default" target="_blank">
-        Hasura Cloud
-      </Link>{' '}
-      empowers you to create highly optimized, managed and massively scalable Hasura instances in seconds and includes
-      extra reliability, monitoring, caching, tracing, security and deployment features. You can also deploy Hasura
-      manually using our Community Edition Docker image which includes all the core features of GraphQL Engine.
-      <br />
-      <br />
-      <VersionedLink to="/enterprise/index">Hasura Enterprise Edition (EE)</VersionedLink> builds on all the features of
-      the Hasura GraphQL Engine while giving you an enterprise-ready solution - complete with key features like observability,
-      security, and performance - deployable in minutes. Designed to work with your container platform of choice, Hasura
-      EE can quickly be set up on AWS ECS, Kubernetes, and Google Cloud Run.
-    </p>
+    <div className="front-matter">
+      <p>
+        The Hasura GraphQL Engine makes your data instantly accessible over a GraphQL API, so you can build and ship
+        modern, performant apps and APIs 10x faster. Hasura connects to your databases, REST and GraphQL endpoints, and
+        third party APIs to provide a unified, connected, real-time, secured GraphQL API for all of your data.
+        <br />
+        <br />
+        <Link to="https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=hasura-cloud&tech=default" target="_blank">
+          <b>Hasura Cloud</b>
+        </Link> empowers you to create highly optimized, managed and massively scalable Hasura instances in seconds and includes
+        extra reliability, monitoring, caching, tracing, security and deployment features. You can also deploy Hasura manually
+        using our Community Edition Docker image which includes all the core features of GraphQL Engine.
+        <br />
+        <br />
+        <VersionedLink to="/enterprise/overview">
+          <b>Hasura Enterprise Edition (EE)</b>
+        </VersionedLink>{' '}
+        builds on all the features of the Hasura GraphQL Engine while giving you an enterprise-ready solution - complete
+        with key features like observability, security, and performance - deployable in minutes.
+      </p>
+      <iframe
+        src="https://www.youtube.com/embed/5E4T6SDWLJQ"
+        frameborder="0"
+        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+      />
+    </div>
   </div>
   <div className="sub-heading">
     <h3>Popular Topics</h3>
@@ -60,7 +70,7 @@ import Security from '@site/static/icons/features/security.svg';
       <h4>Basics</h4>
     </div>
     <p>You can get up and running with Hasura in minutes by following our Getting Started guide.</p>
-    <VersionedLink to="/getting-started/index">
+    <VersionedLink to="/getting-started/overview">
       See Getting Started <ArrowRight className="arrow" />
     </VersionedLink>
   </div>
@@ -70,20 +80,31 @@ import Security from '@site/static/icons/features/security.svg';
       <h4>GraphQL API</h4>
     </div>
     <p>We provide an instant GraphQL API by generating your GraphQL schema for you based on your data.</p>
-    <VersionedLink to="/schema/index">
-      See Schema <ArrowRight className="arrow" />
+    <VersionedLink to="/schema/overview">
+      See GraphQL Schema <ArrowRight className="arrow" />
     </VersionedLink>
   </div>
   <div className="card">
     <div className="card-header">
       <BusinessLogic />
-      <h4>Business Logic</h4>
+      <h4>Actions</h4>
     </div>
     <p>
-      With built-in extensibility, Hasura can handle business logic via Actions, Remote Schemas, and Event Triggers.
+      Hasura's Actions feature allows you to write custom business logic in your preferred language and expose it as a
+      GraphQL API.
     </p>
-    <VersionedLink to="/faq/index/#faq-business-logic">
-      See Business Logic <ArrowRight className="arrow" />
+    <VersionedLink to="/actions/overview">
+      See Actions <ArrowRight className="arrow" />
+    </VersionedLink>
+  </div>
+  <div className="card">
+    <div className="card-header">
+      <Remote />
+      <h4>Remote Schemas</h4>
+    </div>
+    <p>Hasura's Remote Schemas feature allows you to combine multiple GraphQL APIs into a single unified endpoint.</p>
+    <VersionedLink to="/remote-schemas/overview">
+      See Remote Schema <ArrowRight className="arrow" />
     </VersionedLink>
   </div>
   <div className="card">
@@ -95,18 +116,8 @@ import Security from '@site/static/icons/features/security.svg';
       By using role-based authorization and industry-standard authentication patterns, you can secure your app and your
       data with ease.
     </p>
-    <VersionedLink to="/auth/index">
+    <VersionedLink to="/auth/overview">
       See Auth <ArrowRight className="arrow" />
-    </VersionedLink>
-  </div>
-  <div className="card">
-    <div className="card-header">
-      <Enterprise />
-      <h4>Enterprise</h4>
-    </div>
-    <p>Deploy an enterprise-ready instance of Hasura in minutes using your container platform of choice.</p>
-    <VersionedLink to="/enterprise/index">
-      See Hasura Enterprise <ArrowRight className="arrow" />
     </VersionedLink>
   </div>
   <div className="card">
@@ -115,82 +126,11 @@ import Security from '@site/static/icons/features/security.svg';
       <h4>Deployments</h4>
     </div>
     <p>
-      Whether you're using Hasura Cloud or one of your favorite one-click services, Hasura's flexibility makes it quick
-      to deploy.
+      Whether you're using Hasura Cloud or one of your favorite one-click services, Hasura's containerization makes it
+      quick and easy to deploy.
     </p>
     <VersionedLink to="/deployment/deployment-guides/index">
       See Deployment Guides <ArrowRight className="arrow" />
-    </VersionedLink>
-  </div>
-  <div className="card">
-    <div className="card-header">
-      <Learn />
-      <h4>Learn</h4>
-    </div>
-    <p>Our Learn team is hard at work creating courses to help developers learn more about Hasura and GraphQL.</p>
-    <Link to="https://hasura.io/learn/" target="_blank">
-      See Courses <ArrowRight className="arrow" />
-    </Link>
-  </div>
-  <div className="card">
-    <div className="card-header">
-      <Cloud />
-      <h4>Cloud Projects</h4>
-    </div>
-    <p>
-      Hasura Cloud gives you a fully managed, production ready GraphQL API as a service to help you build modern apps
-      faster.
-    </p>
-    <VersionedLink to="/getting-started/getting-started-cloud/">
-      See Getting Started with Cloud <ArrowRight className="arrow" />
-    </VersionedLink>
-  </div>
-  <div className="card">
-    <div className="card-header">
-      <Observability />
-      <h4>Observability</h4>
-    </div>
-    <p>
-      For enhanced reliability and performance, Hasura Cloud offers easy-to-integrate metrics and compatibility with
-      different common services.
-    </p>
-    <VersionedLink to="/observability/index">
-      See Metrics <ArrowRight className="arrow" />
-    </VersionedLink>
-  </div>
-  <div className="card">
-    <div className="card-header">
-      <Caching />
-      <h4>Query Response Caching</h4>
-    </div>
-    <p>
-      For frequently executed queries, Hasura Cloud offers caching to improve performance and your users' experience.
-    </p>
-    <VersionedLink to="/queries/response-caching">
-      See Query Response Caching <ArrowRight className="arrow" />
-    </VersionedLink>
-  </div>
-  <div className="card">
-    <div className="card-header">
-      <Testing />
-      <h4>Regression Tests</h4>
-    </div>
-    <p>
-      With regression tests, Hasura Cloud provides you a comprehensive test bench which is executable on any GraphQL
-      Engine instance.
-    </p>
-    <VersionedLink to="/hasura-cloud/regression-tests">
-      See Regression Tests <ArrowRight className="arrow" />
-    </VersionedLink>
-  </div>
-  <div className="card">
-    <div className="card-header">
-      <Security />
-      <h4>API Security</h4>
-    </div>
-    <p>Keep your API secure and healthy with tools like API limits, allow limits, multiple secrets, and more.</p>
-    <VersionedLink to="/security/index">
-      See Security <ArrowRight className="arrow" />
     </VersionedLink>
   </div>
 </div>
