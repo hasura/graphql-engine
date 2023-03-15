@@ -383,7 +383,10 @@ functionArgs functionTrackedAs (toList -> inputArgs) = do
                   -- provided by the user.
                   named <- Map.fromList . catMaybes <$> traverse (namedArgument foundArguments) left
                   pure $ FunctionArgsExp positional named
-          pure $ P.field fieldName (Just fieldDesc) objectParser
+          pure $
+            if null mandatory
+              then P.fieldOptional fieldName (Just fieldDesc) objectParser <&> fromMaybe emptyFunctionArgsExp
+              else P.field fieldName (Just fieldDesc) objectParser
   where
     sessionPlaceholder :: Postgres.ArgumentExp (IR.UnpreparedValue b)
     sessionPlaceholder = Postgres.AEInput IR.UVSession
