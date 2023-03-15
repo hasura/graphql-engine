@@ -136,7 +136,11 @@ export const ManageTable: React.VFC<ManageTableProps> = (
     <div className="w-full overflow-y-auto bg-gray-50">
       <div className="px-md pt-md mb-xs">
         <Breadcrumbs dataSourceName={dataSourceName} tableName={tableName} />
-        <TableName dataSourceName={dataSourceName} tableName={tableName} />
+        <TableName
+          dataSourceName={dataSourceName}
+          tableName={tableName}
+          table={table}
+        />
         <Tabs
           value={operation}
           onValueChange={_operation => {
