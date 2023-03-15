@@ -1,10 +1,10 @@
 import { hasuraToast } from '../../new-components/Toasts';
-import { useState } from 'react';
 import { useInsertRow, FormData } from '../Data/hooks/useInsertRow';
 import { useListAllTableColumns } from '../Data/hooks/useListAllTableColumns';
 import { getPlaceholder } from './utils/getPlaceholder';
 import { Table } from '../hasura-metadata-types/source/table';
 import { InsertRowForm, InsertRowFormProps } from './InsertRowForm';
+import { useTableInfo } from '../Data/hooks/useTableInfo';
 
 type InsertRowFormContainerProps = {
   dataSourceName: string;
@@ -15,7 +15,15 @@ export const InsertRowFormContainer = ({
   dataSourceName,
   table,
 }: InsertRowFormContainerProps) => {
-  const { columns, isLoading } = useListAllTableColumns(dataSourceName, table);
+  const { columns: tableColumns, isLoading: isLoadingColumns } =
+    useListAllTableColumns(dataSourceName, table);
+
+  const { data: tableInfo, isLoading: isLoadingTableInfo } = useTableInfo({
+    dataSourceName,
+    table,
+  });
+
+  const isLoading = isLoadingColumns || isLoadingTableInfo;
 
   const onInsertSuccess = () =>
     hasuraToast({
@@ -32,33 +40,41 @@ export const InsertRowFormContainer = ({
     });
   };
 
-  const { insertRow } = useInsertRow({
+  const { insertRow, isLoading: isInserting } = useInsertRow({
     dataSourceName,
     table,
     onSuccess: onInsertSuccess,
     onError: onInsertError,
   });
 
-  const [isInserting, setInserting] = useState(false);
-
   const onInsertRow = async (formData: FormData) => {
-    setInserting(true);
     await insertRow(formData);
-    setInserting(false);
   };
 
-  const columnsWithPlaceholder: InsertRowFormProps['columns'] = columns.map(
-    column => {
-      return {
-        ...column,
-        placeholder: getPlaceholder(column.dataType),
-      };
-    }
-  );
+  const columnsDefinitions = tableInfo?.columns;
+
+  const columns: InsertRowFormProps['columns'] = tableColumns.map(column => {
+    const columnInfo = columnsDefinitions?.find(
+      columnDefinition => columnDefinition.name === column.name
+    );
+
+    const dataType = columnInfo?.type || column.dataType;
+
+    return {
+      ...column,
+      insertable:
+        typeof columnInfo?.insertable !== 'undefined'
+          ? columnInfo?.insertable
+          : true,
+      description: columnInfo?.description || '',
+      dataType,
+      placeholder: getPlaceholder(dataType),
+    };
+  });
 
   return (
     <InsertRowForm
-      columns={columnsWithPlaceholder}
+      columns={columns}
       isInserting={isInserting}
       isLoading={isLoading}
       onInsertRow={onInsertRow}

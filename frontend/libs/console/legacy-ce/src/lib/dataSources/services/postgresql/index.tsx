@@ -380,21 +380,22 @@ const parseColumnsInfoResult = (data: string[][]) => {
 };
 
 const columnDataTypes = {
-  INTEGER: 'integer',
-  SERIAL: 'serial',
+  ARRAY: 'ARRAY',
   BIGINT: 'bigint',
   BIGSERIAL: 'bigserial',
-  UUID: 'uuid',
-  JSONDTYPE: 'json',
-  JSONB: 'jsonb',
-  TIMESTAMP: 'timestamp with time zone',
-  TIME: 'time with time zone',
-  NUMERIC: 'numeric',
-  DATE: 'date',
-  TIMETZ: 'timetz',
   BOOLEAN: 'boolean',
+  DATE: 'date',
+  DATETIME: 'datetime',
+  INTEGER: 'integer',
+  JSONB: 'jsonb',
+  JSONDTYPE: 'json',
+  NUMERIC: 'numeric',
+  SERIAL: 'serial',
   TEXT: 'text',
-  ARRAY: 'ARRAY',
+  TIME: 'time with time zone',
+  TIMESTAMP: 'timestamp with time zone',
+  TIMETZ: 'timetz',
+  UUID: 'uuid',
 };
 
 const commonDataTypes = [

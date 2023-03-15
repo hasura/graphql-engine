@@ -6,7 +6,14 @@ import { GDCTable } from '..';
 
 export type GetTableInfoResponse = {
   name: GDCTable;
-  columns: { name: string; type: string; nullable: boolean }[];
+  columns: {
+    name: string;
+    type: string;
+    nullable: boolean;
+    insertable: boolean;
+    updatable: boolean;
+    description: string;
+  }[];
   primary_key?: string[] | null;
   description?: string;
   foreign_keys?: Record<

@@ -8,7 +8,11 @@ import { convertTableValue } from './InsertRowForm.utils';
 import { ListAllTableColumn } from '../Data/hooks/useListAllTableColumns';
 
 export type InsertRowFormProps = {
-  columns: (ListAllTableColumn & { placeholder: string })[];
+  columns: (ListAllTableColumn & {
+    placeholder: string;
+    insertable: boolean;
+    description: string;
+  })[];
   isInserting: boolean;
   isLoading: boolean;
   onInsertRow: (formData: FormData) => void;
@@ -114,7 +118,10 @@ export const InsertRowForm: React.VFC<InsertRowFormProps> = ({
 
   return (
     <form
-      onSubmit={() => onInsert()}
+      onSubmit={e => {
+        e.preventDefault();
+        onInsert();
+      }}
       className="w-full bg-white p-4 rounded-sm border my-2"
     >
       <div className="flex flex-col mb-6 gap-3 max-w-screen-md">
@@ -125,8 +132,7 @@ export const InsertRowForm: React.VFC<InsertRowFormProps> = ({
             name={column.name}
             onChange={onChange}
             placeholder={column.placeholder}
-            // disable if the column is auto-increment or auto-generated
-            isDisabled={false}
+            isDisabled={!column.insertable}
             // disable if the column has no default value
             isDefaultDisabled={false}
             isNullDisabled={!column.nullable}
@@ -137,12 +143,7 @@ export const InsertRowForm: React.VFC<InsertRowFormProps> = ({
       </div>
       <div className="flex gap-3">
         <Button onClick={() => onResetForm()}>Reset</Button>
-        <Button
-          mode="primary"
-          onClick={() => onInsert()}
-          isLoading={isInserting}
-          type="submit"
-        >
+        <Button mode="primary" isLoading={isInserting} type="submit">
           Insert row
         </Button>
       </div>
