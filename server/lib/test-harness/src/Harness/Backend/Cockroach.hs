@@ -16,10 +16,7 @@ module Harness.Backend.Cockroach
     dropTable,
     dropTableIfExists,
     untrackTable,
-    setupPermissions,
-    teardownPermissions,
     setupTablesAction,
-    setupPermissionsAction,
   )
 where
 
@@ -48,7 +45,6 @@ import Harness.Logging
 import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.BackendType (BackendTypeConfig)
 import Harness.Test.BackendType qualified as BackendType
-import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), SchemaName (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
@@ -322,17 +318,3 @@ setupTablesAction ts env =
   SetupAction
     (setup ts (env, ()))
     (const $ teardown ts (env, ()))
-
-setupPermissionsAction :: [Permissions.Permission] -> TestEnvironment -> SetupAction
-setupPermissionsAction permissions env =
-  SetupAction
-    (setupPermissions permissions env)
-    (const $ teardownPermissions permissions env)
-
--- | Setup the given permissions to the graphql engine in a TestEnvironment.
-setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions testEnvironment = Permissions.setup permissions testEnvironment
-
--- | Remove the given permissions from the graphql engine in a TestEnvironment.
-teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown backendTypeMetadata permissions env

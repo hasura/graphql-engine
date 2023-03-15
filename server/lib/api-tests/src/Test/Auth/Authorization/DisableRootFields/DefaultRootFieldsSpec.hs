@@ -16,6 +16,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Permissions (Permission (..), SelectPermissionDetails (..), selectPermission)
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SetupAction (setupPermissionsAction)
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -32,7 +33,7 @@ spec =
         [ (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ BigQuery.setupTablesAction schema testEnv,
-                  BigQuery.setupPermissionsAction permissions testEnv
+                  setupPermissionsAction permissions testEnv
                 ],
               Fixture.customOptions =
                 Just $
@@ -43,25 +44,25 @@ spec =
           (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Citus.setupTablesAction schema testEnv,
-                  Citus.setupPermissionsAction permissions testEnv
+                  setupPermissionsAction permissions testEnv
                 ]
             },
           (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Cockroach.setupTablesAction schema testEnv,
-                  Cockroach.setupPermissionsAction permissions testEnv
+                  setupPermissionsAction permissions testEnv
                 ]
             },
           (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv,
-                  Postgres.setupPermissionsAction permissions testEnv
+                  setupPermissionsAction permissions testEnv
                 ]
             },
           (Fixture.fixture $ Fixture.Backend SQLServer.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ SQLServer.setupTablesAction schema testEnv,
-                  SQLServer.setupPermissionsAction permissions testEnv
+                  setupPermissionsAction permissions testEnv
                 ]
             }
         ]

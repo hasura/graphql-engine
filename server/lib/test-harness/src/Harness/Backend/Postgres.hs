@@ -24,7 +24,6 @@ module Harness.Backend.Postgres
     trackTable,
     untrackTable,
     setupTablesAction,
-    setupPermissionsAction,
     setupFunctionRootFieldAction,
     setupComputedFieldAction,
     -- sql generation for other postgres-like backends
@@ -60,7 +59,6 @@ import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Services.Postgres qualified as Postgres
 import Harness.Test.BackendType (BackendTypeConfig)
 import Harness.Test.BackendType qualified as BackendType
-import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema
   ( BackendScalarType (..),
     BackendScalarValue (..),
@@ -487,20 +485,6 @@ setupTablesAction ts env =
   SetupAction
     (setup ts (env, ()))
     (const $ teardown ts (env, ()))
-
-setupPermissionsAction :: [Permissions.Permission] -> TestEnvironment -> SetupAction
-setupPermissionsAction permissions env =
-  SetupAction
-    (setupPermissions permissions env)
-    (const $ teardownPermissions permissions env)
-
--- | Setup the given permissions to the graphql engine in a TestEnvironment.
-setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup permissions env
-
--- | Remove the given permissions from the graphql engine in a TestEnvironment.
-teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown backendTypeMetadata permissions env
 
 setupFunctionRootFieldAction :: String -> TestEnvironment -> SetupAction
 setupFunctionRootFieldAction functionName env =

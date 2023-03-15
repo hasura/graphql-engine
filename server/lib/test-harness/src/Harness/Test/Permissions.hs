@@ -13,8 +13,6 @@ module Harness.Test.Permissions
     InsertPermissionDetails (..),
     createPermission,
     dropPermission,
-    setup,
-    teardown,
     selectPermission,
     updatePermission,
     insertPermission,
@@ -29,7 +27,6 @@ import Data.List (subsequences)
 import Data.Text qualified as Text
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.BackendType (BackendTypeConfig)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment
@@ -159,8 +156,7 @@ withPermissions (toList -> permissions) = mapSpecForest (map go)
       traverse_ (createPermission testEnvironment) permissions'
 
       test testEnvironment {testingRole = Just "success"}
-        `finally` for_ (getBackendTypeConfig testEnvironment) \config ->
-          traverse_ (dropPermission config testEnvironment) permissions'
+        `finally` traverse_ (dropPermission testEnvironment) permissions'
 
     failing :: (ActionWith TestEnvironment -> IO ()) -> ActionWith TestEnvironment -> IO ()
     failing k test = k \testEnvironment -> do
@@ -185,8 +181,7 @@ withPermissions (toList -> permissions) = mapSpecForest (map go)
                     pure ()
 
           attempt (test testEnvironment {testingRole = Just "failure"})
-            `finally` for_ (getBackendTypeConfig testEnvironment) \config ->
-              traverse_ (dropPermission config testEnvironment) permissions'
+            `finally` traverse_ (dropPermission testEnvironment) permissions'
 
 -- | Update the role on a given permission.
 withRole :: Text -> Permission -> Permission
@@ -275,9 +270,10 @@ createPermission testEnvironment (SelectPermission SelectPermissionDetails {..})
           limit: *selectPermissionLimit
     |]
 
-dropPermission :: BackendTypeConfig -> TestEnvironment -> Permission -> IO ()
-dropPermission backendTypeMetadata env (InsertPermission InsertPermissionDetails {..}) = do
-  let schemaName = Schema.getSchemaName env
+dropPermission :: TestEnvironment -> Permission -> IO ()
+dropPermission env (InsertPermission InsertPermissionDetails {..}) = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig env
+      schemaName = Schema.getSchemaName env
       backendType = BackendType.backendTypeString backendTypeMetadata
       requestType = backendType <> "_drop_insert_permission"
       sourceName = BackendType.backendSourceName backendTypeMetadata
@@ -291,8 +287,9 @@ dropPermission backendTypeMetadata env (InsertPermission InsertPermissionDetails
         source: *sourceName
         role:  *insertPermissionRole
     |]
-dropPermission backendTypeMetadata env (SelectPermission SelectPermissionDetails {..}) = do
-  let schemaName = Schema.getSchemaName env
+dropPermission env (SelectPermission SelectPermissionDetails {..}) = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig env
+      schemaName = Schema.getSchemaName env
       backendType = BackendType.backendTypeString backendTypeMetadata
       sourceName = BackendType.backendSourceName backendTypeMetadata
       requestType = backendType <> "_drop_select_permission"
@@ -306,8 +303,9 @@ dropPermission backendTypeMetadata env (SelectPermission SelectPermissionDetails
         source: *sourceName
         role:  *selectPermissionRole
     |]
-dropPermission backendTypeMetadata env (UpdatePermission UpdatePermissionDetails {..}) = do
-  let schemaName = Schema.getSchemaName env
+dropPermission env (UpdatePermission UpdatePermissionDetails {..}) = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig env
+      schemaName = Schema.getSchemaName env
       backendType = BackendType.backendTypeString backendTypeMetadata
       sourceName = BackendType.backendSourceName backendTypeMetadata
       requestType = backendType <> "_drop_update_permission"
@@ -321,13 +319,3 @@ dropPermission backendTypeMetadata env (UpdatePermission UpdatePermissionDetails
         source: *sourceName
         role:  *updatePermissionRole
     |]
-
--- | Setup the given permissions to the graphql engine in a TestEnvironment.
-setup :: [Permission] -> TestEnvironment -> IO ()
-setup permissions testEnvironment =
-  mapM_ (createPermission testEnvironment) permissions
-
--- | Remove the given permissions from the graphql engine in a TestEnvironment.
-teardown :: BackendTypeConfig -> [Permission] -> TestEnvironment -> IO ()
-teardown backendTypeMetadata permissions testEnvironment =
-  mapM_ (dropPermission backendTypeMetadata testEnvironment) permissions

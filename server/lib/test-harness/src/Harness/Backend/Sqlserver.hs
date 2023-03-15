@@ -16,7 +16,6 @@ module Harness.Backend.Sqlserver
     dropTable,
     untrackTable,
     setupTablesAction,
-    setupPermissionsAction,
   )
 where
 
@@ -37,7 +36,6 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Logging
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (SQLServer), BackendTypeConfig (..))
-import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
@@ -334,17 +332,3 @@ setupTablesAction ts env =
   SetupAction
     (setup ts (env, ()))
     (const $ teardown ts (env, ()))
-
-setupPermissionsAction :: [Permissions.Permission] -> TestEnvironment -> SetupAction
-setupPermissionsAction permissions env =
-  SetupAction
-    (setupPermissions permissions env)
-    (const $ teardownPermissions permissions env)
-
--- | Setup the given permissions to the graphql engine in a TestEnvironment.
-setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup permissions env
-
--- | Remove the given permissions from the graphql engine in a TestEnvironment.
-teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown backendTypeMetadata permissions env

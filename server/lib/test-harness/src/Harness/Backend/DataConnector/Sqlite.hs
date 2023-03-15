@@ -7,7 +7,6 @@
 module Harness.Backend.DataConnector.Sqlite
   ( backendTypeMetadata,
     setupTablesAction,
-    setupPermissionsAction,
   )
 where
 
@@ -24,7 +23,6 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (SchemaName)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment (..))
@@ -61,22 +59,6 @@ backendTypeMetadata =
       backendServerUrl = Just "http://localhost:65007",
       backendSchemaKeyword = "schema"
     }
-
---------------------------------------------------------------------------------
-
--- | Setup the given permissions to the graphql engine in a TestEnvironment.
-setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup permissions env
-
--- | Remove the given permissions from the graphql engine in a TestEnvironment.
-teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown backendTypeMetadata permissions env
-
-setupPermissionsAction :: [Permissions.Permission] -> TestEnvironment -> Fixture.SetupAction
-setupPermissionsAction permissions env =
-  Fixture.SetupAction
-    (setupPermissions permissions env)
-    (const $ teardownPermissions permissions env)
 
 --------------------------------------------------------------------------------
 

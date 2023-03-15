@@ -17,6 +17,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Introspection (introspectEnums, introspectTypes)
 import Harness.Test.Permissions (InsertPermissionDetails (..), Permission (..), SelectPermissionDetails (..), insertPermission, selectPermission)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SetupAction (setupPermissionsAction)
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -29,19 +30,19 @@ spec = do
         [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment,
-                  Postgres.setupPermissionsAction permissions testEnvironment
+                  setupPermissionsAction permissions testEnvironment
                 ]
             },
           (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Citus.setupTablesAction schema testEnvironment,
-                  Citus.setupPermissionsAction permissions testEnvironment
+                  setupPermissionsAction permissions testEnvironment
                 ]
             },
           (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Cockroach.setupTablesAction schema testEnvironment,
-                  Cockroach.setupPermissionsAction permissions testEnvironment
+                  setupPermissionsAction permissions testEnvironment
                 ]
             }
         ]

@@ -15,7 +15,6 @@ module Harness.Backend.BigQuery
     dropTable,
     untrackTable,
     setupTablesAction,
-    setupPermissionsAction,
   )
 where
 
@@ -37,7 +36,6 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendTypeConfig)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture (SetupAction (..))
-import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema
   ( BackendScalarType (..),
     BackendScalarValue (..),
@@ -276,20 +274,6 @@ setupTablesAction ts env =
   SetupAction
     (setup ts (env, ()))
     (const $ teardown ts (env, ()))
-
-setupPermissionsAction :: HasCallStack => [Permissions.Permission] -> TestEnvironment -> SetupAction
-setupPermissionsAction permissions env =
-  SetupAction
-    (setupPermissions permissions env)
-    (const $ teardownPermissions permissions env)
-
--- | Setup the given permissions to the graphql engine in a TestEnvironment.
-setupPermissions :: HasCallStack => [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup permissions env
-
--- | Remove the given permissions from the graphql engine in a TestEnvironment.
-teardownPermissions :: HasCallStack => [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown backendTypeMetadata permissions env
 
 -- | We get @jobRateLimitExceeded@ errors from BigQuery if we run too many DML operations in short intervals.
 --   This functions tries to fix that by retrying after a few seconds if there's an error.

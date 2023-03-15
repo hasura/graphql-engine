@@ -11,6 +11,7 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema hiding (runSQL)
+import Harness.Test.SetupAction (setupPermissionsAction)
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -26,7 +27,7 @@ spec = do
         [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv,
-                  Postgres.setupPermissionsAction [updatePermission] testEnv
+                  setupPermissionsAction [updatePermission] testEnv
                 ]
             }
         ]
