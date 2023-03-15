@@ -544,7 +544,7 @@ metadataToDTO
         metaV3GraphqlSchemaIntrospection = placeholder . objectFromOrdJSON <$> introspectionDisabledRolesToOrdJSON introspectionDisabledRoles,
         metaV3Network = placeholder . objectFromOrdJSON <$> networkConfigToOrdJSON networkConfig,
         metaV3BackendConfigs = placeholder . objectFromOrdJSON <$> backendConfigsToOrdJSON backendConfigs,
-        metaV3OpenTelemetryConfig = placeholder . objectFromOrdJSON <$> openTelemetryConfigToOrdJSON openTelemetryConfig
+        metaV3OpenTelemetryConfig = openTelemetryConfig
       }
     where
       -- This is a /partial/ function to unwrap a JSON object

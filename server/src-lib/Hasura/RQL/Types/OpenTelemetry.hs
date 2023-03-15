@@ -36,6 +36,8 @@ module Hasura.RQL.Types.OpenTelemetry
   )
 where
 
+import Autodocodec (HasCodec, optionalField, optionalFieldWithDefault, optionalFieldWithDefault', requiredField', (<?>))
+import Autodocodec qualified as AC
 import Control.Lens.TH (makeLenses)
 import Data.Aeson (FromJSON, ToJSON (..), (.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as Aeson
@@ -46,6 +48,7 @@ import Data.Set qualified as Set
 import Data.Text qualified as Text
 import GHC.Generics
 import Hasura.Base.Error (Code (InvalidParams), QErr, err400)
+import Hasura.Metadata.DTO.Utils (boundedEnumCodec)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Headers
 import Language.Haskell.TH.Syntax (Lift)
@@ -64,6 +67,15 @@ data OpenTelemetryConfig = OpenTelemetryConfig
     _ocBatchSpanProcessor :: OtelBatchSpanProcessorConfig
   }
   deriving stock (Eq, Show)
+
+instance HasCodec OpenTelemetryConfig where
+  codec =
+    AC.object "OpenTelemetryConfig" $
+      OpenTelemetryConfig
+        <$> optionalFieldWithDefault' "status" defaultOtelStatus AC..= _ocStatus
+        <*> optionalFieldWithDefault' "data_types" defaultOtelEnabledDataTypes AC..= _ocEnabledDataTypes
+        <*> optionalFieldWithDefault' "exporter_otlp" defaultOtelExporterConfig AC..= _ocExporterOtlp
+        <*> optionalFieldWithDefault' "batch_span_processor" defaultOtelBatchSpanProcessorConfig AC..= _ocBatchSpanProcessor
 
 instance FromJSON OpenTelemetryConfig where
   parseJSON = Aeson.withObject "OpenTelemetryConfig" $ \o ->
@@ -97,10 +109,15 @@ data OpenTelemetryConfigSubobject
 
 -- | Should the OpenTelemetry exporter be enabled?
 data OtelStatus = OtelEnabled | OtelDisabled
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Show, Bounded, Enum)
 
 defaultOtelStatus :: OtelStatus
 defaultOtelStatus = OtelDisabled
+
+instance HasCodec OtelStatus where
+  codec = boundedEnumCodec \case
+    OtelEnabled -> "enabled"
+    OtelDisabled -> "disabled"
 
 instance FromJSON OtelStatus where
   parseJSON = \case
@@ -119,7 +136,11 @@ instance ToJSON OtelStatus where
 -- We currently only support traces
 data OtelDataType
   = OtelTraces
-  deriving stock (Eq, Ord, Show)
+  deriving stock (Eq, Ord, Show, Bounded, Enum)
+
+instance HasCodec OtelDataType where
+  codec = boundedEnumCodec \case
+    OtelTraces -> "traces"
 
 instance FromJSON OtelDataType where
   parseJSON = Aeson.withText "OtelDataType" \case
@@ -146,6 +167,20 @@ data OtelExporterConfig = OtelExporterConfig
     _oecResourceAttributes :: [NameValue]
   }
   deriving stock (Eq, Show)
+
+instance HasCodec OtelExporterConfig where
+  codec =
+    AC.object "OtelExporterConfig" $
+      OtelExporterConfig
+        <$> optionalField "otlp_traces_endpoint" tracesEndpointDoc AC..= _oecTracesEndpoint
+        <*> optionalFieldWithDefault "protocol" defaultOtelExporterProtocol protocolDoc AC..= _oecProtocol
+        <*> optionalFieldWithDefault "headers" defaultOtelExporterHeaders headersDoc AC..= _oecHeaders
+        <*> optionalFieldWithDefault "resource_attributes" defaultOtelExporterResourceAttributes attrsDoc AC..= _oecResourceAttributes
+    where
+      tracesEndpointDoc = "Target URL to which the exporter is going to send traces. No default."
+      protocolDoc = "The transport protocol"
+      headersDoc = "Key-value pairs to be used as headers to send with an export request."
+      attrsDoc = "Attributes to send as the resource attributes of an export request. We currently only support string-valued attributes."
 
 instance FromJSON OtelExporterConfig where
   parseJSON = Aeson.withObject "OtelExporterConfig" $ \o -> do
@@ -184,7 +219,14 @@ data OtlpProtocol
   = OtlpProtocolHttpProtobuf
   -- OtlpProtocolHttpJson
   -- OtlpProtocolGrpc
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Show, Bounded, Enum)
+
+instance HasCodec OtlpProtocol where
+  codec =
+    ( boundedEnumCodec \case
+        OtlpProtocolHttpProtobuf -> "http/protobuf"
+    )
+      <?> "Possible protocol to use with OTLP. Currently, only http/protobuf is supported."
 
 instance FromJSON OtlpProtocol where
   parseJSON = Aeson.withText "OtlpProtocol" \case
@@ -203,6 +245,16 @@ data NameValue = NameValue
     nv_value :: Text
   }
   deriving stock (Eq, Show)
+
+instance HasCodec NameValue where
+  codec =
+    AC.object
+      "OtelNameValue"
+      ( NameValue
+          <$> requiredField' "name" AC..= nv_name
+          <*> requiredField' "value" AC..= nv_value
+      )
+      <?> "Internal helper type for JSON lists of key-value pairs"
 
 instance ToJSON NameValue where
   toJSON (NameValue {nv_name, nv_value}) =
@@ -233,6 +285,14 @@ newtype OtelBatchSpanProcessorConfig = OtelBatchSpanProcessorConfig
     _obspcMaxExportBatchSize :: Int
   }
   deriving stock (Eq, Show)
+
+instance HasCodec OtelBatchSpanProcessorConfig where
+  codec =
+    AC.object "OtelBatchSpanProcessorConfig" $
+      OtelBatchSpanProcessorConfig
+        <$> optionalFieldWithDefault "max_export_batch_size" defaultMaxExportBatchSize maxSizeDoc AC..= _obspcMaxExportBatchSize
+    where
+      maxSizeDoc = "The maximum batch size of every export. It must be smaller or equal to maxQueueSize (not yet configurable). Default 512."
 
 instance FromJSON OtelBatchSpanProcessorConfig where
   parseJSON = Aeson.withObject "OtelBatchSpanProcessorConfig" $ \o ->

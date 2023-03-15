@@ -4459,8 +4459,7 @@
                         "description": "TODO\n\n\nobject with unspecified properties - this is a placeholder that will eventually be replaced with a more detailed description"
                     },
                     "opentelemetry": {
-                        "additionalProperties": true,
-                        "description": "TODO\n\n\nobject with unspecified properties - this is a placeholder that will eventually be replaced with a more detailed description"
+                        "$ref": "#/components/schemas/OpenTelemetryConfig"
                     },
                     "query_collections": {
                         "default": [],
@@ -6198,6 +6197,103 @@
                 "required": [
                     "name",
                     "fields"
+                ],
+                "type": "object"
+            },
+            "OpenTelemetryConfig": {
+                "properties": {
+                    "batch_span_processor": {
+                        "$ref": "#/components/schemas/OtelBatchSpanProcessorConfig"
+                    },
+                    "data_types": {
+                        "default": [],
+                        "items": {
+                            "enum": [
+                                "traces"
+                            ],
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "exporter_otlp": {
+                        "$ref": "#/components/schemas/OtelExporterConfig"
+                    },
+                    "status": {
+                        "default": "disabled",
+                        "enum": [
+                            "enabled",
+                            "disabled"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "OtelBatchSpanProcessorConfig": {
+                "properties": {
+                    "max_export_batch_size": {
+                        "default": 512,
+                        "description": "The maximum batch size of every export. It must be smaller or equal to maxQueueSize (not yet configurable). Default 512.",
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "type": "number"
+                    }
+                },
+                "type": "object"
+            },
+            "OtelExporterConfig": {
+                "properties": {
+                    "headers": {
+                        "default": [],
+                        "description": "Key-value pairs to be used as headers to send with an export request.",
+                        "items": {
+                            "oneOf": [
+                                {
+                                    "$ref": "#/components/schemas/HeaderConfValue"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/HeaderConfFromEnv"
+                                }
+                            ]
+                        },
+                        "type": "array"
+                    },
+                    "otlp_traces_endpoint": {
+                        "description": "Target URL to which the exporter is going to send traces. No default.",
+                        "type": "string"
+                    },
+                    "protocol": {
+                        "default": "http/protobuf",
+                        "description": "The transport protocol\nPossible protocol to use with OTLP. Currently, only http/protobuf is supported.",
+                        "enum": [
+                            "http/protobuf"
+                        ],
+                        "type": "string"
+                    },
+                    "resource_attributes": {
+                        "default": [],
+                        "description": "Attributes to send as the resource attributes of an export request. We currently only support string-valued attributes.",
+                        "items": {
+                            "$ref": "#/components/schemas/OtelNameValue"
+                        },
+                        "type": "array"
+                    }
+                },
+                "type": "object"
+            },
+            "OtelNameValue": {
+                "description": "Internal helper type for JSON lists of key-value pairs",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name",
+                    "value"
                 ],
                 "type": "object"
             },

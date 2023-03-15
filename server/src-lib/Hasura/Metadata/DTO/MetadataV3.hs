@@ -27,6 +27,7 @@ import Hasura.RQL.Types.Common (MetricsConfig, emptyMetricsConfig)
 import Hasura.RQL.Types.CustomTypes (CustomTypes, emptyCustomTypes)
 import Hasura.RQL.Types.Endpoint (_ceName)
 import Hasura.RQL.Types.Metadata.Common (Actions, CronTriggers, Endpoints, InheritedRoles, QueryCollections, RemoteSchemas, Sources, sourcesCodec)
+import Hasura.RQL.Types.OpenTelemetry (OpenTelemetryConfig, emptyOpenTelemetryConfig)
 import Hasura.RQL.Types.QueryCollection qualified as QC
 import Hasura.RQL.Types.Roles (Role (_rRoleName))
 import Hasura.RQL.Types.ScheduledTrigger (CronTriggerMetadata (ctName))
@@ -49,7 +50,7 @@ data MetadataV3 = MetadataV3
     metaV3GraphqlSchemaIntrospection :: Maybe PlaceholderObject,
     metaV3Network :: Maybe PlaceholderObject,
     metaV3BackendConfigs :: Maybe PlaceholderObject,
-    metaV3OpenTelemetryConfig :: Maybe PlaceholderObject
+    metaV3OpenTelemetryConfig :: OpenTelemetryConfig
   }
   deriving stock (Show, Eq, Generic)
   deriving (FromJSON, ToJSON, OpenApi.ToSchema) via (Autodocodec MetadataV3)
@@ -83,4 +84,4 @@ instance HasCodec MetadataV3 where
         <*> optionalField "graphql_schema_introspection" "TODO" .= metaV3GraphqlSchemaIntrospection
         <*> optionalField "network" "TODO" .= metaV3Network
         <*> optionalField "backend_configs" "TODO" .= metaV3BackendConfigs
-        <*> optionalField "opentelemetry" "TODO" .= metaV3OpenTelemetryConfig
+        <*> optionalFieldWithOmittedDefault' "opentelemetry" emptyOpenTelemetryConfig .= metaV3OpenTelemetryConfig
