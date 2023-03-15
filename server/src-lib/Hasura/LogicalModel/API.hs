@@ -235,14 +235,13 @@ runUntrackLogicalModel ::
   ( BackendMetadata b,
     MonadError QErr m,
     CacheRWM m,
-    MetadataM m,
-    HasServerConfigCtx m,
-    MonadIO m
+    MetadataM m
   ) =>
   UntrackLogicalModel b ->
   m EncJSON
 runUntrackLogicalModel q = do
-  throwIfFeatureDisabled
+  -- we do not check for feature flag here as we always want users to be able
+  -- to remove logical models if they'd like
   assertLogicalModelExists @b source fieldName
 
   let metadataObj =
