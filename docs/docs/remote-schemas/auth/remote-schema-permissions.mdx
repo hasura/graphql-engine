@@ -158,7 +158,7 @@ type Query {
 
 We want to configure the `user` role to only be able to query their own record. To do this, we need to preset the `id`
 parameter of the `get_user` field defined in the `Query` object. Let's say we have the value of the `id` argument set in
-one of the [session variables](/auth/authorization/roles-variables.mdx#dynamic-session-variables), we can preset the
+one of the [session variables](/auth/authorization/roles-variables.mdx#session-variables), we can preset the
 `id` argument with the session variable. Using the above schema, we can do that in the following manner:
 
 ```graphql
@@ -190,7 +190,8 @@ type Query {
 :::info Note
 
 By default, any preset string value in the format of `x-hasura-*` is assumed to be a
-[session variable](/auth/authorization/roles-variables.mdx#dynamic-session-variables)`. To override this behavior i.e. to treat the value literally, the `static`argument equal to`true`needs to be added in the`preset`directive. In the following example, the`x-hasura-user-id`
+[session variable](/auth/authorization/roles-variables.mdx#session-variables)`. To override this behaviour i.
+e. to treat the value literally, the `static`argument equal to`true`needs to be added in the`preset`directive. In the following example, the`x-hasura-user-id`
 will be treated literally.
 
 ```graphql

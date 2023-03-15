@@ -563,8 +563,8 @@ A custom function `f` is only accessible to a role `r` if there is a function pe
 defined on the function `f` for the role `r`. Additionally, role `r` must have SELECT permissions on the returning table
 of the function `f`.
 
-[Access control permissions](/auth/authorization/permission-rules.mdx) configured for the `SETOF` table of a function
-are also applicable to the function itself.
+[Access control permissions](/auth/authorization/permissions/index.mdx) configured for the `SETOF` table of a
+function are also applicable to the function itself.
 
 **For example**, in our text-search example above, if the role `user` has access only to certain columns of the table
 `article`, a validation error will be thrown if the `search_articles` query is run selecting a column to which the

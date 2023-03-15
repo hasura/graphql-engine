@@ -70,7 +70,7 @@ defined operations. Public APIs or APIs with less defined expected operations sh
 - Configure both [rate limits](/security/api-limits.mdx#rate-limits) and
   [time limits](/security/api-limits.mdx#time-limits) to restrict frequency and duration of operations.
 
-- [Limit rows](/auth/authorization/permission-rules.mdx#limit-rows-permissions) returned by a select operation.
+- [Limit rows](/auth/authorization/permissions/row-fetch-limit.mdx) returned by a select operation.
 
 #### Permissions
 
@@ -80,9 +80,9 @@ permissions be configured correctly in order to prevent unauthorized or unintend
 - Review the [permissions summary](/deployment/production-checklist.mdx#review-the-summary) for each schema to verify
   permissions are constructed appropriately for your expected data access.
 
-- Configure an [anonymous default role](/auth/authorization/common-roles-auth-examples.mdx#anonymous-users-example) in
+- Configure an [anonymous default role](/auth/authorization/permissions/common-roles-auth-examples.mdx#unauthorized-users-example) in
   order to apply global security permissions. This default role should be configured similarly to any other role. This
-  includes [RBAC permissions](/auth/authorization/basics.mdx), [API limits](/security/api-limits.mdx),
+  includes [RBAC permissions](/auth/authorization/quickstart.mdx), [API limits](/security/api-limits.mdx),
   [allowed operations lists](https://www.graphql-code-generator.com/plugins/other/hasura-allow-list) and
   [disabling schema introspection](/security/disable-graphql-introspection.mdx).
 

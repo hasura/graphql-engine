@@ -58,8 +58,8 @@ get a bird's eye view on all the permissions set across all tables and roles. Pa
 
 ### Limit number of rows returned
 
-You should [limit the number of rows](/auth/authorization/permission-rules.mdx#limit-rows-permissions) that can be
-accessed in one request, by setting the number in the select permission. This will prevent someone from accidentally or
+You should [limit the number of rows](/auth/authorization/permissions/row-fetch-limit.mdx) that can be accessed
+in one request, by setting the number in the select permission. This will prevent someone from accidentally or
 otherwise querying the entire table in one shot, thus adding load on Postgres.
 
 ## Disable APIs

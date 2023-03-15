@@ -16,52 +16,41 @@ import Auth from '@site/static/icons/features/auth.svg';
 
 # <Auth /> Authentication and Authorization
 
-In Hasura, access control or authorization is based on **roles**. Let's take a look at how this works when the GraphQL
-engine receives a request:
+## Introduction
 
-<Thumbnail src="/img/auth/auth-high-level-overview.png" alt="Authentication and authorization with Hasura" />
+**_Authentication_ verifies the identity of a user, while _authorization_ determines what they can access**.
 
-As you can see from this:
+Hasura provides flexible authentication and role-based access control (RBAC) authorization models.
 
-- **Authentication** is handled outside of Hasura. Hasura delegates authentication and resolution of request headers
-  into session variables to your authentication service _(existing or new)_.
+**Actual authentication is handled outside Hasura.** Once a user is authenticated with your auth service, you can either
+i) provide a JWT to the Hasura GraphQL Engine containing session variables like user role and any other values like
+user id, or ii) specify a webhook in order to resolve the variables and send them back.
 
-  Your authentication service is required to pass a user's **role** information in the form of session variables like
-  `X-Hasura-Role`, etc. More often than not, you'll also need to pass user information for your access control use
-  cases, like `X-Hasura-User-Id`, to build permission rules.
+**For authorization, Hasura helps you define granular, role and session variable based permission rules to control
+access to your data**. These permissions utilize the session variables returned by your authentication service and are
+granular enough to control access to every row or column in your database.
 
-- For **Authorization** or **Access Control**, Hasura helps you define granular role-based access control rules for
-  every field in your GraphQL schema _(granular enough to control access to any row or column in your database)_.
+Let's take a look at a high-level overview of how this works when Hasura GraphQL Engine receives a request:
 
-  Hasura uses the role/user information in the session variables and the actual request itself to validate the request
-  against the rules defined by you. If the request/operation is allowed, it generates an SQL query, which includes the
-  row/column-level constraints from the access control rules, and sends it to the database to perform the required
-  operation (_fetch the required rows for queries, insert/edit rows for mutations, etc._).
+<Thumbnail src="/img/auth/auth-high-level-overview-diagram.png" alt="Authentication and authorization in
+Hasura flow diagram" />
 
-**See more details about setting up authentication and access control at:**
+Hasura uses the role, session variables and the actual GraphQL query itself to validate against the authorization
+permission rules defined by you. If the operation is allowed, it generates an optimized SQL query, which includes
+the constraints from the permission rules, and sends it to the database to perform the required operation; fetching
+the required rows for queries or inserting, editing or deleting rows for mutations.
+
+Hasura also provides functionality to enable authorization for its [Actions](actions/action-permissions.mdx) and
+[Remote Schema](/remote-schemas/auth/index.mdx) features too.
+
+**More details about setting up authentication and authorization permissions:**
 
 - [Authentication](/auth/authentication/index.mdx)
-- [Authorization / Access control](/auth/authorization/index.mdx)
+- [Authorization](/auth/authorization/index.mdx)
 
 :::info Learn Tutorial
 
-If you'd like to learn about authentication and authorization / access control by following a tutorial, check out our
-Learn Tutorial, [Authentication with Hasura](https://hasura.io/learn/graphql/hasura-auth-slack/introduction/).
+If you'd like to learn about authentication and authorization by following a tutorial, check out our Learn Tutorial,
+[Authentication with Hasura](https://hasura.io/learn/graphql/hasura-auth-slack/introduction/).
 
 :::
-
-:::info Additional Resources
-
-Enterprise Grade Authorization -
-[Watch Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
-
-:::
-
-<!--
-.. hiding this as it mixes auth for the data plane with auth for the control plane and might be confusing
-
-  .. admonition:: Adding collaborators in Hasura Cloud
-    :class: dhc
-
-    Hasura Cloud offers collaborators in addition to role management. Collaborators can be granted access to specific portions of the Console, like Metrics. Additionally, adding collaborators allows you to avoid sharing the `HASURA-ADMIN-SECRET`. For more information about collaborator management, see :ref:`Collaborators in Hasura Cloud <manage_project_collaborators>`.
--->

@@ -190,7 +190,7 @@ fields during execution. This way the field is executed with limited
 input values. Argument presets are of two types:
 
 1.  Static Value
-2.  [Session Variable](/auth/authorization/roles-variables.mdx#dynamic-session-variables)
+2.  [Session Variable](/auth/authorization/roles-variables.mdx#session-variables)
 
 A preset value can be added to an input value via the `@preset`
 directive.
@@ -219,7 +219,7 @@ before querying the Remote Schema.
 :::info Note
 
 By default, if the input value preset contains a
-[session variable value](/auth/authorization/roles-variables.mdx#dynamic-session-variables), then its value
+[session variable value](/auth/authorization/roles-variables.mdx#session-variables), then its value
 will be resolved when the query is executed. To treat the session
 variable value as a literal value (avoiding resolving of the session
 variable value) can be done by specifying `static` as `true` while
