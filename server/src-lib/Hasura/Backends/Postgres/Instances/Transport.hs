@@ -155,7 +155,7 @@ mkQueryLog ::
   Maybe (ResolvedConnectionTemplate ('Postgres pgKind)) ->
   QueryLog
 mkQueryLog gqlQuery fieldName preparedSql requestId resolvedConnectionTemplate =
-  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId (QueryLogKindDatabase (mkBackendResolvedConnectionTemplate <$> resolvedConnectionTemplate)) Nothing
+  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId (QueryLogKindDatabase (mkBackendResolvedConnectionTemplate <$> resolvedConnectionTemplate))
   where
     mkBackendResolvedConnectionTemplate ::
       ResolvedConnectionTemplate ('Postgres pgKind) ->

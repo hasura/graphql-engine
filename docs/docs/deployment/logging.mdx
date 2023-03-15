@@ -54,6 +54,7 @@ All the log-types that can be enabled/disabled are:
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
 | `startup`         | Information that is logged during startup                                                                                                                                                                                         | `info`             |
 | `query-log`       | Logs: the entire GraphQL query with variables, generated SQL statements (only for database queries, not for mutations/subscriptions or Remote Schema and Action queries), the operation name (if provided in the GraphQL request) | `info`             |
+| `execution-log`   | Logs data-source-specific information generated during the request                                                                                                                                                                | `info`
 | `http-log`        | Http access and error logs at the webserver layer (handling GraphQL and Metadata requests)                                                                                                                                        | `info` and `error` |
 | `websocket-log`   | Websocket events and error logs at the websocket server layer (handling GraphQL requests)                                                                                                                                         | `info` and `error` |
 | `webhook-log`     | Logs responses and errors from the authorization webhook (if setup)                                                                                                                                                               | `info` and `error` |
@@ -154,6 +155,36 @@ This log contains 4 important fields:
   of the connection template resolution.
 
 (\*) - Supported only in Cloud and Enterprise editions only
+
+### **execution-log** structure
+
+On enabling verbose logging, i.e. enabling `execution-log`, GraphQL Engine may also log statistics about the request once it has completed.
+
+```json
+{
+  "detail": {
+    "request_id": "ff8d2809-8afb-4d6e-a6c3-0fb61ac813e7",
+    "statistics": {
+      "job": {
+        "id": "1230123-sd2fsdjs23djj24s57dfj",
+        "location": "europe-west2",
+        "state": "DONE"
+      }
+    }
+  },
+  "level": "info",
+  "timestamp": "2023-03-15T10:29:08.928+0000",
+  "type": "execution-log"
+}
+```
+
+This log contains 2 important fields:
+
+- `request_id`: A unique ID for each request. If the client sends a `x-request-id` header then that is respected,
+  otherwise a UUID is generated for each request. This is useful to correlate between `execution-log` and `query-log`.
+- `statistics`: Statistics about the completed request. These will differ
+  depending on the backend used for the request. For instance, BigQuery returns
+  details about the [job](https://cloud.google.com/bigquery/docs/jobs-overview) it created.
 
 ### **http-log** structure {#http-log-structure}
 

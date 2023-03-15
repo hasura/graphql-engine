@@ -58,6 +58,7 @@ createWSServerApp ::
     E.MonadGQLExecutionCheck m,
     WS.MonadWSLog m,
     MonadQueryLog m,
+    MonadExecutionLog m,
     MonadExecuteQuery m,
     MonadMetadataStorage m,
     EB.MonadQueryTags m,

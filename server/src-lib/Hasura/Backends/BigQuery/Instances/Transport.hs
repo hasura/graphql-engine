@@ -9,11 +9,13 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Logging
-  ( ExecutionStats (..),
+  ( ExecutionLog (..),
+    ExecutionStats (..),
     GeneratedQuery (..),
+    MonadExecutionLog (..),
     MonadQueryLog (..),
     QueryLog (..),
-    QueryLogKind (QueryLogKindDatabase, QueryLogKindDatabaseResponse),
+    QueryLogKind (QueryLogKindDatabase),
   )
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Transport.Backend
@@ -38,6 +40,7 @@ runQuery ::
   ( MonadIO m,
     MonadBaseControl IO m,
     MonadQueryLog m,
+    MonadExecutionLog m,
     MonadTrace m,
     MonadError QErr m
   ) =>
@@ -55,10 +58,10 @@ runQuery ::
 runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql _ = do
   -- log the generated SQL and the graphql query
   -- FIXME: fix logging by making logQueryLog expect something backend agnostic!
-  logQueryLog logger $ mkQueryLog (QueryLogKindDatabase Nothing) query fieldName genSql reqId Nothing
+  logQueryLog logger $ mkQueryLog (QueryLogKindDatabase Nothing) query fieldName genSql reqId
   (diffTime, (stats, result)) <- withElapsedTime $ run tx
 
-  logQueryLog logger $ mkQueryLog (QueryLogKindDatabaseResponse Nothing) query fieldName Nothing reqId stats
+  logExecutionLog logger $ mkExecutionLog reqId stats
 
   pure (diffTime, result)
 
@@ -108,8 +111,13 @@ mkQueryLog ::
   RootFieldAlias ->
   Maybe Text ->
   RequestId ->
-  Maybe (AnyBackend ExecutionStats) ->
   QueryLog
-mkQueryLog _qlKind _qlQuery fieldName preparedSql _qlRequestId _qlStatistics = QueryLog {..}
+mkQueryLog _qlKind _qlQuery fieldName preparedSql _qlRequestId = QueryLog {..}
   where
     _qlGeneratedSql = preparedSql <&> \query -> (fieldName, GeneratedQuery query J.Null)
+
+mkExecutionLog ::
+  RequestId ->
+  Maybe (AnyBackend ExecutionStats) ->
+  ExecutionLog
+mkExecutionLog _elRequestId _elStatistics = ExecutionLog {..}

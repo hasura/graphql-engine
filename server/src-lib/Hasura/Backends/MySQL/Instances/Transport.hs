@@ -74,7 +74,7 @@ mkQueryLog ::
   QueryLog
 mkQueryLog gqlQuery fieldName preparedSql requestId =
   -- @QueryLogKindDatabase Nothing@ means that the backend doesn't support connection templates
-  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId (QueryLogKindDatabase Nothing) Nothing
+  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId (QueryLogKindDatabase Nothing)
   where
     generatedQuery =
       preparedSql <&> \queryString ->

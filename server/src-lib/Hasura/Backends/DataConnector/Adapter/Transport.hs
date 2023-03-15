@@ -77,7 +77,6 @@ mkQueryLog gqlQuery fieldName maybeQuery requestId =
     requestId
     -- @QueryLogKindDatabase Nothing@ means that the backend doesn't support connection templates
     (HGL.QueryLogKindDatabase Nothing)
-    Nothing
 
 runDBQueryExplain' ::
   ( MonadIO m,
