@@ -66,32 +66,32 @@ testAdminAccess opts = do
 
   describe "Admin access" do
     it "Fails to track a Logical Model without admin access" $
-      \testEnv -> do
+      \testEnvironment -> do
+        let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+            sourceName = BackendType.backendSourceName backendTypeMetadata
+
+            dividedStuffLogicalModel :: Schema.LogicalModel
+            dividedStuffLogicalModel =
+              (Schema.logicalModel "divided_stuff" query)
+                { Schema.logicalModelColumns =
+                    [ (Schema.logicalModelColumn "divided" "integer")
+                        { Schema.logicalModelColumnDescription = Just "a divided thing"
+                        }
+                    ],
+                  Schema.logicalModelArguments =
+                    [ Schema.logicalModelColumn "denominator" "integer",
+                      Schema.logicalModelColumn "target_date" "date"
+                    ]
+                }
+
         shouldReturnYaml
           opts
           ( GraphqlEngine.postMetadataWithStatusAndHeaders
               400
-              testEnv
+              testEnvironment
               [ ("X-Hasura-Role", "not-admin")
               ]
-              [yaml|
-                type: pg_track_logical_model
-                args:
-                  type: query
-                  source: postgres
-                  root_field_name: divided_stuff
-                  code: *query
-                  arguments:
-                    denominator:
-                      type: integer
-                    target_date:
-                      type: date
-                  returns:
-                    columns:
-                      divided:
-                        type: integer
-                        description: "a divided thing"
-              |]
+              (Schema.logicalModelToJson sourceName dividedStuffLogicalModel)
           )
           [yaml|
             code: access-denied
@@ -100,19 +100,22 @@ testAdminAccess opts = do
           |]
 
     it "Fails to untrack a Logical Model without admin access" $
-      \testEnv -> do
+      \testEnvironment -> do
+        let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+            sourceName = BackendType.backendSourceName backendTypeMetadata
+
         shouldReturnYaml
           opts
           ( GraphqlEngine.postMetadataWithStatusAndHeaders
               400
-              testEnv
+              testEnvironment
               [ ("X-Hasura-Role", "not-admin")
               ]
               [yaml|
                 type: pg_untrack_logical_model
                 args:
                   root_field_name: divided_stuff
-                  source: postgres
+                  source: *sourceName
               |]
           )
           [yaml|
@@ -122,18 +125,21 @@ testAdminAccess opts = do
           |]
 
     it "Fails to list a Logical Model without admin access" $
-      \testEnv -> do
+      \testEnvironment -> do
+        let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+            sourceName = BackendType.backendSourceName backendTypeMetadata
+
         shouldReturnYaml
           opts
           ( GraphqlEngine.postMetadataWithStatusAndHeaders
               400
-              testEnv
+              testEnvironment
               [ ("X-Hasura-Role", "not-admin")
               ]
               [yaml|
                 type: pg_get_logical_model
                 args:
-                  source: postgres
+                  source: *sourceName
               |]
           )
           [yaml|
@@ -155,56 +161,47 @@ testImplementation opts = do
       query = "SELECT thing / {{denominator}} AS divided FROM stuff WHERE date = {{target_date}}"
 
   describe "Implementation" $ do
-    it "Adds a simple logical model of a function with no arguments and returns a 200" $ \testEnv -> do
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postMetadata
-            testEnv
-            [yaml|
-              type: pg_track_logical_model
-              args:
-                type: query
-                source: postgres
-                root_field_name: divided_stuff
-                code: *simpleQuery
-                arguments:
-                  unused:
-                    type: integer
-                returns:
-                  columns:
-                    divided:
-                      type: integer
-                      description: "a divided thing"
-            |]
-        )
-        [yaml|
-          message: success
-        |]
+    it "Adds a simple logical model of a function with no arguments and returns a 200" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
 
-    it "Adding a logical model of a function with broken SQL returns a 400" $ \testEnv -> do
+          dividedStuffLogicalModel :: Schema.LogicalModel
+          dividedStuffLogicalModel =
+            (Schema.logicalModel "divided_stuff" simpleQuery)
+              { Schema.logicalModelColumns =
+                  [ (Schema.logicalModelColumn "divided" "integer")
+                      { Schema.logicalModelColumnDescription = Just "a divided thing"
+                      }
+                  ],
+                Schema.logicalModelArguments =
+                  [Schema.logicalModelColumn "unused" "integer"]
+              }
+
+      Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
+
+    it "Adding a logical model of a function with broken SQL returns a 400" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+          brokenQuery = "SELECT * FROM dogs WHERE name = {{name"
+
+          brokenQueryLogicalModel :: Schema.LogicalModel
+          brokenQueryLogicalModel =
+            (Schema.logicalModel "divided_stuff" brokenQuery)
+              { Schema.logicalModelColumns =
+                  [ (Schema.logicalModelColumn "divided" "integer")
+                      { Schema.logicalModelColumnDescription = Just "a divided thing"
+                      }
+                  ],
+                Schema.logicalModelArguments =
+                  [Schema.logicalModelColumn "unused" "integer"]
+              }
+
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadataWithStatus
             400
-            testEnv
-            [yaml|
-              type: pg_track_logical_model
-              args:
-                type: query
-                source: postgres
-                root_field_name: divided_stuff
-                code: "SELECT * FROM dogs WHERE name = {{name"
-                arguments:
-                  denominator:
-                    type: integer
-                  target_date:
-                    type: date
-                returns:
-                  columns:
-                    divided:
-                      type: integer
-                      description: "a divided thing"
-            |]
+            testEnvironment
+            (Schema.logicalModelToJson sourceName brokenQueryLogicalModel)
         )
         [yaml|
           code: parse-failed
@@ -212,44 +209,37 @@ testImplementation opts = do
           path: "$.args"
         |]
 
-    it "Checks for the logical model of a function" $ \testEnv -> do
-      let rootfield :: String
+    it "Checks for the logical model of a function" $ \testEnvironment -> do
+      let rootfield :: Text
           rootfield = "divided_stuff2"
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postMetadata
-            testEnv
-            [yaml|
-              type: pg_track_logical_model
-              args:
-                type: query
-                source: postgres
-                root_field_name: *rootfield
-                code: *query
-                arguments:
-                  denominator:
-                    type: integer
-                  target_date:
-                    type: date
-                returns:
-                  columns:
-                    divided:
-                      type: integer
-                      description: "a divided thing"
-            |]
-        )
-        [yaml|
-            message: success
-          |]
+
+          backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+
+          dividedStuffLogicalModel :: Schema.LogicalModel
+          dividedStuffLogicalModel =
+            (Schema.logicalModel rootfield query)
+              { Schema.logicalModelColumns =
+                  [ (Schema.logicalModelColumn "divided" "integer")
+                      { Schema.logicalModelColumnDescription = Just "a divided thing"
+                      }
+                  ],
+                Schema.logicalModelArguments =
+                  [ Schema.logicalModelColumn "denominator" "integer",
+                    Schema.logicalModelColumn "target_date" "date"
+                  ]
+              }
+
+      Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
-            testEnv
+            testEnvironment
             [yaml|
               type: pg_get_logical_model
               args:
-                source: postgres
+                source: *sourceName
             |]
         )
         [yaml|
@@ -270,37 +260,34 @@ testImplementation opts = do
                       description: "a divided thing"
         |]
 
-    it "Drops a logical model of a function and returns a 200" $ \testEnv -> do
-      _ <-
-        GraphqlEngine.postMetadata
-          testEnv
-          [yaml|
-            type: pg_track_logical_model
-            args:
-              type: query
-              source: postgres
-              root_field_name: divided_stuff
-              code: *query
-              arguments:
-                denominator:
-                  type: integer
-                target_date:
-                  type: date
-              returns:
-                columns:
-                  divided:
-                    type: integer
-                    description: "a divided thing"
-          |]
+    it "Drops a logical model of a function and returns a 200" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+
+          dividedStuffLogicalModel :: Schema.LogicalModel
+          dividedStuffLogicalModel =
+            (Schema.logicalModel "divided_stuff" query)
+              { Schema.logicalModelColumns =
+                  [ (Schema.logicalModelColumn "divided" "integer")
+                      { Schema.logicalModelColumnDescription = Just "a divided thing"
+                      }
+                  ],
+                Schema.logicalModelArguments =
+                  [ Schema.logicalModelColumn "denominator" "integer",
+                    Schema.logicalModelColumn "target_date" "date"
+                  ]
+              }
+
+      Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
-            testEnv
+            testEnvironment
             [yaml|
               type: pg_untrack_logical_model
               args:
-                source: postgres
+                source: *sourceName
                 root_field_name: divided_stuff
             |]
         )
@@ -308,84 +295,75 @@ testImplementation opts = do
           message: success
         |]
 
-    it "Checks the logical model of a function can be deleted" $ \testEnv -> do
-      _ <-
-        GraphqlEngine.postMetadata
-          testEnv
-          [yaml|
-            type: pg_track_logical_model
-            args:
-              type: query
-              source: postgres
-              root_field_name: divided_stuff
-              code: *query
-              arguments:
-                denominator:
-                  type: integer
-                target_date:
-                  type: date
-              returns:
-                columns:
-                  divided:
-                    type: integer
-                    description: "a divided thing"
-          |]
+    it "Checks the logical model of a function can be deleted" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+
+          dividedStuffLogicalModel :: Schema.LogicalModel
+          dividedStuffLogicalModel =
+            (Schema.logicalModel "divided_stuff" query)
+              { Schema.logicalModelColumns =
+                  [ (Schema.logicalModelColumn "divided" "integer")
+                      { Schema.logicalModelColumnDescription = Just "a divided thing"
+                      }
+                  ],
+                Schema.logicalModelArguments =
+                  [ Schema.logicalModelColumn "denominator" "integer",
+                    Schema.logicalModelColumn "target_date" "date"
+                  ]
+              }
+
+      Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 
       _ <-
         GraphqlEngine.postMetadata
-          testEnv
+          testEnvironment
           [yaml|
             type: pg_untrack_logical_model
             args:
               root_field_name: divided_stuff
-              source: postgres
+              source: *sourceName
           |]
 
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
-            testEnv
+            testEnvironment
             [yaml|
               type: pg_get_logical_model
               args:
-                source: postgres
+                source: *sourceName
             |]
         )
         [yaml|
           []
         |]
 
-    it "Descriptions and nullability appear in the schema" $ \testEnv -> do
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postMetadata
-            testEnv
-            [yaml|
-              type: pg_track_logical_model
-              args:
-                type: query
-                source: postgres
-                root_field_name: divided_stuff
-                code: |
-                  SELECT thing / 2 AS divided, null as something_nullable FROM stuff
-                arguments:
-                  unused:
-                    type: integer
-                returns:
-                  description: "Return type description"
-                  columns:
-                    divided:
-                      type: integer
-                      description: "A divided thing"
-                    something_nullable:
-                      type: integer
-                      description: "Something nullable"
-                      nullable: true
-            |]
-        )
-        [yaml|
-          message: success
-        |]
+    it "Descriptions and nullability appear in the schema" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+
+          nullableQuery = "SELECT thing / 2 AS divided, null as something_nullable FROM stuff"
+
+          descriptionsAndNullableLogicalModel :: Schema.LogicalModel
+          descriptionsAndNullableLogicalModel =
+            (Schema.logicalModel "divided_stuff" nullableQuery)
+              { Schema.logicalModelColumns =
+                  [ (Schema.logicalModelColumn "divided" "integer")
+                      { Schema.logicalModelColumnDescription = Just "A divided thing"
+                      },
+                    (Schema.logicalModelColumn "something_nullable" "integer")
+                      { Schema.logicalModelColumnDescription = Just "Something nullable",
+                        Schema.logicalModelColumnNullable = True
+                      }
+                  ],
+                Schema.logicalModelArguments =
+                  [ Schema.logicalModelColumn "unused" "integer"
+                  ],
+                Schema.logicalModelReturnTypeDescription = Just "Return type description"
+              }
+
+      Schema.trackLogicalModel sourceName descriptionsAndNullableLogicalModel testEnvironment
 
       let queryTypesIntrospection :: A.Value
           queryTypesIntrospection =
@@ -443,7 +421,7 @@ testImplementation opts = do
                 }
               |]
 
-      actual <- GraphqlEngine.postGraphql testEnv queryTypesIntrospection
+      actual <- GraphqlEngine.postGraphql testEnvironment queryTypesIntrospection
 
       actual `shouldBeYaml` expected
 
@@ -458,17 +436,20 @@ testValidation opts = do
 
   describe "Validation fails on untrack a logical model" do
     it "when a logical model does not exist" $
-      \testEnv -> do
+      \testEnvironment -> do
+        let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+            sourceName = BackendType.backendSourceName backendTypeMetadata
+
         shouldReturnYaml
           opts
           ( GraphqlEngine.postMetadataWithStatus
               400
-              testEnv
+              testEnvironment
               [yaml|
               type: pg_untrack_logical_model
               args:
                 root_field_name: some_logical_model
-                source: postgres
+                source: *sourceName
             |]
           )
           [yaml|
@@ -479,7 +460,10 @@ testValidation opts = do
 
   describe "Validation fails on track a logical model" do
     it "when the query has a syntax error" $
-      \testEnv -> do
+      \testEnvironment -> do
+        let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+            sourceName = BackendType.backendSourceName backendTypeMetadata
+
         let spicyQuery :: Text
             spicyQuery = "query bad"
 
@@ -489,35 +473,50 @@ testValidation opts = do
                   error: Failed to validate query
                   path: "$.args"
               |]
+
+            syntaxErrorLogicalModel :: Schema.LogicalModel
+            syntaxErrorLogicalModel =
+              (Schema.logicalModel "divided_stuff" spicyQuery)
+                { Schema.logicalModelColumns =
+                    [ (Schema.logicalModelColumn "divided" "integer")
+                        { Schema.logicalModelColumnDescription = Just "A divided thing"
+                        }
+                    ],
+                  Schema.logicalModelArguments =
+                    [ Schema.logicalModelColumn "denominator" "integer",
+                      Schema.logicalModelColumn "target_date" "date"
+                    ]
+                }
+
         actual <-
           GraphqlEngine.postMetadataWithStatus
             400
-            testEnv
-            [yaml|
-                type: pg_track_logical_model
-                args:
-                  type: query
-                  source: postgres
-                  root_field_name: divided_stuff
-                  code: *spicyQuery
-                  arguments:
-                    denominator:
-                      type: integer
-                    target_date:
-                      type: date
-                  returns:
-                    columns:
-                      divided:
-                        type: integer
-                        description: "a divided thing"
-              |]
+            testEnvironment
+            (Schema.logicalModelToJson sourceName syntaxErrorLogicalModel)
 
         actual `shouldAtLeastBe` expected
 
     it "when the query refers to non existing table" $
-      \testEnv -> do
+      \testEnvironment -> do
+        let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+            sourceName = BackendType.backendSourceName backendTypeMetadata
+
         let spicyQuery :: Text
             spicyQuery = "SELECT thing / {{denominator}} AS divided FROM does_not_exist WHERE date = {{target_date}}"
+
+            brokenLogicalModel :: Schema.LogicalModel
+            brokenLogicalModel =
+              (Schema.logicalModel "divided_stuff" spicyQuery)
+                { Schema.logicalModelColumns =
+                    [ (Schema.logicalModelColumn "divided" "integer")
+                        { Schema.logicalModelColumnDescription = Just "A divided thing"
+                        }
+                    ],
+                  Schema.logicalModelArguments =
+                    [ Schema.logicalModelColumn "denominator" "integer",
+                      Schema.logicalModelColumn "target_date" "date"
+                    ]
+                }
 
         let expected =
               [yaml|
@@ -532,25 +531,8 @@ testValidation opts = do
         actual <-
           GraphqlEngine.postMetadataWithStatus
             400
-            testEnv
-            [yaml|
-                type: pg_track_logical_model
-                args:
-                  type: query
-                  source: postgres
-                  root_field_name: divided_stuff
-                  code: *spicyQuery
-                  arguments:
-                    denominator:
-                      type: integer
-                    target_date:
-                      type: date
-                  returns:
-                    columns:
-                      divided:
-                        type: integer
-                        description: "a divided thing"
-              |]
+            testEnvironment
+            (Schema.logicalModelToJson sourceName brokenLogicalModel)
 
         actual `shouldAtLeastBe` expected
 
@@ -558,34 +540,30 @@ testValidation opts = do
       \testEnv -> do
         let spicyQuery :: Text
             spicyQuery = "select * from stuff"
+
             backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnv
             source = BackendType.backendSourceName backendTypeMetadata
             schemaName = Schema.getSchemaName testEnv
+
+            conflictingLogicalModel :: Schema.LogicalModel
+            conflictingLogicalModel =
+              (Schema.logicalModel (Schema.unSchemaName schemaName <> "_stuff") spicyQuery)
+                { Schema.logicalModelColumns =
+                    [ Schema.logicalModelColumn "thing" "integer",
+                      Schema.logicalModelColumn "date" "date"
+                    ],
+                  Schema.logicalModelArguments =
+                    [ Schema.logicalModelColumn "denominator" "integer",
+                      Schema.logicalModelColumn "target_date" "date"
+                    ]
+                }
 
         shouldReturnYaml
           opts
           ( GraphqlEngine.postMetadataWithStatus
               500
               testEnv
-              [interpolateYaml|
-                type: pg_track_logical_model
-                args:
-                  type: query
-                  source: #{source}
-                  root_field_name: #{schemaName}_stuff
-                  code: #{spicyQuery}
-                  arguments:
-                    denominator:
-                      type: integer
-                    target_date:
-                      type: date
-                  returns:
-                    columns:
-                      thing:
-                        type: integer
-                      date:
-                        type: date
-              |]
+              (Schema.logicalModelToJson source conflictingLogicalModel)
           )
           [yaml|
               code: unexpected
@@ -598,35 +576,28 @@ testValidation opts = do
         let spicyQuery :: Text
             spicyQuery = "select * from stuff"
             backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnv
+
             source = BackendType.backendSourceName backendTypeMetadata
             schemaName = Schema.getSchemaName testEnv
 
-            trackLogimoReq =
-              [interpolateYaml|
-                type: pg_track_logical_model
-                args:
-                  type: query
-                  source: #{source}
-                  root_field_name: #{schemaName}_stuff_exist
-                  code: #{spicyQuery}
-                  arguments:
-                    denominator:
-                      type: integer
-                    target_date:
-                      type: date
-                  returns:
-                    columns:
-                      thing:
-                        type: integer
-                      date:
-                        type: date
-              |]
+            conflictingLogicalModel :: Schema.LogicalModel
+            conflictingLogicalModel =
+              (Schema.logicalModel (Schema.unSchemaName schemaName <> "_stuff_exist") spicyQuery)
+                { Schema.logicalModelColumns =
+                    [ Schema.logicalModelColumn "thing" "integer",
+                      Schema.logicalModelColumn "date" "date"
+                    ],
+                  Schema.logicalModelArguments =
+                    [ Schema.logicalModelColumn "denominator" "integer",
+                      Schema.logicalModelColumn "target_date" "date"
+                    ]
+                }
 
         shouldReturnYaml
           opts
           ( GraphqlEngine.postMetadata
               testEnv
-              trackLogimoReq
+              (Schema.logicalModelToJson source conflictingLogicalModel)
           )
           [yaml|
               message: success
@@ -637,7 +608,7 @@ testValidation opts = do
           ( GraphqlEngine.postMetadataWithStatus
               400
               testEnv
-              trackLogimoReq
+              (Schema.logicalModelToJson source conflictingLogicalModel)
           )
           [yaml|
               code: already-tracked
@@ -646,21 +617,25 @@ testValidation opts = do
           |]
 
     it "where arguments do not typecheck" $
-      \testEnv -> do
+      \testEnvironment -> do
+        let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+            sourceName = BackendType.backendSourceName backendTypeMetadata
+
         let expected =
               [yaml|
                   code: validation-failed
                   error: Failed to validate query
                 |]
+
         actual <-
           GraphqlEngine.postMetadataWithStatus
             400
-            testEnv
+            testEnvironment
             [yaml|
                   type: pg_track_logical_model
                   args:
                     type: query
-                    source: postgres
+                    source: *sourceName
                     root_field_name: divided_failing
                     code: |
                       SELECT 10 / {{denominator}} AS divided
@@ -676,17 +651,20 @@ testValidation opts = do
         actual `shouldAtLeastBe` expected
 
     it "that uses undeclared arguments" $
-      \testEnv -> do
+      \testEnvironment -> do
+        let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+            sourceName = BackendType.backendSourceName backendTypeMetadata
+
         shouldReturnYaml
           opts
           ( GraphqlEngine.postMetadataWithStatus
               400
-              testEnv
+              testEnvironment
               [yaml|
                   type: pg_track_logical_model
                   args:
                     type: query
-                    source: postgres
+                    source: *sourceName
                     root_field_name: divided_failing
                     code: |
                       SELECT 10 / {{denominator}} AS divided
@@ -704,18 +682,21 @@ testValidation opts = do
 
   describe "Validation succeeds" do
     it "when tracking then untracking then re-tracking a logical model" $
-      \testEnv -> do
+      \testEnvironment -> do
+        let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+            sourceName = BackendType.backendSourceName backendTypeMetadata
+
         shouldReturnYaml
           opts
           ( GraphqlEngine.postMetadata
-              testEnv
+              testEnvironment
               [yaml|
                 type: bulk
                 args:
                   - type: pg_track_logical_model
                     args:
                       type: query
-                      source: postgres
+                      source: *sourceName
                       root_field_name: divided_stuff2
                       code: *simpleQuery
                       arguments:
@@ -730,11 +711,11 @@ testValidation opts = do
                   - type: pg_untrack_logical_model
                     args:
                       root_field_name: divided_stuff2
-                      source: postgres
+                      source: *sourceName
                   - type: pg_track_logical_model
                     args:
                       type: query
-                      source: postgres
+                      source: *sourceName
                       root_field_name: divided_stuff2
                       code: *simpleQuery
                       arguments:
@@ -764,18 +745,21 @@ testPermissions opts = do
       simpleQuery = "SELECT thing / 2 AS divided FROM stuff"
 
   describe "Permissions" do
-    it "Adds a simple logical model function with no arguments a select permission and returns a 200" $ \testEnv -> do
+    it "Adds a simple logical model function with no arguments a select permission and returns a 200" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
-            testEnv
+            testEnvironment
             [yaml|
               type: bulk
               args:
                 - type: pg_track_logical_model
                   args:
                     type: query
-                    source: postgres
+                    source: *sourceName
                     root_field_name: divided_stuff
                     code: *simpleQuery
                     arguments:
@@ -788,7 +772,7 @@ testPermissions opts = do
                           description: "a divided thing"
                 - type: pg_create_logical_model_select_permission
                   args:
-                    source: postgres
+                    source: *sourceName
                     root_field_name: divided_stuff
                     role: "test"
                     permission:
@@ -805,11 +789,11 @@ testPermissions opts = do
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
-            testEnv
+            testEnvironment
             [yaml|
               type: pg_get_logical_model
               args:
-                source: postgres
+                source: *sourceName
             |]
         )
         [yaml|
@@ -833,20 +817,24 @@ testPermissions opts = do
                   type: integer
         |]
 
-    it "Adds a logical model, removes it, and returns 200" $ \testEnv -> do
+    it "Adds a logical model, removes it, and returns 200" $ \testEnvironment -> do
       let rootfield :: String
           rootfield = "divided_stuff1231"
+
+          backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
-            testEnv
+            testEnvironment
             [yaml|
               type: bulk
               args:
                 - type: pg_track_logical_model
                   args:
                     type: query
-                    source: postgres
+                    source: *sourceName
                     root_field_name: *rootfield
                     code: *simpleQuery
                     arguments:
@@ -859,7 +847,7 @@ testPermissions opts = do
                           description: "a divided thing"
                 - type: pg_create_logical_model_select_permission
                   args:
-                    source: postgres
+                    source: *sourceName
                     root_field_name: *rootfield
                     role: "test"
                     permission:
@@ -868,7 +856,7 @@ testPermissions opts = do
                       filter: {}
                 - type: pg_drop_logical_model_select_permission
                   args:
-                    source: postgres
+                    source: *sourceName
                     root_field_name: *rootfield
                     role: "test"
             |]
@@ -882,11 +870,11 @@ testPermissions opts = do
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
-            testEnv
+            testEnvironment
             [yaml|
               type: pg_get_logical_model
               args:
-                source: postgres
+                source: *sourceName
             |]
         )
         [yaml|
@@ -907,12 +895,12 @@ testPermissions opts = do
 testPermissionFailures :: Fixture.Options -> SpecWith TestEnvironment
 testPermissionFailures opts = do
   describe "Permission failures" do
-    it "Fails to adds a select permission to a nonexisting source" $ \testEnv -> do
+    it "Fails to adds a select permission to a nonexisting source" $ \testEnvironment -> do
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadataWithStatus
             400
-            testEnv
+            testEnvironment
             [yaml|
               type: bulk
               args:
@@ -933,18 +921,21 @@ testPermissionFailures opts = do
           path: "$.args[0].args"
         |]
 
-    it "Fails to adds a select permission to a nonexisting logical model" $ \testEnv -> do
+    it "Fails to adds a select permission to a nonexisting logical model" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadataWithStatus
             400
-            testEnv
+            testEnvironment
             [yaml|
               type: bulk
               args:
                 - type: pg_create_logical_model_select_permission
                   args:
-                    source: postgres
+                    source: *sourceName
                     root_field_name: made_up_logical_model
                     role: "test"
                     permission:
@@ -983,16 +974,19 @@ testPermissionFailures opts = do
           path: "$.args"
         |]
 
-    it "Fails to drop a select permission from a nonexisting logical model" $ \testEnv -> do
+    it "Fails to drop a select permission from a nonexisting logical model" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadataWithStatus
             400
-            testEnv
+            testEnvironment
             [yaml|
               type: pg_drop_logical_model_select_permission
               args:
-                source: postgres
+                source: *sourceName
                 root_field_name: made_up_logical_model
                 role: "test"
             |]

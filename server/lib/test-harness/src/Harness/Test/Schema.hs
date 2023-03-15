@@ -20,6 +20,11 @@ module Harness.Test.Schema
     BackendScalarValueType (..),
     ManualRelationship (..),
     SchemaName (..),
+    LogicalModel (..),
+    logicalModel,
+    LogicalModelColumn (..),
+    logicalModelColumn,
+    logicalModelToJson,
     resolveTableSchema,
     resolveReferenceSchema,
     quotedValue,
@@ -47,6 +52,7 @@ module Harness.Test.Schema
     untrackComputedField,
     runSQL,
     addSource,
+    trackLogicalModel,
   )
 where
 
@@ -118,6 +124,42 @@ table tableName =
       tableConstraints = [],
       tableUniqueIndexes = [],
       tableQualifiers = []
+    }
+
+data LogicalModelColumn = LogicalModelColumn
+  { logicalModelColumnName :: Text,
+    logicalModelColumnType :: Text, -- this should be ScalarType but we'll need to think about per-DB serialisation etc first
+    logicalModelColumnNullable :: Bool,
+    logicalModelColumnDescription :: Maybe Text
+  }
+  deriving (Show, Eq)
+
+logicalModelColumn :: Text -> Text -> LogicalModelColumn
+logicalModelColumn name colType =
+  LogicalModelColumn
+    { logicalModelColumnName = name,
+      logicalModelColumnType = colType,
+      logicalModelColumnNullable = False,
+      logicalModelColumnDescription = Nothing
+    }
+
+data LogicalModel = LogicalModel
+  { logicalModelName :: Text,
+    logicalModelColumns :: [LogicalModelColumn],
+    logicalModelQuery :: Text,
+    logicalModelArguments :: [LogicalModelColumn],
+    logicalModelReturnTypeDescription :: Maybe Text
+  }
+  deriving (Show, Eq)
+
+logicalModel :: Text -> Text -> LogicalModel
+logicalModel logicalModelName query =
+  LogicalModel
+    { logicalModelName,
+      logicalModelColumns = mempty,
+      logicalModelQuery = query,
+      logicalModelArguments = mempty,
+      logicalModelReturnTypeDescription = Nothing
     }
 
 -- | Foreign keys for backends that support it.
@@ -696,3 +738,51 @@ addSource sourceName sourceConfig testEnvironment = do
         name: #{ sourceName }
         configuration: #{ sourceConfig }
       |]
+
+logicalModelToJson :: String -> LogicalModel -> Value
+logicalModelToJson sourceName (LogicalModel {logicalModelReturnTypeDescription, logicalModelName, logicalModelArguments, logicalModelQuery, logicalModelColumns}) =
+  let columnsToJson =
+        Aeson.object
+          . fmap
+            ( \LogicalModelColumn {..} ->
+                let key = K.fromText logicalModelColumnName
+                    descriptionPair = case logicalModelColumnDescription of
+                      Just desc -> [(K.fromText "description", Aeson.String desc)]
+                      Nothing -> []
+
+                    value =
+                      Aeson.object $
+                        [ (K.fromText "type", Aeson.String logicalModelColumnType),
+                          (K.fromText "nullable", Aeson.Bool logicalModelColumnNullable)
+                        ]
+                          <> descriptionPair
+                 in (key, value)
+            )
+
+      arguments = columnsToJson logicalModelArguments
+
+      columns = columnsToJson logicalModelColumns
+
+      returnTypePair = case logicalModelReturnTypeDescription of
+        Just desc -> [("description", Aeson.String desc)]
+        Nothing -> []
+
+      returns =
+        Aeson.object $
+          [(K.fromText "columns", columns)] <> returnTypePair
+   in [yaml|
+        type: pg_track_logical_model
+        args:
+          type: query
+          source: *sourceName
+          root_field_name: *logicalModelName 
+          code: *logicalModelQuery
+          arguments: *arguments
+          returns: *returns
+      |]
+
+trackLogicalModel :: HasCallStack => String -> LogicalModel -> TestEnvironment -> IO ()
+trackLogicalModel sourceName logMod testEnvironment = do
+  let json = logicalModelToJson sourceName logMod
+
+  GraphqlEngine.postMetadata_ testEnvironment json

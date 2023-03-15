@@ -68,6 +68,15 @@ tests opts = do
   let query :: Text
       query = "SELECT * FROM (VALUES ('hello', 'world'), ('welcome', 'friend')) as t(\"one\", \"two\")"
 
+      helloWorldLogicalModel :: Schema.LogicalModel
+      helloWorldLogicalModel =
+        (Schema.logicalModel "hello_world_function" query)
+          { Schema.logicalModelColumns =
+              [ Schema.logicalModelColumn "one" "text",
+                Schema.logicalModelColumn "two" "text"
+              ]
+          }
+
       shouldBe :: IO Value -> Value -> IO ()
       shouldBe = shouldReturnYaml opts
 
@@ -76,28 +85,7 @@ tests opts = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postMetadata
-            testEnvironment
-            [yaml|
-              type: pg_track_logical_model
-              args:
-                type: query
-                source: *source
-                root_field_name: hello_world_function
-                code: *query
-                returns:
-                  columns:
-                    one:
-                      type: text
-                    two:
-                      type: text
-            |]
-        )
-        [yaml|
-          message: success
-        |]
+      Schema.trackLogicalModel source helloWorldLogicalModel testEnvironment
 
       let expected =
             [yaml|
@@ -128,28 +116,7 @@ tests opts = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postMetadata
-            testEnvironment
-            [yaml|
-              type: pg_track_logical_model
-              args:
-                type: query
-                source: *source
-                root_field_name: hello_world_function
-                code: *query
-                returns:
-                  columns:
-                    one:
-                      type: text
-                    two:
-                      type: text
-            |]
-        )
-        [yaml|
-          message: success
-        |]
+      Schema.trackLogicalModel source helloWorldLogicalModel testEnvironment
 
       let expected =
             [yaml|
@@ -181,28 +148,16 @@ tests opts = do
           queryWithDuplicates :: Text
           queryWithDuplicates = "SELECT * FROM (VALUES ('hello', 'world'), ('hello', 'friend')) as t(\"one\", \"two\")"
 
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postMetadata
-            testEnvironment
-            [yaml|
-              type: pg_track_logical_model
-              args:
-                type: query
-                source: *source
-                root_field_name: hello_world_function
-                code: *queryWithDuplicates
-                returns:
-                  columns:
-                    one:
-                      type: text
-                    two:
-                      type: text
-            |]
-        )
-        [yaml|
-          message: success
-        |]
+          helloWorldLogicalModelWithDuplicates :: Schema.LogicalModel
+          helloWorldLogicalModelWithDuplicates =
+            (Schema.logicalModel "hello_world_function" queryWithDuplicates)
+              { Schema.logicalModelColumns =
+                  [ Schema.logicalModelColumn "one" "text",
+                    Schema.logicalModelColumn "two" "text"
+                  ]
+              }
+
+      Schema.trackLogicalModel source helloWorldLogicalModelWithDuplicates testEnvironment
 
       let expected =
             [yaml|
@@ -232,30 +187,9 @@ tests opts = do
 
     it "Runs a simple query that takes no parameters" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
-          source = BackendType.backendSourceName backendTypeMetadata
+          sourceName = BackendType.backendSourceName backendTypeMetadata
 
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postMetadata
-            testEnvironment
-            [yaml|
-              type: pg_track_logical_model
-              args:
-                type: query
-                source: *source
-                root_field_name: hello_world_function
-                code: *query
-                returns:
-                  columns:
-                    one:
-                      type: text
-                    two:
-                      type: text
-            |]
-        )
-        [yaml|
-          message: success
-        |]
+      Schema.trackLogicalModel sourceName helloWorldLogicalModel testEnvironment
 
       let expected =
             [yaml|
@@ -284,31 +218,19 @@ tests opts = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postMetadata
-            testEnvironment
-            [yaml|
-              type: pg_track_logical_model
-              args:
-                type: query
-                source: *source
-                root_field_name: hello_world_function_with_dummy
-                arguments:
-                  dummy:
-                    type: varchar
-                code: *query
-                returns:
-                  columns:
-                    one:
-                      type: text
-                    two:
-                      type: text
-            |]
-        )
-        [yaml|
-          message: success
-        |]
+          helloWorldLogicalModelWithDummyArgument :: Schema.LogicalModel
+          helloWorldLogicalModelWithDummyArgument =
+            (Schema.logicalModel "hello_world_function_with_dummy" query)
+              { Schema.logicalModelColumns =
+                  [ Schema.logicalModelColumn "one" "text",
+                    Schema.logicalModelColumn "two" "text"
+                  ],
+                Schema.logicalModelArguments =
+                  [ Schema.logicalModelColumn "dummy" "varchar"
+                  ]
+              }
+
+      Schema.trackLogicalModel source helloWorldLogicalModelWithDummyArgument testEnvironment
 
       let expected =
             [yaml|
@@ -339,28 +261,16 @@ tests opts = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postMetadata
-            testEnvironment
-            [yaml|
-              type: pg_track_logical_model
-              args:
-                type: query
-                source: *source
-                root_field_name: hello_comment_function
-                code: *spicyQuery
-                returns:
-                  columns:
-                    one:
-                      type: text
-                    two:
-                      type: text
-            |]
-        )
-        [yaml|
-          message: success
-        |]
+          helloCommentLogicalModel :: Schema.LogicalModel
+          helloCommentLogicalModel =
+            (Schema.logicalModel "hello_comment_function" spicyQuery)
+              { Schema.logicalModelColumns =
+                  [ Schema.logicalModelColumn "one" "text",
+                    Schema.logicalModelColumn "two" "text"
+                  ]
+              }
+
+      Schema.trackLogicalModel source helloCommentLogicalModel testEnvironment
 
       let expected =
             [yaml|
@@ -401,35 +311,21 @@ tests opts = do
                           from article
                       |]
 
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postMetadata
-            testEnvironment
-            [yaml|
-              type: pg_track_logical_model
-              args:
-                type: query
-                source: *source
-                root_field_name: article_with_excerpt
-                code: *spicyQuery
-                arguments:
-                  length:
-                    type: integer
-                returns:
-                  columns:
-                    id:
-                      type: integer
-                    title:
-                      type: text
-                    excerpt:
-                      type: text
-                    date:
-                      type: date
-            |]
-        )
-        [yaml|
-          message: success
-        |]
+          articleWithExcerptLogicalModel :: Schema.LogicalModel
+          articleWithExcerptLogicalModel =
+            (Schema.logicalModel "article_with_excerpt" spicyQuery)
+              { Schema.logicalModelColumns =
+                  [ Schema.logicalModelColumn "id" "integer",
+                    Schema.logicalModelColumn "title" "text",
+                    Schema.logicalModelColumn "excerpt" "text",
+                    Schema.logicalModelColumn "date" "date"
+                  ],
+                Schema.logicalModelArguments =
+                  [ Schema.logicalModelColumn "length" "integer"
+                  ]
+              }
+
+      Schema.trackLogicalModel source articleWithExcerptLogicalModel testEnvironment
 
       let actual :: IO Value
           actual =
@@ -472,65 +368,29 @@ tests opts = do
                           from article
                       |]
 
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postMetadata
-            testEnvironment
-            [yaml|
-              type: pg_track_logical_model
-              args:
-                type: query
-                source: *source
-                root_field_name: article_with_excerpt_1
-                code: *spicyQuery
-                arguments:
-                  length:
-                    type: integer
-                returns:
-                  columns:
-                    id:
-                      type: integer
-                    title:
-                      type: text
-                    excerpt:
-                      type: text
-                    date:
-                      type: date
-            |]
-        )
-        [yaml|
-          message: success
-        |]
+          mkArticleWithExcerptLogicalModel :: Text -> Schema.LogicalModel
+          mkArticleWithExcerptLogicalModel name =
+            (Schema.logicalModel name spicyQuery)
+              { Schema.logicalModelColumns =
+                  [ Schema.logicalModelColumn "id" "integer",
+                    Schema.logicalModelColumn "title" "text",
+                    Schema.logicalModelColumn "excerpt" "text",
+                    Schema.logicalModelColumn "date" "date"
+                  ],
+                Schema.logicalModelArguments =
+                  [ Schema.logicalModelColumn "length" "integer"
+                  ]
+              }
 
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postMetadata
-            testEnvironment
-            [yaml|
-              type: pg_track_logical_model
-              args:
-                type: query
-                source: *source
-                root_field_name: article_with_excerpt_2
-                code: *spicyQuery
-                arguments:
-                  length:
-                    type: integer
-                returns:
-                  columns:
-                    id:
-                      type: integer
-                    title:
-                      type: text
-                    excerpt:
-                      type: text
-                    date:
-                      type: date
-            |]
-        )
-        [yaml|
-          message: success
-        |]
+      Schema.trackLogicalModel
+        source
+        (mkArticleWithExcerptLogicalModel "article_with_excerpt_1")
+        testEnvironment
+
+      Schema.trackLogicalModel
+        source
+        (mkArticleWithExcerptLogicalModel "article_with_excerpt_2")
+        testEnvironment
 
       let actual :: IO Value
           actual =
@@ -572,35 +432,21 @@ tests opts = do
                           from article
                       |]
 
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postMetadata
-            testEnvironment
-            [yaml|
-              type: pg_track_logical_model
-              args:
-                type: query
-                source: *source
-                root_field_name: article_with_excerpt
-                code: *spicyQuery
-                arguments:
-                  length:
-                    type: integer
-                returns:
-                  columns:
-                    id:
-                      type: integer
-                    title:
-                      type: text
-                    excerpt:
-                      type: text
-                    date:
-                      type: date
-            |]
-        )
-        [yaml|
-          message: success
-        |]
+          articleWithExcerptLogicalModel :: Schema.LogicalModel
+          articleWithExcerptLogicalModel =
+            (Schema.logicalModel "article_with_excerpt" spicyQuery)
+              { Schema.logicalModelColumns =
+                  [ Schema.logicalModelColumn "id" "integer",
+                    Schema.logicalModelColumn "title" "text",
+                    Schema.logicalModelColumn "excerpt" "text",
+                    Schema.logicalModelColumn "date" "date"
+                  ],
+                Schema.logicalModelArguments =
+                  [ Schema.logicalModelColumn "length" "integer"
+                  ]
+              }
+
+      Schema.trackLogicalModel source articleWithExcerptLogicalModel testEnvironment
 
       let actual :: IO Value
           actual =
@@ -642,35 +488,21 @@ tests opts = do
                           from article
                       |]
 
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postMetadata
-            testEnvironment
-            [yaml|
-              type: pg_track_logical_model
-              args:
-                type: query
-                source: *source
-                root_field_name: article_with_excerpt
-                code: *spicyQuery
-                arguments:
-                  length:
-                    type: integer
-                returns:
-                  columns:
-                    id:
-                      type: integer
-                    title:
-                      type: text
-                    excerpt:
-                      type: text
-                    date:
-                      type: date
-            |]
-        )
-        [yaml|
-          message: success
-        |]
+          articleWithExcerptLogicalModel :: Schema.LogicalModel
+          articleWithExcerptLogicalModel =
+            (Schema.logicalModel "article_with_excerpt" spicyQuery)
+              { Schema.logicalModelColumns =
+                  [ Schema.logicalModelColumn "id" "integer",
+                    Schema.logicalModelColumn "title" "text",
+                    Schema.logicalModelColumn "excerpt" "text",
+                    Schema.logicalModelColumn "date" "date"
+                  ],
+                Schema.logicalModelArguments =
+                  [ Schema.logicalModelColumn "length" "integer"
+                  ]
+              }
+
+      Schema.trackLogicalModel source articleWithExcerptLogicalModel testEnvironment
 
       let variables =
             [yaml|
@@ -699,29 +531,28 @@ tests opts = do
 
       actual `shouldBe` expected
 
-    it "Uses a column permission that we are allowed to access" $ \testEnv -> do
-      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnv
+    it "Uses a column permission that we are allowed to access" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
+
+          helloWorldPermLogicalModel :: Schema.LogicalModel
+          helloWorldPermLogicalModel =
+            (Schema.logicalModel "hello_world_perms" query)
+              { Schema.logicalModelColumns =
+                  [ Schema.logicalModelColumn "one" "text",
+                    Schema.logicalModelColumn "two" "text"
+                  ]
+              }
+
+      Schema.trackLogicalModel source helloWorldPermLogicalModel testEnvironment
 
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
-            testEnv
+            testEnvironment
             [yaml|
               type: bulk
               args:
-                - type: pg_track_logical_model
-                  args:
-                    type: query
-                    source: *source
-                    root_field_name: hello_world_perms
-                    code: *query
-                    returns:
-                      columns:
-                        one:
-                          type: text
-                        two:
-                          type: text
                 - type: pg_create_logical_model_select_permission
                   args:
                     source: *source
@@ -734,7 +565,6 @@ tests opts = do
             |]
         )
         [yaml|
-          - message: success
           - message: success
         |]
 
@@ -749,7 +579,7 @@ tests opts = do
           actual :: IO Value
           actual =
             GraphqlEngine.postGraphqlWithHeaders
-              testEnv
+              testEnvironment
               [("X-Hasura-Role", "test")]
               [graphql|
               query {
@@ -761,29 +591,28 @@ tests opts = do
 
       actual `shouldBe` expected
 
-    it "Fails because we access a column we do not have permissions for" $ \testEnv -> do
-      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnv
+    it "Fails because we access a column we do not have permissions for" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
+
+          helloWorldPermLogicalModel :: Schema.LogicalModel
+          helloWorldPermLogicalModel =
+            (Schema.logicalModel "hello_world_perms" query)
+              { Schema.logicalModelColumns =
+                  [ Schema.logicalModelColumn "one" "text",
+                    Schema.logicalModelColumn "two" "text"
+                  ]
+              }
+
+      Schema.trackLogicalModel source helloWorldPermLogicalModel testEnvironment
 
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
-            testEnv
+            testEnvironment
             [yaml|
               type: bulk
               args:
-                - type: pg_track_logical_model
-                  args:
-                    type: query
-                    source: *source
-                    root_field_name: hello_world_perms
-                    code: *query
-                    returns:
-                      columns:
-                        one:
-                          type: text
-                        two:
-                          type: text
                 - type: pg_create_logical_model_select_permission
                   args:
                     source: *source
@@ -796,7 +625,6 @@ tests opts = do
             |]
         )
         [yaml|
-          - message: success
           - message: success
         |]
 
@@ -812,7 +640,7 @@ tests opts = do
           actual :: IO Value
           actual =
             GraphqlEngine.postGraphqlWithHeaders
-              testEnv
+              testEnvironment
               [("X-Hasura-Role", "test")]
               [graphql|
               query {
@@ -824,29 +652,28 @@ tests opts = do
 
       actual `shouldBe` expected
 
-    it "Using row permissions filters out some results" $ \testEnv -> do
-      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnv
+    it "Using row permissions filters out some results" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
+
+          helloWorldPermLogicalModel :: Schema.LogicalModel
+          helloWorldPermLogicalModel =
+            (Schema.logicalModel "hello_world_perms" query)
+              { Schema.logicalModelColumns =
+                  [ Schema.logicalModelColumn "one" "text",
+                    Schema.logicalModelColumn "two" "text"
+                  ]
+              }
+
+      Schema.trackLogicalModel source helloWorldPermLogicalModel testEnvironment
 
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
-            testEnv
+            testEnvironment
             [yaml|
               type: bulk
               args:
-                - type: pg_track_logical_model
-                  args:
-                    type: query
-                    source: *source
-                    root_field_name: hello_world_perms
-                    code: *query
-                    returns:
-                      columns:
-                        one:
-                          type: text
-                        two:
-                          type: text
                 - type: pg_create_logical_model_select_permission
                   args:
                     source: *source
@@ -861,7 +688,6 @@ tests opts = do
         )
         [yaml|
           - message: success
-          - message: success
         |]
 
       let expected =
@@ -875,7 +701,7 @@ tests opts = do
           actual :: IO Value
           actual =
             GraphqlEngine.postGraphqlWithHeaders
-              testEnv
+              testEnvironment
               [("X-Hasura-Role", "test")]
               [graphql|
               query {
