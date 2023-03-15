@@ -18396,7 +18396,7 @@ data EventingMode
 EventingEnabled :: EventingMode
 EventingDisabled :: EventingMode
 data ServerConfigCtx
-ServerConfigCtx :: InferFunctionPermissions -> RemoteSchemaPermissions -> SQLGenCtx -> MaintenanceMode () -> HashSet ExperimentalFeature -> EventingMode -> ReadOnlyMode -> NamingCase -> MetadataDefaults -> (FeatureFlag -> IO Bool) -> ServerConfigCtx
+ServerConfigCtx :: InferFunctionPermissions -> RemoteSchemaPermissions -> SQLGenCtx -> MaintenanceMode () -> HashSet ExperimentalFeature -> EventingMode -> ReadOnlyMode -> NamingCase -> MetadataDefaults -> (FeatureFlag -> IO Bool) -> ApolloFederationStatus -> ServerConfigCtx
 [_sccFunctionPermsCtx] :: ServerConfigCtx -> InferFunctionPermissions
 [_sccRemoteSchemaPermsCtx] :: ServerConfigCtx -> RemoteSchemaPermissions
 [_sccSQLGenCtx] :: ServerConfigCtx -> SQLGenCtx
@@ -18409,9 +18409,16 @@ ServerConfigCtx :: InferFunctionPermissions -> RemoteSchemaPermissions -> SQLGen
 [_sccDefaultNamingConvention] :: ServerConfigCtx -> NamingCase
 [_sccMetadataDefaults] :: ServerConfigCtx -> MetadataDefaults
 [_sccCheckFeatureFlag] :: ServerConfigCtx -> FeatureFlag -> IO Bool
+[_sccApolloFederationStatus] :: ServerConfigCtx -> ApolloFederationStatus
 askMetadataDefaults :: HasServerConfigCtx m => m MetadataDefaults
 class (Monad m) => HasServerConfigCtx m
 askServerConfigCtx :: HasServerConfigCtx m => m ServerConfigCtx
+
+-- | Whether or not to enable apollo federation fields.
+data ApolloFederationStatus
+ApolloFederationEnabled :: ApolloFederationStatus
+ApolloFederationDisabled :: ApolloFederationStatus
+isApolloFederationEnabled :: ApolloFederationStatus -> Bool
 instance Data.Hashable.Class.Hashable Hasura.Server.Types.RequestId
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Types.RequestId
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Types.RequestId
@@ -18450,9 +18457,17 @@ instance GHC.Classes.Eq Hasura.Server.Types.ReadOnlyMode
 instance GHC.Show.Show Hasura.Server.Types.ReadOnlyMode
 instance GHC.Classes.Eq Hasura.Server.Types.EventingMode
 instance GHC.Show.Show Hasura.Server.Types.EventingMode
+instance GHC.Generics.Generic Hasura.Server.Types.ApolloFederationStatus
+instance GHC.Classes.Ord Hasura.Server.Types.ApolloFederationStatus
+instance GHC.Classes.Eq Hasura.Server.Types.ApolloFederationStatus
+instance GHC.Show.Show Hasura.Server.Types.ApolloFederationStatus
 instance Hasura.Server.Types.HasServerConfigCtx m => Hasura.Server.Types.HasServerConfigCtx (Control.Monad.Trans.Reader.ReaderT r m)
 instance Hasura.Server.Types.HasServerConfigCtx m => Hasura.Server.Types.HasServerConfigCtx (Control.Monad.Trans.Except.ExceptT e m)
 instance Hasura.Server.Types.HasServerConfigCtx m => Hasura.Server.Types.HasServerConfigCtx (Control.Monad.Trans.State.Strict.StateT s m)
+instance Control.DeepSeq.NFData Hasura.Server.Types.ApolloFederationStatus
+instance Data.Hashable.Class.Hashable Hasura.Server.Types.ApolloFederationStatus
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Types.ApolloFederationStatus
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Types.ApolloFederationStatus
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.Server.Types.MaintenanceMode ())
 instance Data.Aeson.Types.ToJSON.ToJSON (Hasura.Server.Types.MaintenanceMode ())
 instance Data.Hashable.Class.Hashable Hasura.Server.Types.ExperimentalFeature
@@ -18871,10 +18886,10 @@ ActionRemoteRelationshipSelect :: HashMap FieldName Name -> r -> ActionRemoteRel
 --   an execution tree is constructed so that a backend is absolved of
 --   dealing with remote relationships.
 [_arrsRelationship] :: ActionRemoteRelationshipSelect r -> r
-_ACFNestedObject :: forall r_auHB5. Prism' (ActionFieldG r_auHB5) (Name, ActionFieldsG r_auHB5)
-_ACFExpression :: forall r_auHB5. Prism' (ActionFieldG r_auHB5) Text
-_ACFRemote :: forall r_auHB5. Prism' (ActionFieldG r_auHB5) (ActionRemoteRelationshipSelect r_auHB5)
-_ACFScalar :: forall r_auHB5. Prism' (ActionFieldG r_auHB5) Name
+_ACFNestedObject :: forall r_auIDk. Prism' (ActionFieldG r_auIDk) (Name, ActionFieldsG r_auIDk)
+_ACFExpression :: forall r_auIDk. Prism' (ActionFieldG r_auIDk) Text
+_ACFRemote :: forall r_auIDk. Prism' (ActionFieldG r_auIDk) (ActionRemoteRelationshipSelect r_auIDk)
+_ACFScalar :: forall r_auIDk. Prism' (ActionFieldG r_auIDk) Name
 data AnnActionExecution (r :: Type)
 AnnActionExecution :: ActionName -> GraphQLType -> ActionFieldsG r -> Value -> ActionOutputFields -> EnvRecord ResolvedWebhook -> [HeaderConf] -> Bool -> Timeout -> Maybe RequestTransform -> Maybe MetadataResponseTransform -> AnnActionExecution (r :: Type)
 [_aaeName] :: AnnActionExecution (r :: Type) -> ActionName
@@ -18928,30 +18943,30 @@ ASINoSource :: ActionSourceInfo b
 
 -- | All relationships refer to tables in one source
 ASISource :: SourceName -> SourceConfig b -> ActionSourceInfo b
-aaaqStringifyNum :: forall b_auHYC r_auHYD. Lens' (AnnActionAsyncQuery b_auHYC r_auHYD) StringifyNumbers
-aaaqSource :: forall b_auHYC r_auHYD. Lens' (AnnActionAsyncQuery b_auHYC r_auHYD) (ActionSourceInfo b_auHYC)
-aaaqOutputType :: forall b_auHYC r_auHYD. Lens' (AnnActionAsyncQuery b_auHYC r_auHYD) GraphQLType
-aaaqName :: forall b_auHYC r_auHYD. Lens' (AnnActionAsyncQuery b_auHYC r_auHYD) ActionName
-aaaqForwardClientHeaders :: forall b_auHYC r_auHYD. Lens' (AnnActionAsyncQuery b_auHYC r_auHYD) Bool
-aaaqFields :: forall b_auHYC r_auHYD r_auIxI. Lens (AnnActionAsyncQuery b_auHYC r_auHYD) (AnnActionAsyncQuery b_auHYC r_auIxI) (AsyncActionQueryFieldsG r_auHYD) (AsyncActionQueryFieldsG r_auIxI)
-aaaqDefinitionList :: forall b_auHYC r_auHYD. Lens' (AnnActionAsyncQuery b_auHYC r_auHYD) [(Column b_auHYC, ScalarType b_auHYC)]
-aaaqActionId :: forall b_auHYC r_auHYD. Lens' (AnnActionAsyncQuery b_auHYC r_auHYD) ActionId
-aaeWebhook :: forall r_auHYG. Lens' (AnnActionExecution r_auHYG) (EnvRecord ResolvedWebhook)
-aaeTimeOut :: forall r_auHYG. Lens' (AnnActionExecution r_auHYG) Timeout
-aaeResponseTransform :: forall r_auHYG. Lens' (AnnActionExecution r_auHYG) (Maybe MetadataResponseTransform)
-aaeRequestTransform :: forall r_auHYG. Lens' (AnnActionExecution r_auHYG) (Maybe RequestTransform)
-aaePayload :: forall r_auHYG. Lens' (AnnActionExecution r_auHYG) Value
-aaeOutputType :: forall r_auHYG. Lens' (AnnActionExecution r_auHYG) GraphQLType
-aaeOutputFields :: forall r_auHYG. Lens' (AnnActionExecution r_auHYG) ActionOutputFields
-aaeName :: forall r_auHYG. Lens' (AnnActionExecution r_auHYG) ActionName
-aaeHeaders :: forall r_auHYG. Lens' (AnnActionExecution r_auHYG) [HeaderConf]
-aaeForwardClientHeaders :: forall r_auHYG. Lens' (AnnActionExecution r_auHYG) Bool
-aaeFields :: forall r_auHYG r_auIEt. Lens (AnnActionExecution r_auHYG) (AnnActionExecution r_auIEt) (ActionFieldsG r_auHYG) (ActionFieldsG r_auIEt)
-_AsyncErrors :: forall r_auHYF. Prism' (AsyncActionQueryFieldG r_auHYF) ()
-_AsyncCreatedAt :: forall r_auHYF. Prism' (AsyncActionQueryFieldG r_auHYF) ()
-_AsyncId :: forall r_auHYF. Prism' (AsyncActionQueryFieldG r_auHYF) ()
-_AsyncOutput :: forall r_auINw r_auHYF. Prism (AsyncActionQueryFieldG r_auINw) (AsyncActionQueryFieldG r_auHYF) (ActionFieldsG r_auINw) (ActionFieldsG r_auHYF)
-_AsyncTypename :: forall r_auHYF. Prism' (AsyncActionQueryFieldG r_auHYF) Text
+aaaqStringifyNum :: forall b_auJ0R r_auJ0S. Lens' (AnnActionAsyncQuery b_auJ0R r_auJ0S) StringifyNumbers
+aaaqSource :: forall b_auJ0R r_auJ0S. Lens' (AnnActionAsyncQuery b_auJ0R r_auJ0S) (ActionSourceInfo b_auJ0R)
+aaaqOutputType :: forall b_auJ0R r_auJ0S. Lens' (AnnActionAsyncQuery b_auJ0R r_auJ0S) GraphQLType
+aaaqName :: forall b_auJ0R r_auJ0S. Lens' (AnnActionAsyncQuery b_auJ0R r_auJ0S) ActionName
+aaaqForwardClientHeaders :: forall b_auJ0R r_auJ0S. Lens' (AnnActionAsyncQuery b_auJ0R r_auJ0S) Bool
+aaaqFields :: forall b_auJ0R r_auJ0S r_auJzX. Lens (AnnActionAsyncQuery b_auJ0R r_auJ0S) (AnnActionAsyncQuery b_auJ0R r_auJzX) (AsyncActionQueryFieldsG r_auJ0S) (AsyncActionQueryFieldsG r_auJzX)
+aaaqDefinitionList :: forall b_auJ0R r_auJ0S. Lens' (AnnActionAsyncQuery b_auJ0R r_auJ0S) [(Column b_auJ0R, ScalarType b_auJ0R)]
+aaaqActionId :: forall b_auJ0R r_auJ0S. Lens' (AnnActionAsyncQuery b_auJ0R r_auJ0S) ActionId
+aaeWebhook :: forall r_auJ0V. Lens' (AnnActionExecution r_auJ0V) (EnvRecord ResolvedWebhook)
+aaeTimeOut :: forall r_auJ0V. Lens' (AnnActionExecution r_auJ0V) Timeout
+aaeResponseTransform :: forall r_auJ0V. Lens' (AnnActionExecution r_auJ0V) (Maybe MetadataResponseTransform)
+aaeRequestTransform :: forall r_auJ0V. Lens' (AnnActionExecution r_auJ0V) (Maybe RequestTransform)
+aaePayload :: forall r_auJ0V. Lens' (AnnActionExecution r_auJ0V) Value
+aaeOutputType :: forall r_auJ0V. Lens' (AnnActionExecution r_auJ0V) GraphQLType
+aaeOutputFields :: forall r_auJ0V. Lens' (AnnActionExecution r_auJ0V) ActionOutputFields
+aaeName :: forall r_auJ0V. Lens' (AnnActionExecution r_auJ0V) ActionName
+aaeHeaders :: forall r_auJ0V. Lens' (AnnActionExecution r_auJ0V) [HeaderConf]
+aaeForwardClientHeaders :: forall r_auJ0V. Lens' (AnnActionExecution r_auJ0V) Bool
+aaeFields :: forall r_auJ0V r_auJGI. Lens (AnnActionExecution r_auJ0V) (AnnActionExecution r_auJGI) (ActionFieldsG r_auJ0V) (ActionFieldsG r_auJGI)
+_AsyncErrors :: forall r_auJ0U. Prism' (AsyncActionQueryFieldG r_auJ0U) ()
+_AsyncCreatedAt :: forall r_auJ0U. Prism' (AsyncActionQueryFieldG r_auJ0U) ()
+_AsyncId :: forall r_auJ0U. Prism' (AsyncActionQueryFieldG r_auJ0U) ()
+_AsyncOutput :: forall r_auJPL r_auJ0U. Prism (AsyncActionQueryFieldG r_auJPL) (AsyncActionQueryFieldG r_auJ0U) (ActionFieldsG r_auJPL) (ActionFieldsG r_auJ0U)
+_AsyncTypename :: forall r_auJ0U. Prism' (AsyncActionQueryFieldG r_auJ0U) Text
 instance Data.Traversable.Traversable Hasura.RQL.IR.Action.AnnActionExecution
 instance Data.Foldable.Foldable Hasura.RQL.IR.Action.AnnActionExecution
 instance GHC.Base.Functor Hasura.RQL.IR.Action.AnnActionExecution
@@ -20027,35 +20042,12 @@ data ApolloFederationParserFunction n
 ApolloFederationParserFunction :: (ApolloFederationAnyType -> n (QueryRootField UnpreparedValue)) -> ApolloFederationParserFunction n
 [aafuGetRootField] :: ApolloFederationParserFunction n -> ApolloFederationAnyType -> n (QueryRootField UnpreparedValue)
 convertToApolloFedParserFunc :: (MonadParse n, Backend b) => SourceInfo b -> TableInfo b -> TablePermG b (UnpreparedValue b) -> StringifyNumbers -> Maybe NamingCase -> NESeq (ColumnInfo b) -> Parser 'Output n (AnnotatedFields b) -> Parser 'Output n (ApolloFederationParserFunction n)
+apolloRootFields :: ApolloFederationStatus -> [(Name, Parser 'Output Parse (ApolloFederationParserFunction Parse))] -> [FieldParser Parse (SchemaIntrospection -> QueryRootField UnpreparedValue)]
 
--- | Creates <tt>_service</tt> <tt>FieldParser</tt> using the schema
---   introspection. This will allow us to process the following query:
---   
---   <pre>
---   query {
---     _service {
---       sdl
---     }
---   }
---   </pre>
-mkServiceField :: FieldParser Parse (SchemaIntrospection -> QueryRootField UnpreparedValue)
-apolloRootFields :: HashSet ExperimentalFeature -> [(Name, Parser 'Output Parse (ApolloFederationParserFunction Parse))] -> [FieldParser Parse (SchemaIntrospection -> QueryRootField UnpreparedValue)]
-
--- | Creates <tt>_entities</tt> <tt>FieldParser</tt> using <a>Parser</a>s
---   for Entity union, schema introspection and a list of all query
---   <a>FieldParser</a>. This will allow us to process the following query:
---   
---   <pre>
---   query ($representations: [_Any!]!) {
---     _entities(representations: $representations) {
---       ... on SomeType {
---         foo
---         bar
---       }
---     }
---   }
---   </pre>
-mkEntityUnionFieldParser :: [(Name, Parser 'Output Parse (ApolloFederationParserFunction Parse))] -> FieldParser Parse (QueryRootField UnpreparedValue)
+-- | Check if the Apollo Federation feature is enabled or not. If the user
+--   has explicitly set the Apollo Federation status, then we use that else
+--   we fallback to the experimental feature flag
+getApolloFederationStatus :: HashSet ExperimentalFeature -> Maybe ApolloFederationStatus -> ApolloFederationStatus
 instance GHC.Show.Show Hasura.GraphQL.ApolloFederation.ApolloFederationAnyType
 
 
@@ -23378,22 +23370,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aDEpL. Lens' (CreateEventTriggerQuery b_aDEpL) TriggerOnReplication
-cteqCleanupConfig :: forall b_aDEpL. Lens' (CreateEventTriggerQuery b_aDEpL) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aDEpL. Lens' (CreateEventTriggerQuery b_aDEpL) (Maybe Text)
-cetqWebhook :: forall b_aDEpL. Lens' (CreateEventTriggerQuery b_aDEpL) (Maybe InputWebhook)
-cetqUpdate :: forall b_aDEpL. Lens' (CreateEventTriggerQuery b_aDEpL) (Maybe (SubscribeOpSpec b_aDEpL))
-cetqTable :: forall b_aDEpL. Lens' (CreateEventTriggerQuery b_aDEpL) (TableName b_aDEpL)
-cetqSource :: forall b_aDEpL. Lens' (CreateEventTriggerQuery b_aDEpL) SourceName
-cetqRetryConf :: forall b_aDEpL. Lens' (CreateEventTriggerQuery b_aDEpL) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aDEpL. Lens' (CreateEventTriggerQuery b_aDEpL) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aDEpL. Lens' (CreateEventTriggerQuery b_aDEpL) (Maybe RequestTransform)
-cetqReplace :: forall b_aDEpL. Lens' (CreateEventTriggerQuery b_aDEpL) Bool
-cetqName :: forall b_aDEpL. Lens' (CreateEventTriggerQuery b_aDEpL) TriggerName
-cetqInsert :: forall b_aDEpL. Lens' (CreateEventTriggerQuery b_aDEpL) (Maybe (SubscribeOpSpec b_aDEpL))
-cetqHeaders :: forall b_aDEpL. Lens' (CreateEventTriggerQuery b_aDEpL) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aDEpL. Lens' (CreateEventTriggerQuery b_aDEpL) (Maybe Bool)
-cetqDelete :: forall b_aDEpL. Lens' (CreateEventTriggerQuery b_aDEpL) (Maybe (SubscribeOpSpec b_aDEpL))
+cteqTriggerOnReplication :: forall b_aDFtr. Lens' (CreateEventTriggerQuery b_aDFtr) TriggerOnReplication
+cteqCleanupConfig :: forall b_aDFtr. Lens' (CreateEventTriggerQuery b_aDFtr) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aDFtr. Lens' (CreateEventTriggerQuery b_aDFtr) (Maybe Text)
+cetqWebhook :: forall b_aDFtr. Lens' (CreateEventTriggerQuery b_aDFtr) (Maybe InputWebhook)
+cetqUpdate :: forall b_aDFtr. Lens' (CreateEventTriggerQuery b_aDFtr) (Maybe (SubscribeOpSpec b_aDFtr))
+cetqTable :: forall b_aDFtr. Lens' (CreateEventTriggerQuery b_aDFtr) (TableName b_aDFtr)
+cetqSource :: forall b_aDFtr. Lens' (CreateEventTriggerQuery b_aDFtr) SourceName
+cetqRetryConf :: forall b_aDFtr. Lens' (CreateEventTriggerQuery b_aDFtr) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aDFtr. Lens' (CreateEventTriggerQuery b_aDFtr) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aDFtr. Lens' (CreateEventTriggerQuery b_aDFtr) (Maybe RequestTransform)
+cetqReplace :: forall b_aDFtr. Lens' (CreateEventTriggerQuery b_aDFtr) Bool
+cetqName :: forall b_aDFtr. Lens' (CreateEventTriggerQuery b_aDFtr) TriggerName
+cetqInsert :: forall b_aDFtr. Lens' (CreateEventTriggerQuery b_aDFtr) (Maybe (SubscribeOpSpec b_aDFtr))
+cetqHeaders :: forall b_aDFtr. Lens' (CreateEventTriggerQuery b_aDFtr) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aDFtr. Lens' (CreateEventTriggerQuery b_aDFtr) (Maybe Bool)
+cetqDelete :: forall b_aDFtr. Lens' (CreateEventTriggerQuery b_aDFtr) (Maybe (SubscribeOpSpec b_aDFtr))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
@@ -25671,7 +25663,7 @@ _HCServe :: Prism' (HGECommand a) a
 --   NOTE: A <a>Nothing</a> value indicates the absence of a particular
 --   flag. Hence types such as 'Maybe (HashSet X)' or 'Maybe Bool'.
 data ServeOptionsRaw impl
-ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe TxIsolation -> Maybe AdminSecretHash -> AuthHookRaw -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> Maybe TelemetryStatus -> WsReadCookieStatus -> StringifyNumbers -> Maybe DangerouslyCollapseBooleans -> Maybe (HashSet API) -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> AllowListStatus -> Maybe (HashSet (EngineLogType impl)) -> Maybe LogLevel -> DevModeStatus -> Maybe AdminInternalErrorsStatus -> Maybe (Refined Positive Int) -> Maybe (Refined NonNegative Milliseconds) -> Maybe OptionalInterval -> RemoteSchemaPermissions -> CompressionOptions -> Maybe KeepAliveDelay -> Maybe InferFunctionPermissions -> MaintenanceMode () -> Maybe OptionalInterval -> Maybe (HashSet ExperimentalFeature) -> Maybe (Refined NonNegative Int) -> Maybe (Refined NonNegative Seconds) -> Maybe WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> Maybe ExtensionsSchema -> Maybe MetadataDefaults -> ServeOptionsRaw impl
+ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe TxIsolation -> Maybe AdminSecretHash -> AuthHookRaw -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> Maybe TelemetryStatus -> WsReadCookieStatus -> StringifyNumbers -> Maybe DangerouslyCollapseBooleans -> Maybe (HashSet API) -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> AllowListStatus -> Maybe (HashSet (EngineLogType impl)) -> Maybe LogLevel -> DevModeStatus -> Maybe AdminInternalErrorsStatus -> Maybe (Refined Positive Int) -> Maybe (Refined NonNegative Milliseconds) -> Maybe OptionalInterval -> RemoteSchemaPermissions -> CompressionOptions -> Maybe KeepAliveDelay -> Maybe InferFunctionPermissions -> MaintenanceMode () -> Maybe OptionalInterval -> Maybe (HashSet ExperimentalFeature) -> Maybe (Refined NonNegative Int) -> Maybe (Refined NonNegative Seconds) -> Maybe WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> Maybe ExtensionsSchema -> Maybe MetadataDefaults -> Maybe ApolloFederationStatus -> ServeOptionsRaw impl
 [rsoPort] :: ServeOptionsRaw impl -> Maybe Port
 [rsoHost] :: ServeOptionsRaw impl -> Maybe HostPreference
 [rsoConnParams] :: ServeOptionsRaw impl -> ConnParamsRaw
@@ -25719,6 +25711,7 @@ ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe 
 [rsoDefaultNamingConvention] :: ServeOptionsRaw impl -> Maybe NamingCase
 [rsoExtensionsSchema] :: ServeOptionsRaw impl -> Maybe ExtensionsSchema
 [rsoMetadataDefaults] :: ServeOptionsRaw impl -> Maybe MetadataDefaults
+[rsoApolloFederationStatus] :: ServeOptionsRaw impl -> Maybe ApolloFederationStatus
 
 -- | Whether or not to serve Console assets.
 data ConsoleStatus
@@ -25824,7 +25817,7 @@ WSConnectionInitTimeout :: Refined NonNegative Seconds -> WSConnectionInitTimeou
 --   the Environment, fully processed and ready to apply when running the
 --   server.
 data ServeOptions impl
-ServeOptions :: Port -> HostPreference -> ConnParams -> TxIsolation -> HashSet AdminSecretHash -> Maybe AuthHook -> [JWTConfig] -> Maybe RoleName -> CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> TelemetryStatus -> StringifyNumbers -> DangerouslyCollapseBooleans -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> AllowListStatus -> HashSet (EngineLogType impl) -> LogLevel -> Refined Positive Int -> Refined NonNegative Milliseconds -> OptionalInterval -> RemoteSchemaPermissions -> ConnectionOptions -> KeepAliveDelay -> InferFunctionPermissions -> MaintenanceMode () -> OptionalInterval -> HashSet ExperimentalFeature -> Refined NonNegative Int -> DevModeStatus -> AdminInternalErrorsStatus -> Refined NonNegative Seconds -> WSConnectionInitTimeout -> EventingMode -> ReadOnlyMode -> MetadataQueryLoggingMode -> NamingCase -> ExtensionsSchema -> MetadataDefaults -> ServeOptions impl
+ServeOptions :: Port -> HostPreference -> ConnParams -> TxIsolation -> HashSet AdminSecretHash -> Maybe AuthHook -> [JWTConfig] -> Maybe RoleName -> CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> TelemetryStatus -> StringifyNumbers -> DangerouslyCollapseBooleans -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> AllowListStatus -> HashSet (EngineLogType impl) -> LogLevel -> Refined Positive Int -> Refined NonNegative Milliseconds -> OptionalInterval -> RemoteSchemaPermissions -> ConnectionOptions -> KeepAliveDelay -> InferFunctionPermissions -> MaintenanceMode () -> OptionalInterval -> HashSet ExperimentalFeature -> Refined NonNegative Int -> DevModeStatus -> AdminInternalErrorsStatus -> Refined NonNegative Seconds -> WSConnectionInitTimeout -> EventingMode -> ReadOnlyMode -> MetadataQueryLoggingMode -> NamingCase -> ExtensionsSchema -> MetadataDefaults -> ApolloFederationStatus -> ServeOptions impl
 [soPort] :: ServeOptions impl -> Port
 [soHost] :: ServeOptions impl -> HostPreference
 [soConnParams] :: ServeOptions impl -> ConnParams
@@ -25871,6 +25864,7 @@ ServeOptions :: Port -> HostPreference -> ConnParams -> TxIsolation -> HashSet A
 [soDefaultNamingConvention] :: ServeOptions impl -> NamingCase
 [soExtensionsSchema] :: ServeOptions impl -> ExtensionsSchema
 [soMetadataDefaults] :: ServeOptions impl -> MetadataDefaults
+[soApolloFederationStatus] :: ServeOptions impl -> ApolloFederationStatus
 
 -- | <a>ResponseInternalErrorsConfig</a> represents the encoding of the
 --   internal errors in the response to the client.
@@ -26129,6 +26123,7 @@ instance Hasura.Server.Init.Env.FromEnv (Refined.Unsafe.Type.Refined Refined.Pos
 instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Init.Config.Port
 instance Hasura.Server.Init.Env.FromEnv Hasura.Cache.Bounded.CacheSize
 instance Hasura.Server.Init.Env.FromEnv Hasura.SQL.Types.ExtensionsSchema
+instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Types.ApolloFederationStatus
 
 
 -- | The Downgrade Command Parser
@@ -26192,6 +26187,7 @@ defaultNamingConventionOption :: Option NamingCase
 metadataDefaultsOption :: Option MetadataDefaults
 parseMetadataDefaults :: Parser (Maybe MetadataDefaults)
 metadataDBExtensionsSchemaOption :: Option ExtensionsSchema
+apolloFederationStatusOption :: Option (Maybe ApolloFederationStatus)
 serveCmdFooter :: Doc
 
 module Hasura.Server.Init.Arg
@@ -27096,7 +27092,7 @@ AppEnv :: Port -> HostPreference -> PGPool -> Manager -> Loggers -> TMVar Metada
 -- | Represents the Dynamic Hasura State, these field are mutable and can
 --   be changed during runtime.
 data AppContext
-AppContext :: SchemaCacheRef -> AuthMode -> SQLGenCtx -> HashSet API -> AllowListStatus -> ResponseInternalErrorsConfig -> Environment -> RemoteSchemaPermissions -> InferFunctionPermissions -> HashSet ExperimentalFeature -> NamingCase -> MetadataDefaults -> LiveQueriesOptions -> StreamQueriesOptions -> CorsConfig -> ConsoleStatus -> TelemetryStatus -> Refined Positive Int -> Refined NonNegative Milliseconds -> Refined NonNegative Int -> OptionalInterval -> OptionalInterval -> AppContext
+AppContext :: SchemaCacheRef -> AuthMode -> SQLGenCtx -> HashSet API -> AllowListStatus -> ResponseInternalErrorsConfig -> Environment -> RemoteSchemaPermissions -> InferFunctionPermissions -> HashSet ExperimentalFeature -> NamingCase -> MetadataDefaults -> LiveQueriesOptions -> StreamQueriesOptions -> CorsConfig -> ConsoleStatus -> TelemetryStatus -> Refined Positive Int -> Refined NonNegative Milliseconds -> Refined NonNegative Int -> OptionalInterval -> OptionalInterval -> ApolloFederationStatus -> AppContext
 [acCacheRef] :: AppContext -> SchemaCacheRef
 [acAuthMode] :: AppContext -> AuthMode
 [acSQLGenCtx] :: AppContext -> SQLGenCtx
@@ -27119,6 +27115,7 @@ AppContext :: SchemaCacheRef -> AuthMode -> SQLGenCtx -> HashSet API -> AllowLis
 [acEventsFetchBatchSize] :: AppContext -> Refined NonNegative Int
 [acAsyncActionsFetchInterval] :: AppContext -> OptionalInterval
 [acSchemaPollInterval] :: AppContext -> OptionalInterval
+[acApolloFederationStatus] :: AppContext -> ApolloFederationStatus
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
 data Loggers
