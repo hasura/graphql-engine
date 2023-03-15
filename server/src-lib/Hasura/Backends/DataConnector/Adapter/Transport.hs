@@ -13,7 +13,7 @@ import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig (..))
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), AgentClientT, runAgentClientT)
 import Hasura.Base.Error (QErr)
 import Hasura.EncJSON (EncJSON)
-import Hasura.GraphQL.Execute.Backend (DBStepInfo (..), OnBaseMonad (..))
+import Hasura.GraphQL.Execute.Backend (DBStepInfo (..), OnBaseMonad (..), arResult)
 import Hasura.GraphQL.Logging qualified as HGL
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Transport.Backend (BackendTransport (..))
@@ -21,6 +21,7 @@ import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
 import Hasura.Logging (Hasura, Logger, nullLogger)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (ResolvedConnectionTemplate)
+import Hasura.SQL.AnyBackend (AnyBackend)
 import Hasura.SQL.Backend (BackendType (DataConnector))
 import Hasura.Server.Types (RequestId)
 import Hasura.Session (UserInfo)
@@ -50,7 +51,7 @@ runDBQuery' ::
   UserInfo ->
   Logger Hasura ->
   SourceConfig ->
-  OnBaseMonad AgentClientT a ->
+  OnBaseMonad AgentClientT (Maybe (AnyBackend HGL.ExecutionStats), a) ->
   Maybe DataConnectorPreparedQuery ->
   ResolvedConnectionTemplate 'DataConnector ->
   m (DiffTime, a)
@@ -59,6 +60,7 @@ runDBQuery' requestId query fieldName _userInfo logger SourceConfig {..} action 
   withElapsedTime
     . Tracing.trace ("Data Connector backend query for root field " <>> fieldName)
     . flip runAgentClientT (AgentClientContext logger _scEndpoint _scManager _scTimeoutMicroseconds)
+    . fmap snd
     . runOnBaseMonad
     $ action
 
@@ -75,6 +77,7 @@ mkQueryLog gqlQuery fieldName maybeQuery requestId =
     requestId
     -- @QueryLogKindDatabase Nothing@ means that the backend doesn't support connection templates
     (HGL.QueryLogKindDatabase Nothing)
+    Nothing
 
 runDBQueryExplain' ::
   ( MonadIO m,
@@ -86,7 +89,7 @@ runDBQueryExplain' ::
   m EncJSON
 runDBQueryExplain' (DBStepInfo _ SourceConfig {..} _ action _) =
   flip runAgentClientT (AgentClientContext nullLogger _scEndpoint _scManager _scTimeoutMicroseconds) $
-    runOnBaseMonad action
+    fmap arResult (runOnBaseMonad action)
 
 runDBMutation' ::
   ( MonadIO m,

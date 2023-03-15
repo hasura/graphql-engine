@@ -9,10 +9,11 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Logging
-  ( GeneratedQuery (..),
+  ( ExecutionStats (..),
+    GeneratedQuery (..),
     MonadQueryLog (..),
     QueryLog (..),
-    QueryLogKind (QueryLogKindDatabase),
+    QueryLogKind (QueryLogKindDatabase, QueryLogKindDatabaseResponse),
   )
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Transport.Backend
@@ -20,6 +21,7 @@ import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.SQL.AnyBackend (AnyBackend)
 import Hasura.SQL.Backend
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
@@ -45,7 +47,7 @@ runQuery ::
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig 'BigQuery ->
-  OnBaseMonad IdentityT EncJSON ->
+  OnBaseMonad IdentityT (Maybe (AnyBackend ExecutionStats), EncJSON) ->
   Maybe Text ->
   ResolvedConnectionTemplate 'BigQuery ->
   -- | Also return the time spent in the PG query; for telemetry.
@@ -53,8 +55,12 @@ runQuery ::
 runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql _ = do
   -- log the generated SQL and the graphql query
   -- FIXME: fix logging by making logQueryLog expect something backend agnostic!
-  logQueryLog logger $ mkQueryLog query fieldName genSql reqId
-  withElapsedTime $ run tx
+  logQueryLog logger $ mkQueryLog (QueryLogKindDatabase Nothing) query fieldName genSql reqId Nothing
+  (diffTime, (stats, result)) <- withElapsedTime $ run tx
+
+  logQueryLog logger $ mkQueryLog (QueryLogKindDatabaseResponse Nothing) query fieldName Nothing reqId stats
+
+  pure (diffTime, result)
 
 runQueryExplain ::
   ( MonadIO m,
@@ -64,7 +70,7 @@ runQueryExplain ::
   ) =>
   DBStepInfo 'BigQuery ->
   m EncJSON
-runQueryExplain (DBStepInfo _ _ _ action _) = run action
+runQueryExplain (DBStepInfo _ _ _ action _) = fmap arResult (run action)
 
 runMutation ::
   ( MonadError QErr m
@@ -95,14 +101,15 @@ run ::
   m a
 run = runIdentityT . runOnBaseMonad
 
+-- @QueryLogKindDatabase Nothing@ means that the backend doesn't support connection templates
 mkQueryLog ::
+  QueryLogKind ->
   GQLReqUnparsed ->
   RootFieldAlias ->
   Maybe Text ->
   RequestId ->
+  Maybe (AnyBackend ExecutionStats) ->
   QueryLog
-mkQueryLog gqlQuery fieldName preparedSql requestId =
-  -- @QueryLogKindDatabase Nothing@ means that the backend doesn't support connection templates
-  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId (QueryLogKindDatabase Nothing)
+mkQueryLog _qlKind _qlQuery fieldName preparedSql _qlRequestId _qlStatistics = QueryLog {..}
   where
-    generatedQuery = preparedSql <&> \qs -> GeneratedQuery qs J.Null
+    _qlGeneratedSql = preparedSql <&> \query -> (fieldName, GeneratedQuery query J.Null)

@@ -32,6 +32,7 @@ import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.SQL.AnyBackend (AnyBackend)
 import Hasura.SQL.Backend
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
@@ -66,7 +67,7 @@ runQuery ::
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig 'MSSQL ->
-  OnBaseMonad (ExceptT QErr) EncJSON ->
+  OnBaseMonad (ExceptT QErr) (Maybe (AnyBackend ExecutionStats), EncJSON) ->
   Maybe (PreparedQuery 'MSSQL) ->
   ResolvedConnectionTemplate 'MSSQL ->
   -- | Also return the time spent in the PG query; for telemetry.
@@ -75,7 +76,7 @@ runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql _ = do
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId
   withElapsedTime $
     trace ("MSSQL Query for root field " <>> fieldName) $
-      run tx
+      fmap snd (run tx)
 
 runQueryExplain ::
   ( MonadIO m,
@@ -85,7 +86,7 @@ runQueryExplain ::
   ) =>
   DBStepInfo 'MSSQL ->
   m EncJSON
-runQueryExplain (DBStepInfo _ _ _ action _) = run action
+runQueryExplain (DBStepInfo _ _ _ action _) = fmap arResult (run action)
 
 runMutation ::
   ( MonadIO m,
@@ -157,7 +158,7 @@ mkQueryLog ::
   QueryLog
 mkQueryLog gqlQuery fieldName preparedSql requestId =
   -- @QueryLogKindDatabase Nothing@ means that the backend doesn't support connection templates
-  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId (QueryLogKindDatabase Nothing)
+  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId (QueryLogKindDatabase Nothing) Nothing
   where
     generatedQuery =
       preparedSql <&> \queryString ->

@@ -9,12 +9,13 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.Subscription.Plan
-import Hasura.GraphQL.Logging (MonadQueryLog)
+import Hasura.GraphQL.Logging (ExecutionStats, MonadQueryLog)
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.SQL.AnyBackend (AnyBackend)
 import Hasura.SQL.Backend
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
@@ -37,7 +38,7 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
     UserInfo ->
     L.Logger L.Hasura ->
     SourceConfig b ->
-    OnBaseMonad (ExecutionMonad b) EncJSON ->
+    OnBaseMonad (ExecutionMonad b) (Maybe (AnyBackend ExecutionStats), EncJSON) ->
     Maybe (PreparedQuery b) ->
     ResolvedConnectionTemplate b ->
     m (DiffTime, EncJSON)

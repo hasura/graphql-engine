@@ -89,7 +89,7 @@ runSQL_ f (BigQueryRunSQL query source) = do
     Right recordSet ->
       pure
         ( encJFromJValue
-            (RunSQLRes "TuplesOk" (f recordSet))
+            (RunSQLRes "TuplesOk" (f (snd recordSet)))
         )
 
 recordSetAsHeaderAndRows :: Execute.RecordSet -> J.Value

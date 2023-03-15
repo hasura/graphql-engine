@@ -84,7 +84,7 @@ bqDBQueryPlan userInfo _env sourceName sourceConfig qrf _ _ = do
             (DataLoader.executeSelect select)
         case result of
           Left err -> throw500WithDetail (DataLoader.executeProblemMessage DataLoader.HideDetails err) $ Aeson.toJSON err
-          Right recordSet -> pure $! recordSetToEncJSON (BigQuery.selectCardinality select) recordSet
+          Right (job, recordSet) -> pure ActionResult {arStatistics = Just BigQuery.ExecutionStatistics {_esJob = job}, arResult = recordSetToEncJSON (BigQuery.selectCardinality select) recordSet}
   pure $ DBStepInfo @'BigQuery sourceName sourceConfig (Just (selectSQLTextForExplain select)) action ()
 
 -- | Convert the dataloader's 'RecordSet' type to JSON.
@@ -161,11 +161,12 @@ bqDBQueryExplain fieldName userInfo sourceName sourceConfig qrf _ _ = do
         Nothing
         ( OnBaseMonad $
             pure $
-              encJFromJValue $
-                ExplainPlan
-                  fieldName
-                  (Just $ textSQL)
-                  (Just $ T.lines $ textSQL)
+              withNoStatistics $
+                encJFromJValue $
+                  ExplainPlan
+                    fieldName
+                    (Just $ textSQL)
+                    (Just $ T.lines $ textSQL)
         )
         ()
 

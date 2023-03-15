@@ -73,7 +73,7 @@ mysqlDBQueryPlan userInfo _env sourceName sourceConfig qrf _ _ = do
                 (DataLoader.execute actionsForest)
             either
               (throw500WithDetail "MySQL DataLoader Error" . toJSON . show)
-              (pure . encJFromRecordSet)
+              (pure . withNoStatistics . encJFromRecordSet)
               result
         )
         ()
@@ -105,7 +105,7 @@ mysqlDBQueryExplain fieldName userInfo sourceName sourceConfig qrf _ _ = do
             fields <- fetchFields result
             rows <- fetchAllRows result
             let texts = concat $ parseTextRows fields rows
-            pure $ encJFromJValue $ ExplainPlan fieldName (Just sqlQueryText) (Just texts)
+            pure $ withNoStatistics $ encJFromJValue $ ExplainPlan fieldName (Just sqlQueryText) (Just texts)
   pure $
     AB.mkAnyBackend $
       DBStepInfo @'MySQL sourceName sourceConfig Nothing explainResult ()
