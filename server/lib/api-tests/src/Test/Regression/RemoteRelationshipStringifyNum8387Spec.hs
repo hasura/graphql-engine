@@ -220,8 +220,12 @@ lhsPostgresSetup rhsTableName (testEnvironment, _) = do
   Schema.trackTable (Text.unpack lhsSourceName_) track testEnvironmentPostgres
 
   -- Setup metadata
-  Permissions.createPermission testEnvironmentPostgres lhsRole1
-  Permissions.createPermission testEnvironmentPostgres lhsRole2
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionCommand testEnvironmentPostgres lhsRole1
+
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionCommand testEnvironmentPostgres lhsRole2
+
   createRemoteRelationship rhsTableName testEnvironmentPostgres
 
 --------------------------------------------------------------------------------
@@ -316,8 +320,11 @@ rhsPostgresSetup (testEnvironment, _) = do
   Schema.trackTable (Text.unpack rhsSourceName_) album testEnvironmentPostgres
 
   -- setup metadata
-  Permissions.createPermission testEnvironmentPostgres rhsRole1
-  Permissions.createPermission testEnvironmentPostgres rhsRole2
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionCommand testEnvironmentPostgres rhsRole1
+
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionCommand testEnvironmentPostgres rhsRole2
 
 --------------------------------------------------------------------------------
 -- Tests

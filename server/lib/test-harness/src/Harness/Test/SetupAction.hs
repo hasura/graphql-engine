@@ -10,7 +10,7 @@ where
 
 import Control.Exception.Safe (catchAny)
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Test.Permissions (Permission, createPermission, dropPermission)
+import Harness.Test.Permissions (Permission, createPermissionCommand, dropPermissionCommand)
 import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Prelude
 
@@ -52,6 +52,10 @@ permitTeardownFail SetupAction {teardownAction = ta, setupAction = sa} =
 setupPermissionsAction :: [Permission] -> TestEnvironment -> SetupAction
 setupPermissionsAction permissions testEnvironment =
   SetupAction
-    { setupAction = traverse_ (createPermission testEnvironment) permissions,
-      teardownAction = const $ traverse_ (dropPermission testEnvironment) permissions
+    { setupAction = for_ permissions \permission ->
+        GraphqlEngine.postMetadata_ testEnvironment do
+          createPermissionCommand testEnvironment permission,
+      teardownAction = const $ for_ permissions \permission ->
+        GraphqlEngine.postMetadata_ testEnvironment do
+          dropPermissionCommand testEnvironment permission
     }

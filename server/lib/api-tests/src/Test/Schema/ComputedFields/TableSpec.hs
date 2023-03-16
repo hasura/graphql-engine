@@ -226,41 +226,44 @@ setupMetadata testEnvironment =
           },
         Fixture.SetupAction
           { Fixture.setupAction =
-              -- Role user_1 has select permissions on author and article tables.
-              -- user_1 can query search_articles computed field.
-              Permission.createPermission
-                testEnvironment
-                $ SelectPermission
-                  selectPermission
-                    { selectPermissionTable = "author",
-                      selectPermissionRole = "user_1",
-                      selectPermissionColumns = (["id", "name"] :: [Text])
-                    },
+              GraphqlEngine.postMetadata_ testEnvironment do
+                -- Role user_1 has select permissions on author and article tables.
+                -- user_1 can query search_articles computed field.
+                Permission.createPermissionCommand
+                  testEnvironment
+                  $ SelectPermission
+                    selectPermission
+                      { selectPermissionTable = "author",
+                        selectPermissionRole = "user_1",
+                        selectPermissionColumns = (["id", "name"] :: [Text])
+                      },
             Fixture.teardownAction = \_ -> pure ()
           },
         Fixture.SetupAction
           { Fixture.setupAction =
-              Permission.createPermission
-                testEnvironment
-                $ SelectPermission
-                  selectPermission
-                    { selectPermissionTable = "article",
-                      selectPermissionRole = "user_1",
-                      selectPermissionColumns = (["id", "title", "content", "author_id"] :: [Text])
-                    },
+              GraphqlEngine.postMetadata_ testEnvironment do
+                Permission.createPermissionCommand
+                  testEnvironment
+                  $ SelectPermission
+                    selectPermission
+                      { selectPermissionTable = "article",
+                        selectPermissionRole = "user_1",
+                        selectPermissionColumns = (["id", "title", "content", "author_id"] :: [Text])
+                      },
             Fixture.teardownAction = \_ -> pure ()
           },
         Fixture.SetupAction
           { Fixture.setupAction =
-              -- Role user_2 has select permissions only on author table.
-              Permission.createPermission
-                testEnvironment
-                $ SelectPermission
-                  selectPermission
-                    { selectPermissionTable = "author",
-                      selectPermissionRole = "user_2",
-                      selectPermissionColumns = (["id", "name"] :: [Text])
-                    },
+              GraphqlEngine.postMetadata_ testEnvironment do
+                -- Role user_2 has select permissions only on author table.
+                Permission.createPermissionCommand
+                  testEnvironment
+                  $ SelectPermission
+                    selectPermission
+                      { selectPermissionTable = "author",
+                        selectPermissionRole = "user_2",
+                        selectPermissionColumns = (["id", "name"] :: [Text])
+                      },
             Fixture.teardownAction = \_ -> pure ()
           }
       ]
