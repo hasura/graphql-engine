@@ -283,8 +283,7 @@ const loadSchema = (configOptions = {}) => {
               '',
               {
                 action: body.args,
-                message:
-                  'Click "Details" to see more information about the request',
+                message: 'See details about the slowly running queries below',
               }
             )
           );

@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, PropsWithChildren, ReactNode } from 'react';
+import { MouseEventHandler, PropsWithChildren, ReactNode } from 'react';
 import { Toast, toast, ToastOptions } from 'react-hot-toast/headless';
 import { deepmerge } from 'deepmerge-ts';
 import clsx from 'clsx';

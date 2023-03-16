@@ -347,12 +347,16 @@ const showErrorNotification = (
     };
 
     const action = getNotificationAction();
+    const errorDetails = [
+      getNotificationDetails(errorJson as Json, getRefreshBtn()),
+    ];
     dispatch(
       showNotification(
         {
           title,
           message: errorMessage,
           action,
+          children: errorDetails,
         },
         'error'
       )
