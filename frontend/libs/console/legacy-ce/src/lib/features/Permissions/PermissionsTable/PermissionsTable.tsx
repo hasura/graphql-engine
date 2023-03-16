@@ -6,6 +6,9 @@ import { useRolePermissions } from './hooks/usePermissions';
 import { PermissionsLegend } from './components/PermissionsLegend';
 import { EditableCell, InputCell } from './components/Cells';
 import { TableMachine } from './hooks';
+import { useDriverCapabilities } from '../../Data/hooks/useDriverCapabilities';
+import { Capabilities } from '@hasura/dc-api-types';
+import { getDriversSupportedQueryTypes } from './utils/getDriversSupportedQueryTypes';
 
 const queryType = ['insert', 'select', 'update', 'delete'] as const;
 type QueryType = (typeof queryType)[number];
@@ -61,6 +64,11 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
     dataSourceName,
     table,
   });
+
+  const driverCapabilities = useDriverCapabilities({ dataSourceName });
+  const driverSupportedQueries = getDriversSupportedQueryTypes(
+    driverCapabilities?.data as Capabilities
+  );
 
   const [state, send] = machine;
 
@@ -119,7 +127,8 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
 
                   {permissionTypes.map(({ permissionType, access }) => {
                     // TODO: add checks to see what permissions are supported by each db
-                    const isEditable = true;
+                    const isEditable =
+                      driverSupportedQueries.includes(permissionType);
 
                     if (isNewRole) {
                       return (

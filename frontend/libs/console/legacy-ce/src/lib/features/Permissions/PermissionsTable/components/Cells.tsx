@@ -83,7 +83,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
 }) => {
   if (!isEditable) {
     return (
-      <td className="p-md whitespace-nowrap text-center cursor-not-allowed">
+      <td className="p-md whitespace-nowrap text-center cursor-not-allowed opacity-30">
         <PermissionsIcon type={access} selected={isCurrentEdit} />
       </td>
     );

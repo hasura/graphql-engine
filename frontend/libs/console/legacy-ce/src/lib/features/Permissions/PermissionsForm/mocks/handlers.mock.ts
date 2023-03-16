@@ -1,6 +1,6 @@
 import { rest } from 'msw';
 import { results } from '../components/RowPermissionsBuilder/mocks';
-import { metadata, metadataTable } from './dataStubs';
+import { metadata, metadataTable, capabilitiesResponse } from './dataStubs';
 
 const baseUrl = 'http://localhost:8080';
 
@@ -49,8 +49,13 @@ export const handlers = (url = baseUrl) => [
   rest.post(`${url}/v1/metadata`, async (req, res, ctx) => {
     const body = (await req.json()) as Record<string, any>;
 
-    const isGetTableInfo = body.type === 'get_table_info';
+    const getSourceKindCapabilities =
+      body.type === 'get_source_kind_capabilities';
+    if (getSourceKindCapabilities) {
+      return res(ctx.json(capabilitiesResponse));
+    }
 
+    const isGetTableInfo = body.type === 'get_table_info';
     if (isGetTableInfo) {
       return res(ctx.json(metadataTable));
     }
