@@ -55,7 +55,7 @@ selectPermission =
   SelectPermissionDetails
     { selectPermissionSource = Nothing,
       selectPermissionTable = mempty,
-      selectPermissionRole = mempty,
+      selectPermissionRole = "test-role",
       selectPermissionColumns = mempty,
       selectPermissionRows = object [],
       selectPermissionAllowAggregations = False,
@@ -67,7 +67,7 @@ updatePermission =
   UpdatePermissionDetails
     { updatePermissionSource = Nothing,
       updatePermissionTable = mempty,
-      updatePermissionRole = mempty,
+      updatePermissionRole = "test-role",
       updatePermissionColumns = mempty,
       updatePermissionRows = object []
     }
@@ -77,7 +77,7 @@ insertPermission =
   InsertPermissionDetails
     { insertPermissionSource = Nothing,
       insertPermissionTable = mempty,
-      insertPermissionRole = mempty,
+      insertPermissionRole = "test-role",
       insertPermissionColumns = mempty,
       insertPermissionRows = object []
     }

@@ -61,7 +61,7 @@ import Harness.Exceptions (bracket, withFrozenCallStack)
 import Harness.Http qualified as Http
 import Harness.Logging
 import Harness.Quoter.Yaml (fromYaml, yaml)
-import Harness.TestEnvironment (Protocol (..), Server (..), TestEnvironment (..), getServer, requestProtocol, serverUrl, testLogMessage)
+import Harness.TestEnvironment (Protocol (..), Server (..), TestEnvironment (..), TestingRole (..), getServer, requestProtocol, serverUrl, testLogMessage)
 import Harness.WebSockets (responseListener)
 import Hasura.App qualified as App
 import Hasura.Logging (Hasura)
@@ -121,10 +121,13 @@ postWithHeadersStatus ::
 postWithHeadersStatus statusCode testEnv@(getServer -> Server {urlPrefix, port}) path headers requestBody = do
   testLogMessage testEnv $ LogHGERequest (T.pack path) requestBody
 
-  let headers' :: Http.RequestHeaders
-      headers' = case testingRole testEnv of
-        Just role -> ("X-Hasura-Role", txtToBs role) : headers
-        Nothing -> headers
+  let role :: ByteString
+      role = case permissions testEnv of
+        Admin -> "admin"
+        NonAdmin _ -> "test-role"
+
+      headers' :: Http.RequestHeaders
+      headers' = ("X-Hasura-Role", role) : headers
 
   responseBody <- withFrozenCallStack case requestProtocol (globalEnvironment testEnv) of
     WebSocket connection -> postWithHeadersStatusViaWebSocket connection headers' requestBody

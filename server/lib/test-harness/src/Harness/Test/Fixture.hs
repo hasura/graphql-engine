@@ -63,6 +63,7 @@ import Harness.TestEnvironment
     Server (..),
     TestEnvironment (..),
     TestingMode (..),
+    TestingRole (..),
     UniqueTestId (..),
     logger,
   )
@@ -283,7 +284,7 @@ setupTestEnvironment name globalTestEnvironment = do
           { fixtureName = name,
             uniqueTestId = uniqueTestId,
             globalEnvironment = globalTestEnvironment,
-            testingRole = Nothing
+            permissions = Admin
           }
 
   -- create source databases
@@ -459,17 +460,14 @@ withPermissions (toList -> permissions) spec = do
   where
     succeeding :: (ActionWith TestEnvironment -> IO ()) -> ActionWith TestEnvironment -> IO ()
     succeeding k test = k \testEnvironment -> do
-      let permissions' :: [Permission]
-          permissions' = fmap (withRole "success") permissions
+      for_ permissions $
+        postMetadata_ testEnvironment
+          . Permissions.createPermissionMetadata testEnvironment
 
-      for_ permissions' \permission ->
-        postMetadata_ testEnvironment do
-          Permissions.createPermissionMetadata testEnvironment permission
-
-      test testEnvironment {testingRole = Just "success"}
-        `finally` for_ permissions' \permission ->
-          postMetadata_ testEnvironment do
-            Permissions.dropPermissionMetadata testEnvironment permission
+      test testEnvironment {permissions = NonAdmin permissions} `finally` do
+        for_ permissions $
+          postMetadata_ testEnvironment
+            . Permissions.dropPermissionMetadata testEnvironment
 
     failing :: (ActionWith TestEnvironment -> IO ()) -> ActionWith TestEnvironment -> IO ()
     failing k test = k \testEnvironment -> do
@@ -477,12 +475,9 @@ withPermissions (toList -> permissions) spec = do
       -- they lead to test failures.
       for_ (subsequences permissions) \subsequence ->
         unless (subsequence == permissions) do
-          let permissions' :: [Permission]
-              permissions' = map (withRole "failure") subsequence
-
-          for_ permissions' \permission ->
-            postMetadata_ testEnvironment do
-              Permissions.createPermissionMetadata testEnvironment permission
+          for_ subsequence $
+            postMetadata_ testEnvironment
+              . Permissions.createPermissionMetadata testEnvironment
 
           let attempt :: IO () -> IO ()
               attempt x =
@@ -491,18 +486,12 @@ withPermissions (toList -> permissions) spec = do
                     expectationFailure $
                       mconcat
                         [ "Unexpectedly adequate permissions:\n",
-                          ppShow permissions'
+                          ppShow subsequence
                         ]
                   Left (_ :: SomeException) ->
                     pure ()
 
-          attempt (test testEnvironment {testingRole = Just "failure"})
-            `finally` for_ permissions' \permission ->
-              postMetadata_ testEnvironment do
-                Permissions.dropPermissionMetadata testEnvironment permission
-
-    withRole :: Text -> Permission -> Permission
-    withRole role = \case
-      SelectPermission p -> Permissions.SelectPermission p {Permissions.selectPermissionRole = role}
-      UpdatePermission p -> Permissions.UpdatePermission p {Permissions.updatePermissionRole = role}
-      InsertPermission p -> Permissions.InsertPermission p {Permissions.insertPermissionRole = role}
+          attempt (test testEnvironment {permissions = NonAdmin subsequence}) `finally` do
+            for_ subsequence $
+              postMetadata_ testEnvironment
+                . Permissions.dropPermissionMetadata testEnvironment

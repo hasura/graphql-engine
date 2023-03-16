@@ -8,6 +8,7 @@ module Harness.TestEnvironment
     Protocol (..),
     Server (..),
     TestingMode (..),
+    TestingRole (..),
     UniqueTestId (..),
     debugger,
     getServer,
@@ -32,6 +33,7 @@ import Data.UUID (UUID)
 import Data.Word
 import Database.PostgreSQL.Simple.Options (Options)
 import Harness.Logging.Messages
+import Harness.Permissions.Types (Permission)
 import Harness.Services.Composed qualified as Services
 import Harness.Test.BackendType
 import Harness.Test.FixtureName
@@ -90,10 +92,14 @@ data TestEnvironment = TestEnvironment
     uniqueTestId :: UniqueTestId,
     -- | the backend types of the tests
     fixtureName :: FixtureName,
-    -- | The role we attach to requests made within the tests. This allows us
-    -- to test permissions.
-    testingRole :: Maybe Text
+    -- | The permissions we'd like to use for testing.
+    permissions :: TestingRole
   }
+
+-- | The role we're going to use for testing. Either we're an admin, in which
+-- case all permissions are implied, /or/ we're a regular user, in which case
+-- the given permissions will be applied.
+data TestingRole = Admin | NonAdmin [Permission]
 
 -- | How should we make requests to `graphql-engine`? Both WebSocket- and HTTP-
 -- based requests are supported.
