@@ -24,7 +24,8 @@ module Harness.Test.Schema
     logicalModel,
     LogicalModelColumn (..),
     logicalModelColumn,
-    logicalModelToJson,
+    trackLogicalModelCommand,
+    untrackLogicalModelCommand,
     resolveTableSchema,
     resolveReferenceSchema,
     quotedValue,
@@ -53,6 +54,7 @@ module Harness.Test.Schema
     runSQL,
     addSource,
     trackLogicalModel,
+    untrackLogicalModel,
   )
 where
 
@@ -739,8 +741,8 @@ addSource sourceName sourceConfig testEnvironment = do
         configuration: #{ sourceConfig }
       |]
 
-logicalModelToJson :: String -> LogicalModel -> Value
-logicalModelToJson sourceName (LogicalModel {logicalModelReturnTypeDescription, logicalModelName, logicalModelArguments, logicalModelQuery, logicalModelColumns}) =
+trackLogicalModelCommand :: String -> BackendTypeConfig -> LogicalModel -> Value
+trackLogicalModelCommand sourceName backendTypeConfig (LogicalModel {logicalModelReturnTypeDescription, logicalModelName, logicalModelArguments, logicalModelQuery, logicalModelColumns}) =
   let columnsToJson =
         Aeson.object
           . fmap
@@ -770,8 +772,12 @@ logicalModelToJson sourceName (LogicalModel {logicalModelReturnTypeDescription, 
       returns =
         Aeson.object $
           [(K.fromText "columns", columns)] <> returnTypePair
+
+      backendType = BackendType.backendTypeString backendTypeConfig
+
+      requestType = backendType <> "_track_logical_model"
    in [yaml|
-        type: pg_track_logical_model
+        type: *requestType
         args:
           type: query
           source: *sourceName
@@ -783,6 +789,29 @@ logicalModelToJson sourceName (LogicalModel {logicalModelReturnTypeDescription, 
 
 trackLogicalModel :: HasCallStack => String -> LogicalModel -> TestEnvironment -> IO ()
 trackLogicalModel sourceName logMod testEnvironment = do
-  let json = logicalModelToJson sourceName logMod
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
 
-  GraphqlEngine.postMetadata_ testEnvironment json
+  let command = trackLogicalModelCommand sourceName backendTypeMetadata logMod
+
+  GraphqlEngine.postMetadata_ testEnvironment command
+
+untrackLogicalModelCommand :: String -> BackendTypeConfig -> LogicalModel -> Value
+untrackLogicalModelCommand source backendTypeMetadata LogicalModel {logicalModelName} =
+  let backendType = BackendType.backendTypeString backendTypeMetadata
+      requestType = backendType <> "_untrack_logical_model"
+   in [yaml|
+      type: *requestType
+      args:
+        source: *source
+        root_field_name: *logicalModelName 
+    |]
+
+untrackLogicalModel :: HasCallStack => String -> LogicalModel -> TestEnvironment -> IO ()
+untrackLogicalModel source logMod testEnvironment = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+
+  let command = untrackLogicalModelCommand source backendTypeMetadata logMod
+
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    command
