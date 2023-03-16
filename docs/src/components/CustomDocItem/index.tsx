@@ -37,7 +37,7 @@ const CustomDocItem = props => {
       <ActualDocItem {...props} />
       <div
         className={
-          props.location.pathname === `/docs/latest/index/`
+          props.location.pathname === `/docs/latest/index/` || props.location.pathname.includes('overview')
             ? `custom_doc_item_footer-x-wide`
             : styles['custom_doc_item_footer']
         }

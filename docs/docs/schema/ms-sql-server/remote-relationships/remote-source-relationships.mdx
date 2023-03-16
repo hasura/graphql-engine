@@ -37,12 +37,12 @@ Remote database relationships for MS SQL Server are supported from versions `v2.
 
 ## Create remote database relationships
 
-### Step 0: Add two database sources
+### Step 1: Add two database sources
 
 Add a source database as described [here](/databases/overview.mdx) and track the required tables. Then, repeat
 the process to add your target database.
 
-### Step 1: Define and create the relationship
+### Step 2: Define and create the relationship
 
 A remote database relationship is defined alongside the source database table (that is, the source side of the join).
 
@@ -146,7 +146,7 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-### Step 2: Explore with GraphiQL
+### Step 3: Explore with GraphiQL
 
 Run the following query in the GraphiQL editor to test your remote database relationship across the two connected
 databases:

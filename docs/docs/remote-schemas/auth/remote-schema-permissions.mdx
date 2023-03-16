@@ -278,11 +278,11 @@ mutation {
 
 ## Add Remote Schema permissions
 
-### Step 0: Add a Remote Schema
+### Step 1: Add a Remote Schema
 
 Add a Remote Schema as described [here](/remote-schemas/adding-schema.mdx), if the schema isn't already added.
 
-### Step 1: Set permissions
+### Step 2: Set permissions
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
@@ -367,7 +367,7 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-### Step 2: Test and verify the permissions
+### Step 3: Test and verify the permissions
 
 Head to the `API` section. Add the session variable `X-Hasura-Role` with the value as the role for which we set
 permissions in the previous step.
