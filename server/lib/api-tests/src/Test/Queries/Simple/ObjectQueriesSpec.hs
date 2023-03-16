@@ -20,7 +20,7 @@ import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Permissions (Permission (..), SelectPermissionDetails (..), selectPermission, withPermissions)
+import Harness.Test.Permissions (Permission (..), SelectPermissionDetails (..), selectPermission)
 import Harness.Test.Protocol (withEachProtocol)
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
@@ -71,7 +71,7 @@ spec = do
               }
           ]
       )
-      ( withPermissions
+      ( Fixture.withPermissions
           ( NE.fromList
               [ SelectPermission
                   selectPermission

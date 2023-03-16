@@ -1,4 +1,5 @@
 {-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- | This module defines a way to setup test fixtures which can help defining
 -- tests.
@@ -30,6 +31,7 @@ module Harness.Test.Fixture
     combineFixtures,
     LHSFixture,
     RHSFixture,
+    withPermissions,
   )
 where
 
@@ -37,6 +39,7 @@ import Control.Concurrent.Async qualified as Async
 import Control.Monad.Managed (Managed, runManaged, with)
 import Data.Aeson (Value)
 import Data.Has (getter)
+import Data.List (subsequences)
 import Data.Set qualified as S
 import Data.Text qualified as T
 import Data.UUID.V4 (nextRandom)
@@ -45,11 +48,14 @@ import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.Exceptions
+import Harness.GraphqlEngine (postMetadata_)
 import Harness.Logging
 import Harness.Services.GraphqlEngine
 import Harness.Test.BackendType
 import Harness.Test.CustomOptions
 import Harness.Test.FixtureName
+import Harness.Test.Permissions (Permission (..))
+import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.SetupAction (SetupAction (..))
 import Harness.Test.SetupAction qualified as SetupAction
 import Harness.TestEnvironment
@@ -68,8 +74,11 @@ import Test.Hspec
     aroundWith,
     beforeWith,
     describe,
+    expectationFailure,
     pendingWith,
   )
+import Test.Hspec.Core.Spec (Item (..), mapSpecItem_)
+import Text.Show.Pretty (ppShow)
 
 -- | Runs the given tests, for each provided 'Fixture'@ ()@.
 --
@@ -418,3 +427,82 @@ combineFixtures lhs (tableName, rhs) =
         setupTeardown = rhsSetupTeardown,
         customOptions = rhsOptions
       } = rhs
+
+-- | Assert that a given test block requires precisely the given permissions.
+--
+-- This function modifies the given Hspec test "forest" to replace each test
+-- with two separate tests:
+--
+-- * The original test, but all requests will be made under a Hasura role with
+--   the given permissions. This test should therefore only pass if the given
+--   permissions are sufficient.
+--
+-- * The opposite test: all requests will be made under a Hasura role with
+--   every (proper) subset of the given permissions. If the original test can
+--   run successfully with missing permissions, then this test will __fail__.
+--
+-- The responsibility is on the test writer to make the permissions
+-- requirements as granular as possible. If two tests in the same block require
+-- differing levels of permissions, those tests should be separated into
+-- distinct blocks.
+--
+-- Note that we don't check anything about /extra/ permissions.
+withPermissions :: NonEmpty Permission -> SpecWith TestEnvironment -> SpecWith TestEnvironment
+withPermissions (toList -> permissions) spec = do
+  describe "With sufficient permissions" do
+    flip mapSpecItem_ spec \item ->
+      item {itemExample = \params -> itemExample item params . succeeding}
+
+  describe "With insufficient permissions" do
+    flip mapSpecItem_ spec \item ->
+      item {itemExample = \params -> itemExample item params . failing}
+  where
+    succeeding :: (ActionWith TestEnvironment -> IO ()) -> ActionWith TestEnvironment -> IO ()
+    succeeding k test = k \testEnvironment -> do
+      let permissions' :: [Permission]
+          permissions' = fmap (withRole "success") permissions
+
+      for_ permissions' \permission ->
+        postMetadata_ testEnvironment do
+          Permissions.createPermissionCommand testEnvironment permission
+
+      test testEnvironment {testingRole = Just "success"}
+        `finally` for_ permissions' \permission ->
+          postMetadata_ testEnvironment do
+            Permissions.dropPermissionCommand testEnvironment permission
+
+    failing :: (ActionWith TestEnvironment -> IO ()) -> ActionWith TestEnvironment -> IO ()
+    failing k test = k \testEnvironment -> do
+      -- Test every possible (strict) subset of the permissions to ensure that
+      -- they lead to test failures.
+      for_ (subsequences permissions) \subsequence ->
+        unless (subsequence == permissions) do
+          let permissions' :: [Permission]
+              permissions' = map (withRole "failure") subsequence
+
+          for_ permissions' \permission ->
+            postMetadata_ testEnvironment do
+              Permissions.createPermissionCommand testEnvironment permission
+
+          let attempt :: IO () -> IO ()
+              attempt x =
+                try x >>= \case
+                  Right _ ->
+                    expectationFailure $
+                      mconcat
+                        [ "Unexpectedly adequate permissions:\n",
+                          ppShow permissions'
+                        ]
+                  Left (_ :: SomeException) ->
+                    pure ()
+
+          attempt (test testEnvironment {testingRole = Just "failure"})
+            `finally` for_ permissions' \permission ->
+              postMetadata_ testEnvironment do
+                Permissions.dropPermissionCommand testEnvironment permission
+
+    withRole :: Text -> Permission -> Permission
+    withRole role = \case
+      SelectPermission p -> Permissions.SelectPermission p {Permissions.selectPermissionRole = role}
+      UpdatePermission p -> Permissions.UpdatePermission p {Permissions.updatePermissionRole = role}
+      InsertPermission p -> Permissions.InsertPermission p {Permissions.insertPermissionRole = role}
