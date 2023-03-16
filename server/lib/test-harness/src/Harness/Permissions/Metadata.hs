@@ -1,107 +1,23 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE ViewPatterns #-}
 
--- | This module captures what different backends happen to have in common with
--- regard to permission metadata handling.
---
--- Tests should never use the setup function in this module directly but instead
--- rely those exposed in specific backend harness modules.
-module Harness.Test.Permissions
-  ( Permission (..),
-    SelectPermissionDetails (..),
-    UpdatePermissionDetails (..),
-    InsertPermissionDetails (..),
-    createPermissionCommand,
-    dropPermissionCommand,
-    selectPermission,
-    updatePermission,
-    insertPermission,
+module Harness.Permissions.Metadata
+  ( createPermissionMetadata,
+    dropPermissionMetadata,
   )
 where
 
-import Data.Aeson qualified as Aeson
+import Data.Aeson (Value)
 import Data.Text qualified as Text
+import Harness.Permissions.Types qualified as Types
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment
+import Harness.TestEnvironment (TestEnvironment (..), getBackendTypeConfig)
 import Hasura.Prelude
 
--- | Data type used to model permissions to be setup in tests.
--- Each case of this type mirrors the fields in the correspond permission
--- tracking metadata API payload.
-data Permission
-  = SelectPermission SelectPermissionDetails
-  | UpdatePermission UpdatePermissionDetails
-  | InsertPermission InsertPermissionDetails
-  deriving (Eq, Show)
-
-data SelectPermissionDetails = SelectPermissionDetails
-  { selectPermissionSource :: Maybe Text,
-    selectPermissionTable :: Text,
-    selectPermissionRole :: Text,
-    selectPermissionColumns :: [Text],
-    selectPermissionRows :: Aeson.Value,
-    selectPermissionAllowAggregations :: Bool,
-    selectPermissionLimit :: Aeson.Value
-  }
-  deriving (Eq, Show)
-
-data UpdatePermissionDetails = UpdatePermissionDetails
-  { updatePermissionSource :: Maybe Text,
-    updatePermissionTable :: Text,
-    updatePermissionRole :: Text,
-    updatePermissionColumns :: [Text],
-    updatePermissionRows :: Aeson.Value
-  }
-  deriving (Eq, Show)
-
-data InsertPermissionDetails = InsertPermissionDetails
-  { insertPermissionSource :: Maybe Text,
-    insertPermissionTable :: Text,
-    insertPermissionRole :: Text,
-    insertPermissionColumns :: [Text],
-    insertPermissionRows :: Aeson.Value
-  }
-  deriving (Eq, Show)
-
-selectPermission :: SelectPermissionDetails
-selectPermission =
-  SelectPermissionDetails
-    { selectPermissionSource = Nothing,
-      selectPermissionTable = mempty,
-      selectPermissionRole = mempty,
-      selectPermissionColumns = mempty,
-      selectPermissionRows = [yaml|{}|],
-      selectPermissionAllowAggregations = False,
-      selectPermissionLimit = Aeson.Null
-    }
-
-updatePermission :: UpdatePermissionDetails
-updatePermission =
-  UpdatePermissionDetails
-    { updatePermissionSource = Nothing,
-      updatePermissionTable = mempty,
-      updatePermissionRole = mempty,
-      updatePermissionColumns = mempty,
-      updatePermissionRows = [yaml|{}|]
-    }
-
-insertPermission :: InsertPermissionDetails
-insertPermission =
-  InsertPermissionDetails
-    { insertPermissionSource = Nothing,
-      insertPermissionTable = mempty,
-      insertPermissionRole = mempty,
-      insertPermissionColumns = mempty,
-      insertPermissionRows = [yaml|{}|]
-    }
-
--- | Send a JSON payload of the common `*_create_*_permission` form.
--- Backends where the format of this api call deviates significantly from this
--- should implement their own variation in its harness module.
-createPermissionCommand :: TestEnvironment -> Permission -> Aeson.Value
-createPermissionCommand testEnvironment (InsertPermission InsertPermissionDetails {..}) = do
+-- | Produce a JSON payload of the common `*_create_*_permission` form.
+createPermissionMetadata :: TestEnvironment -> Types.Permission -> Value
+createPermissionMetadata testEnvironment (Types.InsertPermission Types.InsertPermissionDetails {..}) = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
@@ -124,7 +40,7 @@ createPermissionCommand testEnvironment (InsertPermission InsertPermissionDetail
         check: {}
         set: {}
   |]
-createPermissionCommand testEnvironment (UpdatePermission UpdatePermissionDetails {..}) = do
+createPermissionMetadata testEnvironment (Types.UpdatePermission Types.UpdatePermissionDetails {..}) = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
@@ -147,7 +63,7 @@ createPermissionCommand testEnvironment (UpdatePermission UpdatePermissionDetail
         check: {}
         set: {}
   |]
-createPermissionCommand testEnvironment (SelectPermission SelectPermissionDetails {..}) = do
+createPermissionMetadata testEnvironment (Types.SelectPermission Types.SelectPermissionDetails {..}) = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
@@ -171,8 +87,9 @@ createPermissionCommand testEnvironment (SelectPermission SelectPermissionDetail
         limit: *selectPermissionLimit
   |]
 
-dropPermissionCommand :: TestEnvironment -> Permission -> Aeson.Value
-dropPermissionCommand env (InsertPermission InsertPermissionDetails {..}) = do
+-- | Produce a JSON payload of the common `*_drop_*_permission` form.
+dropPermissionMetadata :: TestEnvironment -> Types.Permission -> Value
+dropPermissionMetadata env (Types.InsertPermission Types.InsertPermissionDetails {..}) = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig env
       schemaName = Schema.getSchemaName env
       backendType = BackendType.backendTypeString backendTypeMetadata
@@ -186,7 +103,7 @@ dropPermissionCommand env (InsertPermission InsertPermissionDetails {..}) = do
       source: *sourceName
       role:  *insertPermissionRole
   |]
-dropPermissionCommand env (SelectPermission SelectPermissionDetails {..}) = do
+dropPermissionMetadata env (Types.SelectPermission Types.SelectPermissionDetails {..}) = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig env
       schemaName = Schema.getSchemaName env
       backendType = BackendType.backendTypeString backendTypeMetadata
@@ -200,7 +117,7 @@ dropPermissionCommand env (SelectPermission SelectPermissionDetails {..}) = do
       source: *sourceName
       role:  *selectPermissionRole
   |]
-dropPermissionCommand env (UpdatePermission UpdatePermissionDetails {..}) = do
+dropPermissionMetadata env (Types.UpdatePermission Types.UpdatePermissionDetails {..}) = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig env
       schemaName = Schema.getSchemaName env
       backendType = BackendType.backendTypeString backendTypeMetadata

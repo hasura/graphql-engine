@@ -137,6 +137,7 @@ library
     Harness.Http
     Harness.Logging
     Harness.Logging.Messages
+    Harness.Permissions
     Harness.PytestPortedCompat
     Harness.Quoter.Graphql
     Harness.Quoter.Yaml
@@ -151,7 +152,6 @@ library
     Harness.Test.Fixture
     Harness.Test.FixtureName
     Harness.Test.Introspection
-    Harness.Test.Permissions
     Harness.Test.Protocol
     Harness.Test.Schema
     Harness.Test.SchemaName
@@ -161,3 +161,7 @@ library
     Harness.Webhook
     Harness.WebSockets
     Harness.Yaml
+
+  other-modules:
+    Harness.Permissions.Metadata
+    Harness.Permissions.Types

@@ -9,13 +9,13 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as Text
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
+import Harness.Permissions (SelectPermissionDetails (..))
+import Harness.Permissions qualified as Permissions
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.FixtureName (FixtureName (..))
-import Harness.Test.Permissions (SelectPermissionDetails (..))
-import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (Table (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction qualified as SetupAction
@@ -221,10 +221,10 @@ lhsPostgresSetup rhsTableName (testEnvironment, _) = do
 
   -- Setup metadata
   GraphqlEngine.postMetadata_ testEnvironment do
-    Permissions.createPermissionCommand testEnvironmentPostgres lhsRole1
+    Permissions.createPermissionMetadata testEnvironmentPostgres lhsRole1
 
   GraphqlEngine.postMetadata_ testEnvironment do
-    Permissions.createPermissionCommand testEnvironmentPostgres lhsRole2
+    Permissions.createPermissionMetadata testEnvironmentPostgres lhsRole2
 
   createRemoteRelationship rhsTableName testEnvironmentPostgres
 
@@ -321,10 +321,10 @@ rhsPostgresSetup (testEnvironment, _) = do
 
   -- setup metadata
   GraphqlEngine.postMetadata_ testEnvironment do
-    Permissions.createPermissionCommand testEnvironmentPostgres rhsRole1
+    Permissions.createPermissionMetadata testEnvironmentPostgres rhsRole1
 
   GraphqlEngine.postMetadata_ testEnvironment do
-    Permissions.createPermissionCommand testEnvironmentPostgres rhsRole2
+    Permissions.createPermissionMetadata testEnvironmentPostgres rhsRole2
 
 --------------------------------------------------------------------------------
 -- Tests

@@ -12,12 +12,12 @@ import Data.Text qualified as T
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
+import Harness.Permissions (Permission (SelectPermission), SelectPermissionDetails (..), selectPermission)
+import Harness.Permissions qualified as Permission
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Permissions (Permission (SelectPermission), SelectPermissionDetails (..), selectPermission)
-import Harness.Test.Permissions qualified as Permission
 import Harness.Test.Schema (SchemaName (..), Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..), getBackendTypeConfig)
@@ -229,7 +229,7 @@ setupMetadata testEnvironment =
               GraphqlEngine.postMetadata_ testEnvironment do
                 -- Role user_1 has select permissions on author and article tables.
                 -- user_1 can query search_articles computed field.
-                Permission.createPermissionCommand
+                Permission.createPermissionMetadata
                   testEnvironment
                   $ SelectPermission
                     selectPermission
@@ -242,7 +242,7 @@ setupMetadata testEnvironment =
         Fixture.SetupAction
           { Fixture.setupAction =
               GraphqlEngine.postMetadata_ testEnvironment do
-                Permission.createPermissionCommand
+                Permission.createPermissionMetadata
                   testEnvironment
                   $ SelectPermission
                     selectPermission
@@ -256,7 +256,7 @@ setupMetadata testEnvironment =
           { Fixture.setupAction =
               GraphqlEngine.postMetadata_ testEnvironment do
                 -- Role user_2 has select permissions only on author table.
-                Permission.createPermissionCommand
+                Permission.createPermissionMetadata
                   testEnvironment
                   $ SelectPermission
                     selectPermission

@@ -50,12 +50,12 @@ import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.Exceptions
 import Harness.GraphqlEngine (postMetadata_)
 import Harness.Logging
+import Harness.Permissions (Permission (..))
+import Harness.Permissions qualified as Permissions
 import Harness.Services.GraphqlEngine
 import Harness.Test.BackendType
 import Harness.Test.CustomOptions
 import Harness.Test.FixtureName
-import Harness.Test.Permissions (Permission (..))
-import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.SetupAction (SetupAction (..))
 import Harness.Test.SetupAction qualified as SetupAction
 import Harness.TestEnvironment
@@ -464,12 +464,12 @@ withPermissions (toList -> permissions) spec = do
 
       for_ permissions' \permission ->
         postMetadata_ testEnvironment do
-          Permissions.createPermissionCommand testEnvironment permission
+          Permissions.createPermissionMetadata testEnvironment permission
 
       test testEnvironment {testingRole = Just "success"}
         `finally` for_ permissions' \permission ->
           postMetadata_ testEnvironment do
-            Permissions.dropPermissionCommand testEnvironment permission
+            Permissions.dropPermissionMetadata testEnvironment permission
 
     failing :: (ActionWith TestEnvironment -> IO ()) -> ActionWith TestEnvironment -> IO ()
     failing k test = k \testEnvironment -> do
@@ -482,7 +482,7 @@ withPermissions (toList -> permissions) spec = do
 
           for_ permissions' \permission ->
             postMetadata_ testEnvironment do
-              Permissions.createPermissionCommand testEnvironment permission
+              Permissions.createPermissionMetadata testEnvironment permission
 
           let attempt :: IO () -> IO ()
               attempt x =
@@ -499,7 +499,7 @@ withPermissions (toList -> permissions) spec = do
           attempt (test testEnvironment {testingRole = Just "failure"})
             `finally` for_ permissions' \permission ->
               postMetadata_ testEnvironment do
-                Permissions.dropPermissionCommand testEnvironment permission
+                Permissions.dropPermissionMetadata testEnvironment permission
 
     withRole :: Text -> Permission -> Permission
     withRole role = \case
