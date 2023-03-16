@@ -650,6 +650,39 @@ testValidation opts = do
 
         actual `shouldAtLeastBe` expected
 
+    it "where the column names specified are not returned from the query" $
+      \testEnv -> do
+        let expected =
+              [yaml|
+                  code: validation-failed
+                  error: Failed to validate query
+                  internal:
+                    error:
+                      message: column "text" does not exist
+                |]
+        actual <-
+          GraphqlEngine.postMetadataWithStatus
+            400
+            testEnv
+            [yaml|
+                  type: pg_track_logical_model
+                  args:
+                    type: query
+                    source: postgres
+                    root_field_name: text_failing
+                    code: |
+                      SELECT {{text}} AS not_text
+                    arguments:
+                      text:
+                        type: text
+                    returns:
+                      columns:
+                        text:
+                          type: text
+            |]
+
+        actual `shouldAtLeastBe` expected
+
     it "that uses undeclared arguments" $
       \testEnvironment -> do
         let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment

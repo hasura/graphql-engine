@@ -12,6 +12,7 @@ import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
+import Data.Text qualified as Text
 import Data.Text.Extended (commaSeparated, toTxt)
 import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection qualified as PG
@@ -19,6 +20,7 @@ import Hasura.Backends.Postgres.Connection.Connect (withPostgresDB)
 import Hasura.Backends.Postgres.Instances.Types ()
 import Hasura.Backends.Postgres.SQL.Types (PGScalarType, pgScalarTypeToText)
 import Hasura.Base.Error
+import Hasura.CustomReturnType
 import Hasura.LogicalModel.Metadata
   ( InterpolatedItem (..),
     InterpolatedQuery (..),
@@ -28,6 +30,44 @@ import Hasura.LogicalModel.Metadata
 import Hasura.LogicalModel.Types (NullableScalarType (nstType), getLogicalModelName)
 import Hasura.Prelude
 import Hasura.SQL.Backend
+
+-- | Prepare a logical model query against a postgres-like database to validate it.
+validateLogicalModel ::
+  forall m pgKind.
+  (MonadIO m, MonadError QErr m) =>
+  Env.Environment ->
+  PG.PostgresConnConfiguration ->
+  LogicalModelMetadata ('Postgres pgKind) ->
+  m ()
+validateLogicalModel env connConf model = do
+  preparedQuery <- logicalModelToPreparedStatement model
+
+  -- We don't need to deallocate the prepared statement because 'withPostgresDB'
+  -- opens a new connection, runs a statement, and then closes the connection.
+  -- Since a prepared statement only lasts for the duration of the session, once
+  -- the session closes, the prepared statement is deallocated as well.
+  runRaw (PG.fromText $ preparedQuery)
+  where
+    runRaw :: PG.Query -> m ()
+    runRaw stmt =
+      liftEither
+        =<< liftIO
+          ( withPostgresDB
+              env
+              connConf
+              ( PG.rawQE
+                  ( \e ->
+                      (err400 ValidationFailed "Failed to validate query")
+                        { qeInternal = Just $ ExtraInternal $ toJSON e
+                        }
+                  )
+                  stmt
+                  []
+                  False
+              )
+          )
+
+---------------------------------------
 
 -- | The environment and fresh-name generator used by 'renameIQ'.
 data RenamingState = RenamingState
@@ -82,13 +122,19 @@ renameIQ = runRenaming . fmap InterpolatedQuery . mapM renameII . getInterpolate
       where
         swap (a, b) = (b, a)
 
+-- | Pretty print an interpolated query with numbered parameters.
 renderIQ :: InterpolatedQuery Int -> Text
-renderIQ (InterpolatedQuery items) = mconcat (map printItem items)
+renderIQ (InterpolatedQuery items) = foldMap printItem items
   where
     printItem :: InterpolatedItem Int -> Text
     printItem (IIText t) = t
     printItem (IIVariable i) = "$" <> tshow i
 
+-----------------------------------------
+
+-- | Convert a logical model to a prepared statement to be validate.
+--
+-- Used by 'validateLogicalModel'. Exported for testing.
 logicalModelToPreparedStatement ::
   forall m pgKind.
   MonadError QErr m =>
@@ -97,8 +143,8 @@ logicalModelToPreparedStatement ::
 logicalModelToPreparedStatement model = do
   let name = getLogicalModelName $ _lmmRootFieldName model
   let (preparedIQ, argumentMapping) = renameIQ $ _lmmCode model
-      code :: Text
-      code = renderIQ preparedIQ
+      logimoCode :: Text
+      logimoCode = renderIQ preparedIQ
       prepname = "_logimo_vali_" <> toTxt name
 
       occurringArguments, declaredArguments, undeclaredArguments :: Set LogicalModelArgumentName
@@ -113,7 +159,24 @@ logicalModelToPreparedStatement model = do
         | argumentTypes /= mempty = "(" <> commaSeparated (pgScalarTypeToText <$> Map.elems argumentTypes) <> ")"
         | otherwise = ""
 
-      preparedQuery = "PREPARE " <> prepname <> argumentSignature <> " AS " <> code
+      returnedColumnNames :: Text
+      returnedColumnNames =
+        commaSeparated $ HashMap.keys (crtColumns (_lmmReturns model))
+
+      wrapInCTE :: Text -> Text
+      wrapInCTE query =
+        Text.intercalate
+          "\n"
+          [ "WITH " <> ctename <> " AS (",
+            query,
+            ")",
+            "SELECT " <> returnedColumnNames,
+            "FROM " <> ctename
+          ]
+        where
+          ctename = "_cte" <> prepname
+
+      preparedQuery = "PREPARE " <> prepname <> argumentSignature <> " AS " <> wrapInCTE logimoCode
 
   when (Set.empty /= undeclaredArguments) $
     throwError $
@@ -121,39 +184,3 @@ logicalModelToPreparedStatement model = do
         "Undeclared arguments: " <> commaSeparated (map tshow $ Set.toList undeclaredArguments)
 
   return preparedQuery
-
--- | Prepare a logical model query against a postgres-like database to validate it.
-validateLogicalModel ::
-  forall m pgKind.
-  (MonadIO m, MonadError QErr m) =>
-  Env.Environment ->
-  PG.PostgresConnConfiguration ->
-  LogicalModelMetadata ('Postgres pgKind) ->
-  m ()
-validateLogicalModel env connConf model = do
-  preparedQuery <- logicalModelToPreparedStatement model
-
-  -- We don't need to deallocate the prepared statement because 'withPostgresDB'
-  -- opens a new connection, runs a statement, and then closes the connection.
-  -- Since a prepared statement only lasts for the duration of the session, once
-  -- the session closes, the prepared statement is deallocated as well.
-  runRaw (PG.fromText $ preparedQuery)
-  where
-    runRaw :: PG.Query -> m ()
-    runRaw stmt =
-      liftEither
-        =<< liftIO
-          ( withPostgresDB
-              env
-              connConf
-              ( PG.rawQE
-                  ( \e ->
-                      (err400 ValidationFailed "Failed to validate query")
-                        { qeInternal = Just $ ExtraInternal $ toJSON e
-                        }
-                  )
-                  stmt
-                  []
-                  False
-              )
-          )

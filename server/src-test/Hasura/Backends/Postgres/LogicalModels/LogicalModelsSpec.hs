@@ -100,7 +100,8 @@ spec = do
 
       (first showQErr actual) `shouldSatisfy` isRight
       let Right rendered = actual
-      rendered `shouldBe` "PREPARE _logimo_vali_root_field_name(varchar) AS SELECT $1, $1"
+      rendered
+        `shouldBe` "PREPARE _logimo_vali_root_field_name(varchar) AS WITH _cte_logimo_vali_root_field_name AS (\nSELECT $1, $1\n)\nSELECT \nFROM _cte_logimo_vali_root_field_name"
 
     it "Handles multiple variables " do
       let Right code = parseInterpolatedQuery "SELECT {{hey}}, {{ho}}"
@@ -118,4 +119,5 @@ spec = do
 
       (first showQErr actual) `shouldSatisfy` isRight
       let Right rendered = actual
-      rendered `shouldBe` "PREPARE _logimo_vali_root_field_name(varchar, integer) AS SELECT $1, $2"
+      rendered
+        `shouldBe` "PREPARE _logimo_vali_root_field_name(varchar, integer) AS WITH _cte_logimo_vali_root_field_name AS (\nSELECT $1, $2\n)\nSELECT \nFROM _cte_logimo_vali_root_field_name"
