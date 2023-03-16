@@ -133,7 +133,9 @@ buildComputedFieldInfo trackedTables table _tableColumns computedField definitio
               MV.dispute $
                 pure $
                   CFVEReturnTableNotFound returnTable
-            pure $ PG.CFRSetofTable returnTable
+            pure $ if rfiReturnsSet rawFunctionInfo
+              then PG.CFRSetofTable returnTable
+              else PG.CFRTable returnTable
           else do
             let scalarType = _qptName functionReturnType
             unless (isBaseType functionReturnType) $

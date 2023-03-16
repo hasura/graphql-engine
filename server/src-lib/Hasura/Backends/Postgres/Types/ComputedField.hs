@@ -9,6 +9,7 @@ module Hasura.Backends.Postgres.Types.ComputedField
     fromComputedFieldImplicitArguments,
     ComputedFieldReturn (..),
     _CFRScalar,
+    _CFRTable,
     _CFRSetofTable,
   )
 where
@@ -108,6 +109,7 @@ fromComputedFieldImplicitArguments sess _ = [AESession sess, AETableRow]
 
 data ComputedFieldReturn
   = CFRScalar PGScalarType
+  | CFRTable QualifiedTable
   | CFRSetofTable QualifiedTable
   deriving (Show, Eq, Generic)
 

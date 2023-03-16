@@ -313,16 +313,18 @@ buildComputedFieldBooleanExp boolExpResolver rhsParser rootFieldInfoMap colInfoM
     [] -> do
       let hasuraSession = _berpSessionValue rhsParser
           computedFieldFunctionArgs = flip FunctionArgsExp mempty $ PG.fromComputedFieldImplicitArguments hasuraSession _cffComputedFieldImplicitArgs
+          cfbeFromTable tableName = do
+            tableBoolExp <- decodeValue colVal
+            tableFieldInfoMap <- askFieldInfoMapSource tableName
+            annTableBoolExp <- (getBoolExpResolver boolExpResolver) rhsParser tableFieldInfoMap tableFieldInfoMap $ unBoolExp tableBoolExp
+            pure $ CFBETable tableName annTableBoolExp
       AnnComputedFieldBoolExp _cfiXComputedFieldInfo _cfiName _cffName computedFieldFunctionArgs
         <$> case _cfiReturnType of
           CFRScalar scalarType ->
             CFBEScalar
               <$> parseBoolExpOperations (_berpValueParser rhsParser) rootFieldInfoMap colInfoMap (ColumnReferenceComputedField _cfiName scalarType) colVal
-          CFRSetofTable table -> do
-            tableBoolExp <- decodeValue colVal
-            tableFieldInfoMap <- askFieldInfoMapSource table
-            annTableBoolExp <- (getBoolExpResolver boolExpResolver) rhsParser tableFieldInfoMap tableFieldInfoMap $ unBoolExp tableBoolExp
-            pure $ CFBETable table annTableBoolExp
+          CFRTable t -> cfbeFromTable t
+          CFRSetofTable t -> cfbeFromTable t
     _ ->
       throw400
         UnexpectedPayload

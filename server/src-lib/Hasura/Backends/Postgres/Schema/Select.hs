@@ -240,10 +240,28 @@ computedFieldPG ComputedFieldInfo {..} parentTable tableInfo = runMaybeT do
                 )
       dummyParser <- lift $ columnParser @('Postgres pgKind) (ColumnScalar scalarReturnType) (G.Nullability True)
       pure $ P.selection fieldName fieldDescription fieldArgsParser dummyParser
+    Postgres.CFRTable tableName -> do
+      otherTableInfo <- lift $ askTableInfo tableName
+      remotePerms <- hoistMaybe $ tableSelectPermissions roleName otherTableInfo
+      selectionSetParser <- MaybeT $ tableSelectionSet otherTableInfo
+      let fieldArgsParser = functionArgsParser
+      pure $
+        P.subselection fieldName fieldDescription fieldArgsParser selectionSetParser
+          <&> \(functionArgs', fields) ->
+            IR.AFComputedField _cfiXComputedFieldInfo _cfiName $
+              IR.CFSTable JASSingleObject $
+                IR.AnnSelectG
+                  { IR._asnFields = fields,
+                    IR._asnFrom = IR.FromFunction (_cffName _cfiFunction) functionArgs' Nothing,
+                    IR._asnPerm = tablePermissionsInfo remotePerms,
+                    IR._asnArgs = noSelectArgs,
+                    IR._asnStrfyNum = stringifyNumbers,
+                    IR._asnNamingConvention = Just tCase
+                  }
     Postgres.CFRSetofTable tableName -> do
       otherTableInfo <- lift $ askTableInfo tableName
       remotePerms <- hoistMaybe $ tableSelectPermissions roleName otherTableInfo
-      selectionSetParser <- MaybeT (fmap (P.multiple . P.nonNullableParser) <$> tableSelectionSet otherTableInfo)
+      selectionSetParser <- MaybeT (fmap (P.nonNullableParser . P.multiple . P.nonNullableParser) <$> tableSelectionSet otherTableInfo)
       selectArgsParser <- lift $ tableArguments otherTableInfo
       let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
       pure $

@@ -146,6 +146,7 @@ instance
   computedFieldReturnType = \case
     Postgres.CFRScalar scalarType -> ReturnsScalar scalarType
     Postgres.CFRSetofTable table -> ReturnsTable table
+    Postgres.CFRTable table -> ReturnsTable table
   fromComputedFieldImplicitArguments = Postgres.fromComputedFieldImplicitArguments
 
   tableGraphQLName = Postgres.qualifiedObjectToName
