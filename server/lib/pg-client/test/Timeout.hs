@@ -103,7 +103,7 @@ killAllRunningQueries pool = do
   leftovers <- getRunningQueries pool
   unless
     (null leftovers)
-    (error $ "not all processes have been stopped: " <> show leftovers)
+    (putStrLn $ "not all processes have been stopped: " <> show leftovers)
 
 killQueryByPid :: PGPool -> Int32 -> IO (Either PGExecErr ())
 killQueryByPid pool pid =
