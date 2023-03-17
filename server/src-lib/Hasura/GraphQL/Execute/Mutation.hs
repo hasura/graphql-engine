@@ -58,7 +58,7 @@ convertMutationAction env logger prometheusMetrics userInfo reqHeaders gqlQueryT
   httpManager <- askHTTPManager
   case action of
     AMSync s ->
-      pure $ AEPSync $ resolveActionExecution httpManager env logger prometheusMetrics userInfo s actionExecContext gqlQueryText
+      pure $ AEPSync $ resolveActionExecution httpManager env logger prometheusMetrics s actionExecContext gqlQueryText
     AMAsync s ->
       AEPAsyncMutation <$> resolveActionMutationAsync s reqHeaders userSession
   where

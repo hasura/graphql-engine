@@ -7,7 +7,6 @@ module Hasura.RQL.DDL.Schema.Source
     -- Drop Source
     DropSource (..),
     runDropSource,
-    dropSource,
     runPostDropSourceHook,
 
     -- * Rename Source
@@ -223,7 +222,7 @@ runDropSource dropSourceInfo@(DropSource name cascade) = do
   let sources = scSources schemaCache
   case HM.lookup name sources of
     Just backendSourceInfo ->
-      AB.dispatchAnyBackend @BackendMetadata backendSourceInfo $ dropSource schemaCache dropSourceInfo
+      AB.dispatchAnyBackend @BackendMetadata backendSourceInfo $ dropSource dropSourceInfo
     Nothing -> do
       metadata <- getMetadata
       void $
@@ -251,11 +250,10 @@ dropSource ::
     Has (L.Logger L.Hasura) r,
     BackendMetadata b
   ) =>
-  SchemaCache ->
   DropSource ->
   SourceInfo b ->
   m ()
-dropSource _schemaCache (DropSource sourceName cascade) sourceInfo = do
+dropSource (DropSource sourceName cascade) sourceInfo = do
   schemaCache <- askSchemaCache
   let remoteDeps = getRemoteDependencies schemaCache sourceName
 

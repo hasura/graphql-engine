@@ -56,13 +56,12 @@ fetchRemoteSchema ::
   forall m.
   (MonadIO m, MonadError QErr m, Tracing.MonadTrace m, ProvidesNetwork m) =>
   Env.Environment ->
-  RemoteSchemaName ->
   ValidatedRemoteSchemaDef ->
   m (IntrospectionResult, BL.ByteString, RemoteSchemaInfo)
-fetchRemoteSchema env _rscName rsDef = do
+fetchRemoteSchema env rsDef = do
   (_, _, rawIntrospectionResult) <-
     execRemoteGQ env adminUserInfo [] rsDef introspectionQuery
-  (ir, rsi) <- stitchRemoteSchema rawIntrospectionResult _rscName rsDef
+  (ir, rsi) <- stitchRemoteSchema rawIntrospectionResult rsDef
   -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
   -- the introspection result of the remote server. We store this in the
   -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
@@ -74,10 +73,9 @@ fetchRemoteSchema env _rscName rsDef = do
 stitchRemoteSchema ::
   (MonadIO m, MonadError QErr m) =>
   BL.ByteString ->
-  RemoteSchemaName ->
   ValidatedRemoteSchemaDef ->
   m (IntrospectionResult, RemoteSchemaInfo)
-stitchRemoteSchema rawIntrospectionResult _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
+stitchRemoteSchema rawIntrospectionResult rsDef@ValidatedRemoteSchemaDef {..} = do
   -- Parse the JSON into flat GraphQL type AST.
   FromIntrospection _rscIntroOriginal <-
     J.eitherDecode rawIntrospectionResult `onLeft` (throwRemoteSchema . T.pack)

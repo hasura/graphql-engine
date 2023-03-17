@@ -142,12 +142,11 @@ resolveActionExecution ::
   Env.Environment ->
   L.Logger L.Hasura ->
   PrometheusMetrics ->
-  UserInfo ->
   IR.AnnActionExecution Void ->
   ActionExecContext ->
   Maybe GQLQueryText ->
   ActionExecution
-resolveActionExecution httpManager env logger prometheusMetrics _userInfo IR.AnnActionExecution {..} ActionExecContext {..} gqlQueryText =
+resolveActionExecution httpManager env logger prometheusMetrics IR.AnnActionExecution {..} ActionExecContext {..} gqlQueryText =
   ActionExecution $ first (encJFromOrderedValue . makeActionResponseNoRelations _aaeFields _aaeOutputType _aaeOutputFields True) <$> runWebhook
   where
     handlerPayload = ActionWebhookPayload (ActionContext _aaeName) _aecSessionVariables _aaePayload gqlQueryText

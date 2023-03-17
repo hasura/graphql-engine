@@ -66,10 +66,10 @@ buildRemoteSchemas env =
             ( liftEitherA <<< bindA
                 -< runExceptT
                   case M.lookup name =<< storedIntrospection of
-                    Nothing -> noopTrace $ addRemoteSchemaP2Setup env name defn
+                    Nothing -> noopTrace $ addRemoteSchemaP2Setup env defn
                     Just rawIntro -> do
                       rsDef <- validateRemoteSchemaDef env defn
-                      (ir, rsi) <- stitchRemoteSchema rawIntro name rsDef
+                      (ir, rsi) <- stitchRemoteSchema rawIntro rsDef
                       pure (ir, rawIntro, rsi)
             )
           |) (mkRemoteSchemaMetadataObject remoteSchema)
@@ -173,9 +173,8 @@ buildRemoteSchemaPermissions = proc ((remoteSchemaName, originalIntrospection, o
 addRemoteSchemaP2Setup ::
   (QErrM m, MonadIO m, ProvidesNetwork m, Tracing.MonadTrace m) =>
   Env.Environment ->
-  RemoteSchemaName ->
   RemoteSchemaDef ->
   m (IntrospectionResult, BL.ByteString, RemoteSchemaInfo)
-addRemoteSchemaP2Setup env name def = do
+addRemoteSchemaP2Setup env def = do
   rsi <- validateRemoteSchemaDef env def
-  fetchRemoteSchema env name rsi
+  fetchRemoteSchema env rsi

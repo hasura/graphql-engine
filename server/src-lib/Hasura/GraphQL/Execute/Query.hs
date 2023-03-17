@@ -136,7 +136,6 @@ convertQuerySelSet
                         env
                         logger
                         prometheusMetrics
-                        userInfo
                         s
                         (ActionExecContext reqHeaders (_uiSession userInfo))
                         (Just (GH._grQuery gqlUnparsed)),

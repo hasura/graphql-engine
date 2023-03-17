@@ -71,7 +71,7 @@ runAddRemoteSchema ::
   m EncJSON
 runAddRemoteSchema env (AddRemoteSchemaQuery name defn comment) = do
   addRemoteSchemaP1 name
-  void $ addRemoteSchemaP2Setup env name defn
+  void $ addRemoteSchemaP2Setup env defn
   buildSchemaCacheFor (MORemoteSchema name) $
     MetadataModifier $
       metaRemoteSchemas %~ OMap.insert name remoteSchemaMeta
@@ -197,7 +197,7 @@ runUpdateRemoteSchema env (AddRemoteSchemaQuery name defn comment) = do
         || (isJust metadataRMSchemaURLFromEnv && isJust currentRMSchemaURLFromEnv && metadataRMSchemaURLFromEnv == currentRMSchemaURLFromEnv)
     )
     $ void
-    $ fetchRemoteSchema env name rsi
+    $ fetchRemoteSchema env rsi
 
   -- This will throw an error if the new schema fetched in incompatible
   -- with the existing permissions and relations
