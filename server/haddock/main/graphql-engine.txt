@@ -19974,12 +19974,12 @@ module Hasura.GraphQL.RemoteServer
 --   we need to present and stitch the remote schema. This powers
 --   add_remote_schema, and also is called by schema cache rebuilding code
 --   in <a>Hasura.RQL.DDL.Schema.Cache</a>.
-fetchRemoteSchema :: forall m. (MonadIO m, MonadError QErr m, MonadTrace m, ProvidesNetwork m) => Environment -> RemoteSchemaName -> ValidatedRemoteSchemaDef -> m (IntrospectionResult, ByteString, RemoteSchemaInfo)
+fetchRemoteSchema :: forall m. (MonadIO m, MonadError QErr m, MonadTrace m, ProvidesNetwork m) => Environment -> ValidatedRemoteSchemaDef -> m (IntrospectionResult, ByteString, RemoteSchemaInfo)
 
 -- | Parses the remote schema introspection result, and check whether it
 --   looks like it's a valid GraphQL endpoint even under the configured
 --   customization.
-stitchRemoteSchema :: (MonadIO m, MonadError QErr m) => ByteString -> RemoteSchemaName -> ValidatedRemoteSchemaDef -> m (IntrospectionResult, RemoteSchemaInfo)
+stitchRemoteSchema :: (MonadIO m, MonadError QErr m) => ByteString -> ValidatedRemoteSchemaDef -> m (IntrospectionResult, RemoteSchemaInfo)
 
 -- | Sends a GraphQL query to the given server.
 execRemoteGQ :: (MonadIO m, MonadError QErr m, MonadTrace m, ProvidesNetwork m) => Environment -> UserInfo -> [Header] -> ValidatedRemoteSchemaDef -> GQLReqOutgoing -> m (DiffTime, [Header], ByteString)
@@ -23412,22 +23412,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aDHYf. Lens' (CreateEventTriggerQuery b_aDHYf) TriggerOnReplication
-cteqCleanupConfig :: forall b_aDHYf. Lens' (CreateEventTriggerQuery b_aDHYf) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aDHYf. Lens' (CreateEventTriggerQuery b_aDHYf) (Maybe Text)
-cetqWebhook :: forall b_aDHYf. Lens' (CreateEventTriggerQuery b_aDHYf) (Maybe InputWebhook)
-cetqUpdate :: forall b_aDHYf. Lens' (CreateEventTriggerQuery b_aDHYf) (Maybe (SubscribeOpSpec b_aDHYf))
-cetqTable :: forall b_aDHYf. Lens' (CreateEventTriggerQuery b_aDHYf) (TableName b_aDHYf)
-cetqSource :: forall b_aDHYf. Lens' (CreateEventTriggerQuery b_aDHYf) SourceName
-cetqRetryConf :: forall b_aDHYf. Lens' (CreateEventTriggerQuery b_aDHYf) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aDHYf. Lens' (CreateEventTriggerQuery b_aDHYf) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aDHYf. Lens' (CreateEventTriggerQuery b_aDHYf) (Maybe RequestTransform)
-cetqReplace :: forall b_aDHYf. Lens' (CreateEventTriggerQuery b_aDHYf) Bool
-cetqName :: forall b_aDHYf. Lens' (CreateEventTriggerQuery b_aDHYf) TriggerName
-cetqInsert :: forall b_aDHYf. Lens' (CreateEventTriggerQuery b_aDHYf) (Maybe (SubscribeOpSpec b_aDHYf))
-cetqHeaders :: forall b_aDHYf. Lens' (CreateEventTriggerQuery b_aDHYf) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aDHYf. Lens' (CreateEventTriggerQuery b_aDHYf) (Maybe Bool)
-cetqDelete :: forall b_aDHYf. Lens' (CreateEventTriggerQuery b_aDHYf) (Maybe (SubscribeOpSpec b_aDHYf))
+cteqTriggerOnReplication :: forall b_aDHY5. Lens' (CreateEventTriggerQuery b_aDHY5) TriggerOnReplication
+cteqCleanupConfig :: forall b_aDHY5. Lens' (CreateEventTriggerQuery b_aDHY5) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aDHY5. Lens' (CreateEventTriggerQuery b_aDHY5) (Maybe Text)
+cetqWebhook :: forall b_aDHY5. Lens' (CreateEventTriggerQuery b_aDHY5) (Maybe InputWebhook)
+cetqUpdate :: forall b_aDHY5. Lens' (CreateEventTriggerQuery b_aDHY5) (Maybe (SubscribeOpSpec b_aDHY5))
+cetqTable :: forall b_aDHY5. Lens' (CreateEventTriggerQuery b_aDHY5) (TableName b_aDHY5)
+cetqSource :: forall b_aDHY5. Lens' (CreateEventTriggerQuery b_aDHY5) SourceName
+cetqRetryConf :: forall b_aDHY5. Lens' (CreateEventTriggerQuery b_aDHY5) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aDHY5. Lens' (CreateEventTriggerQuery b_aDHY5) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aDHY5. Lens' (CreateEventTriggerQuery b_aDHY5) (Maybe RequestTransform)
+cetqReplace :: forall b_aDHY5. Lens' (CreateEventTriggerQuery b_aDHY5) Bool
+cetqName :: forall b_aDHY5. Lens' (CreateEventTriggerQuery b_aDHY5) TriggerName
+cetqInsert :: forall b_aDHY5. Lens' (CreateEventTriggerQuery b_aDHY5) (Maybe (SubscribeOpSpec b_aDHY5))
+cetqHeaders :: forall b_aDHY5. Lens' (CreateEventTriggerQuery b_aDHY5) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aDHY5. Lens' (CreateEventTriggerQuery b_aDHY5) (Maybe Bool)
+cetqDelete :: forall b_aDHY5. Lens' (CreateEventTriggerQuery b_aDHY5) (Maybe (SubscribeOpSpec b_aDHY5))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
@@ -24290,7 +24290,7 @@ instance GHC.Classes.Eq Hasura.RQL.DDL.Schema.Cache.Permission.OrderedRoles
 
 module Hasura.RemoteSchema.SchemaCache.Build
 buildRemoteSchemas :: (ArrowChoice arr, ArrowDistribute arr, ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr, ArrowCache m arr, MonadIO m, MonadBaseControl IO m, Eq remoteRelationshipDefinition, ToJSON remoteRelationshipDefinition, MonadError QErr m, ProvidesNetwork m) => Environment -> ((Dependency (HashMap RemoteSchemaName InvalidationKey), OrderedRoles, Maybe (HashMap RemoteSchemaName ByteString)), [RemoteSchemaMetadataG remoteRelationshipDefinition]) `arr` HashMap RemoteSchemaName (PartiallyResolvedRemoteSchemaCtxG remoteRelationshipDefinition, MetadataObject)
-addRemoteSchemaP2Setup :: (QErrM m, MonadIO m, ProvidesNetwork m, MonadTrace m) => Environment -> RemoteSchemaName -> RemoteSchemaDef -> m (IntrospectionResult, ByteString, RemoteSchemaInfo)
+addRemoteSchemaP2Setup :: (QErrM m, MonadIO m, ProvidesNetwork m, MonadTrace m) => Environment -> RemoteSchemaDef -> m (IntrospectionResult, ByteString, RemoteSchemaInfo)
 
 module Hasura.RemoteSchema.SchemaCache
 
@@ -25252,7 +25252,7 @@ runActionExecution :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m, Mona
 
 -- | Synchronously execute webhook handler and resolve response to action
 --   "output"
-resolveActionExecution :: Manager -> Environment -> Logger Hasura -> PrometheusMetrics -> UserInfo -> AnnActionExecution Void -> ActionExecContext -> Maybe GQLQueryText -> ActionExecution
+resolveActionExecution :: Manager -> Environment -> Logger Hasura -> PrometheusMetrics -> AnnActionExecution Void -> ActionExecContext -> Maybe GQLQueryText -> ActionExecution
 
 -- | Resolve asynchronous action mutation which returns only the action
 --   uuid
@@ -26299,7 +26299,6 @@ DropSource :: SourceName -> Bool -> DropSource
 [_dsName] :: DropSource -> SourceName
 [_dsCascade] :: DropSource -> Bool
 runDropSource :: forall m r. (MonadError QErr m, CacheRWM m, MonadIO m, MonadBaseControl IO m, MetadataM m, MonadReader r m, Has (Logger Hasura) r) => DropSource -> m EncJSON
-dropSource :: forall m r b. (MonadError QErr m, CacheRWM m, MonadIO m, MonadBaseControl IO m, MetadataM m, MonadReader r m, Has (Logger Hasura) r, BackendMetadata b) => SchemaCache -> DropSource -> SourceInfo b -> m ()
 runPostDropSourceHook :: forall m r b. (MonadError QErr m, MonadIO m, MonadBaseControl IO m, MonadReader r m, Has (Logger Hasura) r, BackendMetadata b) => SourceName -> SourceInfo b -> m ()
 data UpdateSource b
 runUpdateSource :: forall m b. (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) => UpdateSource b -> m EncJSON
