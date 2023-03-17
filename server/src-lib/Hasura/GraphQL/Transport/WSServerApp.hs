@@ -13,9 +13,9 @@ import Data.Aeson (object, toJSON, (.=))
 import Data.ByteString.Char8 qualified as B (pack)
 import Data.Environment qualified as Env
 import Data.Text (pack)
+import Hasura.App.State
 import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Execute.Backend qualified as EB
-import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Execute.Subscription.State qualified as ES
 import Hasura.GraphQL.Logging
 import Hasura.GraphQL.Transport.HTTP (MonadExecuteQuery)
@@ -27,13 +27,11 @@ import Hasura.GraphQL.Transport.WebSocket.Types
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
-import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.SchemaCache
+import Hasura.Server.AppStateRef
 import Hasura.Server.Auth (AuthMode, UserAuthentication)
-import Hasura.Server.Cors
 import Hasura.Server.Init.Config
-  ( AllowListStatus,
-    KeepAliveDelay,
+  ( KeepAliveDelay,
     WSConnectionInitTimeout,
   )
 import Hasura.Server.Limits
@@ -69,12 +67,12 @@ createWSServerApp ::
   Env.Environment ->
   HashSet (L.EngineLogType L.Hasura) ->
   AuthMode ->
-  WSServerEnv ->
+  WSServerEnv impl ->
   WSConnectionInitTimeout ->
   WS.HasuraServerApp m
 --   -- ^ aka generalized 'WS.ServerApp'
 createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ipAddress !pendingConn -> do
-  let getMetricsConfig = scMetricsConfig . fst <$> _wseGCtxMap serverEnv
+  let getMetricsConfig = scMetricsConfig <$> getSchemaCache (_wseAppStateRef serverEnv)
   WS.createServerApp getMetricsConfig connInitTimeout (_wseServer serverEnv) prometheusMetrics handlers ipAddress pendingConn
   where
     handlers =
@@ -105,55 +103,46 @@ createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ip
       liftIO $ decWebsocketConnections $ pmConnections prometheusMetrics
       onClose logger serverMetrics prometheusMetrics (_wseSubscriptionState serverEnv) conn
 
-stopWSServerApp :: WSServerEnv -> IO ()
+stopWSServerApp :: WSServerEnv impl -> IO ()
 stopWSServerApp wsEnv = WS.shutdown (_wseServer wsEnv)
 
 createWSServerEnv ::
   (MonadIO m) =>
   L.Logger L.Hasura ->
   ES.SubscriptionsState ->
-  ES.LiveQueriesOptions ->
-  ES.StreamQueriesOptions ->
-  IO (SchemaCache, SchemaCacheVer) ->
+  AppStateRef impl ->
   HTTP.Manager ->
-  CorsPolicy ->
-  SQLGenCtx ->
   ReadOnlyMode ->
-  AllowListStatus ->
   KeepAliveDelay ->
   ServerMetrics ->
   PrometheusMetrics ->
   Tracing.SamplingPolicy ->
-  m WSServerEnv
+  m (WSServerEnv impl)
 createWSServerEnv
   logger
   lqState
-  lqOpts
-  streamQOpts
-  getSchemaCache
+  appStateRef
   httpManager
-  corsPolicy
-  sqlGenCtx
   readOnlyMode
-  enableAL
   keepAliveDelay
   serverMetrics
   prometheusMetrics
   traceSamplingPolicy = do
+    AppContext {..} <- liftIO $ getAppContext appStateRef
     wsServer <- liftIO $ STM.atomically $ WS.createWSServer logger
     pure $
       WSServerEnv
         logger
         lqState
-        lqOpts
-        streamQOpts
-        getSchemaCache
+        acLiveQueryOptions
+        acStreamQueryOptions
+        appStateRef
         httpManager
-        corsPolicy
-        sqlGenCtx
+        acCorsPolicy
+        acSQLGenCtx
         readOnlyMode
         wsServer
-        enableAL
+        acEnableAllowlist
         keepAliveDelay
         serverMetrics
         prometheusMetrics

@@ -763,7 +763,7 @@ library
                      , Hasura.Server.Middleware
                      , Hasura.Server.Cors
                      , Hasura.Server.CheckUpdates
-                     , Hasura.Server.SchemaCacheRef
+                     , Hasura.Server.AppStateRef
                      , Hasura.Server.SchemaUpdate
                      , Hasura.Server.Migrate.LatestVersion
                      , Hasura.Server.Migrate.Version

@@ -1,11 +1,16 @@
 {-# LANGUAGE CPP #-}
 
-module Hasura.Server.SchemaCacheRef
-  ( SchemaCacheRef,
-    initialiseSchemaCacheRef,
+module Hasura.Server.AppStateRef
+  ( AppStateRef (..),
+    AppState (..),
+    initialiseAppStateRef,
     withSchemaCacheUpdate,
+    readAppContextRef,
     readSchemaCacheRef,
+    getAppContext,
     getSchemaCache,
+    getSchemaCacheWithVersion,
+    getSchemaCacheRef,
 
     -- * Utility
     logInconsistentMetadata,
@@ -16,6 +21,7 @@ import Control.Concurrent.MVar.Lifted
 import Control.Concurrent.STM qualified as STM
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.IORef
+import Hasura.App.State
 import Hasura.Logging qualified as L
 import Hasura.Prelude hiding (get, put)
 import Hasura.RQL.DDL.Schema
@@ -28,12 +34,12 @@ import Hasura.Server.Metrics
 import System.Metrics.Gauge (Gauge)
 import System.Metrics.Gauge qualified as Gauge
 
--- | A mutable reference to a 'RebuildableSchemaCache', plus
+-- | A mutable reference to a 'AppState', plus
 --
 -- * a write lock,
 -- * update version tracking, and
 -- * a gauge metric that tracks the metadata version of the 'SchemaCache'.
-data SchemaCacheRef = SchemaCacheRef
+data AppStateRef impl = AppStateRef
   { -- | The idea behind explicit locking here is to
     --
     --   1. Allow maximum throughput for serving requests (/v1/graphql) (as each
@@ -49,7 +55,7 @@ data SchemaCacheRef = SchemaCacheRef
     -- it is an okay trade-off to pay for a higher throughput (I remember doing a
     -- bunch of benchmarks to test this hypothesis).
     _scrLock :: MVar (),
-    _scrCache :: IORef (RebuildableSchemaCache, SchemaCacheVer),
+    _scrCache :: AppState impl,
     -- | The gauge metric that tracks the current metadata version.
     --
     -- Invariant: This gauge must be updated via 'updateMetadataVersionGauge'
@@ -57,35 +63,48 @@ data SchemaCacheRef = SchemaCacheRef
     _scrMetadataVersionGauge :: Gauge
   }
 
--- | Build a new 'SchemaCacheRef'
-initialiseSchemaCacheRef ::
-  MonadIO m => ServerMetrics -> RebuildableSchemaCache -> m SchemaCacheRef
-initialiseSchemaCacheRef serverMetrics schemaCache = liftIO $ do
-  cacheLock <- newMVar ()
-  cacheCell <- newIORef (schemaCache, initSchemaCacheVer)
-  let metadataVersionGauge = smSchemaCacheMetadataResourceVersion serverMetrics
-  updateMetadataVersionGauge metadataVersionGauge schemaCache
-  pure $ SchemaCacheRef cacheLock cacheCell metadataVersionGauge
+-- | A mutable reference to '(RebuildableSchemaCache, SchemaCacheVer)' and 'RebuildableAppContext'
+data AppState impl = AppState
+  { asSchemaCache :: IORef (RebuildableSchemaCache, SchemaCacheVer),
+    asAppCtx :: IORef (RebuildableAppContext impl)
+  }
 
--- | Set the 'SchemaCacheRef' to the 'RebuildableSchemaCache' produced by the
+-- | Build a new 'AppStateRef'
+initialiseAppStateRef ::
+  MonadIO m =>
+  ServerMetrics ->
+  RebuildableSchemaCache ->
+  RebuildableAppContext impl ->
+  m (AppStateRef impl)
+initialiseAppStateRef serverMetrics rebuildableSchemaCache appCtx = liftIO $ do
+  cacheLock <- newMVar ()
+  !asSchemaCache <- newIORef (rebuildableSchemaCache, initSchemaCacheVer)
+  !asAppCtx <- newIORef appCtx
+  let cacheCell = AppState {..}
+  let metadataVersionGauge = smSchemaCacheMetadataResourceVersion serverMetrics
+  updateMetadataVersionGauge metadataVersionGauge rebuildableSchemaCache
+  pure $ AppStateRef cacheLock cacheCell metadataVersionGauge
+
+-- | Set the 'AppStateRef' to the 'RebuildableSchemaCache' produced by the
 -- given action.
 --
--- An internal lock ensures that at most one update to the 'SchemaCacheRef' may
+-- An internal lock ensures that at most one update to the 'AppStateRef' may
 -- proceed at a time.
 withSchemaCacheUpdate ::
   (MonadIO m, MonadBaseControl IO m) =>
-  SchemaCacheRef ->
+  (AppStateRef impl) ->
   L.Logger L.Hasura ->
   Maybe (STM.TVar Bool) ->
   m (a, RebuildableSchemaCache) ->
   m a
-withSchemaCacheUpdate (SchemaCacheRef lock cacheRef metadataVersionGauge) logger mLogCheckerTVar action =
+withSchemaCacheUpdate (AppStateRef lock cacheRef metadataVersionGauge) logger mLogCheckerTVar action =
   withMVarMasked lock $ \() -> do
     (!res, !newSC) <- action
     liftIO $ do
+      let AppState asSchemaCache _ = cacheRef
       -- update schemacache in IO reference
-      modifyIORef' cacheRef $ \(_, prevVer) ->
-        let !newVer = incSchemaCacheVer prevVer
+      modifyIORef' asSchemaCache $ \appStateSchemaCache ->
+        let !newVer = incSchemaCacheVer (snd appStateSchemaCache)
          in (newSC, newVer)
 
       -- update metric with new metadata version
@@ -108,15 +127,29 @@ withSchemaCacheUpdate (SchemaCacheRef lock cacheRef metadataVersionGauge) logger
 
     return res
 
--- | Read the contents of the 'SchemaCacheRef'
-readSchemaCacheRef :: SchemaCacheRef -> IO (RebuildableSchemaCache, SchemaCacheVer)
-readSchemaCacheRef scRef = readIORef $ _scrCache scRef
+-- | Read the contents of the 'AppStateRef' to get the latest 'RebuildableSchemaCache' and 'SchemaCacheVer'
+readSchemaCacheRef :: AppStateRef impl -> IO (RebuildableSchemaCache, SchemaCacheVer)
+readSchemaCacheRef scRef = readIORef <$> asSchemaCache $ _scrCache scRef
 
--- | Utility function. Read the latest 'SchemaCache' from the 'SchemaCacheRef'.
+-- | Read the contents of the 'AppStateRef' to get the latest 'RebuildableAppContext'
+readAppContextRef :: AppStateRef impl -> IO (RebuildableAppContext impl)
+readAppContextRef scRef = readIORef <$> asAppCtx $ _scrCache scRef
+
+-- | Utility function. Read the latest 'SchemaCache' from the 'AppStateRef'.
 --
--- > getSchemaCache == fmap (lastBuiltSchemaCache . fst) . readSchemaCacheRef
-getSchemaCache :: SchemaCacheRef -> IO SchemaCache
-getSchemaCache scRef = lastBuiltSchemaCache . fst <$> readSchemaCacheRef scRef
+-- > getSchemaCache == fmap (lastBuiltSchemaCache . fst) . readAppStateRef
+getSchemaCache :: AppStateRef impl -> IO SchemaCache
+getSchemaCache asRef = lastBuiltSchemaCache . fst <$> readSchemaCacheRef asRef
+
+getSchemaCacheWithVersion :: AppStateRef impl -> IO (SchemaCache, SchemaCacheVer)
+getSchemaCacheWithVersion scRef = fmap (\(sc, ver) -> (lastBuiltSchemaCache sc, ver)) $ readSchemaCacheRef scRef
+
+getSchemaCacheRef :: AppStateRef impl -> IORef (RebuildableSchemaCache, SchemaCacheVer)
+getSchemaCacheRef = asSchemaCache . _scrCache
+
+-- | Utility function. Read the latest 'AppContext' from the 'AppStateRef'.
+getAppContext :: AppStateRef impl -> IO AppContext
+getAppContext asRef = lastBuiltAppContext <$> readAppContextRef asRef
 
 -- | Utility function
 logInconsistentMetadata :: L.Logger L.Hasura -> [InconsistentMetadata] -> IO ()

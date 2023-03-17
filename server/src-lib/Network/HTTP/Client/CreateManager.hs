@@ -11,7 +11,7 @@ import Network.HTTP.Client.DynamicTlsPermissions qualified as HTTP
 import Network.HTTP.Client.Restricted qualified as Restricted
 
 -- | This mkHttpManager function takes a mechanism for finding the current allowlist,
--- | Thus allowing it to be coupled from any ref type such as SchemaCacheRef.
+-- | Thus allowing it to be coupled from any ref type such as AppStateRef.
 -- | A mechanism to block IPs (both IPv4 and IPv6) has also been added to it.
 mkHttpManager :: IO [TlsAllow] -> Blocklist -> IO HTTP.Manager
 mkHttpManager currentAllow blocklist = do

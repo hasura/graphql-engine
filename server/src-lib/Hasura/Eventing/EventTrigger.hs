@@ -180,10 +180,11 @@ defaultMaxEventThreads = $$(refineTH 100)
 defaultFetchInterval :: DiffTime
 defaultFetchInterval = seconds 1
 
-initEventEngineCtx :: Int -> DiffTime -> Refined NonNegative Int -> STM EventEngineCtx
-initEventEngineCtx maxT _eeCtxFetchInterval _eeCtxFetchSize = do
-  _eeCtxEventThreadsCapacity <- newTVar maxT
-  return $ EventEngineCtx {..}
+initEventEngineCtx :: MonadIO m => Refined Positive Int -> Refined NonNegative Milliseconds -> Refined NonNegative Int -> m EventEngineCtx
+initEventEngineCtx maxThreads fetchInterval _eeCtxFetchSize = do
+  _eeCtxEventThreadsCapacity <- liftIO $ newTVarIO $ unrefine maxThreads
+  let _eeCtxFetchInterval = milliseconds $ unrefine fetchInterval
+  return EventEngineCtx {..}
 
 saveLockedEventTriggerEvents :: MonadIO m => SourceName -> [EventId] -> TVar (HashMap SourceName (Set.Set EventId)) -> m ()
 saveLockedEventTriggerEvents sourceName eventIds lockedEvents =
@@ -290,18 +291,17 @@ processEventQueue ::
   FetchedEventsStatsLogger ->
   HTTP.Manager ->
   IO SchemaCache ->
-  EventEngineCtx ->
+  IO EventEngineCtx ->
+  TVar Int ->
   LockedEventsCtx ->
   ServerMetrics ->
   EventTriggerMetrics ->
   MaintenanceMode () ->
   m (Forever m)
-processEventQueue logger statsLogger httpMgr getSchemaCache EventEngineCtx {..} LockedEventsCtx {leEvents} serverMetrics eventTriggerMetrics maintenanceMode = do
+processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx activeEventProcessingThreads LockedEventsCtx {leEvents} serverMetrics eventTriggerMetrics maintenanceMode = do
   events0 <- popEventsBatch
   return $ Forever (events0, 0, False) go
   where
-    fetchBatchSize = unrefine _eeCtxFetchSize
-
     popEventsBatch :: m [BackendEventWithSource]
     popEventsBatch = do
       {-
@@ -315,6 +315,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache EventEngineCtx {..} 
         (delivered=t or error=t or archived=t) after a fixed number of tries (assuming it begins with locked='f').
       -}
       allSources <- scSources <$> liftIO getSchemaCache
+      fetchBatchSize <- unrefine . _eeCtxFetchSize <$> liftIO getEventEngineCtx
       events <- liftIO . fmap concat $
         -- fetch pending events across all the sources asynchronously
         LA.forConcurrently (M.toList allSources) \(sourceName, sourceCache) ->
@@ -358,6 +359,8 @@ processEventQueue logger statsLogger httpMgr getSchemaCache EventEngineCtx {..} 
     -- for each in the batch, minding the requested pool size.
     go :: FetchEventArguments -> m FetchEventArguments
     go (events, !fullFetchCount, !alreadyWarned) = do
+      EventEngineCtx {..} <- liftIO getEventEngineCtx
+      let fetchBatchSize = unrefine _eeCtxFetchSize
       -- process events ASAP until we've caught up; only then can we sleep
       when (null events) . liftIO $ sleep _eeCtxFetchInterval
 
@@ -375,21 +378,18 @@ processEventQueue logger statsLogger httpMgr getSchemaCache EventEngineCtx {..} 
               liftIO $
                 atomically $ do
                   -- block until < HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE threads:
-                  capacity <- readTVar _eeCtxEventThreadsCapacity
-                  check $ capacity > 0
-                  writeTVar _eeCtxEventThreadsCapacity (capacity - 1)
+                  maxCapacity <- readTVar _eeCtxEventThreadsCapacity
+                  activeThreadCount <- readTVar activeEventProcessingThreads
+                  check $ maxCapacity > activeThreadCount
+                  modifyTVar' activeEventProcessingThreads (+ 1)
               -- since there is some capacity in our worker threads, we can launch another:
-              let restoreCapacity =
-                    liftIO $
-                      atomically $
-                        modifyTVar' _eeCtxEventThreadsCapacity (+ 1)
               t <-
                 LA.async $
                   flip runReaderT (logger, httpMgr) $
                     processEvent eventWithSource'
                       `finally`
                       -- NOTE!: this needs to happen IN THE FORKED THREAD:
-                      restoreCapacity
+                      decrementActiveThreadCount
               LA.link t
 
         -- return when next batch ready; some 'processEvent' threads may be running.
@@ -418,6 +418,11 @@ processEventQueue logger statsLogger httpMgr getSchemaCache EventEngineCtx {..} 
                     fromString $
                       "It looks like the events processor is keeping up again."
               return (eventsNext, 0, False)
+
+    decrementActiveThreadCount =
+      liftIO $
+        atomically $
+          modifyTVar' activeEventProcessingThreads (subtract 1)
 
     -- \| Extract a trace context from an event trigger payload.
     extractEventContext :: forall io. MonadIO io => J.Value -> io (Maybe Tracing.TraceContext)

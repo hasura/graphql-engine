@@ -20,6 +20,7 @@ import Data.Aeson.TH
 import Data.HashMap.Strict qualified as HM
 import Data.HashSet qualified as HS
 import Database.PG.Query qualified as PG
+import Hasura.App.State
 import Hasura.Base.Error
 import Hasura.Logging
 import Hasura.Metadata.Class
@@ -32,15 +33,18 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.SQL.Backend (BackendType (..))
 import Hasura.SQL.BackendMap qualified as BackendMap
-import Hasura.Server.Logging
-import Hasura.Server.SchemaCacheRef
-  ( SchemaCacheRef,
+import Hasura.Server.AppStateRef
+  ( AppStateRef,
+    getAppContext,
     readSchemaCacheRef,
     withSchemaCacheUpdate,
   )
+import Hasura.Server.Init (FeatureFlag)
+import Hasura.Server.Logging
 import Hasura.Server.Types
 import Hasura.Services
 import Hasura.Session
+import Network.HTTP.Client qualified as HTTP
 import Refined (NonNegative, Refined, unrefine)
 
 data ThreadError
@@ -139,26 +143,34 @@ startSchemaSyncProcessorThread ::
   ( C.ForkableMonadIO m,
     MonadMetadataStorage m,
     MonadResolveSource m,
-    ProvidesHasuraServices m
+    ProvidesNetwork m
   ) =>
   Logger Hasura ->
+  HTTP.Manager ->
   STM.TMVar MetadataResourceVersion ->
-  SchemaCacheRef ->
+  AppStateRef impl ->
   InstanceId ->
-  ServerConfigCtx ->
+  (MaintenanceMode ()) ->
+  EventingMode ->
+  ReadOnlyMode ->
   STM.TVar Bool ->
+  (FeatureFlag -> IO Bool) ->
   ManagedT m Immortal.Thread
 startSchemaSyncProcessorThread
   logger
+  httpMgr
   schemaSyncEventRef
-  cacheRef
+  appStateRef
   instanceId
-  serverConfigCtx
-  logTVar = do
+  maintenanceMode
+  eventingMode
+  readOnlyMode
+  logTVar
+  checkFeatureFlag = do
     -- Start processor thread
     processorThread <-
       C.forkManagedT "SchemeUpdate.processor" logger $
-        processor logger schemaSyncEventRef cacheRef instanceId serverConfigCtx logTVar
+        processor logger httpMgr schemaSyncEventRef appStateRef instanceId maintenanceMode eventingMode readOnlyMode logTVar checkFeatureFlag
     logThreadStarted logger instanceId TTProcessor processorThread
     pure processorThread
 
@@ -247,28 +259,50 @@ listener logger pool metaVersionRef interval = L.iterateM_ listenerLoop defaultE
 
 -- | An IO action that processes events from Queue, in a loop forever.
 processor ::
-  forall m void.
+  forall m void impl.
   ( C.ForkableMonadIO m,
     MonadMetadataStorage m,
     MonadResolveSource m,
-    ProvidesHasuraServices m
+    ProvidesNetwork m
   ) =>
   Logger Hasura ->
+  HTTP.Manager ->
   STM.TMVar MetadataResourceVersion ->
-  SchemaCacheRef ->
+  AppStateRef impl ->
   InstanceId ->
-  ServerConfigCtx ->
+  (MaintenanceMode ()) ->
+  EventingMode ->
+  ReadOnlyMode ->
   STM.TVar Bool ->
+  (FeatureFlag -> IO Bool) ->
   m void
 processor
   logger
+  _httpMgr
   metaVersionRef
-  cacheRef
+  appStateRef
   instanceId
-  serverConfigCtx
-  logTVar = forever $ do
+  maintenanceMode
+  eventingMode
+  readOnlyMode
+  logTVar
+  checkFeatureFlag = forever $ do
     metaVersion <- liftIO $ STM.atomically $ STM.takeTMVar metaVersionRef
-    refreshSchemaCache metaVersion instanceId logger cacheRef TTProcessor serverConfigCtx logTVar
+    AppContext {..} <- liftIO $ getAppContext appStateRef
+    let serverConfigCtx =
+          ServerConfigCtx
+            acFunctionPermsCtx
+            acRemoteSchemaPermsCtx
+            acSQLGenCtx
+            maintenanceMode
+            acExperimentalFeatures
+            eventingMode
+            readOnlyMode
+            acDefaultNamingConvention
+            acMetadataDefaults
+            checkFeatureFlag
+            acApolloFederationStatus
+    refreshSchemaCache metaVersion instanceId logger appStateRef TTProcessor serverConfigCtx logTVar
 
 refreshSchemaCache ::
   ( MonadIO m,
@@ -280,7 +314,7 @@ refreshSchemaCache ::
   MetadataResourceVersion ->
   InstanceId ->
   Logger Hasura ->
-  SchemaCacheRef ->
+  AppStateRef impl ->
   SchemaSyncThreadType ->
   ServerConfigCtx ->
   STM.TVar Bool ->
@@ -289,13 +323,13 @@ refreshSchemaCache
   resourceVersion
   instanceId
   logger
-  cacheRef
+  appStateRef
   threadType
   serverConfigCtx
   logTVar = do
     respErr <- runExceptT $
-      withSchemaCacheUpdate cacheRef logger (Just logTVar) $ do
-        rebuildableCache <- liftIO $ fst <$> readSchemaCacheRef cacheRef
+      withSchemaCacheUpdate appStateRef logger (Just logTVar) $ do
+        rebuildableCache <- liftIO $ fst <$> readSchemaCacheRef appStateRef
         (msg, cache, _) <- peelRun runCtx $
           runCacheRWT rebuildableCache $ do
             schemaCache <- askSchemaCache

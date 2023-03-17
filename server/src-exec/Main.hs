@@ -79,7 +79,7 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = ignoreTraceT do
       -- It'd be nice if we didn't have to call runManagedT twice here, but
       -- there is a data dependency problem since the call to runPGMetadataStorageApp
       -- below depends on appCtx.
-      runManagedT (initialiseContext env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways) $ \(appCtx, appEnv) -> do
+      runManagedT (initialiseContext env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways) $ \(appStateRef, appEnv) -> do
         -- Catches the SIGTERM signal and initiates a graceful shutdown.
         -- Graceful shutdown for regular HTTP requests is already implemented in
         -- Warp, and is triggered by invoking the 'closeSocket' callback.
@@ -97,9 +97,9 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = ignoreTraceT do
             C.forkImmortal "ourIdleGC" logger $
               GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 
-        runPGMetadataStorageAppT (appCtx, appEnv) $
+        runPGMetadataStorageAppT appEnv $
           lowerManagedT $
-            runHGEServer (const $ pure ()) appCtx appEnv initTime Nothing ekgStore
+            runHGEServer (\_ _ -> pure ()) appStateRef appEnv initTime Nothing ekgStore
     HCExport -> do
       GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo fetchMetadataFromCatalog

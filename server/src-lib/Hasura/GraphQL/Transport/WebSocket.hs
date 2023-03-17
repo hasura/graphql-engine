@@ -71,6 +71,7 @@ import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.SchemaCache (scApiLimits, scMetricsConfig)
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Server.AppStateRef
 import Hasura.Server.Auth
   ( AuthMode,
     UserAuthentication,
@@ -283,7 +284,7 @@ sendMsgWithMetadata wsConn msg opName paramQueryHash (ES.SubscriptionMetadata ex
           }
 
 onConn ::
-  (MonadIO m, MonadReader WSServerEnv m) =>
+  (MonadIO m, MonadReader (WSServerEnv impl) m) =>
   WS.OnConnH m WSConnData
 onConn wsId requestHead ipAddress onConnHActions = do
   res <- runExceptT $ do
@@ -401,7 +402,7 @@ data ShouldCaptureQueryVariables
   | DoNotCaptureQueryVariables
 
 onStart ::
-  forall m.
+  forall m impl.
   ( MonadIO m,
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
@@ -416,7 +417,7 @@ onStart ::
   ) =>
   Env.Environment ->
   HashSet (L.EngineLogType L.Hasura) ->
-  WSServerEnv ->
+  WSServerEnv impl ->
   WSConn ->
   ShouldCaptureQueryVariables ->
   StartMsg ->
@@ -445,7 +446,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
       withComplete $ sendStartErr e
 
   (requestId, reqHdrs) <- liftIO $ getRequestId origReqHdrs
-  (sc, scVer) <- liftIO getSchemaCache
+  (sc, scVer) <- liftIO $ getSchemaCacheWithVersion appStateRef
 
   operationLimit <- askGraphqlOperationLimit requestId userInfo (scApiLimits sc)
   let runLimits ::
@@ -794,7 +795,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
       subscriptionsState
       lqOpts
       streamQOpts
-      getSchemaCache
+      appStateRef
       _
       _
       sqlGenCtx
@@ -1019,7 +1020,7 @@ onMessage ::
   Env.Environment ->
   HashSet (L.EngineLogType L.Hasura) ->
   AuthMode ->
-  WSServerEnv ->
+  WSServerEnv impl ->
   WSConn ->
   LBS.ByteString ->
   WS.WSActions WSConnData ->
@@ -1043,7 +1044,7 @@ onMessage env enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions 
             onErrAction
             keepAliveMessageAction
         CMStart startMsg -> do
-          schemaCache <- liftIO $ fst <$> _wseGCtxMap serverEnv
+          schemaCache <- liftIO $ getSchemaCache $ _wseAppStateRef serverEnv
           let shouldCaptureVariables =
                 if _mcAnalyzeQueryVariables (scMetricsConfig schemaCache)
                   then CaptureQueryVariables
@@ -1064,7 +1065,7 @@ onPing :: (MonadIO m) => WSConn -> Maybe PingPongPayload -> m ()
 onPing wsConn mPayload =
   liftIO $ sendMsg wsConn (SMPong mPayload)
 
-onStop :: (MonadIO m) => WSServerEnv -> WSConn -> StopMsg -> m ()
+onStop :: (MonadIO m) => WSServerEnv impl -> WSConn -> StopMsg -> m ()
 onStop serverEnv wsConn (StopMsg opId) = liftIO $ do
   -- When a stop message is received for an operation, it may not be present in OpMap
   -- in these cases:
@@ -1082,7 +1083,7 @@ onStop serverEnv wsConn (StopMsg opId) = liftIO $ do
   where
     logger = _wseLogger serverEnv
 
-stopOperation :: WSServerEnv -> WSConn -> OperationId -> IO () -> IO ()
+stopOperation :: WSServerEnv impl -> WSConn -> OperationId -> IO () -> IO ()
 stopOperation serverEnv wsConn opId logWhenOpNotExist = do
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
   case opM of

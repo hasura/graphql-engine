@@ -26,7 +26,6 @@ module Hasura.Server.Auth
   )
 where
 
-import Control.Concurrent.Extended (sleep)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.Hash qualified as Crypto
 import Data.ByteArray qualified as BA
@@ -171,20 +170,19 @@ setupAuthMode adminSecretHashSet mWebHook mJwtSecrets mUnAuthRole logger httpMan
         JFEJwkParseError _ e -> throwError e
         JFEExpiryParseError _ _ -> pure (JWKSet [], [])
 
--- | Core logic to fork a poller thread to update the JWK based on the
--- expiry time specified in @Expires@ header or @Cache-Control@ header
+-- | Update the JWK based on the expiry time specified in @Expires@ header or
+-- @Cache-Control@ header
 updateJwkCtx ::
   forall m.
   (MonadIO m, MonadBaseControl IO m) =>
   AuthMode ->
   HTTP.Manager ->
   Logger Hasura ->
-  m Void
-updateJwkCtx authMode httpManager logger = forever $ do
+  m ()
+updateJwkCtx authMode httpManager logger = do
   case authMode of
     AMAdminSecretAndJWT _ jwtCtxs _ -> traverse_ updateJwkFromUrl jwtCtxs
     _ -> pure ()
-  liftIO $ sleep $ seconds 1
   where
     updateJwkFromUrl :: JWTCtx -> m ()
     updateJwkFromUrl (JWTCtx url ref _ _ _ _ _) =

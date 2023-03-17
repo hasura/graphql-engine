@@ -378,10 +378,10 @@ runApp serveOptions = do
   prometheusMetrics <- makeDummyPrometheusMetrics
   let managedServerCtx = App.initialiseContext env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways
   runManagedT managedServerCtx \(appCtx, appEnv) ->
-    App.runPGMetadataStorageAppT (appCtx, appEnv) $
+    App.runPGMetadataStorageAppT appEnv $
       lowerManagedT $
         App.runHGEServer
-          (const $ pure ())
+          (\_ _ -> pure ())
           appCtx
           appEnv
           initTime
