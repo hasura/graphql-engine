@@ -110,8 +110,9 @@ mutation returns the updated row object or `null` if the row does not exist.
 
 :::info Note
 
-`update_<table>_by_pk` will **only** be available if you have select permissions on the table, as it returns the updated
-row.
+`update_<table>_by_pk` will **only** be available if you have select
+permissions on at least the columns that make up the primary key as well as
+update permissions on at least one column.
 
 :::
 
