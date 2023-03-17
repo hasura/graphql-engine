@@ -7,12 +7,11 @@ import { useIsDisabled } from '../hooks/useIsDisabled';
 import { QueryType } from '../../types';
 import { Permission } from '../../schema';
 import { Feature } from '../../../DataSource';
-import { Table } from '../../../hasura-metadata-types';
 import { getTableDisplayName } from '../../../DatabaseRelationships';
-
+import { QualifiedTable } from '../../../../metadata/types';
 interface ClonePermissionsRowProps {
   id: number;
-  tables: Table[];
+  tables: QualifiedTable[];
   currentQueryType: QueryType;
   queryTypes: string[];
   roleNames: string[];
@@ -42,7 +41,6 @@ export const ClonePermissionsRow: React.FC<ClonePermissionsRowProps> = ({
       <div>
         <select
           className={className}
-          disabled={allDisabled}
           title={allDisabled ? 'Set a row permission first' : ''}
           {...register(`${formKey}.${id}.tableName`)}
         >
@@ -64,7 +62,6 @@ export const ClonePermissionsRow: React.FC<ClonePermissionsRowProps> = ({
       <div>
         <select
           className={className}
-          disabled={allDisabled}
           title={allDisabled ? 'Set a row permission first' : ''}
           {...register(`${formKey}.${id}.queryType`)}
         >
@@ -83,7 +80,6 @@ export const ClonePermissionsRow: React.FC<ClonePermissionsRowProps> = ({
       <div>
         <select
           className={className}
-          disabled={allDisabled}
           title={allDisabled ? 'Set a row permission first' : ''}
           {...register(`${formKey}.${id}.roleName`)}
         >
@@ -113,7 +109,7 @@ export const ClonePermissionsRow: React.FC<ClonePermissionsRowProps> = ({
 
 export interface ClonePermissionsSectionProps {
   queryType: string;
-  tables: Table[];
+  tables: QualifiedTable[];
   supportedQueryTypes: QueryType[] | Feature | undefined;
   roles: string[];
   defaultOpen?: boolean;

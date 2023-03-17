@@ -9,6 +9,7 @@ import { getEdForm } from '../../../../components/Services/Data/utils';
 import { useIsDisabled } from '../hooks/useIsDisabled';
 import { QueryType } from '../../types';
 import { isPermissionModalDisabled } from '../utils/getPermissionModalStatus';
+import { SelectColumn } from '../../../DataSource/types';
 
 import {
   getPermissionsModalTitle,
@@ -171,7 +172,6 @@ export const ColumnPermissionsSection: React.FC<
                 <strong>columns</strong>:
               </p>
             </div>
-
             <fieldset className="flex gap-4 flex-wrap">
               {columns?.map(fieldName => (
                 <label key={fieldName} className="flex gap-2 items-center">

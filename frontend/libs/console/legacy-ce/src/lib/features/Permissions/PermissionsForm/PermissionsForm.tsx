@@ -97,11 +97,8 @@ const Component = (props: ComponentProps) => {
   // E.g. when switching tables
   useEffect(() => {
     const newValues = getValues();
-    reset({ ...newValues, ...defaultValues });
+    reset({ ...newValues, ...defaultValues, clonePermissions: [] });
   }, [roleName, defaultValues]);
-
-  // allRowChecks relates to other queries and is for duplicating from others
-  const allRowChecks = defaultValues?.allRowChecks;
 
   const key = `${JSON.stringify(table)}-${queryType}-${roleName}`;
 
@@ -140,7 +137,6 @@ const Component = (props: ComponentProps) => {
               queryType={queryType}
               subQueryType={queryType === 'update' ? 'pre' : undefined}
               permissionsKey={filterKeys[0]}
-              allRowChecks={allRowChecks || []}
               dataSourceName={dataSourceName}
               supportedOperators={data?.defaultValues?.supportedOperators ?? []}
               defaultValues={defaultValues}
@@ -157,7 +153,6 @@ const Component = (props: ComponentProps) => {
                   roleName={roleName}
                   queryType={queryType}
                   subQueryType={queryType === 'update' ? 'post' : undefined}
-                  allRowChecks={allRowChecks || []}
                   permissionsKey={filterKeys[1]}
                   dataSourceName={dataSourceName}
                   supportedOperators={

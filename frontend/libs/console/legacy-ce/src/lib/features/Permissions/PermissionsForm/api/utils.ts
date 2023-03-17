@@ -1,8 +1,8 @@
-import produce from 'immer';
+import produce, { Draft, original } from 'immer';
 
 import { allowedMetadataTypes } from '../../../MetadataAPI';
 
-import { AccessType } from '../../types';
+import { AccessType, QueryType } from '../../types';
 import { PermissionsSchema, Presets } from '../../schema';
 import { areTablesEqual } from '../../../hasura-metadata-api';
 import { Table } from '../../../hasura-metadata-types';
@@ -205,6 +205,49 @@ export interface ExistingPermission {
   role: string;
   queryType: string;
 }
+
+/**
+ * When cloning permissions we have to transform the payload between filter and checks.
+ * The input per type is:
+ * select uses filter
+ * delete uses filter
+ * insert uses check
+ * update uses filter(for pre-check) and check (for post-check)
+ *
+ * When cloning between the permissions type we need to swap these out based on with way we are cloning
+ */
+const getPermissionsWithMappedRowPermissions = (
+  permissionsObject: any,
+  mainQueryType: QueryType,
+  clonedQueryType: string
+): { filter?: Record<string, any>; check?: Record<string, any> } => {
+  const clone: { filter?: Record<string, any>; check?: Record<string, any> } = {
+    filter: permissionsObject.filter,
+    check: permissionsObject.check,
+  };
+
+  if (
+    (mainQueryType === 'select' && clonedQueryType === 'insert') ||
+    (mainQueryType === 'select' && clonedQueryType === 'update') ||
+    (mainQueryType === 'delete' && clonedQueryType === 'insert') ||
+    (mainQueryType === 'delete' && clonedQueryType === 'update')
+  ) {
+    clone.check = permissionsObject.filter;
+  }
+
+  if (
+    (mainQueryType === 'update' && clonedQueryType === 'select') ||
+    (mainQueryType === 'update' && clonedQueryType === 'delete') ||
+    (mainQueryType === 'insert' && clonedQueryType === 'select') ||
+    (mainQueryType === 'insert' && clonedQueryType === 'delete') ||
+    (mainQueryType === 'insert' && clonedQueryType === 'update')
+  ) {
+    clone.filter = permissionsObject.check;
+  }
+
+  return { filter: clone.filter, check: clone.check };
+};
+
 /**
  * creates the insert arguments to update permissions
  * adds cloned permissions
@@ -221,7 +264,6 @@ export const createInsertArgs = ({
   tables,
 }: CreateInsertArgs) => {
   const permission = createPermission(formData);
-
   // create args object with args from form
   const initialArgs = [
     {
@@ -274,9 +316,22 @@ export const createInsertArgs = ({
               d.set = {};
             }
 
-            return d;
+            const newValues = {
+              ...getPermissionsWithMappedRowPermissions(
+                original(d),
+                queryType,
+                clonedPermission.queryType
+              ),
+            };
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            d.filter = newValues.filter;
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            d.check = newValues.check;
           }
         );
+
         // add each closed permission to args
         draft.push({
           type: `${driver}_create_${clonedPermission.queryType}_permission` as allowedMetadataTypes,

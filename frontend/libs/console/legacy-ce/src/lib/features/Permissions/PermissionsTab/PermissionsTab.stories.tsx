@@ -50,34 +50,30 @@ GDCUpdateTableCloneSelectPermission.parameters = {
 GDCUpdateTableCloneSelectPermission.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
-  await waitFor(
-    async () => await canvas.getByTestId('permission-table-button-user-update')
-  );
-
+  await canvas.findByTestId('permission-table-button-user-update');
   const tableUserUpdateButton = await canvas.getByTestId(
     'permission-table-button-user-update'
   );
 
   await userEvent.click(tableUserUpdateButton);
-  await waitFor(
-    async () => await canvas.getByTestId('external-user-select-input-pre')
-  );
-  const selectCheckbox = await canvas.getByTestId(
-    `external-user-select-input-pre`
+  const selectCheckbox = await canvas.findByTestId(
+    'external-user-select-input-pre'
   );
   await userEvent.click(selectCheckbox);
-  await waitFor(async () => await canvas.getByTestId('row-permission-builder'));
+
+  await canvas.findByTestId('external-check-json-editor');
   const rowPermissionBuilderContainer = await canvas.getByTestId(
-    `row-permission-builder`
+    'external-check-json-editor'
   );
+
   expect(rowPermissionBuilderContainer.getAttribute('data-state')).toEqual(
     '{"ArtistId":{"_eq":"X-Hasura-User-Id"}}'
   );
 };
 
-export const GDCUpdateTableCreatePermissions: Story<
-  PermissionsTabProps
-> = args => <PermissionsTab {...args} />;
+// export const GDCUpdateTableCreatePermissions: Story<
+//   PermissionsTabProps
+// > = args => <PermissionsTab {...args} />;
 
 // GDCUpdateTableCreatePermissions.args = {
 //   dataSourceName: 'sqlite',

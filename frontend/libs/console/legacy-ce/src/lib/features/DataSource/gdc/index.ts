@@ -40,7 +40,7 @@ export const gdc: Database = {
       return (table as GDCTable).join('_');
     },
     getSupportedQueryTypes: async () => {
-      return ['select'];
+      return ['select', 'delete', 'update', 'insert'];
     },
   },
 };

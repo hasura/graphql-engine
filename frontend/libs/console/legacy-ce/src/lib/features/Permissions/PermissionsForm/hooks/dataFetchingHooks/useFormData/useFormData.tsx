@@ -47,6 +47,7 @@ export const useFormData = ({
       JSON.stringify(table),
       roleName,
       tableColumns,
+      queryType,
     ],
     queryFn: async () => {
       if (tableColumns.length === 0)
@@ -89,7 +90,6 @@ export const useFormData = ({
 
       return { formData, defaultValues };
     },
-
     refetchOnWindowFocus: false,
   });
 };

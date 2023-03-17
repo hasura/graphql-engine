@@ -16,10 +16,7 @@ import {
   TableEntry,
 } from '../../../../../../../metadata/types';
 
-import {
-  createPermissionsObject,
-  getRowPermissionsForAllOtherQueriesMatchingSelectedRole,
-} from './utils';
+import { createPermissionsObject } from './utils';
 
 interface GetMetadataTableArgs {
   table: unknown;
@@ -68,17 +65,11 @@ export const createDefaultValues = ({
     configuration: selectedTable?.configuration,
   });
 
-  const allRowChecks = getRowPermissionsForAllOtherQueriesMatchingSelectedRole(
-    queryType,
-    roleName,
-    selectedTable
-  );
-
   const baseDefaultValues: DefaultValues = {
     queryType: 'select',
     filterType: 'none',
     columns: {},
-    allRowChecks,
+
     supportedOperators,
   };
 
@@ -99,6 +90,5 @@ export const createDefaultValues = ({
 };
 
 type DefaultValues = PermissionsSchema & {
-  allRowChecks: { queryType: QueryType; value: string }[];
   operators?: Record<string, unknown>;
 };

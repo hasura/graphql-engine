@@ -127,8 +127,10 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
 
                   {permissionTypes.map(({ permissionType, access }) => {
                     // TODO: add checks to see what permissions are supported by each db
+
                     const isEditable =
-                      driverSupportedQueries.includes(permissionType);
+                      driverSupportedQueries.includes(permissionType) ||
+                      roleName !== 'admin';
 
                     if (isNewRole) {
                       return (

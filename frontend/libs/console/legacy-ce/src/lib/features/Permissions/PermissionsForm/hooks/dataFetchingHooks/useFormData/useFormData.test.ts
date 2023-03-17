@@ -48,7 +48,6 @@ const defaultValuesMockResult: ReturnType<typeof createDefaultValues> = {
     Series_title_4: false,
     Series_title_5: false,
   },
-  allRowChecks: [],
   supportedOperators: [
     { name: 'equals', value: '_eq' },
     { name: 'not equals', value: '_neq' },
@@ -83,5 +82,6 @@ const defaultValuesMockResult: ReturnType<typeof createDefaultValues> = {
 
 test('use default values returns values correctly', () => {
   const result = createDefaultValues(useFormDataCreateDefaultValuesMock);
+
   expect(result).toEqual(defaultValuesMockResult);
 });
