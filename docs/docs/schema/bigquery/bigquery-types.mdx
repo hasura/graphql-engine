@@ -63,24 +63,15 @@ Reference: https://cloud.google.com/bigquery/docs/reference/standard-sql/data-ty
 
 ### Large numerical types {#large-numerical-types}
 
-Because BigQuery supports numerical types which accommodate a wider range of numbers than the Number type in Javascript
-(and in programming languages in general), the Hasura GraphQL Engine supports optionally representing numbers as
-strings.
+In addition to the [`stringify-numeric-types`
+](/deployment/graphql-engine-flags/reference.mdx#stringify-numeric-types) option,
+the BigQuery backend supports an experimental feature
+[`bigquery_string_numeric_input`](/deployment/graphql-engine-flags/reference.mdx#experimental-features)
+which extends the support for stringified numbers to input values as well.
 
-This enables making a trade-off between avoiding issues with numerical overflows when storing or transmitting numerical
-data and actually being able to do numerical operations. If you're using large numbers identifiers only, then this
-trade-off can make sense.
-
-Enabling the setting `stringify-numeric-types`, (e.g.
-[by setting the environment variable `HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES=true`](/deployment/graphql-engine-flags/reference.mdx#stringify-numeric-types))
-will use string scalars for types that are able to represent large numerical values. It's then up to the caller to
-interpret these strings numerically as needed.
-
-Similarly, enabling the experimental feature `bigquery_string_numeric_input` (e.g.
-[by setting the environment variable `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES=bigquery_string_numeric_input`](/deployment/graphql-engine-flags/reference.mdx#experimental-features))
-extends the support for stringified numbers to input values as well.
-
-Enabling this flag will add a `bigquery_` prefix to the names of numeric types, as GraphQL mandates that the builtin
+Enabling this flag will add a `bigquery_` prefix to the names of numeric types
+appearing in the GraphQL schema and use those instead of the builtin scalar
+types. This distinction is necessary, as GraphQL mandates that the builtin
 numeric types be syntactically represented as numbers only.
 
 ## Bool {#bool}

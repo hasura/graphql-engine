@@ -1,0 +1,71 @@
+---
+description: Thing to be aware of when dealing with wide numeric types
+keywords:
+  - hasura
+  - docs
+  - schema
+title: Wide Numeric Types
+hide_table_of_contents: true
+sidebar_position: 1
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import VersionedLink from '@site/src/components/VersionedLink';
+
+# Wide Numeric Types
+
+Databases often support numerical types which accommodate a wider range of numbers than the Number type in JavaScript
+(and in programming languages broadly). Parsing JSON payloads containing such numbers naively suffers from numerical
+overflow issues.
+
+For example, The JSON object `{ "value" : 9223372036854775807}`, is still a valid
+[RFC4627](https://www.ietf.org/rfc/rfc4627.txt) JSON string, but in most JS runtimes, the result of `JSON.parse` is the
+object `{ value: 9223372036854776000 }`, where the last 4 digits have been rounded.
+
+In order to deal with this you will need to ensure that clients issuing queries containing large numbers are adequately
+equipped to handle those. For Javascript, this could mean using a package such as
+[json-bigint](https://www.npmjs.com/package/json-bigint).
+
+The Hasura GraphQL Engine also supports optionally representing large number types as strings. You can do this using
+Hasura Community Edition, Hasura Cloud, and Hasura Enterprise Edition by setting the
+[`stringify-numeric-types` environment variable](/deployment/graphql-engine-flags/reference.mdx#stringify-numeric-types).
+
+When this option is set, all values of large numerical type appearing in query results will be represented as strings.
+It's then up to the caller to interpret these strings numerically as needed.
+
+:::info Note
+
+This only affects the JSON format of query results. Query _input fields_ still use JSON and GraphQL number types, though
+the [BigQuery](/schema/bigquery/bigquery-types.mdx#large-numerical-types) backend also supports an extra flag to affect
+input fields.
+
+:::
+
+:::tip Using the `json-bigint` package
+
+The `json-bigint` package can be used to parse JSON strings containing large numbers:
+
+```javascript
+var JSONbig = require('json-bigint');
+var json = '{ "value" : 9223372036854775807, "v2": 123 }';
+// Built-in JSON parsing:
+var r = JSON.parse(json);
+
+console.log(r.value.toString());
+// Prints: 9223372036854776000
+
+console.log(JSON.stringify(r));
+// Prints: {"value":9223372036854776000,"v2":123}
+// Big number JSON parsing:
+var r1 = JSONbig.parse(json);
+
+console.log(r1.value.toString());
+// Prints: 9223372036854775807
+
+console.log(JSONbig.stringify(r1));
+// Prints: {"value":9223372036854775807,"v2":123}
+```
+
+[Source: json-bigint homepage](https://www.npmjs.com/package/json-bigint).
+
+:::
