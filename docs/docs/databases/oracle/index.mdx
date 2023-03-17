@@ -1,0 +1,53 @@
+---
+description: Hasura Oracle database support
+keywords:
+  - hasura
+  - docs
+  - databases
+  - Oracle
+slug: index
+---
+
+# Oracle
+
+<div className="badge-container">
+  <div className="badge badge--primary heading-badge">Available on: Hasura Cloud, Enterprise (Self-hosted)</div>
+  <div className="badge badge-gray heading-badge">Alpha</div>
+</div>
+
+## Introduction
+
+Hasura enables you to connect to Oracle databases to automatically build a GraphQL API based on your database
+schema.
+
+At present, our Oracle integration is available in Hasura Cloud and Docker environments, where you can run
+Hasura GraphQL Engine and connect the Oracle GraphQL Data Connector to it. For more information on GraphQL Data
+Connectors check out [our blog post on the topic](https://hasura.io/blog/hasura-graphql-data-connectors/).
+
+To get started with Oracle:
+- In Hasura Cloud, check out our [Getting Started with Oracle in Hasura Cloud](/databases/oracle/cloud.mdx) guide
+- In a Docker environment, check out our [Getting Started with Docker](/databases/oracle/docker.mdx) guide
+
+:::tip Supported versions
+
+1.  Hasura GraphQL Engine `v2.21.0` onwards
+2.  Oracle version 18.0 and higher
+
+:::
+
+:::tip Alpha version supported features
+
+Hasura currently supports queries, table relationships and permissions on Oracle.
+
+Note that Hasura doesn't yet support the ability to modify the database schema, so the database you
+connect to should already contain tables and data. You should also ideally have access to it outside of Hasura to
+modify the schema.
+
+:::
+
+## Coming soon for Oracle
+
+- [Mutations](/mutations/overview.mdx)
+- [Remote relationships](/remote-schemas/remote-relationships/index.mdx)
+- [Subscriptions](/subscriptions/overview.mdx)
+- [Event triggers](/event-triggers/overview.mdx)

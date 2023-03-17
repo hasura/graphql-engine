@@ -1,0 +1,91 @@
+version: '3.7'
+services:
+  redis:
+    image: redis:7
+    restart: always
+    # ports:
+    #   - 6379:6379
+  postgres:
+    image: postgres:15
+    restart: always
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgrespassword
+  hasura:
+    image: hasura/graphql-engine:v2.21.0
+    restart: always
+    ports:
+      - 8080:8080
+    environment:
+      ## Add your license key below
+      HASURA_GRAPHQL_EE_LICENSE_KEY: ''
+      HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+      ## The metadata database for this Hasura GraphQL project. Can be changed to a managed postgres instance
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
+      # HASURA_GRAPHQL_READ_REPLICA_URLS: postgres://postgres:postgrespassword@postgres:5432/postgres
+
+      ## Optional settings
+      ## enable the console served by server
+      HASURA_GRAPHQL_ENABLE_CONSOLE: 'true'
+      ## enable required apis; metrics api exposes a prometheus endpoint, uncomment to enable
+      # HASURA_GRAPHQL_ENABLED_APIS: 'graphql,metadata,config,developer,pgdump,metrics'
+      ## secure metrics endpoint with a secret, uncomment to enable
+      # HASURA_GRAPHQL_METRICS_SECRET: 'secret'
+      ## enable debugging mode. It is recommended to disable this in production
+      HASURA_GRAPHQL_DEV_MODE: 'true'
+      # HASURA_GRAPHQL_LOG_LEVEL: debug
+      HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: '/srv/console-assets'
+      HASURA_GRAPHQL_REDIS_URL: redis://redis:6379
+      HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL: 'redis://redis:6379'
+      HASURA_GRAPHQL_MAX_CACHE_SIZE: '200'
+      # Configures the connection to the Data Connector agent for MySQL by default
+      # You can also omit this and manually configure the same thing via the 'Data' tab, then 'Add Agent'
+      # in the Hasura console
+      HASURA_GRAPHQL_METADATA_DEFAULTS: '{"backend_configs":{"dataconnector":{"oracle":{"uri":"http://data-connector-agent:8081/api/v1/oracle"}}}}'
+    depends_on:
+      data-connector-agent:
+        condition: service_healthy
+  data-connector-agent:
+    image: hasura/graphql-data-connector:v2.21.0
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      QUARKUS_LOG_LEVEL: ERROR # FATAL, ERROR, WARN, INFO, DEBUG, TRACE
+      ## https://quarkus.io/guides/opentelemetry#configuration-reference
+      QUARKUS_OPENTELEMETRY_ENABLED: 'false'
+      ## QUARKUS_OPENTELEMETRY_TRACER_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8081/api/v1/oracle/health']
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 5s
+  # NOTE: this oracle docker image does not work on apple silicon. Please see subsection "Oracle XE on Apple M chips" here https://hub.docker.com/r/gvenzl/oracle-xe.
+  database:
+    image: gvenzl/oracle-xe:21.3.0-slim
+    restart: always
+    environment:
+      - ORACLE_PASSWORD=pass
+      - ORACLE_DATABASE=example
+  # jaeger:
+  #   image: jaegertracing/all-in-one:1.37
+  #   restart: always
+  #   ports:
+  #     - 5775:5775/udp
+  #     - 6831:6831/udp
+  #     - 6832:6832/udp
+  #     - 5778:5778
+  #     - 4002:16686
+  #     - 14250:14250
+  #     - 14268:14268
+  #     - 14269:14269
+  #     - 4317:4317 # OTLP gRPC
+  #     - 4318:4318 # OTLP HTTP
+  #     - 9411:9411
+  #   environment:
+  #     COLLECTOR_OTLP_ENABLED: 'true'
+  #     COLLECTOR_ZIPKIN_HOST_PORT: '9411'
+volumes:
+  db_data:
