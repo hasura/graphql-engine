@@ -541,8 +541,8 @@ metadataToDTO
         metaV3ApiLimits = apiLimits,
         metaV3MetricsConfig = metricsConfig,
         metaV3InheritedRoles = inheritedRoles,
-        metaV3GraphqlSchemaIntrospection = placeholder . objectFromOrdJSON <$> introspectionDisabledRolesToOrdJSON introspectionDisabledRoles,
-        metaV3Network = placeholder . objectFromOrdJSON <$> networkConfigToOrdJSON networkConfig,
+        metaV3GraphqlSchemaIntrospection = introspectionDisabledRoles,
+        metaV3Network = networkConfig,
         metaV3BackendConfigs = placeholder . objectFromOrdJSON <$> backendConfigsToOrdJSON backendConfigs,
         metaV3OpenTelemetryConfig = openTelemetryConfig
       }

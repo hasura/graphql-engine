@@ -5,6 +5,8 @@ module Hasura.RQL.Types.GraphqlSchemaIntrospection
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec)
+import Autodocodec.Extended (hashSetCodec)
 import Data.Aeson.TH
 import Data.HashSet qualified as Set
 import Hasura.Prelude
@@ -16,5 +18,8 @@ newtype SetGraphqlIntrospectionOptions = SetGraphqlIntrospectionOptions {_idrDis
 instance NFData SetGraphqlIntrospectionOptions
 
 instance Hashable SetGraphqlIntrospectionOptions
+
+instance HasCodec SetGraphqlIntrospectionOptions where
+  codec = dimapCodec SetGraphqlIntrospectionOptions _idrDisabledForRoles hashSetCodec
 
 $(deriveJSON hasuraJSON ''SetGraphqlIntrospectionOptions)

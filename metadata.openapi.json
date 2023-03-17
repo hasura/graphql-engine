@@ -4440,8 +4440,11 @@
                         "$ref": "#/components/schemas/CustomTypes"
                     },
                     "graphql_schema_introspection": {
-                        "additionalProperties": true,
-                        "description": "TODO\n\n\nobject with unspecified properties - this is a placeholder that will eventually be replaced with a more detailed description"
+                        "default": [],
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
                     },
                     "inherited_roles": {
                         "default": [],
@@ -4455,8 +4458,7 @@
                         "$ref": "#/components/schemas/MetricsConfig"
                     },
                     "network": {
-                        "additionalProperties": true,
-                        "description": "TODO\n\n\nobject with unspecified properties - this is a placeholder that will eventually be replaced with a more detailed description"
+                        "$ref": "#/components/schemas/Network"
                     },
                     "opentelemetry": {
                         "$ref": "#/components/schemas/OpenTelemetryConfig"
@@ -6150,6 +6152,18 @@
                     "graphql-default"
                 ],
                 "type": "string"
+            },
+            "Network": {
+                "properties": {
+                    "tls_allowlist": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/TlsAllow"
+                        },
+                        "type": "array"
+                    }
+                },
+                "type": "object"
             },
             "ObjectFieldDefinition_GraphQLType": {
                 "properties": {
@@ -8763,6 +8777,29 @@
                         ]
                     }
                 },
+                "type": "object"
+            },
+            "TlsAllow": {
+                "properties": {
+                    "host": {
+                        "type": "string"
+                    },
+                    "permissions": {
+                        "items": {
+                            "enum": [
+                                "self-signed"
+                            ],
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "suffix": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "host"
+                ],
                 "type": "object"
             },
             "ToSchemaRelationshipDef": {

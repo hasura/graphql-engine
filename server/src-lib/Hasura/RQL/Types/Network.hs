@@ -8,14 +8,23 @@ module Hasura.RQL.Types.Network
   )
 where
 
+import Autodocodec (HasCodec, optionalField', optionalFieldWithDefault', requiredField')
+import Autodocodec qualified as AC
 import Data.Aeson as A
 import Data.Text qualified as T
+import Hasura.Metadata.DTO.Utils (boundedEnumCodec)
 import Hasura.Prelude
 
 data Network = Network
   { networkTlsAllowlist :: [TlsAllow]
   }
   deriving (Show, Eq, Generic)
+
+instance HasCodec Network where
+  codec =
+    AC.object "Network" $
+      Network
+        <$> optionalFieldWithDefault' "tls_allowlist" [] AC..= networkTlsAllowlist
 
 instance FromJSON Network where
   parseJSON = withObject "Network" $ \o -> Network <$> o .:? "tls_allowlist" .!= []
@@ -32,6 +41,14 @@ data TlsAllow = TlsAllow
     taPermit :: Maybe [TlsPermission]
   }
   deriving (Show, Read, Eq, Generic)
+
+instance HasCodec TlsAllow where
+  codec =
+    AC.object "TlsAllow" $
+      TlsAllow
+        <$> requiredField' "host" AC..= taHost
+        <*> optionalField' "suffix" AC..= taSuffix
+        <*> optionalField' "permissions" AC..= taPermit
 
 instance FromJSON TlsAllow where
   parseJSON j = aString j <|> anObject j
@@ -59,6 +76,10 @@ instance ToJSON TlsAllow where
 data TlsPermission
   = SelfSigned
   deriving (Show, Read, Eq, Generic, Enum, Bounded)
+
+instance HasCodec TlsPermission where
+  codec = boundedEnumCodec \case
+    SelfSigned -> "self-signed"
 
 instance FromJSON TlsPermission where
   parseJSON (String "self-signed") = pure SelfSigned

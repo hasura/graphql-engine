@@ -26,7 +26,9 @@ import Hasura.RQL.Types.ApiLimit (ApiLimit, emptyApiLimit)
 import Hasura.RQL.Types.Common (MetricsConfig, emptyMetricsConfig)
 import Hasura.RQL.Types.CustomTypes (CustomTypes, emptyCustomTypes)
 import Hasura.RQL.Types.Endpoint (_ceName)
+import Hasura.RQL.Types.GraphqlSchemaIntrospection (SetGraphqlIntrospectionOptions)
 import Hasura.RQL.Types.Metadata.Common (Actions, CronTriggers, Endpoints, InheritedRoles, QueryCollections, RemoteSchemas, Sources, sourcesCodec)
+import Hasura.RQL.Types.Network (Network, emptyNetwork)
 import Hasura.RQL.Types.OpenTelemetry (OpenTelemetryConfig, emptyOpenTelemetryConfig)
 import Hasura.RQL.Types.QueryCollection qualified as QC
 import Hasura.RQL.Types.Roles (Role (_rRoleName))
@@ -47,8 +49,8 @@ data MetadataV3 = MetadataV3
     metaV3ApiLimits :: ApiLimit,
     metaV3MetricsConfig :: MetricsConfig,
     metaV3InheritedRoles :: InheritedRoles,
-    metaV3GraphqlSchemaIntrospection :: Maybe PlaceholderObject,
-    metaV3Network :: Maybe PlaceholderObject,
+    metaV3GraphqlSchemaIntrospection :: SetGraphqlIntrospectionOptions,
+    metaV3Network :: Network,
     metaV3BackendConfigs :: Maybe PlaceholderObject,
     metaV3OpenTelemetryConfig :: OpenTelemetryConfig
   }
@@ -81,7 +83,7 @@ instance HasCodec MetadataV3 where
         <*> optionalFieldWithOmittedDefault "api_limits" emptyApiLimit "limts to depth and/or rate of API requests" .= metaV3ApiLimits
         <*> optionalFieldWithOmittedDefault' "metrics_config" emptyMetricsConfig .= metaV3MetricsConfig
         <*> optionalFieldWithOmittedDefaultWith "inherited_roles" (sortedElemsCodec _rRoleName) [] "an inherited role is a way to create a new role which inherits permissions from two or more roles" .= metaV3InheritedRoles
-        <*> optionalField "graphql_schema_introspection" "TODO" .= metaV3GraphqlSchemaIntrospection
-        <*> optionalField "network" "TODO" .= metaV3Network
+        <*> optionalFieldWithOmittedDefault' "graphql_schema_introspection" mempty .= metaV3GraphqlSchemaIntrospection
+        <*> optionalFieldWithOmittedDefault' "network" emptyNetwork .= metaV3Network
         <*> optionalField "backend_configs" "TODO" .= metaV3BackendConfigs
         <*> optionalFieldWithOmittedDefault' "opentelemetry" emptyOpenTelemetryConfig .= metaV3OpenTelemetryConfig
