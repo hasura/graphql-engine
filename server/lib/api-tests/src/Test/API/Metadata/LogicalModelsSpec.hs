@@ -5,6 +5,7 @@ module Test.API.Metadata.LogicalModelsSpec (spec) where
 
 import Data.Aeson qualified as A
 import Data.List.NonEmpty qualified as NE
+import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
@@ -33,6 +34,11 @@ spec = do
           [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
               { Fixture.setupTeardown = \(testEnv, _) ->
                   [ Postgres.setupTablesAction schema testEnv
+                  ]
+              },
+            (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
+              { Fixture.setupTeardown = \(testEnv, _) ->
+                  [ Citus.setupTablesAction schema testEnv
                   ]
               }
           ]
@@ -123,6 +129,8 @@ testAdminAccess opts = do
       \testEnvironment -> do
         let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
             sourceName = BackendType.backendSourceName backendTypeMetadata
+            backendType = BackendType.backendTypeString backendTypeMetadata
+            getRequestType = backendType <> "_get_logical_model"
 
         shouldReturnYaml
           opts
@@ -132,7 +140,7 @@ testAdminAccess opts = do
               [ ("X-Hasura-Role", "not-admin")
               ]
               [yaml|
-                type: pg_get_logical_model
+                type: *getRequestType 
                 args:
                   source: *sourceName
               |]
@@ -210,6 +218,8 @@ testImplementation opts = do
 
           backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
+          backendType = BackendType.backendTypeString backendTypeMetadata
+          getRequestType = backendType <> "_get_logical_model"
 
           dividedStuffLogicalModel :: Schema.LogicalModel
           dividedStuffLogicalModel =
@@ -232,7 +242,7 @@ testImplementation opts = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: pg_get_logical_model
+              type: *getRequestType 
               args:
                 source: *sourceName
             |]
@@ -280,6 +290,8 @@ testImplementation opts = do
     it "Checks the logical model of a function can be deleted" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
+          backendType = BackendType.backendTypeString backendTypeMetadata
+          getRequestType = backendType <> "_get_logical_model"
 
           dividedStuffLogicalModel :: Schema.LogicalModel
           dividedStuffLogicalModel =
@@ -304,7 +316,7 @@ testImplementation opts = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: pg_get_logical_model
+              type: *getRequestType 
               args:
                 source: *sourceName
             |]
@@ -417,6 +429,8 @@ testValidation opts = do
             nonExistentLogicalModel :: Schema.LogicalModel
             nonExistentLogicalModel = Schema.logicalModel "some_logical_model" ""
 
+            expectedError = "Logical model \"some_logical_model\" not found in source \"" <> sourceName <> "\"."
+
         shouldReturnYaml
           opts
           ( GraphqlEngine.postMetadataWithStatus
@@ -426,7 +440,7 @@ testValidation opts = do
           )
           [yaml|
           code: not-found
-          error: "Logical model \"some_logical_model\" not found in source \"postgres\"."
+          error: *expectedError
           path: "$.args"
         |]
 
@@ -514,7 +528,7 @@ testValidation opts = do
             spicyQuery = "select * from stuff"
 
             backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnv
-            source = BackendType.backendSourceName backendTypeMetadata
+            sourceName = BackendType.backendSourceName backendTypeMetadata
             schemaName = Schema.getSchemaName testEnv
 
             conflictingLogicalModel :: Schema.LogicalModel
@@ -530,16 +544,18 @@ testValidation opts = do
                     ]
                 }
 
+            expectedError = "Encountered conflicting definitions in the selection set for 'subscription_root' for field 'hasura_stuff' defined in [table hasura.stuff in source " <> sourceName <> ", logical_model hasura_stuff in source " <> sourceName <> "]. Fields must not be defined more than once across all sources."
+
         shouldReturnYaml
           opts
           ( GraphqlEngine.postMetadataWithStatus
               500
               testEnv
-              (Schema.trackLogicalModelCommand source backendTypeMetadata conflictingLogicalModel)
+              (Schema.trackLogicalModelCommand sourceName backendTypeMetadata conflictingLogicalModel)
           )
           [yaml|
               code: unexpected
-              error: Encountered conflicting definitions in the selection set for 'subscription_root' for field 'hasura_stuff' defined in [table hasura.stuff in source postgres, logical_model hasura_stuff in source postgres]. Fields must not be defined more than once across all sources.
+              error: *expectedError 
               path: $.args
           |]
 
@@ -621,7 +637,10 @@ testValidation opts = do
         actual `shouldAtLeastBe` expected
 
     it "where the column names specified are not returned from the query" $
-      \testEnv -> do
+      \testEnvironment -> do
+        let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+            sourceName = BackendType.backendSourceName backendTypeMetadata
+
         let expected =
               [yaml|
                   code: validation-failed
@@ -630,26 +649,25 @@ testValidation opts = do
                     error:
                       message: column "text" does not exist
                 |]
+
+            query = "SELECT {{text}} AS not_text"
+
+            brokenColumnsLogicalModel :: Schema.LogicalModel
+            brokenColumnsLogicalModel =
+              (Schema.logicalModel "text_failing" query)
+                { Schema.logicalModelColumns =
+                    [ Schema.logicalModelColumn "text" "text"
+                    ],
+                  Schema.logicalModelArguments =
+                    [ Schema.logicalModelColumn "text" "text"
+                    ]
+                }
+
         actual <-
           GraphqlEngine.postMetadataWithStatus
             400
-            testEnv
-            [yaml|
-                  type: pg_track_logical_model
-                  args:
-                    type: query
-                    source: postgres
-                    root_field_name: text_failing
-                    code: |
-                      SELECT {{text}} AS not_text
-                    arguments:
-                      text:
-                        type: text
-                    returns:
-                      columns:
-                        text:
-                          type: text
-            |]
+            testEnvironment
+            (Schema.trackLogicalModelCommand sourceName backendTypeMetadata brokenColumnsLogicalModel)
 
         actual `shouldAtLeastBe` expected
 
@@ -733,6 +751,9 @@ testPermissions opts = do
     it "Adds a simple logical model function with no arguments a select permission and returns a 200" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
+          backendType = BackendType.backendTypeString backendTypeMetadata
+          createPermRequestType = backendType <> "_create_logical_model_select_permission"
+          getRequestType = backendType <> "_get_logical_model"
 
       Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 
@@ -743,7 +764,7 @@ testPermissions opts = do
             [yaml|
               type: bulk
               args:
-                - type: pg_create_logical_model_select_permission
+                - type: *createPermRequestType
                   args:
                     source: *sourceName
                     root_field_name: divided_stuff
@@ -763,7 +784,7 @@ testPermissions opts = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: pg_get_logical_model
+              type: *getRequestType 
               args:
                 source: *sourceName
             |]
@@ -795,6 +816,10 @@ testPermissions opts = do
 
           backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
+          backendType = BackendType.backendTypeString backendTypeMetadata
+          createPermRequestType = backendType <> "_create_logical_model_select_permission"
+          dropPermRequestType = backendType <> "_drop_logical_model_select_permission"
+          getRequestType = backendType <> "_get_logical_model"
 
       Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 
@@ -805,7 +830,7 @@ testPermissions opts = do
             [yaml|
               type: bulk
               args:
-                - type: pg_create_logical_model_select_permission
+                - type: *createPermRequestType 
                   args:
                     source: *sourceName
                     root_field_name: *rootfield
@@ -814,7 +839,7 @@ testPermissions opts = do
                       columns:
                         - divided
                       filter: {}
-                - type: pg_drop_logical_model_select_permission
+                - type: *dropPermRequestType 
                   args:
                     source: *sourceName
                     root_field_name: *rootfield
@@ -831,7 +856,7 @@ testPermissions opts = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: pg_get_logical_model
+              type: *getRequestType 
               args:
                 source: *sourceName
             |]
@@ -855,6 +880,10 @@ testPermissionFailures :: Fixture.Options -> SpecWith TestEnvironment
 testPermissionFailures opts = do
   describe "Permission failures" do
     it "Fails to adds a select permission to a nonexisting source" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          backendType = BackendType.backendTypeString backendTypeMetadata
+          createPermRequestType = backendType <> "_create_logical_model_select_permission"
+
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadataWithStatus
@@ -863,7 +892,7 @@ testPermissionFailures opts = do
             [yaml|
               type: bulk
               args:
-                - type: pg_create_logical_model_select_permission
+                - type: *createPermRequestType 
                   args:
                     source: made_up_source
                     root_field_name: made_up_logical_model
@@ -883,6 +912,10 @@ testPermissionFailures opts = do
     it "Fails to adds a select permission to a nonexisting logical model" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
+          backendType = BackendType.backendTypeString backendTypeMetadata
+          createPermRequestType = backendType <> "_create_logical_model_select_permission"
+
+          expectedError = "Logical model \"made_up_logical_model\" not found in source \"" <> sourceName <> "\"."
 
       shouldReturnYaml
         opts
@@ -892,7 +925,7 @@ testPermissionFailures opts = do
             [yaml|
               type: bulk
               args:
-                - type: pg_create_logical_model_select_permission
+                - type: *createPermRequestType 
                   args:
                     source: *sourceName
                     root_field_name: made_up_logical_model
@@ -905,18 +938,22 @@ testPermissionFailures opts = do
         )
         [yaml|
           code: "not-found"
-          error: "Logical model \"made_up_logical_model\" not found in source \"postgres\"."
+          error: *expectedError
           path: "$.args[0].args"
         |]
 
-    it "Fails to drop a select permission on a nonexisting source" $ \testEnv -> do
+    it "Fails to drop a select permission on a nonexisting source" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          backendType = BackendType.backendTypeString backendTypeMetadata
+          dropPermRequestType = backendType <> "_drop_logical_model_select_permission"
+
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadataWithStatus
             400
-            testEnv
+            testEnvironment
             [yaml|
-              type: pg_drop_logical_model_select_permission
+              type: *dropPermRequestType 
               args:
                 source: made_up_source
                 root_field_name: made_up_logical_model
@@ -936,6 +973,9 @@ testPermissionFailures opts = do
     it "Fails to drop a select permission from a nonexisting logical model" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
+          backendType = BackendType.backendTypeString backendTypeMetadata
+          dropPermRequestType = backendType <> "_drop_logical_model_select_permission"
+          expectedError = "Logical model \"made_up_logical_model\" not found in source \"" <> sourceName <> "\"."
 
       shouldReturnYaml
         opts
@@ -943,7 +983,7 @@ testPermissionFailures opts = do
             400
             testEnvironment
             [yaml|
-              type: pg_drop_logical_model_select_permission
+              type: *dropPermRequestType 
               args:
                 source: *sourceName
                 root_field_name: made_up_logical_model
@@ -952,6 +992,6 @@ testPermissionFailures opts = do
         )
         [yaml|
           code: "not-found"
-          error: "Logical model \"made_up_logical_model\" not found in source \"postgres\"."
+          error: *expectedError 
           path: "$.args"
         |]

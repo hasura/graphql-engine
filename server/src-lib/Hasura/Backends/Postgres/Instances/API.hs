@@ -43,7 +43,8 @@ instance BackendAPI ('Postgres 'Citus) where
         functionPermissionsCommands @('Postgres 'Citus),
         relationshipCommands @('Postgres 'Citus),
         remoteRelationshipCommands @('Postgres 'Citus),
-        connectionTemplateCommands @('Postgres 'Citus)
+        connectionTemplateCommands @('Postgres 'Citus),
+        logicalModelsCommands @('Postgres 'Citus)
       ]
 
 instance BackendAPI ('Postgres 'Cockroach) where

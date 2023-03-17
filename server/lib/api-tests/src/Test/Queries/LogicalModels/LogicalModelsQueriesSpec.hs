@@ -8,6 +8,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Time.Calendar.OrdinalDate
 import Data.Time.Clock
 import Database.PG.Query qualified as PG
+import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
@@ -34,6 +35,11 @@ spec =
           [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
               { Fixture.setupTeardown = \(testEnvironment, _) ->
                   [ Postgres.setupTablesAction schema testEnvironment
+                  ]
+              },
+            (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
+              { Fixture.setupTeardown = \(testEnvironment, _) ->
+                  [ Citus.setupTablesAction schema testEnvironment
                   ]
               }
           ]
@@ -534,6 +540,8 @@ tests opts = do
     it "Uses a column permission that we are allowed to access" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
+          backendType = BackendType.backendTypeString backendTypeMetadata
+          createPermRequestType = backendType <> "_create_logical_model_select_permission"
 
           helloWorldPermLogicalModel :: Schema.LogicalModel
           helloWorldPermLogicalModel =
@@ -553,7 +561,7 @@ tests opts = do
             [yaml|
               type: bulk
               args:
-                - type: pg_create_logical_model_select_permission
+                - type: *createPermRequestType
                   args:
                     source: *source
                     root_field_name: hello_world_perms
@@ -594,6 +602,8 @@ tests opts = do
     it "Fails because we access a column we do not have permissions for" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
+          backendType = BackendType.backendTypeString backendTypeMetadata
+          createPermRequestType = backendType <> "_create_logical_model_select_permission"
 
           helloWorldPermLogicalModel :: Schema.LogicalModel
           helloWorldPermLogicalModel =
@@ -613,7 +623,7 @@ tests opts = do
             [yaml|
               type: bulk
               args:
-                - type: pg_create_logical_model_select_permission
+                - type: *createPermRequestType
                   args:
                     source: *source
                     root_field_name: hello_world_perms
@@ -655,6 +665,8 @@ tests opts = do
     it "Using row permissions filters out some results" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
+          backendType = BackendType.backendTypeString backendTypeMetadata
+          createPermRequestType = backendType <> "_create_logical_model_select_permission"
 
           helloWorldPermLogicalModel :: Schema.LogicalModel
           helloWorldPermLogicalModel =
@@ -674,7 +686,7 @@ tests opts = do
             [yaml|
               type: bulk
               args:
-                - type: pg_create_logical_model_select_permission
+                - type: *createPermRequestType
                   args:
                     source: *source
                     root_field_name: hello_world_perms
