@@ -125,6 +125,7 @@ export const Input = ({
   label,
   className = '',
   rightButton,
+  fieldProps = {},
 }: InputProps) => {
   const showInputEndContainer = clearButton || (iconPosition === 'end' && icon);
 
@@ -174,6 +175,7 @@ export const Input = ({
           onInput={onInput}
           disabled={disabled}
           data-testid={name}
+          {...fieldProps}
         />
         {showInputEndContainer && (
           <div className="absolute inset-y-0 right-0 flex items-center pointer-events-none">

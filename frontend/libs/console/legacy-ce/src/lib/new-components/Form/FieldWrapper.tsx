@@ -15,6 +15,14 @@ export type FieldWrapperPassThroughProps = {
    */
   id?: string;
   /**
+   * The wrapped field props
+   */
+  fieldProps?: Partial<
+    React.InputHTMLAttributes<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  >;
+  /**
    * The field size (full: the full width of the container , medium: half the
    * width of the container)
    */

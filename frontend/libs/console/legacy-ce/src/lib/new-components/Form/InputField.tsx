@@ -88,6 +88,7 @@ export const InputField = <T extends z.infer<Schema>>({
   renderDescriptionLineBreaks = false,
   clearButton,
   inputClassName,
+  fieldProps = {},
   ...wrapperProps
 }: InputFieldProps<T>) => {
   const {
@@ -154,6 +155,7 @@ export const InputField = <T extends z.infer<Schema>>({
         onChange={onInputChangeEvent}
         onClearButtonClick={onClearButtonClick}
         inputProps={regReturn}
+        fieldProps={fieldProps}
       />
     </FieldWrapper>
   );

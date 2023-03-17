@@ -305,6 +305,31 @@ VariantAppendLabel.parameters = {
   },
 };
 
+export const VariantAutocompleteNewPassword: ComponentStory<
+  typeof InputField
+> = () => {
+  const validationSchema = z.object({});
+
+  return (
+    <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
+      <InputField
+        name="inputFieldName"
+        label="New password"
+        placeholder="The new password"
+        type="password"
+        fieldProps={{ autoComplete: 'new-password' }}
+      />
+    </SimpleForm>
+  );
+};
+VariantAutocompleteNewPassword.storyName =
+  '🎭 Variant - Autocomplete new pasword';
+VariantAutocompleteNewPassword.parameters = {
+  docs: {
+    source: { state: 'open' },
+  },
+};
+
 export const StateWithDefaultValue: ComponentStory<typeof InputField> = () => {
   const defaultValues = { inputFieldName: 'value2' };
 
