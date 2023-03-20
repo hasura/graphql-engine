@@ -5,7 +5,7 @@ module Test.DataConnector.MockAgent.RemoteRelationshipsSpec (spec) where
 
 --------------------------------------------------------------------------------
 
-import Control.Lens ((.~), _Just)
+import Control.Lens ((.~), (?~), _Just)
 import Data.Aeson qualified as Aeson
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
@@ -24,6 +24,7 @@ import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
+import Test.DataConnector.MockAgent.TestHelpers
 import Test.Hspec (HasCallStack, SpecWith, describe, it, shouldBe)
 
 --------------------------------------------------------------------------------
@@ -211,27 +212,27 @@ tests _opts = do
             }
           |]
     let queryResponse =
-          mkRowsResponse
-            [ [ ( API.FieldName "query",
+          mkRowsQueryResponse
+            [ [ ( "query",
                   API.mkRelationshipFieldValue $
-                    mkRowsResponse
-                      [ [ (API.FieldName "AlbumId", API.mkColumnFieldValue $ Aeson.Number 1),
-                          (API.FieldName "Title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
+                    mkRowsQueryResponse
+                      [ [ ("AlbumId", API.mkColumnFieldValue $ Aeson.Number 1),
+                          ("Title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
                         ],
-                        [ (API.FieldName "AlbumId", API.mkColumnFieldValue $ Aeson.Number 4),
-                          (API.FieldName "Title", API.mkColumnFieldValue $ Aeson.String "Let There Be Rock")
+                        [ ("AlbumId", API.mkColumnFieldValue $ Aeson.Number 4),
+                          ("Title", API.mkColumnFieldValue $ Aeson.String "Let There Be Rock")
                         ]
                       ]
                 )
               ],
-              [ ( API.FieldName "query",
+              [ ( "query",
                   API.mkRelationshipFieldValue $
-                    mkRowsResponse
-                      [ [ (API.FieldName "AlbumId", API.mkColumnFieldValue $ Aeson.Number 2),
-                          (API.FieldName "Title", API.mkColumnFieldValue $ Aeson.String "Balls to the Wall")
+                    mkRowsQueryResponse
+                      [ [ ("AlbumId", API.mkColumnFieldValue $ Aeson.Number 2),
+                          ("Title", API.mkColumnFieldValue $ Aeson.String "Balls to the Wall")
                         ],
-                        [ (API.FieldName "AlbumId", API.mkColumnFieldValue $ Aeson.Number 3),
-                          (API.FieldName "Title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
+                        [ ("AlbumId", API.mkColumnFieldValue $ Aeson.Number 3),
+                          ("Title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
                         ]
                       ]
                 )
@@ -264,30 +265,20 @@ tests _opts = do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            API.QueryRequest
-              { _qrTable = API.TableName ("Album" :| []),
-                _qrTableRelationships = [],
-                _qrQuery =
-                  API.Query
-                    { _qFields =
-                        Just $
-                          HashMap.fromList
-                            [ (API.FieldName "AlbumId", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
-                              (API.FieldName "Title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
-                            ],
-                      _qAggregates = Nothing,
-                      _qLimit = Nothing,
-                      _qOffset = Nothing,
-                      _qWhere = Nothing,
-                      _qOrderBy = Nothing
-                    },
-                _qrForeach =
-                  Just $
-                    NonEmpty.fromList
-                      [ HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (Aeson.Number 1) (API.ScalarType "number"))],
-                        HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (Aeson.Number 2) (API.ScalarType "number"))]
+            mkQueryRequest
+              (mkTableName "Album")
+              ( emptyQuery
+                  & API.qFields
+                    ?~ mkFieldsMap
+                      [ ("AlbumId", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
+                        ("Title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
                       ]
-              }
+              )
+              & API.qrForeach
+                ?~ NonEmpty.fromList
+                  [ HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (Aeson.Number 1) (API.ScalarType "number"))],
+                    HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (Aeson.Number 2) (API.ScalarType "number"))]
+                  ]
         )
 
   mockAgentGraphqlTest "can act as the target of a remote object relationship" $ \testEnv performGraphqlRequest -> do
@@ -307,30 +298,30 @@ tests _opts = do
             }
           |]
     let queryResponse =
-          mkRowsResponse
-            [ [ ( API.FieldName "query",
+          mkRowsQueryResponse
+            [ [ ( "query",
                   API.mkRelationshipFieldValue $
-                    mkRowsResponse
-                      [ [ (API.FieldName "AlbumId", API.mkColumnFieldValue $ Aeson.Number 3),
-                          (API.FieldName "Title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
+                    mkRowsQueryResponse
+                      [ [ ("AlbumId", API.mkColumnFieldValue $ Aeson.Number 3),
+                          ("Title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
                         ]
                       ]
                 )
               ],
-              [ ( API.FieldName "query",
+              [ ( "query",
                   API.mkRelationshipFieldValue $
-                    mkRowsResponse
-                      [ [ (API.FieldName "AlbumId", API.mkColumnFieldValue $ Aeson.Number 1),
-                          (API.FieldName "Title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
+                    mkRowsQueryResponse
+                      [ [ ("AlbumId", API.mkColumnFieldValue $ Aeson.Number 1),
+                          ("Title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
                         ]
                       ]
                 )
               ],
-              [ ( API.FieldName "query",
+              [ ( "query",
                   API.mkRelationshipFieldValue $
-                    mkRowsResponse
-                      [ [ (API.FieldName "AlbumId", API.mkColumnFieldValue $ Aeson.Number 4),
-                          (API.FieldName "Title", API.mkColumnFieldValue $ Aeson.String "Let There Be Rock")
+                    mkRowsQueryResponse
+                      [ [ ("AlbumId", API.mkColumnFieldValue $ Aeson.Number 4),
+                          ("Title", API.mkColumnFieldValue $ Aeson.String "Let There Be Rock")
                         ]
                       ]
                 )
@@ -364,31 +355,21 @@ tests _opts = do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            API.QueryRequest
-              { _qrTable = API.TableName ("Album" :| []),
-                _qrTableRelationships = [],
-                _qrQuery =
-                  API.Query
-                    { _qFields =
-                        Just $
-                          HashMap.fromList
-                            [ (API.FieldName "AlbumId", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
-                              (API.FieldName "Title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
-                            ],
-                      _qAggregates = Nothing,
-                      _qLimit = Nothing,
-                      _qOffset = Nothing,
-                      _qWhere = Nothing,
-                      _qOrderBy = Nothing
-                    },
-                _qrForeach =
-                  Just $
-                    NonEmpty.fromList
-                      [ HashMap.fromList [(API.ColumnName "AlbumId", API.ScalarValue (Aeson.Number 3) (API.ScalarType "number"))],
-                        HashMap.fromList [(API.ColumnName "AlbumId", API.ScalarValue (Aeson.Number 1) (API.ScalarType "number"))],
-                        HashMap.fromList [(API.ColumnName "AlbumId", API.ScalarValue (Aeson.Number 4) (API.ScalarType "number"))]
+            mkQueryRequest
+              (mkTableName "Album")
+              ( emptyQuery
+                  & API.qFields
+                    ?~ mkFieldsMap
+                      [ ("AlbumId", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
+                        ("Title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
                       ]
-              }
+              )
+              & API.qrForeach
+                ?~ NonEmpty.fromList
+                  [ HashMap.fromList [(API.ColumnName "AlbumId", API.ScalarValue (Aeson.Number 3) (API.ScalarType "number"))],
+                    HashMap.fromList [(API.ColumnName "AlbumId", API.ScalarValue (Aeson.Number 1) (API.ScalarType "number"))],
+                    HashMap.fromList [(API.ColumnName "AlbumId", API.ScalarValue (Aeson.Number 4) (API.ScalarType "number"))]
+                  ]
         )
 
   mockAgentGraphqlTest "can act as the target of an aggregation over a remote array relationship" $ \testEnv performGraphqlRequest -> do
@@ -413,32 +394,32 @@ tests _opts = do
             }
           |]
     let queryResponse =
-          mkRowsResponse
-            [ [ ( API.FieldName "query",
+          mkRowsQueryResponse
+            [ [ ( "query",
                   API.mkRelationshipFieldValue $
                     mkQueryResponse
-                      [ [ (API.FieldName "nodes_AlbumId", API.mkColumnFieldValue $ Aeson.Number 1),
-                          (API.FieldName "nodes_Title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
+                      [ [ ("nodes_AlbumId", API.mkColumnFieldValue $ Aeson.Number 1),
+                          ("nodes_Title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
                         ],
-                        [ (API.FieldName "nodes_AlbumId", API.mkColumnFieldValue $ Aeson.Number 4),
-                          (API.FieldName "nodes_Title", API.mkColumnFieldValue $ Aeson.String "Let There Be Rock")
+                        [ ("nodes_AlbumId", API.mkColumnFieldValue $ Aeson.Number 4),
+                          ("nodes_Title", API.mkColumnFieldValue $ Aeson.String "Let There Be Rock")
                         ]
                       ]
-                      [ (API.FieldName "aggregate_count", Aeson.Number 2)
+                      [ ("aggregate_count", Aeson.Number 2)
                       ]
                 )
               ],
-              [ ( API.FieldName "query",
+              [ ( "query",
                   API.mkRelationshipFieldValue $
                     mkQueryResponse
-                      [ [ (API.FieldName "nodes_AlbumId", API.mkColumnFieldValue $ Aeson.Number 2),
-                          (API.FieldName "nodes_Title", API.mkColumnFieldValue $ Aeson.String "Balls to the Wall")
+                      [ [ ("nodes_AlbumId", API.mkColumnFieldValue $ Aeson.Number 2),
+                          ("nodes_Title", API.mkColumnFieldValue $ Aeson.String "Balls to the Wall")
                         ],
-                        [ (API.FieldName "nodes_AlbumId", API.mkColumnFieldValue $ Aeson.Number 3),
-                          (API.FieldName "nodes_Title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
+                        [ ("nodes_AlbumId", API.mkColumnFieldValue $ Aeson.Number 3),
+                          ("nodes_Title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
                         ]
                       ]
-                      [ (API.FieldName "aggregate_count", Aeson.Number 2)
+                      [ ("aggregate_count", Aeson.Number 2)
                       ]
                 )
               ]
@@ -476,40 +457,22 @@ tests _opts = do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            API.QueryRequest
-              { _qrTable = API.TableName ("Album" :| []),
-                _qrTableRelationships = [],
-                _qrQuery =
-                  API.Query
-                    { _qFields =
-                        Just $
-                          HashMap.fromList
-                            [ (API.FieldName "nodes_AlbumId", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
-                              (API.FieldName "nodes_Title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
-                            ],
-                      _qAggregates =
-                        Just $
-                          HashMap.fromList
-                            [(API.FieldName "aggregate_count", API.StarCount)],
-                      _qLimit = Nothing,
-                      _qOffset = Nothing,
-                      _qWhere = Nothing,
-                      _qOrderBy = Nothing
-                    },
-                _qrForeach =
-                  Just $
-                    NonEmpty.fromList
-                      [ HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (Aeson.Number 1) (API.ScalarType "number"))],
-                        HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (Aeson.Number 2) (API.ScalarType "number"))]
+            mkQueryRequest
+              (mkTableName "Album")
+              ( emptyQuery
+                  & API.qFields
+                    ?~ mkFieldsMap
+                      [ ("nodes_AlbumId", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
+                        ("nodes_Title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
                       ]
-              }
+                  & API.qAggregates ?~ mkFieldsMap [("aggregate_count", API.StarCount)]
+              )
+              & API.qrForeach
+                ?~ NonEmpty.fromList
+                  [ HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (Aeson.Number 1) (API.ScalarType "number"))],
+                    HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (Aeson.Number 2) (API.ScalarType "number"))]
+                  ]
         )
-
-mkRowsResponse :: [[(API.FieldName, API.FieldValue)]] -> API.QueryResponse
-mkRowsResponse rows = API.QueryResponse (Just $ HashMap.fromList <$> rows) Nothing
-
-mkQueryResponse :: [[(API.FieldName, API.FieldValue)]] -> [(API.FieldName, Aeson.Value)] -> API.QueryResponse
-mkQueryResponse rows aggregates = API.QueryResponse (Just $ HashMap.fromList <$> rows) (Just $ HashMap.fromList aggregates)
 
 errorTests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 errorTests opts = do

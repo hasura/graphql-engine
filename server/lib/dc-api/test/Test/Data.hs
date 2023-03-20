@@ -598,7 +598,7 @@ findColumnScalarType API.SchemaResponse {..} tableName columnName =
     columnInfo = find (\API.ColumnInfo {..} -> _ciName == columnName) =<< API._tiColumns <$> tableInfo
 
 emptyQuery :: API.Query
-emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing
+emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 emptyMutationRequest :: API.MutationRequest
 emptyMutationRequest = API.MutationRequest mempty mempty mempty

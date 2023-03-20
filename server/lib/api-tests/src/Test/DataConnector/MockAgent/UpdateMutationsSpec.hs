@@ -3,6 +3,7 @@ module Test.DataConnector.MockAgent.UpdateMutationsSpec
   )
 where
 
+import Control.Lens ((.~), (?~))
 import Data.Aeson qualified as Aeson
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
@@ -18,6 +19,7 @@ import Harness.Yaml
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
+import Test.DataConnector.MockAgent.TestHelpers
 import Test.Hspec
 
 --------------------------------------------------------------------------------
@@ -127,35 +129,35 @@ tests _opts = do
                 { API._morAffectedRows = 3,
                   API._morReturning =
                     Just
-                      [ HashMap.fromList
-                          [ (API.FieldName "updatedRows_TrackId", API.mkColumnFieldValue $ Aeson.Number 3),
-                            (API.FieldName "updatedRows_Name", API.mkColumnFieldValue $ Aeson.String "Another Name"),
-                            ( API.FieldName "updatedRows_Genre",
+                      [ mkFieldsMap
+                          [ ("updatedRows_TrackId", API.mkColumnFieldValue $ Aeson.Number 3),
+                            ("updatedRows_Name", API.mkColumnFieldValue $ Aeson.String "Another Name"),
+                            ( "updatedRows_Genre",
                               API.mkRelationshipFieldValue $
-                                rowsResponse
-                                  [ [ (API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Rock")
+                                mkRowsQueryResponse
+                                  [ [ ("Name", API.mkColumnFieldValue $ Aeson.String "Rock")
                                     ]
                                   ]
                             )
                           ],
-                        HashMap.fromList
-                          [ (API.FieldName "updatedRows_TrackId", API.mkColumnFieldValue $ Aeson.Number 4),
-                            (API.FieldName "updatedRows_Name", API.mkColumnFieldValue $ Aeson.String "Another Name"),
-                            ( API.FieldName "updatedRows_Genre",
+                        mkFieldsMap
+                          [ ("updatedRows_TrackId", API.mkColumnFieldValue $ Aeson.Number 4),
+                            ("updatedRows_Name", API.mkColumnFieldValue $ Aeson.String "Another Name"),
+                            ( "updatedRows_Genre",
                               API.mkRelationshipFieldValue $
-                                rowsResponse
-                                  [ [ (API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Rock")
+                                mkRowsQueryResponse
+                                  [ [ ("Name", API.mkColumnFieldValue $ Aeson.String "Rock")
                                     ]
                                   ]
                             )
                           ],
-                        HashMap.fromList
-                          [ (API.FieldName "updatedRows_TrackId", API.mkColumnFieldValue $ Aeson.Number 5),
-                            (API.FieldName "updatedRows_Name", API.mkColumnFieldValue $ Aeson.String "Another Name"),
-                            ( API.FieldName "updatedRows_Genre",
+                        mkFieldsMap
+                          [ ("updatedRows_TrackId", API.mkColumnFieldValue $ Aeson.Number 5),
+                            ("updatedRows_Name", API.mkColumnFieldValue $ Aeson.String "Another Name"),
+                            ( "updatedRows_Genre",
                               API.mkRelationshipFieldValue $
-                                rowsResponse
-                                  [ [ (API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Rock")
+                                mkRowsQueryResponse
+                                  [ [ ("Name", API.mkColumnFieldValue $ Aeson.String "Rock")
                                     ]
                                   ]
                             )
@@ -188,91 +190,78 @@ tests _opts = do
       |]
 
     let expectedRequest =
-          API.MutationRequest
-            { API._mrTableRelationships =
-                [ API.TableRelationships
-                    { API._trSourceTable = API.TableName ("Track" :| []),
-                      API._trRelationships =
-                        HashMap.fromList
-                          [ ( API.RelationshipName "Genre",
-                              API.Relationship
-                                { API._rTargetTable = API.TableName ("Genre" :| []),
-                                  API._rRelationshipType = API.ObjectRelationship,
-                                  API._rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
-                                }
-                            )
-                          ]
-                    }
-                ],
-              API._mrInsertSchema = [],
-              API._mrOperations =
-                [ API.UpdateOperation $
-                    API.UpdateMutationOperation
-                      { API._umoTable = API.TableName ("Track" :| []),
-                        API._umoUpdates =
-                          [ API.SetColumn $
-                              API.RowColumnOperatorValue
-                                { API._rcovColumn = API.ColumnName "Name",
-                                  API._rcovValue = Aeson.String "Another Name",
-                                  API._rcovValueType = API.ScalarType "string"
-                                },
-                            API.CustomUpdateColumnOperator (API.UpdateColumnOperatorName [G.name|inc|]) $
-                              API.RowColumnOperatorValue
-                                { API._rcovColumn = API.ColumnName "Milliseconds",
-                                  API._rcovValue = Aeson.Number 1000,
-                                  API._rcovValueType = API.ScalarType "number"
-                                },
-                            API.SetColumn $
-                              API.RowColumnOperatorValue
-                                { API._rcovColumn = API.ColumnName "AlbumId",
-                                  API._rcovValue = Aeson.Number 3,
-                                  API._rcovValueType = API.ScalarType "number"
-                                }
-                          ],
-                        API._umoWhere =
-                          Just $
-                            API.And
-                              [ API.ApplyBinaryComparisonOperator
-                                  API.Equal
-                                  (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number")),
-                                API.ApplyBinaryComparisonOperator
-                                  API.Equal
-                                  (API.ComparisonColumn API.CurrentTable (API.ColumnName "GenreId") $ API.ScalarType "number")
-                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 1) (API.ScalarType "number"))
-                              ],
-                        API._umoPostUpdateCheck =
-                          Just $
-                            API.ApplyBinaryComparisonOperator
-                              API.GreaterThan
-                              (API.ComparisonColumn API.CurrentTable (API.ColumnName "UnitPrice") $ API.ScalarType "number")
-                              (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 0) (API.ScalarType "number")),
-                        API._umoReturningFields =
-                          HashMap.fromList
-                            [ (API.FieldName "updatedRows_TrackId", API.ColumnField (API.ColumnName "TrackId") (API.ScalarType "number")),
-                              (API.FieldName "updatedRows_Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string")),
-                              ( API.FieldName "updatedRows_Genre",
-                                API.RelField
-                                  ( API.RelationshipField
-                                      (API.RelationshipName "Genre")
-                                      API.Query
-                                        { _qFields =
-                                            Just $
-                                              HashMap.fromList
-                                                [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")
-                                                ],
-                                          _qAggregates = Nothing,
-                                          _qLimit = Nothing,
-                                          _qOffset = Nothing,
-                                          _qWhere = Nothing,
-                                          _qOrderBy = Nothing
-                                        }
-                                  )
-                              )
-                            ]
-                      }
-                ]
-            }
+          emptyMutationRequest
+            & API.mrTableRelationships
+              .~ [ API.TableRelationships
+                     { API._trSourceTable = mkTableName "Track",
+                       API._trRelationships =
+                         HashMap.fromList
+                           [ ( API.RelationshipName "Genre",
+                               API.Relationship
+                                 { API._rTargetTable = mkTableName "Genre",
+                                   API._rRelationshipType = API.ObjectRelationship,
+                                   API._rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
+                                 }
+                             )
+                           ]
+                     }
+                 ]
+            & API.mrOperations
+              .~ [ API.UpdateOperation $
+                     API.UpdateMutationOperation
+                       { API._umoTable = mkTableName "Track",
+                         API._umoUpdates =
+                           [ API.SetColumn $
+                               API.RowColumnOperatorValue
+                                 { API._rcovColumn = API.ColumnName "Name",
+                                   API._rcovValue = Aeson.String "Another Name",
+                                   API._rcovValueType = API.ScalarType "string"
+                                 },
+                             API.CustomUpdateColumnOperator (API.UpdateColumnOperatorName [G.name|inc|]) $
+                               API.RowColumnOperatorValue
+                                 { API._rcovColumn = API.ColumnName "Milliseconds",
+                                   API._rcovValue = Aeson.Number 1000,
+                                   API._rcovValueType = API.ScalarType "number"
+                                 },
+                             API.SetColumn $
+                               API.RowColumnOperatorValue
+                                 { API._rcovColumn = API.ColumnName "AlbumId",
+                                   API._rcovValue = Aeson.Number 3,
+                                   API._rcovValueType = API.ScalarType "number"
+                                 }
+                           ],
+                         API._umoWhere =
+                           Just $
+                             API.And
+                               [ API.ApplyBinaryComparisonOperator
+                                   API.Equal
+                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
+                                   (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number")),
+                                 API.ApplyBinaryComparisonOperator
+                                   API.Equal
+                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "GenreId") $ API.ScalarType "number")
+                                   (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 1) (API.ScalarType "number"))
+                               ],
+                         API._umoPostUpdateCheck =
+                           Just $
+                             API.ApplyBinaryComparisonOperator
+                               API.GreaterThan
+                               (API.ComparisonColumn API.CurrentTable (API.ColumnName "UnitPrice") $ API.ScalarType "number")
+                               (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 0) (API.ScalarType "number")),
+                         API._umoReturningFields =
+                           mkFieldsMap
+                             [ ("updatedRows_TrackId", API.ColumnField (API.ColumnName "TrackId") (API.ScalarType "number")),
+                               ("updatedRows_Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string")),
+                               ( "updatedRows_Genre",
+                                 API.RelField
+                                   ( API.RelationshipField
+                                       (API.RelationshipName "Genre")
+                                       (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")])
+                                   )
+                               )
+                             ]
+                       }
+                 ]
     _mrrRecordedRequest `shouldBe` Just (Mutation expectedRequest)
 
   mockAgentGraphqlTest "update_many rows with update permissions" $ \_testEnv performGraphqlRequest -> do
@@ -301,13 +290,13 @@ tests _opts = do
                 { API._morAffectedRows = 1,
                   API._morReturning =
                     Just
-                      [ HashMap.fromList
-                          [ (API.FieldName "updatedRows_TrackId", API.mkColumnFieldValue $ Aeson.Number 3),
-                            (API.FieldName "updatedRows_Name", API.mkColumnFieldValue $ Aeson.String "Another Name"),
-                            ( API.FieldName "updatedRows_Genre",
+                      [ mkFieldsMap
+                          [ ("updatedRows_TrackId", API.mkColumnFieldValue $ Aeson.Number 3),
+                            ("updatedRows_Name", API.mkColumnFieldValue $ Aeson.String "Another Name"),
+                            ( "updatedRows_Genre",
                               API.mkRelationshipFieldValue $
-                                rowsResponse
-                                  [ [ (API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Rock")
+                                mkRowsQueryResponse
+                                  [ [ ("Name", API.mkColumnFieldValue $ Aeson.String "Rock")
                                     ]
                                   ]
                             )
@@ -318,24 +307,24 @@ tests _opts = do
                 { API._morAffectedRows = 2,
                   API._morReturning =
                     Just
-                      [ HashMap.fromList
-                          [ (API.FieldName "updatedRows_TrackId", API.mkColumnFieldValue $ Aeson.Number 4),
-                            (API.FieldName "updatedRows_Name", API.mkColumnFieldValue $ Aeson.String "Better Name"),
-                            ( API.FieldName "updatedRows_Genre",
+                      [ mkFieldsMap
+                          [ ("updatedRows_TrackId", API.mkColumnFieldValue $ Aeson.Number 4),
+                            ("updatedRows_Name", API.mkColumnFieldValue $ Aeson.String "Better Name"),
+                            ( "updatedRows_Genre",
                               API.mkRelationshipFieldValue $
-                                rowsResponse
-                                  [ [ (API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Rock")
+                                mkRowsQueryResponse
+                                  [ [ ("Name", API.mkColumnFieldValue $ Aeson.String "Rock")
                                     ]
                                   ]
                             )
                           ],
-                        HashMap.fromList
-                          [ (API.FieldName "updatedRows_TrackId", API.mkColumnFieldValue $ Aeson.Number 5),
-                            (API.FieldName "updatedRows_Name", API.mkColumnFieldValue $ Aeson.String "Better Name"),
-                            ( API.FieldName "updatedRows_Genre",
+                        mkFieldsMap
+                          [ ("updatedRows_TrackId", API.mkColumnFieldValue $ Aeson.Number 5),
+                            ("updatedRows_Name", API.mkColumnFieldValue $ Aeson.String "Better Name"),
+                            ( "updatedRows_Genre",
                               API.mkRelationshipFieldValue $
-                                rowsResponse
-                                  [ [ (API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Rock")
+                                mkRowsQueryResponse
+                                  [ [ ("Name", API.mkColumnFieldValue $ Aeson.String "Rock")
                                     ]
                                   ]
                             )
@@ -376,126 +365,110 @@ tests _opts = do
               (API.ComparisonColumn API.CurrentTable (API.ColumnName "UnitPrice") $ API.ScalarType "number")
               (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 0) (API.ScalarType "number"))
     let sharedReturning =
-          HashMap.fromList
-            [ (API.FieldName "updatedRows_TrackId", API.ColumnField (API.ColumnName "TrackId") (API.ScalarType "number")),
-              (API.FieldName "updatedRows_Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string")),
-              ( API.FieldName "updatedRows_Genre",
+          mkFieldsMap
+            [ ("updatedRows_TrackId", API.ColumnField (API.ColumnName "TrackId") (API.ScalarType "number")),
+              ("updatedRows_Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string")),
+              ( "updatedRows_Genre",
                 API.RelField
                   ( API.RelationshipField
                       (API.RelationshipName "Genre")
-                      API.Query
-                        { _qFields =
-                            Just $
-                              HashMap.fromList
-                                [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")
-                                ],
-                          _qAggregates = Nothing,
-                          _qLimit = Nothing,
-                          _qOffset = Nothing,
-                          _qWhere = Nothing,
-                          _qOrderBy = Nothing
-                        }
+                      (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")])
                   )
               )
             ]
     let expectedRequest =
-          API.MutationRequest
-            { API._mrTableRelationships =
-                [ API.TableRelationships
-                    { API._trSourceTable = API.TableName ("Track" :| []),
-                      API._trRelationships =
-                        HashMap.fromList
-                          [ ( API.RelationshipName "Genre",
-                              API.Relationship
-                                { API._rTargetTable = API.TableName ("Genre" :| []),
-                                  API._rRelationshipType = API.ObjectRelationship,
-                                  API._rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
-                                }
-                            )
-                          ]
-                    }
-                ],
-              API._mrInsertSchema = [],
-              API._mrOperations =
-                [ API.UpdateOperation $
-                    API.UpdateMutationOperation
-                      { API._umoTable = API.TableName ("Track" :| []),
-                        API._umoUpdates =
-                          [ API.SetColumn $
-                              API.RowColumnOperatorValue
-                                { API._rcovColumn = API.ColumnName "Name",
-                                  API._rcovValue = Aeson.String "Another Name",
-                                  API._rcovValueType = API.ScalarType "string"
-                                },
-                            API.CustomUpdateColumnOperator (API.UpdateColumnOperatorName [G.name|inc|]) $
-                              API.RowColumnOperatorValue
-                                { API._rcovColumn = API.ColumnName "Milliseconds",
-                                  API._rcovValue = Aeson.Number 1000,
-                                  API._rcovValueType = API.ScalarType "number"
-                                },
-                            API.SetColumn $
-                              API.RowColumnOperatorValue
-                                { API._rcovColumn = API.ColumnName "AlbumId",
-                                  API._rcovValue = Aeson.Number 3,
-                                  API._rcovValueType = API.ScalarType "number"
-                                }
-                          ],
-                        API._umoWhere =
-                          Just $
-                            API.And
-                              [ API.ApplyBinaryComparisonOperator
-                                  API.Equal
-                                  (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number")),
-                                API.ApplyBinaryComparisonOperator
-                                  API.Equal
-                                  (API.ComparisonColumn API.CurrentTable (API.ColumnName "TrackId") $ API.ScalarType "number")
-                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number"))
-                              ],
-                        API._umoPostUpdateCheck = sharedPostUpdateCheck,
-                        API._umoReturningFields = sharedReturning
-                      },
-                  API.UpdateOperation $
-                    API.UpdateMutationOperation
-                      { API._umoTable = API.TableName ("Track" :| []),
-                        API._umoUpdates =
-                          [ API.SetColumn $
-                              API.RowColumnOperatorValue
-                                { API._rcovColumn = API.ColumnName "Name",
-                                  API._rcovValue = Aeson.String "Better Name",
-                                  API._rcovValueType = API.ScalarType "string"
-                                },
-                            API.CustomUpdateColumnOperator (API.UpdateColumnOperatorName [G.name|inc|]) $
-                              API.RowColumnOperatorValue
-                                { API._rcovColumn = API.ColumnName "UnitPrice",
-                                  API._rcovValue = Aeson.Number 1,
-                                  API._rcovValueType = API.ScalarType "number"
-                                },
-                            API.SetColumn $
-                              API.RowColumnOperatorValue
-                                { API._rcovColumn = API.ColumnName "AlbumId",
-                                  API._rcovValue = Aeson.Number 3,
-                                  API._rcovValueType = API.ScalarType "number"
-                                }
-                          ],
-                        API._umoWhere =
-                          Just $
-                            API.And
-                              [ API.ApplyBinaryComparisonOperator
-                                  API.Equal
-                                  (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number")),
-                                API.ApplyBinaryComparisonOperator
-                                  API.GreaterThan
-                                  (API.ComparisonColumn API.CurrentTable (API.ColumnName "TrackId") $ API.ScalarType "number")
-                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number"))
-                              ],
-                        API._umoPostUpdateCheck = sharedPostUpdateCheck,
-                        API._umoReturningFields = sharedReturning
-                      }
-                ]
-            }
+          emptyMutationRequest
+            & API.mrTableRelationships
+              .~ [ API.TableRelationships
+                     { API._trSourceTable = mkTableName "Track",
+                       API._trRelationships =
+                         HashMap.fromList
+                           [ ( API.RelationshipName "Genre",
+                               API.Relationship
+                                 { API._rTargetTable = mkTableName "Genre",
+                                   API._rRelationshipType = API.ObjectRelationship,
+                                   API._rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
+                                 }
+                             )
+                           ]
+                     }
+                 ]
+            & API.mrOperations
+              .~ [ API.UpdateOperation $
+                     API.UpdateMutationOperation
+                       { API._umoTable = mkTableName "Track",
+                         API._umoUpdates =
+                           [ API.SetColumn $
+                               API.RowColumnOperatorValue
+                                 { API._rcovColumn = API.ColumnName "Name",
+                                   API._rcovValue = Aeson.String "Another Name",
+                                   API._rcovValueType = API.ScalarType "string"
+                                 },
+                             API.CustomUpdateColumnOperator (API.UpdateColumnOperatorName [G.name|inc|]) $
+                               API.RowColumnOperatorValue
+                                 { API._rcovColumn = API.ColumnName "Milliseconds",
+                                   API._rcovValue = Aeson.Number 1000,
+                                   API._rcovValueType = API.ScalarType "number"
+                                 },
+                             API.SetColumn $
+                               API.RowColumnOperatorValue
+                                 { API._rcovColumn = API.ColumnName "AlbumId",
+                                   API._rcovValue = Aeson.Number 3,
+                                   API._rcovValueType = API.ScalarType "number"
+                                 }
+                           ],
+                         API._umoWhere =
+                           Just $
+                             API.And
+                               [ API.ApplyBinaryComparisonOperator
+                                   API.Equal
+                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
+                                   (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number")),
+                                 API.ApplyBinaryComparisonOperator
+                                   API.Equal
+                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "TrackId") $ API.ScalarType "number")
+                                   (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number"))
+                               ],
+                         API._umoPostUpdateCheck = sharedPostUpdateCheck,
+                         API._umoReturningFields = sharedReturning
+                       },
+                   API.UpdateOperation $
+                     API.UpdateMutationOperation
+                       { API._umoTable = mkTableName "Track",
+                         API._umoUpdates =
+                           [ API.SetColumn $
+                               API.RowColumnOperatorValue
+                                 { API._rcovColumn = API.ColumnName "Name",
+                                   API._rcovValue = Aeson.String "Better Name",
+                                   API._rcovValueType = API.ScalarType "string"
+                                 },
+                             API.CustomUpdateColumnOperator (API.UpdateColumnOperatorName [G.name|inc|]) $
+                               API.RowColumnOperatorValue
+                                 { API._rcovColumn = API.ColumnName "UnitPrice",
+                                   API._rcovValue = Aeson.Number 1,
+                                   API._rcovValueType = API.ScalarType "number"
+                                 },
+                             API.SetColumn $
+                               API.RowColumnOperatorValue
+                                 { API._rcovColumn = API.ColumnName "AlbumId",
+                                   API._rcovValue = Aeson.Number 3,
+                                   API._rcovValueType = API.ScalarType "number"
+                                 }
+                           ],
+                         API._umoWhere =
+                           Just $
+                             API.And
+                               [ API.ApplyBinaryComparisonOperator
+                                   API.Equal
+                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
+                                   (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number")),
+                                 API.ApplyBinaryComparisonOperator
+                                   API.GreaterThan
+                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "TrackId") $ API.ScalarType "number")
+                                   (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number"))
+                               ],
+                         API._umoPostUpdateCheck = sharedPostUpdateCheck,
+                         API._umoReturningFields = sharedReturning
+                       }
+                 ]
     _mrrRecordedRequest `shouldBe` Just (Mutation expectedRequest)
-
-rowsResponse :: [[(API.FieldName, API.FieldValue)]] -> API.QueryResponse
-rowsResponse rows = API.QueryResponse (Just $ HashMap.fromList <$> rows) Nothing

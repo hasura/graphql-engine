@@ -11,6 +11,7 @@ module Hasura.Backends.DataConnector.API.V0.Query
     Query (..),
     qFields,
     qAggregates,
+    qAggregatesLimit,
     qLimit,
     qOffset,
     qWhere,
@@ -92,9 +93,14 @@ data Query = Query
     _qFields :: Maybe (HashMap FieldName Field),
     -- | Map of aggregate field name to Aggregate definition
     _qAggregates :: Maybe (HashMap FieldName API.V0.Aggregate),
-    -- | Optionally limit to N results.
+    -- | Optionally limit the maximum number of rows considered while applying
+    -- aggregations. This limit does not apply to returned rows.
+    _qAggregatesLimit :: Maybe Int,
+    -- | Optionally limit the maximum number of returned rows. This limit does not
+    -- apply to records considered while apply aggregations.
     _qLimit :: Maybe Int,
-    -- | Optionally offset from the Nth result.
+    -- | Optionally offset from the Nth result. This applies to both row
+    -- and aggregation results.
     _qOffset :: Maybe Int,
     -- | Optionally constrain the results to satisfy some predicate.
     _qWhere :: Maybe API.V0.Expression,
@@ -112,9 +118,11 @@ instance HasCodec Query where
           .= _qFields
         <*> optionalFieldOrNull "aggregates" "Aggregate fields of the query"
           .= _qAggregates
-        <*> optionalFieldOrNull "limit" "Optionally limit to N results"
+        <*> optionalFieldOrNull "aggregates_limit" "Optionally limit the maximum number of rows considered while applying aggregations. This limit does not apply to returned rows."
+          .= _qAggregatesLimit
+        <*> optionalFieldOrNull "limit" "Optionally limit the maximum number of returned rows. This limit does not apply to records considered while apply aggregations."
           .= _qLimit
-        <*> optionalFieldOrNull "offset" "Optionally offset from the Nth result"
+        <*> optionalFieldOrNull "offset" "Optionally offset from the Nth result. This applies to both row and aggregation results."
           .= _qOffset
         <*> optionalFieldOrNull "where" "Optionally constrain the results to satisfy some predicate"
           .= _qWhere

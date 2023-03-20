@@ -5,8 +5,8 @@ module Test.DataConnector.MockAgent.TransformedConfigurationSpec (spec) where
 
 --------------------------------------------------------------------------------
 
+import Control.Lens ((?~))
 import Data.Aeson qualified as Aeson
-import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
@@ -18,6 +18,7 @@ import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldBeYaml)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
+import Test.DataConnector.MockAgent.TestHelpers
 import Test.Hspec (SpecWith, describe, shouldBe)
 
 --------------------------------------------------------------------------------
@@ -113,9 +114,9 @@ tests _opts = describe "Transformed Configuration Tests" $ do
             }
           |]
     let queryResponse =
-          rowsResponse
-            [ [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 1),
-                (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
+          mkRowsQueryResponse
+            [ [ ("id", API.mkColumnFieldValue $ Aeson.Number 1),
+                ("title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
               ]
             ]
     let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
@@ -133,25 +134,16 @@ tests _opts = describe "Transformed Configuration Tests" $ do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            API.QueryRequest
-              { _qrTable = API.TableName ("Album" :| []),
-                _qrTableRelationships = [],
-                _qrQuery =
-                  API.Query
-                    { _qFields =
-                        Just $
-                          HashMap.fromList
-                            [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
-                              (API.FieldName "title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
-                            ],
-                      _qAggregates = Nothing,
-                      _qLimit = Just 1,
-                      _qOffset = Nothing,
-                      _qWhere = Nothing,
-                      _qOrderBy = Nothing
-                    },
-                _qrForeach = Nothing
-              }
+            mkQueryRequest
+              (mkTableName "Album")
+              ( emptyQuery
+                  & API.qFields
+                    ?~ mkFieldsMap
+                      [ ("id", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
+                        ("title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
+                      ]
+                  & API.qLimit ?~ 1
+              )
         )
 
     Aeson.toJSON _mrrRecordedRequestConfig
@@ -161,6 +153,3 @@ tests _opts = describe "Transformed Configuration Tests" $ do
             env: "bar env default"
             session: "foo session default"
         |]
-
-rowsResponse :: [[(API.FieldName, API.FieldValue)]] -> API.QueryResponse
-rowsResponse rows = API.QueryResponse (Just $ HashMap.fromList <$> rows) Nothing

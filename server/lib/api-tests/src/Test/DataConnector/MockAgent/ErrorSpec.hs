@@ -6,8 +6,8 @@ module Test.DataConnector.MockAgent.ErrorSpec (spec) where
 
 --------------------------------------------------------------------------------
 
+import Control.Lens ((?~))
 import Data.Aeson qualified as Aeson
-import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest)
 import Harness.Backend.DataConnector.Mock qualified as Mock
@@ -19,6 +19,7 @@ import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldBeYaml)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
+import Test.DataConnector.MockAgent.TestHelpers
 import Test.Hspec (SpecWith, describe, shouldBe)
 
 --------------------------------------------------------------------------------
@@ -92,23 +93,14 @@ tests _opts = describe "Error Protocol Tests" $ do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            API.QueryRequest
-              { _qrTable = API.TableName ("Album" :| []),
-                _qrTableRelationships = [],
-                _qrQuery =
-                  API.Query
-                    { _qFields =
-                        Just $
-                          HashMap.fromList
-                            [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
-                              (API.FieldName "title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
-                            ],
-                      _qAggregates = Nothing,
-                      _qLimit = Just 1,
-                      _qOffset = Nothing,
-                      _qWhere = Nothing,
-                      _qOrderBy = Nothing
-                    },
-                _qrForeach = Nothing
-              }
+            mkQueryRequest
+              (mkTableName "Album")
+              ( emptyQuery
+                  & API.qFields
+                    ?~ mkFieldsMap
+                      [ ("id", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
+                        ("title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
+                      ]
+                  & API.qLimit ?~ 1
+              )
         )

@@ -41,7 +41,7 @@ spec = do
           }
         |]
     describe "RelationshipField" $ do
-      let query = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing
+      let query = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing Nothing
       testToFromJSONToSchema
         (RelField $ RelationshipField (RelationshipName "a_relationship") query)
         [aesonQQ|
@@ -57,6 +57,7 @@ spec = do
           Query
             { _qFields = Just $ HashMap.fromList [(FieldName "my_field_alias", ColumnField (ColumnName "my_field_name") (ScalarType "string"))],
               _qAggregates = Just $ HashMap.fromList [(FieldName "my_aggregate", StarCount)],
+              _qAggregatesLimit = Just 5,
               _qLimit = Just 10,
               _qOffset = Just 20,
               _qWhere = Just $ And [],
@@ -67,6 +68,7 @@ spec = do
       [aesonQQ|
         { "fields": {"my_field_alias": {"type": "column", "column": "my_field_name", "column_type": "string"}},
           "aggregates": { "my_aggregate": { "type": "star_count" } },
+          "aggregates_limit": 5,
           "limit": 10,
           "offset": 20,
           "where": {"type": "and", "expressions": []},
@@ -91,7 +93,7 @@ spec = do
           QueryRequest
             { _qrTable = TableName ["my_table"],
               _qrTableRelationships = [],
-              _qrQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing,
+              _qrQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing Nothing,
               _qrForeach = Just (HashMap.fromList [(ColumnName "my_id", ScalarValue (J.Number 666) (ScalarType "number"))] :| [])
             }
     testToFromJSONToSchema
@@ -179,6 +181,7 @@ genQuery =
   Query
     <$> Gen.maybe (genFieldMap genField)
     <*> Gen.maybe (genFieldMap genAggregate)
+    <*> Gen.maybe (Gen.int defaultRange)
     <*> Gen.maybe (Gen.int defaultRange)
     <*> Gen.maybe (Gen.int defaultRange)
     <*> Gen.maybe genExpression

@@ -578,12 +578,22 @@ export const queryData = (getTable: (tableName: TableName) => Record<string, Raw
 
     const filteredRows = filterIterable(rows, makeFilterPredicate(query.where ?? null, getComparisonColumnValue, performExistsSubquery));
     const sortedRows = query.order_by ? sortRows(Array.from(filteredRows), query.order_by, getOrderByElementValue) : filteredRows;
-    const paginatedRows = Array.from(paginateRows(sortedRows, query.offset ?? null, query.limit ?? null));
+
+    // Get the smallest set of rows required _for both_ row results and aggregation result
+    const aggregatesLimit = query.aggregates_limit ?? null;
+    const rowLimit = query.limit ?? null;
+    const largestLimit = aggregatesLimit !== null && rowLimit !== null ? Math.max(aggregatesLimit, rowLimit) : null;
+    const largestPageOfRows = Array.from(paginateRows(sortedRows, query.offset ?? null, largestLimit));
+
+    // Limit the set of input rows to appropriate size for row results and aggregation results
+    const paginatedRows = rowLimit != null ? largestPageOfRows.slice(0, rowLimit) : largestPageOfRows;
+    const paginatedRowsForAggregation = aggregatesLimit != null ? largestPageOfRows.slice(0, aggregatesLimit) : largestPageOfRows;
+
     const projectedRows = query.fields
       ? paginatedRows.map(projectRow(query.fields, findRelationship, performNewQuery))
       : null;
     const calculatedAggregates = query.aggregates
-      ? calculateAggregates(paginatedRows, query.aggregates)
+      ? calculateAggregates(paginatedRowsForAggregation, query.aggregates)
       : null;
     return {
       aggregates: calculatedAggregates,

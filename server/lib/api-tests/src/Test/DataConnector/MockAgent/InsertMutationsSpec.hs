@@ -3,6 +3,7 @@ module Test.DataConnector.MockAgent.InsertMutationsSpec
   )
 where
 
+import Control.Lens ((.~), (?~))
 import Data.Aeson qualified as Aeson
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
@@ -17,6 +18,7 @@ import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
+import Test.DataConnector.MockAgent.TestHelpers
 import Test.Hspec
 
 --------------------------------------------------------------------------------
@@ -116,26 +118,26 @@ tests _opts = do
                 { API._morAffectedRows = 2,
                   API._morReturning =
                     Just
-                      [ HashMap.fromList
-                          [ (API.FieldName "insertedRows_AlbumId", API.mkColumnFieldValue $ Aeson.Number 9001),
-                            (API.FieldName "insertedRows_Title", API.mkColumnFieldValue $ Aeson.String "Super Mega Rock"),
-                            ( API.FieldName "insertedRows_Artist",
+                      [ mkFieldsMap
+                          [ ("insertedRows_AlbumId", API.mkColumnFieldValue $ Aeson.Number 9001),
+                            ("insertedRows_Title", API.mkColumnFieldValue $ Aeson.String "Super Mega Rock"),
+                            ( "insertedRows_Artist",
                               API.mkRelationshipFieldValue $
-                                rowsResponse
-                                  [ [ (API.FieldName "ArtistId", API.mkColumnFieldValue $ Aeson.Number 2),
-                                      (API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Accept")
+                                mkRowsQueryResponse
+                                  [ [ ("ArtistId", API.mkColumnFieldValue $ Aeson.Number 2),
+                                      ("Name", API.mkColumnFieldValue $ Aeson.String "Accept")
                                     ]
                                   ]
                             )
                           ],
-                        HashMap.fromList
-                          [ (API.FieldName "insertedRows_AlbumId", API.mkColumnFieldValue $ Aeson.Number 9002),
-                            (API.FieldName "insertedRows_Title", API.mkColumnFieldValue $ Aeson.String "Accept This"),
-                            ( API.FieldName "insertedRows_Artist",
+                        mkFieldsMap
+                          [ ("insertedRows_AlbumId", API.mkColumnFieldValue $ Aeson.Number 9002),
+                            ("insertedRows_Title", API.mkColumnFieldValue $ Aeson.String "Accept This"),
+                            ( "insertedRows_Artist",
                               API.mkRelationshipFieldValue $
-                                rowsResponse
-                                  [ [ (API.FieldName "ArtistId", API.mkColumnFieldValue $ Aeson.Number 2),
-                                      (API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Accept")
+                                mkRowsQueryResponse
+                                  [ [ ("ArtistId", API.mkColumnFieldValue $ Aeson.Number 2),
+                                      ("Name", API.mkColumnFieldValue $ Aeson.String "Accept")
                                     ]
                                   ]
                             )
@@ -166,85 +168,75 @@ tests _opts = do
       |]
 
     let expectedRequest =
-          API.MutationRequest
-            { API._mrTableRelationships =
-                [ API.TableRelationships
-                    { API._trSourceTable = API.TableName ("Album" :| []),
-                      API._trRelationships =
-                        HashMap.fromList
-                          [ ( API.RelationshipName "Artist",
-                              API.Relationship
-                                { API._rTargetTable = API.TableName ("Artist" :| []),
-                                  API._rRelationshipType = API.ObjectRelationship,
-                                  API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-                                }
-                            )
-                          ]
-                    }
-                ],
-              API._mrInsertSchema =
-                [ API.TableInsertSchema
-                    { API._tisTable = API.TableName ("Album" :| []),
-                      API._tisFields =
-                        HashMap.fromList
-                          [ (API.FieldName "AlbumId", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "AlbumId") (API.ScalarType "number")),
-                            (API.FieldName "ArtistId", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "ArtistId") (API.ScalarType "number")),
-                            (API.FieldName "Title", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "Title") (API.ScalarType "string"))
-                          ]
-                    }
-                ],
-              API._mrOperations =
-                [ API.InsertOperation $
-                    API.InsertMutationOperation
-                      { API._imoTable = API.TableName ("Album" :| []),
-                        API._imoRows =
-                          [ API.RowObject $
-                              HashMap.fromList
-                                [ (API.FieldName "AlbumId", API.mkColumnInsertFieldValue $ Aeson.Number 9001),
-                                  (API.FieldName "ArtistId", API.mkColumnInsertFieldValue $ Aeson.Number 2),
-                                  (API.FieldName "Title", API.mkColumnInsertFieldValue $ Aeson.String "Super Mega Rock")
-                                ],
-                            API.RowObject $
-                              HashMap.fromList
-                                [ (API.FieldName "AlbumId", API.mkColumnInsertFieldValue $ Aeson.Number 9002),
-                                  (API.FieldName "ArtistId", API.mkColumnInsertFieldValue $ Aeson.Number 2),
-                                  (API.FieldName "Title", API.mkColumnInsertFieldValue $ Aeson.String "Accept This")
-                                ]
-                          ],
-                        API._imoPostInsertCheck =
-                          Just $
-                            API.ApplyBinaryComparisonOperator
-                              API.Equal
-                              (API.ComparisonColumn API.CurrentTable (API.ColumnName "ArtistId") $ API.ScalarType "number")
-                              (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 2) (API.ScalarType "number")),
-                        API._imoReturningFields =
-                          HashMap.fromList
-                            [ (API.FieldName "insertedRows_AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),
-                              (API.FieldName "insertedRows_Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string")),
-                              ( API.FieldName "insertedRows_Artist",
-                                API.RelField
-                                  ( API.RelationshipField
-                                      (API.RelationshipName "Artist")
-                                      API.Query
-                                        { _qFields =
-                                            Just $
-                                              HashMap.fromList
-                                                [ (API.FieldName "ArtistId", API.ColumnField (API.ColumnName "ArtistId") $ API.ScalarType "number"),
-                                                  (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")
-                                                ],
-                                          _qAggregates = Nothing,
-                                          _qLimit = Nothing,
-                                          _qOffset = Nothing,
-                                          _qWhere = Nothing,
-                                          _qOrderBy = Nothing
-                                        }
-                                  )
-                              )
-                            ]
-                      }
-                ]
-            }
+          emptyMutationRequest
+            & API.mrTableRelationships
+              .~ [ API.TableRelationships
+                     { API._trSourceTable = mkTableName "Album",
+                       API._trRelationships =
+                         HashMap.fromList
+                           [ ( API.RelationshipName "Artist",
+                               API.Relationship
+                                 { API._rTargetTable = mkTableName "Artist",
+                                   API._rRelationshipType = API.ObjectRelationship,
+                                   API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                 }
+                             )
+                           ]
+                     }
+                 ]
+            & API.mrInsertSchema
+              .~ [ API.TableInsertSchema
+                     { API._tisTable = mkTableName "Album",
+                       API._tisFields =
+                         mkFieldsMap
+                           [ ("AlbumId", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "AlbumId") (API.ScalarType "number")),
+                             ("ArtistId", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "ArtistId") (API.ScalarType "number")),
+                             ("Title", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "Title") (API.ScalarType "string"))
+                           ]
+                     }
+                 ]
+            & API.mrOperations
+              .~ [ API.InsertOperation $
+                     API.InsertMutationOperation
+                       { API._imoTable = mkTableName "Album",
+                         API._imoRows =
+                           [ API.RowObject $
+                               mkFieldsMap
+                                 [ ("AlbumId", API.mkColumnInsertFieldValue $ Aeson.Number 9001),
+                                   ("ArtistId", API.mkColumnInsertFieldValue $ Aeson.Number 2),
+                                   ("Title", API.mkColumnInsertFieldValue $ Aeson.String "Super Mega Rock")
+                                 ],
+                             API.RowObject $
+                               mkFieldsMap
+                                 [ ("AlbumId", API.mkColumnInsertFieldValue $ Aeson.Number 9002),
+                                   ("ArtistId", API.mkColumnInsertFieldValue $ Aeson.Number 2),
+                                   ("Title", API.mkColumnInsertFieldValue $ Aeson.String "Accept This")
+                                 ]
+                           ],
+                         API._imoPostInsertCheck =
+                           Just $
+                             API.ApplyBinaryComparisonOperator
+                               API.Equal
+                               (API.ComparisonColumn API.CurrentTable (API.ColumnName "ArtistId") $ API.ScalarType "number")
+                               (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 2) (API.ScalarType "number")),
+                         API._imoReturningFields =
+                           mkFieldsMap
+                             [ ("insertedRows_AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),
+                               ("insertedRows_Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string")),
+                               ( "insertedRows_Artist",
+                                 API.RelField
+                                   ( API.RelationshipField
+                                       (API.RelationshipName "Artist")
+                                       ( emptyQuery
+                                           & API.qFields
+                                             ?~ mkFieldsMap
+                                               [ ("ArtistId", API.ColumnField (API.ColumnName "ArtistId") $ API.ScalarType "number"),
+                                                 ("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")
+                                               ]
+                                       )
+                                   )
+                               )
+                             ]
+                       }
+                 ]
     _mrrRecordedRequest `shouldBe` Just (Mutation expectedRequest)
-
-rowsResponse :: [[(API.FieldName, API.FieldValue)]] -> API.QueryResponse
-rowsResponse rows = API.QueryResponse (Just $ HashMap.fromList <$> rows) Nothing

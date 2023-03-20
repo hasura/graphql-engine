@@ -473,7 +473,125 @@ The rows returned by the query must be put into the `rows` property array in the
 
 #### Pagination
 
-If the GraphQL query contains pagination information, then the `limit` and `offset` fields may be set to integer values, indicating the number of rows to return, and the index of the first row to return, respectively.
+There are three properties that are used to control pagination of queried data:
+
+* `aggregates_limit`: The maximum number of rows to consider in aggregations calculated and returned in the `aggregrates` property. `aggregates_limit` does not influence the rows returned in the `rows` property. It will only be used if there are aggregates in the query.
+* `limit`: The maximum number of rows to return from a query in the `rows` property. `limit` does not influence the rows considered by aggregations.
+* `offset`: The index of the first row to return. This affects the rows returned, and also the rows considered by aggregations.
+
+`limit` and `aggregates_limit` are set when the user uses a `limit` parameter in their GraphQL query. This restricts the dataset considered when returning rows as well as calculating aggregates.
+HGE also has a row limit setting in a table's select permissions. This row limit will be used in the `limit` property if it is specified or if it is smaller than the limit specified in the GraphQL query itself.
+
+To illustrate the difference between `limit` and `aggregates_limit`, consider this GraphQL query, where a row limit of `2` has been placed on the Artist table in its select permissions.
+
+```graphql
+query ArtistsQuery {
+  Artist_aggregate {
+    aggregate {
+      count
+    }
+    nodes {
+      Name
+    }
+  }
+}
+```
+
+This would produce the following agent query request JSON:
+
+```json
+{
+  "table": ["Artist"],
+  "table_relationships": [],
+  "query": {
+    "aggregates_limit": null,
+    "limit": 2,
+    "offset": null,
+    "aggregates": {
+      "aggregate_count": {
+        "type": "star_count"
+      }
+    },
+    "fields": {
+      "nodes_Name": {
+        "type": "column",
+        "column": "Name",
+        "column_type": "string"
+      }
+    }
+  }
+}
+```
+
+The expected response to that query request would be the following JSON. Note that the row count has counted all rows (since `aggregates_limit` was null), but query has only returned the maximum number of rows as specified by the `limit` property: `2`.
+```json
+{
+  "aggregates": {
+    "aggregate_count": 275
+  },
+  "rows":[
+    { "nodes_Name": "AC/DC" },
+    { "nodes_Name": "Accept" }
+  ]
+}
+```
+
+By comparison, if we added a limit to our GraphQL query:
+
+```graphql
+query ArtistsQuery {
+  Artist_aggregate(limit: 5) {
+    aggregate {
+      count
+    }
+    nodes {
+      Name
+    }
+  }
+}
+```
+
+This would produce the following agent query request JSON:
+
+```json
+{
+  "table": ["Artist"],
+  "table_relationships": [],
+  "query": {
+    "aggregates_limit": 5,
+    "limit": 2,
+    "offset": null,
+    "aggregates": {
+      "aggregate_count": {
+        "type": "star_count"
+      }
+    },
+    "fields": {
+      "nodes_Name": {
+        "type": "column",
+        "column": "Name",
+        "column_type": "string"
+      }
+    }
+  }
+}
+```
+
+We would expect the following result:
+
+```json
+{
+  "aggregates": {
+    "aggregate_count": 5
+  },
+  "rows":[
+    { "nodes_Name": "AC/DC" },
+    { "nodes_Name": "Accept" }
+  ]
+}
+```
+
+Note that the row count aggregation has been limited to `5` because `aggregates_limit` was `5`, and the rows returned were limited by the value of `limit`: `2`.
 
 #### Filters
 

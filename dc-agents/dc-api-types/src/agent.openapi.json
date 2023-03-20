@@ -1305,6 +1305,13 @@
             "nullable": true,
             "type": "object"
           },
+          "aggregates_limit": {
+            "description": "Optionally limit the maximum number of rows considered while applying aggregations. This limit does not apply to returned rows.",
+            "maximum": 9223372036854776000,
+            "minimum": -9223372036854776000,
+            "nullable": true,
+            "type": "number"
+          },
           "fields": {
             "additionalProperties": {
               "$ref": "#/components/schemas/Field"
@@ -1314,14 +1321,14 @@
             "type": "object"
           },
           "limit": {
-            "description": "Optionally limit to N results",
+            "description": "Optionally limit the maximum number of returned rows. This limit does not apply to records considered while apply aggregations.",
             "maximum": 9223372036854776000,
             "minimum": -9223372036854776000,
             "nullable": true,
             "type": "number"
           },
           "offset": {
-            "description": "Optionally offset from the Nth result",
+            "description": "Optionally offset from the Nth result. This applies to both row and aggregation results.",
             "maximum": 9223372036854776000,
             "minimum": -9223372036854776000,
             "nullable": true,

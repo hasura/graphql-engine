@@ -23,9 +23,6 @@ import {
     OrderByRelation,
     OrderByElement,
     OrderByTarget,
-    Query,
-    ColumnFieldValue,
-    NullColumnFieldValue,
     ScalarValue,
   } from "@hasura/dc-api-types";
 import { customAlphabet } from "nanoid";
@@ -335,12 +332,13 @@ function table_query(
     fields: Fields | null,
     aggregates: Aggregates | null,
     wWhere: Expression | null,
+    aggregatesLimit: number | null,
     wLimit: number | null,
     wOffset: number | null,
     wOrder: OrderBy | null,
   ): string {
   const tableAlias      = generateTableAlias(tableName);
-  const aggregateSelect = aggregates ? [aggregates_query(ts, tableName, joinInfo, aggregates, wWhere, wLimit, wOffset, wOrder)] : [];
+  const aggregateSelect = aggregates ? [aggregates_query(ts, tableName, joinInfo, aggregates, wWhere, aggregatesLimit, wOffset, wOrder)] : [];
   // The use of the JSON function inside JSON_GROUP_ARRAY is necessary from SQLite 3.39.0 due to breaking changes in
   // SQLite. See https://sqlite.org/forum/forumpost/e3b101fb3234272b for more details. This approach still works fine
   // for older versions too.
@@ -374,10 +372,10 @@ function relationship(ts: TableRelationships[], r: Relationship, field: Relation
 
   // We force a limit of 1 for object relationships in case the user has configured a manual
   // "object" relationship that accidentally actually is an array relationship
-  const limit =
+  const [limit, aggregatesLimit] =
     r.relationship_type === "object"
-      ? 1
-      : coerceUndefinedToNull(field.query.limit);
+      ? [1, 1]
+      : [coerceUndefinedToNull(field.query.limit), coerceUndefinedToNull(field.query.aggregates_limit)];
 
   return tag("relationship", table_query(
     ts,
@@ -386,6 +384,7 @@ function relationship(ts: TableRelationships[], r: Relationship, field: Relation
     coerceUndefinedToNull(field.query.fields),
     coerceUndefinedToNull(field.query.aggregates),
     coerceUndefinedToNull(field.query.where),
+    aggregatesLimit,
     limit,
     coerceUndefinedToNull(field.query.offset),
     coerceUndefinedToNull(field.query.order_by),
@@ -657,6 +656,7 @@ function query(request: QueryRequest): string {
     coerceUndefinedToNull(request.query.fields),
     coerceUndefinedToNull(request.query.aggregates),
     coerceUndefinedToNull(request.query.where),
+    coerceUndefinedToNull(request.query.aggregates_limit),
     coerceUndefinedToNull(request.query.limit),
     coerceUndefinedToNull(request.query.offset),
     coerceUndefinedToNull(request.query.order_by),
@@ -735,6 +735,7 @@ function foreach_query(foreachIds: Record<string, ScalarValue>[], request: Query
     foreachTableName,
     null,
     foreachQueryFields,
+    null,
     null,
     null,
     null,

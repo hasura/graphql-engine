@@ -146,6 +146,7 @@ translateAnnSelect sessionVariables translateFieldsAndAggregates tableName selec
     API.Query
       { _qFields = mapFieldNameHashMap <$> _faaFields,
         _qAggregates = mapFieldNameHashMap <$> _faaAggregates,
+        _qAggregatesLimit = _saLimit (_asnArgs selectG) <* _faaAggregates, -- Only include the aggregates limit if we actually have aggregrates
         _qLimit =
           fmap getMin $
             foldMap
@@ -310,6 +311,7 @@ translateAnnField sessionVariables sourceTableName = \case
             { _qFields = Just $ mapFieldNameHashMap fields,
               _qAggregates = mempty,
               _qWhere = whereClause,
+              _qAggregatesLimit = Nothing,
               _qLimit = Nothing,
               _qOffset = Nothing,
               _qOrderBy = Nothing
