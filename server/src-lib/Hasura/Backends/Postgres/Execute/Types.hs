@@ -16,6 +16,8 @@ module Hasura.Backends.Postgres.Execute.Types
 
     -- * Execution in a Postgres Source
     PGSourceConfig (..),
+    ConnectionTemplateConfig (..),
+    connectionTemplateConfigResolver,
     ConnectionTemplateResolver (..),
     runPgSourceReadTx,
     runPgSourceWriteTx,
@@ -177,6 +179,18 @@ mkTxErrorHandler isExpectedError txe = fromMaybe unexpectedError expectedError
               "serialization failure due to concurrent update"
             _ -> message
 
+data ConnectionTemplateConfig
+  = -- | Connection templates are disabled for Hasura CE
+    ConnTemplate_NotApplicable
+  | ConnTemplate_NotConfigured
+  | ConnTemplate_Resolver ConnectionTemplateResolver
+
+connectionTemplateConfigResolver :: ConnectionTemplateConfig -> Maybe ConnectionTemplateResolver
+connectionTemplateConfigResolver = \case
+  ConnTemplate_NotApplicable -> Nothing
+  ConnTemplate_NotConfigured -> Nothing
+  ConnTemplate_Resolver resolver -> Just resolver
+
 -- | A hook to resolve connection template
 newtype ConnectionTemplateResolver = ConnectionTemplateResolver
   { -- | Runs the connection template resolver. This will return Nothing if
@@ -187,7 +201,7 @@ newtype ConnectionTemplateResolver = ConnectionTemplateResolver
       SessionVariables ->
       [HTTP.Header] ->
       Maybe QueryContext ->
-      m (Maybe PostgresResolvedConnectionTemplate)
+      m PostgresResolvedConnectionTemplate
   }
 
 data PGSourceConfig = PGSourceConfig
@@ -197,9 +211,7 @@ data PGSourceConfig = PGSourceConfig
     _pscPostDropHook :: IO (),
     _pscExtensionsSchema :: ExtensionsSchema,
     _pscConnectionSet :: HashMap PostgresConnectionSetMemberName PG.ConnInfo,
-    -- | Connection template resolver (here `Nothing` means that the connection
-    -- template resolver is not supported for the product)
-    _pscConnectionTemplateResolver :: Maybe ConnectionTemplateResolver
+    _pscConnectionTemplateConfig :: ConnectionTemplateConfig
   }
   deriving (Generic)
 
@@ -255,19 +267,23 @@ applyConnectionTemplateResolver ::
   Maybe QueryContext ->
   m (Maybe PostgresResolvedConnectionTemplate)
 applyConnectionTemplateResolver connectionTemplateResolver sessionVariables requestHeaders queryContext =
-  join <$> for connectionTemplateResolver (\resolver -> (_runResolver resolver) sessionVariables requestHeaders queryContext)
+  for connectionTemplateResolver $ \resolver ->
+    _runResolver resolver sessionVariables requestHeaders queryContext
 
 pgResolveConnectionTemplate :: (MonadError QErr m) => PGSourceConfig -> RequestContext -> m EncJSON
 pgResolveConnectionTemplate sourceConfig (RequestContext (RequestContextHeaders headersMap) sessionVariables queryContext) = do
   let headers = map (\(hName, hVal) -> (CI.mk (txtToBs hName), txtToBs hVal)) $ Map.toList headersMap
   connectionTemplateResolver <-
-    _pscConnectionTemplateResolver sourceConfig
-      `onNothing` throw400 NotSupported "Connection templating feature is enterprise edition only"
+    case _pscConnectionTemplateConfig sourceConfig of
+      ConnTemplate_NotApplicable ->
+        throw400 NotSupported "Connection templating feature is enterprise edition only"
+      ConnTemplate_NotConfigured ->
+        throw400 TemplateResolutionFailed "Connection template not defined for the source"
+      ConnTemplate_Resolver resolver ->
+        pure resolver
   case maybeRoleFromSessionVariables sessionVariables of
     Nothing -> throw400 InvalidParams "No `x-hasura-role` found in session variables. Please try again with non-admin 'x-hasura-role' in the session context."
     Just roleName ->
       when (roleName == adminRoleName) $ throw400 InvalidParams "Only requests made with a non-admin context can resolve the connection template. Please try again with non-admin 'x-hasura-role' in the session context."
-  resolvedTemplate <- applyConnectionTemplateResolver (Just connectionTemplateResolver) sessionVariables headers queryContext
-  case resolvedTemplate of
-    Nothing -> throw400 TemplateResolutionFailed "Connection template not defined for the source"
-    Just result -> pure . encJFromJValue $ J.object ["result" J..= result]
+  resolvedTemplate <- _runResolver connectionTemplateResolver sessionVariables headers queryContext
+  pure . encJFromJValue $ J.object ["result" J..= resolvedTemplate]

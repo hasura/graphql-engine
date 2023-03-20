@@ -68,7 +68,7 @@ buildStreamingSubscriptionSuite = do
   pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams print
 
   let pgContext = mkPGExecCtx PG.ReadCommitted pgPool NeverResizePool
-      dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema mempty Nothing
+      dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema mempty ConnTemplate_NotApplicable
 
   pure $
     describe "Streaming subscriptions polling tests" $

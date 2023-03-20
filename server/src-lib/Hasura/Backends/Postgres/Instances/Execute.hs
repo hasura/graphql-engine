@@ -144,10 +144,13 @@ pgDBQueryPlan userInfo _env sourceName sourceConfig qrf reqHeaders operationName
 
   queryTagsComment <- ask
   resolvedConnectionTemplate <-
-    applyConnectionTemplateResolverNonAdmin (_pscConnectionTemplateResolver sourceConfig) userInfo reqHeaders $
-      Just $
-        QueryContext operationName $
-          QueryOperationType G.OperationTypeQuery
+    let connectionTemplateResolver =
+          connectionTemplateConfigResolver (_pscConnectionTemplateConfig sourceConfig)
+        queryContext =
+          Just $
+            QueryContext operationName $
+              QueryOperationType G.OperationTypeQuery
+     in applyConnectionTemplateResolverNonAdmin connectionTemplateResolver userInfo reqHeaders queryContext
   let preparedSQLWithQueryTags = appendPreparedSQLWithQueryTags (irToRootFieldPlan planVals preparedQuery) queryTagsComment
   let (action, preparedSQL) = mkCurPlanTx userInfo preparedSQLWithQueryTags
 
@@ -178,10 +181,13 @@ pgDBQueryExplain fieldName userInfo sourceName sourceConfig rootSelection reqHea
         PG.withQE dmlTxErrorHandler (PG.fromText withExplain) () True <&> \planList ->
           withNoStatistics $ encJFromJValue $ ExplainPlan fieldName (Just textSQL) (Just $ map runIdentity planList)
   resolvedConnectionTemplate <-
-    applyConnectionTemplateResolverNonAdmin (_pscConnectionTemplateResolver sourceConfig) userInfo reqHeaders $
-      Just $
-        QueryContext operationName $
-          QueryOperationType G.OperationTypeQuery
+    let connectionTemplateResolver =
+          connectionTemplateConfigResolver (_pscConnectionTemplateConfig sourceConfig)
+        queryContext =
+          Just $
+            QueryContext operationName $
+              QueryOperationType G.OperationTypeQuery
+     in applyConnectionTemplateResolverNonAdmin connectionTemplateResolver userInfo reqHeaders queryContext
   pure $
     AB.mkAnyBackend $
       DBStepInfo @('Postgres pgKind) sourceName sourceConfig Nothing action resolvedConnectionTemplate
@@ -318,10 +324,13 @@ pgDBMutationPlan ::
   m (DBStepInfo ('Postgres pgKind))
 pgDBMutationPlan userInfo _environment stringifyNum sourceName sourceConfig mrf reqHeaders operationName = do
   resolvedConnectionTemplate <-
-    applyConnectionTemplateResolverNonAdmin (_pscConnectionTemplateResolver sourceConfig) userInfo reqHeaders $
-      Just $
-        QueryContext operationName $
-          QueryOperationType G.OperationTypeMutation
+    let connectionTemplateResolver =
+          connectionTemplateConfigResolver (_pscConnectionTemplateConfig sourceConfig)
+        queryContext =
+          Just $
+            QueryContext operationName $
+              QueryOperationType G.OperationTypeMutation
+     in applyConnectionTemplateResolverNonAdmin connectionTemplateResolver userInfo reqHeaders queryContext
   go resolvedConnectionTemplate <$> case mrf of
     MDBInsert s -> convertInsert userInfo s stringifyNum
     MDBUpdate s -> convertUpdate userInfo s stringifyNum
@@ -368,10 +377,13 @@ pgDBLiveQuerySubscriptionPlan userInfo _sourceName sourceConfig namespace unprep
       parameterizedPlan = ParameterizedSubscriptionQueryPlan roleName multiplexedQueryWithQueryTags
 
   resolvedConnectionTemplate <-
-    applyConnectionTemplateResolverNonAdmin (_pscConnectionTemplateResolver sourceConfig) userInfo reqHeaders $
-      Just $
-        QueryContext operationName $
-          QueryOperationType G.OperationTypeSubscription
+    let connectionTemplateResolver =
+          connectionTemplateConfigResolver (_pscConnectionTemplateConfig sourceConfig)
+        queryContext =
+          Just $
+            QueryContext operationName $
+              QueryOperationType G.OperationTypeSubscription
+     in applyConnectionTemplateResolverNonAdmin connectionTemplateResolver userInfo reqHeaders queryContext
 
   -- Cohort Id: Used for validating the multiplexed query. See @'testMultiplexedQueryTx'.
   -- It is disposed when the subscriber is added to existing cohort.
@@ -426,10 +438,13 @@ pgDBStreamingSubscriptionPlan userInfo _sourceName sourceConfig (rootFieldAlias,
       parameterizedPlan = ParameterizedSubscriptionQueryPlan roleName multiplexedQueryWithQueryTags
 
   resolvedConnectionTemplate <-
-    applyConnectionTemplateResolverNonAdmin (_pscConnectionTemplateResolver sourceConfig) userInfo reqHeaders $
-      Just $
-        QueryContext operationName $
-          QueryOperationType G.OperationTypeSubscription
+    let connectionTemplateResolver =
+          connectionTemplateConfigResolver (_pscConnectionTemplateConfig sourceConfig)
+        queryContext =
+          Just $
+            QueryContext operationName $
+              QueryOperationType G.OperationTypeSubscription
+     in applyConnectionTemplateResolverNonAdmin connectionTemplateResolver userInfo reqHeaders queryContext
 
   -- Cohort Id: Used for validating the multiplexed query. See @'testMultiplexedQueryTx'.
   -- It is disposed when the subscriber is added to existing cohort.
