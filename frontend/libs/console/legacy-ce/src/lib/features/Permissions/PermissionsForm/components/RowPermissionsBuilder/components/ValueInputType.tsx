@@ -31,8 +31,7 @@ export const ValueInputType = ({
       />
     );
   }
-
-  if (operator?.inputStructure === 'object') {
+  if (operator?.type === 'jsonb' && operator?.inputStructure === 'object') {
     return (
       <ObjectValueInput
         componentLevelId={componentLevelId}

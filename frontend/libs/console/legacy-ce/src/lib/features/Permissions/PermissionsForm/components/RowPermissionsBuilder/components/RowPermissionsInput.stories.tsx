@@ -6,6 +6,7 @@ import { within } from '@testing-library/dom';
 import {
   fireEvent,
   userEvent,
+  waitFor,
   waitForElementToBeRemoved,
 } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
@@ -16,6 +17,8 @@ import { usePermissionComparators } from '../hooks/usePermissionComparators';
 import { handlers } from './__tests__/fixtures/jsonb/handlers';
 import { ReactQueryDecorator } from '../../../../../../storybook/decorators/react-query';
 import { isEmpty } from 'lodash';
+import { useState } from 'react';
+import { Permissions } from './types';
 
 export default {
   title: 'Features/Permissions/Form/Row Permissions Input',
@@ -611,7 +614,7 @@ export const JsonbColumns: ComponentStory<
 
 JsonbColumns.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
-  // Wait unti Loading is gone
+  // Wait until Loading is gone
   await waitForElementToBeRemoved(() => canvas.getByText('Loading'), {
     timeout: 50000,
   });
@@ -644,4 +647,107 @@ export const JsonbColumnsHasKeys: ComponentStory<
       permissions={{ jason: { _has_keys_all: [''] } }}
     />
   );
+};
+
+export const StringColumns: ComponentStory<
+  typeof RowPermissionsInput
+> = args => {
+  const [permissions, setPermissions] = useState<Permissions>({
+    name: { _eq: '' },
+  });
+  const tables = usePermissionTables({
+    dataSourceName: 'default',
+  });
+
+  const comparators = usePermissionComparators();
+
+  if (!tables || isEmpty(comparators)) return <>Loading</>;
+  return (
+    <>
+      <RowPermissionsInput
+        onPermissionsChange={p => {
+          setPermissions(p);
+        }}
+        table={{ schema: 'public', name: 'Stuff' }}
+        tables={tables}
+        comparators={comparators}
+        permissions={{ name: { _eq: '' } }}
+      />
+      {/* State debugger. Used to test the current permissions value */}
+      <div className="invisible" data-testid="permissions-state">
+        {JSON.stringify(permissions)}
+      </div>
+    </>
+  );
+};
+
+// Play function testing that string column with numbers inside are represented as text on the UI
+// Prevents regression where they were treated as numbers
+StringColumns.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  // Wait until Loading is gone
+  await waitForElementToBeRemoved(() => canvas.getByText('Loading'), {
+    timeout: 50000,
+  });
+
+  // // Write a number in the input
+  await userEvent.type(canvas.getByTestId('name._eq-value-input'), '1337');
+
+  // Expect the input to have the number as text
+  await waitFor(async () => {
+    expect(await canvas.findByTestId('permissions-state')).toHaveTextContent(
+      '{"name":{"_eq":"1337"}}'
+    );
+  });
+};
+
+export const NumberColumns: ComponentStory<
+  typeof RowPermissionsInput
+> = args => {
+  const [permissions, setPermissions] = useState<Permissions>({
+    id: { _eq: '' },
+  });
+  const tables = usePermissionTables({
+    dataSourceName: 'default',
+  });
+
+  const comparators = usePermissionComparators();
+
+  if (!tables || isEmpty(comparators)) return <>Loading</>;
+  return (
+    <>
+      <RowPermissionsInput
+        onPermissionsChange={p => {
+          setPermissions(p);
+        }}
+        table={{ schema: 'public', name: 'Stuff' }}
+        tables={tables}
+        comparators={comparators}
+        permissions={{ id: { _eq: '1234' } }}
+      />
+      {/* State debugger. Used to test the current permissions value */}
+      <div className="invisible" data-testid="permissions-state">
+        {JSON.stringify(permissions)}
+      </div>
+    </>
+  );
+};
+
+NumberColumns.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  // Wait until Loading is gone
+  await waitForElementToBeRemoved(() => canvas.getByText('Loading'), {
+    timeout: 50000,
+  });
+
+  // // Write a number in the input
+  await userEvent.type(canvas.getByTestId('id._eq-value-input'), '1337');
+
+  // Expect the input to have the number as text
+  // Note it's not a number but a string
+  await waitFor(async () => {
+    expect(await canvas.findByTestId('permissions-state')).toHaveTextContent(
+      '{"id":{"_eq":"12341337"}}'
+    );
+  });
 };
