@@ -35,7 +35,9 @@ module Hasura.Server.Logging
   )
 where
 
+import Control.Lens ((^?))
 import Data.Aeson
+import Data.Aeson.Lens (key, _String)
 import Data.Aeson.TH
 import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
@@ -460,6 +462,14 @@ isQueryIncludedInLogs urlPath LoggingSettings {..}
     metadataUrlPaths = ["/v1/metadata", "/v1/query"]
     isMetadataRequest = urlPath `elem` metadataUrlPaths
 
+-- | Add the 'query' field to the http-log if `MetadataQueryLoggingMode`
+-- is set to `MetadataQueryLoggingEnabled` else only adds the `query.type` field.
+addQuery :: Maybe Value -> Text -> LoggingSettings -> Maybe Value
+addQuery parsedReq path loggingSettings =
+  if isQueryIncludedInLogs path loggingSettings
+    then parsedReq
+    else Just $ object ["type" .= (fmap (^? key "type" . _String)) parsedReq]
+
 mkHttpAccessLogContext ::
   -- | Maybe because it may not have been resolved
   Maybe UserInfo ->
@@ -496,7 +506,7 @@ mkHttpAccessLogContext userInfoM loggingSettings reqId req (_, parsedReq) uncomp
             olRequestReadTime = Seconds . fst <$> mTiming,
             olQueryExecutionTime = Seconds . snd <$> mTiming,
             olRequestMode = batching,
-            olQuery = if (isQueryIncludedInLogs (hlPath http) loggingSettings) then parsedReq else Nothing,
+            olQuery = addQuery parsedReq (hlPath http) loggingSettings,
             olRawQuery = Nothing,
             olError = Nothing
           }
@@ -511,13 +521,13 @@ mkHttpAccessLogContext userInfoM loggingSettings reqId req (_, parsedReq) uncomp
                             GQLQueryOperationSuccess (GQLQueryOperationSuccessLog {..}) ->
                               BatchOperationSuccess $
                                 BatchOperationSuccessLog
-                                  (if (isQueryIncludedInLogs (hlPath http) loggingSettings) then parsedReq else Nothing)
+                                  (addQuery parsedReq (hlPath http) loggingSettings)
                                   gqolResponseSize
                                   (convertDuration gqolQueryExecutionTime)
                             GQLQueryOperationError (GQLQueryOperationErrorLog {..}) ->
                               BatchOperationError $
                                 BatchOperationErrorLog
-                                  (if (isQueryIncludedInLogs (hlPath http) loggingSettings) then parsedReq else Nothing)
+                                  (addQuery parsedReq (hlPath http) loggingSettings)
                                   gqelError
                         )
                         opLogs
@@ -559,7 +569,7 @@ mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq (reqBody, parsedReq
             olUncompressedResponseSize = responseSize,
             olRequestReadTime = Seconds . fst <$> mTiming,
             olQueryExecutionTime = Seconds . snd <$> mTiming,
-            olQuery = if (isQueryIncludedInLogs (hlPath http) loggingSettings) then parsedReq else Nothing,
+            olQuery = addQuery parsedReq (hlPath http) loggingSettings,
             -- if parsedReq is Nothing, add the raw query
             olRawQuery = maybe (reqToLog $ Just $ bsToTxt $ BL.toStrict reqBody) (const Nothing) parsedReq,
             olError = Just err,

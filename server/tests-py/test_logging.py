@@ -201,11 +201,11 @@ class TestLogging():
         print(http_logs[0])
         assert 'error' in http_logs[0]['detail']['operation']
         assert http_logs[0]['detail']['operation']['error']['code'] == 'access-denied'
-        assert http_logs[0]['detail']['operation'].get('query') is None
+        assert "type" in http_logs[0]['detail']['operation'].get('query')
         # By default, 'raw_query' field is ignored for metadata queries. To allow
         # logging this field use the flag HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING
         assert http_logs[0]['detail']['operation'].get('raw_query') is None
-    
+
 class TestWebsocketLogging():
     """
     Test logs emitted on websocket transport
