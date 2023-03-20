@@ -1,36 +1,18 @@
 # HLint configuration file
 # https://github.com/ndmitchell/hlint
-##########################
 
-# This file contains a template configuration file, which is typically
-# placed as .hlint.yaml in the root of your project
+################################################################################
+# Global hlint configuration
+
+- arguments: [-XQuasiQuotes]
 
 
-# Specify additional command line arguments
-#
-# - arguments: [--color, --cpp-simple, -XQuasiQuotes]
-
-- arguments: -XQuasiQuotes
-
-# Control which extensions/flags/modules/functions can be used
-#
-# - extensions:
-#   - default: false # all extension are banned by default
-#   - name: [PatternGuards, ViewPatterns] # only these listed extensions can be used
-#   - {name: CPP, within: CrossPlatform} # CPP can only be used in a given module
-#
-# - flags:
-#   - {name: -w, within: []} # -w is allowed nowhere
-#
-# - modules:
-#   - {name: [Data.Set, Data.HashSet], as: Set} # if you import Data.Set qualified, it must be as 'Set'
-#   - {name: Control.Arrow, within: []} # Certain modules are banned entirely
-#
-# - functions:
-#   - {name: unsafePerformIO, within: []} # unsafePerformIO can only appear in no modules
+################################################################################
+# Restrictions on functions
 
 - functions:
 
+      # Hspec restrictions
       - name: "Test.Hspec.focus"
         within: []
         message: "Specs with focusing should only be used during development"
@@ -55,6 +37,7 @@
         within: []
         message: "testLogHarness should only be ad-hoc during development. Please define proper log message data types for published code"
 
+      # Harness restrictions
       - name: "Harness.Logging.LogHarness"
         within: []
         message: "LogHarness should only be ad-hoc during development. Please define proper log message data types for published code"
@@ -83,26 +66,14 @@
         within: ["Test.**"]
         message: "logTrace should only be used outside the test-harness package"
 
-# Add custom hints for this project
-#
-# Will suggest replacing "wibbleMany [myvar]" with "wibbleOne myvar"
-# - error: {lhs: "wibbleMany [x]", rhs: wibbleOne x}
-
-# Turn on hints that are off by default
-#
-# Ban "module X(module X) where", to require a real export list
-# - warn: {name: Use explicit module export list}
-#
-# Replace a $ b $ c with a . b $ c
-# - group: {name: dollar, enabled: true}
-#
-# Generalise map to fmap, ++ to <>
-# - group: {name: generalise, enabled: true}
+      # General restrictions
+      - name: "undefined"
+        within: []
+        message: "undefined isn't allowed"
 
 
+################################################################################
 # Ignore some builtin hints
-# - ignore: {name: Use let}
-# - ignore: {name: Use const, within: SpecialModule} # Only within certain modules
 
 - ignore: {name: Reduce duplication}
 - ignore: {name: Redundant $}
@@ -135,12 +106,9 @@
 - ignore: {name: Redundant lambda}
 - ignore: {name: Avoid lambda using `infix`}
 
-# Define some custom infix operators
-# - fixity: infixr 3 ~^#^~
 
-
-# To generate a suitable file for HLint do:
-# $ hlint --default > .hlint.yaml
+################################################################################
+# Custom rules
 
 - error: {lhs: maybe False, rhs: any}
 - error: {lhs: maybe True, rhs: all}
@@ -234,30 +202,57 @@
     imports:
       - package base
     rules:
-      - error: {lhs: "Language.GraphQL.Draft.Syntax.unsafeMkName", rhs: "Language.GraphQL.Draft.Syntax.mkName", note: "avoid unsafeMkName if possible"}
-      - error: {lhs: "Control.Concurrent.threadDelay", rhs: "Control.Concurrent.Extended.sleep", note: "Please use `sleep` instead (and read the docs!)"}
-      - suggest: {lhs: "Control.Concurrent.Async.Lifted.Safe.async", rhs: "Control.Concurrent.Async.Lifted.Safe.withAsync", note: "Please use 'Control.Control.Concurrent.Async.Lifted.Safe.withAsync' or our 'forkImmortal' instead for more robust threading."}
-      - suggest: {lhs: "Control.Concurrent.forkIO", rhs: "Control.Concurrent.Async.Lifted.Safe.withAsync", note: "Please use 'Control.Control.Concurrent.Async.Lifted.Safe.withAsync' or our 'forkImmortal' instead for more robust threading."}
-      - suggest: {
-          lhs: "System.Environment.getEnvironment",
-          rhs: "env_from_function_argument",
+      - error:
+          name: "avoid Language.GraphQL.Draft.Syntax.unsafeMkName"
+          lhs: "Language.GraphQL.Draft.Syntax.unsafeMkName"
+          rhs: "Language.GraphQL.Draft.Syntax.mkName"
+          note: "avoid unsafeMkName if possible"
+      - error:
+          name: "avoid Control.Concurrent.threadDelay"
+          lhs: "Control.Concurrent.threadDelay"
+          rhs: "Control.Concurrent.Extended.sleep"
+          note: "Please use `sleep` instead (and read the docs!)"
+      - suggest:
+          name: "avoid Control.Concurrent.Async.Lifted.Safe.async"
+          lhs: "Control.Concurrent.Async.Lifted.Safe.async"
+          rhs: "Control.Concurrent.Async.Lifted.Safe.withAsync"
+          note: "Please use 'Control.Control.Concurrent.Async.Lifted.Safe.withAsync' or our 'forkImmortal' instead for more robust threading."
+      - suggest:
+          name: "avoid Control.Concurrent.forkIO"
+          lhs: "Control.Concurrent.forkIO"
+          rhs: "Control.Concurrent.Async.Lifted.Safe.withAsync"
+          note: "Please use 'Control.Control.Concurrent.Async.Lifted.Safe.withAsync' or our 'forkImmortal' instead for more robust threading."
+      - suggest:
+          name: "avoid System.Environment.getEnvironment"
+          lhs: "System.Environment.getEnvironment"
+          rhs: "env_from_function_argument"
           note: "Instead of 'getEnvironment', use the environment from the server context, typically accessible as a function argument"
-      }
-      - suggest: {
-          lhs: "Data.Environment.getEnvironment",
-          rhs:  "env_from_function_argument",
+      - suggest:
+          name: "avoid Data.Environment.getEnvironment"
+          lhs: "Data.Environment.getEnvironment"
+          rhs:  "env_from_function_argument"
           note: "Instead of 'getEnvironment', use the environment from the server context, typically accessible as a function argument"
-      }
 
-- ignore: {
-    group: {name: "unsafe"},
+
+################################################################################
+# Exceptions to our own rules
+
+- ignore:
     within: ["Harness.**", "Spec", "Spec.**", "SpecHook", "Test.**"]
-    }
+    name:
+      - "avoid Control.Concurrent.threadDelay"
+      - "avoid Control.Concurrent.Async.Lifted.Safe.async"
+      - "avoid Control.Concurrent.forkIO"
+      - "avoid System.Environment.getEnvironment"
+      - "avoid Data.Environment.getEnvironment"
+
+- ignore:
+    within: ["Language.GraphQL.Draft.**"]
+    name: "avoid Language.GraphQL.Draft.Syntax.unsafeMkName"
 
 
-
-
-# Glorious import restrictions
+################################################################################
+# Import restrictions
 
 # We limit the place where the module `Hasura.RQL.Types.Instances` can be
 # imported in order to make it easier to avoid module cycles.
