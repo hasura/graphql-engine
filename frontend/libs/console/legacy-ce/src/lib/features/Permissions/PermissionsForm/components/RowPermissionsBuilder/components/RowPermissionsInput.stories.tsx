@@ -3,14 +3,27 @@ import { action } from '@storybook/addon-actions';
 
 import { RowPermissionsInput } from './RowPermissionsInput';
 import { within } from '@testing-library/dom';
-import { fireEvent, userEvent } from '@storybook/testing-library';
+import {
+  fireEvent,
+  userEvent,
+  waitForElementToBeRemoved,
+} from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { tables } from './__tests__/fixtures/tables';
 import { comparators } from './__tests__/fixtures/comparators';
+import { usePermissionTables } from '../hooks/usePermissionTables';
+import { usePermissionComparators } from '../hooks/usePermissionComparators';
+import { handlers } from './__tests__/fixtures/jsonb/handlers';
+import { ReactQueryDecorator } from '../../../../../../storybook/decorators/react-query';
+import { isEmpty } from 'lodash';
 
 export default {
   title: 'Features/Permissions/Form/Row Permissions Input',
   component: RowPermissionsInput,
+  parameters: {
+    msw: handlers(),
+  },
+  decorators: [ReactQueryDecorator()],
 } as Meta;
 
 export const SetRootLevelPermission: ComponentStory<
@@ -413,6 +426,10 @@ SetExistsPermission.play = async ({ canvasElement }) => {
     canvas.getByTestId('_exists._where.id._eq-value-input'),
     '1337'
   );
+
+  expect(canvas.getByTestId('_exists._where.id._eq-value-input')).toHaveValue(
+    '1337'
+  );
 };
 
 SetMultilevelExistsPermission.play = async ({ canvasElement }) => {
@@ -444,6 +461,10 @@ SetMultilevelExistsPermission.play = async ({ canvasElement }) => {
     canvas.getByTestId('_exists._where._exists._where.id._eq-value-input'),
     '1337'
   );
+
+  expect(
+    canvas.getByTestId('_exists._where._exists._where.id._eq-value-input')
+  ).toHaveValue('1337');
 };
 
 SetAndPermission.play = async ({ canvasElement }) => {
@@ -461,6 +482,10 @@ SetAndPermission.play = async ({ canvasElement }) => {
     '1337',
     { delay: 300 }
   );
+
+  expect(
+    canvas.getByTestId('_and.1.Series_reference._eq-value-input')
+  ).toHaveValue('1337');
 };
 
 SetMultilevelAndPermission.play = async ({ canvasElement }) => {
@@ -487,6 +512,10 @@ SetMultilevelAndPermission.play = async ({ canvasElement }) => {
     canvas.getByTestId('_and.2.STATUS._eq-value-input'),
     '1338'
   );
+
+  expect(canvas.getByTestId('_and.2.STATUS._eq-value-input')).toHaveValue(
+    '1338'
+  );
 };
 
 SetNotPermission.play = async ({ canvasElement }) => {
@@ -511,6 +540,10 @@ SetOrPermission.play = async ({ canvasElement }) => {
 
   await userEvent.type(
     canvas.getByTestId('_or.1.Period._eq-value-input'),
+    '1337'
+  );
+
+  expect(canvas.getByTestId('_or.1.Period._eq-value-input')).toHaveValue(
     '1337'
   );
 };
@@ -553,4 +586,62 @@ SetDisabledExistsPermission.play = async ({ canvasElement }) => {
   );
 
   expect(existElement).not.toHaveAttribute('disabled');
+};
+
+export const JsonbColumns: ComponentStory<
+  typeof RowPermissionsInput
+> = args => {
+  const tables = usePermissionTables({
+    dataSourceName: 'default',
+  });
+
+  const comparators = usePermissionComparators();
+
+  if (!tables || isEmpty(comparators)) return <>Loading</>;
+  return (
+    <RowPermissionsInput
+      onPermissionsChange={action('onPermissionsChange')}
+      table={{ schema: 'public', name: 'Stuff' }}
+      tables={tables}
+      comparators={comparators}
+      permissions={{ jason: { _contained_in: { a: 'b' } } }}
+    />
+  );
+};
+
+JsonbColumns.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  // Wait unti Loading is gone
+  await waitForElementToBeRemoved(() => canvas.getByText('Loading'), {
+    timeout: 50000,
+  });
+  // Expect jason._contained_in-comparator to be in the document
+  expect(
+    canvas.getByTestId('jason._contained_in-comparator')
+  ).toBeInTheDocument();
+  // Expect jason._contained_in-value-input to have value "{"a": "b"}"
+  expect(canvas.getByTestId('jason._contained_in-value-input')).toHaveValue(
+    '{"a":"b"}'
+  );
+};
+
+export const JsonbColumnsHasKeys: ComponentStory<
+  typeof RowPermissionsInput
+> = args => {
+  const tables = usePermissionTables({
+    dataSourceName: 'default',
+  });
+
+  const comparators = usePermissionComparators();
+
+  if (!tables || isEmpty(comparators)) return <>Loading</>;
+  return (
+    <RowPermissionsInput
+      onPermissionsChange={action('onPermissionsChange')}
+      table={{ schema: 'public', name: 'Stuff' }}
+      tables={tables}
+      comparators={comparators}
+      permissions={{ jason: { _has_keys_all: [''] } }}
+    />
+  );
 };

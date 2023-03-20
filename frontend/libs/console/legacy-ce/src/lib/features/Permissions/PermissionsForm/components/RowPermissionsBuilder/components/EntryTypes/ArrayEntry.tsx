@@ -25,6 +25,7 @@ export function ArrayEntry({
     path,
     relationships,
   });
+  const array = Array.isArray(v) ? v : [];
   return (
     <Wrapper>
       <div
@@ -32,26 +33,24 @@ export function ArrayEntry({
           !isComparator(k) ? `border-dashed border-l border-gray-200` : ''
         }
       >
-        {Array.isArray(v) ? (
-          <div className="p-2 ml-6">
-            {v.map((val, i) => {
-              return (
-                <ValueInput
-                  key={String(i)}
-                  value={val}
-                  path={[...path, String(i)]}
-                />
-              );
-            })}
+        <div className="p-2 ml-6">
+          {array.map((entry, i) => {
+            return (
+              <ValueInput
+                key={String(i)}
+                value={entry}
+                path={[...path, String(i)]}
+              />
+            );
+          })}
 
-            <Button
-              onClick={() => setValue([...path, String(v.length)], '')}
-              mode="default"
-            >
-              Add input
-            </Button>
-          </div>
-        ) : null}
+          <Button
+            onClick={() => setValue([...path, String(array.length)], '')}
+            mode="default"
+          >
+            Add input
+          </Button>
+        </div>
       </div>
     </Wrapper>
   );

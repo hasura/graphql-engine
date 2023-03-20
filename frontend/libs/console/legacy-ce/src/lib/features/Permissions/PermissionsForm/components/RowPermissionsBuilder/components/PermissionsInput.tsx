@@ -25,6 +25,8 @@ export const PermissionsInput = ({
       <>
         {permissions.map((v, i) => {
           const index = isEmpty(v) ? 0 : i;
+          // Don't show empty arrays. They get handled by <EmptyEntry/ >
+          if (v === '') return null;
           return (
             <PermissionsInput
               key={path.join('.') + '.' + index}

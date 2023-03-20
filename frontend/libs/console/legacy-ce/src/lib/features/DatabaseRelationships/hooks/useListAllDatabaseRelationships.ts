@@ -54,12 +54,7 @@ export const useListAllDatabaseRelationships = ({
   } = useFkConstraints({ dataSourceName, table });
 
   return {
-    data: tableRelationships(
-      metadataTable,
-      table,
-      dataSourceName,
-      fkConstraints
-    ),
+    data: tableRelationships(metadataTable, dataSourceName, fkConstraints),
     isFetching: isMetadataPending || isDALIntrospectionPending,
     isLoading: isMetadataLoading || isDALIntrospectionLoading,
     error: [metadataError, dalError],

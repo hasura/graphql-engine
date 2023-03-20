@@ -24,10 +24,10 @@ import {
 
 export function tableRelationships(
   metadataTable: MetadataTable | undefined,
-  table: Table,
   dataSourceName: string,
   fkConstraints: TableFkRelationships[] | undefined
 ): Relationship[] {
+  const table = metadataTable?.table;
   // adapt local array relationships
   const localArrayRelationships = (
     metadataTable?.array_relationships ?? []

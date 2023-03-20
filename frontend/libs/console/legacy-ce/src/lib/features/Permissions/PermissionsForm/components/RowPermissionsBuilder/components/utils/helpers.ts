@@ -1,7 +1,6 @@
 import { get, isEmpty, set, unset, isObjectLike } from 'lodash';
 import { RowPermissionsState, PermissionType } from '../types';
-import { allOperators } from '../../../../../../../components/Services/Data/TablePermissions/PermissionBuilder/utils';
-import { GraphQLType, isScalarType } from 'graphql';
+import { allOperators } from './comparatorsFromSchema';
 
 const getKeyPath = ({
   keyPath,
@@ -56,6 +55,8 @@ const getInitialValue = (key: string, type?: PermissionType) => {
     case '_or':
       return [{}];
     case '_not':
+    case '_contains':
+    case '_contained_in':
       return {};
     case '_is_null':
       return false;
@@ -66,6 +67,8 @@ const getInitialValue = (key: string, type?: PermissionType) => {
       };
     case '_nin':
     case '_in':
+    case '_has_keys_all':
+    case '_has_keys_any':
       return [''];
   }
 
@@ -108,27 +111,12 @@ export const updateKey = ({
 };
 
 export const isComparator = (k: string) => {
-  return allOperators.find(o => o === k);
+  return allOperators.find(o => o.name === k);
 };
 
 export const isPrimitive = (value: any) => {
   return !isObjectLike(value);
 };
-
-export function graphQLTypeToJsType(
-  value: string,
-  type: GraphQLType | undefined
-): boolean | string | number {
-  if (!isScalarType(type)) {
-    return value;
-  }
-  if (type.name === 'Boolean') {
-    return Boolean(value);
-  }
-
-  // Default to string on custom scalars since we have no way of knowing if they map to a number or boolean
-  return value;
-}
 
 export function isColumnComparator(comparator: string) {
   return (
