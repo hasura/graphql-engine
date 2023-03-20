@@ -56,7 +56,8 @@ backendTypeMetadata =
       backendDisplayNameString = "mock",
       backendReleaseNameString = Nothing,
       backendServerUrl = Just "http://localhost:65006",
-      backendSchemaKeyword = "schema"
+      backendSchemaKeyword = "schema",
+      backendScalarType = const ""
     }
 
 --------------------------------------------------------------------------------

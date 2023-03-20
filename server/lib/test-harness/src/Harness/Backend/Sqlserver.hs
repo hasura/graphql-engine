@@ -55,7 +55,8 @@ backendTypeMetadata =
       backendDisplayNameString = "mssql",
       backendReleaseNameString = Nothing,
       backendServerUrl = Nothing,
-      backendSchemaKeyword = "schema"
+      backendSchemaKeyword = "schema",
+      backendScalarType = scalarType
     }
 
 --------------------------------------------------------------------------------

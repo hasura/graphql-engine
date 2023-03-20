@@ -65,7 +65,8 @@ backendTypeMetadata =
       backendDisplayNameString = "citus",
       backendReleaseNameString = Nothing,
       backendServerUrl = Nothing,
-      backendSchemaKeyword = "schema"
+      backendSchemaKeyword = "schema",
+      backendScalarType = scalarType
     }
 
 --------------------------------------------------------------------------------
@@ -166,11 +167,11 @@ createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk,
 
 scalarType :: HasCallStack => Schema.ScalarType -> Text
 scalarType = \case
-  Schema.TInt -> "INT"
-  Schema.TStr -> "VARCHAR"
-  Schema.TUTCTime -> "TIMESTAMP"
-  Schema.TBool -> "BOOLEAN"
-  Schema.TGeography -> "GEOGRAPHY"
+  Schema.TInt -> "integer"
+  Schema.TStr -> "varchar"
+  Schema.TUTCTime -> "timestamp"
+  Schema.TBool -> "boolean"
+  Schema.TGeography -> "geography"
   Schema.TCustomType txt -> Schema.getBackendScalarType txt bstCitus
 
 mkColumnSql :: Schema.Column -> Text

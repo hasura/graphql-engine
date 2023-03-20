@@ -78,8 +78,8 @@ tests opts = do
       helloWorldLogicalModel =
         (Schema.logicalModel "hello_world_function" query)
           { Schema.logicalModelColumns =
-              [ Schema.logicalModelColumn "one" "text",
-                Schema.logicalModelColumn "two" "text"
+              [ Schema.logicalModelColumn "one" Schema.TStr,
+                Schema.logicalModelColumn "two" Schema.TStr
               ]
           }
 
@@ -158,8 +158,8 @@ tests opts = do
           helloWorldLogicalModelWithDuplicates =
             (Schema.logicalModel "hello_world_function" queryWithDuplicates)
               { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "one" "text",
-                    Schema.logicalModelColumn "two" "text"
+                  [ Schema.logicalModelColumn "one" Schema.TStr,
+                    Schema.logicalModelColumn "two" Schema.TStr
                   ]
               }
 
@@ -228,11 +228,11 @@ tests opts = do
           helloWorldLogicalModelWithDummyArgument =
             (Schema.logicalModel "hello_world_function_with_dummy" query)
               { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "one" "text",
-                    Schema.logicalModelColumn "two" "text"
+                  [ Schema.logicalModelColumn "one" Schema.TStr,
+                    Schema.logicalModelColumn "two" Schema.TStr
                   ],
                 Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "dummy" "varchar"
+                  [ Schema.logicalModelColumn "dummy" Schema.TStr
                   ]
               }
 
@@ -271,8 +271,8 @@ tests opts = do
           helloCommentLogicalModel =
             (Schema.logicalModel "hello_comment_function" spicyQuery)
               { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "one" "text",
-                    Schema.logicalModelColumn "two" "text"
+                  [ Schema.logicalModelColumn "one" Schema.TStr,
+                    Schema.logicalModelColumn "two" Schema.TStr
                   ]
               }
 
@@ -321,13 +321,13 @@ tests opts = do
           articleWithExcerptLogicalModel =
             (Schema.logicalModel "article_with_excerpt" spicyQuery)
               { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "id" "integer",
-                    Schema.logicalModelColumn "title" "text",
-                    Schema.logicalModelColumn "excerpt" "text",
-                    Schema.logicalModelColumn "date" "date"
+                  [ Schema.logicalModelColumn "id" Schema.TInt,
+                    Schema.logicalModelColumn "title" Schema.TStr,
+                    Schema.logicalModelColumn "excerpt" Schema.TStr,
+                    Schema.logicalModelColumn "date" Schema.TUTCTime
                   ],
                 Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "length" "integer"
+                  [ Schema.logicalModelColumn "length" Schema.TInt
                   ]
               }
 
@@ -378,13 +378,13 @@ tests opts = do
           mkArticleWithExcerptLogicalModel name =
             (Schema.logicalModel name spicyQuery)
               { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "id" "integer",
-                    Schema.logicalModelColumn "title" "text",
-                    Schema.logicalModelColumn "excerpt" "text",
-                    Schema.logicalModelColumn "date" "date"
+                  [ Schema.logicalModelColumn "id" Schema.TInt,
+                    Schema.logicalModelColumn "title" Schema.TStr,
+                    Schema.logicalModelColumn "excerpt" Schema.TStr,
+                    Schema.logicalModelColumn "date" Schema.TUTCTime
                   ],
                 Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "length" "integer"
+                  [ Schema.logicalModelColumn "length" Schema.TInt
                   ]
               }
 
@@ -442,13 +442,13 @@ tests opts = do
           articleWithExcerptLogicalModel =
             (Schema.logicalModel "article_with_excerpt" spicyQuery)
               { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "id" "integer",
-                    Schema.logicalModelColumn "title" "text",
-                    Schema.logicalModelColumn "excerpt" "text",
-                    Schema.logicalModelColumn "date" "date"
+                  [ Schema.logicalModelColumn "id" Schema.TInt,
+                    Schema.logicalModelColumn "title" Schema.TStr,
+                    Schema.logicalModelColumn "excerpt" Schema.TStr,
+                    Schema.logicalModelColumn "date" Schema.TUTCTime
                   ],
                 Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "length" "integer"
+                  [ Schema.logicalModelColumn "length" Schema.TInt
                   ]
               }
 
@@ -498,13 +498,13 @@ tests opts = do
           articleWithExcerptLogicalModel =
             (Schema.logicalModel "article_with_excerpt" spicyQuery)
               { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "id" "integer",
-                    Schema.logicalModelColumn "title" "text",
-                    Schema.logicalModelColumn "excerpt" "text",
-                    Schema.logicalModelColumn "date" "date"
+                  [ Schema.logicalModelColumn "id" Schema.TInt,
+                    Schema.logicalModelColumn "title" Schema.TStr,
+                    Schema.logicalModelColumn "excerpt" Schema.TStr,
+                    Schema.logicalModelColumn "date" Schema.TUTCTime
                   ],
                 Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "length" "integer"
+                  [ Schema.logicalModelColumn "length" Schema.TInt
                   ]
               }
 
@@ -547,8 +547,8 @@ tests opts = do
           helloWorldPermLogicalModel =
             (Schema.logicalModel "hello_world_perms" query)
               { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "one" "text",
-                    Schema.logicalModelColumn "two" "text"
+                  [ Schema.logicalModelColumn "one" Schema.TStr,
+                    Schema.logicalModelColumn "two" Schema.TStr
                   ]
               }
 
@@ -609,8 +609,8 @@ tests opts = do
           helloWorldPermLogicalModel =
             (Schema.logicalModel "hello_world_perms" query)
               { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "one" "text",
-                    Schema.logicalModelColumn "two" "text"
+                  [ Schema.logicalModelColumn "one" Schema.TStr,
+                    Schema.logicalModelColumn "two" Schema.TStr
                   ]
               }
 
@@ -672,8 +672,8 @@ tests opts = do
           helloWorldPermLogicalModel =
             (Schema.logicalModel "hello_world_perms" query)
               { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "one" "text",
-                    Schema.logicalModelColumn "two" "text"
+                  [ Schema.logicalModelColumn "one" Schema.TStr,
+                    Schema.logicalModelColumn "two" Schema.TStr
                   ]
               }
 

@@ -153,6 +153,7 @@ library
     Harness.Test.FixtureName
     Harness.Test.Introspection
     Harness.Test.Protocol
+    Harness.Test.ScalarType
     Harness.Test.Schema
     Harness.Test.SchemaName
     Harness.Test.SetupAction

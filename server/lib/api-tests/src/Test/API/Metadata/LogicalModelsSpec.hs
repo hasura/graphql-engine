@@ -75,13 +75,13 @@ testAdminAccess opts = do
         dividedStuffLogicalModel =
           (Schema.logicalModel "divided_stuff" query)
             { Schema.logicalModelColumns =
-                [ (Schema.logicalModelColumn "divided" "integer")
+                [ (Schema.logicalModelColumn "divided" Schema.TInt)
                     { Schema.logicalModelColumnDescription = Just "a divided thing"
                     }
                 ],
               Schema.logicalModelArguments =
-                [ Schema.logicalModelColumn "denominator" "integer",
-                  Schema.logicalModelColumn "target_date" "date"
+                [ Schema.logicalModelColumn "denominator" Schema.TInt,
+                  Schema.logicalModelColumn "target_date" Schema.TUTCTime
                 ]
             }
 
@@ -172,12 +172,12 @@ testImplementation opts = do
           dividedStuffLogicalModel =
             (Schema.logicalModel "divided_stuff" simpleQuery)
               { Schema.logicalModelColumns =
-                  [ (Schema.logicalModelColumn "divided" "integer")
+                  [ (Schema.logicalModelColumn "divided" Schema.TInt)
                       { Schema.logicalModelColumnDescription = Just "a divided thing"
                       }
                   ],
                 Schema.logicalModelArguments =
-                  [Schema.logicalModelColumn "unused" "integer"]
+                  [Schema.logicalModelColumn "unused" Schema.TInt]
               }
 
       Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
@@ -191,12 +191,12 @@ testImplementation opts = do
           brokenQueryLogicalModel =
             (Schema.logicalModel "divided_stuff" brokenQuery)
               { Schema.logicalModelColumns =
-                  [ (Schema.logicalModelColumn "divided" "integer")
+                  [ (Schema.logicalModelColumn "divided" Schema.TInt)
                       { Schema.logicalModelColumnDescription = Just "a divided thing"
                       }
                   ],
                 Schema.logicalModelArguments =
-                  [Schema.logicalModelColumn "unused" "integer"]
+                  [Schema.logicalModelColumn "unused" Schema.TInt]
               }
 
       shouldReturnYaml
@@ -225,13 +225,13 @@ testImplementation opts = do
           dividedStuffLogicalModel =
             (Schema.logicalModel rootfield query)
               { Schema.logicalModelColumns =
-                  [ (Schema.logicalModelColumn "divided" "integer")
+                  [ (Schema.logicalModelColumn "divided" Schema.TInt)
                       { Schema.logicalModelColumnDescription = Just "a divided thing"
                       }
                   ],
                 Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "denominator" "integer",
-                    Schema.logicalModelColumn "target_date" "date"
+                  [ Schema.logicalModelColumn "denominator" Schema.TInt,
+                    Schema.logicalModelColumn "target_date" Schema.TUTCTime
                   ]
               }
 
@@ -255,7 +255,7 @@ testImplementation opts = do
                 type: integer
                 nullable: false
               target_date:
-                type: date
+                type: timestamp
                 nullable: false
             returns:
               columns:
@@ -273,13 +273,13 @@ testImplementation opts = do
           dividedStuffLogicalModel =
             (Schema.logicalModel "divided_stuff" query)
               { Schema.logicalModelColumns =
-                  [ (Schema.logicalModelColumn "divided" "integer")
+                  [ (Schema.logicalModelColumn "divided" Schema.TInt)
                       { Schema.logicalModelColumnDescription = Just "a divided thing"
                       }
                   ],
                 Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "denominator" "integer",
-                    Schema.logicalModelColumn "target_date" "date"
+                  [ Schema.logicalModelColumn "denominator" Schema.TInt,
+                    Schema.logicalModelColumn "target_date" Schema.TUTCTime
                   ]
               }
 
@@ -297,13 +297,13 @@ testImplementation opts = do
           dividedStuffLogicalModel =
             (Schema.logicalModel "divided_stuff" query)
               { Schema.logicalModelColumns =
-                  [ (Schema.logicalModelColumn "divided" "integer")
+                  [ (Schema.logicalModelColumn "divided" Schema.TInt)
                       { Schema.logicalModelColumnDescription = Just "a divided thing"
                       }
                   ],
                 Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "denominator" "integer",
-                    Schema.logicalModelColumn "target_date" "date"
+                  [ Schema.logicalModelColumn "denominator" Schema.TInt,
+                    Schema.logicalModelColumn "target_date" Schema.TUTCTime
                   ]
               }
 
@@ -335,16 +335,16 @@ testImplementation opts = do
           descriptionsAndNullableLogicalModel =
             (Schema.logicalModel "divided_stuff" nullableQuery)
               { Schema.logicalModelColumns =
-                  [ (Schema.logicalModelColumn "divided" "integer")
+                  [ (Schema.logicalModelColumn "divided" Schema.TInt)
                       { Schema.logicalModelColumnDescription = Just "A divided thing"
                       },
-                    (Schema.logicalModelColumn "something_nullable" "integer")
+                    (Schema.logicalModelColumn "something_nullable" Schema.TInt)
                       { Schema.logicalModelColumnDescription = Just "Something nullable",
                         Schema.logicalModelColumnNullable = True
                       }
                   ],
                 Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "unused" "integer"
+                  [ Schema.logicalModelColumn "unused" Schema.TInt
                   ],
                 Schema.logicalModelReturnTypeDescription = Just "Return type description"
               }
@@ -464,13 +464,13 @@ testValidation opts = do
             syntaxErrorLogicalModel =
               (Schema.logicalModel "divided_stuff" spicyQuery)
                 { Schema.logicalModelColumns =
-                    [ (Schema.logicalModelColumn "divided" "integer")
+                    [ (Schema.logicalModelColumn "divided" Schema.TInt)
                         { Schema.logicalModelColumnDescription = Just "A divided thing"
                         }
                     ],
                   Schema.logicalModelArguments =
-                    [ Schema.logicalModelColumn "denominator" "integer",
-                      Schema.logicalModelColumn "target_date" "date"
+                    [ Schema.logicalModelColumn "denominator" Schema.TInt,
+                      Schema.logicalModelColumn "target_date" Schema.TUTCTime
                     ]
                 }
 
@@ -494,13 +494,13 @@ testValidation opts = do
             brokenLogicalModel =
               (Schema.logicalModel "divided_stuff" spicyQuery)
                 { Schema.logicalModelColumns =
-                    [ (Schema.logicalModelColumn "divided" "integer")
+                    [ (Schema.logicalModelColumn "divided" Schema.TInt)
                         { Schema.logicalModelColumnDescription = Just "A divided thing"
                         }
                     ],
                   Schema.logicalModelArguments =
-                    [ Schema.logicalModelColumn "denominator" "integer",
-                      Schema.logicalModelColumn "target_date" "date"
+                    [ Schema.logicalModelColumn "denominator" Schema.TInt,
+                      Schema.logicalModelColumn "target_date" Schema.TUTCTime
                     ]
                 }
 
@@ -535,12 +535,12 @@ testValidation opts = do
             conflictingLogicalModel =
               (Schema.logicalModel (Schema.unSchemaName schemaName <> "_stuff") spicyQuery)
                 { Schema.logicalModelColumns =
-                    [ Schema.logicalModelColumn "thing" "integer",
-                      Schema.logicalModelColumn "date" "date"
+                    [ Schema.logicalModelColumn "thing" Schema.TInt,
+                      Schema.logicalModelColumn "date" Schema.TUTCTime
                     ],
                   Schema.logicalModelArguments =
-                    [ Schema.logicalModelColumn "denominator" "integer",
-                      Schema.logicalModelColumn "target_date" "date"
+                    [ Schema.logicalModelColumn "denominator" Schema.TInt,
+                      Schema.logicalModelColumn "target_date" Schema.TUTCTime
                     ]
                 }
 
@@ -572,12 +572,12 @@ testValidation opts = do
             conflictingLogicalModel =
               (Schema.logicalModel (Schema.unSchemaName schemaName <> "_stuff_exist") spicyQuery)
                 { Schema.logicalModelColumns =
-                    [ Schema.logicalModelColumn "thing" "integer",
-                      Schema.logicalModelColumn "date" "date"
+                    [ Schema.logicalModelColumn "thing" Schema.TInt,
+                      Schema.logicalModelColumn "date" Schema.TUTCTime
                     ],
                   Schema.logicalModelArguments =
-                    [ Schema.logicalModelColumn "denominator" "integer",
-                      Schema.logicalModelColumn "target_date" "date"
+                    [ Schema.logicalModelColumn "denominator" Schema.TInt,
+                      Schema.logicalModelColumn "target_date" Schema.TUTCTime
                     ]
                 }
 
@@ -615,10 +615,10 @@ testValidation opts = do
             brokenTypesLogicalModel =
               (Schema.logicalModel "divided_falling" query)
                 { Schema.logicalModelColumns =
-                    [ Schema.logicalModelColumn "divided" "integer"
+                    [ Schema.logicalModelColumn "divided" Schema.TInt
                     ],
                   Schema.logicalModelArguments =
-                    [ Schema.logicalModelColumn "denominator" "varchar"
+                    [ Schema.logicalModelColumn "denominator" Schema.TStr
                     ]
                 }
 
@@ -656,10 +656,10 @@ testValidation opts = do
             brokenColumnsLogicalModel =
               (Schema.logicalModel "text_failing" query)
                 { Schema.logicalModelColumns =
-                    [ Schema.logicalModelColumn "text" "text"
+                    [ Schema.logicalModelColumn "text" Schema.TStr
                     ],
                   Schema.logicalModelArguments =
-                    [ Schema.logicalModelColumn "text" "text"
+                    [ Schema.logicalModelColumn "text" Schema.TStr
                     ]
                 }
 
@@ -682,7 +682,7 @@ testValidation opts = do
             missingArgsLogicalModel =
               (Schema.logicalModel "divided_falling" query)
                 { Schema.logicalModelColumns =
-                    [ Schema.logicalModelColumn "divided" "integer"
+                    [ Schema.logicalModelColumn "divided" Schema.TInt
                     ],
                   Schema.logicalModelArguments =
                     []
@@ -711,11 +711,11 @@ testValidation opts = do
             dividedStuffLogicalModel =
               (Schema.logicalModel "divided_stuff2" simpleQuery)
                 { Schema.logicalModelColumns =
-                    [ Schema.logicalModelColumn "divided" "integer"
+                    [ Schema.logicalModelColumn "divided" Schema.TInt
                     ],
                   Schema.logicalModelArguments =
-                    [ Schema.logicalModelColumn "denominator" "integer",
-                      Schema.logicalModelColumn "target_date" "date"
+                    [ Schema.logicalModelColumn "denominator" Schema.TInt,
+                      Schema.logicalModelColumn "target_date" Schema.TUTCTime
                     ]
                 }
 
@@ -739,12 +739,12 @@ testPermissions opts = do
         dividedStuffLogicalModel =
           (Schema.logicalModel "divided_stuff" simpleQuery)
             { Schema.logicalModelColumns =
-                [ (Schema.logicalModelColumn "divided" "integer")
+                [ (Schema.logicalModelColumn "divided" Schema.TInt)
                     { Schema.logicalModelColumnDescription = Just "a divided thing"
                     }
                 ],
               Schema.logicalModelArguments =
-                [ Schema.logicalModelColumn "unused" "integer"
+                [ Schema.logicalModelColumn "unused" Schema.TInt
                 ]
             }
 

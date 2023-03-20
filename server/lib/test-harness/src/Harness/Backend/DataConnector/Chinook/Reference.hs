@@ -77,7 +77,8 @@ backendTypeConfig =
       backendDisplayNameString = "reference",
       backendReleaseNameString = Nothing,
       backendServerUrl = Just "http://localhost:65005",
-      backendSchemaKeyword = "schema"
+      backendSchemaKeyword = "schema",
+      backendScalarType = const ""
     }
 
 --------------------------------------------------------------------------------

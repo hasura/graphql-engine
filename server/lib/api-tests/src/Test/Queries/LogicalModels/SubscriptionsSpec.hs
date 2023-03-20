@@ -96,13 +96,13 @@ tests opts = do
             articleWithExcerptLogicalModel =
               (Schema.logicalModel "article_with_excerpt" spicyQuery)
                 { Schema.logicalModelColumns =
-                    [ Schema.logicalModelColumn "id" "integer",
-                      Schema.logicalModelColumn "title" "text",
-                      Schema.logicalModelColumn "excerpt" "text",
-                      Schema.logicalModelColumn "date" "date"
+                    [ Schema.logicalModelColumn "id" Schema.TInt,
+                      Schema.logicalModelColumn "title" Schema.TStr,
+                      Schema.logicalModelColumn "excerpt" Schema.TStr,
+                      Schema.logicalModelColumn "date" Schema.TUTCTime
                     ],
                   Schema.logicalModelArguments =
-                    [Schema.logicalModelColumn "length" "integer"]
+                    [Schema.logicalModelColumn "length" Schema.TInt]
                 }
 
         Schema.trackLogicalModel sourceName articleWithExcerptLogicalModel testEnvironment

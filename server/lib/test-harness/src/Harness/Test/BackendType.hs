@@ -17,6 +17,7 @@ where
 import Data.Aeson (Value)
 import Data.Aeson.Key (Key)
 import Data.Aeson.Types qualified as Aeson
+import Harness.Test.ScalarType
 import Hasura.Backends.DataConnector.API.V0 qualified as API
 import Hasura.Prelude
 
@@ -38,7 +39,9 @@ data BackendTypeConfig = BackendTypeConfig
     -- | The default backend URL for the given backend in this test
     -- suite project.
     backendServerUrl :: Maybe String,
-    backendSchemaKeyword :: Key
+    backendSchemaKeyword :: Key,
+    -- | How should we render scalar types for this backend?
+    backendScalarType :: ScalarType -> Text
   }
 
 parseCapabilities :: BackendTypeConfig -> Maybe API.Capabilities

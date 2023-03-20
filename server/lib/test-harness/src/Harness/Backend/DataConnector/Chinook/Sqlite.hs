@@ -101,7 +101,8 @@ backendTypeConfig =
       backendDisplayNameString = "Hasura SQLite",
       backendReleaseNameString = Nothing,
       backendServerUrl = Just "http://localhost:65007",
-      backendSchemaKeyword = "schema"
+      backendSchemaKeyword = "schema",
+      backendScalarType = const ""
     }
 
 --------------------------------------------------------------------------------

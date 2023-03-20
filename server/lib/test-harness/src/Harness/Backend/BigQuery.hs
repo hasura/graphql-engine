@@ -62,7 +62,8 @@ backendTypeMetadata =
       backendDisplayNameString = "bigquery",
       backendReleaseNameString = Nothing,
       backendServerUrl = Nothing,
-      backendSchemaKeyword = "dataset"
+      backendSchemaKeyword = "dataset",
+      backendScalarType = scalarType
     }
 
 --------------------------------------------------------------------------------
