@@ -12,7 +12,6 @@ import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import Tabbed from '../TabbedDataSourceConnection';
 import { NotFoundError } from '../../../../Error/PageNotFound';
 import { getDataSources } from '../../../../../metadata/selector';
-import { HerokuBanner } from './Neon/components/HerokuBanner/Banner';
 import { Neon } from './Neon';
 
 interface Props extends InjectedProps {}
@@ -34,7 +33,6 @@ const CreateDataSource: React.FC<Props> = ({ dispatch, allDataSources }) => {
                 dispatch={dispatch}
               />
             </div>
-            <HerokuBanner />
           </div>
         </div>
       </Analytics>
