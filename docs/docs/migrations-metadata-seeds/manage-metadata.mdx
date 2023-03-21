@@ -217,11 +217,15 @@ The exported JSON can be imported via the
 Here is an example using `curl`:
 
 ```bash
-curl -d'{"type":"replace_metadata", "args":'$(cat hasura_metadata.json)'}' http://localhost:8080/v1/metadata
+curl -d '{"type":"replace_metadata", "args":'"$(cat hasura_metadata.json)"'}' http://localhost:8080/v1/metadata
 ```
 
 This command reads the `hasura_metadata.json` file and makes a POST request to replace the Metadata. If an admin secret
-is set, add `-H 'X-Hasura-Admin-Secret: [your-admin-secret]'` as the API is an admin-only API.
+is set, add `-H 'X-Hasura-Admin-Secret: <YOUR_ADMIN_SECRET>'` as the API is an admin-only API:
+
+```bash
+curl -H "X-Hasura-Admin-Secret: <YOUR_ADMIN_SECRET>" -d '{"type":"replace_metadata", "args":'"$(cat hasura_metadata.json)"'}' http://localhost:8080/v1/metadata
+```
 
 </TabItem>
 
