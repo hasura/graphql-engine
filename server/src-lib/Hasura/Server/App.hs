@@ -570,36 +570,15 @@ v1Alpha1GQHandler ::
   GH.GQLBatchedReqs (GH.GQLReq GH.GQLQueryText) ->
   m (HttpLogGraphQLInfo, HttpResponse EncJSON)
 v1Alpha1GQHandler queryType query = do
-  appEnv <- askAppEnv
-  appCtx@AppContext {..} <- asks hcAppContext
+  AppEnv {..} <- askAppEnv
+  AppContext {..} <- asks hcAppContext
   userInfo <- asks hcUser
-  schemaCache <- asks hcSchemaCache
+  schemaCache <- lastBuiltSchemaCache <$> asks hcSchemaCache
   schemaCacheVer <- asks hcSchemaCacheVersion
   reqHeaders <- asks hcReqHeaders
   ipAddress <- asks hcSourceIpAddress
   requestId <- asks hcRequestId
-  let logger = _lsLogger $ appEnvLoggers appEnv
-      execCtx = mkExecutionContext appCtx appEnv schemaCache schemaCacheVer
-
-  flip runReaderT execCtx $
-    GH.runGQBatched acEnvironment logger requestId acResponseInternalErrorsConfig userInfo ipAddress reqHeaders queryType query
-
-mkExecutionContext ::
-  AppContext ->
-  AppEnv ->
-  RebuildableSchemaCache ->
-  SchemaCacheVer ->
-  E.ExecutionCtx
-mkExecutionContext AppContext {..} AppEnv {..} sc scVer =
-  let logger = _lsLogger appEnvLoggers
-   in E.ExecutionCtx
-        logger
-        acSQLGenCtx
-        (lastBuiltSchemaCache sc)
-        scVer
-        acEnableAllowlist
-        appEnvEnableReadOnlyMode
-        appEnvPrometheusMetrics
+  GH.runGQBatched acEnvironment acSQLGenCtx schemaCache schemaCacheVer acEnableAllowlist appEnvEnableReadOnlyMode appEnvPrometheusMetrics (_lsLogger appEnvLoggers) requestId acResponseInternalErrorsConfig userInfo ipAddress reqHeaders queryType query
 
 v1GQHandler ::
   ( MonadIO m,
@@ -911,15 +890,12 @@ httpApp setupHook appStateRef appEnv@AppEnv {..} ekgStore = do
         Handler m (HttpLogGraphQLInfo, APIResp)
       customEndpointHandler restReq = do
         endpoints <- liftIO $ scEndpoints <$> getSchemaCache appStateRef
-        appCtx' <- asks hcAppContext
-        schemaCache <- asks hcSchemaCache
+        schemaCache <- lastBuiltSchemaCache <$> asks hcSchemaCache
         schemaCacheVer <- asks hcSchemaCacheVersion
         requestId <- asks hcRequestId
         userInfo <- asks hcUser
         reqHeaders <- asks hcReqHeaders
         ipAddress <- asks hcSourceIpAddress
-
-        let execCtx = mkExecutionContext appCtx' appEnv schemaCache schemaCacheVer
 
         req <-
           restReq & traverse \case
@@ -931,7 +907,7 @@ httpApp setupHook appStateRef appEnv@AppEnv {..} ekgStore = do
               Spock.PATCH -> pure EP.PATCH
               other -> throw400 BadRequest $ "Method " <> tshow other <> " not supported."
             _ -> throw400 BadRequest $ "Nonstandard method not allowed for REST endpoints"
-        fmap JSONResp <$> runCustomEndpoint acEnvironment execCtx requestId userInfo reqHeaders ipAddress req endpoints
+        fmap JSONResp <$> runCustomEndpoint acEnvironment acSQLGenCtx schemaCache schemaCacheVer acEnableAllowlist appEnvEnableReadOnlyMode appEnvPrometheusMetrics (_lsLogger appEnvLoggers) requestId userInfo reqHeaders ipAddress req endpoints
 
   -- See Issue #291 for discussion around restified feature
   Spock.hookRouteAll ("api" <//> "rest" <//> Spock.wildcard) $ \wildcard -> do

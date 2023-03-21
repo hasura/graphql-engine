@@ -19,20 +19,25 @@ import Hasura.EncJSON
 import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Execute.Backend qualified as EB
 import Hasura.GraphQL.Logging (MonadExecutionLog, MonadQueryLog)
-import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHashList (..))
+import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Transport.HTTP qualified as GH
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.HTTP
+import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
-import Hasura.Prelude hiding (get, put)
+import Hasura.Prelude
+import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.QueryCollection
+import Hasura.RQL.Types.SchemaCache
+import Hasura.Server.Init qualified as Init
 import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Name qualified as Name
+import Hasura.Server.Prometheus (PrometheusMetrics)
 import Hasura.Server.Types
-import Hasura.Services.Network
+import Hasura.Services
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -106,7 +111,13 @@ runCustomEndpoint ::
     ProvidesNetwork m
   ) =>
   Env.Environment ->
-  E.ExecutionCtx ->
+  SQLGenCtx ->
+  SchemaCache ->
+  SchemaCacheVer ->
+  Init.AllowListStatus ->
+  ReadOnlyMode ->
+  PrometheusMetrics ->
+  L.Logger L.Hasura ->
   RequestId ->
   UserInfo ->
   [HTTP.Header] ->
@@ -114,7 +125,7 @@ runCustomEndpoint ::
   RestRequest EndpointMethod ->
   EndpointTrie GQLQueryWithText ->
   m (HttpLogGraphQLInfo, HttpResponse EncJSON)
-runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestRequest {..} endpoints = do
+runCustomEndpoint env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger requestId userInfo reqHeaders ipAddress RestRequest {..} endpoints = do
   -- First match the path to an endpoint.
   case matchPath reqMethod (T.split (== '/') reqPath) endpoints of
     MatchFound (queryx :: EndpointMetadata GQLQueryWithText) matches ->
@@ -143,8 +154,8 @@ runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestReques
               -- Construct a graphql query by pairing the resolved variables
               -- with the query string from the schema cache, and pass it
               -- through to the /v1/graphql endpoint.
-              (httpLoggingMetadata, handlerResp) <- flip runReaderT execCtx $ do
-                (gqlOperationLog, resp) <- GH.runGQ env (E._ecxLogger execCtx) requestId userInfo ipAddress reqHeaders E.QueryHasura (mkPassthroughRequest queryx resolvedVariables)
+              (httpLoggingMetadata, handlerResp) <- do
+                (gqlOperationLog, resp) <- GH.runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger requestId userInfo ipAddress reqHeaders E.QueryHasura (mkPassthroughRequest queryx resolvedVariables)
                 let httpLoggingGQInfo = (CommonHttpLogMetadata RequestModeNonBatchable Nothing, (PQHSetSingleton (gqolParameterizedQueryHash gqlOperationLog)))
                 return (httpLoggingGQInfo, fst <$> resp)
               case sequence handlerResp of

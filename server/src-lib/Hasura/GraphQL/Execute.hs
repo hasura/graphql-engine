@@ -7,7 +7,6 @@ module Hasura.GraphQL.Execute
     execRemoteGQ,
     SubscriptionExecution (..),
     buildSubscriptionPlan,
-    ExecutionCtx (..),
     EC.MonadGQLExecutionCheck (..),
     checkQueryInAllowlist,
     MultiplexedSubscriptionQueryPlan (..),
@@ -64,20 +63,6 @@ import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
-
--- | Execution context
---
--- TODO: can this be deduplicated with Run? is there anything in here that isn't
--- already in the stack?
-data ExecutionCtx = ExecutionCtx
-  { _ecxLogger :: L.Logger L.Hasura,
-    _ecxSqlGenCtx :: SQLGenCtx,
-    _ecxSchemaCache :: SchemaCache,
-    _ecxSchemaCacheVer :: SchemaCacheVer,
-    _ecxEnableAllowList :: Init.AllowListStatus,
-    _ecxReadOnlyMode :: ReadOnlyMode,
-    _ecxPrometheusMetrics :: PrometheusMetrics
-  }
 
 -- | Construct a single step of an execution plan.
 makeGQLContext ::

@@ -55,7 +55,7 @@ import Hasura.GraphQL.Logging
   )
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.ParameterizedQueryHash
-import Hasura.GraphQL.Parser.Directives (CachedDirective (..), DirectiveMap, cached)
+import Hasura.GraphQL.Parser.Directives hiding (cachedDirective)
 import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.GraphQL.Transport.Instances ()
@@ -69,11 +69,13 @@ import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
+import Hasura.Server.Init qualified as Init
 import Hasura.Server.Init.Config
 import Hasura.Server.Limits
 import Hasura.Server.Logging
@@ -83,8 +85,8 @@ import Hasura.Server.Prometheus
     PrometheusMetrics (..),
   )
 import Hasura.Server.Telemetry.Counters qualified as Telem
-import Hasura.Server.Types (RequestId)
-import Hasura.Services.Network
+import Hasura.Server.Types (ReadOnlyMode (..), RequestId (..))
+import Hasura.Services
 import Hasura.Session
 import Hasura.Tracing (MonadTrace, TraceT, newSpan)
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -301,7 +303,6 @@ runGQ ::
   ( MonadIO m,
     MonadBaseControl IO m,
     MonadError QErr m,
-    MonadReader E.ExecutionCtx m,
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
     MonadExecutionLog m,
@@ -312,7 +313,18 @@ runGQ ::
     HasResourceLimits m,
     ProvidesNetwork m
   ) =>
+  -- TODO: almost all of those arguments come from `AppEnv` and `HandlerCtx`
+  -- (including `AppContext`). We could refactor this function to make use of
+  -- `HasAppEnv` and `MonadReader HandlerCtx` if the direct dependency is ok.
+  -- In turn, cleaning this list of arguments would allow for a cleanup of
+  -- `runGQBatched` and `runCustomEndpoint`.
   Env.Environment ->
+  SQLGenCtx ->
+  SchemaCache ->
+  SchemaCacheVer ->
+  Init.AllowListStatus ->
+  ReadOnlyMode ->
+  PrometheusMetrics ->
   L.Logger L.Hasura ->
   RequestId ->
   UserInfo ->
@@ -321,8 +333,7 @@ runGQ ::
   E.GraphQLQueryType ->
   GQLReqUnparsed ->
   m (GQLQueryOperationSuccessLog, HttpResponse (Maybe GQResponse, EncJSON))
-runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
-  E.ExecutionCtx _ sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics <- ask
+runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   let gqlMetrics = pmGraphQLRequestMetrics prometheusMetrics
 
   (totalTime, (response, parameterizedQueryHash, gqlOpType)) <- withElapsedTime $ do
@@ -728,7 +739,6 @@ runGQBatched ::
   ( MonadIO m,
     MonadBaseControl IO m,
     MonadError QErr m,
-    MonadReader E.ExecutionCtx m,
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
     MonadExecutionLog m,
@@ -740,6 +750,12 @@ runGQBatched ::
     ProvidesNetwork m
   ) =>
   Env.Environment ->
+  SQLGenCtx ->
+  SchemaCache ->
+  SchemaCacheVer ->
+  Init.AllowListStatus ->
+  ReadOnlyMode ->
+  PrometheusMetrics ->
   L.Logger L.Hasura ->
   RequestId ->
   ResponseInternalErrorsConfig ->
@@ -750,24 +766,23 @@ runGQBatched ::
   -- | the batched request with unparsed GraphQL query
   GQLBatchedReqs (GQLReq GQLQueryText) ->
   m (HttpLogGraphQLInfo, HttpResponse EncJSON)
-runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query =
+runGQBatched env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query =
   case query of
     GQLSingleRequest req -> do
-      (gqlQueryOperationLog, httpResp) <- runGQ env logger reqId userInfo ipAddress reqHdrs queryType req
+      (gqlQueryOperationLog, httpResp) <- runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger reqId userInfo ipAddress reqHdrs queryType req
       let httpLoggingGQInfo = (CommonHttpLogMetadata L.RequestModeSingle (Just (GQLSingleRequest (GQLQueryOperationSuccess gqlQueryOperationLog))), (PQHSetSingleton (gqolParameterizedQueryHash gqlQueryOperationLog)))
       pure (httpLoggingGQInfo, snd <$> httpResp)
     GQLBatchedReqs reqs -> do
       -- It's unclear what we should do if we receive multiple
       -- responses with distinct headers, so just do the simplest thing
       -- in this case, and don't forward any.
-      executionCtx <- ask
-      E.checkGQLBatchedReqs userInfo reqId reqs (E._ecxSchemaCache executionCtx) >>= flip onLeft throwError
+      E.checkGQLBatchedReqs userInfo reqId reqs sc >>= flip onLeft throwError
       let includeInternal = shouldIncludeInternal (_uiRole userInfo) responseErrorsConfig
           removeHeaders =
             flip HttpResponse []
               . encJFromList
               . map (either (encJFromJValue . encodeGQErr includeInternal) _hrBody)
-      responses <- traverse (\req -> fmap (req,) . try . (fmap . fmap . fmap) snd . runGQ env logger reqId userInfo ipAddress reqHdrs queryType $ req) reqs
+      responses <- for reqs \req -> fmap (req,) $ try $ (fmap . fmap . fmap) snd $ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger reqId userInfo ipAddress reqHdrs queryType req
       let requestsOperationLogs = map fst $ rights $ map snd responses
           batchOperationLogs =
             map
