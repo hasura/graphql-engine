@@ -282,7 +282,6 @@ instance MonadMetadataApiAuthorization m => MonadMetadataApiAuthorization (Traci
 class Monad m => MonadConfigApiHandler m where
   runConfigApiHandler ::
     AppStateRef impl ->
-    AppEnv ->
     Spock.SpockCtxT () m ()
 
 mkSpockAction ::
@@ -713,9 +712,9 @@ configApiGetHandler ::
     MonadTrace m
   ) =>
   AppStateRef impl ->
-  AppEnv ->
   Spock.SpockCtxT () m ()
-configApiGetHandler appStateRef AppEnv {..} = do
+configApiGetHandler appStateRef = do
+  AppEnv {..} <- lift askAppEnv
   AppContext {..} <- liftIO $ getAppContext appStateRef
   Spock.get "v1alpha1/config" $
     mkSpockAction appStateRef encodeQErr id $
@@ -768,31 +767,26 @@ mkWaiApp ::
     ProvidesNetwork m,
     MonadGetApiTimeLimit m
   ) =>
-  (AppStateRef impl -> AppEnv -> Spock.SpockT m ()) ->
+  (AppStateRef impl -> Spock.SpockT m ()) ->
   AppStateRef impl ->
-  AppEnv ->
   EKG.Store EKG.EmptyMetrics ->
   WS.WSServerEnv impl ->
   m HasuraApp
-mkWaiApp
-  setupHook
-  appStateRef
-  appEnv@AppEnv {..}
-  ekgStore
-  wsServerEnv = do
-    AppContext {..} <- liftIO $ getAppContext appStateRef
-    spockApp <- liftWithStateless $ \lowerIO ->
-      Spock.spockAsApp $
-        Spock.spockT lowerIO $
-          httpApp setupHook appStateRef appEnv ekgStore
+mkWaiApp setupHook appStateRef ekgStore wsServerEnv = do
+  appEnv@AppEnv {..} <- askAppEnv
+  AppContext {..} <- liftIO $ getAppContext appStateRef
+  spockApp <- liftWithStateless $ \lowerIO ->
+    Spock.spockAsApp $
+      Spock.spockT lowerIO $
+        httpApp setupHook appStateRef appEnv ekgStore
 
-    let wsServerApp = WS.createWSServerApp acEnvironment (_lsEnabledLogTypes appEnvLoggingSettings) acAuthMode wsServerEnv appEnvWebSocketConnectionInitTimeout -- TODO: Lyndon: Can we pass environment through wsServerEnv?
-        stopWSServer = WS.stopWSServerApp wsServerEnv
+  let wsServerApp = WS.createWSServerApp acEnvironment (_lsEnabledLogTypes appEnvLoggingSettings) acAuthMode wsServerEnv appEnvWebSocketConnectionInitTimeout -- TODO: Lyndon: Can we pass environment through wsServerEnv?
+      stopWSServer = WS.stopWSServerApp wsServerEnv
 
-    waiApp <- liftWithStateless $ \lowerIO ->
-      pure $ WSC.websocketsOr appEnvConnectionOptions (\ip conn -> lowerIO $ wsServerApp ip conn) spockApp
+  waiApp <- liftWithStateless $ \lowerIO ->
+    pure $ WSC.websocketsOr appEnvConnectionOptions (\ip conn -> lowerIO $ wsServerApp ip conn) spockApp
 
-    return $ HasuraApp waiApp (ES._ssAsyncActions appEnvSubscriptionState) stopWSServer
+  pure $ HasuraApp waiApp (ES._ssAsyncActions appEnvSubscriptionState) stopWSServer
 
 httpApp ::
   forall m impl.
@@ -819,14 +813,14 @@ httpApp ::
     ProvidesNetwork m,
     MonadGetApiTimeLimit m
   ) =>
-  (AppStateRef impl -> AppEnv -> Spock.SpockT m ()) ->
+  (AppStateRef impl -> Spock.SpockT m ()) ->
   AppStateRef impl ->
   AppEnv ->
   EKG.Store EKG.EmptyMetrics ->
   Spock.SpockT m ()
-httpApp setupHook appStateRef appEnv@AppEnv {..} ekgStore = do
+httpApp setupHook appStateRef AppEnv {..} ekgStore = do
   -- Additional spock action to run
-  setupHook appStateRef appEnv
+  setupHook appStateRef
 
   -- cors middleware
   -- todo: puru: create middleware dynamically based on the corsPolicy change
@@ -952,7 +946,8 @@ httpApp setupHook appStateRef appEnv@AppEnv {..} ekgStore = do
         mkPostHandler $
           fmap (emptyHttpLogGraphQLInfo,) <$> v1Alpha1PGDumpHandler
 
-  when (isConfigEnabled appCtx) $ runConfigApiHandler appStateRef appEnv
+  when (isConfigEnabled appCtx) $
+    runConfigApiHandler appStateRef
 
   when (isGraphQLEnabled appCtx) $ do
     Spock.post "v1alpha1/graphql" $
@@ -1038,16 +1033,14 @@ httpApp setupHook appStateRef appEnv@AppEnv {..} ekgStore = do
       let headers = Wai.requestHeaders req
           blMsg = TL.encodeUtf8 msg
       (reqId, _newHeaders) <- getRequestId headers
-      lift $
-        logHttpSuccess logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) blMsg blMsg Nothing Nothing headers (emptyHttpLogMetadata @m)
+      lift $ logHttpSuccess logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) blMsg blMsg Nothing Nothing headers (emptyHttpLogMetadata @m)
 
     logError err = do
       req <- Spock.request
       reqBody <- liftIO $ Wai.strictRequestBody req
       let headers = Wai.requestHeaders req
       (reqId, _newHeaders) <- getRequestId headers
-      lift $
-        logHttpError logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) err headers (emptyHttpLogMetadata @m)
+      lift $ logHttpError logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) err headers (emptyHttpLogMetadata @m)
 
     spockAction ::
       forall a.

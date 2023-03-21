@@ -381,9 +381,8 @@ runApp serveOptions = do
     App.runPGMetadataStorageAppT appEnv $
       lowerManagedT $
         App.runHGEServer
-          (\_ _ -> pure ())
+          (const $ pure ())
           appCtx
-          appEnv
           initTime
           Nothing
           ekgStore
