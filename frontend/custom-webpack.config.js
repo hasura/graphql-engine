@@ -6,6 +6,7 @@ const util = require('util');
 const withConsoleTweaks = require('./tools/webpack/withConsoleTweaks');
 const withDevAssetLoader = require('./tools/webpack/withDevAssetLoader');
 const withCircularDependencyPlugin = require('./tools/webpack/withCircularDependencyPlugin');
+const withNxEnvCleanup = require('./tools/webpack/withNxEnvCleanup');
 
 module.exports = composePlugins(
   // Nx plugins for webpack.
@@ -13,7 +14,8 @@ module.exports = composePlugins(
   // Replace this with withReact for fast refresh once we are able to use it
   withWeb(),
   withConsoleTweaks(),
-  withDevAssetLoader()
+  withDevAssetLoader(),
+  withNxEnvCleanup()
 
   /*
   withCircularDependencyPlugin({
