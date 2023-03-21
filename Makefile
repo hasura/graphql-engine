@@ -13,6 +13,7 @@ include ./scripts/make/ghcid.mk
 include ./scripts/make/legacy-tests.mk
 include ./scripts/make/lint.mk
 include ./scripts/make/metadata-api.mk
+include ./scripts/make/repl.mk
 include ./scripts/make/run.mk
 include ./scripts/make/tests.mk
 include ./scripts/make/test-infrastructure.mk
