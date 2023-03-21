@@ -23497,33 +23497,6 @@ instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.EventTrigger.Redeliv
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.EventTrigger.DeleteEventTriggerQuery b)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.EventTrigger.CreateEventTriggerQuery b)
 
-module Hasura.RQL.Types.Run
-data RunCtx
-RunCtx :: UserInfo -> ServerConfigCtx -> RunCtx
-[_rcUserInfo] :: RunCtx -> UserInfo
-[_rcServerConfigCtx] :: RunCtx -> ServerConfigCtx
-newtype RunT m a
-RunT :: (RunCtx -> m a) -> RunT m a
-[unRunT] :: RunT m a -> RunCtx -> m a
-peelRun :: RunCtx -> RunT m a -> m a
-instance Control.Monad.Trans.Class.MonadTrans Hasura.RQL.Types.Run.RunT
-instance Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit m => Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit (Hasura.RQL.Types.Run.RunT m)
-instance Hasura.RQL.DDL.EventTrigger.MonadEventLogCleanup m => Hasura.RQL.DDL.EventTrigger.MonadEventLogCleanup (Hasura.RQL.Types.Run.RunT m)
-instance Hasura.RQL.Types.Source.MonadResolveSource m => Hasura.RQL.Types.Source.MonadResolveSource (Hasura.RQL.Types.Run.RunT m)
-instance Hasura.Services.Network.ProvidesNetwork m => Hasura.Services.Network.ProvidesNetwork (Hasura.RQL.Types.Run.RunT m)
-instance Hasura.Metadata.Class.MonadMetadataStorageQueryAPI m => Hasura.Metadata.Class.MonadMetadataStorageQueryAPI (Hasura.RQL.Types.Run.RunT m)
-instance Hasura.Metadata.Class.MonadMetadataStorage m => Hasura.Metadata.Class.MonadMetadataStorage (Hasura.RQL.Types.Run.RunT m)
-instance Control.Monad.Trans.Control.MonadBaseControl b m => Control.Monad.Trans.Control.MonadBaseControl b (Hasura.RQL.Types.Run.RunT m)
-instance Control.Monad.Base.MonadBase b m => Control.Monad.Base.MonadBase b (Hasura.RQL.Types.Run.RunT m)
-instance Hasura.Tracing.Class.MonadTrace m => Hasura.Tracing.Class.MonadTrace (Hasura.RQL.Types.Run.RunT m)
-instance Control.Monad.IO.Class.MonadIO m => Control.Monad.IO.Class.MonadIO (Hasura.RQL.Types.Run.RunT m)
-instance Control.Monad.Error.Class.MonadError e m => Control.Monad.Error.Class.MonadError e (Hasura.RQL.Types.Run.RunT m)
-instance GHC.Base.Monad m => GHC.Base.Monad (Hasura.RQL.Types.Run.RunT m)
-instance GHC.Base.Applicative m => GHC.Base.Applicative (Hasura.RQL.Types.Run.RunT m)
-instance GHC.Base.Functor m => GHC.Base.Functor (Hasura.RQL.Types.Run.RunT m)
-instance GHC.Base.Monad m => Hasura.Session.UserInfoM (Hasura.RQL.Types.Run.RunT m)
-instance GHC.Base.Monad m => Hasura.Server.Types.HasServerConfigCtx (Hasura.RQL.Types.Run.RunT m)
-
 
 -- | <h1>Scheduled Triggers</h1>
 --   
@@ -25043,18 +25016,8 @@ instance Hasura.GraphQL.Execute.Backend.MonadQueryTags m => Hasura.GraphQL.Execu
 instance Hasura.GraphQL.Execute.Backend.MonadQueryTags m => Hasura.GraphQL.Execute.Backend.MonadQueryTags (Database.PG.Query.Transaction.TxET Hasura.Base.Error.QErr m)
 instance Hasura.GraphQL.Execute.Backend.MonadQueryTags m => Hasura.GraphQL.Execute.Backend.MonadQueryTags (Hasura.RQL.Types.SchemaCache.Build.MetadataT m)
 instance Hasura.GraphQL.Execute.Backend.MonadQueryTags m => Hasura.GraphQL.Execute.Backend.MonadQueryTags (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-instance Hasura.GraphQL.Execute.Backend.MonadQueryTags m => Hasura.GraphQL.Execute.Backend.MonadQueryTags (Hasura.RQL.Types.Run.RunT m)
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Backend.ExplainPlan
 instance GHC.Base.Functor (Hasura.GraphQL.Execute.Backend.OnBaseMonad t)
-
-
--- | The RQL query ('<i>v2</i>query')
-module Hasura.Server.API.V2Query
-data RQLQuery
-runQuery :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m, MonadTrace m, MonadMetadataStorage m, MonadResolveSource m, MonadQueryTags m, ProvidesHasuraServices m) => Environment -> InstanceId -> UserInfo -> RebuildableSchemaCache -> ServerConfigCtx -> RQLQuery -> m (EncJSON, RebuildableSchemaCache)
-queryModifiesSchema :: RQLQuery -> Bool
-instance GHC.Generics.Generic Hasura.Server.API.V2Query.RQLQuery
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.V2Query.RQLQuery
 
 
 -- | This module holds functions and data types used for logging at the
@@ -26353,213 +26316,6 @@ runSetMetricsConfig :: (MonadIO m, CacheRWM m, MetadataM m, MonadError QErr m) =
 runRemoveMetricsConfig :: (MonadIO m, CacheRWM m, MetadataM m, MonadError QErr m) => m EncJSON
 runTestWebhookTransform :: QErrM m => TestWebhookTransform -> m EncJSON
 
-
--- | The RQL query ('<i>v1</i>query')
-module Hasura.Server.API.Query
-data RQLQuery
-runQuery :: (MonadIO m, MonadError QErr m, MonadTrace m, MonadBaseControl IO m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m, MonadGetApiTimeLimit m) => Environment -> Logger Hasura -> InstanceId -> UserInfo -> RebuildableSchemaCache -> ServerConfigCtx -> RQLQuery -> m (EncJSON, RebuildableSchemaCache)
-
--- | A predicate that determines whether the given query might
---   modify/rebuild the schema cache. If so, it needs to acquire the global
---   lock on the schema cache so that other queries do not modify it
---   concurrently.
---   
---   Ideally, we would enforce this using the type system — queries for
---   which this function returns <a>False</a> should not be allowed to
---   modify the schema cache. But for now we just ensure consistency by
---   hand.
-queryModifiesSchemaCache :: RQLQuery -> Bool
-requiresAdmin :: RQLQuery -> Bool
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Query.RQLQuery
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Query.RQLQueryV1
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Query.RQLQueryV2
-
-
--- | The RQL metadata query ('<i>v1</i>metadata')
-module Hasura.Server.API.Metadata
-data RQLMetadataV1
-RMAddSource :: !AnyBackend AddSource -> RQLMetadataV1
-RMDropSource :: DropSource -> RQLMetadataV1
-RMRenameSource :: !RenameSource -> RQLMetadataV1
-RMUpdateSource :: !AnyBackend UpdateSource -> RQLMetadataV1
-RMListSourceKinds :: !ListSourceKinds -> RQLMetadataV1
-RMGetSourceKindCapabilities :: !GetSourceKindCapabilities -> RQLMetadataV1
-RMGetSourceTables :: !GetSourceTables -> RQLMetadataV1
-RMGetTableInfo :: !GetTableInfo -> RQLMetadataV1
-RMTrackTable :: !AnyBackend TrackTableV2 -> RQLMetadataV1
-RMUntrackTable :: !AnyBackend UntrackTable -> RQLMetadataV1
-RMSetTableCustomization :: !AnyBackend SetTableCustomization -> RQLMetadataV1
-RMSetApolloFederationConfig :: AnyBackend SetApolloFederationConfig -> RQLMetadataV1
-RMPgSetTableIsEnum :: !AnyBackend SetTableIsEnum -> RQLMetadataV1
-RMCreateInsertPermission :: !AnyBackend (CreatePerm InsPerm) -> RQLMetadataV1
-RMCreateSelectPermission :: !AnyBackend (CreatePerm SelPerm) -> RQLMetadataV1
-RMCreateUpdatePermission :: !AnyBackend (CreatePerm UpdPerm) -> RQLMetadataV1
-RMCreateDeletePermission :: !AnyBackend (CreatePerm DelPerm) -> RQLMetadataV1
-RMDropInsertPermission :: !AnyBackend DropPerm -> RQLMetadataV1
-RMDropSelectPermission :: !AnyBackend DropPerm -> RQLMetadataV1
-RMDropUpdatePermission :: !AnyBackend DropPerm -> RQLMetadataV1
-RMDropDeletePermission :: !AnyBackend DropPerm -> RQLMetadataV1
-RMSetPermissionComment :: !AnyBackend SetPermComment -> RQLMetadataV1
-RMCreateObjectRelationship :: !AnyBackend CreateObjRel -> RQLMetadataV1
-RMCreateArrayRelationship :: !AnyBackend CreateArrRel -> RQLMetadataV1
-RMDropRelationship :: !AnyBackend DropRel -> RQLMetadataV1
-RMSetRelationshipComment :: !AnyBackend SetRelComment -> RQLMetadataV1
-RMRenameRelationship :: !AnyBackend RenameRel -> RQLMetadataV1
-RMSuggestRelationships :: !AnyBackend SuggestRels -> RQLMetadataV1
-RMCreateRemoteRelationship :: !AnyBackend CreateFromSourceRelationship -> RQLMetadataV1
-RMUpdateRemoteRelationship :: !AnyBackend CreateFromSourceRelationship -> RQLMetadataV1
-RMDeleteRemoteRelationship :: !AnyBackend DeleteFromSourceRelationship -> RQLMetadataV1
-RMTrackFunction :: !AnyBackend TrackFunctionV2 -> RQLMetadataV1
-RMUntrackFunction :: !AnyBackend UnTrackFunction -> RQLMetadataV1
-RMSetFunctionCustomization :: AnyBackend SetFunctionCustomization -> RQLMetadataV1
-RMCreateFunctionPermission :: !AnyBackend FunctionPermissionArgument -> RQLMetadataV1
-RMDropFunctionPermission :: !AnyBackend FunctionPermissionArgument -> RQLMetadataV1
-RMAddComputedField :: !AnyBackend AddComputedField -> RQLMetadataV1
-RMDropComputedField :: !AnyBackend DropComputedField -> RQLMetadataV1
-RMTestConnectionTemplate :: !AnyBackend TestConnectionTemplate -> RQLMetadataV1
-RMGetLogicalModel :: !AnyBackend GetLogicalModel -> RQLMetadataV1
-RMTrackLogicalModel :: !AnyBackend TrackLogicalModel -> RQLMetadataV1
-RMUntrackLogicalModel :: !AnyBackend UntrackLogicalModel -> RQLMetadataV1
-RMCreateSelectLogicalModelPermission :: !AnyBackend (CreateLogicalModelPermission SelPerm) -> RQLMetadataV1
-RMDropSelectLogicalModelPermission :: !AnyBackend DropLogicalModelPermission -> RQLMetadataV1
-RMCreateEventTrigger :: !AnyBackend (Unvalidated1 CreateEventTriggerQuery) -> RQLMetadataV1
-RMDeleteEventTrigger :: !AnyBackend DeleteEventTriggerQuery -> RQLMetadataV1
-RMRedeliverEvent :: !AnyBackend RedeliverEventQuery -> RQLMetadataV1
-RMInvokeEventTrigger :: !AnyBackend InvokeEventTriggerQuery -> RQLMetadataV1
-RMCleanupEventTriggerLog :: !TriggerLogCleanupConfig -> RQLMetadataV1
-RMResumeEventTriggerCleanup :: !TriggerLogCleanupToggleConfig -> RQLMetadataV1
-RMPauseEventTriggerCleanup :: !TriggerLogCleanupToggleConfig -> RQLMetadataV1
-RMAddRemoteSchema :: !AddRemoteSchemaQuery -> RQLMetadataV1
-RMUpdateRemoteSchema :: !AddRemoteSchemaQuery -> RQLMetadataV1
-RMRemoveRemoteSchema :: !RemoteSchemaNameQuery -> RQLMetadataV1
-RMReloadRemoteSchema :: !RemoteSchemaNameQuery -> RQLMetadataV1
-RMIntrospectRemoteSchema :: !RemoteSchemaNameQuery -> RQLMetadataV1
-RMAddRemoteSchemaPermissions :: !AddRemoteSchemaPermission -> RQLMetadataV1
-RMDropRemoteSchemaPermissions :: !DropRemoteSchemaPermissions -> RQLMetadataV1
-RMCreateRemoteSchemaRemoteRelationship :: CreateRemoteSchemaRemoteRelationship -> RQLMetadataV1
-RMUpdateRemoteSchemaRemoteRelationship :: CreateRemoteSchemaRemoteRelationship -> RQLMetadataV1
-RMDeleteRemoteSchemaRemoteRelationship :: DeleteRemoteSchemaRemoteRelationship -> RQLMetadataV1
-RMCreateCronTrigger :: !Unvalidated CreateCronTrigger -> RQLMetadataV1
-RMDeleteCronTrigger :: !ScheduledTriggerName -> RQLMetadataV1
-RMCreateScheduledEvent :: !CreateScheduledEvent -> RQLMetadataV1
-RMDeleteScheduledEvent :: !DeleteScheduledEvent -> RQLMetadataV1
-RMGetScheduledEvents :: !GetScheduledEvents -> RQLMetadataV1
-RMGetScheduledEventInvocations :: !GetScheduledEventInvocations -> RQLMetadataV1
-RMGetCronTriggers :: RQLMetadataV1
-RMCreateAction :: !Unvalidated CreateAction -> RQLMetadataV1
-RMDropAction :: !DropAction -> RQLMetadataV1
-RMUpdateAction :: !Unvalidated UpdateAction -> RQLMetadataV1
-RMCreateActionPermission :: !CreateActionPermission -> RQLMetadataV1
-RMDropActionPermission :: !DropActionPermission -> RQLMetadataV1
-RMCreateQueryCollection :: !CreateCollection -> RQLMetadataV1
-RMRenameQueryCollection :: !RenameCollection -> RQLMetadataV1
-RMDropQueryCollection :: !DropCollection -> RQLMetadataV1
-RMAddQueryToCollection :: !AddQueryToCollection -> RQLMetadataV1
-RMDropQueryFromCollection :: !DropQueryFromCollection -> RQLMetadataV1
-RMAddCollectionToAllowlist :: !AllowlistEntry -> RQLMetadataV1
-RMDropCollectionFromAllowlist :: !DropCollectionFromAllowlist -> RQLMetadataV1
-RMUpdateScopeOfCollectionInAllowlist :: !UpdateScopeOfCollectionInAllowlist -> RQLMetadataV1
-RMCreateRestEndpoint :: !CreateEndpoint -> RQLMetadataV1
-RMDropRestEndpoint :: !DropEndpoint -> RQLMetadataV1
-RMDCAddAgent :: !DCAddAgent -> RQLMetadataV1
-RMDCDeleteAgent :: !DCDeleteAgent -> RQLMetadataV1
-RMSetCustomTypes :: !CustomTypes -> RQLMetadataV1
-RMSetApiLimits :: !ApiLimit -> RQLMetadataV1
-RMRemoveApiLimits :: RQLMetadataV1
-RMSetMetricsConfig :: !MetricsConfig -> RQLMetadataV1
-RMRemoveMetricsConfig :: RQLMetadataV1
-RMAddInheritedRole :: !InheritedRole -> RQLMetadataV1
-RMDropInheritedRole :: !DropInheritedRole -> RQLMetadataV1
-RMReplaceMetadata :: !ReplaceMetadata -> RQLMetadataV1
-RMExportMetadata :: !ExportMetadata -> RQLMetadataV1
-RMClearMetadata :: !ClearMetadata -> RQLMetadataV1
-RMReloadMetadata :: !ReloadMetadata -> RQLMetadataV1
-RMGetInconsistentMetadata :: !GetInconsistentMetadata -> RQLMetadataV1
-RMDropInconsistentMetadata :: !DropInconsistentMetadata -> RQLMetadataV1
-RMSetGraphqlSchemaIntrospectionOptions :: !SetGraphqlIntrospectionOptions -> RQLMetadataV1
-RMAddHostToTLSAllowlist :: !AddHostToTLSAllowlist -> RQLMetadataV1
-RMDropHostFromTLSAllowlist :: !DropHostFromTLSAllowlist -> RQLMetadataV1
-RMSetQueryTagsConfig :: !SetQueryTagsConfig -> RQLMetadataV1
-RMSetOpenTelemetryConfig :: !OpenTelemetryConfig -> RQLMetadataV1
-RMSetOpenTelemetryStatus :: !OtelStatus -> RQLMetadataV1
-RMDumpInternalState :: !DumpInternalState -> RQLMetadataV1
-RMGetCatalogState :: !GetCatalogState -> RQLMetadataV1
-RMSetCatalogState :: !SetCatalogState -> RQLMetadataV1
-RMTestWebhookTransform :: !Unvalidated TestWebhookTransform -> RQLMetadataV1
-RMGetFeatureFlag :: !GetFeatureFlag -> RQLMetadataV1
-RMBulk :: [RQLMetadataRequest] -> RQLMetadataV1
-
--- | The payload for the <tt><i>v1</i>metadata</tt> endpoint. See:
---   
---   
---   <a>https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index/</a>
-data RQLMetadata
-runMetadataQuery :: (MonadIO m, MonadError QErr m, MonadBaseControl IO m, MonadTrace m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadEventLogCleanup m, ProvidesHasuraServices m, MonadGetApiTimeLimit m) => Environment -> Logger Hasura -> InstanceId -> UserInfo -> ServerConfigCtx -> RebuildableSchemaCache -> RQLMetadata -> m (EncJSON, RebuildableSchemaCache)
-instance GHC.Generics.Generic Hasura.Server.API.Metadata.RQLMetadataV2
-instance GHC.Generics.Generic Hasura.Server.API.Metadata.RQLMetadataV1
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Metadata.RQLMetadata
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Metadata.RQLMetadataV1
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Metadata.RQLMetadataRequest
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Metadata.RQLMetadataV2
-
-module Hasura.Server.API.Instances
-
-
--- | Postgres Instances API
---   
---   Defines a <a>BackendAPI</a> type class instance for Postgres.
-module Hasura.Backends.Postgres.Instances.API
-instance Hasura.Server.API.Backend.BackendAPI ('Hasura.SQL.Backend.Postgres 'Hasura.SQL.Backend.Vanilla)
-instance Hasura.Server.API.Backend.BackendAPI ('Hasura.SQL.Backend.Postgres 'Hasura.SQL.Backend.Citus)
-instance Hasura.Server.API.Backend.BackendAPI ('Hasura.SQL.Backend.Postgres 'Hasura.SQL.Backend.Cockroach)
-
-
--- | BackendAPI
---   
---   This module defines the <a>BackendAPI</a> class, alongside a few
---   helpers. Its goal is to delegate to backends the responsibility of
---   creating the parsers for the metadata API. Each backend is expected to
---   provide a list of <a>CommandParser</a>, which in turn is a simple
---   function from command name and command arguments to a corresponding
---   parser. Command parsers can easily be created using the
---   <a>commandParser</a> function.
---   
---   Furthermore, for each set of related features, such as table tracking
---   commands, or permission commands, a helper function is provided, that
---   allows a backend to write its instance by simply listing the set of
---   features it supports.
-module Hasura.Server.API.Backend
-class BackendAPI (b :: BackendType)
-metadataV1CommandParsers :: BackendAPI b => [CommandParser b]
-commandParser :: FromJSON a => Text -> (a -> RQLMetadataV1) -> CommandParser b
-sourceCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-tableCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-tablePermissionsCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-functionCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-functionPermissionsCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-relationshipCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-remoteRelationshipCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-eventTriggerCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-computedFieldCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-connectionTemplateCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-logicalModelsCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-
-module Hasura.Backends.MySQL.Instances.API
-instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.MySQL
-
-
--- | MSSQL Instances API
---   
---   Defines a <a>BackendAPI</a> type class instance for MSSQL.
-module Hasura.Backends.MSSQL.Instances.API
-instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.MSSQL
-
-module Hasura.Backends.DataConnector.Adapter.API
-instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.DataConnector
-
-module Hasura.Backends.BigQuery.Instances.API
-instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.BigQuery
-
 module Hasura.GraphQL.Transport.WebSocket.Server
 data WSId
 mkUnsafeWSId :: UUID -> WSId
@@ -27116,10 +26872,31 @@ Loggers :: LoggerCtx Hasura -> Logger Hasura -> PGLogger -> Loggers
 [_lsLogger] :: Loggers -> Logger Hasura
 [_lsPgLogger] :: Loggers -> PGLogger
 
+-- | Provides access to the <a>AppEnv</a>.
+--   
+--   This class is nothing more than an equivalent of <tt>MonadReader
+--   AppEnv m</tt>, but it abstracts it, so that application code can be
+--   written without explicitly relying on an explicit implementation of
+--   the app monad. It allows for the app env to be passed implicitly
+--   instead of explictly in all of the app init code.
+--   
+--   This class is not meant to be used across the entirety of the
+--   codebase, as using it brings in scope the types of all fields,
+--   creating dependencies between unrelated parts of the codebase. It is
+--   only meant to be used at the top level; more specific parts of the
+--   code should only rely on the relevant subset of the environment,
+--   exposed by small, local typeclasses. For instance, at time of writing,
+--   this can be used to implement <a>HasServerConfigCtx</a>, as a first
+--   step towards breaking it down.
+class Monad m => HasAppEnv m
+askAppEnv :: HasAppEnv m => m AppEnv
+
 -- | Function to build the <a>AppContext</a> (given the
 --   <a>ServeOptions</a>) for the first time
 buildRebuildableAppContext :: (Logger Hasura, Manager) -> ServeOptions impl -> Environment -> ExceptT QErr IO (RebuildableAppContext impl)
 initSQLGenCtx :: HashSet ExperimentalFeature -> StringifyNumbers -> DangerouslyCollapseBooleans -> SQLGenCtx
+instance Hasura.App.State.HasAppEnv m => Hasura.App.State.HasAppEnv (Control.Monad.Trans.Reader.ReaderT r m)
+instance Hasura.App.State.HasAppEnv m => Hasura.App.State.HasAppEnv (Control.Monad.Trans.Except.ExceptT e m)
 
 module Hasura.Server.AppStateRef
 
@@ -27212,9 +26989,236 @@ startSchemaSyncListenerThread :: ForkableMonadIO m => Logger Hasura -> PGPool ->
 
 -- | An async thread which processes the schema sync events See Note
 --   [Schema Cache Sync]
-startSchemaSyncProcessorThread :: (ForkableMonadIO m, MonadMetadataStorage m, MonadResolveSource m, ProvidesNetwork m) => Logger Hasura -> Manager -> TMVar MetadataResourceVersion -> AppStateRef impl -> InstanceId -> MaintenanceMode () -> EventingMode -> ReadOnlyMode -> TVar Bool -> (FeatureFlag -> IO Bool) -> ManagedT m Thread
+startSchemaSyncProcessorThread :: (ForkableMonadIO m, HasAppEnv m, MonadMetadataStorage m, MonadResolveSource m, ProvidesNetwork m) => AppStateRef impl -> TVar Bool -> ManagedT m Thread
 instance GHC.Classes.Eq Hasura.Server.SchemaUpdate.ErrorState
+instance Control.Monad.Trans.Class.MonadTrans Hasura.Server.SchemaUpdate.SchemaUpdateT
+instance Hasura.RQL.Types.Source.MonadResolveSource m => Hasura.RQL.Types.Source.MonadResolveSource (Hasura.Server.SchemaUpdate.SchemaUpdateT m)
+instance Hasura.Services.Network.ProvidesNetwork m => Hasura.Services.Network.ProvidesNetwork (Hasura.Server.SchemaUpdate.SchemaUpdateT m)
+instance Hasura.Metadata.Class.MonadMetadataStorage m => Hasura.Metadata.Class.MonadMetadataStorage (Hasura.Server.SchemaUpdate.SchemaUpdateT m)
+instance Control.Monad.IO.Class.MonadIO m => Control.Monad.IO.Class.MonadIO (Hasura.Server.SchemaUpdate.SchemaUpdateT m)
+instance Control.Monad.Error.Class.MonadError e m => Control.Monad.Error.Class.MonadError e (Hasura.Server.SchemaUpdate.SchemaUpdateT m)
+instance GHC.Base.Monad m => GHC.Base.Monad (Hasura.Server.SchemaUpdate.SchemaUpdateT m)
+instance GHC.Base.Applicative m => GHC.Base.Applicative (Hasura.Server.SchemaUpdate.SchemaUpdateT m)
+instance GHC.Base.Functor m => GHC.Base.Functor (Hasura.Server.SchemaUpdate.SchemaUpdateT m)
+instance GHC.Base.Monad m => Hasura.Session.UserInfoM (Hasura.Server.SchemaUpdate.SchemaUpdateT m)
+instance Hasura.App.State.HasAppEnv m => Hasura.Server.Types.HasServerConfigCtx (Hasura.Server.SchemaUpdate.SchemaUpdateT m)
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.SchemaUpdate.ThreadError
+
+
+-- | The RQL query ('<i>v2</i>query')
+module Hasura.Server.API.V2Query
+data RQLQuery
+runQuery :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m, HasAppEnv m, MonadTrace m, MonadMetadataStorage m, MonadResolveSource m, MonadQueryTags m, ProvidesHasuraServices m, UserInfoM m, HasServerConfigCtx m) => AppContext -> RebuildableSchemaCache -> RQLQuery -> m (EncJSON, RebuildableSchemaCache)
+queryModifiesSchema :: RQLQuery -> Bool
+instance GHC.Generics.Generic Hasura.Server.API.V2Query.RQLQuery
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.V2Query.RQLQuery
+
+
+-- | The RQL query ('<i>v1</i>query')
+module Hasura.Server.API.Query
+data RQLQuery
+runQuery :: (MonadIO m, MonadError QErr m, HasAppEnv m, MonadTrace m, MonadBaseControl IO m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m, MonadGetApiTimeLimit m, UserInfoM m, HasServerConfigCtx m) => AppContext -> RebuildableSchemaCache -> RQLQuery -> m (EncJSON, RebuildableSchemaCache)
+
+-- | A predicate that determines whether the given query might
+--   modify/rebuild the schema cache. If so, it needs to acquire the global
+--   lock on the schema cache so that other queries do not modify it
+--   concurrently.
+--   
+--   Ideally, we would enforce this using the type system — queries for
+--   which this function returns <a>False</a> should not be allowed to
+--   modify the schema cache. But for now we just ensure consistency by
+--   hand.
+queryModifiesSchemaCache :: RQLQuery -> Bool
+requiresAdmin :: RQLQuery -> Bool
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Query.RQLQuery
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Query.RQLQueryV1
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Query.RQLQueryV2
+
+
+-- | The RQL metadata query ('<i>v1</i>metadata')
+module Hasura.Server.API.Metadata
+data RQLMetadataV1
+RMAddSource :: !AnyBackend AddSource -> RQLMetadataV1
+RMDropSource :: DropSource -> RQLMetadataV1
+RMRenameSource :: !RenameSource -> RQLMetadataV1
+RMUpdateSource :: !AnyBackend UpdateSource -> RQLMetadataV1
+RMListSourceKinds :: !ListSourceKinds -> RQLMetadataV1
+RMGetSourceKindCapabilities :: !GetSourceKindCapabilities -> RQLMetadataV1
+RMGetSourceTables :: !GetSourceTables -> RQLMetadataV1
+RMGetTableInfo :: !GetTableInfo -> RQLMetadataV1
+RMTrackTable :: !AnyBackend TrackTableV2 -> RQLMetadataV1
+RMUntrackTable :: !AnyBackend UntrackTable -> RQLMetadataV1
+RMSetTableCustomization :: !AnyBackend SetTableCustomization -> RQLMetadataV1
+RMSetApolloFederationConfig :: AnyBackend SetApolloFederationConfig -> RQLMetadataV1
+RMPgSetTableIsEnum :: !AnyBackend SetTableIsEnum -> RQLMetadataV1
+RMCreateInsertPermission :: !AnyBackend (CreatePerm InsPerm) -> RQLMetadataV1
+RMCreateSelectPermission :: !AnyBackend (CreatePerm SelPerm) -> RQLMetadataV1
+RMCreateUpdatePermission :: !AnyBackend (CreatePerm UpdPerm) -> RQLMetadataV1
+RMCreateDeletePermission :: !AnyBackend (CreatePerm DelPerm) -> RQLMetadataV1
+RMDropInsertPermission :: !AnyBackend DropPerm -> RQLMetadataV1
+RMDropSelectPermission :: !AnyBackend DropPerm -> RQLMetadataV1
+RMDropUpdatePermission :: !AnyBackend DropPerm -> RQLMetadataV1
+RMDropDeletePermission :: !AnyBackend DropPerm -> RQLMetadataV1
+RMSetPermissionComment :: !AnyBackend SetPermComment -> RQLMetadataV1
+RMCreateObjectRelationship :: !AnyBackend CreateObjRel -> RQLMetadataV1
+RMCreateArrayRelationship :: !AnyBackend CreateArrRel -> RQLMetadataV1
+RMDropRelationship :: !AnyBackend DropRel -> RQLMetadataV1
+RMSetRelationshipComment :: !AnyBackend SetRelComment -> RQLMetadataV1
+RMRenameRelationship :: !AnyBackend RenameRel -> RQLMetadataV1
+RMSuggestRelationships :: !AnyBackend SuggestRels -> RQLMetadataV1
+RMCreateRemoteRelationship :: !AnyBackend CreateFromSourceRelationship -> RQLMetadataV1
+RMUpdateRemoteRelationship :: !AnyBackend CreateFromSourceRelationship -> RQLMetadataV1
+RMDeleteRemoteRelationship :: !AnyBackend DeleteFromSourceRelationship -> RQLMetadataV1
+RMTrackFunction :: !AnyBackend TrackFunctionV2 -> RQLMetadataV1
+RMUntrackFunction :: !AnyBackend UnTrackFunction -> RQLMetadataV1
+RMSetFunctionCustomization :: AnyBackend SetFunctionCustomization -> RQLMetadataV1
+RMCreateFunctionPermission :: !AnyBackend FunctionPermissionArgument -> RQLMetadataV1
+RMDropFunctionPermission :: !AnyBackend FunctionPermissionArgument -> RQLMetadataV1
+RMAddComputedField :: !AnyBackend AddComputedField -> RQLMetadataV1
+RMDropComputedField :: !AnyBackend DropComputedField -> RQLMetadataV1
+RMTestConnectionTemplate :: !AnyBackend TestConnectionTemplate -> RQLMetadataV1
+RMGetLogicalModel :: !AnyBackend GetLogicalModel -> RQLMetadataV1
+RMTrackLogicalModel :: !AnyBackend TrackLogicalModel -> RQLMetadataV1
+RMUntrackLogicalModel :: !AnyBackend UntrackLogicalModel -> RQLMetadataV1
+RMCreateSelectLogicalModelPermission :: !AnyBackend (CreateLogicalModelPermission SelPerm) -> RQLMetadataV1
+RMDropSelectLogicalModelPermission :: !AnyBackend DropLogicalModelPermission -> RQLMetadataV1
+RMCreateEventTrigger :: !AnyBackend (Unvalidated1 CreateEventTriggerQuery) -> RQLMetadataV1
+RMDeleteEventTrigger :: !AnyBackend DeleteEventTriggerQuery -> RQLMetadataV1
+RMRedeliverEvent :: !AnyBackend RedeliverEventQuery -> RQLMetadataV1
+RMInvokeEventTrigger :: !AnyBackend InvokeEventTriggerQuery -> RQLMetadataV1
+RMCleanupEventTriggerLog :: !TriggerLogCleanupConfig -> RQLMetadataV1
+RMResumeEventTriggerCleanup :: !TriggerLogCleanupToggleConfig -> RQLMetadataV1
+RMPauseEventTriggerCleanup :: !TriggerLogCleanupToggleConfig -> RQLMetadataV1
+RMAddRemoteSchema :: !AddRemoteSchemaQuery -> RQLMetadataV1
+RMUpdateRemoteSchema :: !AddRemoteSchemaQuery -> RQLMetadataV1
+RMRemoveRemoteSchema :: !RemoteSchemaNameQuery -> RQLMetadataV1
+RMReloadRemoteSchema :: !RemoteSchemaNameQuery -> RQLMetadataV1
+RMIntrospectRemoteSchema :: !RemoteSchemaNameQuery -> RQLMetadataV1
+RMAddRemoteSchemaPermissions :: !AddRemoteSchemaPermission -> RQLMetadataV1
+RMDropRemoteSchemaPermissions :: !DropRemoteSchemaPermissions -> RQLMetadataV1
+RMCreateRemoteSchemaRemoteRelationship :: CreateRemoteSchemaRemoteRelationship -> RQLMetadataV1
+RMUpdateRemoteSchemaRemoteRelationship :: CreateRemoteSchemaRemoteRelationship -> RQLMetadataV1
+RMDeleteRemoteSchemaRemoteRelationship :: DeleteRemoteSchemaRemoteRelationship -> RQLMetadataV1
+RMCreateCronTrigger :: !Unvalidated CreateCronTrigger -> RQLMetadataV1
+RMDeleteCronTrigger :: !ScheduledTriggerName -> RQLMetadataV1
+RMCreateScheduledEvent :: !CreateScheduledEvent -> RQLMetadataV1
+RMDeleteScheduledEvent :: !DeleteScheduledEvent -> RQLMetadataV1
+RMGetScheduledEvents :: !GetScheduledEvents -> RQLMetadataV1
+RMGetScheduledEventInvocations :: !GetScheduledEventInvocations -> RQLMetadataV1
+RMGetCronTriggers :: RQLMetadataV1
+RMCreateAction :: !Unvalidated CreateAction -> RQLMetadataV1
+RMDropAction :: !DropAction -> RQLMetadataV1
+RMUpdateAction :: !Unvalidated UpdateAction -> RQLMetadataV1
+RMCreateActionPermission :: !CreateActionPermission -> RQLMetadataV1
+RMDropActionPermission :: !DropActionPermission -> RQLMetadataV1
+RMCreateQueryCollection :: !CreateCollection -> RQLMetadataV1
+RMRenameQueryCollection :: !RenameCollection -> RQLMetadataV1
+RMDropQueryCollection :: !DropCollection -> RQLMetadataV1
+RMAddQueryToCollection :: !AddQueryToCollection -> RQLMetadataV1
+RMDropQueryFromCollection :: !DropQueryFromCollection -> RQLMetadataV1
+RMAddCollectionToAllowlist :: !AllowlistEntry -> RQLMetadataV1
+RMDropCollectionFromAllowlist :: !DropCollectionFromAllowlist -> RQLMetadataV1
+RMUpdateScopeOfCollectionInAllowlist :: !UpdateScopeOfCollectionInAllowlist -> RQLMetadataV1
+RMCreateRestEndpoint :: !CreateEndpoint -> RQLMetadataV1
+RMDropRestEndpoint :: !DropEndpoint -> RQLMetadataV1
+RMDCAddAgent :: !DCAddAgent -> RQLMetadataV1
+RMDCDeleteAgent :: !DCDeleteAgent -> RQLMetadataV1
+RMSetCustomTypes :: !CustomTypes -> RQLMetadataV1
+RMSetApiLimits :: !ApiLimit -> RQLMetadataV1
+RMRemoveApiLimits :: RQLMetadataV1
+RMSetMetricsConfig :: !MetricsConfig -> RQLMetadataV1
+RMRemoveMetricsConfig :: RQLMetadataV1
+RMAddInheritedRole :: !InheritedRole -> RQLMetadataV1
+RMDropInheritedRole :: !DropInheritedRole -> RQLMetadataV1
+RMReplaceMetadata :: !ReplaceMetadata -> RQLMetadataV1
+RMExportMetadata :: !ExportMetadata -> RQLMetadataV1
+RMClearMetadata :: !ClearMetadata -> RQLMetadataV1
+RMReloadMetadata :: !ReloadMetadata -> RQLMetadataV1
+RMGetInconsistentMetadata :: !GetInconsistentMetadata -> RQLMetadataV1
+RMDropInconsistentMetadata :: !DropInconsistentMetadata -> RQLMetadataV1
+RMSetGraphqlSchemaIntrospectionOptions :: !SetGraphqlIntrospectionOptions -> RQLMetadataV1
+RMAddHostToTLSAllowlist :: !AddHostToTLSAllowlist -> RQLMetadataV1
+RMDropHostFromTLSAllowlist :: !DropHostFromTLSAllowlist -> RQLMetadataV1
+RMSetQueryTagsConfig :: !SetQueryTagsConfig -> RQLMetadataV1
+RMSetOpenTelemetryConfig :: !OpenTelemetryConfig -> RQLMetadataV1
+RMSetOpenTelemetryStatus :: !OtelStatus -> RQLMetadataV1
+RMDumpInternalState :: !DumpInternalState -> RQLMetadataV1
+RMGetCatalogState :: !GetCatalogState -> RQLMetadataV1
+RMSetCatalogState :: !SetCatalogState -> RQLMetadataV1
+RMTestWebhookTransform :: !Unvalidated TestWebhookTransform -> RQLMetadataV1
+RMGetFeatureFlag :: !GetFeatureFlag -> RQLMetadataV1
+RMBulk :: [RQLMetadataRequest] -> RQLMetadataV1
+
+-- | The payload for the <tt><i>v1</i>metadata</tt> endpoint. See:
+--   
+--   
+--   <a>https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index/</a>
+data RQLMetadata
+runMetadataQuery :: (MonadIO m, MonadError QErr m, MonadBaseControl IO m, HasAppEnv m, MonadTrace m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadEventLogCleanup m, ProvidesHasuraServices m, MonadGetApiTimeLimit m, UserInfoM m, HasServerConfigCtx m) => AppContext -> RebuildableSchemaCache -> RQLMetadata -> m (EncJSON, RebuildableSchemaCache)
+instance GHC.Generics.Generic Hasura.Server.API.Metadata.RQLMetadataV2
+instance GHC.Generics.Generic Hasura.Server.API.Metadata.RQLMetadataV1
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Metadata.RQLMetadata
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Metadata.RQLMetadataV1
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Metadata.RQLMetadataRequest
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Metadata.RQLMetadataV2
+
+module Hasura.Server.API.Instances
+
+
+-- | Postgres Instances API
+--   
+--   Defines a <a>BackendAPI</a> type class instance for Postgres.
+module Hasura.Backends.Postgres.Instances.API
+instance Hasura.Server.API.Backend.BackendAPI ('Hasura.SQL.Backend.Postgres 'Hasura.SQL.Backend.Vanilla)
+instance Hasura.Server.API.Backend.BackendAPI ('Hasura.SQL.Backend.Postgres 'Hasura.SQL.Backend.Citus)
+instance Hasura.Server.API.Backend.BackendAPI ('Hasura.SQL.Backend.Postgres 'Hasura.SQL.Backend.Cockroach)
+
+
+-- | BackendAPI
+--   
+--   This module defines the <a>BackendAPI</a> class, alongside a few
+--   helpers. Its goal is to delegate to backends the responsibility of
+--   creating the parsers for the metadata API. Each backend is expected to
+--   provide a list of <a>CommandParser</a>, which in turn is a simple
+--   function from command name and command arguments to a corresponding
+--   parser. Command parsers can easily be created using the
+--   <a>commandParser</a> function.
+--   
+--   Furthermore, for each set of related features, such as table tracking
+--   commands, or permission commands, a helper function is provided, that
+--   allows a backend to write its instance by simply listing the set of
+--   features it supports.
+module Hasura.Server.API.Backend
+class BackendAPI (b :: BackendType)
+metadataV1CommandParsers :: BackendAPI b => [CommandParser b]
+commandParser :: FromJSON a => Text -> (a -> RQLMetadataV1) -> CommandParser b
+sourceCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+tableCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+tablePermissionsCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+functionCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+functionPermissionsCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+relationshipCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+remoteRelationshipCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+eventTriggerCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+computedFieldCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+connectionTemplateCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+logicalModelsCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+
+module Hasura.Backends.MySQL.Instances.API
+instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.MySQL
+
+
+-- | MSSQL Instances API
+--   
+--   Defines a <a>BackendAPI</a> type class instance for MSSQL.
+module Hasura.Backends.MSSQL.Instances.API
+instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.MSSQL
+
+module Hasura.Backends.DataConnector.Adapter.API
+instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.DataConnector
+
+module Hasura.Backends.BigQuery.Instances.API
+instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.BigQuery
 
 module Hasura.GraphQL.Execute.Common
 
@@ -27580,7 +27584,7 @@ authorizeV2QueryApi :: MonadMetadataApiAuthorization m => RQLQuery -> HandlerCtx
 -- | The config API (<i>v1alpha1</i>config) handler
 class Monad m => MonadConfigApiHandler m
 runConfigApiHandler :: MonadConfigApiHandler m => AppStateRef impl -> AppEnv -> SpockCtxT () m ()
-mkSpockAction :: forall m a impl. (MonadIO m, MonadBaseControl IO m, FromJSON a, UserAuthentication m, HttpLog m, HasResourceLimits m, MonadTrace m) => AppStateRef impl -> AppEnv -> (Bool -> QErr -> Value) -> (QErr -> QErr) -> APIHandler m a -> ActionT m ()
+mkSpockAction :: forall m a impl. (MonadIO m, MonadBaseControl IO m, HasAppEnv m, FromJSON a, UserAuthentication m, HttpLog m, HasResourceLimits m, MonadTrace m) => AppStateRef impl -> (Bool -> QErr -> Value) -> (QErr -> QErr) -> APIHandler m a -> ActionT m ()
 class (Monad m) => ConsoleRenderer m
 renderConsole :: ConsoleRenderer m => Text -> AuthMode -> TelemetryStatus -> Maybe Text -> Maybe Text -> m (Either String Text)
 class (Monad m) => MonadVersionAPIWithExtraData m
@@ -27588,10 +27592,10 @@ getExtraDataForVersionAPI :: MonadVersionAPIWithExtraData m => m [Pair]
 renderHtmlTemplate :: Template -> Value -> Either String Text
 
 -- | Default implementation of the <a>MonadConfigApiHandler</a>
-configApiGetHandler :: forall m impl. (MonadIO m, MonadBaseControl IO m, UserAuthentication m, HttpLog m, HasResourceLimits m, MonadTrace m) => AppStateRef impl -> AppEnv -> SpockCtxT () m ()
+configApiGetHandler :: forall m impl. (MonadIO m, MonadBaseControl IO m, HasAppEnv m, UserAuthentication m, HttpLog m, HasResourceLimits m, MonadTrace m) => AppStateRef impl -> AppEnv -> SpockCtxT () m ()
 data HasuraApp
 HasuraApp :: !Application -> !AsyncActionSubscriptionState -> !IO () -> HasuraApp
-mkWaiApp :: forall m impl. (MonadIO m, MonadFix m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, MonadVersionAPIWithExtraData m, HttpLog m, UserAuthentication m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadExecutionLog m, MonadWSLog m, MonadTrace m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesNetwork m, MonadGetApiTimeLimit m) => (AppStateRef impl -> AppEnv -> SpockT m ()) -> AppStateRef impl -> AppEnv -> Store EmptyMetrics -> WSServerEnv impl -> m HasuraApp
+mkWaiApp :: forall m impl. (MonadIO m, MonadFix m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, MonadVersionAPIWithExtraData m, HttpLog m, HasAppEnv m, UserAuthentication m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadExecutionLog m, MonadWSLog m, MonadTrace m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesNetwork m, MonadGetApiTimeLimit m) => (AppStateRef impl -> AppEnv -> SpockT m ()) -> AppStateRef impl -> AppEnv -> Store EmptyMetrics -> WSServerEnv impl -> m HasuraApp
 instance Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit m => Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit (Hasura.Server.App.Handler m)
 instance Hasura.Services.Network.ProvidesNetwork m => Hasura.Services.Network.ProvidesNetwork (Hasura.Server.App.Handler m)
 instance Hasura.Metadata.Class.MonadMetadataStorageQueryAPI m => Hasura.Metadata.Class.MonadMetadataStorageQueryAPI (Hasura.Server.App.Handler m)
@@ -27603,9 +27607,9 @@ instance Hasura.GraphQL.Logging.ExecutionLog.MonadExecutionLog m => Hasura.Graph
 instance Hasura.GraphQL.Logging.QueryLog.MonadQueryLog m => Hasura.GraphQL.Logging.QueryLog.MonadQueryLog (Hasura.Server.App.Handler m)
 instance Hasura.RQL.DDL.EventTrigger.MonadEventLogCleanup m => Hasura.RQL.DDL.EventTrigger.MonadEventLogCleanup (Hasura.Server.App.Handler m)
 instance Hasura.GraphQL.Execute.Common.MonadGQLExecutionCheck m => Hasura.GraphQL.Execute.Common.MonadGQLExecutionCheck (Hasura.Server.App.Handler m)
-instance Hasura.Server.Types.HasServerConfigCtx m => Hasura.Server.Types.HasServerConfigCtx (Hasura.Server.App.Handler m)
 instance Hasura.RQL.Types.Source.MonadResolveSource m => Hasura.RQL.Types.Source.MonadResolveSource (Hasura.Server.App.Handler m)
 instance Hasura.Server.Limits.HasResourceLimits m => Hasura.Server.Limits.HasResourceLimits (Hasura.Server.App.Handler m)
+instance Hasura.App.State.HasAppEnv m => Hasura.App.State.HasAppEnv (Hasura.Server.App.Handler m)
 instance Hasura.Tracing.Class.MonadTrace m => Hasura.Tracing.Class.MonadTrace (Hasura.Server.App.Handler m)
 instance GHC.Base.Monad m => Control.Monad.Error.Class.MonadError Hasura.Base.Error.QErr (Hasura.Server.App.Handler m)
 instance GHC.Base.Monad m => Control.Monad.Reader.Class.MonadReader Hasura.Server.App.HandlerCtx (Hasura.Server.App.Handler m)
@@ -27618,6 +27622,8 @@ instance GHC.Base.Monad m => GHC.Base.Applicative (Hasura.Server.App.Handler m)
 instance GHC.Base.Functor m => GHC.Base.Functor (Hasura.Server.App.Handler m)
 instance Hasura.Server.App.ConsoleRenderer m => Hasura.Server.App.ConsoleRenderer (Hasura.Tracing.Monad.TraceT m)
 instance Control.Monad.Trans.Class.MonadTrans Hasura.Server.App.Handler
+instance GHC.Base.Monad m => Hasura.Session.UserInfoM (Hasura.Server.App.Handler m)
+instance Hasura.App.State.HasAppEnv m => Hasura.Server.Types.HasServerConfigCtx (Hasura.Server.App.Handler m)
 instance Hasura.Server.App.MonadMetadataApiAuthorization m => Hasura.Server.App.MonadMetadataApiAuthorization (Control.Monad.Trans.Reader.ReaderT r m)
 instance Hasura.Server.App.MonadMetadataApiAuthorization m => Hasura.Server.App.MonadMetadataApiAuthorization (Control.Monad.Trans.Except.ExceptT e m)
 instance Hasura.Server.App.MonadMetadataApiAuthorization m => Hasura.Server.App.MonadMetadataApiAuthorization (Hasura.Tracing.Monad.TraceT m)
@@ -27710,12 +27716,12 @@ flushLogger :: MonadIO m => LoggerCtx impl -> m ()
 --   last, so that we retain as many "thread stopping" log messages as
 --   possible. The order in which the finalizers is run is determined by
 --   the order in which they are introduced in the code.
-runHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication m, HttpLog m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadExecutionLog m, MonadWSLog m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m, MonadTrace m, MonadGetApiTimeLimit m) => (AppStateRef impl -> AppEnv -> SpockT m ()) -> AppStateRef impl -> AppEnv -> UTCTime -> Maybe (IO ()) -> Store EmptyMetrics -> ManagedT m ()
+runHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication m, HttpLog m, HasAppEnv m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadExecutionLog m, MonadWSLog m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m, MonadTrace m, MonadGetApiTimeLimit m) => (AppStateRef impl -> AppEnv -> SpockT m ()) -> AppStateRef impl -> AppEnv -> UTCTime -> Maybe (IO ()) -> Store EmptyMetrics -> ManagedT m ()
 
 -- | Part of a factorization of <a>runHGEServer</a> to expose the
 --   constructed WAI application for testing purposes. See
 --   <a>runHGEServer</a> for documentation.
-mkHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication m, HttpLog m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadExecutionLog m, MonadWSLog m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m, MonadTrace m, MonadGetApiTimeLimit m) => (AppStateRef impl -> AppEnv -> SpockT m ()) -> AppStateRef impl -> AppEnv -> Store EmptyMetrics -> ManagedT m Application
+mkHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication m, HttpLog m, HasAppEnv m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadExecutionLog m, MonadWSLog m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m, MonadTrace m, MonadGetApiTimeLimit m) => (AppStateRef impl -> AppEnv -> SpockT m ()) -> AppStateRef impl -> AppEnv -> Store EmptyMetrics -> ManagedT m Application
 accessDeniedErrMsg :: Text
 notifySchemaCacheSyncTx :: MetadataResourceVersion -> InstanceId -> CacheInvalidations -> TxE QErr ()
 getCatalogStateTx :: TxE QErr CatalogState
@@ -27735,10 +27741,10 @@ instance Control.Monad.IO.Class.MonadIO m => Control.Monad.IO.Class.MonadIO (Has
 instance GHC.Base.Monad m => GHC.Base.Monad (Hasura.App.PGMetadataStorageAppT m)
 instance GHC.Base.Applicative m => GHC.Base.Applicative (Hasura.App.PGMetadataStorageAppT m)
 instance GHC.Base.Functor m => GHC.Base.Functor (Hasura.App.PGMetadataStorageAppT m)
+instance GHC.Base.Monad m => Hasura.App.State.HasAppEnv (Hasura.App.PGMetadataStorageAppT m)
 instance (Control.Monad.IO.Class.MonadIO m, Control.Monad.Trans.Control.MonadBaseControl GHC.Types.IO m) => Hasura.Tracing.Class.MonadTrace (Hasura.App.PGMetadataStorageAppT m)
 instance Control.Monad.Trans.Class.MonadTrans Hasura.App.PGMetadataStorageAppT
 instance GHC.Base.Monad m => Hasura.Services.Network.ProvidesNetwork (Hasura.App.PGMetadataStorageAppT m)
-instance Hasura.Server.Types.HasServerConfigCtx m => Hasura.Server.Types.HasServerConfigCtx (Hasura.App.PGMetadataStorageAppT m)
 instance GHC.Base.Monad m => Hasura.Server.Limits.HasResourceLimits (Hasura.App.PGMetadataStorageAppT m)
 instance Control.Monad.IO.Class.MonadIO m => Hasura.Server.Logging.HttpLog (Hasura.App.PGMetadataStorageAppT m)
 instance GHC.Base.Monad m => Hasura.GraphQL.Transport.HTTP.MonadExecuteQuery (Hasura.App.PGMetadataStorageAppT m)
