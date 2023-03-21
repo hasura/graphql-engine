@@ -78,7 +78,7 @@ mkReqTransformCtx ::
 mkReqTransformCtx url sessionVars rtcEngine reqData =
   let rtcBaseUrl = Just $ Aeson.toJSON url
       rtcBody =
-        let mBody = Lens.view HTTP.body reqData >>= Aeson.decode @Aeson.Value
+        let mBody = Lens.preview (HTTP.body . HTTP._RequestBodyLBS) reqData >>= Aeson.decode @Aeson.Value
          in fromMaybe Aeson.Null mBody
       rtcSessionVariables = sessionVars
       rtcQueryParams =

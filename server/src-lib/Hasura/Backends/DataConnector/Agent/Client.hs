@@ -15,9 +15,7 @@ import Hasura.HTTP qualified
 import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.Tracing (MonadTrace, traceHTTPRequest)
-import Network.HTTP.Client (Manager)
-import Network.HTTP.Client qualified as HTTP
-import Network.HTTP.Client.Transformable qualified as TransformableHTTP
+import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.HTTP.Types.Status (Status)
 import Servant.Client
 import Servant.Client.Core (Request, RunClient (..))
@@ -26,7 +24,7 @@ import Servant.Client.Internal.HttpClient (clientResponseToResponse, mkFailureRe
 data AgentClientContext = AgentClientContext
   { _accLogger :: Logger Hasura,
     _accBaseUrl :: BaseUrl,
-    _accHttpManager :: Manager,
+    _accHttpManager :: HTTP.Manager,
     _accResponseTimeout :: Maybe Int
   }
 
@@ -46,28 +44,24 @@ instance (MonadIO m, MonadTrace m, MonadError QErr m) => RunClient (AgentClientT
 runRequestAcceptStatus' :: (MonadIO m, MonadTrace m, MonadError QErr m) => Maybe [Status] -> Request -> (AgentClientT m) Response
 runRequestAcceptStatus' acceptStatus req = do
   AgentClientContext {..} <- askClientContext
-  let req' = defaultMakeClientRequest _accBaseUrl req
-
-  transformableReq <-
-    TransformableHTTP.tryFromClientRequest req'
-      `onLeft` (\err -> throw500 $ "Error in Data Connector backend: Could not create request. " <> err)
+  let transformableReq = defaultMakeClientRequest _accBaseUrl req
 
   -- Set the response timeout explicitly if it is provided
   let transformableReq' =
         transformableReq &~ do
-          for _accResponseTimeout \x -> TransformableHTTP.timeout .= HTTP.responseTimeoutMicro x
+          for _accResponseTimeout \x -> HTTP.timeout .= HTTP.responseTimeoutMicro x
 
   (tracedReq, responseOrException) <- traceHTTPRequest transformableReq' \tracedReq ->
-    fmap (tracedReq,) . liftIO . try @HTTP.HttpException $ TransformableHTTP.performRequest tracedReq _accHttpManager
+    fmap (tracedReq,) . liftIO . try @HTTP.HttpException $ HTTP.httpLbs tracedReq _accHttpManager
   logAgentRequest _accLogger tracedReq responseOrException
   case responseOrException of
     -- throwConnectionError is used here in order to avoid a metadata inconsistency error
     Left ex -> throwConnectionError $ "Error in Data Connector backend: " <> Hasura.HTTP.serializeHTTPExceptionMessage (Hasura.HTTP.HttpException ex)
     Right response -> do
-      let status = TransformableHTTP.responseStatus response
+      let status = HTTP.responseStatus response
           servantResponse = clientResponseToResponse id response
           goodStatus = case acceptStatus of
-            Nothing -> TransformableHTTP.statusIsSuccessful status
+            Nothing -> HTTP.statusIsSuccessful status
             Just good -> status `elem` good
       if goodStatus
         then pure $ servantResponse

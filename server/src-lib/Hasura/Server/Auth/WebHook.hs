@@ -80,7 +80,7 @@ userInfoFromAuthHook logger manager hook reqHeaders reqs = do
             let isCommonHeader = (`elem` commonClientHeadersIgnored)
                 filteredHeaders = filter (not . isCommonHeader . fst) reqHeaders
                 req' = req & set HTTP.headers (addDefaultHeaders filteredHeaders)
-            HTTP.performRequest req' manager
+            HTTP.httpLbs req' manager
           AHTPost -> do
             let contentType = ("Content-Type", "application/json")
                 headersPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
@@ -90,7 +90,7 @@ userInfoFromAuthHook logger manager hook reqHeaders reqs = do
                     & set HTTP.headers (addDefaultHeaders [contentType])
                     & set
                       HTTP.body
-                      ( Just $
+                      ( HTTP.RequestBodyLBS $
                           J.encode $
                             object
                               ( ["headers" J..= headersPayload]
@@ -98,7 +98,7 @@ userInfoFromAuthHook logger manager hook reqHeaders reqs = do
                                   <> ["request" J..= reqs | ahSendRequestBody hook]
                               )
                       )
-            HTTP.performRequest req' manager
+            HTTP.httpLbs req' manager
 
     logAndThrow :: HTTP.HttpException -> m a
     logAndThrow err = do

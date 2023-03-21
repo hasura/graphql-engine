@@ -569,7 +569,7 @@ callWebhook
           initReq
             & set HTTP.method "POST"
             & set HTTP.headers hdrs
-            & set HTTP.body (Just requestBody)
+            & set HTTP.body (HTTP.RequestBodyLBS requestBody)
             & set HTTP.timeout responseTimeout
 
     (transformedReq, transformedReqSize, reqTransformCtx) <- case metadataRequestTransform of
@@ -593,7 +593,7 @@ callWebhook
 
     httpResponse <-
       Tracing.traceHTTPRequest actualReq $ \request ->
-        liftIO . try $ HTTP.performRequest request manager
+        liftIO . try $ HTTP.httpLbs request manager
 
     let requestInfo = ActionRequestInfo webhookEnvName postPayload (confHeaders <> toHeadersConf clientHeaders) transformedReq
 

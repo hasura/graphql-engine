@@ -538,7 +538,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                     pure (request, resp)
               case eitherReqRes of
                 Right (req, resp) -> do
-                  let reqBody = fromMaybe J.Null $ view HTTP.body req >>= J.decode @J.Value
+                  let reqBody = fromMaybe J.Null $ preview (HTTP.body . HTTP._RequestBodyLBS) req >>= J.decode @J.Value
                   processSuccess sourceConfig e logHeaders reqBody maintenanceModeVersion resp >>= flip onLeft logQErr
                   eventExecutionFinishTime <- liftIO getCurrentTime
                   let eventWebhookProcessingTime' = realToFrac $ diffUTCTime eventExecutionFinishTime eventExecutionStartTime

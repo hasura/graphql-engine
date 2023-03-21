@@ -7,7 +7,7 @@
     headers:
       - - foo
         - bar
-    body:
+    body: ''
     method: GET
     webhook_url: http://www.google.com?foo=bar
   query:

@@ -1,15 +1,28 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 -- | Our HTTP client library, with better ergonomics for logging and so on (see
 -- 'Request').
+--
+-- NOTE: Do not create requests with IO based RequestBody
+-- constructors. They cannot be transformed or logged.
+--
+-- NOTE: This module is meant to be imported qualified, e.g.
+--
+-- >  import qualified Network.HTTP.Client.Transformable as HTTP
+--
+-- ...or
+--
+-- >  import qualified Network.HTTP.Client.Transformable as Transformable
 module Network.HTTP.Client.Transformable
-  ( Request,
+  ( Client.Request,
     mkRequestThrow,
     mkRequestEither,
-    tryFromClientRequest,
     url,
     Network.HTTP.Client.Transformable.method,
     headers,
     host,
     body,
+    _RequestBodyLBS,
     port,
     path,
     queryParams,
@@ -17,28 +30,31 @@ module Network.HTTP.Client.Transformable
     timeout,
     getReqSize,
     getQueryStr,
-    performRequest,
     Client.Response (..),
     Client.ResponseTimeout,
     Client.HttpException (..),
     Internal.HttpExceptionContent (..),
     Client.Manager,
+    Client.httpLbs,
     Client.responseTimeoutDefault,
     Client.responseTimeoutMicro,
     Client.newManager,
     module Types,
     module TLSClient,
+    Client.RequestBody (..),
   )
 where
 
+-------------------------------------------------------------------------------
+
 import Control.Exception.Safe (impureThrow)
-import Control.Lens (Lens', lens, set, to, view, (^.), (^?), _Just)
-import Control.Lens.Iso (strict)
+import Control.Lens (Lens', Prism', lens, preview, prism', set, strict, to, view, (^.), (^?))
 import Control.Monad.Catch (MonadThrow, fromException)
 import Data.Aeson qualified as J
 import Data.Bifunctor (first)
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as B
+import Data.ByteString.Builder qualified as Builder
 import Data.ByteString.Char8 qualified as C8
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
@@ -58,48 +74,20 @@ import Network.HTTP.Types as Types
 import Network.URI qualified as URI
 import Prelude
 
--- | @Network.HTTP.Client@.'Client.Request' stores the request body in a sum
--- type which has a case containing IO along with some other unwieldy cases.
--- This makes it difficult to log our requests before and after transformation.
---
--- In our codebase we only ever use the Lazy ByteString case. So by
--- lifting the request body out of Network.HTTP.Client.Request, we
--- make it much easier to log our Requests.
---
--- When executing the request we simply insert the value at `rdBody`
--- into the Request.
---
--- When working with Transformable Requests you should always import
--- this module qualified and use the `mkRequest*` functions for
--- constructing requests. Modification of Request should be done using
--- the provided lens API.
---
--- NOTE: This module is meant to be imported qualified, e.g.
---
--- >  import qualified Network.HTTP.Client.Transformable as HTTP
---
--- ...or
---
--- >  import qualified Network.HTTP.Client.Transformable as Transformable
---
--- Use 'performRequest' to execute the request.
-data Request = Request
-  { rdRequest :: Client.Request,
-    rdBody :: Maybe BL.ByteString
-  }
-  deriving (Show)
+-------------------------------------------------------------------------------
 
--- XXX: This function makes internal usage of `Strict.utf8`/`TE.decodeUtf8`,
+-- NOTE: This function makes internal usage of `Strict.utf8`/`TE.decodeUtf8`,
 -- which throws an impure exception when the supplied `ByteString` cannot be
 -- decoded into valid UTF8 text!
-instance J.ToJSON Request where
-  toJSON req@Request {rdRequest, rdBody} =
+instance J.ToJSON Client.Request where
+  toJSON req =
     J.object
       [ "url" J..= (req ^. url),
         "method" J..= (req ^. method . Strict.utf8),
         "headers" J..= (req ^. headers . renderHeaders),
-        "body" J..= (rdBody ^? _Just . strict . Strict.utf8),
-        "query_string" J..= (rdRequest ^. to Client.queryString . Strict.utf8),
+        -- NOTE: We cannot decode IO based body types.
+        "body" J..= (req ^? body . _RequestBodyLBS . strict . Strict.utf8),
+        "query_string" J..= (req ^. to Client.queryString . Strict.utf8),
         "response_timeout" J..= (req ^. timeout . renderResponseTimeout)
       ]
     where
@@ -117,10 +105,8 @@ instance J.ToJSON Request where
 --
 -- NOTE: This function will throw an error in 'MonadThrow' if the URL is
 -- invalid.
-mkRequestThrow :: MonadThrow m => Text -> m Request
-mkRequestThrow urlTxt = do
-  request <- Client.parseRequest $ T.unpack urlTxt
-  pure $ Request request Nothing
+mkRequestThrow :: MonadThrow m => Text -> m Client.Request
+mkRequestThrow = Client.parseRequest . T.unpack
 
 -- | 'mkRequestThrow' with the 'MonadThrow' instance specialized to 'Either'.
 --
@@ -130,28 +116,12 @@ mkRequestThrow urlTxt = do
 -- 'mkRequestThrow' calls 'Client.parseRequest', which only ever throws
 -- 'Client.HttpException' errors (which should be "caught" by the
 -- 'fromException' cast).
-mkRequestEither :: Text -> Either Client.HttpException Request
+mkRequestEither :: Text -> Either Client.HttpException Client.Request
 mkRequestEither urlTxt =
   mkRequestThrow urlTxt & first
     \someExc -> case fromException @Client.HttpException someExc of
       Just httpExc -> httpExc
       Nothing -> impureThrow someExc
-
--- | Creates a 'Request', converting it from a 'Client.Request'. This only
--- supports requests that use a Strict/Lazy ByteString as a request body
--- and will fail with all other body types.
---
--- NOTE: You should avoid creating 'Client.Request's and use the 'mk'
--- functions to create 'Request's. This is for if a framework hands you
--- a precreated 'Client.Request' and you don't have a choice.
-tryFromClientRequest :: Client.Request -> Either Text Request
-tryFromClientRequest req = case Client.requestBody req of
-  Client.RequestBodyLBS lbs -> Right $ Request req (Just lbs)
-  Client.RequestBodyBS bs -> Right $ Request req (Just $ BL.fromStrict bs)
-  Client.RequestBodyBuilder _ _ -> Left "Unsupported body: Builder"
-  Client.RequestBodyStream _ _ -> Left "Unsupported body: Stream"
-  Client.RequestBodyStreamChunked _ -> Left "Unsupported body: Stream Chunked"
-  Client.RequestBodyIO _ -> Left "Unsupported body: IO"
 
 -- | Url is 'materialized view' into `Request` consisting of
 -- concatenation of `host`, `port`, `queryParams`, and `path` in the
@@ -167,13 +137,13 @@ tryFromClientRequest req = case Client.requestBody req of
 -- We use the literal field to `view` the value but we must
 -- carefully set the subcomponents by hand during `set` operations. Be
 -- careful modifying this lens and verify against the unit tests..
-url :: Lens' Request Text
+url :: Lens' Client.Request Text
 url = lens getUrl setUrl
   where
-    getUrl :: Request -> Text
-    getUrl Request {rdRequest} = T.pack $ URI.uriToString id (Client.getUri rdRequest) mempty
+    getUrl :: Client.Request -> Text
+    getUrl req = T.pack $ URI.uriToString id (Client.getUri req) mempty
 
-    setUrl :: Request -> Text -> Request
+    setUrl :: Client.Request -> Text -> Client.Request
     setUrl req url' = fromMaybe req $ do
       uri <- URI.parseURI (T.unpack url')
       URI.URIAuth {..} <- URI.uriAuthority uri
@@ -192,103 +162,97 @@ url = lens getUrl setUrl
           & set queryParams queryString
           & set path path'
 
-body :: Lens' Request (Maybe BL.ByteString)
-body = lens rdBody setBody
+body :: Lens' Client.Request NHS.RequestBody
+body = lens getBody setBody
   where
-    setBody :: Request -> Maybe BL.ByteString -> Request
-    setBody req body' = req {rdBody = body'}
+    getBody :: Client.Request -> NHS.RequestBody
+    getBody = NHS.requestBody
 
-headers :: Lens' Request [Types.Header]
+    setBody :: Client.Request -> NHS.RequestBody -> Client.Request
+    setBody req newBody = req {NHS.requestBody = newBody}
+
+-- NOTE: We cannot decode IO based body types.
+_RequestBodyLBS :: Prism' NHS.RequestBody BL.ByteString
+_RequestBodyLBS = prism' Client.RequestBodyLBS $ \case
+  Client.RequestBodyLBS lbs -> pure lbs
+  Client.RequestBodyBS bs -> pure (BL.fromStrict bs)
+  Client.RequestBodyBuilder _ bldr -> pure (Builder.toLazyByteString bldr)
+  _ -> Nothing
+
+headers :: Lens' Client.Request [Types.Header]
 headers = lens getHeaders setHeaders
   where
-    getHeaders :: Request -> [Types.Header]
-    getHeaders Request {rdRequest} = Client.requestHeaders rdRequest
+    getHeaders :: Client.Request -> [Types.Header]
+    getHeaders = Client.requestHeaders
 
-    setHeaders :: Request -> [Types.Header] -> Request
-    setHeaders req@Request {rdRequest} headers' =
-      req {rdRequest = NHS.setRequestHeaders headers' rdRequest}
+    setHeaders :: Client.Request -> [Types.Header] -> Client.Request
+    setHeaders req headers' = NHS.setRequestHeaders headers' req
 
-host :: Lens' Request B.ByteString
+host :: Lens' Client.Request B.ByteString
 host = lens getHost setHost
   where
-    getHost :: Request -> B.ByteString
-    getHost Request {rdRequest} = Client.host rdRequest
+    getHost :: Client.Request -> B.ByteString
+    getHost = Client.host
 
-    setHost :: Request -> B.ByteString -> Request
-    setHost req@Request {rdRequest} host' =
-      req {rdRequest = NHS.setRequestHost host' rdRequest}
+    setHost :: Client.Request -> B.ByteString -> Client.Request
+    setHost req host' = NHS.setRequestHost host' req
 
-secure :: Lens' Request Bool
+secure :: Lens' Client.Request Bool
 secure = lens getSecure setSecure
   where
-    getSecure :: Request -> Bool
-    getSecure Request {rdRequest} = Client.secure rdRequest
+    getSecure :: Client.Request -> Bool
+    getSecure = Client.secure
 
-    setSecure :: Request -> Bool -> Request
-    setSecure req@Request {rdRequest} ssl =
-      req {rdRequest = NHS.setRequestSecure ssl rdRequest}
+    setSecure :: Client.Request -> Bool -> Client.Request
+    setSecure req ssl = NHS.setRequestSecure ssl req
 
-method :: Lens' Request B.ByteString
+method :: Lens' Client.Request B.ByteString
 method = lens getMethod setMethod
   where
-    getMethod :: Request -> B.ByteString
-    getMethod Request {rdRequest} = Client.method rdRequest
+    getMethod :: Client.Request -> B.ByteString
+    getMethod = Client.method
 
-    setMethod :: Request -> B.ByteString -> Request
-    setMethod req@Request {rdRequest} method' = req {rdRequest = NHS.setRequestMethod method' rdRequest}
+    setMethod :: Client.Request -> B.ByteString -> Client.Request
+    setMethod req method' = NHS.setRequestMethod method' req
 
-path :: Lens' Request B.ByteString
+path :: Lens' Client.Request B.ByteString
 path = lens getPath setPath
   where
-    getPath :: Request -> B.ByteString
-    getPath Request {rdRequest} = Client.path rdRequest
+    getPath :: Client.Request -> B.ByteString
+    getPath = Client.path
 
-    setPath :: Request -> B.ByteString -> Request
-    setPath req@Request {rdRequest} p =
-      req {rdRequest = rdRequest {Client.path = p}}
+    setPath :: Client.Request -> B.ByteString -> Client.Request
+    setPath req p = req {Client.path = p}
 
-port :: Lens' Request Int
+port :: Lens' Client.Request Int
 port = lens getPort setPort
   where
-    getPort :: Request -> Int
-    getPort Request {rdRequest} = Client.port rdRequest
+    getPort :: Client.Request -> Int
+    getPort = Client.port
 
-    setPort :: Request -> Int -> Request
-    setPort req@Request {rdRequest} i =
-      req {rdRequest = NHS.setRequestPort i rdRequest}
+    setPort :: Client.Request -> Int -> Client.Request
+    setPort req i = NHS.setRequestPort i req
 
-getQueryStr :: Request -> ByteString
+getQueryStr :: Client.Request -> ByteString
 getQueryStr = Types.renderQuery True . view queryParams
 
-queryParams :: Lens' Request NHS.Query
+queryParams :: Lens' Client.Request NHS.Query
 queryParams = lens getQueryParams setQueryParams
   where
-    getQueryParams :: Request -> NHS.Query
-    getQueryParams Request {rdRequest} = NHS.getRequestQueryString rdRequest
+    getQueryParams :: Client.Request -> NHS.Query
+    getQueryParams = NHS.getRequestQueryString
 
-    setQueryParams :: Request -> NHS.Query -> Request
-    setQueryParams req@Request {rdRequest} params = req {rdRequest = NHS.setQueryString params rdRequest}
+    setQueryParams :: Client.Request -> NHS.Query -> Client.Request
+    setQueryParams req params = NHS.setQueryString params req
 
-timeout :: Lens' Request Client.ResponseTimeout
+timeout :: Lens' Client.Request Client.ResponseTimeout
 timeout = lens getTimeout setTimeout
   where
-    getTimeout :: Request -> Client.ResponseTimeout
-    getTimeout Request {rdRequest} = Client.responseTimeout rdRequest
+    getTimeout :: Client.Request -> Client.ResponseTimeout
+    getTimeout = Client.responseTimeout
 
-    setTimeout :: Request -> Client.ResponseTimeout -> Request
-    setTimeout req@Request {rdRequest} timeout' =
-      let updatedReq = rdRequest {Client.responseTimeout = timeout'}
-       in req {rdRequest = updatedReq}
+    setTimeout :: Client.Request -> Client.ResponseTimeout -> Client.Request
+    setTimeout req timeout' = req {Client.responseTimeout = timeout'}
 
-getReqSize :: Request -> Int64
-getReqSize Request {rdBody} = maybe 0 BL.length rdBody
-
-toRequest :: Request -> Client.Request
-toRequest Request {rdRequest, rdBody} = case rdBody of
-  Nothing -> rdRequest
-  Just body' -> NHS.setRequestBody (Client.RequestBodyLBS body') rdRequest
-
--- | NOTE: for now, please always wrap this in @tracedHttpRequest@ to make sure
--- a trace is logged.
-performRequest :: Request -> Client.Manager -> IO (Client.Response BL.ByteString)
-performRequest req manager = Client.httpLbs (toRequest req) manager
+getReqSize :: Client.Request -> Int64
+getReqSize req = maybe 0 BL.length $ preview (body . _RequestBodyLBS) req

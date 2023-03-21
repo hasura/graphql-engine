@@ -360,7 +360,7 @@ fetchJwk (Logger logger) manager url = do
   res <- try $ do
     req <- liftIO $ HTTP.mkRequestThrow $ tshow url
     let req' = req & over HTTP.headers addDefaultHeaders
-    liftIO $ HTTP.performRequest req' manager
+    liftIO $ HTTP.httpLbs req' manager
   resp <- onLeft res logAndThrowHttp
   let status = resp ^. Wreq.responseStatus
       respBody = resp ^. Wreq.responseBody

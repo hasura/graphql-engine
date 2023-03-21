@@ -1,5 +1,8 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
+{-# HLINT ignore "Use maybe" #-}
 
 -- | Webhook Transformations are data transformations used to modify
 -- HTTP Requests/Responses before requests are executed and after
@@ -57,7 +60,7 @@ where
 
 import Autodocodec (HasCodec, dimapCodec, disjointEitherCodec, optionalField', optionalFieldWithDefault')
 import Autodocodec qualified as AC
-import Control.Lens (Lens', lens, set, traverseOf, view)
+import Control.Lens (Lens', lens, preview, set, traverseOf, view)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson.Extended ((.!=), (.:?), (.=), (.=?))
 import Data.Aeson.Extended qualified as Aeson
@@ -293,16 +296,16 @@ requestL = lens getter setter
       RequestFields
         { method = coerce $ CI.mk $ TE.decodeUtf8 $ view HTTP.method req,
           url = coerce $ view HTTP.url req,
-          body = coerce $ JSONBody $ Aeson.decode =<< view HTTP.body req,
+          body = coerce $ JSONBody $ Aeson.decode =<< preview (HTTP.body . HTTP._RequestBodyLBS) req,
           queryParams = coerce $ view HTTP.queryParams req,
           requestHeaders = coerce $ view HTTP.headers req
         }
 
-    serializeBody :: Body -> Maybe BL.ByteString
+    serializeBody :: Body -> HTTP.RequestBody
     serializeBody = \case
-      JSONBody body -> fmap Aeson.encode body
-      RawBody "" -> Nothing
-      RawBody bs -> Just bs
+      JSONBody body -> HTTP.RequestBodyLBS $ fromMaybe mempty $ fmap Aeson.encode body
+      RawBody "" -> mempty
+      RawBody bs -> HTTP.RequestBodyLBS bs
 
     setter :: HTTP.Request -> RequestData -> HTTP.Request
     setter req RequestFields {..} =

@@ -123,7 +123,7 @@ where
 
 import Control.Concurrent.Extended (Forever (..), sleep)
 import Control.Concurrent.STM
-import Control.Lens (view)
+import Control.Lens (preview)
 import Data.Aeson qualified as J
 import Data.Environment qualified as Env
 import Data.Has
@@ -444,7 +444,7 @@ processScheduledEvent prometheusMetrics eventId eventHeaders retryCtx payload we
               pure (request, resp)
         case eitherReqRes of
           Right (req, resp) ->
-            let reqBody = fromMaybe J.Null $ view HTTP.body req >>= J.decode @J.Value
+            let reqBody = fromMaybe J.Null $ preview (HTTP.body . HTTP._RequestBodyLBS) req >>= J.decode @J.Value
              in processSuccess eventId decodedHeaders type' reqBody resp
           Left (HTTPError reqBody e) -> processError eventId retryCtx decodedHeaders type' reqBody e
           Left (TransformationError _ e) -> do

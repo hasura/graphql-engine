@@ -158,12 +158,12 @@ execRemoteGQ env userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
         initReq
           & set HTTP.method "POST"
           & set HTTP.headers finalHeaders
-          & set HTTP.body (Just $ J.encode gqlReqUnparsed)
+          & set HTTP.body (HTTP.RequestBodyLBS $ J.encode gqlReqUnparsed)
           & set HTTP.timeout (HTTP.responseTimeoutMicro (timeout * 1000000))
 
   manager <- askHTTPManager
   Tracing.traceHTTPRequest req \req' -> do
-    (time, res) <- withElapsedTime $ liftIO $ try $ HTTP.performRequest req' manager
+    (time, res) <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req' manager
     resp <- onLeft res (throwRemoteSchemaHttp webhookEnvRecord)
     pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
   where

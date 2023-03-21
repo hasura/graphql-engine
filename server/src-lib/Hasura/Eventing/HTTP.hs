@@ -44,7 +44,7 @@ module Hasura.Eventing.HTTP
 where
 
 import Control.Exception (try)
-import Control.Lens (preview, set, view, (.~))
+import Control.Lens (preview, set, (.~))
 import Data.Aeson qualified as J
 import Data.Aeson.Encoding qualified as JE
 import Data.Aeson.Key qualified as J
@@ -278,7 +278,7 @@ logHTTPForST eitherResp extraLogCtx reqDetails webhookVarName logHeaders = do
 
 runHTTP :: (MonadIO m) => HTTP.Manager -> HTTP.Request -> m (Either (HTTPErr a) (HTTPResp a))
 runHTTP manager req = do
-  res <- liftIO $ try $ HTTP.performRequest req manager
+  res <- liftIO $ try $ HTTP.httpLbs req manager
   return $ either (Left . HClient . HttpException) anyBodyParser res
 
 data TransformableRequestError a
@@ -306,7 +306,7 @@ mkRequest headers timeout payload mRequestTransform (ResolvedWebhook webhook) =
                 initReq
                   & set HTTP.method "POST"
                   & set HTTP.headers headers
-                  & set HTTP.body (Just payload)
+                  & set HTTP.body (HTTP.RequestBodyLBS payload)
                   & set HTTP.timeout timeout
               sessionVars = do
                 val <- J.decode @J.Value payload
@@ -341,7 +341,7 @@ invokeRequest ::
   m (HTTPResp a)
 invokeRequest reqDetails@RequestDetails {..} respTransform' sessionVars logger = do
   let finalReq = fromMaybe _rdOriginalRequest _rdTransformedRequest
-      reqBody = fromMaybe J.Null $ view HTTP.body finalReq >>= J.decode @J.Value
+      reqBody = fromMaybe J.Null $ preview (HTTP.body . HTTP._RequestBodyLBS) finalReq >>= J.decode @J.Value
   manager <- asks getter
   -- Perform the HTTP Request
   eitherResp <- traceHTTPRequest finalReq $ runHTTP manager

@@ -806,7 +806,7 @@ runTestWebhookTransform (TestWebhookTransform env headers urlE payload rt _ sv) 
   result <- runExceptT $ do
     initReq <- hoistEither $ first RequestInitializationError $ HTTP.mkRequestEither url
 
-    let req = initReq & HTTP.body .~ pure (J.encode payload) & HTTP.headers .~ headers'
+    let req = initReq & HTTP.body .~ HTTP.RequestBodyLBS (J.encode payload) & HTTP.headers .~ headers'
         reqTransform = requestFields rt
         engine = templateEngine rt
         reqTransformCtx = fmap mkRequestContext $ mkReqTransformCtx url sv engine
@@ -875,6 +875,7 @@ packTransformResult = \case
         [ "webhook_url" J..= (req ^. HTTP.url),
           "method" J..= (req ^. HTTP.method),
           "headers" J..= (first CI.foldedCase <$> (req ^. HTTP.headers)),
-          "body" J..= decodeBody (req ^. HTTP.body)
+          -- NOTE: We cannot decode IO based body types.
+          "body" J..= decodeBody (req ^? HTTP.body . HTTP._RequestBodyLBS)
         ]
   Left err -> throw400WithDetail ValidationFailed "request transform validation failed" $ J.toJSON err
