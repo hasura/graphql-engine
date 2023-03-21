@@ -96,7 +96,7 @@ import Data.Vector.Instances ()
 import Hasura.Base.Error
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
-import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
+import Hasura.Metadata.DTO.Utils (boundedEnumCodec)
 import Hasura.Prelude hiding (state)
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Function (FunctionArgName)
@@ -610,11 +610,25 @@ data ScalarType
   | DecimalScalarType
   | BigDecimalScalarType
   | StructScalarType
-  deriving stock (Show, Eq, Ord, Generic, Data, Lift)
+  deriving stock (Show, Eq, Ord, Bounded, Enum, Generic, Data, Lift)
   deriving anyclass (FromJSON, Hashable, NFData, ToJSON, ToJSONKey)
 
 instance HasCodec ScalarType where
-  codec = AC.named "ScalarType" placeholderCodecViaJSON
+  codec = AC.named "ScalarType" $
+    boundedEnumCodec \case
+      StringScalarType -> "STRING"
+      BytesScalarType -> "BYTES"
+      IntegerScalarType -> "INT64"
+      FloatScalarType -> "FLOAT64"
+      BoolScalarType -> "BOOL"
+      TimestampScalarType -> "TIMESTAMP"
+      DateScalarType -> "DATE"
+      TimeScalarType -> "TIME"
+      DatetimeScalarType -> "DATETIME"
+      GeographyScalarType -> "GEOGRAPHY"
+      DecimalScalarType -> "DECIMAL"
+      BigDecimalScalarType -> "BIGDECIMAL"
+      StructScalarType -> "STRUCT"
 
 instance ToTxt ScalarType where toTxt = tshow
 

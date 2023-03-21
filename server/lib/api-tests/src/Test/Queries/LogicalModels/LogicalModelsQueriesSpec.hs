@@ -12,13 +12,13 @@ import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
-import Harness.Yaml (shouldReturnYaml)
+import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
@@ -66,6 +66,12 @@ schema =
               Schema.VUTCTime (UTCTime (fromOrdinalDate 2000 1) 0)
             ]
           ]
+      },
+    (table "stuff")
+      { tableColumns =
+          [ Schema.column "thing" Schema.TInt,
+            Schema.column "date" Schema.TUTCTime
+          ]
       }
   ]
 
@@ -87,6 +93,92 @@ tests opts = do
       shouldBe = shouldReturnYaml opts
 
   describe "Testing Logical Models" $ do
+    it "Descriptions and nullability appear in the schema" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+
+          nullableQuery = "SELECT thing / 2 AS divided, null as something_nullable FROM stuff"
+
+          descriptionsAndNullableLogicalModel :: Schema.LogicalModel
+          descriptionsAndNullableLogicalModel =
+            (Schema.logicalModel "divided_stuff" nullableQuery)
+              { Schema.logicalModelColumns =
+                  [ (Schema.logicalModelColumn "divided" Schema.TInt)
+                      { Schema.logicalModelColumnDescription = Just "A divided thing"
+                      },
+                    (Schema.logicalModelColumn "something_nullable" Schema.TInt)
+                      { Schema.logicalModelColumnDescription = Just "Something nullable",
+                        Schema.logicalModelColumnNullable = True
+                      }
+                  ],
+                Schema.logicalModelArguments =
+                  [ Schema.logicalModelColumn "unused" Schema.TInt
+                  ],
+                Schema.logicalModelReturnTypeDescription = Just "Return type description"
+              }
+
+      Schema.trackLogicalModel sourceName descriptionsAndNullableLogicalModel testEnvironment
+
+      let queryTypesIntrospection :: Value
+          queryTypesIntrospection =
+            [graphql|
+                query {
+                  __type(name: "divided_stuff") {
+                    name
+                    description
+                    fields {
+                      name
+                      description
+                      type {
+                        name
+                        kind
+                        ofType {
+                          name
+                        }
+                      }
+                    }
+                  }
+                }
+              |]
+
+          expected =
+            [interpolateYaml|
+                {
+                  "data": {
+                    "__type": {
+                      "description": "Return type description",
+                      "fields": [
+                      {
+                        "description": "A divided thing",
+                        "name": "divided",
+                        "type": {
+                          "kind": "NON_NULL",
+                          "name": null,
+                          "ofType": {
+                            "name": "Int"
+                          }
+                        }
+                      },
+                      {
+                        "description": "Something nullable",
+                        "name": "something_nullable",
+                        "type": {
+                          "kind": "SCALAR",
+                          "name": "Int",
+                          "ofType": null
+                        }
+                      }
+                      ],
+                      "name": "divided_stuff"
+                    }
+                  }
+                }
+              |]
+
+      actual <- GraphqlEngine.postGraphql testEnvironment queryTypesIntrospection
+
+      actual `shouldBeYaml` expected
+
     it "Runs the absolute simplest query that takes no parameters" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata

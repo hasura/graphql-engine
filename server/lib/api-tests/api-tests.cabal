@@ -95,6 +95,7 @@ library
     Test.API.Metadata.ComputedFieldsSpec
     Test.API.Metadata.InconsistentSpec
     Test.API.Metadata.LogicalModelsSpec
+    Test.API.Metadata.LogicalModels.ValidationSpec
     Test.API.Metadata.SuggestRelationshipsSpec
     Test.API.Metadata.TestConnectionTemplateSpec
     Test.API.Metadata.TransparentDefaultsSpec
