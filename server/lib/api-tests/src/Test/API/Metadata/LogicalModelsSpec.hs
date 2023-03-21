@@ -14,7 +14,7 @@ import Harness.Quoter.Yaml.InterpolateYaml
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig, scalarTypeToText)
 import Harness.Yaml (shouldAtLeastBe, shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -247,20 +247,20 @@ testImplementation opts = do
                 source: *sourceName
             |]
         )
-        [yaml|
-          - root_field_name: *rootfield
-            code: *query
+        [interpolateYaml|
+          - root_field_name: #{rootfield}
+            code: #{query}
             arguments:
               denominator:
-                type: integer
+                type: #{scalarTypeToText testEnvironment Schema.TInt}
                 nullable: false
               target_date:
-                type: timestamp
+                type: #{scalarTypeToText testEnvironment Schema.TUTCTime}
                 nullable: false
             returns:
               columns:
                     divided:
-                      type: integer
+                      type: #{scalarTypeToText testEnvironment Schema.TInt}
                       nullable: false
                       description: "a divided thing"
         |]
@@ -789,12 +789,12 @@ testPermissions opts = do
                 source: *sourceName
             |]
         )
-        [yaml|
+        [interpolateYaml|
           - root_field_name: divided_stuff
-            code: *simpleQuery
+            code: #{simpleQuery}
             arguments:
               unused:
-                type: integer
+                type: #{scalarTypeToText testEnvironment Schema.TInt}
                 nullable: false
             select_permissions:
               - role: "test"
@@ -807,7 +807,7 @@ testPermissions opts = do
                 divided:
                   description: a divided thing
                   nullable: false
-                  type: integer
+                  type: #{scalarTypeToText testEnvironment Schema.TInt}
         |]
 
     it "Adds a logical model, removes it, and returns 200" $ \testEnvironment -> do
@@ -861,19 +861,19 @@ testPermissions opts = do
                 source: *sourceName
             |]
         )
-        [yaml|
-          - root_field_name: *rootfield
-            code: *simpleQuery
+        [interpolateYaml|
+          - root_field_name: #{rootfield}
+            code: #{simpleQuery}
             arguments:
               unused:
-                type: integer
+                type: #{scalarTypeToText testEnvironment Schema.TInt}
                 nullable: false
             returns:
               columns:
                 divided:
                   description: a divided thing
                   nullable: false
-                  type: integer
+                  type: #{scalarTypeToText testEnvironment Schema.TInt}
         |]
 
 testPermissionFailures :: Fixture.Options -> SpecWith TestEnvironment

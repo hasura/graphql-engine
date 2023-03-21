@@ -16,6 +16,7 @@ module Harness.TestEnvironment
     getBackendTypeConfig,
     focusFixtureLeft,
     focusFixtureRight,
+    scalarTypeToText,
     serverUrl,
     stopServer,
     testLogTrace,
@@ -37,6 +38,7 @@ import Harness.Permissions.Types (Permission)
 import Harness.Services.Composed qualified as Services
 import Harness.Test.BackendType
 import Harness.Test.FixtureName
+import Harness.Test.ScalarType
 import Hasura.Prelude
 import Network.WebSockets qualified as WS
 import System.Process (readProcess)
@@ -95,6 +97,11 @@ data TestEnvironment = TestEnvironment
     -- | The permissions we'd like to use for testing.
     permissions :: TestingRole
   }
+
+scalarTypeToText :: TestEnvironment -> ScalarType -> Text
+scalarTypeToText TestEnvironment {fixtureName} = case fixtureName of
+  Backend BackendTypeConfig {backendScalarType} -> backendScalarType
+  _ -> error "scalarTypeToText only currently defined for the `Backend` `FixtureName`"
 
 -- | The role we're going to use for testing. Either we're an admin, in which
 -- case all permissions are implied, /or/ we're a regular user, in which case
