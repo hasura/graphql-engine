@@ -3,7 +3,6 @@ import type { ComponentPropsWithoutRef } from 'react';
 
 import * as React from 'react';
 import { expect } from '@storybook/jest';
-import { act } from '@testing-library/react';
 import { action } from '@storybook/addon-actions';
 import { userEvent, within } from '@storybook/testing-library';
 
@@ -132,77 +131,76 @@ HappyPath.play = async ({ args, canvasElement }) => {
   const canvas = within(canvasElement);
 
   // act avoids the "When testing, code that causes React state updates should be wrapped into act(...):" error
-  await act(async () => {
-    // STEP: Enable OpenTelemetry
-    await userEvent.click(await canvas.findByLabelText('Status'));
 
-    // STEP: Type the Endpoint
-    await userEvent.type(
-      await canvas.findByLabelText('Endpoint', { selector: 'input' }),
-      'http://hasura.io'
-    );
+  // STEP: Enable OpenTelemetry
+  await userEvent.click(await canvas.findByLabelText('Status'));
 
-    // STEP: Type the Batch Size
-    const batchSizeInputField = await canvas.findByLabelText('Batch Size', {
-      selector: 'input',
-    });
-    await userEvent.clear(batchSizeInputField);
-    await userEvent.type(batchSizeInputField, '100');
+  // STEP: Type the Endpoint
+  await userEvent.type(
+    await canvas.findByLabelText('Endpoint', { selector: 'input' }),
+    'http://hasura.io'
+  );
 
-    // STEP: Open the collapsible headers section
-    await userEvent.click(await canvas.findByText('Headers'));
-
-    const addNewHeaderButton = canvas.getByText('Add Headers');
-    // STEP: Add one more header
-    await userEvent.click(addNewHeaderButton);
-
-    await userEvent.type(
-      canvas.getByRole('textbox', { name: 'headers[0].name' }),
-      'x-hasura-name'
-    );
-    await userEvent.type(
-      canvas.getByRole('textbox', { name: 'headers[0].value' }),
-      'hasura_user'
-    );
-
-    // STEP: Add one more header
-    await userEvent.click(addNewHeaderButton);
-
-    // STEP: Add an env-var header
-    await userEvent.selectOptions(
-      canvas.getByRole('combobox', { name: 'headers[1].type' }),
-      'from_env'
-    );
-    await userEvent.type(
-      canvas.getByRole('textbox', { name: 'headers[1].name' }),
-      'x-hasura-env'
-    );
-    await userEvent.type(
-      canvas.getByRole('textbox', { name: 'headers[1].value' }),
-      'HASURA_USER'
-    );
-
-    // STEP: Open the collapsible attributes section
-    await userEvent.click(await canvas.findByText('Attributes'));
-
-    const addNewAttributeButton = canvas.getByText('Add Attributes');
-    // STEP: Add one more attribute
-    await userEvent.click(addNewAttributeButton);
-
-    // STEP: Add an attribute
-    await userEvent.type(
-      canvas.getByRole('textbox', { name: 'attributes[0].name' }),
-      'foo'
-    );
-    await userEvent.type(
-      canvas.getByRole('textbox', { name: 'attributes[0].value' }),
-      'bar'
-    );
-
-    // STEP: Click the Submit button
-    const submitButton = await canvas.findByRole('button', { name: 'Connect' });
-    await userEvent.click(submitButton);
+  // STEP: Type the Batch Size
+  const batchSizeInputField = await canvas.findByLabelText('Batch Size', {
+    selector: 'input',
   });
+  await userEvent.clear(batchSizeInputField);
+  await userEvent.type(batchSizeInputField, '100');
+
+  // STEP: Open the collapsible headers section
+  await userEvent.click(await canvas.findByText('Headers'));
+
+  const addNewHeaderButton = canvas.getByText('Add Headers');
+  // STEP: Add one more header
+  await userEvent.click(addNewHeaderButton);
+
+  await userEvent.type(
+    canvas.getByRole('textbox', { name: 'headers[0].name' }),
+    'x-hasura-name'
+  );
+  await userEvent.type(
+    canvas.getByRole('textbox', { name: 'headers[0].value' }),
+    'hasura_user'
+  );
+
+  // STEP: Add one more header
+  await userEvent.click(addNewHeaderButton);
+
+  // STEP: Add an env-var header
+  await userEvent.selectOptions(
+    canvas.getByRole('combobox', { name: 'headers[1].type' }),
+    'from_env'
+  );
+  await userEvent.type(
+    canvas.getByRole('textbox', { name: 'headers[1].name' }),
+    'x-hasura-env'
+  );
+  await userEvent.type(
+    canvas.getByRole('textbox', { name: 'headers[1].value' }),
+    'HASURA_USER'
+  );
+
+  // STEP: Open the collapsible attributes section
+  await userEvent.click(await canvas.findByText('Attributes'));
+
+  const addNewAttributeButton = canvas.getByText('Add Attributes');
+  // STEP: Add one more attribute
+  await userEvent.click(addNewAttributeButton);
+
+  // STEP: Add an attribute
+  await userEvent.type(
+    canvas.getByRole('textbox', { name: 'attributes[0].name' }),
+    'foo'
+  );
+  await userEvent.type(
+    canvas.getByRole('textbox', { name: 'attributes[0].value' }),
+    'bar'
+  );
+
+  // STEP: Click the Submit button
+  const submitButton = await canvas.findByRole('button', { name: 'Connect' });
+  await userEvent.click(submitButton);
 
   // @ts-expect-error arg.onSubmit is a Storybook action, hence a mock function, even if TS cannot
   // infer it from the story

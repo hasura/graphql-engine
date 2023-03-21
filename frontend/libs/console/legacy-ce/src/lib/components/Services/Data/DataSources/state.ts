@@ -1,4 +1,4 @@
-import pickBy from 'lodash.pickby';
+import pickBy from 'lodash/pickBy';
 import produce from 'immer';
 import { Driver, getSupportedDrivers } from '../../../../dataSources';
 import { makeConnectionStringFromConnectionParams } from './ManageDBUtils';

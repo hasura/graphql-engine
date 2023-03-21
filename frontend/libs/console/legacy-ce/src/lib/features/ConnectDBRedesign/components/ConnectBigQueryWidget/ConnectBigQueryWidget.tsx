@@ -1,12 +1,9 @@
 import { InputField, useConsoleForm } from '../../../../new-components/Form';
-import { Tabs } from '../../../../new-components/Tabs';
 import { Button } from '../../../../new-components/Button';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { GraphQLCustomization } from '../GraphQLCustomization/GraphQLCustomization';
 import { Configuration } from './parts/Configuration';
 import { getDefaultValues, BigQueryConnectionSchema, schema } from './schema';
-import { get } from 'lodash';
-import { FaExclamationTriangle } from 'react-icons/fa';
 import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { useMetadata } from '../../../hasura-metadata-api';

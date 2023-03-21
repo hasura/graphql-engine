@@ -14,7 +14,6 @@ import FilterTypeInput from './FilterTypeInput';
 import TimeRangeFilter from './TimeRangeFilter';
 import FilterTypeCheckbox from './FilterTypeCheckbox';
 import ComposeDropdownFilter from './ComposeDropdownFilter';
-import { DocumentNode } from 'graphql';
 
 /*
  * Dropdown filters are not rendered. The pattern ensures that data for

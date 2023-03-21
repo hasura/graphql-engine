@@ -27,6 +27,8 @@ import {
 import { FaCaretDown, FaCaretUp, FaSort } from 'react-icons/fa';
 
 import styles from '../Metrics.module.scss';
+import failure from '../images/failure.svg';
+import success from '../images/success.svg';
 
 const LIMIT = 10;
 
@@ -37,8 +39,6 @@ const defaultState = {
     time: 'desc',
   },
 };
-import failure from '../images/failure.svg';
-import success from '../images/success.svg';
 
 const BrowserRows = props => {
   const [browseState, setState] = useState(defaultState);

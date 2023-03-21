@@ -7,9 +7,7 @@ type Props = {
 };
 
 const IndexFields: React.FC<Props> = props => (
-  <>
-    <IndexFieldsEditor currentTableInfo={props.tableSchema} />
-  </>
+  <IndexFieldsEditor currentTableInfo={props.tableSchema} />
 );
 
 export default IndexFields;

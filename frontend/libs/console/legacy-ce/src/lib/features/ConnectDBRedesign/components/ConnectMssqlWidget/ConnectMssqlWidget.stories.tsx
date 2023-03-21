@@ -43,24 +43,28 @@ MSSQLCreateConnection.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
   // verify if the right title is displayed. It should contain the word `postgres`.
-  expect(await canvas.findByText('Connect MSSQL Database')).toBeInTheDocument();
+  await expect(
+    await canvas.findByText('Connect MSSQL Database')
+  ).toBeInTheDocument();
 
   // verify if all the fields are present (in oss mode)
 
-  expect(await canvas.findByLabelText('Database name')).toBeInTheDocument();
+  await expect(
+    await canvas.findByLabelText('Database name')
+  ).toBeInTheDocument();
 
   // There should be exactly 3 supported database connection options
   const radioOptions = await canvas.findAllByLabelText('Connect Database via');
-  expect(radioOptions.length).toBe(2);
+  await expect(radioOptions.length).toBe(2);
 
   const databaseUrlOption = await canvas.findByTestId(
     'configuration.connectionInfo.connectionString.connectionType-databaseUrl'
   );
-  expect(databaseUrlOption).toBeInTheDocument();
-  expect(databaseUrlOption).toBeChecked();
+  await expect(databaseUrlOption).toBeInTheDocument();
+  await expect(databaseUrlOption).toBeChecked();
 
   // Expect the first option to have the following input fields
-  expect(
+  await expect(
     await canvas.findByPlaceholderText(
       'Driver={ODBC Driver 18 for SQL Server};Server=serveraddress;Database=dbname;Uid=username;Pwd=password'
     )
@@ -70,15 +74,17 @@ MSSQLCreateConnection.play = async ({ canvasElement }) => {
   const environmentVariableOption = await canvas.findByTestId(
     'configuration.connectionInfo.connectionString.connectionType-envVar'
   );
-  userEvent.click(environmentVariableOption);
-  expect(
+  await userEvent.click(environmentVariableOption);
+  await expect(
     await canvas.findByPlaceholderText('HASURA_GRAPHQL_DB_URL_FROM_ENV')
   ).toBeInTheDocument();
 
   // Find and click on advanced settings
-  userEvent.click(await canvas.findByText('Advanced Settings'));
-  expect(await canvas.findByText('Total Max Connections')).toBeInTheDocument();
-  expect(await canvas.findByText('Idle Timeout')).toBeInTheDocument();
+  await userEvent.click(await canvas.findByText('Advanced Settings'));
+  await expect(
+    await canvas.findByText('Total Max Connections')
+  ).toBeInTheDocument();
+  await expect(await canvas.findByText('Idle Timeout')).toBeInTheDocument();
 };
 
 export const MSSQLEditConnection: ComponentStory<
@@ -99,13 +105,15 @@ MSSQLEditConnection.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
   // verify if the right title is displayed. It should contain the word `postgres`.
-  expect(await canvas.findByText('Edit MSSQL Connection')).toBeInTheDocument();
+  await expect(
+    await canvas.findByText('Edit MSSQL Connection')
+  ).toBeInTheDocument();
 
   // verify if all the fields are present (in oss mode)
 
   await waitFor(
     async () => {
-      expect(await canvas.findByLabelText('Database name')).toHaveValue(
+      await expect(await canvas.findByLabelText('Database name')).toHaveValue(
         'mssql1'
       );
     },
@@ -113,12 +121,12 @@ MSSQLEditConnection.play = async ({ canvasElement }) => {
   );
 
   const radioOptions = await canvas.findAllByLabelText('Connect Database via');
-  expect(radioOptions.length).toBe(2);
+  await expect(radioOptions.length).toBe(2);
   const databaseUrlOption = await canvas.findByTestId(
     'configuration.connectionInfo.connectionString.connectionType-databaseUrl'
   );
-  expect(databaseUrlOption).toBeChecked();
-  expect(
+  await expect(databaseUrlOption).toBeChecked();
+  await expect(
     await canvas.findByTestId(
       'configuration.connectionInfo.connectionString.url'
     )
@@ -127,33 +135,33 @@ MSSQLEditConnection.play = async ({ canvasElement }) => {
   );
 
   // Find and click on advanced settings
-  userEvent.click(await canvas.findByText('Advanced Settings'));
-  expect(
+  await userEvent.click(await canvas.findByText('Advanced Settings'));
+  await expect(
     await canvas.findByTestId(
       'configuration.connectionInfo.poolSettings.totalMaxConnections'
     )
   ).toHaveValue(50);
-  expect(
+  await expect(
     await canvas.findByTestId(
       'configuration.connectionInfo.poolSettings.idleTimeout'
     )
   ).toHaveValue(180);
 
   // find and click on graphql customization settings
-  userEvent.click(await canvas.findByText('GraphQL Customization'));
-  expect(
+  await userEvent.click(await canvas.findByText('GraphQL Customization'));
+  await expect(
     await canvas.findByTestId('customization.rootFields.namespace')
   ).toHaveValue('some_field_name');
-  expect(
+  await expect(
     await canvas.findByTestId('customization.rootFields.prefix')
   ).toHaveValue('some_field_name_prefix');
-  expect(
+  await expect(
     await canvas.findByTestId('customization.rootFields.suffix')
   ).toHaveValue('some_field_name_suffix');
-  expect(
+  await expect(
     await canvas.findByTestId('customization.typeNames.prefix')
   ).toHaveValue('some_type_name_prefix');
-  expect(
+  await expect(
     await canvas.findByTestId('customization.typeNames.suffix')
   ).toHaveValue('some_type_name_suffix');
 };

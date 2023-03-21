@@ -39,11 +39,11 @@ Base.play = async ({ args, canvasElement }) => {
   const canvas = within(canvasElement);
 
   // Type in text input field
-  userEvent.type(
+  await userEvent.type(
     await canvas.findByPlaceholderText('placeholder...'),
     'John Doe'
   );
 
-  expect(args.onChange).toHaveBeenCalled();
-  expect(args.onInput).toHaveBeenCalled();
+  await expect(args.onChange).toHaveBeenCalled();
+  await expect(args.onInput).toHaveBeenCalled();
 };

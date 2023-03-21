@@ -3,7 +3,7 @@ import {
   FieldWrapperPassThroughProps,
 } from '../../../../../new-components/Form';
 import { Switch } from '../../../../../new-components/Switch';
-import { get } from 'lodash';
+import get from 'lodash/get';
 import { Controller, FieldError, useFormContext } from 'react-hook-form';
 
 type BooleanInputProps = FieldWrapperPassThroughProps & {

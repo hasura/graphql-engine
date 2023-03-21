@@ -1,5 +1,3 @@
-import { GraphQLCustomization } from './components/GraphQLCustomization/schema';
-
 export type DatabaseConnection = {
   driver: string;
   details: {

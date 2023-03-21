@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { isEmpty } from 'lodash';
+import isEmpty from 'lodash/isEmpty';
 import { useContext } from 'react';
 import { PermissionsInput } from './PermissionsInput';
 import { rowPermissionsContext } from './RowPermissionsProvider';

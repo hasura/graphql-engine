@@ -16,7 +16,7 @@ export function readMetadata() {
       args: {},
       type: 'export_metadata',
     })
-    .then(_response => {
+    .then(() => {
       Cypress.log({ message: '**--- Metadata read: end**' });
     });
 }

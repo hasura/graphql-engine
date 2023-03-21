@@ -66,7 +66,7 @@ import {
 } from '../../types';
 import { useDebouncedEffect } from '../../../../../hooks/useDebounceEffect';
 
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 
 const Add: React.FC<Props> = props => {
   const { state, setState } = useEventTrigger();

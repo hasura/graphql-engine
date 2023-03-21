@@ -5,7 +5,7 @@ import { Button } from '../../../../new-components/Button';
 import { transformSchemaToZodObject } from '../../../OpenApi3Form/utils';
 import { InputField, useConsoleForm } from '../../../../new-components/Form';
 import { Tabs } from '../../../../new-components/Tabs';
-import { get } from 'lodash';
+import get from 'lodash/get';
 import { useEffect, useState } from 'react';
 import { FaExclamationTriangle } from 'react-icons/fa';
 import { useQuery } from 'react-query';

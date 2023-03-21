@@ -4,7 +4,7 @@ import { useReadOnlyMode } from '../../../../hooks';
 import { useMetadata } from '../../../../features/MetadataAPI';
 import { HasuraMetadataV3 } from '../../../../metadata/types';
 import Spinner from '../../../Common/Spinner/Spinner';
-import isObject from 'lodash.isobject';
+import isObject from 'lodash/isObject';
 
 import { fetchEnumOptions, insertItem } from './InsertActions';
 import { TableInsertItems } from './TableInsertItems';

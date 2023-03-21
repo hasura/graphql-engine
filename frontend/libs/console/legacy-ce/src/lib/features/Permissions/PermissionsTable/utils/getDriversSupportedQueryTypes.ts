@@ -1,5 +1,5 @@
 import { Capabilities } from '@hasura/dc-api-types';
-import isObject from 'lodash.isobject';
+import isObject from 'lodash/isObject';
 
 export const getDriversSupportedQueryTypes = (
   driverCapabilities: Capabilities

@@ -1,7 +1,7 @@
 import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import React from 'react';
-import { screen } from '@testing-library/dom';
+import { screen } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { userEvent, waitFor, within } from '@storybook/testing-library';
 import { RenderOpenApi3Form } from './common/RenderOpenApi3Form';

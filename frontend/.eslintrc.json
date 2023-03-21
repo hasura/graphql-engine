@@ -2,9 +2,11 @@
   "root": true,
   "ignorePatterns": ["**/*"],
   "plugins": ["@nrwl/nx"],
+  "extends": ["plugin:@nrwl/nx/react"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "extends": ["plugin:storybook/recommended"],
       "rules": {
         "@nrwl/nx/enforce-module-boundaries": [
           "error",
@@ -24,12 +26,54 @@
     {
       "files": ["*.ts", "*.tsx"],
       "extends": ["plugin:@nrwl/nx/typescript"],
-      "rules": {}
+      "rules": {
+        "no-unused-vars": "off",
+        "@typescript-eslint/no-unused-vars": [
+          "error",
+          {
+            "args": "none",
+            "varsIgnorePattern": "React"
+          }
+        ],
+        "@typescript-eslint/no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "lodash",
+                "message": "Please use sub imports (eg, lodash/get) instead of the global lodash import.",
+                "allowTypeImports": true
+              }
+            ]
+          }
+        ],
+        "jsx-a11y/alt-text": "error"
+      }
     },
     {
       "files": ["*.js", "*.jsx"],
       "extends": ["plugin:@nrwl/nx/javascript"],
-      "rules": {}
+      "rules": {
+        "no-unused-vars": [
+          "error",
+          {
+            "args": "none",
+            "varsIgnorePattern": "React"
+          }
+        ],
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "lodash",
+                "message": "Please use sub imports (eg, lodash/get) instead of the global lodash import."
+              }
+            ]
+          }
+        ],
+        "jsx-a11y/alt-text": "error"
+      }
     },
     {
       "files": "*.json",

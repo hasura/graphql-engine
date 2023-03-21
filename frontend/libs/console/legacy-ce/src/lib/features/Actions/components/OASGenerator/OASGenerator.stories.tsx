@@ -3,7 +3,6 @@ import { Story, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { handlers } from '../../../../mocks/metadata.mock';
 import { within, userEvent } from '@storybook/testing-library';
-import { waitFor } from '@testing-library/react';
 import { expect } from '@storybook/jest';
 import { OASGenerator, OASGeneratorProps } from './OASGenerator';
 import petstore from './petstore.json';

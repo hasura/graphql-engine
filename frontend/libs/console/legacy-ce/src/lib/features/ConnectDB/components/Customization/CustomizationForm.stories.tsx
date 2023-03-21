@@ -3,7 +3,7 @@ import { SimpleForm } from '../../../../new-components/Form';
 import { expect } from '@storybook/jest';
 import { ComponentStory, Meta } from '@storybook/react';
 import { userEvent, waitFor, within } from '@storybook/testing-library';
-import { screen } from '@testing-library/dom';
+import { screen } from '@storybook/testing-library';
 import React from 'react';
 import { z } from 'zod';
 import { action } from '@storybook/addon-actions';

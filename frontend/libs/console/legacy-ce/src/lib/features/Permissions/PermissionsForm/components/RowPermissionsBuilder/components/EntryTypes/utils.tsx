@@ -1,5 +1,5 @@
 import { Fragment, ReactNode } from 'react';
-import { get } from 'lodash';
+import get from 'lodash/get';
 import { TableProvider } from '../TableProvider';
 import { PermissionType, Relationships } from '../types';
 

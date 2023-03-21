@@ -1,4 +1,4 @@
-import pickBy from 'lodash.pickby';
+import pickBy from 'lodash/pickBy';
 import { Dictionary } from 'ts-essentials';
 import { Schema } from './schema';
 

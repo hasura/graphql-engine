@@ -1,9 +1,5 @@
 import { Collapsible } from '../../../../../new-components/Collapsible';
-import { InputField, Radio, Select } from '../../../../../new-components/Form';
 import { isProConsole } from '../../../../../utils';
-import { useFormContext } from 'react-hook-form';
-import { ConnectionInfoSchema } from '../schema';
-import { BooleanInput } from './BooleanInput';
 import { DatabaseUrl } from './DatabaseUrl';
 import { IsolationLevel } from './IsolationLevel';
 import { PoolSettings } from './PoolSettings';
@@ -17,8 +13,6 @@ export const ConnectionInfo = ({
   name: string;
   hideOptions: string[];
 }) => {
-  const { watch } = useFormContext<Record<string, ConnectionInfoSchema>>();
-
   return (
     <div className="bg-white border border-hasGray-300 rounded-md shadow-sm overflow-hidden p-4">
       <DatabaseUrl name={`${name}.databaseUrl`} hideOptions={hideOptions} />

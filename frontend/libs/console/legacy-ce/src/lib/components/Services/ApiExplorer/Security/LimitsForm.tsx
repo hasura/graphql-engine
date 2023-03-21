@@ -123,83 +123,81 @@ export const LimitsForm: React.FC<LimitFormProps> = ({
               </div>
             )}
           </div>
-          <>
-            <input
-              type="number"
-              min={0}
-              className={`form-control ${styles.special_input}`}
-              value={renderValue()}
-              onChange={e => onInputChange(limit, role)(e.target.value)}
-              placeholder={isRateLimit ? 'Request Per Minute' : 'Limit'}
-              disabled={isDisabled}
-            />
+          <input
+            type="number"
+            min={0}
+            className={`form-control ${styles.special_input}`}
+            value={renderValue()}
+            onChange={e => onInputChange(limit, role)(e.target.value)}
+            placeholder={isRateLimit ? 'Request Per Minute' : 'Limit'}
+            disabled={isDisabled}
+          />
 
-            {isRateLimit && (
-              <div className={styles.unique_params}>
-                <div className={styles.radio_group}>
-                  <div className={`${styles.checkbox_group} radio_input`}>
-                    <input
-                      type="checkbox"
-                      id="additional_unique_param"
-                      className="legacy-input-fix"
-                      checked={addUniqueParams}
-                      disabled={isDisabled}
-                      onChange={() => setAddUniqueParams(pre => !pre)}
-                    />
-                    <label htmlFor="additional_unique_param">
-                      <b>Additional Unique Parameters</b>
-                    </label>
-                  </div>
-                  <div className="radio_input">
-                    <input
-                      type="radio"
-                      className="legacy-input-fix"
-                      id="ip_address"
-                      checked={
-                        isGlobal
-                          ? unique_params_global === 'IP'
-                          : unique_params_role === 'IP'
-                      }
-                      disabled={!addUniqueParams || isDisabled}
-                      onChange={() => onUniqueParamsChange(role)('IP')}
-                    />
-                    <label htmlFor="ip_address">IP Address</label>
-                  </div>
-                  <div className="radio_input">
-                    <input
-                      type="radio"
-                      className="legacy-input-fix"
-                      id="session_variable"
-                      checked={
-                        isGlobal
-                          ? unique_params_global !== 'IP' &&
-                            !isEmpty(unique_params_global)
-                          : unique_params_role !== 'IP' &&
-                            !isEmpty(unique_params_role)
-                      }
-                      disabled={!addUniqueParams || isDisabled}
-                      onChange={() => onUniqueParamsChange(role)('')}
-                    />
-                    <label htmlFor="session_variable">
-                      Session Variable(s){' '}
-                      <ToolTip message="multiple session variables can be provided as comma separated values" />
-                    </label>
-                  </div>
-                </div>
-                {((isGlobal && unique_params_global !== 'IP') ||
-                  (!isGlobal && unique_params_role !== 'IP')) && (
+          {isRateLimit && (
+            <div className={styles.unique_params}>
+              <div className={styles.radio_group}>
+                <div className={`${styles.checkbox_group} radio_input`}>
                   <input
-                    type="text"
-                    className={`form-control ${styles.special_input}`}
-                    value={renderUniqueParamValue()}
-                    disabled={!addUniqueParams || isDisabled}
-                    placeholder="x-hasura-user-id, x-hasura-org"
-                    onChange={e => onUniqueParamsChange(role)(e.target.value)}
+                    type="checkbox"
+                    id="additional_unique_param"
+                    className="legacy-input-fix"
+                    checked={addUniqueParams}
+                    disabled={isDisabled}
+                    onChange={() => setAddUniqueParams(pre => !pre)}
                   />
-                )}
+                  <label htmlFor="additional_unique_param">
+                    <b>Additional Unique Parameters</b>
+                  </label>
+                </div>
+                <div className="radio_input">
+                  <input
+                    type="radio"
+                    className="legacy-input-fix"
+                    id="ip_address"
+                    checked={
+                      isGlobal
+                        ? unique_params_global === 'IP'
+                        : unique_params_role === 'IP'
+                    }
+                    disabled={!addUniqueParams || isDisabled}
+                    onChange={() => onUniqueParamsChange(role)('IP')}
+                  />
+                  <label htmlFor="ip_address">IP Address</label>
+                </div>
+                <div className="radio_input">
+                  <input
+                    type="radio"
+                    className="legacy-input-fix"
+                    id="session_variable"
+                    checked={
+                      isGlobal
+                        ? unique_params_global !== 'IP' &&
+                          !isEmpty(unique_params_global)
+                        : unique_params_role !== 'IP' &&
+                          !isEmpty(unique_params_role)
+                    }
+                    disabled={!addUniqueParams || isDisabled}
+                    onChange={() => onUniqueParamsChange(role)('')}
+                  />
+                  <label htmlFor="session_variable">
+                    Session Variable(s){' '}
+                    <ToolTip message="multiple session variables can be provided as comma separated values" />
+                  </label>
+                </div>
               </div>
-            )}
-          </>
+              {((isGlobal && unique_params_global !== 'IP') ||
+                (!isGlobal && unique_params_role !== 'IP')) && (
+                <input
+                  type="text"
+                  className={`form-control ${styles.special_input}`}
+                  value={renderUniqueParamValue()}
+                  disabled={!addUniqueParams || isDisabled}
+                  placeholder="x-hasura-user-id, x-hasura-org"
+                  onChange={e => onUniqueParamsChange(role)(e.target.value)}
+                />
+              )}
+            </div>
+          )}
         </div>
         {isdisabledGlobally && <div className={styles.disabled_cover} />}
       </div>

@@ -1,5 +1,5 @@
 import { Table } from '../../hasura-metadata-types';
-import { Database, Feature } from '..';
+import { Database } from '..';
 import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 import {
   getDatabaseConfiguration,

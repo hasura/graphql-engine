@@ -2,7 +2,7 @@ import React from 'react';
 import { DecoratorFn } from '@storybook/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import merge from 'lodash.merge';
+import merge from 'lodash/merge';
 
 import { RootState } from '../../store';
 import reducer from '../../reducer';

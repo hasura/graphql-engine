@@ -59,7 +59,6 @@ import {
   useVPCBannerVisibility,
 } from './utils';
 import { NeonDashboardLink } from '../DataSources/CreateDataSource/Neon/components/NeonDashboardLink';
-import { ListConnectedDatabases } from '../../../../features/ConnectDBRedesign';
 
 const KNOW_MORE_PROJECT_REGION_UPDATE =
   'https://hasura.io/docs/latest/projects/regions/#changing-region-of-an-existing-project';

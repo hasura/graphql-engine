@@ -97,11 +97,7 @@ describe('Check different configurations of Onboarding wizard depending on onboa
     server.use(onboardingDataEmptyActivity);
     render(<Root />, { wrapper });
 
-    await waitFor(() =>
-      expect(
-        screen.queryByText('Welcome to your new Hasura project!')
-      ).toBeInTheDocument()
-    );
+    await screen.findByText('Welcome to your new Hasura project!');
   });
 
   it('should hide wizard as onboarding skipped by user', async () => {

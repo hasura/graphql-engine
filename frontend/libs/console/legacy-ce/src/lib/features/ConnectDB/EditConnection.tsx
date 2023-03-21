@@ -47,7 +47,7 @@ const useEditDataSourceConnectionInfo = () => {
 };
 
 export const EditConnection = () => {
-  const { data, isLoading, isSuccess } = useEditDataSourceConnectionInfo();
+  const { data, isLoading } = useEditDataSourceConnectionInfo();
   const {
     schema = z.any(),
     name,
@@ -57,7 +57,7 @@ export const EditConnection = () => {
   } = data || {};
   const { submit, isLoading: submitIsLoading } = useEditDataSourceConnection();
   const {
-    methods: { formState, getValues, reset },
+    methods: { formState, reset },
     Form,
   } = useConsoleForm({
     schema,

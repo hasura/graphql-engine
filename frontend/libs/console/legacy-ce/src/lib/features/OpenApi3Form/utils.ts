@@ -1,8 +1,8 @@
 /* eslint-disable no-underscore-dangle */
-import get from 'lodash.get';
+import get from 'lodash/get';
 import { OpenApiSchema, OpenApiReference } from '@hasura/dc-api-types';
 import { z, ZodSchema } from 'zod';
-import pickBy from 'lodash.pickby';
+import pickBy from 'lodash/pickBy';
 
 export function isReferenceObject(obj: any): obj is OpenApiReference {
   return Object.prototype.hasOwnProperty.call(obj, '$ref');

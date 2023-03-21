@@ -1,5 +1,5 @@
 import { generateGraphQLSelectQuery } from '../../../GraphQLUtils';
-import get from 'lodash.get';
+import get from 'lodash/get';
 import { BigQueryTable } from '..';
 import { exportMetadata, runGraphQL } from '../../api';
 import { transformGraphqlResponse } from '../../common/utils';

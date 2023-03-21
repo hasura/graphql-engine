@@ -1,4 +1,4 @@
-import isEqual from 'lodash.isequal';
+import isEqual from 'lodash/isEqual';
 
 import { TableColumn } from '../../../../../../DataSource';
 import { getTypeName } from '../../../../../../GraphQLUtils';

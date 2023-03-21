@@ -33,22 +33,22 @@ Base.play = async ({ args, canvasElement }) => {
   const canvas = within(canvasElement);
 
   // Type in text input field
-  userEvent.type(
+  await userEvent.type(
     await canvas.findByPlaceholderText('placeholder...'),
     'John Doe'
   );
 
-  expect(args.onChange).toHaveBeenCalled();
-  expect(args.onInput).toHaveBeenCalled();
+  await expect(args.onChange).toHaveBeenCalled();
+  await expect(args.onInput).toHaveBeenCalled();
 
-  expect(await canvas.findByTitle('Expand')).toBeInTheDocument();
+  await expect(await canvas.findByTitle('Expand')).toBeInTheDocument();
 
   await userEvent.click(await canvas.findByTitle('Expand'));
 
   await userEvent.keyboard('Enter', { delay: 50 });
 
-  expect(args.onChange).toHaveBeenCalled();
-  expect(args.onInput).toHaveBeenCalled();
+  await expect(args.onChange).toHaveBeenCalled();
+  await expect(args.onInput).toHaveBeenCalled();
 
   await userEvent.click(await canvas.findByTitle('Collapse'));
 };

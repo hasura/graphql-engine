@@ -1,4 +1,4 @@
-import isObject from 'lodash.isobject';
+import isObject from 'lodash/isObject';
 import { QualifiedTable, TableConfig } from '../../../metadata/types';
 import Endpoints from '../../../Endpoints';
 import { ReduxState } from '../../../types';

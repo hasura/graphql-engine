@@ -4,7 +4,7 @@ import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 
 import { PermissionsTab, PermissionsTabProps } from './PermissionsTab';
 import { handlers } from '../PermissionsForm/mocks/handlers.mock';
-import { waitFor, within } from '@testing-library/dom';
+import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { userEvent } from '@storybook/testing-library';
 
@@ -66,9 +66,9 @@ GDCUpdateTableCloneSelectPermission.play = async ({ canvasElement }) => {
     'external-check-json-editor'
   );
 
-  expect(rowPermissionBuilderContainer.getAttribute('data-state')).toEqual(
-    '{"ArtistId":{"_eq":"X-Hasura-User-Id"}}'
-  );
+  await expect(
+    rowPermissionBuilderContainer.getAttribute('data-state')
+  ).toEqual('{"ArtistId":{"_eq":"X-Hasura-User-Id"}}');
 };
 
 // export const GDCUpdateTableCreatePermissions: Story<

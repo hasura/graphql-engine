@@ -7,7 +7,7 @@ import ProcessedEvents from './ProcessedEvents';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { useGetCronTriggers } from '../Hooks/useGetCronTriggers';
 
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 
 const ProcessedEventsContainer: React.FC<Props> = props => {
   const { data: cronTriggers, isLoading, error } = useGetCronTriggers();

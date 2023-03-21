@@ -41,12 +41,10 @@ const OverallHealthCard = () => {
         {loading ? (
           'Loading...'
         ) : (
-          <>
-            <p className={`${styles.sm} ${styles.muted} ${styles.no_pad}`}>
-              <HealthStatus status={healthzStatus} />
-              {healthzStatus}
-            </p>
-          </>
+          <p className={`${styles.sm} ${styles.muted} ${styles.no_pad}`}>
+            <HealthStatus status={healthzStatus} />
+            {healthzStatus}
+          </p>
         )}
       </div>
     </div>

@@ -42,10 +42,6 @@ import { unsupportedRawSQLDrivers } from './utils';
 import { nativeDrivers } from '../../../../features/DataSource';
 import { useRunSQL } from './hooks/useRunSQL';
 import { useFireNotification } from '../../../../new-components/Notifications';
-import {
-  availableFeatureFlagIds,
-  useIsFeatureFlagEnabled,
-} from '../../../../features/FeatureFlags';
 
 const checkChangeLang = (sql, selectedDriver) => {
   return (

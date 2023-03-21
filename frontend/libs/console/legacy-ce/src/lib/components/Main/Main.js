@@ -85,7 +85,7 @@ export const updateRequestHeaders = props => {
     }
   }
 };
-
+/*
 const getSettingsSelectedMarker = pathname => {
   const currentActiveBlock = getPathRoot(pathname);
 
@@ -95,6 +95,7 @@ const getSettingsSelectedMarker = pathname => {
 
   return null;
 };
+ */
 
 class Main extends React.Component {
   constructor(props) {
@@ -272,10 +273,7 @@ class Main extends React.Component {
       serverVersion,
     } = this.props;
 
-    const {
-      proClickState: { isProClicked },
-      isPopUpOpen,
-    } = this.state;
+    const { isPopUpOpen } = this.state;
 
     const appPrefix = '';
 
@@ -363,7 +361,7 @@ class Main extends React.Component {
             <div className="flex gap-1 flex-grow">
               <div className="px-5 py-2 flex items-center gap-3">
                 <Link to="/">
-                  <img className="w-24" src={logo} />
+                  <img className="w-24" src={logo} alt="" />
                 </Link>
                 <Link to="/">
                   <div className="text-white text-xs max-w-[128px]">

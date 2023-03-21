@@ -14,7 +14,7 @@ import {
   SourceToSourceRelationship,
   Table,
 } from '../../hasura-metadata-types';
-import isEqual from 'lodash.isequal';
+import isEqual from 'lodash/isEqual';
 import {
   LocalRelationship,
   RemoteDatabaseRelationship,

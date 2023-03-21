@@ -4,7 +4,7 @@ import { action } from '@storybook/addon-actions';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { expect } from '@storybook/jest';
 import { userEvent } from '@storybook/testing-library';
-import { within } from '@testing-library/react';
+import { within } from '@storybook/testing-library';
 import { AdvancedSelect } from '.';
 
 export default {

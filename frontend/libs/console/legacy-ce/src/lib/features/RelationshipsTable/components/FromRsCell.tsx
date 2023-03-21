@@ -22,20 +22,18 @@ const FromRsCell = ({
   rsName: ReactText;
   leafs: ReactText[];
 }) => (
-  <>
-    <div className="flex items-center">
-      <FiType
-        className="fill-current text-sm text-muted mr-1 p-0"
-        title="Type"
-        style={{ strokeWidth: 4.5 }}
-      />
-      {rsName}
-      <span className="px-2">/</span>
-      {leafs.map(i => (
-        <RsLeafCell leafName={i} />
-      ))}
-    </div>
-  </>
+  <div className="flex items-center">
+    <FiType
+      className="fill-current text-sm text-muted mr-1 p-0"
+      title="Type"
+      style={{ strokeWidth: 4.5 }}
+    />
+    {rsName}
+    <span className="px-2">/</span>
+    {leafs.map(i => (
+      <RsLeafCell leafName={i} />
+    ))}
+  </div>
 );
 
 export default FromRsCell;

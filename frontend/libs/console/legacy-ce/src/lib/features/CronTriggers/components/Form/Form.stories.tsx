@@ -4,7 +4,7 @@ import { ComponentMeta, Story } from '@storybook/react';
 import { CronTriggers } from '../..';
 import { within, userEvent, waitFor } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
-import { waitForElementToBeRemoved } from '@testing-library/react';
+import { waitForElementToBeRemoved } from '@storybook/testing-library';
 import { handlers } from './mocks/handlers.mock';
 
 export default {

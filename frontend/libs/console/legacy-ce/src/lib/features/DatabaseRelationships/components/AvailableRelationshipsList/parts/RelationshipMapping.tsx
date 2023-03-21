@@ -1,4 +1,3 @@
-import { Tooltip } from '../../../../../new-components/Tooltip';
 import { getRemoteFieldPath } from '../../../../RelationshipsTable';
 import React from 'react';
 import {

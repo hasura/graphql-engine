@@ -1,8 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 import { Dispatch } from 'redux';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { isEmpty } from 'lodash';
+import isEmpty from 'lodash/isEmpty';
 import { Badge } from '../../../new-components/Badge';
 import { DropdownButton } from '../../../new-components/DropdownButton';
 import { FaArrowRight, FaFlask } from 'react-icons/fa';

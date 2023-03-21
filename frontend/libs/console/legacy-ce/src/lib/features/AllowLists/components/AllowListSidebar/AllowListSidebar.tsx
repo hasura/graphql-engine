@@ -1,4 +1,4 @@
-import debounce from 'lodash.debounce';
+import debounce from 'lodash/debounce';
 import React from 'react';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { useServerConfig } from '../../../../hooks';

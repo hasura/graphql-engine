@@ -5,8 +5,7 @@ import { FaShieldAlt } from 'react-icons/fa';
 import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 
 export const GraphQLServiceUrl = () => {
-  const { watch, register } = useFormContext();
-  const url = watch('url');
+  const { register } = useFormContext();
   return (
     <div className="mb-md w-6/12">
       <label className="block flex items-center text-gray-600 font-semibold mb-xs">

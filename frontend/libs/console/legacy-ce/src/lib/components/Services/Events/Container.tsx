@@ -28,7 +28,7 @@ import { mapDispatchToPropsEmpty } from '../../Common/utils/reactUtils';
 import { getEventTriggers } from '../../../metadata/selector';
 import { useGetCronTriggers } from './CronTriggers/Hooks/useGetCronTriggers';
 
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 
 const Container: React.FC<Props> = props => {
   const { data: cronTriggers, isLoading, error } = useGetCronTriggers();

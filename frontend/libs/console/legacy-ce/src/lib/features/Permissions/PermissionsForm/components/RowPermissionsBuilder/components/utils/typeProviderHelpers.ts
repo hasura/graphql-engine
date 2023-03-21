@@ -1,6 +1,7 @@
 import { areTablesEqual } from '../../../../../../hasura-metadata-api';
 import { Table } from '../../../../../../hasura-metadata-types';
-import { isObjectLike, set } from 'lodash';
+import set from 'lodash/set';
+import isObjectLike from 'lodash/isObjectLike';
 import { Permissions, Tables } from '../types';
 
 export const getPermissionTypes = (

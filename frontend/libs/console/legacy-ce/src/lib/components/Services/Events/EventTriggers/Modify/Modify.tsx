@@ -38,7 +38,6 @@ import {
 import ConfigureTransformation from '../../../../Common/ConfigureTransformation/ConfigureTransformation';
 import requestAction from '../../../../../utils/requestAction';
 import Endpoints from '../../../../../Endpoints';
-import defaultState from '../state';
 import {
   getValidateTransformOptions,
   parseValidateApiData,
@@ -70,7 +69,7 @@ import {
 import { AutoCleanupForm } from '../Common/AutoCleanupForm';
 import { useDebouncedEffect } from '../../../../../hooks/useDebounceEffect';
 
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 
 const Modify: React.FC<Props> = props => {
   const { currentTrigger, readOnlyMode, dataSourcesList, dispatch } = props;

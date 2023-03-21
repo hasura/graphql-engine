@@ -1,7 +1,7 @@
 import { Driver } from '../../../dataSources';
 import { getDriverPrefix } from '../../DataSource';
 import { MetadataTableConfig } from '../../hasura-metadata-types';
-import pickBy from 'lodash.pickby';
+import pickBy from 'lodash/pickBy';
 import {
   CustomFieldNamesFormVals,
   GetTablePayloadArgs,

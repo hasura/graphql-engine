@@ -76,4 +76,4 @@ export interface BigQueryConfiguration {
   datasets: string[] | FromEnv;
 }
 
-export interface CitusConfiguration extends PostgresConfiguration {}
+export type CitusConfiguration = PostgresConfiguration;

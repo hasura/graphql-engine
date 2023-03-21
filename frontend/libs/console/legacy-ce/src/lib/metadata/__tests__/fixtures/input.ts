@@ -1,5 +1,4 @@
 import { LocalEventTriggerState } from '../../../components/Services/Events/EventTriggers/state';
-import { Driver } from '../../../dataSources';
 import { HasuraMetadataV3, RequestTransform } from '../../types';
 import { APILimitInputType } from '../../utils';
 

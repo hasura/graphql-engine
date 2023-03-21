@@ -22,19 +22,17 @@ const ToRsCell = ({
   rsName: ReactText;
   leafs: ReactText[];
 }) => (
-  <>
-    <div className="flex items-center">
-      <FaPlug
-        className="fill-current text-sm text-muted mr-1 p-0"
-        title="Remote schema"
-      />
-      {rsName}
-      <span className="px-2">/</span>
-      {leafs.map(i => (
-        <RsLeafCell leafName={i} />
-      ))}
-    </div>
-  </>
+  <div className="flex items-center">
+    <FaPlug
+      className="fill-current text-sm text-muted mr-1 p-0"
+      title="Remote schema"
+    />
+    {rsName}
+    <span className="px-2">/</span>
+    {leafs.map(i => (
+      <RsLeafCell leafName={i} />
+    ))}
+  </div>
 );
 
 export default ToRsCell;

@@ -2,7 +2,7 @@ import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { userEvent, waitFor, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
-import { screen } from '@testing-library/dom';
+import { screen } from '@storybook/testing-library';
 
 import { Tooltip } from '.';
 

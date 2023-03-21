@@ -1,4 +1,4 @@
-import { isEmpty } from 'lodash';
+import isEmpty from 'lodash/isEmpty';
 import { Button } from '../../../../../../new-components/Button';
 import { isComparator } from './utils';
 import { useContext } from 'react';

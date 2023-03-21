@@ -114,14 +114,12 @@ const EditRowModal = ({ onHide, show, name, testSuiteId }) => {
                 onCancel={() => setIsEditing(false)}
               />
             ) : (
-              <Fragment>
-                <CustomCopy
-                  key="variables"
-                  copy={JSON.stringify(variables, null, 2)}
-                  label="Variables"
-                  onEdit={() => setIsEditing(true)}
-                />
-              </Fragment>
+              <CustomCopy
+                key="variables"
+                copy={JSON.stringify(variables, null, 2)}
+                label="Variables"
+                onEdit={() => setIsEditing(true)}
+              />
             )}
           </div>
         </Fragment>

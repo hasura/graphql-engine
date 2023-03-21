@@ -66,17 +66,15 @@ export function Root(props: {
           header="Setting up your project"
           showSubHeaderAboveHeader
           subHeader={
-            <>
-              <a
-                href={gitRepoFullLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-600 hover:text-gray-800 hover:no-underline cursor-pointer"
-              >
-                <FaGithub className="mb-1" />
-                <span className="ml-xs">{gitRepoName}</span>
-              </a>
-            </>
+            <a
+              href={gitRepoFullLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-600 hover:text-gray-800 hover:no-underline cursor-pointer"
+            >
+              <FaGithub className="mb-1" />
+              <span className="ml-xs">{gitRepoName}</span>
+            </a>
           }
         >
           <WorkflowProgress

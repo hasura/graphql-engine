@@ -16,13 +16,11 @@ const FormLabel: React.FC<FormLabelProps> = ({
   knowMoreLink,
 }) => {
   return (
-    <>
-      <h2 className="text-lg font-semibold mb-xs flex items-center">
-        {title}
-        <IconTooltip message={tooltip} icon={tooltipIcon} />
-        {knowMoreLink ? <LearnMoreLink href={knowMoreLink} /> : null}
-      </h2>
-    </>
+    <h2 className="text-lg font-semibold mb-xs flex items-center">
+      {title}
+      <IconTooltip message={tooltip} icon={tooltipIcon} />
+      {knowMoreLink ? <LearnMoreLink href={knowMoreLink} /> : null}
+    </h2>
   );
 };
 

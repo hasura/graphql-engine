@@ -14,8 +14,6 @@ import {
   NavigationSidebarSection,
 } from '../../../new-components/NavigationSidebar';
 
-import { checkFeatureSupport } from '../../../helpers/versionUtils';
-
 export interface Metadata {
   inconsistentObjects: Record<string, unknown>[];
   inconsistentInheritedRoles: Record<string, unknown>[];
@@ -104,8 +102,6 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
     route: '/settings/insecure-domain',
     dataTestVal: 'insecure-domain-link',
   });
-
-  const temp = useMetadata(m => m.metadata.opentelemetry);
 
   const { data: openTelemetry } = useMetadata(m => m.metadata.opentelemetry);
   const { data: configData, isLoading, isError } = useServerConfig();

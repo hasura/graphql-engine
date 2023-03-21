@@ -13,7 +13,7 @@ import {
   EventsLogsInjectedProps,
 } from '../Common/eventLogsMapStateToProps';
 
-interface Props extends EventsLogsInjectedProps {}
+type Props = EventsLogsInjectedProps;
 
 const PendingEvents: React.FC<Props> = props => {
   const { dispatch, triggerName, currentTrigger, readOnlyMode } = props;

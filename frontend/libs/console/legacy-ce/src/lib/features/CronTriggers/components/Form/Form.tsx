@@ -19,7 +19,7 @@ import {
 } from './utils';
 import { useCronMetadataMigration, useDefaultValues } from './hooks';
 import { CronRequestTransformation } from './components/CronRequestTransformation';
-import { FaQuestionCircle, FaShieldAlt } from 'react-icons/fa';
+import { FaShieldAlt } from 'react-icons/fa';
 
 type Props = {
   /**

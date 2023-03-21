@@ -1,4 +1,3 @@
-import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import { routerMiddleware } from 'react-router-redux';
 import { browserHistory } from 'react-router';
 

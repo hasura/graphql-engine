@@ -1,5 +1,4 @@
-import React, { useEffect } from 'react';
-import Skeleton from 'react-loading-skeleton';
+import React from 'react';
 import { FieldError, useFieldArray, useFormContext } from 'react-hook-form';
 import { Select } from '../../../../../new-components/Form';
 import {
@@ -10,10 +9,8 @@ import {
   FaTimesCircle,
 } from 'react-icons/fa';
 import { Button } from '../../../../../new-components/Button';
-import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
-import { useTableColumns } from '../../../hooks/useTableColumns';
 import { TableColumn } from '../../../../DataSource';
-import { get } from 'lodash';
+import get from 'lodash/get';
 
 type Schema = Record<
   string,

@@ -141,22 +141,20 @@ WithNoLabelsAndNoBackground.args = {
 
 const FormElements = () => {
   return (
-    <>
-      <ListMap
-        from={{
-          options: ['apple', 'cherry', 'banana', 'pineapple', 'strawberry'],
-          label: 'Source Column',
-          placeholder: 'Select a fruit',
-        }}
-        to={{
-          type: 'array',
-          options: ['tomato', 'chilli', 'pumpkin', 'onion', 'carrot'],
-          label: 'Reference Column',
-          placeholder: 'Select a vegatable',
-        }}
-        name="mapping"
-      />
-    </>
+    <ListMap
+      from={{
+        options: ['apple', 'cherry', 'banana', 'pineapple', 'strawberry'],
+        label: 'Source Column',
+        placeholder: 'Select a fruit',
+      }}
+      to={{
+        type: 'array',
+        options: ['tomato', 'chilli', 'pumpkin', 'onion', 'carrot'],
+        label: 'Reference Column',
+        placeholder: 'Select a vegatable',
+      }}
+      name="mapping"
+    />
   );
 };
 

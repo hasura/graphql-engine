@@ -270,7 +270,7 @@ const BrowseRows = props => {
             onRowClick(r);
           }}
         >
-          <img className={styles.actionImg} src={graphIcon} />
+          <img className={styles.actionImg} src={graphIcon} alt="" />
         </div>
         {/* renderActionButtonForGroups() */}
       </div>

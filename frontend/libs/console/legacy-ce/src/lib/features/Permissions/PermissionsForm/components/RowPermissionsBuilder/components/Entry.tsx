@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { isEmpty } from 'lodash';
+import isEmpty from 'lodash/isEmpty';
 import { isPrimitive } from './utils/helpers';
 import { tableContext } from './TableProvider';
 import { Key } from './Key';

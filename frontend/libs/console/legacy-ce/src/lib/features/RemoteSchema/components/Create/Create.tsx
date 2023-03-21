@@ -4,7 +4,7 @@ import { FieldError } from 'react-hook-form';
 import { InputField, useConsoleForm } from '../../../../new-components/Form';
 import { useFireNotification } from '../../../../new-components/Notifications';
 import { IconTooltip } from '../../../../new-components/Tooltip';
-import get from 'lodash.get';
+import get from 'lodash/get';
 import { APIError } from '../../../../hooks/error';
 import React, { useState } from 'react';
 import { FaExclamationCircle, FaPlusCircle } from 'react-icons/fa';

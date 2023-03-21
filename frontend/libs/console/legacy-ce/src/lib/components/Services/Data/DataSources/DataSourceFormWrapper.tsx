@@ -69,7 +69,7 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
     /**
      * Early return for gdc drivers when feature flag is enabled
      */
-    const driver = drivers?.find(d => d.name === value);
+    // const driver = drivers?.find(d => d.name === value);
     // if (!driver?.native) return;
 
     if (!isSupported && changeConnectionType) {

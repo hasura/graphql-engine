@@ -18,14 +18,12 @@ const TableCell = ({
   tableName: ReactText;
   cols?: ReactText[];
 }) => (
-  <>
-    <div className="flex items-center">
-      <FaTable className="fill-current text-sm text-muted mr-1" title="Table" />
-      {tableName}
-      <span className="px-2">/</span>
-      {cols ? cols.map(i => <ColumnCell columnName={i} />) : null}
-    </div>
-  </>
+  <div className="flex items-center">
+    <FaTable className="fill-current text-sm text-muted mr-1" title="Table" />
+    {tableName}
+    <span className="px-2">/</span>
+    {cols ? cols.map(i => <ColumnCell columnName={i} />) : null}
+  </div>
 );
 
 export default TableCell;

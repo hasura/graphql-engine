@@ -48,7 +48,7 @@ function getHumanReadableAPIError(err: string) {
       <div>
         You have reached the free tier limit on Neon. Please delete a free tier
         project from{' '}
-        <a href={neonDashboardLink} target="_blank">
+        <a href={neonDashboardLink} target="_blank" rel="noreferrer">
           Neon dashboard
         </a>{' '}
         and try again.

@@ -1,4 +1,4 @@
-import isEqual from 'lodash.isequal';
+import isEqual from 'lodash/isEqual';
 import { DataSource, exportMetadata } from '../../../DataSource';
 import type { TableColumn } from '../../../DataSource';
 

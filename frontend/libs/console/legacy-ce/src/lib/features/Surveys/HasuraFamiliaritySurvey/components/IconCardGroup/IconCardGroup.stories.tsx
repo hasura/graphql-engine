@@ -3,7 +3,7 @@ import { action } from '@storybook/addon-actions';
 import { ComponentMeta, Story } from '@storybook/react';
 import { userEvent, within } from '@storybook/testing-library';
 import { FaStar, FaHeart, FaUser, FaBookmark } from 'react-icons/fa';
-import { waitFor } from '@testing-library/react';
+import { waitFor } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { IconCardGroup } from './IconCardGroup';
 

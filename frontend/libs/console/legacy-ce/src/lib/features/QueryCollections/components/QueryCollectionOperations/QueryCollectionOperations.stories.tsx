@@ -5,7 +5,7 @@ import { ReduxDecorator } from '../../../../storybook/decorators/redux-decorator
 import { ComponentMeta, Story } from '@storybook/react';
 import { within, userEvent, screen } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
-import { waitForElementToBeRemoved } from '@testing-library/react';
+import { waitForElementToBeRemoved } from '@storybook/testing-library';
 
 import { QueryCollectionsOperations } from './QueryCollectionOperations';
 
@@ -48,8 +48,10 @@ Primary.play = async ({ canvasElement }) => {
 
   // select the first operation
   await userEvent.click(canvas.getByTestId('operation-MyQuery'));
+  await userEvent.click(canvas.getByTestId('operation-MyQuery'));
 
   // check that the controls are visible
+  await canvas.queryByTestId('selected-operations-controls');
   expect(
     await canvas.queryByTestId('selected-operations-controls')
   ).toBeInTheDocument();

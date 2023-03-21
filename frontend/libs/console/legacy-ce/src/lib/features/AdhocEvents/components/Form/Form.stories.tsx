@@ -3,7 +3,7 @@ import { ReactQueryDecorator } from '../../../../storybook/decorators/react-quer
 import { ComponentMeta, Story } from '@storybook/react';
 import { within, userEvent, waitFor } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
-import { waitForElementToBeRemoved } from '@testing-library/react';
+import { waitForElementToBeRemoved } from '@storybook/testing-library';
 import { handlers } from '../../../../mocks/metadata.mock';
 import { AdhocEvents } from '../..';
 

@@ -5,7 +5,7 @@ import {
   isRemoteSchemaRelationship,
   TableFkRelationships,
 } from '../../DataSource';
-import { MetadataTable, Table } from '../../hasura-metadata-types';
+import { MetadataTable } from '../../hasura-metadata-types';
 import {
   LocalRelationship,
   Relationship,

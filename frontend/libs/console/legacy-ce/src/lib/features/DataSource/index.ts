@@ -3,7 +3,7 @@ import { Capabilities, OpenApiSchema } from '@hasura/dc-api-types';
 import { DataNode } from 'antd/lib/tree';
 import { AxiosInstance } from 'axios';
 import { z } from 'zod';
-import pickBy from 'lodash.pickby';
+import pickBy from 'lodash/pickBy';
 import { bigquery } from './bigquery';
 import { citus } from './citus';
 import { cockroach } from './cockroach';

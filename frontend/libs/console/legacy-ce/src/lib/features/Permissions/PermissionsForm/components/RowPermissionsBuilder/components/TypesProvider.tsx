@@ -7,7 +7,8 @@ import {
   useEffect,
 } from 'react';
 import { rowPermissionsContext } from './RowPermissionsProvider';
-import { set, unset } from 'lodash';
+import set from 'lodash/set';
+import unset from 'lodash/unset';
 import { getPermissionTypes } from './utils/typeProviderHelpers';
 
 export const typesContext = createContext<TypesContext>({

@@ -9,7 +9,6 @@ import { getEdForm } from '../../../../components/Services/Data/utils';
 import { useIsDisabled } from '../hooks/useIsDisabled';
 import { QueryType } from '../../types';
 import { isPermissionModalDisabled } from '../utils/getPermissionModalStatus';
-import { SelectColumn } from '../../../DataSource/types';
 
 import {
   getPermissionsModalTitle,
@@ -95,7 +94,7 @@ export const ColumnPermissionsSection: React.FC<
   const [showConfirmation, setShowConfirmationModal] = useState<string | null>(
     null
   );
-  const all = watch();
+  watch();
 
   const [selectedColumns, queryRootFields, subscriptionRootFields] = watch([
     'columns',

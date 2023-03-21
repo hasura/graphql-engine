@@ -250,7 +250,7 @@ class Login extends Component {
           <div className={styles.loginCenter}>
             <Helmet title={'Login | ' + 'Hasura'} />
             <div className={styles.hasuraLogo}>
-              <img src={hasuraLogo} />
+              <img src={hasuraLogo} alt="hasura logo" />
             </div>
             <div className={styles.loginWrapper}>
               <form className="form-horizontal" onSubmit={handleLoginClick}>

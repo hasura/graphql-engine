@@ -1,4 +1,8 @@
-import { get, isEmpty, set, unset, isObjectLike } from 'lodash';
+import get from 'lodash/get';
+import isEmpty from 'lodash/isEmpty';
+import set from 'lodash/set';
+import unset from 'lodash/unset';
+import isObjectLike from 'lodash/isObjectLike';
 import { RowPermissionsState, PermissionType } from '../types';
 import { allOperators } from './comparatorsFromSchema';
 

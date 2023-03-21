@@ -1,6 +1,6 @@
 import { isSchemaTable } from '../../DataSource/utils';
 import { Table } from '../../hasura-metadata-types';
-import isObject from 'lodash.isobject';
+import isObject from 'lodash/isObject';
 
 /*
 this function isn't entirely generic but it will hold for the current set of native DBs we have & GDC as well

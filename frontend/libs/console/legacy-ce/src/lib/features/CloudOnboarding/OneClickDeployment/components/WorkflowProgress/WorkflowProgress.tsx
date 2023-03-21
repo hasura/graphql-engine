@@ -8,10 +8,7 @@ import {
   controlPlaneClient,
 } from '../../../../ControlPlane';
 import { reactQueryClient } from '../../../../../lib/reactQuery';
-import {
-  forceChangeGraphiqlQuery,
-  forceGraphiQLIntrospection,
-} from '../../../../../components/Services/ApiExplorer/OneGraphExplorer/utils';
+import { forceGraphiQLIntrospection } from '../../../../../components/Services/ApiExplorer/OneGraphExplorer/utils';
 import {
   RequiredEnvVar,
   OneClickDeploymentState,

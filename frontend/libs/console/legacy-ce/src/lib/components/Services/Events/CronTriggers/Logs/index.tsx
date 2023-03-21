@@ -7,7 +7,7 @@ import Logs from './Logs';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { useGetCronTriggers } from '../Hooks/useGetCronTriggers';
 
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 
 const LogsContainer: React.FC<Props> = ({ dispatch, triggerName }) => {
   const { data: cronTriggers, isLoading, error } = useGetCronTriggers();

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import inflection from 'inflection';
-import camelCase from 'lodash.camelcase';
+import camelCase from 'lodash/camelCase';
 import { isEqual } from '../../../../../components/Common/utils/jsUtils';
 import { LocalRelationship, SuggestedRelationship } from '../../../types';
 import { getTableDisplayName } from '../../../utils/helpers';

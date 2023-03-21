@@ -1,4 +1,4 @@
-import { DataSource, Feature } from '../../DataSource';
+import { DataSource } from '../../DataSource';
 import { DataTarget } from '../../Datasources';
 import { Table } from '../../hasura-metadata-types';
 import { useHttpClient } from '../../Network';

@@ -8,7 +8,7 @@ import { rolesSelector } from '../../../../metadata/selector';
 // import { exportMetadata } from '../../../../metadata/actions';
 import { apiLimitStore } from './state';
 
-interface securitySettingsComponentProps extends InjectedProps {}
+type securitySettingsComponentProps = InjectedProps;
 
 const ApiLimitsComponent: React.FC<securitySettingsComponentProps> = ({
   metadata,

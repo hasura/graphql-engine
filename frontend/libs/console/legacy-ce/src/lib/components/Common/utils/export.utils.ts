@@ -1,4 +1,4 @@
-import isObject from 'lodash.isobject';
+import isObject from 'lodash/isObject';
 
 // return time in format YYYY_MM_DD_hh_mm_ss_s
 export const getCurrTimeForFileName = () => {

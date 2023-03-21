@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, ReactText } from 'react';
-import merge from 'lodash.merge';
+import merge from 'lodash/merge';
 import { GraphQLInputField } from 'graphql';
 import { getChildArguments } from './utils';
 import RSPInput from './RSPInput';

@@ -4,7 +4,7 @@ import AdhocEventContainer from '../Container';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import PendingEvents from './PendingEvents';
 
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 
 const PendingEventsContainer: React.FC<Props> = props => {
   const { dispatch } = props;

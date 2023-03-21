@@ -1,22 +1,15 @@
-import isEqual from 'lodash.isequal';
-import { GraphQLSchema } from 'graphql';
+import isEqual from 'lodash/isEqual';
 import { TableColumn } from '../../../../../../DataSource';
 
 import type {
   DeletePermissionDefinition,
   InsertPermissionDefinition,
-  MetadataTable,
   Permission,
   SelectPermissionDefinition,
-  Source,
   UpdatePermissionDefinition,
 } from '../../../../../../hasura-metadata-types';
 
-import {
-  isPermission,
-  keyToPermission,
-  permissionToKey,
-} from '../../../../../utils';
+import { permissionToKey } from '../../../../../utils';
 import { createDefaultValues } from '../../../../components/RowPermissionsBuilder';
 
 import type { QueryType } from '../../../../../types';

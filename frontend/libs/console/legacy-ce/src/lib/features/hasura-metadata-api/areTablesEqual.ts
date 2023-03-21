@@ -1,6 +1,6 @@
 import { isArray, isObject } from '../../components/Common/utils/jsUtils';
 import { Table } from '../hasura-metadata-types';
-import isEqual from 'lodash.isequal';
+import isEqual from 'lodash/isEqual';
 
 const isObjectOrArray = (table: Table) => isObject(table) || isArray(table);
 

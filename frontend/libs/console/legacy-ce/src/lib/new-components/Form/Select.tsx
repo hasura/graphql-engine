@@ -1,5 +1,5 @@
 import React, { ReactText } from 'react';
-import get from 'lodash.get';
+import get from 'lodash/get';
 import clsx from 'clsx';
 import { FieldError, useFormContext } from 'react-hook-form';
 import { FieldWrapper, FieldWrapperPassThroughProps } from './FieldWrapper';

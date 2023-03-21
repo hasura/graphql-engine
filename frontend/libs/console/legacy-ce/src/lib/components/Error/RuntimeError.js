@@ -39,7 +39,12 @@ class RuntimeError extends Component {
             </div>
           </div>
           <div className="w-1/6 pl-16">
-            <img src={errorImage} name="hasura" title="Something went wrong!" />
+            <img
+              src={errorImage}
+              name="hasura"
+              title="Something went wrong!"
+              alt="something went wrong"
+            />
           </div>
         </div>
       </div>

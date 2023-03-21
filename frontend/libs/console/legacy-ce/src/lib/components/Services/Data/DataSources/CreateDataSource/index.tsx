@@ -14,7 +14,7 @@ import { NotFoundError } from '../../../../Error/PageNotFound';
 import { getDataSources } from '../../../../../metadata/selector';
 import { Neon } from './Neon';
 
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 
 const CreateDataSource: React.FC<Props> = ({ dispatch, allDataSources }) => {
   // this condition fails for everything other than a Hasura Cloud project

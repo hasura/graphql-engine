@@ -2,7 +2,7 @@ import { ComponentStory, Meta } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 
 import { RowPermissionsInput } from './RowPermissionsInput';
-import { within } from '@testing-library/dom';
+import { within } from '@storybook/testing-library';
 import {
   fireEvent,
   userEvent,
@@ -16,7 +16,7 @@ import { usePermissionTables } from '../hooks/usePermissionTables';
 import { usePermissionComparators } from '../hooks/usePermissionComparators';
 import { handlers } from './__tests__/fixtures/jsonb/handlers';
 import { ReactQueryDecorator } from '../../../../../../storybook/decorators/react-query';
-import { isEmpty } from 'lodash';
+import isEmpty from 'lodash/isEmpty';
 import { useState } from 'react';
 import { Permissions } from './types';
 
@@ -615,7 +615,7 @@ export const JsonbColumns: ComponentStory<
 JsonbColumns.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
   // Wait until Loading is gone
-  await waitForElementToBeRemoved(() => canvas.getByText('Loading'), {
+  await waitForElementToBeRemoved(() => canvas.queryByText('Loading'), {
     timeout: 50000,
   });
   // Expect jason._contained_in-comparator to be in the document
@@ -686,7 +686,7 @@ export const StringColumns: ComponentStory<
 StringColumns.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
   // Wait until Loading is gone
-  await waitForElementToBeRemoved(() => canvas.getByText('Loading'), {
+  await waitForElementToBeRemoved(() => canvas.queryByText('Loading'), {
     timeout: 50000,
   });
 
@@ -736,7 +736,7 @@ export const NumberColumns: ComponentStory<
 NumberColumns.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
   // Wait until Loading is gone
-  await waitForElementToBeRemoved(() => canvas.getByText('Loading'), {
+  await waitForElementToBeRemoved(() => canvas.queryByText('Loading'), {
     timeout: 50000,
   });
 

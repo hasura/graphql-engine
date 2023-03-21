@@ -1,4 +1,3 @@
-import { Operator } from '../../../../../DataSource';
 import { MetadataTable } from '../../../../../hasura-metadata-types';
 import {
   GraphQLFieldMap,
@@ -145,11 +144,6 @@ export const getBoolOperators = () => {
 const getExistOperators = () => {
   return ['_exists'];
 };
-
-interface FindColumnArgs {
-  columnKey: string;
-  columnOperators: Operator[];
-}
 
 interface Args {
   tableName: string;

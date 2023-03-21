@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { rowPermissionsContext } from './RowPermissionsProvider';
 import { tableContext } from './TableProvider';
-import { isEmpty } from 'lodash';
+import isEmpty from 'lodash/isEmpty';
 import { useOperators } from './utils/comparatorsFromSchema';
 import { ObjectValueInput } from './ObjectValueInput';
 import { BooleanValueInput } from './BooleanValueInput';

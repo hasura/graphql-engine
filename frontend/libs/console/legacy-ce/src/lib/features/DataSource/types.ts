@@ -13,7 +13,6 @@ import {
 } from '../hasura-metadata-types';
 
 import type { NetworkArgs } from './api';
-import { SchemaTable } from './utils';
 
 export type { BigQueryTable } from './bigquery';
 export type { NetworkArgs };

@@ -3,7 +3,7 @@ import {
   columnOperatorsInfo,
   boolOperatorsInfo,
 } from '../../../../../../../components/Services/Data/TablePermissions/PermissionBuilder/utils';
-import { lowerCase } from 'lodash';
+import lowerCase from 'lodash/lowerCase';
 import { tableContext } from '../TableProvider';
 import { Columns, Comparators, Tables, Operator } from '../types';
 import { areTablesEqual } from '../../../../../../hasura-metadata-api';

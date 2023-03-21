@@ -38,10 +38,9 @@ import DataSourceFormWrapper from './DataSourceFormWrapper';
 import { getSupportedDrivers } from '../../../../dataSources';
 import { Tabs } from '../../../../new-components/Tabs';
 import { DynamicDBRouting } from '../../../../features/ConnectDBRedesign/components/ConnectPostgresWidget/parts/DynamicDBRouting';
-import { isProConsole } from '../../../../utils';
 import { isDynamicDBRoutingEnabled } from '../../../../utils/proConsole';
 
-interface ConnectDatabaseProps extends InjectedProps {}
+type ConnectDatabaseProps = InjectedProps;
 
 const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
   const { dispatch } = props;

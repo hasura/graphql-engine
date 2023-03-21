@@ -80,7 +80,6 @@ import { appcuesIdentify } from '../../utils/appCues';
 import styles from './Main.module.scss';
 import logo from './images/white-logo.svg';
 import logoutIcon from './images/log-out.svg';
-import projectImg from './images/project.svg';
 import EELogo from './images/hasura-ee-mono-light.svg';
 
 const { Plan, Project_Entitlement_Types_Enum } = ControlPlane;
@@ -553,7 +552,7 @@ class Main extends React.Component {
                 <Link
                   to={accessState.hasGraphQLAccess ? '/' : '/access-denied'}
                 >
-                  <img className="w-24" src={getLogoSrc()} />
+                  <img className="w-24" src={getLogoSrc()} alt="" />
                 </Link>
                 <Link
                   to={accessState.hasGraphQLAccess ? '/' : '/access-denied'}

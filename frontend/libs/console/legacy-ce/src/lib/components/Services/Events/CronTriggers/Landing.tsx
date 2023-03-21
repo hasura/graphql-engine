@@ -9,7 +9,7 @@ import { CRON_TRIGGER } from '../constants';
 import TopicDescription from '../../Common/Landing/TopicDescription';
 import _push from '../../Data/push';
 
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 
 const Landing: React.FC<Props> = props => {
   const { dispatch } = props;

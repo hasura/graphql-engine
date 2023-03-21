@@ -1,4 +1,4 @@
-import { isEmpty } from 'lodash';
+import isEmpty from 'lodash/isEmpty';
 import { Entry } from './Entry';
 import { Operator } from './Operator';
 import { isPrimitive } from './utils';

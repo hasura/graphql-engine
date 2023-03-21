@@ -1,9 +1,9 @@
-import produce, { Draft, original } from 'immer';
+import produce, { original } from 'immer';
 
 import { allowedMetadataTypes } from '../../../MetadataAPI';
 
 import { AccessType, QueryType } from '../../types';
-import { PermissionsSchema, Presets } from '../../schema';
+import { PermissionsSchema } from '../../schema';
 import { areTablesEqual } from '../../../hasura-metadata-api';
 import { Table } from '../../../hasura-metadata-types';
 import { getTableDisplayName } from '../../../DatabaseRelationships';

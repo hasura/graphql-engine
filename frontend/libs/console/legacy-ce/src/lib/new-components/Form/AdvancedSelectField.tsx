@@ -1,6 +1,6 @@
 import React from 'react';
 import { Controller, FieldError, useFormContext } from 'react-hook-form';
-import get from 'lodash.get';
+import get from 'lodash/get';
 import { FieldWrapper } from './FieldWrapper';
 import { AdvancedSelect, AdvancedSelectProps } from './AdvancedSelect';
 

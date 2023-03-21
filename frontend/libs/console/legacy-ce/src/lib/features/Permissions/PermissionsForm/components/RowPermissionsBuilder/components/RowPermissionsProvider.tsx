@@ -1,4 +1,4 @@
-import { set } from 'lodash';
+import set from 'lodash/set';
 import { useCallback, useEffect, useState, createContext } from 'react';
 import { Permissions, RowPermissionsState } from './types';
 import { updateKey } from './utils/helpers';

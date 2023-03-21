@@ -67,7 +67,7 @@ import { Nullable } from '../../../Common/utils/tsUtils';
 import { ReduxState } from '../../../../types';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 
-interface AddActionProps extends InjectedProps {}
+type AddActionProps = InjectedProps;
 
 const AddAction: React.FC<AddActionProps> = ({
   handler,

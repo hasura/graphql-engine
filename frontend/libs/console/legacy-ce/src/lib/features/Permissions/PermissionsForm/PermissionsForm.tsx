@@ -27,7 +27,6 @@ import { useListAllTableColumns } from '../../Data';
 import { useMetadataSource } from '../../MetadataAPI';
 import useScrollIntoView from './hooks/useScrollIntoView';
 import { getAllowedFilterKeys } from './hooks/dataFetchingHooks/useFormData/createFormData/index';
-import { isEmpty } from 'lodash';
 
 export interface ComponentProps {
   dataSourceName: string;

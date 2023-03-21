@@ -89,21 +89,19 @@ const FormElements = () => {
   const { control } = useFormContext<Schema>();
 
   return (
-    <>
-      <Controller
-        control={control}
-        name="destination"
-        render={({ field: { onChange, value }, formState: { errors } }) => (
-          <DatabaseSelector
-            value={value}
-            onChange={onChange}
-            name="destination"
-            errors={errors}
-            className="border-l-4 border-l-green-600"
-          />
-        )}
-      />
-    </>
+    <Controller
+      control={control}
+      name="destination"
+      render={({ field: { onChange, value }, formState: { errors } }) => (
+        <DatabaseSelector
+          value={value}
+          onChange={onChange}
+          name="destination"
+          errors={errors}
+          className="border-l-4 border-l-green-600"
+        />
+      )}
+    />
   );
 };
 

@@ -4,7 +4,8 @@ import { createWrapper } from './utils';
 import { useContext } from 'react';
 import { isComparator } from '../utils';
 import { Token } from '../Token';
-import { isEmpty, isPlainObject } from 'lodash';
+import isEmpty from 'lodash/isEmpty';
+import isPlainObject from 'lodash/isPlainObject';
 import { typesContext } from '../TypesProvider';
 import { tableContext } from '../TableProvider';
 

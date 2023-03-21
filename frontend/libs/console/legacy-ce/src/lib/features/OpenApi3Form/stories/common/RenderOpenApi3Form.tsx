@@ -26,10 +26,7 @@ export const RenderOpenApi3Form = ({
     configSchema,
     otherSchemas,
   });
-  const {
-    methods: { formState },
-    Form,
-  } = useConsoleForm({
+  const { Form } = useConsoleForm({
     schema: z.object(schema ? { [name]: schema } : {}),
     options: {
       defaultValues,

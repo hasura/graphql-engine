@@ -314,13 +314,11 @@ const BrowseAllowLists = props => {
       return <Link to={linkParam}>{icon}</Link>;
     };
     return (
-      <React.Fragment>
-        <div className={styles.iconPadding}>
-          <Tooltip side="right" tooltipContentChildren="View operations">
-            {renderLink()}
-          </Tooltip>
-        </div>
-      </React.Fragment>
+      <div className={styles.iconPadding}>
+        <Tooltip side="right" tooltipContentChildren="View operations">
+          {renderLink()}
+        </Tooltip>
+      </div>
     );
   };
 
