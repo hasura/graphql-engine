@@ -27583,7 +27583,7 @@ authorizeV2QueryApi :: MonadMetadataApiAuthorization m => RQLQuery -> HandlerCtx
 
 -- | The config API (<i>v1alpha1</i>config) handler
 class Monad m => MonadConfigApiHandler m
-runConfigApiHandler :: MonadConfigApiHandler m => AppStateRef impl -> AppEnv -> SpockCtxT () m ()
+runConfigApiHandler :: MonadConfigApiHandler m => AppStateRef impl -> SpockCtxT () m ()
 mkSpockAction :: forall m a impl. (MonadIO m, MonadBaseControl IO m, HasAppEnv m, FromJSON a, UserAuthentication m, HttpLog m, HasResourceLimits m, MonadTrace m) => AppStateRef impl -> (Bool -> QErr -> Value) -> (QErr -> QErr) -> APIHandler m a -> ActionT m ()
 class (Monad m) => ConsoleRenderer m
 renderConsole :: ConsoleRenderer m => Text -> AuthMode -> TelemetryStatus -> Maybe Text -> Maybe Text -> m (Either String Text)
@@ -27592,10 +27592,10 @@ getExtraDataForVersionAPI :: MonadVersionAPIWithExtraData m => m [Pair]
 renderHtmlTemplate :: Template -> Value -> Either String Text
 
 -- | Default implementation of the <a>MonadConfigApiHandler</a>
-configApiGetHandler :: forall m impl. (MonadIO m, MonadBaseControl IO m, HasAppEnv m, UserAuthentication m, HttpLog m, HasResourceLimits m, MonadTrace m) => AppStateRef impl -> AppEnv -> SpockCtxT () m ()
+configApiGetHandler :: forall m impl. (MonadIO m, MonadBaseControl IO m, HasAppEnv m, UserAuthentication m, HttpLog m, HasResourceLimits m, MonadTrace m) => AppStateRef impl -> SpockCtxT () m ()
 data HasuraApp
 HasuraApp :: !Application -> !AsyncActionSubscriptionState -> !IO () -> HasuraApp
-mkWaiApp :: forall m impl. (MonadIO m, MonadFix m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, MonadVersionAPIWithExtraData m, HttpLog m, HasAppEnv m, UserAuthentication m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadExecutionLog m, MonadWSLog m, MonadTrace m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesNetwork m, MonadGetApiTimeLimit m) => (AppStateRef impl -> AppEnv -> SpockT m ()) -> AppStateRef impl -> AppEnv -> Store EmptyMetrics -> WSServerEnv impl -> m HasuraApp
+mkWaiApp :: forall m impl. (MonadIO m, MonadFix m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, MonadVersionAPIWithExtraData m, HttpLog m, HasAppEnv m, UserAuthentication m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadExecutionLog m, MonadWSLog m, MonadTrace m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesNetwork m, MonadGetApiTimeLimit m) => (AppStateRef impl -> SpockT m ()) -> AppStateRef impl -> Store EmptyMetrics -> WSServerEnv impl -> m HasuraApp
 instance Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit m => Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit (Hasura.Server.App.Handler m)
 instance Hasura.Services.Network.ProvidesNetwork m => Hasura.Services.Network.ProvidesNetwork (Hasura.Server.App.Handler m)
 instance Hasura.Metadata.Class.MonadMetadataStorageQueryAPI m => Hasura.Metadata.Class.MonadMetadataStorageQueryAPI (Hasura.Server.App.Handler m)
@@ -27716,12 +27716,12 @@ flushLogger :: MonadIO m => LoggerCtx impl -> m ()
 --   last, so that we retain as many "thread stopping" log messages as
 --   possible. The order in which the finalizers is run is determined by
 --   the order in which they are introduced in the code.
-runHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication m, HttpLog m, HasAppEnv m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadExecutionLog m, MonadWSLog m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m, MonadTrace m, MonadGetApiTimeLimit m) => (AppStateRef impl -> AppEnv -> SpockT m ()) -> AppStateRef impl -> AppEnv -> UTCTime -> Maybe (IO ()) -> Store EmptyMetrics -> ManagedT m ()
+runHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication m, HttpLog m, HasAppEnv m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadExecutionLog m, MonadWSLog m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m, MonadTrace m, MonadGetApiTimeLimit m) => (AppStateRef impl -> SpockT m ()) -> AppStateRef impl -> UTCTime -> Maybe (IO ()) -> Store EmptyMetrics -> ManagedT m ()
 
 -- | Part of a factorization of <a>runHGEServer</a> to expose the
 --   constructed WAI application for testing purposes. See
 --   <a>runHGEServer</a> for documentation.
-mkHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication m, HttpLog m, HasAppEnv m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadExecutionLog m, MonadWSLog m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m, MonadTrace m, MonadGetApiTimeLimit m) => (AppStateRef impl -> AppEnv -> SpockT m ()) -> AppStateRef impl -> AppEnv -> Store EmptyMetrics -> ManagedT m Application
+mkHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication m, HttpLog m, HasAppEnv m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadExecutionLog m, MonadWSLog m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m, MonadTrace m, MonadGetApiTimeLimit m) => (AppStateRef impl -> SpockT m ()) -> AppStateRef impl -> Store EmptyMetrics -> ManagedT m Application
 accessDeniedErrMsg :: Text
 notifySchemaCacheSyncTx :: MetadataResourceVersion -> InstanceId -> CacheInvalidations -> TxE QErr ()
 getCatalogStateTx :: TxE QErr CatalogState

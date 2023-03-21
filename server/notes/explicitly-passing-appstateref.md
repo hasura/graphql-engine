@@ -1,6 +1,6 @@
-This note is in [Hasura.Server.App](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/App.hs#L438).
+This note is in [Hasura.Server.App](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/App.hs#L437).
 It is referenced at:
-  - line 482 of [Hasura.Server.App](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/App.hs#L482)
+  - line 481 of [Hasura.Server.App](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/App.hs#L481)
 
 # Explicitly passing AppStateRef
 
