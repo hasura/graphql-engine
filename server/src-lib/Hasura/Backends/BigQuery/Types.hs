@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 
 -- | Types for Transact-SQL aka T-SQL; the language of SQL Server.
@@ -116,13 +117,8 @@ data Select = Select
     selectFinalWantedFields :: Maybe [Text],
     selectCardinality :: Cardinality
   }
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON Select
-
-instance Hashable Select
-
-instance NFData Select
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData)
 
 -- | Helper type allowing addition of extra fields used
 -- in PARTITION BY.
@@ -152,78 +148,42 @@ data ArrayAgg = ArrayAgg
     arrayAggOrderBy :: Maybe (NonEmpty OrderBy),
     arrayAggTop :: Top
   }
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON ArrayAgg
-
-instance Hashable ArrayAgg
-
-instance NFData ArrayAgg
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData)
 
 data Reselect = Reselect
   { reselectProjections :: NonEmpty Projection,
     reselectWhere :: Where
   }
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON Reselect
-
-instance Hashable Reselect
-
-instance NFData Reselect
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData)
 
 data OrderBy = OrderBy
   { orderByFieldName :: FieldName,
     orderByOrder :: Order,
     orderByNullsOrder :: NullsOrder
   }
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON OrderBy
-
-instance Hashable OrderBy
-
-instance ToJSON OrderBy
-
-instance NFData OrderBy
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 
 data Order
   = AscOrder
   | DescOrder
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON Order
-
-instance Hashable Order
-
-instance ToJSON Order
-
-instance NFData Order
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 
 data NullsOrder
   = NullsFirst
   | NullsLast
   | NullsAnyOrder
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON NullsOrder
-
-instance Hashable NullsOrder
-
-instance ToJSON NullsOrder
-
-instance NFData NullsOrder
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 
 data FieldOrigin
   = NoOrigin
   | AggregateOrigin [Aliased Aggregate]
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON FieldOrigin
-
-instance Hashable FieldOrigin
-
-instance NFData FieldOrigin
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData)
 
 aggregateProjectionsFieldOrigin :: Projection -> FieldOrigin
 aggregateProjectionsFieldOrigin = \case
@@ -241,26 +201,14 @@ data Projection
   | EntityProjection (Aliased [(FieldName, FieldOrigin)])
   | ArrayEntityProjection EntityAlias (Aliased [FieldName])
   | WindowProjection (Aliased WindowFunction)
-  deriving (Eq, Show, Generic, Data, Lift, Ord)
-
-instance FromJSON Projection
-
-instance Hashable Projection
-
-instance NFData Projection
+  deriving stock (Eq, Show, Generic, Data, Lift, Ord)
+  deriving anyclass (FromJSON, Hashable, NFData)
 
 data WindowFunction
   = -- | ROW_NUMBER() OVER(PARTITION BY field)
     RowNumberOverPartitionBy (NonEmpty FieldName) (Maybe (NonEmpty OrderBy))
-  deriving (Eq, Show, Generic, Data, Lift, Ord)
-
-instance FromJSON WindowFunction
-
-instance Hashable WindowFunction
-
-instance ToJSON WindowFunction
-
-instance NFData WindowFunction
+  deriving stock (Eq, Show, Generic, Data, Lift, Ord)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 
 data Join = Join
   { joinSource :: JoinSource,
@@ -271,13 +219,8 @@ data Join = Join
     joinExtractPath :: Maybe Text,
     joinRightTable :: EntityAlias
   }
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON Join
-
-instance Hashable Join
-
-instance NFData Join
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData)
 
 data JoinProvenance
   = OrderByJoinProvenance
@@ -285,68 +228,38 @@ data JoinProvenance
   | ArrayAggregateJoinProvenance [(Text, FieldOrigin)]
   | ArrayJoinProvenance [Text]
   | MultiplexProvenance
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON JoinProvenance
-
-instance Hashable JoinProvenance
-
-instance NFData JoinProvenance
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData)
 
 data JoinSource
   = JoinSelect Select
   -- We're not using existingJoins at the moment, which was used to
   -- avoid re-joining on the same table twice.
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON JoinSource
-
-instance Hashable JoinSource
-
-instance NFData JoinSource
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData)
 
 newtype Where
   = Where [Expression]
-  deriving (NFData, Eq, Ord, Show, Generic, Data, Lift, FromJSON, Hashable, Semigroup, Monoid)
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving newtype (FromJSON, Hashable, Monoid, NFData, Semigroup)
 
 data Cardinality
   = Many
   | One
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON Cardinality
-
-instance Hashable Cardinality
-
-instance ToJSON Cardinality
-
-instance NFData Cardinality
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 
 data AsStruct
   = NoAsStruct
   | AsStruct
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON AsStruct
-
-instance Hashable AsStruct
-
-instance ToJSON AsStruct
-
-instance NFData AsStruct
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 
 data Top
   = NoTop
   | Top Int.Int64
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON Top
-
-instance Hashable Top
-
-instance ToJSON Top
-
-instance NFData Top
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 
 instance Monoid Top where
   mempty = NoTop
@@ -386,138 +299,93 @@ data Expression
   | -- | A function input argument expression with argument name
     -- `argument_name` => 'argument_value'
     FunctionNamedArgument Text Expression
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON Expression
-
-instance Hashable Expression
-
-instance NFData Expression
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData)
 
 data JsonPath
   = RootPath
   | FieldPath JsonPath Text
   | IndexPath JsonPath Integer
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON JsonPath
-
-instance Hashable JsonPath
-
-instance ToJSON JsonPath
-
-instance NFData JsonPath
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 
 data Aggregate
   = CountAggregate (Countable FieldName)
   | OpAggregates Text (NonEmpty (Text, Expression))
   | OpAggregate Text Expression
   | TextAggregate Text
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON Aggregate
-
-instance Hashable Aggregate
-
-instance NFData Aggregate
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData)
 
 data Countable fieldname
   = StarCountable
   | NonNullFieldCountable (NonEmpty fieldname)
   | DistinctCountable (NonEmpty fieldname)
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
 
-instance FromJSON a => FromJSON (Countable a)
+deriving anyclass instance FromJSON a => FromJSON (Countable a)
 
-instance Hashable a => Hashable (Countable a)
+deriving anyclass instance Hashable a => Hashable (Countable a)
 
-instance ToJSON a => ToJSON (Countable a)
+deriving anyclass instance ToJSON a => ToJSON (Countable a)
 
-instance NFData a => NFData (Countable a)
+deriving anyclass instance NFData a => NFData (Countable a)
 
 data From
   = FromQualifiedTable (Aliased TableName)
   | FromSelect (Aliased Select)
   | FromSelectJson (Aliased SelectJson)
   | FromFunction (Aliased SelectFromFunction)
-  deriving (Eq, Show, Generic, Data, Lift, Ord)
-
-instance FromJSON From
-
-instance Hashable From
-
-instance NFData From
+  deriving stock (Eq, Show, Generic, Data, Lift, Ord)
+  deriving anyclass (FromJSON, Hashable, NFData)
 
 data SelectJson = SelectJson
   { selectJsonBody :: Expression,
     selectJsonFields :: [(ColumnName, ScalarType)]
   }
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON SelectJson
-
-instance Hashable SelectJson
-
-instance NFData SelectJson
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData)
 
 data SelectFromFunction = SelectFromFunction
   { sffFunctionName :: FunctionName,
     sffArguments :: [Expression]
   }
-  deriving (Eq, Show, Generic, Data, Lift, Ord)
-
-instance FromJSON SelectFromFunction
-
-instance Hashable SelectFromFunction
-
-instance NFData SelectFromFunction
+  deriving stock (Eq, Show, Generic, Data, Lift, Ord)
+  deriving anyclass (FromJSON, Hashable, NFData)
 
 data OpenJson = OpenJson
   { openJsonExpression :: Expression,
     openJsonWith :: NonEmpty JsonFieldSpec
   }
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON OpenJson
-
-instance Hashable OpenJson
-
-instance NFData OpenJson
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData)
 
 data JsonFieldSpec
   = IntField Text
   | JsonField Text
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON JsonFieldSpec
-
-instance Hashable JsonFieldSpec
-
-instance ToJSON JsonFieldSpec
-
-instance NFData JsonFieldSpec
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 
 data Aliased a = Aliased
   { aliasedThing :: a,
     aliasedAlias :: Text
   }
-  deriving (Eq, Show, Generic, Data, Lift, Functor)
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift, Functor)
 
-instance FromJSON a => FromJSON (Aliased a)
+deriving anyclass instance FromJSON a => FromJSON (Aliased a)
 
-instance Hashable a => Hashable (Aliased a)
+deriving anyclass instance Hashable a => Hashable (Aliased a)
 
-instance ToJSON a => ToJSON (Aliased a)
+deriving anyclass instance ToJSON a => ToJSON (Aliased a)
 
-instance NFData a => NFData (Aliased a)
-
-deriving instance Ord a => Ord (Aliased a)
+deriving anyclass instance NFData a => NFData (Aliased a)
 
 data TableName = TableName
   { tableName :: Text,
     tableNameSchema :: Text
   }
-  deriving (Eq, Show, Generic, Data, Lift, Ord)
+  deriving stock (Eq, Show, Generic, Data, Lift, Ord)
+  deriving anyclass (Hashable, NFData, ToJSONKey)
 
 instance HasCodec TableName where
   codec =
@@ -535,12 +403,6 @@ instance FromJSON TableName where
 instance ToJSON TableName where
   toJSON TableName {..} = J.object ["name" J..= tableName, "dataset" J..= tableNameSchema]
 
-instance Hashable TableName
-
-instance ToJSONKey TableName
-
-instance NFData TableName
-
 instance ToTxt TableName where
   toTxt TableName {..} = tableNameSchema <> "." <> tableName
 
@@ -551,20 +413,14 @@ data FieldName = FieldName
   { fieldName :: Text,
     fieldNameEntity :: Text
   }
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON FieldName
-
-instance Hashable FieldName
-
-instance ToJSON FieldName
-
-instance NFData FieldName
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 
 newtype ColumnName = ColumnName
   { columnName :: Text
   }
-  deriving (Eq, Ord, Show, Generic, Data, Lift, FromJSON, ToJSON, ToJSONKey, FromJSONKey, Hashable, NFData, ToTxt)
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving newtype (FromJSON, ToJSON, ToJSONKey, FromJSONKey, Hashable, NFData, ToTxt)
 
 instance HasCodec ColumnName where
   codec = dimapCodec ColumnName columnName codec
@@ -573,20 +429,14 @@ instance ToErrorValue ColumnName where
   toErrorValue = ErrorValue.squote . columnName
 
 data Comment = DueToPermission | RequestedSingleObject
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON Comment
-
-instance Hashable Comment
-
-instance ToJSON Comment
-
-instance NFData Comment
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 
 newtype EntityAlias = EntityAlias
   { entityAliasText :: Text
   }
-  deriving (NFData, Eq, Ord, Show, Generic, Data, Lift, FromJSON, ToJSON, Hashable)
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving newtype (FromJSON, Hashable, NFData, ToJSON)
 
 columnToFieldName :: EntityAlias -> ColumnName -> FieldName
 columnToFieldName EntityAlias {..} ColumnName {..} =
@@ -613,15 +463,8 @@ data Op
   --  | SHasKey
   --  | SHasKeysAny
   --  | SHasKeysAll
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON Op
-
-instance Hashable Op
-
-instance ToJSON Op
-
-instance NFData Op
+  deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 
 -- | Source for this represenation type:
 --
@@ -649,35 +492,33 @@ data Value
   | DateValue Date
   | TimeValue Time
   | DatetimeValue Datetime
-  deriving (Show, Eq, Ord, Generic, Data, Lift)
-
-instance FromJSON Value
-
-instance ToJSON Value
-
-instance NFData Value
-
-instance Hashable Value
+  deriving stock (Show, Eq, Ord, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 
 -- | BigQuery's conception of a timestamp.
 newtype Timestamp = Timestamp Text
-  deriving (Show, Eq, Ord, Generic, Data, Lift, ToJSON, FromJSON, NFData, Hashable)
+  deriving stock (Show, Eq, Ord, Generic, Data, Lift)
+  deriving newtype (ToJSON, FromJSON, NFData, Hashable)
 
 -- | BigQuery's conception of a date.
 newtype Date = Date Text
-  deriving (Show, Eq, Ord, Generic, Data, Lift, ToJSON, FromJSON, NFData, Hashable)
+  deriving stock (Show, Eq, Ord, Generic, Data, Lift)
+  deriving newtype (ToJSON, FromJSON, NFData, Hashable)
 
 -- | BigQuery's conception of a time.
 newtype Time = Time Text
-  deriving (Show, Eq, Ord, Generic, Data, Lift, ToJSON, FromJSON, NFData, Hashable)
+  deriving stock (Show, Eq, Ord, Generic, Data, Lift)
+  deriving newtype (ToJSON, FromJSON, NFData, Hashable)
 
 -- | BigQuery's conception of a datetime.
 newtype Datetime = Datetime Text
-  deriving (Show, Eq, Ord, Generic, Data, Lift, ToJSON, FromJSON, NFData, Hashable)
+  deriving stock (Show, Eq, Ord, Generic, Data, Lift)
+  deriving newtype (ToJSON, FromJSON, NFData, Hashable)
 
 -- | BigQuery's conception of an INTEGER/INT64 (they are the same).
 newtype Int64 = Int64 Text
-  deriving (Show, Eq, Ord, Generic, Data, Lift, NFData, Hashable)
+  deriving stock (Show, Eq, Ord, Generic, Data, Lift)
+  deriving newtype (NFData, Hashable)
 
 instance FromJSON Int64 where parseJSON = liberalInt64Parser Int64
 
@@ -691,7 +532,8 @@ int64Expr = ValueExpression . IntegerValue . intToInt64
 
 -- | BigQuery's conception of a fixed precision decimal.
 newtype Decimal = Decimal Text
-  deriving (Show, Eq, Ord, Generic, Data, NFData, Hashable, Lift)
+  deriving stock (Show, Eq, Ord, Generic, Data, Lift)
+  deriving newtype (NFData, Hashable)
 
 instance FromJSON Decimal where
   parseJSON (J.Number num) = pure $ Decimal $ scientificToText num
@@ -707,7 +549,8 @@ scientificToText num = toStrict $ toLazyText $ formatScientificBuilder Fixed Not
 
 -- | BigQuery's conception of a \"big\" fixed precision decimal.
 newtype BigDecimal = BigDecimal Text
-  deriving (Show, Eq, Ord, Generic, Data, NFData, Hashable, Lift)
+  deriving stock (Show, Eq, Ord, Generic, Data, Lift)
+  deriving newtype (NFData, Hashable)
 
 instance FromJSON BigDecimal where
   parseJSON (J.Number num) = pure $ BigDecimal $ scientificToText num
@@ -722,7 +565,8 @@ doubleToBigDecimal = BigDecimal . T.decodeUtf8 . L.toStrict . J.encode
 
 -- | BigQuery's conception of a fixed precision decimal.
 newtype Float64 = Float64 Text
-  deriving (Show, Eq, Ord, Generic, Data, NFData, Hashable, Lift)
+  deriving stock (Show, Eq, Ord, Generic, Data, Lift)
+  deriving newtype (NFData, Hashable)
 
 instance FromJSON Float64 where parseJSON = liberalDecimalParser Float64
 
@@ -748,11 +592,9 @@ instance Hashable Base64
 newtype Geography = Geography
   { unGeography :: Text
   }
-  deriving (Show, Eq, Ord, Generic, Data, Lift, FromJSON, ToJSON)
-
-instance NFData Geography
-
-instance Hashable Geography
+  deriving stock (Show, Eq, Ord, Generic, Data, Lift)
+  deriving newtype (FromJSON, ToJSON)
+  deriving anyclass (Hashable, NFData)
 
 data ScalarType
   = StringScalarType
@@ -768,20 +610,11 @@ data ScalarType
   | DecimalScalarType
   | BigDecimalScalarType
   | StructScalarType
-  deriving (Show, Eq, Ord, Generic, Data, Lift)
+  deriving stock (Show, Eq, Ord, Generic, Data, Lift)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON, ToJSONKey)
 
 instance HasCodec ScalarType where
   codec = AC.named "ScalarType" placeholderCodecViaJSON
-
-instance FromJSON ScalarType
-
-instance ToJSON ScalarType
-
-instance ToJSONKey ScalarType
-
-instance NFData ScalarType
-
-instance Hashable ScalarType
 
 instance ToTxt ScalarType where toTxt = tshow
 
@@ -866,7 +699,8 @@ data FunctionName = FunctionName
     -- | System functions like "unnest" don't have schema/dataset
     functionNameSchema :: Maybe Text
   }
-  deriving (Eq, Show, Generic, Data, Lift, Ord)
+  deriving stock (Eq, Show, Generic, Data, Lift, Ord)
+  deriving anyclass (Hashable, NFData, ToJSONKey)
 
 instance HasCodec FunctionName where
   codec =
@@ -893,12 +727,6 @@ instance ToTxt FunctionName where
 instance ToErrorValue FunctionName where
   toErrorValue = ErrorValue.squote . toTxt
 
-instance Hashable FunctionName
-
-instance ToJSONKey FunctionName
-
-instance NFData FunctionName
-
 -- | The metadata required to define a computed field for a BigQuery table
 data ComputedFieldDefinition = ComputedFieldDefinition
   { -- | Name of the user defined routine
@@ -909,11 +737,8 @@ data ComputedFieldDefinition = ComputedFieldDefinition
     -- | A mapping context to determine argument value from table column
     _bqcfdArgumentMapping :: HashMap FunctionArgName ColumnName
   }
-  deriving (Eq, Show, Generic, Data, Ord)
-
-instance Hashable ComputedFieldDefinition
-
-instance NFData ComputedFieldDefinition
+  deriving stock (Eq, Show, Generic, Data, Ord)
+  deriving anyclass (Hashable, NFData)
 
 instance HasCodec ComputedFieldDefinition where
   codec =
@@ -947,11 +772,8 @@ data ComputedFieldReturn
     ReturnExistingTable TableName
   | -- | An arbitrary table schema specified by column name and type pairs
     ReturnTableSchema [(ColumnName, G.Name, ScalarType)]
-  deriving (Show, Eq, Generic)
-
-instance NFData ComputedFieldReturn
-
-instance Hashable ComputedFieldReturn
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass (Hashable, NFData)
 
 instance ToJSON ComputedFieldReturn where
   toJSON =
@@ -969,11 +791,8 @@ data FunctionArgument = FunctionArgument
     -- | The data type of the argument
     _faType :: ScalarType
   }
-  deriving (Show, Eq, Generic)
-
-instance NFData FunctionArgument
-
-instance Hashable FunctionArgument
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass (Hashable, NFData)
 
 instance ToJSON FunctionArgument where
   toJSON = J.genericToJSON hasuraJSON
