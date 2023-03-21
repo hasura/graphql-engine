@@ -133,7 +133,7 @@ export const ManageTable: React.VFC<ManageTableProps> = (
   if (isLoading) return <IndicatorCard status="info">Loading...</IndicatorCard>;
 
   return (
-    <div className="w-full overflow-y-auto bg-gray-50">
+    <div className="w-full bg-gray-50">
       <div className="px-md pt-md mb-xs">
         <Breadcrumbs dataSourceName={dataSourceName} tableName={tableName} />
         <TableName

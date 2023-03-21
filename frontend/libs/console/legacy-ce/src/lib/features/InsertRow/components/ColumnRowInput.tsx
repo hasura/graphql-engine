@@ -1,12 +1,14 @@
 import { dataSource } from '../../../dataSources';
 import { BooleanInput } from './BooleanInput';
 import { DateInput } from './DateInput';
+import { DateTimeInput } from './DateTimeInput';
 import {
   ExpandableTextInput,
   ExpandableTextInputProps,
 } from './ExpandableTextInput';
 import { JsonInput } from './JsonInput';
 import { TextInput } from './TextInput';
+import { TimeInput } from './TimeInput';
 
 type ColumnRowInputProps = ExpandableTextInputProps & {
   dataType: string;
@@ -26,6 +28,14 @@ export const ColumnRowInput: React.VFC<ColumnRowInputProps> = ({
 
   if (dataType === dataSource.columnDataTypes.DATE) {
     return <DateInput {...props} />;
+  }
+
+  if (dataType === dataSource.columnDataTypes.DATETIME) {
+    return <DateTimeInput {...props} />;
+  }
+
+  if (dataType === dataSource.columnDataTypes.TIME) {
+    return <TimeInput {...props} />;
   }
 
   if (

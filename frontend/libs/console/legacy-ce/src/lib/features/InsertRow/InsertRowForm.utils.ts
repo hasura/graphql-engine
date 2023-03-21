@@ -1,11 +1,13 @@
 import { TableColumn } from '../DataSource';
 
+const numericDataTypes = ['number', 'float', 'integer'];
+
 export const convertTableValue = (
   value: unknown,
   dataType: TableColumn['dataType'] | undefined
 ): string | number | boolean | unknown => {
   if (typeof value === 'string') {
-    if (dataType === 'number') {
+    if (dataType && numericDataTypes.includes(dataType)) {
       return parseFloat(value);
     }
 

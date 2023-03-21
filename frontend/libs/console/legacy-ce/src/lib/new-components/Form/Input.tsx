@@ -152,7 +152,7 @@ export const Input = ({
           aria-label={label}
           data-test={dataTest}
           className={clsx(
-            'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400 placeholder:text-muted',
+            'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400 placeholder:text-slate-400',
             prependLabel !== '' ? 'rounded-l-none' : '',
             appendLabel !== '' ? 'rounded-r-none' : '',
             maybeError

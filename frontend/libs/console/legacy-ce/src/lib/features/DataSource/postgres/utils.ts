@@ -74,6 +74,7 @@ export function adaptSQLDataType(
       'serial4',
     ],
     json: ['interval', 'json', 'jsonb', 'xml'],
+    float: ['float8'],
   };
 
   const [dataType] = getEntries(consoleDataTypeToSQLTypeMap).find(([, value]) =>

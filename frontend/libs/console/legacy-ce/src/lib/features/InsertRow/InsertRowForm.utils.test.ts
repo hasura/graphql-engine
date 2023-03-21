@@ -10,6 +10,7 @@ describe('convertTableValue', () => {
     ${'false'}  | ${'boolean'} | ${false}
     ${'true'}   | ${'bool'}    | ${true}
     ${'false'}  | ${'bool'}    | ${false}
+    ${'123'}    | ${'float'}   | ${123}
   `(
     'given $dataType it returns $expected',
     ({ columnValue, dataType, expected }) => {

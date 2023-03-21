@@ -22,6 +22,7 @@ export function adaptSQLDataType(
       ],
       text: ['text'],
       json: [],
+      float: ['float'],
     };
 
   const [dataType] = getEntries(DataTypeToSQLTypeMap).find(([, value]) =>
