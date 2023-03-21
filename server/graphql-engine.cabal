@@ -731,7 +731,6 @@ library
                      , Hasura.GraphQL.Logging.QueryLog
                      , Hasura.GraphQL.Logging.ExecutionLog
                      , Hasura.RQL.DML.Select
-                     , Hasura.RQL.Types.Run
                      , Hasura.Session
 
                      , Hasura.Server.API.Config

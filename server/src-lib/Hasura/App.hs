@@ -294,6 +294,9 @@ newtype PGMetadataStorageAppT m a = PGMetadataStorageAppT (ReaderT AppEnv (Trace
       MonadBaseControl b
     )
 
+instance Monad m => HasAppEnv (PGMetadataStorageAppT m) where
+  askAppEnv = ask
+
 instance (MonadIO m, MonadBaseControl IO m) => MonadTrace (PGMetadataStorageAppT m) where
   newTraceWith c p n (PGMetadataStorageAppT a) = PGMetadataStorageAppT $ newTraceWith c p n a
   newSpanWith i n (PGMetadataStorageAppT a) = PGMetadataStorageAppT $ newSpanWith i n a
@@ -305,9 +308,6 @@ instance MonadTrans PGMetadataStorageAppT where
 
 instance Monad m => ProvidesNetwork (PGMetadataStorageAppT m) where
   askHTTPManager = asks appEnvManager
-
-instance HasServerConfigCtx m => HasServerConfigCtx (PGMetadataStorageAppT m) where
-  askServerConfigCtx = lift askServerConfigCtx
 
 runPGMetadataStorageAppT :: AppEnv -> PGMetadataStorageAppT m a -> m a
 runPGMetadataStorageAppT c (PGMetadataStorageAppT a) = ignoreTraceT $ runReaderT a c
@@ -595,6 +595,7 @@ runHGEServer ::
     LA.Forall (LA.Pure m),
     UserAuthentication m,
     HttpLog m,
+    HasAppEnv m,
     ConsoleRenderer m,
     MonadVersionAPIWithExtraData m,
     MonadMetadataApiAuthorization m,
@@ -687,6 +688,7 @@ mkHGEServer ::
     LA.Forall (LA.Pure m),
     UserAuthentication m,
     HttpLog m,
+    HasAppEnv m,
     ConsoleRenderer m,
     MonadVersionAPIWithExtraData m,
     MonadMetadataApiAuthorization m,
@@ -757,18 +759,7 @@ mkHGEServer setupHook appStateRef appEnv@AppEnv {..} ekgStore = do
   newLogTVar <- liftIO $ STM.newTVarIO False
 
   -- Start a background thread for processing schema sync event present in the '_sscSyncEventRef'
-  _ <-
-    startSchemaSyncProcessorThread
-      logger
-      appEnvManager
-      appEnvMetaVersionRef
-      appStateRef
-      appEnvInstanceId
-      appEnvEnableMaintenanceMode
-      appEnvEventingMode
-      appEnvEnableReadOnlyMode
-      newLogTVar
-      appEnvCheckFeatureFlag
+  _ <- startSchemaSyncProcessorThread appStateRef newLogTVar
 
   case appEnvEventingMode of
     EventingEnabled -> do

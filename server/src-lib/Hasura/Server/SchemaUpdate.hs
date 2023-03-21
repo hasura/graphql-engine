@@ -27,7 +27,6 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema (runCacheRWT)
 import Hasura.RQL.DDL.Schema.Catalog
-import Hasura.RQL.Types.Run
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
@@ -39,12 +38,10 @@ import Hasura.Server.AppStateRef
     readSchemaCacheRef,
     withSchemaCacheUpdate,
   )
-import Hasura.Server.Init (FeatureFlag)
 import Hasura.Server.Logging
 import Hasura.Server.Types
 import Hasura.Services
 import Hasura.Session
-import Network.HTTP.Client qualified as HTTP
 import Refined (NonNegative, Refined, unrefine)
 
 data ThreadError
@@ -141,38 +138,23 @@ startSchemaSyncListenerThread logger pool instanceId interval metaVersionRef = d
 -- See Note [Schema Cache Sync]
 startSchemaSyncProcessorThread ::
   ( C.ForkableMonadIO m,
+    HasAppEnv m,
     MonadMetadataStorage m,
     MonadResolveSource m,
     ProvidesNetwork m
   ) =>
-  Logger Hasura ->
-  HTTP.Manager ->
-  STM.TMVar MetadataResourceVersion ->
   AppStateRef impl ->
-  InstanceId ->
-  (MaintenanceMode ()) ->
-  EventingMode ->
-  ReadOnlyMode ->
   STM.TVar Bool ->
-  (FeatureFlag -> IO Bool) ->
   ManagedT m Immortal.Thread
-startSchemaSyncProcessorThread
-  logger
-  httpMgr
-  schemaSyncEventRef
-  appStateRef
-  instanceId
-  maintenanceMode
-  eventingMode
-  readOnlyMode
-  logTVar
-  checkFeatureFlag = do
-    -- Start processor thread
-    processorThread <-
-      C.forkManagedT "SchemeUpdate.processor" logger $
-        processor logger httpMgr schemaSyncEventRef appStateRef instanceId maintenanceMode eventingMode readOnlyMode logTVar checkFeatureFlag
-    logThreadStarted logger instanceId TTProcessor processorThread
-    pure processorThread
+startSchemaSyncProcessorThread appStateRef logTVar = do
+  AppEnv {..} <- lift askAppEnv
+  let logger = _lsLogger appEnvLoggers
+  -- Start processor thread
+  processorThread <-
+    C.forkManagedT "SchemeUpdate.processor" logger $
+      processor appEnvMetadataVersionRef appStateRef logTVar
+  logThreadStarted logger appEnvInstanceId TTProcessor processorThread
+  pure processorThread
 
 -- TODO: This is also defined in multitenant, consider putting it in a library somewhere
 forcePut :: STM.TMVar a -> a -> IO ()
@@ -261,76 +243,85 @@ listener logger pool metaVersionRef interval = L.iterateM_ listenerLoop defaultE
 processor ::
   forall m void impl.
   ( C.ForkableMonadIO m,
+    HasAppEnv m,
     MonadMetadataStorage m,
     MonadResolveSource m,
     ProvidesNetwork m
   ) =>
-  Logger Hasura ->
-  HTTP.Manager ->
   STM.TMVar MetadataResourceVersion ->
   AppStateRef impl ->
-  InstanceId ->
-  (MaintenanceMode ()) ->
-  EventingMode ->
-  ReadOnlyMode ->
   STM.TVar Bool ->
-  (FeatureFlag -> IO Bool) ->
   m void
 processor
-  logger
-  _httpMgr
   metaVersionRef
   appStateRef
-  instanceId
-  maintenanceMode
-  eventingMode
-  readOnlyMode
-  logTVar
-  checkFeatureFlag = forever $ do
+  logTVar = forever do
     metaVersion <- liftIO $ STM.atomically $ STM.takeTMVar metaVersionRef
-    AppContext {..} <- liftIO $ getAppContext appStateRef
-    let serverConfigCtx =
-          ServerConfigCtx
-            acFunctionPermsCtx
-            acRemoteSchemaPermsCtx
-            acSQLGenCtx
-            maintenanceMode
-            acExperimentalFeatures
-            eventingMode
-            readOnlyMode
-            acDefaultNamingConvention
-            acMetadataDefaults
-            checkFeatureFlag
-            acApolloFederationStatus
-    refreshSchemaCache metaVersion instanceId logger appStateRef TTProcessor serverConfigCtx logTVar
+    refreshSchemaCache metaVersion appStateRef TTProcessor logTVar
+
+newtype SchemaUpdateT m a = SchemaUpdateT (AppContext -> m a)
+  deriving
+    ( Functor,
+      Applicative,
+      Monad,
+      MonadError e,
+      MonadIO,
+      MonadMetadataStorage,
+      ProvidesNetwork,
+      MonadResolveSource
+    )
+    via (ReaderT AppContext m)
+  deriving (MonadTrans) via (ReaderT AppContext)
+
+runSchemaUpdate :: AppContext -> SchemaUpdateT m a -> m a
+runSchemaUpdate appContext (SchemaUpdateT action) = action appContext
+
+instance (Monad m) => UserInfoM (SchemaUpdateT m) where
+  askUserInfo = pure adminUserInfo
+
+instance (HasAppEnv m) => HasServerConfigCtx (SchemaUpdateT m) where
+  askServerConfigCtx = SchemaUpdateT \AppContext {..} -> do
+    AppEnv {..} <- askAppEnv
+    pure
+      ServerConfigCtx
+        { _sccFunctionPermsCtx = acFunctionPermsCtx,
+          _sccRemoteSchemaPermsCtx = acRemoteSchemaPermsCtx,
+          _sccSQLGenCtx = acSQLGenCtx,
+          _sccMaintenanceMode = appEnvEnableMaintenanceMode,
+          _sccExperimentalFeatures = acExperimentalFeatures,
+          _sccEventingMode = appEnvEventingMode,
+          _sccReadOnlyMode = appEnvEnableReadOnlyMode,
+          _sccDefaultNamingConvention = acDefaultNamingConvention,
+          _sccMetadataDefaults = acMetadataDefaults,
+          _sccCheckFeatureFlag = appEnvCheckFeatureFlag,
+          _sccApolloFederationStatus = acApolloFederationStatus
+        }
 
 refreshSchemaCache ::
   ( MonadIO m,
     MonadBaseControl IO m,
+    HasAppEnv m,
     MonadMetadataStorage m,
     MonadResolveSource m,
     ProvidesNetwork m
   ) =>
   MetadataResourceVersion ->
-  InstanceId ->
-  Logger Hasura ->
   AppStateRef impl ->
   SchemaSyncThreadType ->
-  ServerConfigCtx ->
   STM.TVar Bool ->
   m ()
 refreshSchemaCache
   resourceVersion
-  instanceId
-  logger
   appStateRef
   threadType
-  serverConfigCtx
   logTVar = do
+    AppEnv {..} <- askAppEnv
+    let logger = _lsLogger appEnvLoggers
     respErr <- runExceptT $
       withSchemaCacheUpdate appStateRef logger (Just logTVar) $ do
         rebuildableCache <- liftIO $ fst <$> readSchemaCacheRef appStateRef
-        (msg, cache, _) <- peelRun runCtx $
+        appContext <- liftIO $ getAppContext appStateRef
+        (msg, cache, _) <- runSchemaUpdate appContext $
           runCacheRWT rebuildableCache $ do
             schemaCache <- askSchemaCache
             case scMetadataResourceVersion schemaCache of
@@ -360,7 +351,7 @@ refreshSchemaCache
                       "Fetched metadata with resource version "
                         <> tshow latestResourceVersion
 
-                  notifications <- liftEitherM $ fetchMetadataNotifications engineResourceVersion instanceId
+                  notifications <- liftEitherM $ fetchMetadataNotifications engineResourceVersion appEnvInstanceId
 
                   case notifications of
                     [] -> do
@@ -395,8 +386,6 @@ refreshSchemaCache
                       logInfo logger threadType $ object ["message" .= ("Schema Version changed with notifications" :: Text)]
         pure (msg, cache)
     onLeft respErr (logError logger threadType . TEQueryError)
-    where
-      runCtx = RunCtx adminUserInfo serverConfigCtx
 
 logInfo :: (MonadIO m) => Logger Hasura -> SchemaSyncThreadType -> Value -> m ()
 logInfo logger threadType val =
@@ -408,10 +397,3 @@ logError logger threadType err =
   unLogger logger $
     SchemaSyncLog LevelError threadType $
       object ["error" .= toJSON err]
-
--- Currently unused
-_logDebug :: (MonadIO m) => Logger Hasura -> SchemaSyncThreadType -> String -> m ()
-_logDebug logger threadType msg =
-  unLogger logger $
-    SchemaSyncLog LevelDebug threadType $
-      object ["message" .= msg]

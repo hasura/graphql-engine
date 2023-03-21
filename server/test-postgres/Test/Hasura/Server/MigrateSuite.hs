@@ -38,7 +38,7 @@ import Test.Hspec.Expectations.Lifted
 
 -- -- NOTE: downgrade test disabled for now (see #5273)
 
-newtype CacheRefT m a = CacheRefT {runCacheRefT :: MVar RebuildableSchemaCache -> m a}
+newtype CacheRefT m a = CacheRefT {runCacheRefT :: (ServerConfigCtx, MVar RebuildableSchemaCache) -> m a}
   deriving
     ( Functor,
       Applicative,
@@ -47,15 +47,19 @@ newtype CacheRefT m a = CacheRefT {runCacheRefT :: MVar RebuildableSchemaCache -
       MonadError e,
       MonadBase b,
       MonadBaseControl b,
+      MonadReader (ServerConfigCtx, MVar RebuildableSchemaCache),
       MonadTx,
       UserInfoM,
-      HasServerConfigCtx,
       MonadMetadataStorage,
       MonadMetadataStorageQueryAPI,
+      MonadResolveSource,
       ProvidesNetwork,
       MonadGetApiTimeLimit
     )
-    via (ReaderT (MVar RebuildableSchemaCache) m)
+    via (ReaderT (ServerConfigCtx, MVar RebuildableSchemaCache) m)
+
+instance Monad m => HasServerConfigCtx (CacheRefT m) where
+  askServerConfigCtx = asks fst
 
 instance MonadTrans CacheRefT where
   lift = CacheRefT . const
@@ -65,7 +69,7 @@ instance MFunctor CacheRefT where
 
 -- instance (MonadBase IO m) => TableCoreInfoRM 'Postgres (CacheRefT m)
 instance (MonadBase IO m) => CacheRM (CacheRefT m) where
-  askSchemaCache = CacheRefT (fmap lastBuiltSchemaCache . readMVar)
+  askSchemaCache = CacheRefT (fmap lastBuiltSchemaCache . readMVar . snd)
 
 instance (MonadEventLogCleanup m) => MonadEventLogCleanup (CacheRefT m) where
   runLogCleaner conf = lift $ runLogCleaner conf
@@ -77,18 +81,19 @@ instance
     MonadBaseControl IO m,
     MonadError QErr m,
     MonadResolveSource m,
-    HasServerConfigCtx m,
     ProvidesNetwork m
   ) =>
   CacheRWM (CacheRefT m)
   where
-  buildSchemaCacheWithOptions reason invalidations metadata =
-    CacheRefT $ flip modifyMVar \schemaCache -> do
+  buildSchemaCacheWithOptions reason invalidations metadata = do
+    scVar <- asks snd
+    modifyMVar scVar \schemaCache -> do
       ((), cache, _) <- runCacheRWT schemaCache (buildSchemaCacheWithOptions reason invalidations metadata)
       pure (cache, ())
 
-  setMetadataResourceVersionInSchemaCache resourceVersion =
-    CacheRefT $ flip modifyMVar \schemaCache -> do
+  setMetadataResourceVersionInSchemaCache resourceVersion = do
+    scVar <- asks snd
+    modifyMVar scVar \schemaCache -> do
       ((), cache, _) <- runCacheRWT schemaCache (setMetadataResourceVersionInSchemaCache resourceVersion)
       pure (cache, ())
 
@@ -106,7 +111,6 @@ suite ::
   ( MonadIO m,
     MonadError QErr m,
     MonadBaseControl IO m,
-    HasServerConfigCtx m,
     MonadResolveSource m,
     MonadMetadataStorageQueryAPI m,
     MonadEventLogCleanup m,
@@ -127,9 +131,9 @@ suite srcConfig pgExecCtx pgConnInfo = do
         (migrationResult, metadata) <- runTx' pgExecCtx $ migrateCatalog (Just srcConfig) (ExtensionsSchema "public") MaintenanceModeDisabled time
         (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache logger env metadata)
 
-      dropAndInit env time = lift $
-        CacheRefT $ flip modifyMVar \_ ->
-          (runTx' pgExecCtx dropHdbCatalogSchema) *> (migrateCatalogAndBuildCache env time)
+      dropAndInit env time = lift do
+        scVar <- asks snd
+        modifyMVar scVar $ const $ (runTx' pgExecCtx dropHdbCatalogSchema) *> (migrateCatalogAndBuildCache env time)
       downgradeTo v = runTx' pgExecCtx . downgradeCatalog (Just srcConfig) DowngradeOptions {dgoDryRun = False, dgoTargetVersion = v}
 
   describe "migrateCatalog" $ do
@@ -149,9 +153,9 @@ suite srcConfig pgExecCtx pgConnInfo = do
       secondDump `shouldBe` firstDump
 
     it "supports upgrades after downgrade to version 12" \(NT transact) -> do
-      let upgradeToLatest env time = lift $
-            CacheRefT $ flip modifyMVar \_ ->
-              migrateCatalogAndBuildCache env time
+      let upgradeToLatest env time = lift do
+            scVar <- asks snd
+            modifyMVar scVar $ const $ migrateCatalogAndBuildCache env time
       env <- Env.getEnvironment
       time <- getCurrentTime
       transact (dropAndInit env time) `shouldReturn` MRInitialized

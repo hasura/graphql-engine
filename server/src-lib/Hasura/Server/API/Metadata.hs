@@ -18,6 +18,7 @@ import Data.Has (Has)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
 import GHC.Generics.Extended (constrName)
+import Hasura.App.State
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Logging qualified as L
@@ -66,7 +67,6 @@ import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Roles
-import Hasura.RQL.Types.Run
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
@@ -381,22 +381,23 @@ runMetadataQuery ::
   ( MonadIO m,
     MonadError QErr m,
     MonadBaseControl IO m,
+    HasAppEnv m,
     Tracing.MonadTrace m,
     MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
-    MonadGetApiTimeLimit m
+    MonadGetApiTimeLimit m,
+    UserInfoM m,
+    HasServerConfigCtx m
   ) =>
-  Env.Environment ->
-  L.Logger L.Hasura ->
-  InstanceId ->
-  UserInfo ->
-  ServerConfigCtx ->
+  AppContext ->
   RebuildableSchemaCache ->
   RQLMetadata ->
   m (EncJSON, RebuildableSchemaCache)
-runMetadataQuery env logger instanceId userInfo serverConfigCtx schemaCache RQLMetadata {..} = do
+runMetadataQuery appContext schemaCache RQLMetadata {..} = do
+  AppEnv {..} <- askAppEnv
+  let logger = _lsLogger appEnvLoggers
   (metadata, currentResourceVersion) <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
   let exportsMetadata = \case
         RMV1 (RMExportMetadata _) -> True
@@ -420,16 +421,16 @@ runMetadataQuery env logger instanceId userInfo serverConfigCtx schemaCache RQLM
         --
         if (exportsMetadata _rqlMetadata || queryModifiesMetadata _rqlMetadata)
           then emptyMetadataDefaults
-          else _sccMetadataDefaults serverConfigCtx
+          else acMetadataDefaults appContext
   ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
-    runMetadataQueryM env currentResourceVersion _rqlMetadata
+    runMetadataQueryM (acEnvironment appContext) currentResourceVersion _rqlMetadata
+      -- TODO: remove this straight runReaderT that provides no actual new info
       & flip runReaderT logger
       & runMetadataT metadata metadataDefaults
       & runCacheRWT schemaCache
-      & peelRun (RunCtx userInfo serverConfigCtx)
   -- set modified metadata in storage
   if queryModifiesMetadata _rqlMetadata
-    then case (_sccMaintenanceMode serverConfigCtx, _sccReadOnlyMode serverConfigCtx) of
+    then case (appEnvEnableMaintenanceMode, appEnvEnableReadOnlyMode) of
       (MaintenanceModeDisabled, ReadOnlyModeDisabled) -> do
         -- set modified metadata in storage
         L.unLogger logger $
@@ -448,7 +449,7 @@ runMetadataQuery env logger instanceId userInfo serverConfigCtx schemaCache RQLM
         -- notify schema cache sync
         Tracing.newSpan "notifySchemaCacheSync" $
           liftEitherM $
-            notifySchemaCacheSync newResourceVersion instanceId cacheInvalidations
+            notifySchemaCacheSync newResourceVersion appEnvInstanceId cacheInvalidations
         L.unLogger logger $
           SchemaSyncLog L.LevelInfo TTMetadataApi $
             String $
@@ -458,7 +459,6 @@ runMetadataQuery env logger instanceId userInfo serverConfigCtx schemaCache RQLM
           Tracing.newSpan "setMetadataResourceVersionInSchemaCache" $
             setMetadataResourceVersionInSchemaCache newResourceVersion
               & runCacheRWT modSchemaCache
-              & peelRun (RunCtx userInfo serverConfigCtx)
 
         pure (r, modSchemaCache')
       (MaintenanceModeEnabled (), ReadOnlyModeDisabled) ->

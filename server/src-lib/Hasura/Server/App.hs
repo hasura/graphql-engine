@@ -6,7 +6,7 @@ module Hasura.Server.App
     ConsoleRenderer (..),
     MonadVersionAPIWithExtraData (..),
     Handler,
-    HandlerCtx (hcReqHeaders, hcAppContext, hcSchemaCache, hcAppEnv, hcUser),
+    HandlerCtx (hcReqHeaders, hcAppContext, hcSchemaCache, hcUser),
     HasuraApp (HasuraApp),
     Loggers (..),
     MonadConfigApiHandler (..),
@@ -113,14 +113,13 @@ import Web.Spock.Core ((<//>))
 import Web.Spock.Core qualified as Spock
 
 data HandlerCtx = HandlerCtx
-  { hcAppContext :: !AppContext,
-    hcSchemaCache :: !RebuildableSchemaCache,
-    hcSchemaCacheVersion :: !SchemaCacheVer,
-    hcAppEnv :: !AppEnv,
-    hcUser :: !UserInfo,
-    hcReqHeaders :: ![HTTP.Header],
-    hcRequestId :: !RequestId,
-    hcSourceIpAddress :: !Wai.IpAddress
+  { hcAppContext :: AppContext,
+    hcSchemaCache :: RebuildableSchemaCache,
+    hcSchemaCacheVersion :: SchemaCacheVer,
+    hcUser :: UserInfo,
+    hcReqHeaders :: [HTTP.Header],
+    hcRequestId :: RequestId,
+    hcSourceIpAddress :: Wai.IpAddress
   }
 
 newtype Handler m a = Handler (ReaderT HandlerCtx (ExceptT QErr m) a)
@@ -135,9 +134,9 @@ newtype Handler m a = Handler (ReaderT HandlerCtx (ExceptT QErr m) a)
       MonadReader HandlerCtx,
       MonadError QErr,
       MonadTrace,
+      HasAppEnv,
       HasResourceLimits,
       MonadResolveSource,
-      HasServerConfigCtx,
       E.MonadGQLExecutionCheck,
       MonadEventLogCleanup,
       MonadQueryLog,
@@ -153,6 +152,28 @@ newtype Handler m a = Handler (ReaderT HandlerCtx (ExceptT QErr m) a)
 
 instance MonadTrans Handler where
   lift = Handler . lift . lift
+
+instance Monad m => UserInfoM (Handler m) where
+  askUserInfo = asks hcUser
+
+instance (HasAppEnv m) => HasServerConfigCtx (Handler m) where
+  askServerConfigCtx = Handler do
+    AppEnv {..} <- askAppEnv
+    AppContext {..} <- asks hcAppContext
+    pure
+      ServerConfigCtx
+        { _sccFunctionPermsCtx = acFunctionPermsCtx,
+          _sccRemoteSchemaPermsCtx = acRemoteSchemaPermsCtx,
+          _sccSQLGenCtx = acSQLGenCtx,
+          _sccMaintenanceMode = appEnvEnableMaintenanceMode,
+          _sccExperimentalFeatures = acExperimentalFeatures,
+          _sccEventingMode = appEnvEventingMode,
+          _sccReadOnlyMode = appEnvEnableReadOnlyMode,
+          _sccDefaultNamingConvention = acDefaultNamingConvention,
+          _sccMetadataDefaults = acMetadataDefaults,
+          _sccCheckFeatureFlag = appEnvCheckFeatureFlag,
+          _sccApolloFederationStatus = acApolloFederationStatus
+        }
 
 runHandler :: (HasResourceLimits m, MonadBaseControl IO m) => HandlerCtx -> Handler m a -> m (Either QErr a)
 runHandler ctx (Handler r) = do
@@ -268,6 +289,7 @@ mkSpockAction ::
   forall m a impl.
   ( MonadIO m,
     MonadBaseControl IO m,
+    HasAppEnv m,
     FromJSON a,
     UserAuthentication m,
     HttpLog m,
@@ -275,20 +297,20 @@ mkSpockAction ::
     MonadTrace m
   ) =>
   AppStateRef impl ->
-  AppEnv ->
   -- | `QErr` JSON encoder function
   (Bool -> QErr -> Value) ->
   -- | `QErr` modifier
   (QErr -> QErr) ->
   APIHandler m a ->
   Spock.ActionT m ()
-mkSpockAction appStateRef appEnv@AppEnv {..} qErrEncoder qErrModifier apiHandler = do
+mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
+  AppEnv {..} <- lift askAppEnv
+  AppContext {..} <- liftIO $ getAppContext appStateRef
   req <- Spock.request
   let origHeaders = Wai.requestHeaders req
       ipAddress = Wai.getSourceFromFallback req
       pathInfo = Wai.rawPathInfo req
 
-  AppContext {..} <- liftIO $ getAppContext appStateRef
   -- Bytes are actually read from the socket here. Time this.
   (ioWaitTime, reqBody) <- withElapsedTime $ liftIO $ Wai.strictRequestBody req
 
@@ -330,7 +352,7 @@ mkSpockAction appStateRef appEnv@AppEnv {..} qErrEncoder qErrModifier apiHandler
         pure
           ( userInfo,
             authHeaders,
-            HandlerCtx appContext schemaCache schemaCacheVer appEnv userInfo headers requestId ipAddress,
+            HandlerCtx appContext schemaCache schemaCacheVer userInfo headers requestId ipAddress,
             shouldIncludeInternal (_uiRole userInfo) acResponseInternalErrorsConfig,
             extraUserInfo
           )
@@ -378,8 +400,7 @@ mkSpockAction appStateRef appEnv@AppEnv {..} qErrEncoder qErrModifier apiHandler
         logSuccessAndResp (Just userInfo) requestId req (reqBody, queryJSON) res (Just (ioWaitTime, serviceTime)) origHeaders authHeaders httpLogMetadata
   where
     logErrorAndResp ::
-      forall n a3 ctx.
-      (MonadIO n, HttpLog n) =>
+      forall any ctx.
       Maybe UserInfo ->
       RequestId ->
       Wai.Request ->
@@ -388,9 +409,10 @@ mkSpockAction appStateRef appEnv@AppEnv {..} qErrEncoder qErrModifier apiHandler
       [HTTP.Header] ->
       ExtraUserInfo ->
       QErr ->
-      Spock.ActionCtxT ctx n a3
+      Spock.ActionCtxT ctx m any
     logErrorAndResp userInfo reqId waiReq req includeInternal headers extraUserInfo qErr = do
-      let httpLogMetadata = buildHttpLogMetadata @n emptyHttpLogGraphQLInfo extraUserInfo
+      AppEnv {..} <- lift askAppEnv
+      let httpLogMetadata = buildHttpLogMetadata @m emptyHttpLogGraphQLInfo extraUserInfo
           jsonResponse = J.encode $ qErrEncoder includeInternal qErr
           contentLength = ("Content-Length", B8.toStrict $ BB.toLazyByteString $ BB.int64Dec $ BL.length jsonResponse)
           allHeaders = [contentLength, jsonHeader]
@@ -400,6 +422,7 @@ mkSpockAction appStateRef appEnv@AppEnv {..} qErrEncoder qErrModifier apiHandler
       Spock.lazyBytes jsonResponse
 
     logSuccessAndResp userInfo reqId waiReq req result qTime reqHeaders authHdrs httpLoggingMetadata = do
+      AppEnv {..} <- lift askAppEnv
       let (respBytes, respHeaders) = case result of
             JSONResp (HttpResponse encJson h) -> (encJToLBS encJson, pure jsonHeader <> h)
             RawResp (HttpResponse rawBytes h) -> (rawBytes, h)
@@ -431,49 +454,29 @@ v1QueryHandler ::
     MonadReader HandlerCtx m,
     MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
+    HasAppEnv m,
     EB.MonadQueryTags m,
     MonadEventLogCleanup m,
     ProvidesNetwork m,
-    MonadGetApiTimeLimit m
+    MonadGetApiTimeLimit m,
+    UserInfoM m,
+    HasServerConfigCtx m
   ) =>
   AppStateRef impl ->
   RQLQuery ->
   m (HttpResponse EncJSON)
 v1QueryHandler appStateRef query = do
   (liftEitherM . authorizeV1QueryApi query) =<< ask
-  logger <- asks (_lsLogger . appEnvLoggers . hcAppEnv)
-  res <- bool (fst <$> (action logger)) (withSchemaCacheUpdate appStateRef logger Nothing (action logger)) $ queryModifiesSchemaCache query
+  logger <- _lsLogger . appEnvLoggers <$> askAppEnv
+  res <- bool (fst <$> action) (withSchemaCacheUpdate appStateRef logger Nothing action) $ queryModifiesSchemaCache query
   return $ HttpResponse res []
   where
-    action logger = do
-      userInfo <- asks hcUser
-      AppContext {..} <- asks hcAppContext
+    action = do
+      appContext <- asks hcAppContext
       schemaCache <- asks hcSchemaCache
-      instanceId <- asks (appEnvInstanceId . hcAppEnv)
-      maintenanceMode <- asks (appEnvEnableMaintenanceMode . hcAppEnv)
-      eventingMode <- asks (appEnvEventingMode . hcAppEnv)
-      readOnlyMode <- asks (appEnvEnableReadOnlyMode . hcAppEnv)
-      checkFeatureFlag <- asks (appEnvCheckFeatureFlag . hcAppEnv)
-      let serverConfigCtx =
-            ServerConfigCtx
-              acFunctionPermsCtx
-              acRemoteSchemaPermsCtx
-              acSQLGenCtx
-              maintenanceMode
-              acExperimentalFeatures
-              eventingMode
-              readOnlyMode
-              acDefaultNamingConvention
-              acMetadataDefaults
-              checkFeatureFlag
-              acApolloFederationStatus
       runQuery
-        acEnvironment
-        logger
-        instanceId
-        userInfo
+        appContext
         schemaCache
-        serverConfigCtx
         query
 
 -- | See Note [Explicitly passing AppStateRef]
@@ -487,47 +490,27 @@ v1MetadataHandler ::
     MonadResolveSource m,
     MonadMetadataApiAuthorization m,
     MonadEventLogCleanup m,
+    HasAppEnv m,
     ProvidesNetwork m,
-    MonadGetApiTimeLimit m
+    MonadGetApiTimeLimit m,
+    UserInfoM m,
+    HasServerConfigCtx m
   ) =>
   AppStateRef impl ->
   RQLMetadata ->
   m (HttpResponse EncJSON)
 v1MetadataHandler appStateRef query = Tracing.newSpan "Metadata" $ do
   (liftEitherM . authorizeV1MetadataApi query) =<< ask
-  userInfo <- asks hcUser
-  AppContext {..} <- asks hcAppContext
+  logger <- _lsLogger . appEnvLoggers <$> askAppEnv
+  appContext <- asks hcAppContext
   schemaCache <- asks hcSchemaCache
-  instanceId <- asks (appEnvInstanceId . hcAppEnv)
-  logger <- asks (_lsLogger . appEnvLoggers . hcAppEnv)
-  maintenanceMode <- asks (appEnvEnableMaintenanceMode . hcAppEnv)
-  eventingMode <- asks (appEnvEventingMode . hcAppEnv)
-  readOnlyMode <- asks (appEnvEnableReadOnlyMode . hcAppEnv)
-  checkFeatureFlag <- asks (appEnvCheckFeatureFlag . hcAppEnv)
-  let serverConfigCtx =
-        ServerConfigCtx
-          acFunctionPermsCtx
-          acRemoteSchemaPermsCtx
-          acSQLGenCtx
-          maintenanceMode
-          acExperimentalFeatures
-          eventingMode
-          readOnlyMode
-          acDefaultNamingConvention
-          acMetadataDefaults
-          checkFeatureFlag
-          acApolloFederationStatus
   r <-
     withSchemaCacheUpdate
       appStateRef
       logger
       Nothing
       $ runMetadataQuery
-        acEnvironment
-        logger
-        instanceId
-        userInfo
-        serverConfigCtx
+        appContext
         schemaCache
         query
   pure $ HttpResponse r []
@@ -541,15 +524,18 @@ v2QueryHandler ::
     MonadReader HandlerCtx m,
     MonadMetadataStorage m,
     MonadResolveSource m,
+    HasAppEnv m,
     EB.MonadQueryTags m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    UserInfoM m,
+    HasServerConfigCtx m
   ) =>
   AppStateRef impl ->
   V2Q.RQLQuery ->
   m (HttpResponse EncJSON)
 v2QueryHandler appStateRef query = Tracing.newSpan "v2 Query" $ do
   (liftEitherM . authorizeV2QueryApi query) =<< ask
-  logger <- asks (_lsLogger . appEnvLoggers . hcAppEnv)
+  logger <- _lsLogger . appEnvLoggers <$> askAppEnv
   res <-
     bool (fst <$> dbAction) (withSchemaCacheUpdate appStateRef logger Nothing dbAction) $
       V2Q.queryModifiesSchema query
@@ -557,29 +543,12 @@ v2QueryHandler appStateRef query = Tracing.newSpan "v2 Query" $ do
   where
     -- Hit postgres
     dbAction = do
-      userInfo <- asks hcUser
-      AppContext {..} <- asks hcAppContext
       schemaCache <- asks hcSchemaCache
-      instanceId <- asks (appEnvInstanceId . hcAppEnv)
-      maintenanceMode <- asks (appEnvEnableMaintenanceMode . hcAppEnv)
-      eventingMode <- asks (appEnvEventingMode . hcAppEnv)
-      readOnlyMode <- asks (appEnvEnableReadOnlyMode . hcAppEnv)
-      checkFeatureFlag <- asks (appEnvCheckFeatureFlag . hcAppEnv)
-      let serverConfigCtx =
-            ServerConfigCtx
-              acFunctionPermsCtx
-              acRemoteSchemaPermsCtx
-              acSQLGenCtx
-              maintenanceMode
-              acExperimentalFeatures
-              eventingMode
-              readOnlyMode
-              acDefaultNamingConvention
-              acMetadataDefaults
-              checkFeatureFlag
-              acApolloFederationStatus
-
-      V2Q.runQuery acEnvironment instanceId userInfo schemaCache serverConfigCtx query
+      appContext <- asks hcAppContext
+      V2Q.runQuery
+        appContext
+        schemaCache
+        query
 
 v1Alpha1GQHandler ::
   ( MonadIO m,
@@ -588,6 +557,7 @@ v1Alpha1GQHandler ::
     MonadQueryLog m,
     MonadExecutionLog m,
     MonadTrace m,
+    HasAppEnv m,
     GH.MonadExecuteQuery m,
     MonadError QErr m,
     MonadReader HandlerCtx m,
@@ -600,9 +570,9 @@ v1Alpha1GQHandler ::
   GH.GQLBatchedReqs (GH.GQLReq GH.GQLQueryText) ->
   m (HttpLogGraphQLInfo, HttpResponse EncJSON)
 v1Alpha1GQHandler queryType query = do
-  userInfo <- asks hcUser
+  appEnv <- askAppEnv
   appCtx@AppContext {..} <- asks hcAppContext
-  appEnv <- asks hcAppEnv
+  userInfo <- asks hcUser
   schemaCache <- asks hcSchemaCache
   schemaCacheVer <- asks hcSchemaCacheVersion
   reqHeaders <- asks hcReqHeaders
@@ -638,6 +608,7 @@ v1GQHandler ::
     MonadQueryLog m,
     MonadExecutionLog m,
     MonadTrace m,
+    HasAppEnv m,
     GH.MonadExecuteQuery m,
     MonadError QErr m,
     MonadReader HandlerCtx m,
@@ -657,6 +628,7 @@ v1GQRelayHandler ::
     MonadQueryLog m,
     MonadExecutionLog m,
     MonadTrace m,
+    HasAppEnv m,
     GH.MonadExecuteQuery m,
     MonadError QErr m,
     MonadReader HandlerCtx m,
@@ -755,6 +727,7 @@ configApiGetHandler ::
   forall m impl.
   ( MonadIO m,
     MonadBaseControl IO m,
+    HasAppEnv m,
     UserAuthentication m,
     HttpLog m,
     HasResourceLimits m,
@@ -763,10 +736,10 @@ configApiGetHandler ::
   AppStateRef impl ->
   AppEnv ->
   Spock.SpockCtxT () m ()
-configApiGetHandler appStateRef appEnv = do
+configApiGetHandler appStateRef AppEnv {..} = do
   AppContext {..} <- liftIO $ getAppContext appStateRef
   Spock.get "v1alpha1/config" $
-    mkSpockAction appStateRef appEnv encodeQErr id $
+    mkSpockAction appStateRef encodeQErr id $
       mkGetHandler $ do
         onlyAdmin
         let res =
@@ -777,7 +750,7 @@ configApiGetHandler appStateRef appEnv = do
                 acEnableAllowlist
                 acLiveQueryOptions
                 acStreamQueryOptions
-                (appEnvConsoleAssetsDir appEnv)
+                appEnvConsoleAssetsDir
                 acExperimentalFeatures
                 acEnabledAPIs
                 acDefaultNamingConvention
@@ -798,6 +771,7 @@ mkWaiApp ::
     ConsoleRenderer m,
     MonadVersionAPIWithExtraData m,
     HttpLog m,
+    HasAppEnv m,
     UserAuthentication m,
     MonadMetadataApiAuthorization m,
     E.MonadGQLExecutionCheck m,
@@ -849,6 +823,7 @@ httpApp ::
     ConsoleRenderer m,
     MonadVersionAPIWithExtraData m,
     HttpLog m,
+    HasAppEnv m,
     UserAuthentication m,
     MonadMetadataApiAuthorization m,
     E.MonadGQLExecutionCheck m,
@@ -932,25 +907,11 @@ httpApp setupHook appStateRef appEnv@AppEnv {..} ekgStore = do
     Spock.lazyBytes $ encode $ object $ ["version" .= currentVersion] <> extraData
 
   let customEndpointHandler ::
-        forall n.
-        ( MonadIO n,
-          MonadBaseControl IO n,
-          E.MonadGQLExecutionCheck n,
-          MonadQueryLog n,
-          MonadExecutionLog n,
-          GH.MonadExecuteQuery n,
-          MonadMetadataStorage n,
-          EB.MonadQueryTags n,
-          HasResourceLimits n,
-          ProvidesNetwork n,
-          MonadTrace n
-        ) =>
         RestRequest Spock.SpockMethod ->
-        Handler n (HttpLogGraphQLInfo, APIResp)
+        Handler m (HttpLogGraphQLInfo, APIResp)
       customEndpointHandler restReq = do
         endpoints <- liftIO $ scEndpoints <$> getSchemaCache appStateRef
         appCtx' <- asks hcAppContext
-        appEnv' <- asks hcAppEnv
         schemaCache <- asks hcSchemaCache
         schemaCacheVer <- asks hcSchemaCacheVersion
         requestId <- asks hcRequestId
@@ -958,7 +919,7 @@ httpApp setupHook appStateRef appEnv@AppEnv {..} ekgStore = do
         reqHeaders <- asks hcReqHeaders
         ipAddress <- asks hcSourceIpAddress
 
-        let execCtx = mkExecutionContext appCtx' appEnv' schemaCache schemaCacheVer
+        let execCtx = mkExecutionContext appCtx' appEnv schemaCache schemaCacheVer
 
         req <-
           restReq & traverse \case
@@ -1113,20 +1074,13 @@ httpApp setupHook appStateRef appEnv@AppEnv {..} ekgStore = do
         logHttpError logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) err headers (emptyHttpLogMetadata @m)
 
     spockAction ::
-      forall a n.
-      ( FromJSON a,
-        MonadIO n,
-        MonadBaseControl IO n,
-        UserAuthentication n,
-        HttpLog n,
-        MonadTrace n,
-        HasResourceLimits n
-      ) =>
+      forall a.
+      (FromJSON a) =>
       (Bool -> QErr -> Value) ->
       (QErr -> QErr) ->
-      APIHandler n a ->
-      Spock.ActionT n ()
-    spockAction qErrEncoder qErrModifier apiHandler = mkSpockAction appStateRef appEnv qErrEncoder qErrModifier apiHandler
+      APIHandler m a ->
+      Spock.ActionT m ()
+    spockAction qErrEncoder qErrModifier apiHandler = mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler
 
     -- all graphql errors should be of type 200
     allMod200 qe = qe {qeStatus = HTTP.status200}

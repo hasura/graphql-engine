@@ -1,10 +1,16 @@
 {-# LANGUAGE Arrows #-}
 
 module Hasura.App.State
-  ( RebuildableAppContext (..),
+  ( -- * application state
+    RebuildableAppContext (..),
     AppEnv (..),
     AppContext (..),
     Loggers (..),
+
+    -- * env access
+    HasAppEnv (..),
+
+    -- * init functions
     buildRebuildableAppContext,
     initSQLGenCtx,
   )
@@ -43,6 +49,9 @@ import Network.HTTP.Client qualified as HTTP
 import Network.Wai.Handler.Warp (HostPreference)
 import Network.WebSockets.Connection qualified as WebSockets
 import Refined (NonNegative, Refined)
+
+--------------------------------------------------------------------------------
+-- application state
 
 {- Note [Hasura Application State]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -150,6 +159,35 @@ data Loggers = Loggers
   }
 
 data InvalidationKeys = InvalidationKeys
+
+--------------------------------------------------------------------------------
+-- env access
+
+-- | Provides access to the 'AppEnv'.
+--
+-- This class is nothing more than an equivalent of @MonadReader AppEnv m@, but
+-- it abstracts it, so that application code can be written without explicitly
+-- relying on an explicit implementation of the app monad. It allows for the app
+-- env to be passed implicitly instead of explictly in all of the app init code.
+--
+-- This class is not meant to be used across the entirety of the codebase, as
+-- using it brings in scope the types of all fields, creating dependencies
+-- between unrelated parts of the codebase. It is only meant to be used at the
+-- top level; more specific parts of the code should only rely on the relevant
+-- subset of the environment, exposed by small, local typeclasses. For instance,
+-- at time of writing, this can be used to implement 'HasServerConfigCtx', as a
+-- first step towards breaking it down.
+class Monad m => HasAppEnv m where
+  askAppEnv :: m AppEnv
+
+instance (HasAppEnv m) => HasAppEnv (ReaderT r m) where
+  askAppEnv = lift askAppEnv
+
+instance (HasAppEnv m) => HasAppEnv (ExceptT e m) where
+  askAppEnv = lift askAppEnv
+
+--------------------------------------------------------------------------------
+-- init functions
 
 initInvalidationKeys :: InvalidationKeys
 initInvalidationKeys = InvalidationKeys

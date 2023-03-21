@@ -40,7 +40,6 @@ import Hasura.RQL.Types.Column (ColumnType, fromCol)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.QueryTags (QueryTagsConfig)
 import Hasura.RQL.Types.ResultCustomization
-import Hasura.RQL.Types.Run (RunT (..))
 import Hasura.RQL.Types.SchemaCache.Build (MetadataT (..))
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
@@ -330,6 +329,7 @@ data ExecutionStep where
 -- this will need to be changed into an annotated tree.
 type ExecutionPlan = RootFieldMap ExecutionStep
 
+-- TODO: move this to a new module.
 class (Monad m) => MonadQueryTags m where
   -- | Creates Query Tags. These are appended to the Generated SQL.
   -- Helps users to use native database monitoring tools to get some 'application-context'.
@@ -353,6 +353,3 @@ instance (MonadQueryTags m) => MonadQueryTags (MetadataT m) where
 
 instance (MonadQueryTags m) => MonadQueryTags (CacheRWT m) where
   createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (CacheRWT m) QueryTagsComment
-
-instance (MonadQueryTags m) => MonadQueryTags (RunT m) where
-  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (RunT m) QueryTagsComment

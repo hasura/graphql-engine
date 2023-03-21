@@ -15,6 +15,7 @@ import Data.Aeson.Casing
 import Data.Aeson.TH
 import Data.Environment qualified as Env
 import Data.Has (Has)
+import Hasura.App.State
 import Hasura.Backends.Postgres.DDL.RunSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -49,7 +50,6 @@ import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.Run
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
@@ -177,6 +177,7 @@ $( concat
 runQuery ::
   ( MonadIO m,
     MonadError QErr m,
+    HasAppEnv m,
     Tracing.MonadTrace m,
     MonadBaseControl IO m,
     MonadMetadataStorageQueryAPI m,
@@ -184,18 +185,18 @@ runQuery ::
     MonadQueryTags m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
-    MonadGetApiTimeLimit m
+    MonadGetApiTimeLimit m,
+    UserInfoM m,
+    HasServerConfigCtx m
   ) =>
-  Env.Environment ->
-  L.Logger L.Hasura ->
-  InstanceId ->
-  UserInfo ->
+  AppContext ->
   RebuildableSchemaCache ->
-  ServerConfigCtx ->
   RQLQuery ->
   m (EncJSON, RebuildableSchemaCache)
-runQuery env logger instanceId userInfo sc serverConfigCtx query = do
-  when ((_sccReadOnlyMode serverConfigCtx == ReadOnlyModeEnabled) && queryModifiesUserDB query) $
+runQuery appContext sc query = do
+  AppEnv {..} <- askAppEnv
+  let logger = _lsLogger appEnvLoggers
+  when ((appEnvEnableReadOnlyMode == ReadOnlyModeEnabled) && queryModifiesUserDB query) $
     throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
   let exportsMetadata = \case
@@ -204,32 +205,25 @@ runQuery env logger instanceId userInfo sc serverConfigCtx query = do
       metadataDefaults =
         if (exportsMetadata query)
           then emptyMetadataDefaults
-          else _sccMetadataDefaults serverConfigCtx
+          else acMetadataDefaults appContext
 
   (metadata, currentResourceVersion) <- liftEitherM fetchMetadata
-  result <-
-    runReaderT (runQueryM env query) logger & \x -> do
-      ((js, meta), rsc, ci) <-
-        x
-          & runMetadataT metadata metadataDefaults
-          & runCacheRWT sc
-          & peelRun runCtx
-      pure (js, rsc, ci, meta)
-  withReload currentResourceVersion result
-  where
-    runCtx = RunCtx userInfo serverConfigCtx
-
-    withReload currentResourceVersion (result, updatedCache, invalidations, updatedMetadata) = do
-      when (queryModifiesSchemaCache query) $ do
-        case (_sccMaintenanceMode serverConfigCtx) of
-          MaintenanceModeDisabled -> do
-            -- set modified metadata in storage
-            newResourceVersion <- liftEitherM $ setMetadata currentResourceVersion updatedMetadata
-            -- notify schema cache sync
-            liftEitherM $ notifySchemaCacheSync newResourceVersion instanceId invalidations
-          MaintenanceModeEnabled () ->
-            throw500 "metadata cannot be modified in maintenance mode"
-      pure (result, updatedCache)
+  ((result, updatedMetadata), updatedCache, invalidations) <-
+    runQueryM (acEnvironment appContext) query
+      -- TODO: remove this straight runReaderT that provides no actual new info
+      & flip runReaderT logger
+      & runMetadataT metadata metadataDefaults
+      & runCacheRWT sc
+  when (queryModifiesSchemaCache query) $ do
+    case appEnvEnableMaintenanceMode of
+      MaintenanceModeDisabled -> do
+        -- set modified metadata in storage
+        newResourceVersion <- liftEitherM $ setMetadata currentResourceVersion updatedMetadata
+        -- notify schema cache sync
+        liftEitherM $ notifySchemaCacheSync newResourceVersion appEnvInstanceId invalidations
+      MaintenanceModeEnabled () ->
+        throw500 "metadata cannot be modified in maintenance mode"
+  pure (result, updatedCache)
 
 -- | A predicate that determines whether the given query might modify/rebuild the schema cache. If
 -- so, it needs to acquire the global lock on the schema cache so that other queries do not modify

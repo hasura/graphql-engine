@@ -131,25 +131,22 @@ main = do
           )
           $ \(appStateRef, appEnv) -> return (appStateRef, appEnv)
 
-        let run :: ExceptT QErr (PGMetadataStorageAppT CacheBuild) a -> IO a
+        let run :: ExceptT QErr (PGMetadataStorageAppT IO) a -> IO a
             run =
               runExceptT
                 >>> runPGMetadataStorageAppT appEnv
-                >>> runCacheBuild cacheBuildParams
-                >>> runExceptT
-                >=> flip onLeft printErrJExit
-                >=> flip onLeft printErrJExit
+                >>> flip onLeftM printErrJExit
 
         (metadata, schemaCache) <- run do
           metadata <-
             snd
               <$> (liftEitherM . runExceptT . _pecRunTx pgContext (PGExecCtxInfo (Tx PG.ReadWrite Nothing) InternalRawQuery))
                 (migrateCatalog (Just sourceConfig) defaultPostgresExtensionsSchema maintenanceMode =<< liftIO getCurrentTime)
-          schemaCache <- lift $ lift $ buildRebuildableSchemaCache logger envMap metadata
+          schemaCache <- runCacheBuild cacheBuildParams $ buildRebuildableSchemaCache logger envMap metadata
           pure (metadata, schemaCache)
 
         cacheRef <- newMVar schemaCache
-        pure $ NT (run . flip MigrateSuite.runCacheRefT cacheRef . fmap fst . runMetadataT metadata emptyMetadataDefaults)
+        pure $ NT (run . flip MigrateSuite.runCacheRefT (serverConfigCtx, cacheRef) . fmap fst . runMetadataT metadata emptyMetadataDefaults)
 
   streamingSubscriptionSuite <- StreamingSubscriptionSuite.buildStreamingSubscriptionSuite
   eventTriggerLogCleanupSuite <- EventTriggerCleanupSuite.buildEventTriggerCleanupSuite

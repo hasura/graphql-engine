@@ -16,6 +16,7 @@ import Data.Aeson.Types (Parser)
 import Data.Environment qualified as Env
 import Data.Text qualified as T
 import GHC.Generics.Extended (constrName)
+import Hasura.App.State
 import Hasura.Backends.BigQuery.DDL.RunSQL qualified as BigQuery
 import Hasura.Backends.DataConnector.Adapter.RunSQL qualified as DataConnector
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName, mkDataConnectorName)
@@ -41,7 +42,6 @@ import Hasura.RQL.DML.Types
   )
 import Hasura.RQL.DML.Update
 import Hasura.RQL.Types.Metadata
-import Hasura.RQL.Types.Run
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.SQL.Backend
@@ -105,53 +105,45 @@ runQuery ::
   ( MonadIO m,
     MonadBaseControl IO m,
     MonadError QErr m,
+    HasAppEnv m,
     Tracing.MonadTrace m,
     MonadMetadataStorage m,
     MonadResolveSource m,
     MonadQueryTags m,
-    ProvidesHasuraServices m
+    ProvidesHasuraServices m,
+    UserInfoM m,
+    HasServerConfigCtx m
   ) =>
-  Env.Environment ->
-  InstanceId ->
-  UserInfo ->
+  AppContext ->
   RebuildableSchemaCache ->
-  ServerConfigCtx ->
   RQLQuery ->
   m (EncJSON, RebuildableSchemaCache)
-runQuery env instanceId userInfo schemaCache serverConfigCtx rqlQuery = do
-  when ((_sccReadOnlyMode serverConfigCtx == ReadOnlyModeEnabled) && queryModifiesUserDB rqlQuery) $
+runQuery appContext schemaCache rqlQuery = do
+  AppEnv {..} <- askAppEnv
+  when ((appEnvEnableReadOnlyMode == ReadOnlyModeEnabled) && queryModifiesUserDB rqlQuery) $
     throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
   (metadata, currentResourceVersion) <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
-  result <-
-    runQueryM env rqlQuery & \x -> do
-      ((js, meta), rsc, ci) <-
-        -- We can use defaults here unconditionally, since there is no MD export function in V2Query
-        x
-          & runMetadataT metadata (_sccMetadataDefaults serverConfigCtx)
-          & runCacheRWT schemaCache
-          & peelRun runCtx
-      pure (js, rsc, ci, meta)
-  withReload currentResourceVersion result
-  where
-    runCtx = RunCtx userInfo serverConfigCtx
-
-    withReload currentResourceVersion (result, updatedCache, invalidations, updatedMetadata) = do
-      when (queryModifiesSchema rqlQuery) $ do
-        case _sccMaintenanceMode serverConfigCtx of
-          MaintenanceModeDisabled -> do
-            -- set modified metadata in storage
-            newResourceVersion <-
-              Tracing.newSpan "setMetadata" $
-                liftEitherM $
-                  setMetadata currentResourceVersion updatedMetadata
-            -- notify schema cache sync
-            Tracing.newSpan "notifySchemaCacheSync" $
-              liftEitherM $
-                notifySchemaCacheSync newResourceVersion instanceId invalidations
-          MaintenanceModeEnabled () ->
-            throw500 "metadata cannot be modified in maintenance mode"
-      pure (result, updatedCache)
+  ((result, updatedMetadata), updatedCache, invalidations) <-
+    runQueryM (acEnvironment appContext) rqlQuery
+      -- We can use defaults here unconditionally, since there is no MD export function in V2Query
+      & runMetadataT metadata (acMetadataDefaults appContext)
+      & runCacheRWT schemaCache
+  when (queryModifiesSchema rqlQuery) $ do
+    case appEnvEnableMaintenanceMode of
+      MaintenanceModeDisabled -> do
+        -- set modified metadata in storage
+        newResourceVersion <-
+          Tracing.newSpan "setMetadata" $
+            liftEitherM $
+              setMetadata currentResourceVersion updatedMetadata
+        -- notify schema cache sync
+        Tracing.newSpan "notifySchemaCacheSync" $
+          liftEitherM $
+            notifySchemaCacheSync newResourceVersion appEnvInstanceId invalidations
+      MaintenanceModeEnabled () ->
+        throw500 "metadata cannot be modified in maintenance mode"
+  pure (result, updatedCache)
 
 queryModifiesSchema :: RQLQuery -> Bool
 queryModifiesSchema = \case
