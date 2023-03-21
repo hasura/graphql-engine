@@ -764,7 +764,9 @@ class Schema extends Component {
           />
         )}
         <Analytics name="Schema" {...REDACT_EVERYTHING}>
-          <div className={`container-fluid ${styles.padd_left_remove}`}>
+          <div
+            className={`container-fluid ${styles.padd_left_remove} bootstrap-jail`}
+          >
             <div className={styles.padd_left}>
               <Helmet title="Schema - Data | Hasura" />
               <BreadCrumb

@@ -531,7 +531,7 @@ const Relationships = ({
     <>
       <RightContainer>
         <Analytics name="Relationships" {...REDACT_EVERYTHING}>
-          <div className={`${styles.container} container-fluid`}>
+          <div className={`${styles.container} container-fluid bootstrap-jail`}>
             <TableHeader
               dispatch={dispatch}
               table={tableSchema}

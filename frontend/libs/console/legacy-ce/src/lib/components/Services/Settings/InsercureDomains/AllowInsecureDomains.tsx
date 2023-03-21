@@ -27,7 +27,7 @@ const InsecureDomains: React.FC<AddDomainProps> = props => {
 
   return (
     <Analytics name="InsecureDomains" {...REDACT_EVERYTHING}>
-      <div className="p-lg bg-[#f8fafc]">
+      <div className="p-lg bg-[#f8fafc] bootstrap-jail">
         <div className="max-w-[72rem]">
           <h1 className="text-4xl font-bold my-sm">
             {' '}

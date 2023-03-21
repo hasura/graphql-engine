@@ -64,7 +64,7 @@ const Container: React.FC<Props> = props => {
 
   const sidebarContent = (
     <Analytics name="EventsSidebar" {...REDACT_EVERYTHING}>
-      <ul>
+      <ul className="bootstrap-jail">
         <li
           role="presentation"
           className={isDataEventsRoute(currentLocation) ? styles.active : ''}

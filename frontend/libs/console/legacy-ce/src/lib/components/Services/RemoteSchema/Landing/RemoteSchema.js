@@ -36,7 +36,7 @@ class RemoteSchema extends React.Component {
     };
 
     return (
-      <div className={`pl-0 pt-0`}>
+      <div className="pl-0 pt-0 bootstrap-jail">
         <div className="m-sm">
           <Helmet title={`${pageTitle}s | Hasura`} />
           <div>

@@ -16,7 +16,7 @@ class Container extends React.Component {
     const currentLocation = location.pathname;
 
     const sidebarContent = (
-      <ul>
+      <ul className="bootstrap-jail">
         <li
           role="presentation"
           className={

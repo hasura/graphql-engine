@@ -58,6 +58,7 @@ import HeaderNavItem, {
 } from './HeaderNavItem';
 import { Tooltip } from './../../new-components/Tooltip';
 import { Badge } from './../../new-components/Badge';
+import { ConsoleDevTools } from '../../utils/console-dev-tools/ConsoleDevTools';
 
 export const updateRequestHeaders = props => {
   const { requestHeaders, dispatch } = props;
@@ -413,63 +414,70 @@ class Main extends React.Component {
                 />
               </ul>
             </div>
-            <div
-              id="dropdown_wrapper"
-              className={clsx(
-                'flex gap-2 justify-end items-stretch relative mr-4',
-                this.state.isDropdownOpen ? 'open' : ''
-              )}
-            >
-              {getAdminSecretSection()}
-              <div className={itemContainerStyle}>
-                <Link
-                  className={clsx(
-                    linkStyle,
-                    currentActiveBlock === 'settings' && activeLinkStyle
-                  )}
-                  to="/settings"
-                >
-                  <span className="text-sm self-baseline">
-                    {getMetadataStatusIcon()}
-                  </span>
-                  <span className="uppercase text-left">Settings</span>
-                </Link>
-              </div>
-              {/* Compensate legacy styles directly with style attribute */}
-              <div className={styles.proWrapper} style={{ padding: '0' }}>
+            <div className="bootstrap-jail">
+              <div
+                id="dropdown_wrapper"
+                className={clsx(
+                  'flex gap-2 justify-end items-stretch relative mr-4 h-full',
+                  this.state.isDropdownOpen ? 'open' : ''
+                )}
+              >
+                {getAdminSecretSection()}
                 <div className={itemContainerStyle}>
-                  <div
-                    className={clsx(linkStyle, isPopUpOpen && activeLinkStyle)}
-                    onClick={this.onProIconClick}
+                  <Link
+                    className={clsx(
+                      linkStyle,
+                      currentActiveBlock === 'settings' && activeLinkStyle
+                    )}
+                    to="/settings"
                   >
                     <span className="text-sm self-baseline">
-                      <FaInfoCircle />
+                      {getMetadataStatusIcon()}
                     </span>
-                    <span className="uppercase text-left">CLOUD</span>
+                    <span className="uppercase text-left">Settings</span>
+                  </Link>
+                </div>
+                {/* Compensate legacy styles directly with style attribute */}
+                <div className={styles.proWrapper} style={{ padding: '0' }}>
+                  <div className={itemContainerStyle}>
+                    <div
+                      className={clsx(
+                        linkStyle,
+                        isPopUpOpen && activeLinkStyle
+                      )}
+                      onClick={this.onProIconClick}
+                    >
+                      <span className="text-sm self-baseline">
+                        <FaInfoCircle />
+                      </span>
+                      <span className="uppercase text-left">CLOUD</span>
+                    </div>
                   </div>
+                  {isPopUpOpen && <ProPopup toggleOpen={this.toggleProPopup} />}
                 </div>
-                {isPopUpOpen && <ProPopup toggleOpen={this.toggleProPopup} />}
-              </div>
 
-              <Help isSelected={currentActiveBlock === 'support'} />
-              <NotificationSection
-                isDropDownOpen={this.state.isDropdownOpen}
-                closeDropDown={this.closeDropDown}
-                toggleDropDown={this.toggleDropDown}
-              />
-              {!this.state.loveConsentState.isDismissed ? (
-                <div
-                  id="dropdown_wrapper"
-                  className={`self-stretch ${
-                    this.state.isLoveSectionOpen ? 'open' : ''
-                  }`}
-                >
-                  <LoveSection
-                    closeLoveSection={this.closeLoveSection}
-                    toggleLoveSection={this.toggleLoveSection}
-                  />
-                </div>
-              ) : null}
+                <Help isSelected={currentActiveBlock === 'support'} />
+                <NotificationSection
+                  isDropDownOpen={this.state.isDropdownOpen}
+                  closeDropDown={this.closeDropDown}
+                  toggleDropDown={this.toggleDropDown}
+                />
+                {!this.state.loveConsentState.isDismissed ? (
+                  <div className="bootstrap-jail">
+                    <div
+                      id="dropdown_wrapper"
+                      className={`self-stretch h-full ${
+                        this.state.isLoveSectionOpen ? 'open' : ''
+                      }`}
+                    >
+                      <LoveSection
+                        closeLoveSection={this.closeLoveSection}
+                        toggleLoveSection={this.toggleLoveSection}
+                      />
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             </div>
           </div>
           <div className={styles.main + ' container-fluid'}>
@@ -482,6 +490,7 @@ class Main extends React.Component {
             updateNotificationVersion={this.state.updateNotificationVersion}
           />
         </div>
+        <ConsoleDevTools />
       </div>
     );
   }

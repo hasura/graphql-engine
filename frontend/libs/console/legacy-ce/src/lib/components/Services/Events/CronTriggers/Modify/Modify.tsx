@@ -15,7 +15,7 @@ const Modify: React.FC<Props> = props => {
   const name = props.currentTrigger?.name;
   return (
     <Analytics name="ScheduledTri<EggerModify" {...REDACT_EVERYTHING}>
-      <div className="mb-md">
+      <div className="mb-md bootstrap-jail">
         <CronTriggers.Form
           key={name}
           cronTriggerName={name}

@@ -94,7 +94,7 @@ export const Create = ({ onSuccess }: Props) => {
   ) as FieldError | undefined;
 
   return (
-    <Form onSubmit={onSubmit} className="overflow-y-hidden p-4">
+    <Form onSubmit={onSubmit} className="overflow-y-hidden p-4 bootstrap-jail">
       <Analytics name="AddRemoteSchema" {...REDACT_EVERYTHING}>
         <div className="max-w-6xl">
           <h1 className="text-xl leading-6 font-semibold mb-lg">

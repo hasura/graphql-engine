@@ -115,7 +115,7 @@ export const TableInsertItems = ({
 
   return (
     <RightContainer>
-      <div>
+      <div className="bootstrap-jail">
         <TableHeader
           count={count}
           dispatch={dispatch}

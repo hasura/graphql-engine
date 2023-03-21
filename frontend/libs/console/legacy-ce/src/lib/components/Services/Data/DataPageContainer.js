@@ -47,7 +47,7 @@ const DataPageContainer = ({
 
   const sidebarContent = (
     <Analytics name="DataPageContainerSidebar" {...REDACT_EVERYTHING}>
-      <ul>
+      <ul className="bootstrap-jail">
         <li
           role="presentation"
           className={

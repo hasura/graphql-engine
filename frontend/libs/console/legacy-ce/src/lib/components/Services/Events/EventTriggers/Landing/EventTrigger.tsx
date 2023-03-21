@@ -74,7 +74,7 @@ insert_user(objects: [{name: "testuser"}] ){
 
   return (
     <Analytics name="EventTriggersLanding" {...REDACT_EVERYTHING}>
-      <div className="pl-0 w-full pt-md">
+      <div className="pl-0 w-full pt-md bootstrap-jail">
         <div className="pl-md">
           <Helmet
             title={getReactHelmetTitle(EVENT_TRIGGER, EVENTS_SERVICE_HEADING)}

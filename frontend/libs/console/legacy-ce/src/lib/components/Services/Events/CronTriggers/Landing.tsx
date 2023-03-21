@@ -31,7 +31,7 @@ const Landing: React.FC<Props> = props => {
 
   return (
     <Analytics name="ScheduledTriggerLanding" {...REDACT_EVERYTHING}>
-      <div className="pl-0 w-full mt-md">
+      <div className="pl-0 w-full mt-md bootstrap-jail">
         <div className="pl-md">
           <div className="flex">
             <h2 className="text-xl font-bold mr-md">{CRON_TRIGGER}s</h2>

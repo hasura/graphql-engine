@@ -47,7 +47,7 @@ class About extends Component<ConnectInjectedProps & StateProps> {
 
     return (
       <Analytics name="About" {...REDACT_EVERYTHING}>
-        <div className="clear-both pl-sm pt-md mb-sm">
+        <div className="clear-both pl-sm pt-md mb-sm bootstrap-jail">
           <div className="text-base font-bold">
             <Helmet title="About | Hasura" />
             <h2 className="text-xl font-bold">About</h2>

@@ -410,7 +410,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
       <Helmet title="Manage - Data | Hasura" />
       <Analytics name="ActionEditor" {...REDACT_EVERYTHING}>
         <div
-          className={`container-fluid ${styles.manage_dbs_page}`}
+          className={`container-fluid ${styles.manage_dbs_page} bootstrap-jail`}
           data-test="manage-database-section"
         >
           <BreadCrumb breadCrumbs={crumbs} />

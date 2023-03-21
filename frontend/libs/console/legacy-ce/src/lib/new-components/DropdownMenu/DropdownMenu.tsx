@@ -66,7 +66,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
       <DropdownMenuPrimitive.Content
         align="start"
         {...options?.content}
-        className="z-50"
+        className="z-[101]"
       >
         <div className="origin-top-left absolute left-0 z-10 mt-xs w-max rounded shadow-md bg-white ring-1 ring-gray-300 divide-y divide-gray-300 focus:outline-none">
           {items.map((group, groupIndex) => (

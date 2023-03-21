@@ -29,7 +29,7 @@ const TabbedDSConnection: React.FC<{
     <RightContainer>
       <Helmet title={`${tabs[tabName].display_text} - Hasura`} />
       <div
-        className={`${styles.view_stitch_schema_wrapper} ${styles.addWrapper}`}
+        className={`${styles.view_stitch_schema_wrapper} ${styles.addWrapper} bootstrap-jail`}
       >
         <CommonTabLayout
           appPrefix={appPrefix}

@@ -94,7 +94,7 @@ const TableHeader = ({
   };
 
   return (
-    <div>
+    <div className="bootstrap-jail">
       <Helmet>
         <title {...titleAnalyticsAttributes}>
           {capitalize(tabName) + ' - ' + tableName + ' - Data | Hasura'}

@@ -59,7 +59,7 @@ class Landing extends React.Component {
     return (
       <Analytics name="Actions" {...REDACT_EVERYTHING}>
         <div>
-          <div className="p-5">
+          <div className="p-5 bootstrap-jail">
             <Helmet title={`${pageTitle} | Hasura`} />
             <div>
               <div className={'flex'}>

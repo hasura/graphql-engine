@@ -9,6 +9,7 @@ import OverallHealthCard from './OverallHealthCard';
 import styles from '../MetricsV1.module.scss';
 import AccessDenied from '../../../AccessDenied/AccessDenied';
 import { isAdmin } from '../utils';
+import clsx from 'clsx';
 
 const SourceHealth = ({
   inconsistentObjects,
@@ -20,7 +21,7 @@ const SourceHealth = ({
   const _isAdmin = isAdmin(project.privileges);
 
   return (
-    <div className={styles.sourceHealth}>
+    <div className={clsx(styles.sourceHealth, 'bootstrap-jail')}>
       <Col md={12} lg={_isAdmin ? 8 : 12} className={styles.no_pad}>
         <div>
           <p className={`${styles.strong} ${styles.padding_top_20}`}>

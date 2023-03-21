@@ -380,11 +380,13 @@ const Modify: React.FC<Props> = props => {
               readOnlyMode={readOnlyMode}
             />
             <br />
-            <h2 className="text-lg font-semibold mb-xs flex items-center">
-              Event Info
-            </h2>
-            <Info currentTrigger={currentTrigger} />
-            <div className="relative">
+            <div className="bootstrap-jail">
+              <h2 className="text-lg font-semibold mb-xs flex items-center">
+                Event Info
+              </h2>
+              <Info currentTrigger={currentTrigger} />
+            </div>
+            <div className="relative bootstrap-jail">
               <WebhookEditor
                 currentTrigger={currentTrigger}
                 webhook={state.webhook}

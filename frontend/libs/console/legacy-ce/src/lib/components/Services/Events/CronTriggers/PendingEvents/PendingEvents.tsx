@@ -44,23 +44,25 @@ const PendingEvents: React.FC<Props> = props => {
     setFilterState,
     runQuery
   ) => (
-    <EventsTable
-      rows={rows}
-      filterState={filterState}
-      setFilterState={setFilterState}
-      runQuery={runQuery}
-      columns={[
-        'actions',
-        'id',
-        'status',
-        'scheduled_time',
-        'created_at',
-        'tries',
-      ]}
-      identifier={triggerName}
-      onCancelEvent={onCancelCronTrigger}
-      triggerType="cron"
-    />
+    <div className="bootstrap-jail">
+      <EventsTable
+        rows={rows}
+        filterState={filterState}
+        setFilterState={setFilterState}
+        runQuery={runQuery}
+        columns={[
+          'actions',
+          'id',
+          'status',
+          'scheduled_time',
+          'created_at',
+          'tries',
+        ]}
+        identifier={triggerName}
+        onCancelEvent={onCancelCronTrigger}
+        triggerType="cron"
+      />
+    </div>
   );
 
   return (

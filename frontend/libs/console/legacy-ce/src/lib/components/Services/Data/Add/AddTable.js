@@ -507,7 +507,7 @@ class AddTable extends Component {
 
     return (
       <Analytics name="AddTable" {...REDACT_EVERYTHING}>
-        <div className="p-lg">
+        <div className="p-lg bootstrap-jail">
           <Helmet title={`Add Table - Data | Hasura`} />
           <div>
             <h2 className="text-xl font-semibold mb-lg">Add a New Table</h2>

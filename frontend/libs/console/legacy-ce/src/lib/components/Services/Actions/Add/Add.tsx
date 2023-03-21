@@ -350,7 +350,7 @@ const AddAction: React.FC<AddActionProps> = ({
 
   return (
     <Analytics name="AddAction" {...REDACT_EVERYTHING}>
-      <div className="w-full overflow-y-auto bg-gray-50">
+      <div className="w-full overflow-y-auto bg-gray-50 bootstrap-jail">
         <div className="max-w-6xl">
           <Helmet title="Add Action - Actions | Hasura" />
           <h2 className="font-bold text-xl mb-5">Add a new action</h2>

@@ -136,7 +136,7 @@ export const ModifyTable: React.VFC<ModifyTableProps> = ({
 
   return (
     <RightContainer>
-      <div>
+      <div className="bootstrap-jail">
         <TableHeader
           dispatch={dispatch}
           table={table}

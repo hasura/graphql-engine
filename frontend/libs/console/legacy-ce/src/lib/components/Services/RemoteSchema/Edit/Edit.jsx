@@ -228,6 +228,7 @@ class Edit extends React.Component {
         {isFetching ? null : (
           <Analytics name="EditRemoteSchema" {...REDACT_EVERYTHING}>
             <form
+              className="bootstrap-jail"
               onSubmit={e => {
                 e.preventDefault();
                 this.editClicked();

@@ -1,6 +1,7 @@
+import clsx from 'clsx';
 import React from 'react';
 
-type LogoModes = 'default' | 'primary';
+type LogoModes = 'default' | 'primary' | 'secondary';
 type LogoSize = 'sm' | 'md' | 'lg';
 
 type Props = {
@@ -12,6 +13,10 @@ type Props = {
    * The logo mode
    */
   mode?: LogoModes;
+  /**
+   * The logo className
+   */
+  className?: string;
 };
 
 const logoSizing: Record<LogoSize, string> = {
@@ -23,6 +28,7 @@ const logoSizing: Record<LogoSize, string> = {
 const logoModesStyles: Record<LogoModes, string> = {
   default: 'black',
   primary: 'white',
+  secondary: '#14394a',
 };
 
 export function HasuraLogoIcon(props: Props) {
@@ -30,7 +36,7 @@ export function HasuraLogoIcon(props: Props) {
 
   return (
     <svg
-      className={logoSizing[size]}
+      className={clsx(logoSizing[size], props.className)}
       viewBox="0 0 81 84"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import clsx from 'clsx';
 import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import JSONEditor from './JSONEditor';
 import { IconTooltip } from '../../../../new-components/Tooltip';
@@ -1968,7 +1969,7 @@ class Permissions extends Component {
     return (
       <RightContainer>
         <Analytics name="Permissions" {...REDACT_EVERYTHING}>
-          <div className={styles.container}>
+          <div className={clsx(styles.container, 'bootstrap-jail')}>
             {getHeader(currentTableSchema)}
             <br />
             <div className={styles.padd_left_remove}>

@@ -74,10 +74,10 @@ export const decorators = [
   Story => {
     document.body.classList.add('hasura-tailwind-on');
     return (
-      <>
+      <div>
         <ToastsHub />
         <div className={'bg-legacybg'}>{Story()}</div>
-      </>
+      </div>
     );
   },
 ];

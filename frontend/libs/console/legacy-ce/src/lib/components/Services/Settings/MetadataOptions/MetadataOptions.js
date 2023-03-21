@@ -59,7 +59,7 @@ const MetadataOptions = props => {
 
   return (
     <Analytics name="MetadataOptions" {...REDACT_EVERYTHING}>
-      <div className={`clear-both pl-md mt-md mb-md`}>
+      <div className={`clear-both pl-md mt-md mb-md bootstrap-jail`}>
         <h2 className="text-xl font-bold">Hasura Metadata Actions</h2>
         <div className="mt-xs">
           <div className="w-8/12">

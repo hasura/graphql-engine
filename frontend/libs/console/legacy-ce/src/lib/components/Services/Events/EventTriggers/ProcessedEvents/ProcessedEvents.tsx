@@ -26,15 +26,17 @@ const ProcessedEvents: React.FC<Props> = props => {
     setFilterState,
     runQuery
   ) => (
-    <EventsTable
-      rows={rows}
-      filterState={filterState}
-      setFilterState={setFilterState}
-      runQuery={runQuery}
-      columns={['id', 'delivered', 'created_at', 'tries']}
-      identifier={triggerName}
-      triggerType="data"
-    />
+    <div className="bootstrap-jail">
+      <EventsTable
+        rows={rows}
+        filterState={filterState}
+        setFilterState={setFilterState}
+        runQuery={runQuery}
+        columns={['id', 'delivered', 'created_at', 'tries']}
+        identifier={triggerName}
+        triggerType="data"
+      />
+    </div>
   );
 
   return (

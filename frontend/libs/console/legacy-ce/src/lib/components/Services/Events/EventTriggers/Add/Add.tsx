@@ -379,7 +379,7 @@ const Add: React.FC<Props> = props => {
 
   return (
     <Analytics name="AddEventTrigger" {...REDACT_EVERYTHING}>
-      <div className="w-full overflow-y-auto bg-gray-50">
+      <div className="w-full overflow-y-auto bg-gray-50 bootstrap-jail">
         <div className="max-w-6xl">
           <div className="pt-md pb-md clear-both pl-md">
             <Helmet
