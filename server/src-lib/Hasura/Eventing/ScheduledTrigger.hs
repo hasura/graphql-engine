@@ -473,7 +473,7 @@ processError eventId retryCtx decodedHeaders type' reqJson err = do
   let invocation = case err of
         HClient httpException ->
           let statusMaybe = getHTTPExceptionStatus httpException
-           in mkInvocation eventId statusMaybe decodedHeaders (SB.fromLBS $ J.encode httpException) [] reqJson
+           in mkInvocation eventId statusMaybe decodedHeaders (SB.fromLBS $ httpExceptionErrorEncoding httpException) [] reqJson
         HStatus errResp -> do
           let respPayload = hrsBody errResp
               respHeaders = hrsHeaders errResp

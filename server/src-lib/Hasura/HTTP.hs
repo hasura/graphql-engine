@@ -9,7 +9,12 @@ module Hasura.HTTP
     addHttpResponseHeaders,
     getHTTPExceptionStatus,
     serializeHTTPExceptionMessage,
+    ShowHeadersAndEnvVarInfo (..),
+    serializeHTTPExceptionWithErrorMessage,
     serializeHTTPExceptionMessageForDebugging,
+    encodeHTTPRequestJSON,
+    ShowErrorInfo (..),
+    getHttpExceptionJson,
     serializeServantClientErrorMessage,
     serializeServantClientErrorMessageForDebugging,
   )
@@ -111,8 +116,11 @@ serializeHTTPExceptionMessage (HttpException (HTTP.HttpExceptionRequest _ httpEx
     _ -> "unexpected"
 serializeHTTPExceptionMessage (HttpException (HTTP.InvalidUrlException url reason)) = T.pack $ "URL: " <> url <> " is invalid because " <> reason
 
-serializeHTTPExceptionMessageForDebugging :: HTTP.HttpException -> Text
-serializeHTTPExceptionMessageForDebugging = \case
+newtype ShowHeadersAndEnvVarInfo = ShowHeadersAndEnvVarInfo {unShowHeadersAndEnvVarInfo :: Bool}
+  deriving (Show, Eq)
+
+serializeHTTPExceptionWithErrorMessage :: ShowHeadersAndEnvVarInfo -> HTTP.HttpException -> Text
+serializeHTTPExceptionWithErrorMessage (ShowHeadersAndEnvVarInfo isShowHeaderAndEnvVarInfo) = \case
   HTTP.HttpExceptionRequest _ err -> case err of
     HTTP.StatusCodeException response _ -> "response status code indicated failure" <> (tshow . HTTP.statusCode $ HTTP.responseStatus response)
     HTTP.TooManyRedirects redirects -> "too many redirects: " <> tshow (length redirects) <> " redirects"
@@ -121,9 +129,17 @@ serializeHTTPExceptionMessageForDebugging = \case
     HTTP.ConnectionTimeout -> "connection timeout"
     HTTP.ConnectionFailure exn -> "connection failure: " <> serializeExceptionForDebugging exn
     HTTP.InvalidStatusLine statusLine -> "invalid status line: " <> fromUtf8 statusLine
-    HTTP.InvalidHeader header -> "invalid header: " <> fromUtf8 header
-    HTTP.InvalidRequestHeader requestHeader -> "invalid request header: " <> fromUtf8 requestHeader
-    HTTP.InternalException exn -> "internal error: " <> serializeExceptionForDebugging exn
+    HTTP.InvalidHeader header ->
+      if isShowHeaderAndEnvVarInfo
+        then "invalid header: " <> fromUtf8 header
+        else "invalid Header"
+    HTTP.InvalidRequestHeader requestHeader ->
+      if isShowHeaderAndEnvVarInfo
+        then "invalid request header: " <> fromUtf8 requestHeader
+        else "invalid request header"
+    HTTP.InternalException exn -> case fromException exn of
+      Just (Restricted.ConnectionRestricted _ _) -> "blocked connection to private IP address: " <> serializeExceptionForDebugging exn
+      Nothing -> "internal error: " <> serializeExceptionForDebugging exn
     HTTP.ProxyConnectException proxyHost port status -> "proxy connection to " <> fromUtf8 proxyHost <> ":" <> tshow port <> " returned response with status code that indicated failure: " <> tshow (HTTP.statusCode status)
     HTTP.NoResponseDataReceived -> "no response data received"
     HTTP.TlsNotSupported -> "TLS not supported"
@@ -133,12 +149,18 @@ serializeHTTPExceptionMessageForDebugging = \case
     HTTP.IncompleteHeaders -> "incomplete headers"
     HTTP.InvalidDestinationHost host -> "invalid destination host: " <> fromUtf8 host
     HTTP.HttpZlibException exn -> "HTTP zlib error: " <> serializeExceptionForDebugging exn
-    HTTP.InvalidProxyEnvironmentVariable name value -> "invalid proxy environment variable: " <> name <> "=" <> value
+    HTTP.InvalidProxyEnvironmentVariable name value ->
+      if isShowHeaderAndEnvVarInfo
+        then "invalid proxy environment variable: " <> name <> "=" <> value
+        else "invalid proxy environment variable: " <> name
     HTTP.ConnectionClosed -> "connection closed"
     HTTP.InvalidProxySettings err' -> "invalid proxy settings: " <> err'
   HTTP.InvalidUrlException url' reason -> "invalid url: " <> T.pack url' <> "; reason: " <> T.pack reason
   where
     fromUtf8 = TE.decodeUtf8With TE.lenientDecode
+
+serializeHTTPExceptionMessageForDebugging :: HTTP.HttpException -> Text
+serializeHTTPExceptionMessageForDebugging = serializeHTTPExceptionWithErrorMessage (ShowHeadersAndEnvVarInfo True)
 
 encodeHTTPRequestJSON :: HTTP.Request -> J.Value
 encodeHTTPRequestJSON request =
@@ -154,24 +176,37 @@ encodeHTTPRequestJSON request =
         ("responseTimeout", J.String $ tshow $ HTTP.responseTimeout request)
       ]
 
+newtype ShowErrorInfo = ShowErrorInfo {unShowErrorInfo :: Bool}
+  deriving (Show, Eq)
+
+-- this function excepts a boolean value (`ShowErrorInfo`) when True, exposes the errors associated with the HTTP
+-- Exceptions using `serializeHTTPExceptionWithErrorMessage` function.
+-- This function is used in event triggers, scheduled triggers and cron triggers where `ShowErrorInfo` is True
+getHttpExceptionJson :: ShowErrorInfo -> HttpException -> J.Value
+getHttpExceptionJson (ShowErrorInfo isShowHTTPErrorInfo) httpException =
+  case httpException of
+    (HttpException (HTTP.InvalidUrlException _ e)) ->
+      J.object
+        [ "type" J..= ("invalid_url" :: Text),
+          "message" J..= e
+        ]
+    (HttpException (HTTP.HttpExceptionRequest req _)) -> do
+      let statusMaybe = getHTTPExceptionStatus httpException
+          exceptionContent =
+            if isShowHTTPErrorInfo
+              then serializeHTTPExceptionWithErrorMessage (ShowHeadersAndEnvVarInfo False) (unHttpException httpException)
+              else serializeHTTPExceptionMessage httpException
+          reqJSON = encodeHTTPRequestJSON req
+      J.object $
+        [ "type" J..= ("http_exception" :: Text),
+          "message" J..= exceptionContent,
+          "request" J..= reqJSON
+        ]
+          <> maybe mempty (\status -> ["status" J..= status]) statusMaybe
+
+-- it will not show HTTP Exception error message info
 instance J.ToJSON HttpException where
-  toJSON httpException =
-    case httpException of
-      (HttpException (HTTP.InvalidUrlException _ e)) ->
-        J.object
-          [ "type" J..= ("invalid_url" :: Text),
-            "message" J..= e
-          ]
-      (HttpException (HTTP.HttpExceptionRequest req _)) ->
-        let statusMaybe = getHTTPExceptionStatus httpException
-            exceptionContent = serializeHTTPExceptionMessage httpException
-            reqJSON = encodeHTTPRequestJSON req
-         in J.object $
-              [ "type" J..= ("http_exception" :: Text),
-                "message" J..= exceptionContent,
-                "request" J..= reqJSON
-              ]
-                <> maybe mempty (\status -> ["status" J..= status]) statusMaybe
+  toJSON httpException = getHttpExceptionJson (ShowErrorInfo False) httpException
 
 data HttpResponse a = HttpResponse
   { _hrBody :: !a,

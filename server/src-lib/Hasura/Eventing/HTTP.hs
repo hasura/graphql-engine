@@ -11,6 +11,7 @@
 module Hasura.Eventing.HTTP
   ( HTTPErr (..),
     HTTPResp (..),
+    httpExceptionErrorEncoding,
     runHTTP,
     isNetworkError,
     isNetworkErrorHC,
@@ -45,11 +46,13 @@ where
 import Control.Exception (try)
 import Control.Lens (preview, set, view, (.~))
 import Data.Aeson qualified as J
+import Data.Aeson.Encoding qualified as JE
 import Data.Aeson.Key qualified as J
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Lens
 import Data.Aeson.TH
 import Data.ByteString qualified as BS
+import Data.ByteString.Lazy (ByteString)
 import Data.ByteString.Lazy qualified as LBS
 import Data.CaseInsensitive qualified as CI
 import Data.Either
@@ -59,7 +62,7 @@ import Data.SerializableBlob qualified as SB
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Text.Encoding.Error qualified as TE
-import Hasura.HTTP (HttpException (..), addDefaultHeaders)
+import Hasura.HTTP
 import Hasura.Logging
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
@@ -116,6 +119,11 @@ instance J.ToJSON (HTTPErr a) where
           [ "type" J..= k,
             "detail" J..= v
           ]
+
+-- similar to Aeson.encode function which uses `getHttpExceptionJson` function instead of ToJSON instance of
+-- HttpException
+httpExceptionErrorEncoding :: HttpException -> ByteString
+httpExceptionErrorEncoding = JE.encodingToLazyByteString . JE.value . (getHttpExceptionJson (ShowErrorInfo True))
 
 instance ToEngineLog (HTTPErr 'EventType) Hasura where
   toEngineLog err = (LevelError, eventTriggerLogType, J.toJSON err)

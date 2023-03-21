@@ -614,7 +614,7 @@ processError sourceConfig e retryConf reqHeaders ep maintenanceModeVersion err =
   let invocation = case err of
         HClient httpException ->
           let statusMaybe = getHTTPExceptionStatus httpException
-           in mkInvocation (eId e) ep statusMaybe reqHeaders (SB.fromLBS (J.encode httpException)) []
+           in mkInvocation (eId e) ep statusMaybe reqHeaders (SB.fromLBS (httpExceptionErrorEncoding httpException)) []
         HStatus errResp -> do
           let respPayload = hrsBody errResp
               respHeaders = hrsHeaders errResp
