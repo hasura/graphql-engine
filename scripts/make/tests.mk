@@ -134,12 +134,26 @@ test-integration-postgres: remove-tix-file
 ## test-logical-models: run all tests for the Logical Model feature
 test-logical-models:
 	cabal build exe:graphql-engine
-	docker compose up -d --wait postgres
+	docker compose up -d --wait postgres citus sqlserver-healthcheck
 	HSPEC_MATCH=LogicalModels make test-unit
 	HASURA_TEST_BACKEND_TYPE=Postgres \
 		HSPEC_MATCH=LogicalModels \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		cabal run api-tests:exe:api-tests
+	HASURA_TEST_BACKEND_TYPE=Citus \
+		HSPEC_MATCH=LogicalModels \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		cabal run api-tests:exe:api-tests
+	HASURA_TEST_BACKEND_TYPE=BigQuery \
+		HSPEC_MATCH=Metadata.LogicalModel \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		cabal run api-tests:exe:api-tests
+	HASURA_TEST_BACKEND_TYPE=SQLServer \
+		HSPEC_MATCH=Metadata.LogicalModel \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		cabal run api-tests:exe:api-tests
+
+
 
 .PHONY: py-tests
 ## py-tests: run the python-based test suite

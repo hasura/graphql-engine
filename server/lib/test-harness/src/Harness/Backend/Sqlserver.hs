@@ -156,11 +156,11 @@ createTable testEnvironment Schema.Table {tableName, tableColumns, tablePrimaryK
 
 scalarType :: HasCallStack => Schema.ScalarType -> Text
 scalarType = \case
-  Schema.TInt -> "INT"
-  Schema.TStr -> "NVARCHAR(127)"
-  Schema.TUTCTime -> "DATETIME"
-  Schema.TBool -> "BIT"
-  Schema.TGeography -> "GEOGRAPHY"
+  Schema.TInt -> "integer"
+  Schema.TStr -> "nvarchar(127)"
+  Schema.TUTCTime -> "timestamp"
+  Schema.TBool -> "bit"
+  Schema.TGeography -> "geography"
   Schema.TCustomType txt -> Schema.getBackendScalarType txt bstMssql
 
 mkColumn :: Schema.Column -> Text

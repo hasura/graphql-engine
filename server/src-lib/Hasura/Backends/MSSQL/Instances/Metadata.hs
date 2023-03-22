@@ -26,3 +26,4 @@ instance BackendMetadata 'MSSQL where
   buildComputedFieldBooleanExp _ _ _ _ _ _ =
     throw500 "Computed fields are not yet defined for MSSQL backends"
   supportsBeingRemoteRelationshipTarget _ = True
+  validateLogicalModel _ _ _ = pure () -- for now, all queries are valid

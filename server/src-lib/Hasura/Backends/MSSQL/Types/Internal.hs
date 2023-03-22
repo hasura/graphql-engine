@@ -95,6 +95,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     isNumType,
     mkMSSQLScalarTypeName,
     parseScalarValue,
+    parseScalarType,
     scalarTypeDBName,
     snakeCaseTableName,
     stringTypes,
@@ -603,6 +604,35 @@ mkMSSQLScalarTypeName = \case
             <> " in the GraphQL schema because its name is not a "
             <> "valid GraphQL identifier"
         )
+
+parseScalarType :: Text -> ScalarType
+parseScalarType = \case
+  "char" -> CharType
+  "numeric" -> NumericType
+  "decimal" -> DecimalType
+  "money" -> DecimalType
+  "smallmoney" -> DecimalType
+  "int" -> IntegerType
+  "smallint" -> SmallintType
+  "float" -> FloatType
+  "real" -> RealType
+  "date" -> DateType
+  "time" -> Ss_time2Type
+  "varchar" -> VarcharType
+  "nchar" -> WcharType
+  "nvarchar" -> WvarcharType
+  "ntext" -> WtextType
+  "timestamp" -> TimestampType
+  "text" -> TextType
+  "binary" -> BinaryType
+  "bigint" -> BigintType
+  "tinyint" -> TinyintType
+  "varbinary" -> VarbinaryType
+  "bit" -> BitType
+  "uniqueidentifier" -> GuidType
+  "geography" -> GeographyType
+  "geometry" -> GeometryType
+  t -> UnknownType t
 
 parseScalarValue :: ScalarType -> J.Value -> Either QErr Value
 parseScalarValue scalarType jValue = case scalarType of

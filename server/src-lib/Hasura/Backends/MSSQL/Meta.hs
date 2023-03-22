@@ -195,32 +195,3 @@ coalesceKeys = HM.elems . foldl' coalesce HM.empty
   where
     coalesce mapping fk@(ForeignKey constraint tableName _) = HM.insertWith combine (constraint, tableName) fk mapping
     combine oldFK newFK = oldFK {_fkColumnMapping = (NEHashMap.union `on` _fkColumnMapping) oldFK newFK}
-
-parseScalarType :: Text -> ScalarType
-parseScalarType = \case
-  "char" -> CharType
-  "numeric" -> NumericType
-  "decimal" -> DecimalType
-  "money" -> DecimalType
-  "smallmoney" -> DecimalType
-  "int" -> IntegerType
-  "smallint" -> SmallintType
-  "float" -> FloatType
-  "real" -> RealType
-  "date" -> DateType
-  "time" -> Ss_time2Type
-  "varchar" -> VarcharType
-  "nchar" -> WcharType
-  "nvarchar" -> WvarcharType
-  "ntext" -> WtextType
-  "timestamp" -> TimestampType
-  "text" -> TextType
-  "binary" -> BinaryType
-  "bigint" -> BigintType
-  "tinyint" -> TinyintType
-  "varbinary" -> VarbinaryType
-  "bit" -> BitType
-  "uniqueidentifier" -> GuidType
-  "geography" -> GeographyType
-  "geometry" -> GeometryType
-  t -> UnknownType t

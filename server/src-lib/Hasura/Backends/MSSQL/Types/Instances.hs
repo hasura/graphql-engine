@@ -166,8 +166,14 @@ instance ToTxt FunctionName where
            { parseJSON = genericParseJSON hasuraJSON }
 INSTANCE_CLUMP_3(Order)
 INSTANCE_CLUMP_3(NullsOrder)
-INSTANCE_CLUMP_3(ScalarType)
 INSTANCE_CLUMP_3(FieldName)
+
+instance ToJSON ScalarType where
+  toJSON scalarType = String $ scalarTypeDBName DataLengthUnspecified scalarType
+
+instance FromJSON ScalarType where
+  parseJSON (String s) = pure (parseScalarType s)
+  parseJSON _ = fail "expected a string"
 
 instance HasCodec ColumnName where
   codec = dimapCodec ColumnName columnNameText codec

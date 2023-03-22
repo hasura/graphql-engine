@@ -7,6 +7,7 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Postgres qualified as Postgres
+import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Quoter.Yaml.InterpolateYaml
@@ -43,6 +44,11 @@ spec = do
             (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
               { Fixture.setupTeardown = \(testEnv, _) ->
                   [ Citus.setupTablesAction schema testEnv
+                  ]
+              },
+            (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
+              { Fixture.setupTeardown = \(testEnv, _) ->
+                  [ Sqlserver.setupTablesAction schema testEnv
                   ]
               }
           ]
