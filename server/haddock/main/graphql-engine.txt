@@ -27614,6 +27614,8 @@ instance Hasura.Server.App.MonadMetadataApiAuthorization m => Hasura.Server.App.
 --   implementation of all its behaviour classes.
 module Hasura.App
 data ExitCode
+InvalidEnvironmentVariableOptionsError :: ExitCode
+InvalidDatabaseConnectionParamsError :: ExitCode
 AuthConfigurationError :: ExitCode
 DatabaseMigrationError :: ExitCode
 
@@ -27625,32 +27627,61 @@ MetadataCleanError :: ExitCode
 DowngradeProcessError :: ExitCode
 data ExitException
 ExitException :: !ExitCode -> !ByteString -> ExitException
+[eeCode] :: ExitException -> !ExitCode
+[eeMessage] :: ExitException -> !ByteString
 throwErrExit :: MonadIO m => forall a. ExitCode -> String -> m a
 throwErrJExit :: (ToJSON a, MonadIO m) => forall b. ExitCode -> a -> m b
+accessDeniedErrMsg :: Text
+printJSON :: (ToJSON a, MonadIO m) => a -> m ()
+mkPGLogger :: Logger Hasura -> PGLogger
+mkLoggers :: (MonadIO m, MonadBaseControl IO m) => HashSet (EngineLogType Hasura) -> LogLevel -> ManagedT m Loggers
+
+-- | Basic information required to connect to the metadata DB, and to the
+--   default Postgres DB if any.
+data BasicConnectionInfo
+BasicConnectionInfo :: ConnInfo -> Maybe PostgresConnConfiguration -> BasicConnectionInfo
+
+-- | metadata db connection info
+[bciMetadataConnInfo] :: BasicConnectionInfo -> ConnInfo
+
+-- | default postgres connection info, if any
+[bciDefaultPostgres] :: BasicConnectionInfo -> Maybe PostgresConnConfiguration
+
+-- | Only create the metadata connection info.
+--   
+--   Like <a>initBasicConnectionInfo</a>, it prioritizes
+--   <tt>--metadata-database-url</tt>, and falls back to
+--   <tt>--database-url</tt> otherwise.
+--   
+--   !!! This function throws a fatal error if the <tt>--database-url</tt>
+--   cannot be !!! resolved.
+initMetadataConnectionInfo :: MonadIO m => Environment -> Maybe String -> PostgresConnInfo (Maybe UrlConf) -> m ConnInfo
+
+-- | Create a <a>BasicConnectionInfo</a> based on the given options.
+--   
+--   The default postgres connection is only created when the
+--   <tt>--database-url</tt> option is given. If the
+--   <tt>--metadata-database-url</tt> isn't given, the
+--   <tt>--database-url</tt> will be used for the metadata connection.
+--   
+--   All arguments related to the default postgres connection are ignored
+--   if the <tt>--database-url</tt> is missing.
+--   
+--   !!! This function throws a fatal error if the <tt>--database-url</tt>
+--   cannot be !!! resolved.
+initBasicConnectionInfo :: MonadIO m => Environment -> Maybe String -> PostgresConnInfo (Maybe UrlConf) -> Maybe PostgresPoolSettings -> Bool -> TxIsolation -> m BasicConnectionInfo
+
+-- | Creates a <a>ConnInfo</a> from a <a>UrlConf</a> parameter.
+--   
+--   !!! throws a fatal error if the configuration is invalid
+resolvePostgresConnInfo :: MonadIO m => Environment -> UrlConf -> Maybe Int -> m ConnInfo
 
 -- | Parse cli arguments to graphql-engine executable.
 parseArgs :: EnabledLogTypes impl => Environment -> IO (HGEOptions (ServeOptions impl))
-printJSON :: (ToJSON a, MonadIO m) => a -> m ()
-printYaml :: (ToJSON a, MonadIO m) => a -> m ()
-mkPGLogger :: Logger Hasura -> PGLogger
-
--- | Context required for all graphql-engine CLI commands
-data GlobalCtx
-GlobalCtx :: !ConnInfo -> !(Maybe (UrlConf, ConnInfo), Maybe Int) -> GlobalCtx
-[_gcMetadataDbConnInfo] :: GlobalCtx -> !ConnInfo
-
--- | <ul>
---   <li>-database-url option, @<a>UrlConf</a> is required to construct
---   default source configuration and optional retries</li>
---   </ul>
-[_gcDefaultPostgresConnInfo] :: GlobalCtx -> !(Maybe (UrlConf, ConnInfo), Maybe Int)
-readTlsAllowlist :: AppStateRef impl -> IO [TlsAllow]
-initGlobalCtx :: MonadIO m => Environment -> Maybe String -> PostgresConnInfo (Maybe UrlConf) -> m GlobalCtx
 
 -- | An application with Postgres database as a metadata storage
 data PGMetadataStorageAppT m a
 runPGMetadataStorageAppT :: AppEnv -> PGMetadataStorageAppT m a -> m a
-resolvePostgresConnInfo :: MonadIO m => Environment -> UrlConf -> Maybe Int -> m ConnInfo
 
 -- | Core logic to fork a poller thread to update the JWK based on the
 --   expiry time specified in <tt>Expires</tt> header or
@@ -27661,8 +27692,7 @@ initLockedEventsCtx :: IO LockedEventsCtx
 
 -- | Initializes or migrates the catalog and returns the context required
 --   to start the server.
-initialiseContext :: (ForkableMonadIO m, MonadCatch m) => Environment -> GlobalCtx -> ServeOptions Hasura -> Maybe SubscriptionPostPollHook -> ServerMetrics -> PrometheusMetrics -> SamplingPolicy -> ManagedT m (AppStateRef Hasura, AppEnv)
-mkLoggers :: (MonadIO m, MonadBaseControl IO m) => HashSet (EngineLogType Hasura) -> LogLevel -> ManagedT m Loggers
+initialiseContext :: (ForkableMonadIO m, MonadCatch m) => Environment -> BasicConnectionInfo -> ServeOptions Hasura -> Maybe SubscriptionPostPollHook -> ServerMetrics -> PrometheusMetrics -> SamplingPolicy -> ManagedT m (AppStateRef Hasura, AppEnv)
 
 -- | helper function to initialize or migrate the <tt>hdb_catalog</tt>
 --   schema (used by pro as well)
@@ -27700,8 +27730,8 @@ runHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStatele
 --   constructed WAI application for testing purposes. See
 --   <a>runHGEServer</a> for documentation.
 mkHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication m, HttpLog m, HasAppEnv m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadExecutionLog m, MonadWSLog m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m, MonadTrace m, MonadGetApiTimeLimit m) => (AppStateRef impl -> SpockT m ()) -> AppStateRef impl -> Store EmptyMetrics -> ManagedT m Application
-accessDeniedErrMsg :: Text
 notifySchemaCacheSyncTx :: MetadataResourceVersion -> InstanceId -> CacheInvalidations -> TxE QErr ()
+readTlsAllowlist :: AppStateRef impl -> IO [TlsAllow]
 getCatalogStateTx :: TxE QErr CatalogState
 setCatalogStateTx :: CatalogStateType -> Value -> TxE QErr ()
 mkPgSourceResolver :: PGLogger -> SourceResolver ('Postgres 'Vanilla)
