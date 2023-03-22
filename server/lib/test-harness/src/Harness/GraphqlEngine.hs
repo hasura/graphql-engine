@@ -32,6 +32,8 @@ module Harness.GraphqlEngine
     -- ** Misc.
     setSource,
     setSources,
+    addDataConnectorAgent,
+    deleteDataConnectorAgent,
 
     -- * Server Setup
     startServerThread,
@@ -324,6 +326,29 @@ args:
     sources: *sourcesMetadata
     backend_configs: *backendConfig
   |]
+
+-- | Adds a data connector agent to the data connector backend config
+addDataConnectorAgent :: TestEnvironment -> String -> String -> IO ()
+addDataConnectorAgent testEnvironment name url =
+  postMetadata_
+    testEnvironment
+    [yaml|
+      type: dc_add_agent
+      args:
+        name: *name
+        url: *url
+    |]
+
+-- | Removes a data connector agent from the data connector backend config
+deleteDataConnectorAgent :: TestEnvironment -> String -> IO ()
+deleteDataConnectorAgent testEnvironment name =
+  postMetadata_
+    testEnvironment
+    [yaml|
+      type: dc_delete_agent
+      args:
+        name: *name
+    |]
 
 -------------------------------------------------------------------------------
 

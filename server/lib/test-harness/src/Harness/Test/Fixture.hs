@@ -406,12 +406,13 @@ type RHSFixture = (Value, Fixture ())
 -- Teardown is done in the reverse order.
 --
 -- The metadata is cleared befored each setup.
-combineFixtures :: LHSFixture -> RHSFixture -> Fixture (Maybe Server)
-combineFixtures lhs (tableName, rhs) =
+combineFixtures :: [TestEnvironment -> SetupAction] -> LHSFixture -> RHSFixture -> Fixture (Maybe Server)
+combineFixtures setupActions lhs (tableName, rhs) =
   (fixture $ Combine lhsName rhsName)
     { mkLocalTestEnvironment = lhsMkLocalTestEnvironment,
       setupTeardown = \(testEnvironment, localTestEnvironment) ->
         [SetupAction.clearMetadata testEnvironment]
+          <> ((\mkSetupAction -> mkSetupAction testEnvironment) <$> setupActions)
           <> rhsSetupTeardown (testEnvironment, ())
           <> lhsSetupTeardown (testEnvironment, localTestEnvironment),
       customOptions = combineOptions lhsOptions rhsOptions

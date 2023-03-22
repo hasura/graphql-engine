@@ -38,7 +38,7 @@ spec = do
   where
     lhsFixtures = [lhsPostgres, lhsRemoteServer]
     rhsFixtures = [rhsPostgres]
-    contexts = NE.fromList $ Fixture.combineFixtures <$> lhsFixtures <*> rhsFixtures
+    contexts = NE.fromList $ Fixture.combineFixtures [] <$> lhsFixtures <*> rhsFixtures
 
 --------------------------------------------------------------------------------
 

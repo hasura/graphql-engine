@@ -12,19 +12,23 @@
 module Test.Schema.RemoteRelationships.XToDBObjectRelationshipSpec (spec) where
 
 import Data.Aeson (Value)
+import Data.Aeson qualified as Aeson
 import Data.Char (isUpper, toLower)
 import Data.List.NonEmpty qualified as NE
 import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
 import Data.Morpheus.Document (gqlDocument)
 import Data.Morpheus.Types qualified as Morpheus
+import Data.Text qualified as Text
 import Data.Typeable (Typeable)
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
+import Harness.Backend.DataConnector.Sqlite qualified as Sqlite
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml.InterpolateYaml (interpolateYaml)
 import Harness.RemoteServer qualified as RemoteServer
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..))
@@ -34,12 +38,13 @@ import Harness.Test.TestResource (Managed)
 import Harness.TestEnvironment
   ( GlobalTestEnvironment,
     Server,
-    TestEnvironment,
+    TestEnvironment (uniqueTestId),
     focusFixtureLeft,
     focusFixtureRight,
     stopServer,
   )
 import Harness.Yaml (shouldReturnYaml)
+import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 import Test.Hspec (HasCallStack, SpecWith, describe, it)
 
@@ -49,45 +54,10 @@ import Test.Hspec (HasCallStack, SpecWith, describe, it)
 spec :: SpecWith GlobalTestEnvironment
 spec = Fixture.runWithLocalTestEnvironment contexts tests
   where
-    lhsFixtures = [lhsPostgres, lhsCockroach, lhsSQLServer, lhsCitus, lhsRemoteServer]
-    rhsFixtures = [rhsPostgres, rhsCockroach, rhsSQLServer, rhsCitus]
-    contexts = NE.fromList $ combine <$> lhsFixtures <*> rhsFixtures
-
--- | Combines a lhs and a rhs.
---
--- The rhs is set up first, then the lhs can create the remote relationship.
---
--- Teardown is done in the opposite order.
---
--- The metadata is cleared befored each setup.
-combine :: LHSFixture -> RHSFixture -> Fixture.Fixture (Maybe Server)
-combine lhs (tableName, rhs) =
-  Fixture.Fixture
-    { name = Fixture.Combine lhsName rhsName,
-      mkLocalTestEnvironment = lhsMkLocalTestEnvironment,
-      setupTeardown = \(testEnvironment, localTestEnvironment) ->
-        [ Fixture.SetupAction
-            { Fixture.setupAction = GraphqlEngine.clearMetadata testEnvironment,
-              Fixture.teardownAction = \_ -> GraphqlEngine.clearMetadata testEnvironment
-            }
-        ]
-          <> rhsSetupTeardown (testEnvironment, ())
-          <> lhsSetupTeardown (testEnvironment, localTestEnvironment),
-      customOptions =
-        Fixture.combineOptions lhsOptions rhsOptions
-    }
-  where
-    Fixture.Fixture
-      { name = lhsName,
-        mkLocalTestEnvironment = lhsMkLocalTestEnvironment,
-        setupTeardown = lhsSetupTeardown,
-        customOptions = lhsOptions
-      } = lhs tableName
-    Fixture.Fixture
-      { name = rhsName,
-        setupTeardown = rhsSetupTeardown,
-        customOptions = rhsOptions
-      } = rhs
+    lhsFixtures = [lhsPostgres, lhsCockroach, lhsSQLServer, lhsCitus, lhsSqlite, lhsRemoteServer]
+    rhsFixtures = [rhsPostgres, rhsCockroach, rhsSQLServer, rhsCitus, rhsSqlite]
+    contexts = NE.fromList $ Fixture.combineFixtures [setupSqliteAgentAction] <$> lhsFixtures <*> rhsFixtures
+    setupSqliteAgentAction testEnv = SetupAction.noTeardown (Sqlite.setupSqliteAgent testEnv)
 
 --------------------------------------------------------------------------------
 
@@ -134,6 +104,15 @@ lhsSQLServer tableName =
     { Fixture.mkLocalTestEnvironment = lhsSQLServerMkLocalTestEnvironment,
       Fixture.setupTeardown = \testEnv ->
         [ SetupAction.noTeardown (lhsSQLServerSetup tableName testEnv)
+        ]
+    }
+
+lhsSqlite :: LHSFixture
+lhsSqlite tableName =
+  (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
+    { Fixture.mkLocalTestEnvironment = \_ -> pure Nothing,
+      Fixture.setupTeardown = \testEnv ->
+        [ SetupAction (lhsSqliteSetup tableName testEnv) sqliteTeardown
         ]
     }
 
@@ -217,6 +196,18 @@ rhsSQLServer =
               ]
           }
    in (table, context)
+
+rhsSqlite :: RHSFixture
+rhsSqlite =
+  let sqliteRhsTableName = Aeson.toJSON ["main" :: Text, "album"]
+      context =
+        (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
+          { Fixture.mkLocalTestEnvironment = Fixture.noLocalTestEnvironment,
+            Fixture.setupTeardown = \testEnv ->
+              [ SetupAction (rhsSqliteSetup testEnv) sqliteTeardown
+              ]
+          }
+   in (sqliteRhsTableName, context)
 
 --------------------------------------------------------------------------------
 -- Schema
@@ -524,6 +515,69 @@ args:
         field_mapping:
           album_id: id
   |]
+
+--------------------------------------------------------------------------------
+-- LHS SQLite
+
+lhsSqliteSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO API.DatasetCloneName
+lhsSqliteSetup rhsTableName (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureLeft wholeTestEnvironment
+  let cloneName = API.DatasetCloneName $ tshow (uniqueTestId testEnvironment) <> "-lhs"
+  let lhsSourceName_ = "source"
+  let sourceName = Text.unpack lhsSourceName_
+  let sqliteLhsTableName = Aeson.toJSON ["main" :: Text, "track"]
+
+  (API.Config sourceConfig) <- Sqlite.createEmptyDatasetCloneSourceConfig cloneName
+
+  -- Add remote source
+  Schema.addSource lhsSourceName_ (Aeson.Object sourceConfig) testEnvironment
+
+  -- Setup tables
+  Sqlite.createTable sourceName testEnvironment track
+  Sqlite.insertTable sourceName testEnvironment track
+  Sqlite.trackTable sourceName testEnvironment track
+
+  -- Setup permissions and remote relationship
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+      type: bulk
+      args:
+      - type: sqlite_create_select_permission
+        args:
+          source: *sourceName
+          role: role1
+          table: *sqliteLhsTableName
+          permission:
+            columns: '*'
+            filter: {}
+      - type: sqlite_create_select_permission
+        args:
+          source: *sourceName
+          role: role2
+          table: *sqliteLhsTableName
+          permission:
+            columns: '*'
+            filter: {}
+      - type: sqlite_create_remote_relationship
+        args:
+          source: *sourceName
+          table: *sqliteLhsTableName
+          name: album
+          definition:
+            to_source:
+              source: target
+              table: *rhsTableName
+              relationship_type: object
+              field_mapping:
+                album_id: id
+    |]
+
+  pure cloneName
+
+sqliteTeardown :: Maybe API.DatasetCloneName -> IO ()
+sqliteTeardown cloneName = do
+  traverse_ Sqlite.deleteDatasetClone cloneName
 
 --------------------------------------------------------------------------------
 -- LHS Remote Server
@@ -960,6 +1014,61 @@ args:
   |]
 
 --------------------------------------------------------------------------------
+-- RHS SQLite
+
+rhsSqliteSetup :: (TestEnvironment, ()) -> IO API.DatasetCloneName
+rhsSqliteSetup (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureRight wholeTestEnvironment
+  let cloneName = API.DatasetCloneName $ tshow (uniqueTestId testEnvironment) <> "-rhs"
+  let rhsSourceName_ = "target"
+  let sourceName = Text.unpack rhsSourceName_
+  let sqliteRhsTableName = Aeson.toJSON ["main" :: Text, "album"]
+
+  (API.Config sourceConfig) <- Sqlite.createEmptyDatasetCloneSourceConfig cloneName
+
+  -- Add remote source
+  Schema.addSource rhsSourceName_ (Aeson.Object sourceConfig) testEnvironment
+
+  -- Setup tables
+  Sqlite.createTable sourceName testEnvironment album
+  Sqlite.insertTable sourceName testEnvironment album
+  Sqlite.trackTable sourceName testEnvironment album
+
+  -- Setup permissions
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+      type: bulk
+      args:
+      - type: sqlite_create_select_permission
+        args:
+          source: *sourceName
+          role: role1
+          table: *sqliteRhsTableName
+          permission:
+            columns:
+              - title
+              - artist_id
+            filter:
+              artist_id:
+                _eq: x-hasura-artist-id
+      - type: sqlite_create_select_permission
+        args:
+          source: *sourceName
+          role: role2
+          table: *sqliteRhsTableName
+          permission:
+            columns: [id, title, artist_id]
+            filter:
+              artist_id:
+                _eq: x-hasura-artist-id
+            limit: 1
+            allow_aggregations: true
+    |]
+
+  pure cloneName
+
+--------------------------------------------------------------------------------
 -- Tests
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
@@ -973,10 +1082,11 @@ executionTests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
 executionTests opts = describe "execution" $ do
   -- fetches the relationship data
   it "related-data" $ \(testEnvironment, _) -> do
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
     let query =
           [graphql|
           query {
-            track: hasura_track(where: {title: {_eq: "track1_album1"}}) {
+            track: #{lhsSchema}_track(where: {title: {_eq: "track1_album1"}}) {
               title
               album {
                 title
@@ -999,10 +1109,11 @@ executionTests opts = describe "execution" $ do
 
   -- when any of the join columns are null, the relationship should be null
   it "related-data-null" $ \(testEnvironment, _) -> do
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
     let query =
           [graphql|
           query {
-            track: hasura_track(where: {title: {_eq: "track_no_album"}}) {
+            track: #{lhsSchema}_track(where: {title: {_eq: "track_no_album"}}) {
               title
               album {
                 title
@@ -1024,10 +1135,11 @@ executionTests opts = describe "execution" $ do
 
   -- when the lhs response has both null and non-null values for join columns
   it "related-data-non-null-and-null" $ \(testEnvironment, _) -> do
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
     let query =
           [graphql|
           query {
-            track: hasura_track(
+            track: #{lhsSchema}_track(
               where: {
                 _or: [
                   {title: {_eq: "track1_album1"}},
@@ -1066,10 +1178,11 @@ permissionTests opts = describe "permission" $ do
 
   -- only the allowed rows on the target table are queryable
   it "only-allowed-rows" $ \(testEnvironment, _) -> do
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
     let query =
           [graphql|
           query {
-            track: hasura_track(
+            track: #{lhsSchema}_track(
               order_by: [{id: asc}]
             ) {
               title
@@ -1114,15 +1227,17 @@ permissionTests opts = describe "permission" $ do
   -- 1. the type 'hasura_album' has only 'artist_id' and 'title', the allowed columns
   -- 2. the album field in 'hasura_track' type is of type 'hasura_album'
   it "only-allowed-columns" $ \(testEnvironment, _) -> do
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
+    let rhsSchema = Schema.getSchemaName $ focusFixtureRight testEnvironment
     let query =
           [graphql|
           query {
-            album_fields: __type(name: "hasura_album") {
+            album_fields: __type(name: "#{rhsSchema}_album") {
               fields {
                 name
               }
             }
-            track: hasura_track(where: {title: {_eq: "track1_album1"}}) {
+            track: #{lhsSchema}_track(where: {title: {_eq: "track1_album1"}}) {
               title
               album {
                 __typename
@@ -1131,7 +1246,7 @@ permissionTests opts = describe "permission" $ do
           }
           |]
         expectedResponse =
-          [yaml|
+          [interpolateYaml|
           data:
             album_fields:
               fields:
@@ -1140,7 +1255,7 @@ permissionTests opts = describe "permission" $ do
             track:
             - title: track1_album1
               album:
-                __typename: hasura_album
+                __typename: #{rhsSchema}_album
           |]
     shouldReturnYaml
       opts
@@ -1154,20 +1269,21 @@ schemaTests opts =
   -- 1. track's where clause does not have 'album' field
   -- 2. track's order_by clause does nat have 'album' field
   it "graphql-schema" $ \(testEnvironment, _) -> do
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
     let query =
           [graphql|
           query {
-            track_fields: __type(name: "hasura_track") {
+            track_fields: __type(name: "#{lhsSchema}_track") {
               fields {
                 name
               }
             }
-            track_where_exp_fields: __type(name: "hasura_track_bool_exp") {
+            track_where_exp_fields: __type(name: "#{lhsSchema}_track_bool_exp") {
               inputFields {
                 name
               }
             }
-            track_order_by_exp_fields: __type(name: "hasura_track_order_by") {
+            track_order_by_exp_fields: __type(name: "#{lhsSchema}_track_order_by") {
               inputFields {
                 name
               }
