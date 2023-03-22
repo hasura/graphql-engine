@@ -66,7 +66,6 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Data.Time.Clock
-import Data.Time.Clock qualified as Time
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Base.Error
 import Hasura.Eventing.Common
@@ -163,7 +162,7 @@ data EventPayload (b :: BackendType) = EventPayload
     epTrigger :: TriggerMetadata,
     epEvent :: J.Value,
     epDeliveryInfo :: DeliveryInfo,
-    epCreatedAt :: Time.UTCTime
+    epCreatedAt :: UTCTime
   }
   deriving (Generic)
 

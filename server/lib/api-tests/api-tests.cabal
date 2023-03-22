@@ -150,6 +150,7 @@ library
     Test.EventTriggers.PG.EventTriggersClearMetadataSpec
     Test.EventTriggers.PG.EventTriggersRunSQLSpec
     Test.EventTriggers.PG.EventTriggersUniqueNameSpec
+    Test.EventTriggers.PG.EventTriggersCreatedAtUTCSpec
     Test.EventTriggers.PG.EventTriggersUntrackTableCleanupSpec
     Test.Harness.Quoter.YamlSpec
     Test.HealthCheckSpec

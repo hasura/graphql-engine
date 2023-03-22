@@ -497,9 +497,6 @@ deriving instance Backend b => Show (Event b)
 
 deriving instance Backend b => Eq (Event b)
 
-instance Backend b => FromJSON (Event b) where
-  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
-
 -- | The event payload processed by 'processEvent'
 data EventWithSource (b :: BackendType) = EventWithSource
   { _ewsEvent :: Event b,
