@@ -9,32 +9,39 @@
 -- of the engine: the base application monad and the implementation of all its
 -- behaviour classes.
 module Hasura.App
-  ( ExitCode (AuthConfigurationError, DatabaseMigrationError, DowngradeProcessError, MetadataCleanError, MetadataExportError, SchemaCacheInitError),
-    ExitException (ExitException),
-    GlobalCtx (..),
+  ( -- * top-level error handling
+    ExitCode (..),
+    ExitException (..),
+    throwErrExit,
+    throwErrJExit,
+    accessDeniedErrMsg,
+
+    -- * printing helpers
+    printJSON,
+
+    -- * logging
+    mkLoggers,
+    mkPGLogger,
+
+    -- * basic connection info
+    BasicConnectionInfo (..),
+    initMetadataConnectionInfo,
+    initBasicConnectionInfo,
+    resolvePostgresConnInfo,
     AppContext (..),
     PGMetadataStorageAppT,
     runPGMetadataStorageAppT,
-    accessDeniedErrMsg,
     flushLogger,
     getCatalogStateTx,
-    initGlobalCtx,
     updateJwkCtxThread,
     initialiseContext,
     initSubscriptionsState,
     initLockedEventsCtx,
     initSQLGenCtx,
     migrateCatalogSchema,
-    mkLoggers,
-    mkPGLogger,
+    readTlsAllowlist,
     notifySchemaCacheSyncTx,
     parseArgs,
-    throwErrExit,
-    throwErrJExit,
-    printJSON,
-    printYaml,
-    readTlsAllowlist,
-    resolvePostgresConnInfo,
     runHGEServer,
     setCatalogStateTx,
 
@@ -74,7 +81,6 @@ import Data.Set.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Time.Clock (UTCTime)
 import Data.Time.Clock qualified as Clock
-import Data.Yaml qualified as Y
 import Database.MSSQL.Pool qualified as MSPool
 import Database.PG.Query qualified as PG
 import Database.PG.Query qualified as Q
@@ -168,6 +174,9 @@ import System.Metrics.Gauge qualified as EKG.Gauge
 import Text.Mustache.Compile qualified as M
 import Web.Spock.Core qualified as Spock
 
+--------------------------------------------------------------------------------
+-- Error handling (move to another module!)
+
 data ExitCode
   = -- these are used during server initialization:
     InvalidEnvironmentVariableOptionsError
@@ -196,6 +205,153 @@ throwErrExit reason = liftIO . throwIO . ExitException reason . BC.pack
 throwErrJExit :: (A.ToJSON a, MonadIO m) => forall b. ExitCode -> a -> m b
 throwErrJExit reason = liftIO . throwIO . ExitException reason . BLC.toStrict . A.encode
 
+accessDeniedErrMsg :: Text
+accessDeniedErrMsg = "restricted access : admin only"
+
+--------------------------------------------------------------------------------
+-- Printing helpers (move to another module!)
+
+printJSON :: (A.ToJSON a, MonadIO m) => a -> m ()
+printJSON = liftIO . BLC.putStrLn . A.encode
+
+--------------------------------------------------------------------------------
+-- Logging
+
+mkPGLogger :: Logger Hasura -> PG.PGLogger
+mkPGLogger (Logger logger) (PG.PLERetryMsg msg) = logger $ PGLog LevelWarn msg
+
+mkLoggers ::
+  (MonadIO m, MonadBaseControl IO m) =>
+  HashSet (EngineLogType Hasura) ->
+  LogLevel ->
+  ManagedT m Loggers
+mkLoggers enabledLogs logLevel = do
+  loggerCtx <- mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs
+  let logger = mkLogger loggerCtx
+      pgLogger = mkPGLogger logger
+  pure $ Loggers loggerCtx logger pgLogger
+
+--------------------------------------------------------------------------------
+-- Basic connection info
+
+-- | Basic information required to connect to the metadata DB, and to the
+-- default Postgres DB if any.
+data BasicConnectionInfo = BasicConnectionInfo
+  { -- | metadata db connection info
+    bciMetadataConnInfo :: PG.ConnInfo,
+    -- | default postgres connection info, if any
+    bciDefaultPostgres :: Maybe PostgresConnConfiguration
+  }
+
+-- | Only create the metadata connection info.
+--
+-- Like 'initBasicConnectionInfo', it prioritizes @--metadata-database-url@, and
+-- falls back to @--database-url@ otherwise.
+--
+-- !!! This function throws a fatal error if the @--database-url@ cannot be
+-- !!! resolved.
+initMetadataConnectionInfo ::
+  (MonadIO m) =>
+  Env.Environment ->
+  -- | metadata DB URL (--metadata-database-url)
+  Maybe String ->
+  -- | user's DB URL (--database-url)
+  PostgresConnInfo (Maybe UrlConf) ->
+  m PG.ConnInfo
+initMetadataConnectionInfo env metadataDbURL dbURL =
+  fmap bciMetadataConnInfo $
+    initBasicConnectionInfo
+      env
+      metadataDbURL
+      dbURL
+      Nothing -- ignored
+      False -- ignored
+      PG.ReadCommitted -- ignored
+
+-- | Create a 'BasicConnectionInfo' based on the given options.
+--
+-- The default postgres connection is only created when the @--database-url@
+-- option is given. If the @--metadata-database-url@ isn't given, the
+-- @--database-url@ will be used for the metadata connection.
+--
+-- All arguments related to the default postgres connection are ignored if the
+-- @--database-url@ is missing.
+--
+-- !!! This function throws a fatal error if the @--database-url@ cannot be
+-- !!! resolved.
+initBasicConnectionInfo ::
+  (MonadIO m) =>
+  Env.Environment ->
+  -- | metadata DB URL (--metadata-database-url)
+  Maybe String ->
+  -- | user's DB URL (--database-url)
+  PostgresConnInfo (Maybe UrlConf) ->
+  -- | pool settings of the default PG connection
+  Maybe PostgresPoolSettings ->
+  -- | whether the default PG config should use prepared statements
+  Bool ->
+  -- | default transaction isolation level
+  PG.TxIsolation ->
+  m BasicConnectionInfo
+initBasicConnectionInfo
+  env
+  metadataDbUrl
+  (PostgresConnInfo dbUrlConf maybeRetries)
+  poolSettings
+  usePreparedStatements
+  isolationLevel =
+    case (metadataDbUrl, dbUrlConf) of
+      (Nothing, Nothing) ->
+        throwErrExit
+          InvalidDatabaseConnectionParamsError
+          "Fatal Error: Either of --metadata-database-url or --database-url option expected"
+      -- If no metadata storage specified consider use default database as
+      -- metadata storage
+      (Nothing, Just srcURL) -> do
+        srcConnInfo <- resolvePostgresConnInfo env srcURL maybeRetries
+        pure $ BasicConnectionInfo srcConnInfo (Just $ mkSourceConfig srcURL)
+      (Just mdURL, Nothing) ->
+        pure $ BasicConnectionInfo (mkConnInfoFromMDB mdURL) Nothing
+      (Just mdURL, Just srcURL) -> do
+        _srcConnInfo <- resolvePostgresConnInfo env srcURL maybeRetries
+        pure $ BasicConnectionInfo (mkConnInfoFromMDB mdURL) (Just $ mkSourceConfig srcURL)
+    where
+      mkConnInfoFromMDB mdbURL =
+        PG.ConnInfo
+          { PG.ciRetries = fromMaybe 1 maybeRetries,
+            PG.ciDetails = PG.CDDatabaseURI $ txtToBs $ T.pack mdbURL
+          }
+      mkSourceConfig srcURL =
+        PostgresConnConfiguration
+          { _pccConnectionInfo =
+              PostgresSourceConnInfo
+                { _psciDatabaseUrl = srcURL,
+                  _psciPoolSettings = poolSettings,
+                  _psciUsePreparedStatements = usePreparedStatements,
+                  _psciIsolationLevel = isolationLevel,
+                  _psciSslConfiguration = Nothing
+                },
+            _pccReadReplicas = Nothing,
+            _pccExtensionsSchema = defaultPostgresExtensionsSchema,
+            _pccConnectionTemplate = Nothing,
+            _pccConnectionSet = mempty
+          }
+
+-- | Creates a 'PG.ConnInfo' from a 'UrlConf' parameter.
+--
+-- !!! throws a fatal error if the configuration is invalid
+resolvePostgresConnInfo ::
+  (MonadIO m) =>
+  Env.Environment ->
+  UrlConf ->
+  Maybe Int ->
+  m PG.ConnInfo
+resolvePostgresConnInfo env dbUrlConf (fromMaybe 1 -> retries) = do
+  dbUrlText <-
+    resolveUrlConf env dbUrlConf `onLeft` \err ->
+      liftIO (throwErrJExit InvalidDatabaseConnectionParamsError err)
+  pure $ PG.ConnInfo retries $ PG.CDDatabaseURI $ txtToBs dbUrlText
+
 --------------------------------------------------------------------------------
 -- TODO(SOLOMON): Move Into `Hasura.Server.Init`. Unable to do so
 -- currently due `throwErrExit`.
@@ -214,69 +370,6 @@ parseArgs env = do
             <> header "Hasura GraphQL Engine: Blazing fast, instant realtime GraphQL APIs on your DB with fine grained access control, also trigger webhooks on database events."
             <> footerDoc (Just mainCmdFooter)
         )
-
---------------------------------------------------------------------------------
-
-printJSON :: (A.ToJSON a, MonadIO m) => a -> m ()
-printJSON = liftIO . BLC.putStrLn . A.encode
-
-printYaml :: (A.ToJSON a, MonadIO m) => a -> m ()
-printYaml = liftIO . BC.putStrLn . Y.encode
-
-mkPGLogger :: Logger Hasura -> PG.PGLogger
-mkPGLogger (Logger logger) (PG.PLERetryMsg msg) =
-  logger $ PGLog LevelWarn msg
-
--- | Context required for all graphql-engine CLI commands
-data GlobalCtx = GlobalCtx
-  { _gcMetadataDbConnInfo :: !PG.ConnInfo,
-    -- | --database-url option, @'UrlConf' is required to construct default source configuration
-    -- and optional retries
-    _gcDefaultPostgresConnInfo :: !(Maybe (UrlConf, PG.ConnInfo), Maybe Int)
-  }
-
-readTlsAllowlist :: AppStateRef impl -> IO [TlsAllow]
-readTlsAllowlist appStateRef = do
-  schemaCache <- getSchemaCache appStateRef
-  pure $ scTlsAllowlist schemaCache
-
-initGlobalCtx ::
-  (MonadIO m) =>
-  Env.Environment ->
-  -- | the metadata DB URL
-  Maybe String ->
-  -- | the user's DB URL
-  PostgresConnInfo (Maybe UrlConf) ->
-  m GlobalCtx
-initGlobalCtx env metadataDbUrl defaultPgConnInfo = do
-  let PostgresConnInfo dbUrlConf maybeRetries = defaultPgConnInfo
-      mkConnInfoFromSource dbUrl = do
-        resolvePostgresConnInfo env dbUrl maybeRetries
-
-      mkConnInfoFromMDb mdbUrl =
-        let retries = fromMaybe 1 maybeRetries
-         in (PG.ConnInfo retries . PG.CDDatabaseURI . txtToBs . T.pack) mdbUrl
-
-      mkGlobalCtx mdbConnInfo sourceConnInfo =
-        pure $ GlobalCtx mdbConnInfo (sourceConnInfo, maybeRetries)
-
-  case (metadataDbUrl, dbUrlConf) of
-    (Nothing, Nothing) ->
-      throwErrExit
-        InvalidDatabaseConnectionParamsError
-        "Fatal Error: Either of --metadata-database-url or --database-url option expected"
-    -- If no metadata storage specified consider use default database as
-    -- metadata storage
-    (Nothing, Just dbUrl) -> do
-      connInfo <- mkConnInfoFromSource dbUrl
-      mkGlobalCtx connInfo $ Just (dbUrl, connInfo)
-    (Just mdUrl, Nothing) -> do
-      let mdConnInfo = mkConnInfoFromMDb mdUrl
-      mkGlobalCtx mdConnInfo Nothing
-    (Just mdUrl, Just dbUrl) -> do
-      srcConnInfo <- mkConnInfoFromSource dbUrl
-      let mdConnInfo = mkConnInfoFromMDb mdUrl
-      mkGlobalCtx mdConnInfo (Just (dbUrl, srcConnInfo))
 
 -- | An application with Postgres database as a metadata storage
 newtype PGMetadataStorageAppT m a = PGMetadataStorageAppT (ReaderT AppEnv (TraceT m) a)
@@ -312,16 +405,6 @@ instance Monad m => ProvidesNetwork (PGMetadataStorageAppT m) where
 runPGMetadataStorageAppT :: AppEnv -> PGMetadataStorageAppT m a -> m a
 runPGMetadataStorageAppT c (PGMetadataStorageAppT a) = ignoreTraceT $ runReaderT a c
 
-resolvePostgresConnInfo ::
-  (MonadIO m) => Env.Environment -> UrlConf -> Maybe Int -> m PG.ConnInfo
-resolvePostgresConnInfo env dbUrlConf maybeRetries = do
-  dbUrlText <-
-    runExcept (resolveUrlConf env dbUrlConf) `onLeft` \err ->
-      liftIO (throwErrJExit InvalidDatabaseConnectionParamsError err)
-  pure $ PG.ConnInfo retries $ PG.CDDatabaseURI $ txtToBs dbUrlText
-  where
-    retries = fromMaybe 1 maybeRetries
-
 -- | Core logic to fork a poller thread to update the JWK based on the
 -- expiry time specified in @Expires@ header or @Cache-Control@ header
 updateJwkCtxThread ::
@@ -350,14 +433,14 @@ initLockedEventsCtx = LockedEventsCtx <$> STM.newTVarIO mempty <*> STM.newTVarIO
 initialiseContext ::
   (C.ForkableMonadIO m, MonadCatch m) =>
   Env.Environment ->
-  GlobalCtx ->
+  BasicConnectionInfo ->
   ServeOptions Hasura ->
   Maybe ES.SubscriptionPostPollHook ->
   ServerMetrics ->
   PrometheusMetrics ->
   SamplingPolicy ->
   ManagedT m (AppStateRef Hasura, AppEnv)
-initialiseContext env GlobalCtx {..} serveOptions@ServeOptions {..} liveQueryHook serverMetrics prometheusMetrics traceSamplingPolicy = do
+initialiseContext env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liveQueryHook serverMetrics prometheusMetrics traceSamplingPolicy = do
   instanceId <- liftIO generateInstanceId
   latch <- liftIO newShutdownLatch
   loggers@(Loggers loggerCtx logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
@@ -373,28 +456,15 @@ initialiseContext env GlobalCtx {..} serveOptions@ServeOptions {..} liveQueryHoo
   -- log serve options
   unLogger logger $ serveOptsToLog serveOptions
 
-  -- log postgres connection info
-  unLogger logger $ connInfoToLog _gcMetadataDbConnInfo
+  -- log metadata connection info
+  unLogger logger $ connInfoToLog bciMetadataConnInfo
 
   metadataDbPool <-
     allocate
-      (liftIO $ PG.initPGPool _gcMetadataDbConnInfo soConnParams pgLogger)
+      (liftIO $ PG.initPGPool bciMetadataConnInfo soConnParams pgLogger)
       (liftIO . PG.destroyPGPool)
 
-  let maybeDefaultSourceConfig =
-        fst _gcDefaultPostgresConnInfo <&> \(dbUrlConf, _) ->
-          let connSettings =
-                PostgresPoolSettings
-                  { _ppsMaxConnections = Just $ Q.cpConns soConnParams,
-                    _ppsTotalMaxConnections = Nothing,
-                    _ppsIdleTimeout = Just $ Q.cpIdleTime soConnParams,
-                    _ppsRetries = snd _gcDefaultPostgresConnInfo <|> Just 1,
-                    _ppsPoolTimeout = PG.cpTimeout soConnParams,
-                    _ppsConnectionLifetime = PG.cpMbLifetime soConnParams
-                  }
-              sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings) (PG.cpAllowPrepare soConnParams) soTxIso Nothing
-           in PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema Nothing mempty
-      sqlGenCtx = initSQLGenCtx soExperimentalFeatures soStringifyNum soDangerousBooleanCollapse
+  let sqlGenCtx = initSQLGenCtx soExperimentalFeatures soStringifyNum soDangerousBooleanCollapse
       checkFeatureFlag' = CheckFeatureFlag $ checkFeatureFlag env
       serverConfigCtx =
         ServerConfigCtx
@@ -410,13 +480,14 @@ initialiseContext env GlobalCtx {..} serveOptions@ServeOptions {..} liveQueryHoo
           checkFeatureFlag'
           soApolloFederationStatus
 
+  -- Migrate the catalog and build the schema cache
   (rebuildableSchemaCache, initialHttpManager) <-
     lift . flip onException (flushLogger loggerCtx) $
       migrateCatalogSchema
         env
         logger
         metadataDbPool
-        maybeDefaultSourceConfig
+        bciDefaultPostgres
         mempty
         serverConfigCtx
         (mkPgSourceResolver pgLogger)
@@ -478,17 +549,6 @@ initialiseContext env GlobalCtx {..} serveOptions@ServeOptions {..} liveQueryHoo
             appEnvSchemaPollInterval = soSchemaPollInterval
           }
   pure (appStateRef, appEnv)
-
-mkLoggers ::
-  (MonadIO m, MonadBaseControl IO m) =>
-  HashSet (EngineLogType Hasura) ->
-  LogLevel ->
-  ManagedT m Loggers
-mkLoggers enabledLogs logLevel = do
-  loggerCtx <- mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs
-  let logger = mkLogger loggerCtx
-      pgLogger = mkPGLogger logger
-  return $ Loggers loggerCtx logger pgLogger
 
 -- | helper function to initialize or migrate the @hdb_catalog@ schema (used by pro as well)
 migrateCatalogSchema ::
@@ -1073,10 +1133,6 @@ instance (MonadIO m, MonadBaseControl IO m) => UserAuthentication (PGMetadataSto
       (a, b, c) <- getUserInfoWithExpTime logger manager headers authMode reqs
       pure $ (a, b, c, ExtraUserInfo Nothing)
 
-accessDeniedErrMsg :: Text
-accessDeniedErrMsg =
-  "restricted access : admin only"
-
 instance (Monad m) => MonadMetadataApiAuthorization (PGMetadataStorageAppT m) where
   authorizeV1QueryApi query handlerCtx = runExceptT do
     let currRole = _uiRole $ hcUser handlerCtx
@@ -1166,6 +1222,11 @@ notifySchemaCacheSyncTx (MetadataResourceVersion resourceVersion) instanceId inv
       (PG.ViaJSON invalidations, resourceVersion, instanceId)
       True
   pure ()
+
+readTlsAllowlist :: AppStateRef impl -> IO [TlsAllow]
+readTlsAllowlist appStateRef = do
+  schemaCache <- getSchemaCache appStateRef
+  pure $ scTlsAllowlist schemaCache
 
 getCatalogStateTx :: PG.TxE QErr CatalogState
 getCatalogStateTx =

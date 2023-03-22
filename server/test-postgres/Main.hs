@@ -15,8 +15,9 @@ import Data.Time.Clock (getCurrentTime)
 import Data.URL.Template
 import Database.PG.Query qualified as PG
 import Hasura.App
-  ( PGMetadataStorageAppT,
-    initGlobalCtx,
+  ( BasicConnectionInfo (..),
+    PGMetadataStorageAppT,
+    initMetadataConnectionInfo,
     initialiseContext,
     mkMSSQLSourceResolver,
     mkPgSourceResolver,
@@ -88,7 +89,8 @@ main = do
 
       setupCacheRef = do
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-        globalCtx <- initGlobalCtx envMap metadataDbUrl rci
+        metadataConnectionInfo <- initMetadataConnectionInfo envMap metadataDbUrl rci
+        let globalCtx = BasicConnectionInfo metadataConnectionInfo Nothing
         (_, serverMetrics) <-
           liftIO $ do
             store <- EKG.newStore @TestMetricsSpec
@@ -137,6 +139,7 @@ main = do
                 >>> runPGMetadataStorageAppT appEnv
                 >>> flip onLeftM printErrJExit
 
+        -- why are we building the schema cache here? it's already built in initialiseContext
         (metadata, schemaCache) <- run do
           metadata <-
             snd

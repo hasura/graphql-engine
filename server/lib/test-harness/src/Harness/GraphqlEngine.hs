@@ -393,7 +393,8 @@ runApp serveOptions = do
       metadataDbUrl = Just Constants.postgresqlMetadataConnectionString
   env <- Env.getEnvironment
   initTime <- liftIO getCurrentTime
-  globalCtx <- App.initGlobalCtx env metadataDbUrl rci
+  metadataConnectionInfo <- App.initMetadataConnectionInfo env metadataDbUrl rci
+  let defaultConnInfo = App.BasicConnectionInfo metadataConnectionInfo Nothing
   (ekgStore, serverMetrics) <-
     liftIO $ do
       store <- EKG.newStore @TestMetricsSpec
@@ -401,7 +402,7 @@ runApp serveOptions = do
         liftIO $ createServerMetrics $ EKG.subset ServerSubset store
       pure (EKG.subset EKG.emptyOf store, serverMetrics)
   prometheusMetrics <- makeDummyPrometheusMetrics
-  let managedServerCtx = App.initialiseContext env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways
+  let managedServerCtx = App.initialiseContext env defaultConnInfo serveOptions Nothing serverMetrics prometheusMetrics sampleAlways
   runManagedT managedServerCtx \(appCtx, appEnv) ->
     App.runPGMetadataStorageAppT appEnv $
       lowerManagedT $

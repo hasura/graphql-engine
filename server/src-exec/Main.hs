@@ -59,8 +59,24 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = ignoreTraceT do
   initTime <- liftIO getCurrentTime
 
   case hgeCmd of
-    HCServe serveOptions -> do
-      globalCtx@GlobalCtx {} <- initGlobalCtx env metadataDbUrl rci
+    HCServe serveOptions@ServeOptions {..} -> do
+      let poolSettings =
+            PostgresPoolSettings
+              { _ppsMaxConnections = Just $ PG.cpConns soConnParams,
+                _ppsTotalMaxConnections = Nothing,
+                _ppsIdleTimeout = Just $ PG.cpIdleTime soConnParams,
+                _ppsRetries = _pciRetries rci <|> Just 1,
+                _ppsPoolTimeout = PG.cpTimeout soConnParams,
+                _ppsConnectionLifetime = PG.cpMbLifetime soConnParams
+              }
+      basicConnectionInfo <-
+        initBasicConnectionInfo
+          env
+          metadataDbUrl
+          rci
+          (Just poolSettings)
+          (PG.cpAllowPrepare soConnParams)
+          soTxIso
       (ekgStore, serverMetrics) <- liftIO $ do
         store <- EKG.newStore @AppMetricsSpec
         void $ EKG.register (EKG.subset GcSubset store) EKG.registerGcMetrics
@@ -79,7 +95,7 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = ignoreTraceT do
       -- It'd be nice if we didn't have to call runManagedT twice here, but
       -- there is a data dependency problem since the call to runPGMetadataStorageApp
       -- below depends on appCtx.
-      runManagedT (initialiseContext env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways) $ \(appStateRef, appEnv) -> do
+      runManagedT (initialiseContext env basicConnectionInfo serveOptions Nothing serverMetrics prometheusMetrics sampleAlways) $ \(appStateRef, appEnv) -> do
         -- Catches the SIGTERM signal and initiates a graceful shutdown.
         -- Graceful shutdown for regular HTTP requests is already implemented in
         -- Warp, and is triggered by invoking the 'closeSocket' callback.
@@ -101,28 +117,18 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = ignoreTraceT do
           lowerManagedT $
             runHGEServer (const $ pure ()) appStateRef initTime Nothing ekgStore
     HCExport -> do
-      GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci
-      res <- runTxWithMinimalPool _gcMetadataDbConnInfo fetchMetadataFromCatalog
+      metadataConnection <- initMetadataConnectionInfo env metadataDbUrl rci
+      res <- runTxWithMinimalPool metadataConnection fetchMetadataFromCatalog
       either (throwErrJExit MetadataExportError) printJSON res
     HCClean -> do
-      GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci
-      res <- runTxWithMinimalPool _gcMetadataDbConnInfo dropHdbCatalogSchema
+      metadataConnection <- initMetadataConnectionInfo env metadataDbUrl rci
+      res <- runTxWithMinimalPool metadataConnection dropHdbCatalogSchema
       let cleanSuccessMsg = "successfully cleaned graphql-engine related data"
       either (throwErrJExit MetadataCleanError) (const $ liftIO $ putStrLn cleanSuccessMsg) res
     HCDowngrade opts -> do
-      GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci
-      let (maybeDefaultPgConnInfo, maybeRetries) = _gcDefaultPostgresConnInfo
-      let defaultSourceConfig =
-            maybeDefaultPgConnInfo <&> \(dbUrlConf, _) ->
-              let pgSourceConnInfo =
-                    PostgresSourceConnInfo
-                      dbUrlConf
-                      (Just setPostgresPoolSettings {_ppsRetries = maybeRetries <|> Just 1})
-                      False
-                      PG.ReadCommitted
-                      Nothing
-               in PostgresConnConfiguration pgSourceConnInfo Nothing defaultPostgresExtensionsSchema Nothing mempty
-      res <- runTxWithMinimalPool _gcMetadataDbConnInfo $ downgradeCatalog defaultSourceConfig opts initTime
+      let poolSettings = setPostgresPoolSettings {_ppsRetries = _pciRetries rci <|> Just 1}
+      BasicConnectionInfo {..} <- initBasicConnectionInfo env metadataDbUrl rci (Just poolSettings) False PG.ReadCommitted
+      res <- runTxWithMinimalPool bciMetadataConnInfo $ downgradeCatalog bciDefaultPostgres opts initTime
       either (throwErrJExit DowngradeProcessError) (liftIO . print) res
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ convertText currentVersion
   where
