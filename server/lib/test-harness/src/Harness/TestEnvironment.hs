@@ -240,10 +240,6 @@ getTestingMode = testingMode . globalEnvironment
 stopServer :: Server -> IO ()
 stopServer Server {thread} = Async.cancel thread
 
--- | Log a structured message in tests
-testLogMessage :: LoggableMessage a => TestEnvironment -> a -> IO ()
-testLogMessage = runLogger . logger . globalEnvironment
-
 -- | Log an unstructured trace string. Should only be used directly in specs,
 -- not in the Harness modules.
 {-# ANN testLogTrace ("HLINT: ignore" :: String) #-}

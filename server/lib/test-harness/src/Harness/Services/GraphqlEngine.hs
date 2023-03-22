@@ -8,6 +8,7 @@ module Harness.Services.GraphqlEngine
     withHge,
     spawnServer,
     emptyHgeConfig,
+    hgePost,
   )
 where
 
@@ -26,7 +27,7 @@ import Data.Vector (fromList)
 import Harness.Exceptions
 import Harness.Http qualified as Http
 import Harness.Logging
-import Harness.Services.Postgres
+import Harness.Services.PostgresDb
 import Hasura.Prelude
 import Network.HTTP.Simple qualified as Http
 import Network.Socket qualified as Socket
@@ -277,3 +278,21 @@ hgeLogRelayThread logger hgeOutput = do
 
     logParser :: Atto.Parser Value
     logParser = json' <* (option () (void (string "\n")) <|> endOfInput)
+
+hgePost ::
+  ( Has HgeServerInstance a,
+    Has Logger a
+  ) =>
+  a ->
+  Int ->
+  Text ->
+  Http.RequestHeaders ->
+  Value ->
+  IO Value
+hgePost env statusCode path headers requestBody = do
+  let hgeUrl = getHgeServerInstanceUrl $ getter env
+  let fullUrl = T.unpack $ hgeUrl <> path
+  testLogMessage env $ LogHGERequest path requestBody
+  responseBody <- withFrozenCallStack $ Http.postValueWithStatus statusCode fullUrl headers requestBody
+  testLogMessage env $ LogHGEResponse path responseBody
+  return responseBody

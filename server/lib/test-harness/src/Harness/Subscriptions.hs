@@ -39,7 +39,6 @@ import Harness.TestEnvironment
   ( GlobalTestEnvironment (..),
     Server (..),
     TestEnvironment (..),
-    testLogMessage,
   )
 import Harness.WebSockets (responseListener)
 import Hasura.Prelude

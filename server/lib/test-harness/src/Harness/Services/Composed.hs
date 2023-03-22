@@ -8,7 +8,7 @@ where
 import Data.Has
 import Data.Text qualified as T
 import Harness.Services.GraphqlEngine as I
-import Harness.Services.Postgres as I
+import Harness.Services.PostgresDb as I
 import Hasura.Prelude
 import System.Directory
 import System.Environment

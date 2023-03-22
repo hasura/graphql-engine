@@ -12,7 +12,7 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
-import Harness.Services.Postgres qualified as Postgres
+import Harness.Services.PostgresDb qualified as Postgres
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema

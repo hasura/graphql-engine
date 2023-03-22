@@ -39,7 +39,7 @@ import Harness.Test.BackendType (BackendType (SQLServer), BackendTypeConfig (..)
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
-import Harness.TestEnvironment (TestEnvironment (..), testLogMessage)
+import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Prelude
 import System.Process.Typed
 

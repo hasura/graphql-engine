@@ -1,7 +1,9 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | This module houses low-level functions and types to help access and work
 -- with Postgres servers. For functions and types to help test the Postgres HGE
 -- backend, see 'Harness.Backend.Postgres'.
-module Harness.Services.Postgres
+module Harness.Services.PostgresDb
   ( FreshPostgresDb (..),
     PostgresServerUrl (..),
     run,
@@ -9,6 +11,7 @@ module Harness.Services.Postgres
     dropDatabase,
     mkFreshPostgresDb,
     mkFreshDbConnectionString,
+    withFreshPostgresDb,
   )
 where
 
@@ -18,6 +21,7 @@ import Control.Monad.Managed
 import Data.Aeson (ToJSON)
 import Data.ByteString.Char8 qualified as S8
 import Data.Char qualified
+import Data.Has
 import Data.String
 import Data.Text qualified as T
 import Data.Text.Encoding (encodeUtf8)
@@ -27,6 +31,7 @@ import Database.PostgreSQL.Simple qualified as Postgres
 import Harness.Exceptions
 import Harness.Logging
 import Hasura.Prelude
+import Test.Hspec
 
 newtype PostgresServerUrl = PostgresServerUrl {getPostgresServerUrl :: Text}
   deriving newtype (ToJSON)
@@ -110,3 +115,16 @@ dropDatabase logger pgServerUrl dbName =
       pgServerUrl
       ("DROP DATABASE " <> dbName <> ";")
       `catch` \(ex :: SomeException) -> runLogger logger (LogDropDBFailedWarning dbName ex)
+
+withFreshPostgresDb ::
+  ( Has PostgresServerUrl a,
+    Has Logger a
+  ) =>
+  SpecWith (FreshPostgresDb, a) ->
+  SpecWith a
+withFreshPostgresDb specs =
+  flip aroundWith specs \action a -> runManaged do
+    let pgUrl = getter a
+    let logger = getter @Logger a
+    db <- mkFreshPostgresDb logger pgUrl
+    liftIO $ action (db, a)

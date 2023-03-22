@@ -3,6 +3,7 @@
 
 module Harness.Logging.Messages
   ( Logger (..),
+    testLogMessage,
     TraceString,
     LoggableMessage (..),
     LogTrace (..),
@@ -32,6 +33,7 @@ import Data.Aeson hiding (Error, Result, Success)
 import Data.Aeson.Types (Pair)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as LBS
+import Data.Has
 import Data.Text qualified as T
 import Data.Text.Encoding
 import Data.Text.Lazy qualified as LT
@@ -43,6 +45,12 @@ import Test.Hspec.Core.Format
 
 -- | Newtype wrapper around logging action to encapsulate existential type.
 newtype Logger = Logger {runLogger :: forall a. LoggableMessage a => a -> IO ()}
+
+-- | Log a structured message in tests
+testLogMessage :: (Has Logger env, LoggableMessage msg) => env -> msg -> IO ()
+testLogMessage env msg = do
+  let logger = getter @Logger env
+  runLogger logger $ msg
 
 -- | Type class to make it convenient to construct trace messages from various
 -- text string types. You should likely not define new instances of this class.

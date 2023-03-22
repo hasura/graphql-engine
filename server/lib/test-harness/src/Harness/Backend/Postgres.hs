@@ -56,7 +56,7 @@ import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (interpolateYaml)
-import Harness.Services.Postgres qualified as Postgres
+import Harness.Services.PostgresDb qualified as Postgres
 import Harness.Test.BackendType (BackendTypeConfig)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Schema

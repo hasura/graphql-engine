@@ -57,6 +57,7 @@ library
     , aeson-pretty
     , base
     , bytestring
+    , data-has
     , dc-api
     , directory
     , fast-logger
