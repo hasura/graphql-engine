@@ -8,6 +8,7 @@ where
 import Data.Aeson (toJSON)
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Set (Set)
@@ -161,7 +162,7 @@ logicalModelToPreparedStatement model = do
 
       returnedColumnNames :: Text
       returnedColumnNames =
-        commaSeparated $ HashMap.keys (crtColumns (_lmmReturns model))
+        commaSeparated $ InsOrd.keys (crtColumns (_lmmReturns model))
 
       wrapInCTE :: Text -> Text
       wrapInCTE query =

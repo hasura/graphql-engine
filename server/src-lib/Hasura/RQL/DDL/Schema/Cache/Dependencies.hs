@@ -7,6 +7,7 @@ import Control.Arrow.Extended
 import Control.Lens hiding ((.=))
 import Data.Aeson
 import Data.HashMap.Strict.Extended qualified as M
+import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as HS
 import Data.List (nub)
@@ -178,7 +179,7 @@ pruneDanglingDependents cache =
                         <> " permission defined on logical model "
                         <> logicalModelName <<> " for role " <>> roleName
                 LMOCol column ->
-                  unless (M.member column (crtColumns (_lmiReturns logicalModel))) do
+                  unless (InsOrd.member column (crtColumns (_lmiReturns logicalModel))) do
                     Left ("Could not find column " <> column <<> " in logical model " <>> logicalModelName)
             SOITableObj tableName tableObjectId -> do
               tableInfo <- resolveTable sourceInfo tableName

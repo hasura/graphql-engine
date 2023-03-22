@@ -589,7 +589,25 @@ addSource sourceName sourceConfig testEnvironment = do
 
 trackLogicalModelCommand :: String -> BackendTypeConfig -> LogicalModel -> Value
 trackLogicalModelCommand sourceName backendTypeConfig (LogicalModel {logicalModelReturnTypeDescription, logicalModelName, logicalModelArguments, logicalModelQuery, logicalModelColumns}) =
-  let columnsToJson =
+  -- return type is an array of items
+  let returnTypeToJson =
+        Aeson.Array
+          . V.fromList
+          . fmap
+            ( \LogicalModelColumn {..} ->
+                let descriptionPair = case logicalModelColumnDescription of
+                      Just desc -> [(K.fromText "description", Aeson.String desc)]
+                      Nothing -> []
+                 in Aeson.object $
+                      [ (K.fromText "name", Aeson.String logicalModelColumnName),
+                        (K.fromText "type", Aeson.String ((BackendType.backendScalarType backendTypeConfig) logicalModelColumnType)),
+                        (K.fromText "nullable", Aeson.Bool logicalModelColumnNullable)
+                      ]
+                        <> descriptionPair
+            )
+
+      -- arguments are a map from name to type details
+      argsToJson =
         Aeson.object
           . fmap
             ( \LogicalModelColumn {..} ->
@@ -607,9 +625,9 @@ trackLogicalModelCommand sourceName backendTypeConfig (LogicalModel {logicalMode
                  in (key, value)
             )
 
-      arguments = columnsToJson logicalModelArguments
+      arguments = argsToJson logicalModelArguments
 
-      columns = columnsToJson logicalModelColumns
+      columns = returnTypeToJson logicalModelColumns
 
       returnTypePair = case logicalModelReturnTypeDescription of
         Just desc -> [("description", Aeson.String desc)]

@@ -3,7 +3,7 @@ module Hasura.CustomReturnType.Common
   )
 where
 
-import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.Text.Extended (ToTxt (toTxt))
 import Hasura.CustomReturnType (CustomReturnType (..))
 import Hasura.LogicalModel.Types (NullableScalarType (..))
@@ -17,7 +17,7 @@ toFieldInfo :: forall b. (Backend b) => CustomReturnType b -> Maybe [FieldInfo b
 toFieldInfo customReturnType =
   traverseWithIndex
     (\i -> fmap FIColumn . customTypeToColumnInfo i)
-    (HashMap.toList (crtColumns customReturnType))
+    (InsOrd.toList (crtColumns customReturnType))
   where
     traverseWithIndex :: (Applicative m) => (Int -> aa -> m bb) -> [aa] -> m [bb]
     traverseWithIndex f = zipWithM f [0 ..]

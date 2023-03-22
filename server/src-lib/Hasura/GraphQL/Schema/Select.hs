@@ -37,6 +37,7 @@ import Data.ByteString.Lazy qualified as BL
 import Data.Has
 import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
@@ -528,7 +529,7 @@ defaultLogicalModelSelectionSet name logicalModelInfo = runMaybeT $ do
   let allowedColumns =
         filter
           (isSelectable . fst)
-          (Map.toList (crtColumns (_lmiReturns logicalModelInfo)))
+          (InsOrd.toList (crtColumns (_lmiReturns logicalModelInfo)))
 
   parsers <- traverse parseField allowedColumns
 
@@ -747,7 +748,7 @@ logicalModelDistinctArg name customReturnType = do
   tCase <- retrieve $ _rscNamingConvention . _siCustomization @b
 
   let maybeColumnDefinitions =
-        traverse definitionFromTypeRow (Map.keys (crtColumns customReturnType))
+        traverse definitionFromTypeRow (InsOrd.keys (crtColumns customReturnType))
           >>= NE.nonEmpty
 
   case (,) <$> G.mkName "_enum_name" <*> maybeColumnDefinitions of

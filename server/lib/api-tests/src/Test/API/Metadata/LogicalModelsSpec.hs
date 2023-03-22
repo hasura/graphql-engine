@@ -263,10 +263,10 @@ testImplementation opts = do
                 nullable: false
             returns:
               columns:
-                    divided:
-                      type: #{scalarTypeToText testEnvironment Schema.TInt}
-                      nullable: false
-                      description: "a divided thing"
+                  - name: divided
+                    type: #{scalarTypeToText testEnvironment Schema.TInt}
+                    nullable: false
+                    description: "a divided thing"
         |]
 
     it "Drops a logical model of a function and returns a 200" $ \testEnvironment -> do
@@ -408,7 +408,7 @@ testPermissions opts = do
                   filter: {}
             returns:
               columns:
-                divided:
+                - name: divided
                   description: a divided thing
                   nullable: false
                   type: #{scalarTypeToText testEnvironment Schema.TInt}
@@ -474,7 +474,7 @@ testPermissions opts = do
                 nullable: false
             returns:
               columns:
-                divided:
+                - name: divided
                   description: a divided thing
                   nullable: false
                   type: #{scalarTypeToText testEnvironment Schema.TInt}
