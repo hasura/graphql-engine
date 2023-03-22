@@ -189,6 +189,17 @@ module.exports = (config, context) => {
       ],
     });
   }
+
+  output.plugins = output.plugins.map(plugin => {
+    if (!plugin.definitions || !plugin.definitions['process.env']) {
+      return plugin;
+    }
+
+    if (plugin.definitions['process.env']['NX_CLOUD_ACCESS_TOKEN']) {
+      delete plugin.definitions['process.env']['NX_CLOUD_ACCESS_TOKEN'];
+    }
+    return plugin;
+  });
   // log(output.plugins);
   return output;
 };
