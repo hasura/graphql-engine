@@ -3,6 +3,7 @@
 -- | Feature Flags are /temporary/ toggles.
 module Hasura.Server.Init.FeatureFlag
   ( FeatureFlag (..),
+    CheckFeatureFlag (..),
     checkFeatureFlag,
     Identifier (..),
     FeatureFlags (..),
@@ -41,6 +42,8 @@ checkFeatureFlag env (FeatureFlag {ffEnvVar = envVar, ffDefaultValue = defaultVa
   case Env.lookupEnv env envVar of
     Just found -> pure $ fromMaybe defaultValue (readMaybe found)
     Nothing -> pure $ defaultValue
+
+newtype CheckFeatureFlag = CheckFeatureFlag {runCheckFeatureFlag :: FeatureFlag -> IO Bool}
 
 --------------------------------------------------------------------------------
 

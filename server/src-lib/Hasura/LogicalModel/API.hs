@@ -267,8 +267,9 @@ dropLogicalModelInMetadata source rootFieldName = do
 throwIfFeatureDisabled :: (HasServerConfigCtx m, MonadIO m, MonadError QErr m) => m ()
 throwIfFeatureDisabled = do
   configCtx <- askServerConfigCtx
+  let CheckFeatureFlag runCheckFeatureFlag = _sccCheckFeatureFlag configCtx
 
-  enableLogicalModels <- liftIO (_sccCheckFeatureFlag configCtx FF.logicalModelInterface)
+  enableLogicalModels <- liftIO (runCheckFeatureFlag FF.logicalModelInterface)
 
   unless enableLogicalModels (throw500 "LogicalModels is disabled!")
 

@@ -15,6 +15,7 @@ module Hasura.Server.Types
     RequestId (..),
     ServerConfigCtx (..),
     HasServerConfigCtx (..),
+    CheckFeatureFlag (..),
     askMetadataDefaults,
     getRequestId,
     ApolloFederationStatus (..),
@@ -31,7 +32,7 @@ import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude hiding (intercalate)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata (MetadataDefaults)
-import Hasura.Server.Init.FeatureFlag (FeatureFlag)
+import Hasura.Server.Init.FeatureFlag (CheckFeatureFlag (..))
 import Hasura.Server.Utils
 import Network.HTTP.Types qualified as HTTP
 
@@ -151,7 +152,7 @@ data ServerConfigCtx = ServerConfigCtx
     -- | stores global default naming convention
     _sccDefaultNamingConvention :: NamingCase,
     _sccMetadataDefaults :: MetadataDefaults,
-    _sccCheckFeatureFlag :: FeatureFlag -> IO Bool,
+    _sccCheckFeatureFlag :: CheckFeatureFlag,
     _sccApolloFederationStatus :: ApolloFederationStatus
   }
 

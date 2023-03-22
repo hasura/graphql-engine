@@ -395,7 +395,7 @@ initialiseContext env GlobalCtx {..} serveOptions@ServeOptions {..} liveQueryHoo
               sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings) (PG.cpAllowPrepare soConnParams) soTxIso Nothing
            in PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema Nothing mempty
       sqlGenCtx = initSQLGenCtx soExperimentalFeatures soStringifyNum soDangerousBooleanCollapse
-      checkFeatureFlag' = checkFeatureFlag env
+      checkFeatureFlag' = CheckFeatureFlag $ checkFeatureFlag env
       serverConfigCtx =
         ServerConfigCtx
           soInferFunctionPermissions

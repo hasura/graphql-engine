@@ -124,7 +124,7 @@ data AppEnv = AppEnv
     -- as this thread is initialised there before creating the `AppStateRef`. But eventually we need
     -- to do it for the Enterprise version.
     appEnvSchemaPollInterval :: OptionalInterval,
-    appEnvCheckFeatureFlag :: (FeatureFlag -> IO Bool)
+    appEnvCheckFeatureFlag :: CheckFeatureFlag
   }
 
 -- | Represents the Dynamic Hasura State, these field are mutable and can be changed

@@ -37,12 +37,12 @@ runGetFeatureFlag ::
   GetFeatureFlag ->
   m EncJSON
 runGetFeatureFlag GetFeatureFlag {..} = do
-  checkFeatureFlag <- Types._sccCheckFeatureFlag <$> Types.askServerConfigCtx
+  Types.CheckFeatureFlag getFeatureFlag <- Types._sccCheckFeatureFlag <$> Types.askServerConfigCtx
   let flagM = HashMap.lookup gfgIdentifier $ FeatureFlag.getFeatureFlags $ FeatureFlag.featureFlags
   case flagM of
     Nothing -> Error.throw400 Error.NotFound $ "Feature Flag '" <> gfgIdentifier <> "' not found"
     Just flag -> do
-      flagValue <- liftIO $ checkFeatureFlag flag
+      flagValue <- liftIO $ getFeatureFlag flag
       pure $
         EncJSON.encJFromJValue $
           Aeson.object

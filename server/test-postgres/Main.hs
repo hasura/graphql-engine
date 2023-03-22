@@ -115,7 +115,7 @@ main = do
                 readOnlyMode
                 (_default defaultNamingConventionOption)
                 emptyMetadataDefaults
-                (FF.checkFeatureFlag mempty)
+                (CheckFeatureFlag $ FF.checkFeatureFlag mempty)
                 ApolloFederationDisabled
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver serverConfigCtx
 
