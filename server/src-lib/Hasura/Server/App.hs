@@ -24,7 +24,7 @@ module Hasura.Server.App
 where
 
 import Control.Concurrent.Async.Lifted.Safe qualified as LA
-import Control.Exception (IOException, try)
+import Control.Exception (IOException, throwIO, try)
 import Control.Monad.Morph (hoist)
 import Control.Monad.Stateless
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -104,7 +104,7 @@ import Network.HTTP.Types qualified as HTTP
 import Network.Mime (defaultMimeLookup)
 import Network.Wai.Extended qualified as Wai
 import Network.Wai.Handler.WebSockets.Custom qualified as WSC
-import System.FilePath (joinPath, takeFileName)
+import System.FilePath (isRelative, joinPath, splitExtension, takeFileName)
 import System.Mem (performMajorGC)
 import System.Metrics qualified as EKG
 import System.Metrics.Json qualified as EKG
@@ -656,7 +656,7 @@ consoleAssetsHandler ::
   L.Logger L.Hasura ->
   LoggingSettings ->
   Text ->
-  FilePath ->
+  Text ->
   Spock.ActionT m ()
 consoleAssetsHandler logger loggingSettings dir path = do
   req <- Spock.request
@@ -665,21 +665,23 @@ consoleAssetsHandler logger loggingSettings dir path = do
   -- spock's routing. we get the expanded path.
   eFileContents <-
     liftIO $
-      try $
+      try @IOException do
+        unless validFilename $ throwIO $ userError "invalid asset filename"
         BL.readFile $
-          joinPath [T.unpack dir, path]
+          joinPath [T.unpack dir, pathStr]
   either (onError reqHeaders) onSuccess eFileContents
   where
+    pathStr = T.unpack path
+    validFilename = isRelative pathStr && not (".." `T.isInfixOf` path)
     onSuccess c = do
       mapM_ setHeader headers
       Spock.lazyBytes c
-    onError :: (MonadIO m, HttpLog m) => [HTTP.Header] -> IOException -> Spock.ActionT m ()
-    onError hdrs = raiseGenericApiError logger loggingSettings hdrs . err404 NotFound . tshow
-    fn = T.pack $ takeFileName path
+    onError :: (MonadIO m, HttpLog m) => [HTTP.Header] -> a -> Spock.ActionT m ()
+    onError hdrs _ = raiseGenericApiError logger loggingSettings hdrs $ err404 NotFound $ "Couldn't find console asset " <> path
     -- set gzip header if the filename ends with .gz
-    (fileName, encHeader) = case T.stripSuffix ".gz" fn of
-      Just v -> (v, [gzipHeader])
-      Nothing -> (fn, [])
+    (fileName, encHeader) = case splitExtension (takeFileName pathStr) of
+      (v, ".gz") -> (T.pack v, [gzipHeader])
+      _ -> (path, [])
     mimeType = defaultMimeLookup fileName
     headers = ("Content-Type", mimeType) : encHeader
 
@@ -1074,7 +1076,7 @@ httpApp setupHook appStateRef AppEnv {..} ekgStore = do
       -- serve static files if consoleAssetsDir is set
       for_ appEnvConsoleAssetsDir $ \dir ->
         Spock.get ("console/assets" <//> Spock.wildcard) $ \path -> do
-          consoleAssetsHandler logger appEnvLoggingSettings dir (T.unpack path)
+          consoleAssetsHandler logger appEnvLoggingSettings dir path
 
 raiseGenericApiError ::
   forall m.
