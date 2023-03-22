@@ -137,16 +137,16 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
             >
               <FaExclamationCircle className="fill-current self-start h-md text-muted" />
               <div className="ml-xs">
-                <strong>Dynamic Database Routing Precedence</strong>
+                <strong>Dynamic Routing Precedence</strong>
                 <p>
                   {' '}
-                  Dynamic database routing takes precedence over read replicas.
-                  You may use both read replica routing and default database
-                  routing in your connection template.
+                  Dynamic routing takes precedence over read replicas. You may
+                  use both read replica routing and default database routing in
+                  your connection template.
                 </p>
               </div>
               <a
-                href="https://hasura.io/docs/latest/databases/connect-db/dynamic-db-connection/#setting-up-connection-set-and-connection-template"
+                href="https://hasura.io/docs/latest/databases/database-config/dynamic-db-connection/#setting-up-connection-set-and-connection-template"
                 target="__blank"
                 className="font-semibold ml-auto mr-md px-sm py-xs font-base text-muted border border-muted rounded hover:bg-gray-300"
               >
@@ -160,7 +160,7 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
             </label>
             <IconTooltip message="Connection templates to route GraphQL requests based on different request parameters such as session variables, headers and tenant IDs." />
             <LearnMoreLink
-              href="https://hasura.io/docs/latest/databases/connect-db/dynamic-db-connection/#connection-template"
+              href="https://hasura.io/docs/latest/databases/database-config/dynamic-db-connection/#connection-template"
               className="font-normal"
             />
           </div>
@@ -235,7 +235,7 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
             </label>
             <IconTooltip message="Available database connections which can be referenced in your dynamic connection template." />
             <LearnMoreLink
-              href="https://hasura.io/docs/latest/databases/connect-db/dynamic-db-connection/#connection-set"
+              href="https://hasura.io/docs/latest/databases/database-config/dynamic-db-connection/#connection-set"
               text="(Learn More)"
               className="font-normal"
             />

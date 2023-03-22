@@ -432,7 +432,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
               },
               {
                 value: 'dynamic-db-routing',
-                label: 'Dynamic DB Connection Routing',
+                label: 'Dynamic Routing',
                 content: (
                   <div className="px-4 pt-8">
                     <DynamicDBRouting sourceName={editSourceName} />
