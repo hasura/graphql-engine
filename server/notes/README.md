@@ -40,7 +40,6 @@
   - [Warnings in metadata API](warnings-in-metadata-api.md)
   - [Remote Schema Argument Presets](remote-schema-argument-presets.md)
   - [Remote Schema Permissions Architecture](remote-schema-permissions-architecture.md)
-  - [Explicitly passing AppStateRef](explicitly-passing-appstateref.md)
   - [ReadOnly Mode](readonly-mode.md)
   - [Disable query printing when query-log is disabled](disable-query-printing-when-querylog-is-disabled.md)
   - [Disable query printing for metadata queries](disable-query-printing-for-metadata-queries.md)
