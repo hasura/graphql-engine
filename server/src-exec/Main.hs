@@ -30,7 +30,7 @@ import Hasura.Server.Migrate (downgradeCatalog)
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
 import Hasura.Server.Version
 import Hasura.ShutdownLatch
-import Hasura.Tracing (ignoreTraceT, sampleAlways)
+import Hasura.Tracing (sampleAlways)
 import System.Environment (getEnvironment, lookupEnv, unsetEnv)
 import System.Exit qualified as Sys
 import System.Metrics qualified as EKG
@@ -55,7 +55,7 @@ main = maybeWithGhcDebug $ do
     clearEnvironment = getEnvironment >>= traverse_ \(v, _) -> unsetEnv v
 
 runApp :: Env.Environment -> HGEOptions (ServeOptions Hasura) -> IO ()
-runApp env (HGEOptions rci metadataDbUrl hgeCmd) = ignoreTraceT do
+runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
   initTime <- liftIO getCurrentTime
 
   case hgeCmd of
@@ -90,7 +90,7 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = ignoreTraceT do
 
         pure (EKG.subset EKG.emptyOf store, serverMetrics)
 
-      prometheusMetrics <- lift makeDummyPrometheusMetrics
+      prometheusMetrics <- makeDummyPrometheusMetrics
 
       -- It'd be nice if we didn't have to call runManagedT twice here, but
       -- there is a data dependency problem since the call to runPGMetadataStorageApp
@@ -109,11 +109,10 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = ignoreTraceT do
         let Loggers _ logger _ = appEnvLoggers appEnv
 
         _idleGCThread <-
-          lift $
-            C.forkImmortal "ourIdleGC" logger $
-              GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
+          C.forkImmortal "ourIdleGC" logger $
+            GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 
-        runPGMetadataStorageAppT appEnv $
+        runAppM appEnv $
           lowerManagedT $
             runHGEServer (const $ pure ()) appStateRef initTime Nothing ekgStore
     HCExport -> do

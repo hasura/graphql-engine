@@ -28,9 +28,12 @@ module Hasura.App
     initMetadataConnectionInfo,
     initBasicConnectionInfo,
     resolvePostgresConnInfo,
-    AppContext (..),
-    PGMetadataStorageAppT,
-    runPGMetadataStorageAppT,
+
+    -- * app monad
+    AppM,
+    runAppM,
+
+    -- * misc
     flushLogger,
     getCatalogStateTx,
     updateJwkCtxThread,
@@ -44,8 +47,6 @@ module Hasura.App
     parseArgs,
     runHGEServer,
     setCatalogStateTx,
-
-    -- * Exported for testing
     mkHGEServer,
     mkPgSourceResolver,
     mkMSSQLSourceResolver,
@@ -353,6 +354,172 @@ resolvePostgresConnInfo env dbUrlConf (fromMaybe 1 -> retries) = do
   pure $ PG.ConnInfo retries $ PG.CDDatabaseURI $ txtToBs dbUrlText
 
 --------------------------------------------------------------------------------
+-- App monad
+
+-- | The base app monad of the CE engine.
+newtype AppM a = AppM (ReaderT AppEnv (TraceT IO) a)
+  deriving newtype
+    ( Functor,
+      Applicative,
+      Monad,
+      MonadIO,
+      MonadFix,
+      MonadCatch,
+      MonadThrow,
+      MonadMask,
+      MonadReader AppEnv,
+      MonadBase IO,
+      MonadBaseControl IO
+    )
+
+runAppM :: AppEnv -> AppM a -> IO a
+runAppM c (AppM a) = ignoreTraceT $ runReaderT a c
+
+instance HasAppEnv AppM where
+  askAppEnv = ask
+
+instance MonadTrace AppM where
+  newTraceWith c p n (AppM a) = AppM $ newTraceWith c p n a
+  newSpanWith i n (AppM a) = AppM $ newSpanWith i n a
+  currentContext = AppM currentContext
+  attachMetadata = AppM . attachMetadata
+
+instance ProvidesNetwork AppM where
+  askHTTPManager = asks appEnvManager
+
+instance HasResourceLimits AppM where
+  askHTTPHandlerLimit = pure $ ResourceLimits id
+  askGraphqlOperationLimit _ _ _ = pure $ ResourceLimits id
+
+instance HttpLog AppM where
+  type ExtraHttpLogMetadata AppM = ()
+
+  emptyExtraHttpLogMetadata = ()
+
+  buildExtraHttpLogMetadata _ _ = ()
+
+  logHttpError logger loggingSettings userInfoM reqId waiReq req qErr headers _ =
+    unLogger logger $
+      mkHttpLog $
+        mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq req qErr Nothing Nothing headers
+
+  logHttpSuccess logger loggingSettings userInfoM reqId waiReq reqBody response compressedResponse qTime cType headers (CommonHttpLogMetadata rb batchQueryOpLogs, ()) =
+    unLogger logger $
+      mkHttpLog $
+        mkHttpAccessLogContext userInfoM loggingSettings reqId waiReq reqBody (BL.length response) compressedResponse qTime cType headers rb batchQueryOpLogs
+
+instance MonadExecuteQuery AppM where
+  cacheLookup _ _ _ _ = pure $ Right ([], Nothing)
+  cacheStore _ _ _ = pure $ Right (Right CacheStoreSkipped)
+
+instance UserAuthentication AppM where
+  resolveUserInfo logger manager headers authMode reqs =
+    runExceptT $ do
+      (a, b, c) <- getUserInfoWithExpTime logger manager headers authMode reqs
+      pure $ (a, b, c, ExtraUserInfo Nothing)
+
+instance MonadMetadataApiAuthorization AppM where
+  authorizeV1QueryApi query handlerCtx = runExceptT do
+    let currRole = _uiRole $ hcUser handlerCtx
+    when (requiresAdmin query && currRole /= adminRoleName) $
+      withPathK "args" $
+        throw400 AccessDenied accessDeniedErrMsg
+
+  authorizeV1MetadataApi _ handlerCtx = runExceptT do
+    let currRole = _uiRole $ hcUser handlerCtx
+    when (currRole /= adminRoleName) $
+      withPathK "args" $
+        throw400 AccessDenied accessDeniedErrMsg
+
+  authorizeV2QueryApi _ handlerCtx = runExceptT do
+    let currRole = _uiRole $ hcUser handlerCtx
+    when (currRole /= adminRoleName) $
+      withPathK "args" $
+        throw400 AccessDenied accessDeniedErrMsg
+
+instance ConsoleRenderer AppM where
+  renderConsole path authMode enableTelemetry consoleAssetsDir consoleSentryDsn =
+    return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn
+
+instance MonadVersionAPIWithExtraData AppM where
+  -- we always default to CE as the `server_type` in this codebase
+  getExtraDataForVersionAPI = return ["server_type" A..= ("ce" :: Text)]
+
+instance MonadGQLExecutionCheck AppM where
+  checkGQLExecution userInfo _ enableAL sc query _ = runExceptT $ do
+    req <- toParsed query
+    checkQueryInAllowlist enableAL AllowlistModeGlobalOnly userInfo req sc
+    return req
+
+  executeIntrospection _ introspectionQuery _ =
+    pure $ Right $ ExecStepRaw introspectionQuery
+
+  checkGQLBatchedReqs _ _ _ _ = runExceptT $ pure ()
+
+instance MonadConfigApiHandler AppM where
+  runConfigApiHandler = configApiGetHandler
+
+instance MonadQueryLog AppM where
+  logQueryLog logger = unLogger logger
+
+instance MonadExecutionLog AppM where
+  logExecutionLog logger = unLogger logger
+
+instance WS.MonadWSLog AppM where
+  logWSLog logger = unLogger logger
+
+instance MonadResolveSource AppM where
+  getPGSourceResolver = asks (mkPgSourceResolver . _lsPgLogger . appEnvLoggers)
+  getMSSQLSourceResolver = return mkMSSQLSourceResolver
+
+instance EB.MonadQueryTags AppM where
+  createQueryTags _attributes _qtSourceConfig = return $ emptyQueryTagsComment
+
+instance MonadEventLogCleanup AppM where
+  runLogCleaner _ = pure $ throw400 NotSupported "Event log cleanup feature is enterprise edition only"
+  generateCleanupSchedules _ _ _ = pure $ Right ()
+  updateTriggerCleanupSchedules _ _ _ _ = pure $ Right ()
+
+instance MonadGetApiTimeLimit AppM where
+  runGetApiTimeLimit = pure $ Nothing
+
+-- | Each of the function in the type class is executed in a totally separate transaction.
+instance MonadMetadataStorage AppM where
+  fetchMetadataResourceVersion = runInSeparateTx fetchMetadataResourceVersionFromCatalog
+  fetchMetadata = runInSeparateTx fetchMetadataAndResourceVersionFromCatalog
+  fetchMetadataNotifications a b = runInSeparateTx $ fetchMetadataNotificationsFromCatalog a b
+  setMetadata r = runInSeparateTx . setMetadataInCatalog r
+  notifySchemaCacheSync a b c = runInSeparateTx $ notifySchemaCacheSyncTx a b c
+  getCatalogState = runInSeparateTx getCatalogStateTx
+  setCatalogState a b = runInSeparateTx $ setCatalogStateTx a b
+
+  getMetadataDbUid = runInSeparateTx getDbId
+  checkMetadataStorageHealth = runInSeparateTx $ checkDbConnection
+
+  getDeprivedCronTriggerStats = runInSeparateTx . getDeprivedCronTriggerStatsTx
+  getScheduledEventsForDelivery = runInSeparateTx getScheduledEventsForDeliveryTx
+  insertCronEvents = runInSeparateTx . insertCronEventsTx
+  insertOneOffScheduledEvent = runInSeparateTx . insertOneOffScheduledEventTx
+  insertScheduledEventInvocation a b = runInSeparateTx $ insertInvocationTx a b
+  setScheduledEventOp a b c = runInSeparateTx $ setScheduledEventOpTx a b c
+  unlockScheduledEvents a b = runInSeparateTx $ unlockScheduledEventsTx a b
+  unlockAllLockedScheduledEvents = runInSeparateTx unlockAllLockedScheduledEventsTx
+  clearFutureCronEvents = runInSeparateTx . dropFutureCronEventsTx
+  getOneOffScheduledEvents a b c = runInSeparateTx $ getOneOffScheduledEventsTx a b c
+  getCronEvents a b c d = runInSeparateTx $ getCronEventsTx a b c d
+  getScheduledEventInvocations a = runInSeparateTx $ getScheduledEventInvocationsTx a
+  deleteScheduledEvent a b = runInSeparateTx $ deleteScheduledEventTx a b
+
+  insertAction a b c d = runInSeparateTx $ insertActionTx a b c d
+  fetchUndeliveredActionEvents = runInSeparateTx fetchUndeliveredActionEventsTx
+  setActionStatus a b = runInSeparateTx $ setActionStatusTx a b
+  fetchActionResponse = runInSeparateTx . fetchActionResponseTx
+  clearActionData = runInSeparateTx . clearActionDataTx
+  setProcessingActionLogsToPending = runInSeparateTx . setProcessingActionLogsToPendingTx
+
+instance MonadMetadataStorageQueryAPI AppM
+
+--------------------------------------------------------------------------------
 -- TODO(SOLOMON): Move Into `Hasura.Server.Init`. Unable to do so
 -- currently due `throwErrExit`.
 
@@ -370,40 +537,6 @@ parseArgs env = do
             <> header "Hasura GraphQL Engine: Blazing fast, instant realtime GraphQL APIs on your DB with fine grained access control, also trigger webhooks on database events."
             <> footerDoc (Just mainCmdFooter)
         )
-
--- | An application with Postgres database as a metadata storage
-newtype PGMetadataStorageAppT m a = PGMetadataStorageAppT (ReaderT AppEnv (TraceT m) a)
-  deriving newtype
-    ( Functor,
-      Applicative,
-      Monad,
-      MonadIO,
-      MonadFix,
-      MonadCatch,
-      MonadThrow,
-      MonadMask,
-      MonadReader AppEnv,
-      MonadBase b,
-      MonadBaseControl b
-    )
-
-instance Monad m => HasAppEnv (PGMetadataStorageAppT m) where
-  askAppEnv = ask
-
-instance (MonadIO m, MonadBaseControl IO m) => MonadTrace (PGMetadataStorageAppT m) where
-  newTraceWith c p n (PGMetadataStorageAppT a) = PGMetadataStorageAppT $ newTraceWith c p n a
-  newSpanWith i n (PGMetadataStorageAppT a) = PGMetadataStorageAppT $ newSpanWith i n a
-  currentContext = PGMetadataStorageAppT currentContext
-  attachMetadata = PGMetadataStorageAppT . attachMetadata
-
-instance MonadTrans PGMetadataStorageAppT where
-  lift = PGMetadataStorageAppT . lift . lift
-
-instance Monad m => ProvidesNetwork (PGMetadataStorageAppT m) where
-  askHTTPManager = asks appEnvManager
-
-runPGMetadataStorageAppT :: AppEnv -> PGMetadataStorageAppT m a -> m a
-runPGMetadataStorageAppT c (PGMetadataStorageAppT a) = ignoreTraceT $ runReaderT a c
 
 -- | Core logic to fork a poller thread to update the JWK based on the
 -- expiry time specified in @Expires@ header or @Cache-Control@ header
@@ -1102,106 +1235,9 @@ mkHGEServer setupHook appStateRef ekgStore = do
           (getSchemaCache appStateRef)
           lockedEventsCtx
 
-instance (Monad m) => HasResourceLimits (PGMetadataStorageAppT m) where
-  askHTTPHandlerLimit = pure $ ResourceLimits id
-  askGraphqlOperationLimit _ _ _ = pure $ ResourceLimits id
-
-instance (MonadIO m) => HttpLog (PGMetadataStorageAppT m) where
-  type ExtraHttpLogMetadata (PGMetadataStorageAppT m) = ()
-
-  emptyExtraHttpLogMetadata = ()
-
-  buildExtraHttpLogMetadata _ _ = ()
-
-  logHttpError logger loggingSettings userInfoM reqId waiReq req qErr headers _ =
-    unLogger logger $
-      mkHttpLog $
-        mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq req qErr Nothing Nothing headers
-
-  logHttpSuccess logger loggingSettings userInfoM reqId waiReq reqBody response compressedResponse qTime cType headers (CommonHttpLogMetadata rb batchQueryOpLogs, ()) =
-    unLogger logger $
-      mkHttpLog $
-        mkHttpAccessLogContext userInfoM loggingSettings reqId waiReq reqBody (BL.length response) compressedResponse qTime cType headers rb batchQueryOpLogs
-
-instance (Monad m) => MonadExecuteQuery (PGMetadataStorageAppT m) where
-  cacheLookup _ _ _ _ = pure $ Right ([], Nothing)
-  cacheStore _ _ _ = pure $ Right (Right CacheStoreSkipped)
-
-instance (MonadIO m, MonadBaseControl IO m) => UserAuthentication (PGMetadataStorageAppT m) where
-  resolveUserInfo logger manager headers authMode reqs =
-    runExceptT $ do
-      (a, b, c) <- getUserInfoWithExpTime logger manager headers authMode reqs
-      pure $ (a, b, c, ExtraUserInfo Nothing)
-
-instance (Monad m) => MonadMetadataApiAuthorization (PGMetadataStorageAppT m) where
-  authorizeV1QueryApi query handlerCtx = runExceptT do
-    let currRole = _uiRole $ hcUser handlerCtx
-    when (requiresAdmin query && currRole /= adminRoleName) $
-      withPathK "args" $
-        throw400 AccessDenied accessDeniedErrMsg
-
-  authorizeV1MetadataApi _ handlerCtx = runExceptT do
-    let currRole = _uiRole $ hcUser handlerCtx
-    when (currRole /= adminRoleName) $
-      withPathK "args" $
-        throw400 AccessDenied accessDeniedErrMsg
-
-  authorizeV2QueryApi _ handlerCtx = runExceptT do
-    let currRole = _uiRole $ hcUser handlerCtx
-    when (currRole /= adminRoleName) $
-      withPathK "args" $
-        throw400 AccessDenied accessDeniedErrMsg
-
-instance (Monad m) => ConsoleRenderer (PGMetadataStorageAppT m) where
-  renderConsole path authMode enableTelemetry consoleAssetsDir consoleSentryDsn =
-    return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn
-
-instance (Monad m) => MonadVersionAPIWithExtraData (PGMetadataStorageAppT m) where
-  -- we always default to CE as the `server_type` in this codebase
-  getExtraDataForVersionAPI = return ["server_type" A..= ("ce" :: Text)]
-
-instance (Monad m) => MonadGQLExecutionCheck (PGMetadataStorageAppT m) where
-  checkGQLExecution userInfo _ enableAL sc query _ = runExceptT $ do
-    req <- toParsed query
-    checkQueryInAllowlist enableAL AllowlistModeGlobalOnly userInfo req sc
-    return req
-
-  executeIntrospection _ introspectionQuery _ =
-    pure $ Right $ ExecStepRaw introspectionQuery
-
-  checkGQLBatchedReqs _ _ _ _ = runExceptT $ pure ()
-
-instance (MonadIO m, MonadBaseControl IO m) => MonadConfigApiHandler (PGMetadataStorageAppT m) where
-  runConfigApiHandler = configApiGetHandler
-
-instance (MonadIO m) => MonadQueryLog (PGMetadataStorageAppT m) where
-  logQueryLog logger = unLogger logger
-
-instance (MonadIO m) => MonadExecutionLog (PGMetadataStorageAppT m) where
-  logExecutionLog logger = unLogger logger
-
-instance (MonadIO m) => WS.MonadWSLog (PGMetadataStorageAppT m) where
-  logWSLog logger = unLogger logger
-
-instance (Monad m) => MonadResolveSource (PGMetadataStorageAppT m) where
-  getPGSourceResolver = asks (mkPgSourceResolver . _lsPgLogger . appEnvLoggers)
-  getMSSQLSourceResolver = return mkMSSQLSourceResolver
-
-instance (Monad m) => EB.MonadQueryTags (PGMetadataStorageAppT m) where
-  createQueryTags _attributes _qtSourceConfig = return $ emptyQueryTagsComment
-
-instance (Monad m) => MonadEventLogCleanup (PGMetadataStorageAppT m) where
-  runLogCleaner _ = pure $ throw400 NotSupported "Event log cleanup feature is enterprise edition only"
-  generateCleanupSchedules _ _ _ = pure $ Right ()
-  updateTriggerCleanupSchedules _ _ _ _ = pure $ Right ()
-
-instance (Monad m) => MonadGetApiTimeLimit (PGMetadataStorageAppT m) where
-  runGetApiTimeLimit = pure $ Nothing
-
 runInSeparateTx ::
-  (MonadIO m) =>
   PG.TxE QErr a ->
-  PGMetadataStorageAppT m (Either QErr a)
+  AppM (Either QErr a)
 runInSeparateTx tx = do
   pool <- asks appEnvMetadataDbPool
   liftIO $ runExceptT $ PG.runTx pool (PG.RepeatableRead, Nothing) tx
@@ -1264,42 +1300,6 @@ setCatalogStateTx stateTy stateValue =
       |]
         (Identity $ PG.ViaJSON stateValue)
         False
-
--- | Each of the function in the type class is executed in a totally separate transaction.
-instance (MonadIO m) => MonadMetadataStorage (PGMetadataStorageAppT m) where
-  fetchMetadataResourceVersion = runInSeparateTx fetchMetadataResourceVersionFromCatalog
-  fetchMetadata = runInSeparateTx fetchMetadataAndResourceVersionFromCatalog
-  fetchMetadataNotifications a b = runInSeparateTx $ fetchMetadataNotificationsFromCatalog a b
-  setMetadata r = runInSeparateTx . setMetadataInCatalog r
-  notifySchemaCacheSync a b c = runInSeparateTx $ notifySchemaCacheSyncTx a b c
-  getCatalogState = runInSeparateTx getCatalogStateTx
-  setCatalogState a b = runInSeparateTx $ setCatalogStateTx a b
-
-  getMetadataDbUid = runInSeparateTx getDbId
-  checkMetadataStorageHealth = runInSeparateTx $ checkDbConnection
-
-  getDeprivedCronTriggerStats = runInSeparateTx . getDeprivedCronTriggerStatsTx
-  getScheduledEventsForDelivery = runInSeparateTx getScheduledEventsForDeliveryTx
-  insertCronEvents = runInSeparateTx . insertCronEventsTx
-  insertOneOffScheduledEvent = runInSeparateTx . insertOneOffScheduledEventTx
-  insertScheduledEventInvocation a b = runInSeparateTx $ insertInvocationTx a b
-  setScheduledEventOp a b c = runInSeparateTx $ setScheduledEventOpTx a b c
-  unlockScheduledEvents a b = runInSeparateTx $ unlockScheduledEventsTx a b
-  unlockAllLockedScheduledEvents = runInSeparateTx unlockAllLockedScheduledEventsTx
-  clearFutureCronEvents = runInSeparateTx . dropFutureCronEventsTx
-  getOneOffScheduledEvents a b c = runInSeparateTx $ getOneOffScheduledEventsTx a b c
-  getCronEvents a b c d = runInSeparateTx $ getCronEventsTx a b c d
-  getScheduledEventInvocations a = runInSeparateTx $ getScheduledEventInvocationsTx a
-  deleteScheduledEvent a b = runInSeparateTx $ deleteScheduledEventTx a b
-
-  insertAction a b c d = runInSeparateTx $ insertActionTx a b c d
-  fetchUndeliveredActionEvents = runInSeparateTx fetchUndeliveredActionEventsTx
-  setActionStatus a b = runInSeparateTx $ setActionStatusTx a b
-  fetchActionResponse = runInSeparateTx . fetchActionResponseTx
-  clearActionData = runInSeparateTx . clearActionDataTx
-  setProcessingActionLogsToPending = runInSeparateTx . setProcessingActionLogsToPendingTx
-
-instance MonadIO m => MonadMetadataStorageQueryAPI (PGMetadataStorageAppT m)
 
 --- helper functions ---
 

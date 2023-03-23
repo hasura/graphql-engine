@@ -15,13 +15,13 @@ import Data.Time.Clock (getCurrentTime)
 import Data.URL.Template
 import Database.PG.Query qualified as PG
 import Hasura.App
-  ( BasicConnectionInfo (..),
-    PGMetadataStorageAppT,
+  ( AppM,
+    BasicConnectionInfo (..),
     initMetadataConnectionInfo,
     initialiseContext,
     mkMSSQLSourceResolver,
     mkPgSourceResolver,
-    runPGMetadataStorageAppT,
+    runAppM,
   )
 import Hasura.Backends.Postgres.Connection.Settings
 import Hasura.Backends.Postgres.Execute.Types
@@ -133,10 +133,10 @@ main = do
           )
           $ \(appStateRef, appEnv) -> return (appStateRef, appEnv)
 
-        let run :: ExceptT QErr (PGMetadataStorageAppT IO) a -> IO a
+        let run :: ExceptT QErr AppM a -> IO a
             run =
               runExceptT
-                >>> runPGMetadataStorageAppT appEnv
+                >>> runAppM appEnv
                 >>> flip onLeftM printErrJExit
 
         -- why are we building the schema cache here? it's already built in initialiseContext

@@ -404,7 +404,7 @@ runApp serveOptions = do
   prometheusMetrics <- makeDummyPrometheusMetrics
   let managedServerCtx = App.initialiseContext env defaultConnInfo serveOptions Nothing serverMetrics prometheusMetrics sampleAlways
   runManagedT managedServerCtx \(appCtx, appEnv) ->
-    App.runPGMetadataStorageAppT appEnv $
+    App.runAppM appEnv $
       lowerManagedT $
         App.runHGEServer
           (const $ pure ())
