@@ -434,16 +434,6 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
       mapM_ setHeader allRespHeaders
       Spock.lazyBytes compressedResp
 
-{- Note [Explicitly passing AppStateRef]
-~~~~~~~~~~~~~~~~~~~~~~~
-The AppStateRef is passed explicitly to `v1QueryHandler` and `v1MetadataHandler`
-functions, so that they can update the schema cache in the ref.
-They don't use it to read the latest AppContext or SchemaCache.
-The AppContext or SchemaCache is read from the HandlerCtx.
-This is to avoid any race conditions that can occur by reading AppContext/SchemaCache
-one after the other.
--}
-
 v1QueryHandler ::
   ( MonadIO m,
     MonadError QErr m,
@@ -461,13 +451,12 @@ v1QueryHandler ::
     UserInfoM m,
     HasServerConfigCtx m
   ) =>
-  AppStateRef impl ->
+  (m (EncJSON, RebuildableSchemaCache) -> m EncJSON) ->
   RQLQuery ->
   m (HttpResponse EncJSON)
-v1QueryHandler appStateRef query = do
+v1QueryHandler schemaCacheRefUpdater query = do
   (liftEitherM . authorizeV1QueryApi query) =<< ask
-  logger <- _lsLogger . appEnvLoggers <$> askAppEnv
-  res <- bool (fst <$> action) (withSchemaCacheUpdate appStateRef logger Nothing action) $ queryModifiesSchemaCache query
+  res <- bool (fst <$> action) (schemaCacheRefUpdater action) $ queryModifiesSchemaCache query
   return $ HttpResponse res []
   where
     action = do
@@ -495,20 +484,16 @@ v1MetadataHandler ::
     UserInfoM m,
     HasServerConfigCtx m
   ) =>
-  AppStateRef impl ->
+  (m (EncJSON, RebuildableSchemaCache) -> m EncJSON) ->
   RQLMetadata ->
   m (HttpResponse EncJSON)
-v1MetadataHandler appStateRef query = Tracing.newSpan "Metadata" $ do
+v1MetadataHandler schemaCacheRefUpdater query = Tracing.newSpan "Metadata" $ do
   (liftEitherM . authorizeV1MetadataApi query) =<< ask
-  logger <- _lsLogger . appEnvLoggers <$> askAppEnv
   appContext <- asks hcAppContext
   schemaCache <- asks hcSchemaCache
   r <-
-    withSchemaCacheUpdate
-      appStateRef
-      logger
-      Nothing
-      $ runMetadataQuery
+    schemaCacheRefUpdater $
+      runMetadataQuery
         appContext
         schemaCache
         query
@@ -529,14 +514,13 @@ v2QueryHandler ::
     UserInfoM m,
     HasServerConfigCtx m
   ) =>
-  AppStateRef impl ->
+  (m (EncJSON, RebuildableSchemaCache) -> m EncJSON) ->
   V2Q.RQLQuery ->
   m (HttpResponse EncJSON)
-v2QueryHandler appStateRef query = Tracing.newSpan "v2 Query" $ do
+v2QueryHandler schemaCacheRefUpdater query = Tracing.newSpan "v2 Query" $ do
   (liftEitherM . authorizeV2QueryApi query) =<< ask
-  logger <- _lsLogger . appEnvLoggers <$> askAppEnv
   res <-
-    bool (fst <$> dbAction) (withSchemaCacheUpdate appStateRef logger Nothing dbAction) $
+    bool (fst <$> dbAction) (schemaCacheRefUpdater dbAction) $
       V2Q.queryModifiesSchema query
   return $ HttpResponse res []
   where
@@ -922,23 +906,27 @@ httpApp setupHook appStateRef AppEnv {..} ekgStore = do
       mkGetHandler $ customEndpointHandler (RestRequest wildcard method allParams)
 
   when (isMetadataEnabled appCtx) $ do
+    -- Note: we create a schema cache updater function, to restrict the access
+    -- to 'AppStateRef' inside the request handlers
+    let schemaCacheUpdater = withSchemaCacheUpdate appStateRef logger Nothing
+
     Spock.post "v1/graphql/explain" gqlExplainAction
 
     Spock.post "v1alpha1/graphql/explain" gqlExplainAction
 
     Spock.post "v1/query" $
       spockAction encodeQErr id $ do
-        mkPostHandler $ fmap (emptyHttpLogGraphQLInfo,) <$> mkAPIRespHandler (v1QueryHandler appStateRef)
+        mkPostHandler $ fmap (emptyHttpLogGraphQLInfo,) <$> mkAPIRespHandler (v1QueryHandler schemaCacheUpdater)
 
     Spock.post "v1/metadata" $
       spockAction encodeQErr id $
         mkPostHandler $
-          fmap (emptyHttpLogGraphQLInfo,) <$> mkAPIRespHandler (v1MetadataHandler appStateRef)
+          fmap (emptyHttpLogGraphQLInfo,) <$> mkAPIRespHandler (v1MetadataHandler schemaCacheUpdater)
 
     Spock.post "v2/query" $
       spockAction encodeQErr id $
         mkPostHandler $
-          fmap (emptyHttpLogGraphQLInfo,) <$> mkAPIRespHandler (v2QueryHandler appStateRef)
+          fmap (emptyHttpLogGraphQLInfo,) <$> mkAPIRespHandler (v2QueryHandler schemaCacheUpdater)
 
   when (isPGDumpEnabled appCtx) $
     Spock.post "v1alpha1/pg_dump" $
