@@ -27676,12 +27676,12 @@ initBasicConnectionInfo :: MonadIO m => Environment -> Maybe String -> PostgresC
 --   !!! throws a fatal error if the configuration is invalid
 resolvePostgresConnInfo :: MonadIO m => Environment -> UrlConf -> Maybe Int -> m ConnInfo
 
+-- | The base app monad of the CE engine.
+data AppM a
+runAppM :: AppEnv -> AppM a -> IO a
+
 -- | Parse cli arguments to graphql-engine executable.
 parseArgs :: EnabledLogTypes impl => Environment -> IO (HGEOptions (ServeOptions impl))
-
--- | An application with Postgres database as a metadata storage
-data PGMetadataStorageAppT m a
-runPGMetadataStorageAppT :: AppEnv -> PGMetadataStorageAppT m a -> m a
 
 -- | Core logic to fork a poller thread to update the JWK based on the
 --   expiry time specified in <tt>Expires</tt> header or
@@ -27738,37 +27738,36 @@ mkPgSourceResolver :: PGLogger -> SourceResolver ('Postgres 'Vanilla)
 mkMSSQLSourceResolver :: SourceResolver 'MSSQL
 instance GHC.Show.Show Hasura.App.ExitCode
 instance GHC.Show.Show Hasura.App.ExitException
-instance Control.Monad.Trans.Control.MonadBaseControl b m => Control.Monad.Trans.Control.MonadBaseControl b (Hasura.App.PGMetadataStorageAppT m)
-instance Control.Monad.Base.MonadBase b m => Control.Monad.Base.MonadBase b (Hasura.App.PGMetadataStorageAppT m)
-instance GHC.Base.Monad m => Control.Monad.Reader.Class.MonadReader Hasura.App.State.AppEnv (Hasura.App.PGMetadataStorageAppT m)
-instance Control.Monad.Catch.MonadMask m => Control.Monad.Catch.MonadMask (Hasura.App.PGMetadataStorageAppT m)
-instance Control.Monad.Catch.MonadThrow m => Control.Monad.Catch.MonadThrow (Hasura.App.PGMetadataStorageAppT m)
-instance Control.Monad.Catch.MonadCatch m => Control.Monad.Catch.MonadCatch (Hasura.App.PGMetadataStorageAppT m)
-instance Control.Monad.Fix.MonadFix m => Control.Monad.Fix.MonadFix (Hasura.App.PGMetadataStorageAppT m)
-instance Control.Monad.IO.Class.MonadIO m => Control.Monad.IO.Class.MonadIO (Hasura.App.PGMetadataStorageAppT m)
-instance GHC.Base.Monad m => GHC.Base.Monad (Hasura.App.PGMetadataStorageAppT m)
-instance GHC.Base.Applicative m => GHC.Base.Applicative (Hasura.App.PGMetadataStorageAppT m)
-instance GHC.Base.Functor m => GHC.Base.Functor (Hasura.App.PGMetadataStorageAppT m)
-instance GHC.Base.Monad m => Hasura.App.State.HasAppEnv (Hasura.App.PGMetadataStorageAppT m)
-instance (Control.Monad.IO.Class.MonadIO m, Control.Monad.Trans.Control.MonadBaseControl GHC.Types.IO m) => Hasura.Tracing.Class.MonadTrace (Hasura.App.PGMetadataStorageAppT m)
-instance Control.Monad.Trans.Class.MonadTrans Hasura.App.PGMetadataStorageAppT
-instance GHC.Base.Monad m => Hasura.Services.Network.ProvidesNetwork (Hasura.App.PGMetadataStorageAppT m)
-instance GHC.Base.Monad m => Hasura.Server.Limits.HasResourceLimits (Hasura.App.PGMetadataStorageAppT m)
-instance Control.Monad.IO.Class.MonadIO m => Hasura.Server.Logging.HttpLog (Hasura.App.PGMetadataStorageAppT m)
-instance GHC.Base.Monad m => Hasura.GraphQL.Transport.HTTP.MonadExecuteQuery (Hasura.App.PGMetadataStorageAppT m)
-instance (Control.Monad.IO.Class.MonadIO m, Control.Monad.Trans.Control.MonadBaseControl GHC.Types.IO m) => Hasura.Server.Auth.UserAuthentication (Hasura.App.PGMetadataStorageAppT m)
-instance GHC.Base.Monad m => Hasura.Server.App.MonadMetadataApiAuthorization (Hasura.App.PGMetadataStorageAppT m)
-instance GHC.Base.Monad m => Hasura.Server.App.ConsoleRenderer (Hasura.App.PGMetadataStorageAppT m)
-instance GHC.Base.Monad m => Hasura.Server.App.MonadVersionAPIWithExtraData (Hasura.App.PGMetadataStorageAppT m)
-instance GHC.Base.Monad m => Hasura.GraphQL.Execute.Common.MonadGQLExecutionCheck (Hasura.App.PGMetadataStorageAppT m)
-instance (Control.Monad.IO.Class.MonadIO m, Control.Monad.Trans.Control.MonadBaseControl GHC.Types.IO m) => Hasura.Server.App.MonadConfigApiHandler (Hasura.App.PGMetadataStorageAppT m)
-instance Control.Monad.IO.Class.MonadIO m => Hasura.GraphQL.Logging.QueryLog.MonadQueryLog (Hasura.App.PGMetadataStorageAppT m)
-instance Control.Monad.IO.Class.MonadIO m => Hasura.GraphQL.Logging.ExecutionLog.MonadExecutionLog (Hasura.App.PGMetadataStorageAppT m)
-instance Control.Monad.IO.Class.MonadIO m => Hasura.GraphQL.Transport.WebSocket.Server.MonadWSLog (Hasura.App.PGMetadataStorageAppT m)
-instance GHC.Base.Monad m => Hasura.RQL.Types.Source.MonadResolveSource (Hasura.App.PGMetadataStorageAppT m)
-instance GHC.Base.Monad m => Hasura.GraphQL.Execute.Backend.MonadQueryTags (Hasura.App.PGMetadataStorageAppT m)
-instance GHC.Base.Monad m => Hasura.RQL.DDL.EventTrigger.MonadEventLogCleanup (Hasura.App.PGMetadataStorageAppT m)
-instance GHC.Base.Monad m => Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit (Hasura.App.PGMetadataStorageAppT m)
-instance Control.Monad.IO.Class.MonadIO m => Hasura.Metadata.Class.MonadMetadataStorage (Hasura.App.PGMetadataStorageAppT m)
-instance Control.Monad.IO.Class.MonadIO m => Hasura.Metadata.Class.MonadMetadataStorageQueryAPI (Hasura.App.PGMetadataStorageAppT m)
+instance Control.Monad.Trans.Control.MonadBaseControl GHC.Types.IO Hasura.App.AppM
+instance Control.Monad.Base.MonadBase GHC.Types.IO Hasura.App.AppM
+instance Control.Monad.Reader.Class.MonadReader Hasura.App.State.AppEnv Hasura.App.AppM
+instance Control.Monad.Catch.MonadMask Hasura.App.AppM
+instance Control.Monad.Catch.MonadThrow Hasura.App.AppM
+instance Control.Monad.Catch.MonadCatch Hasura.App.AppM
+instance Control.Monad.Fix.MonadFix Hasura.App.AppM
+instance Control.Monad.IO.Class.MonadIO Hasura.App.AppM
+instance GHC.Base.Monad Hasura.App.AppM
+instance GHC.Base.Applicative Hasura.App.AppM
+instance GHC.Base.Functor Hasura.App.AppM
+instance Hasura.App.State.HasAppEnv Hasura.App.AppM
+instance Hasura.Tracing.Class.MonadTrace Hasura.App.AppM
+instance Hasura.Services.Network.ProvidesNetwork Hasura.App.AppM
+instance Hasura.Server.Limits.HasResourceLimits Hasura.App.AppM
+instance Hasura.Server.Logging.HttpLog Hasura.App.AppM
+instance Hasura.GraphQL.Transport.HTTP.MonadExecuteQuery Hasura.App.AppM
+instance Hasura.Server.Auth.UserAuthentication Hasura.App.AppM
+instance Hasura.Server.App.MonadMetadataApiAuthorization Hasura.App.AppM
+instance Hasura.Server.App.ConsoleRenderer Hasura.App.AppM
+instance Hasura.Server.App.MonadVersionAPIWithExtraData Hasura.App.AppM
+instance Hasura.GraphQL.Execute.Common.MonadGQLExecutionCheck Hasura.App.AppM
+instance Hasura.Server.App.MonadConfigApiHandler Hasura.App.AppM
+instance Hasura.GraphQL.Logging.QueryLog.MonadQueryLog Hasura.App.AppM
+instance Hasura.GraphQL.Logging.ExecutionLog.MonadExecutionLog Hasura.App.AppM
+instance Hasura.GraphQL.Transport.WebSocket.Server.MonadWSLog Hasura.App.AppM
+instance Hasura.RQL.Types.Source.MonadResolveSource Hasura.App.AppM
+instance Hasura.GraphQL.Execute.Backend.MonadQueryTags Hasura.App.AppM
+instance Hasura.RQL.DDL.EventTrigger.MonadEventLogCleanup Hasura.App.AppM
+instance Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit Hasura.App.AppM
+instance Hasura.Metadata.Class.MonadMetadataStorage Hasura.App.AppM
+instance Hasura.Metadata.Class.MonadMetadataStorageQueryAPI Hasura.App.AppM
 instance GHC.Exception.Type.Exception Hasura.App.ExitException
