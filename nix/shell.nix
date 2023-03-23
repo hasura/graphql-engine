@@ -31,6 +31,7 @@ let
   consoleInputs = [
     pkgs.google-cloud-sdk
     pkgs."nodejs-${versions.nodejsVersion}_x"
+    pkgs."nodejs-${versions.nodejsVersion}_x".pkgs.typescript-language-server
   ];
 
   docsInputs = [
@@ -39,6 +40,7 @@ let
 
   integrationTestInputs = [
     pkgs.python3
+    pkgs.pyright # Python type checker
   ];
 
   # The version of GHC in `ghcName` is set in nix/overlays/ghc.nix.
