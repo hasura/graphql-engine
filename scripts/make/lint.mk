@@ -83,17 +83,41 @@ check-format-nix:
 		echo "$(NIX_FMT) is not installed; skipping"; \
 	fi
 
+.PHONY: format-frontend
+## format-frontend: auto-format all frontend code
+format-frontend: frontend/node_modules
+	@echo 'running nx format:write'
+	cd frontend && npm run format:write:all
+
+.PHONY: format-frontend-changed
+## format-frontend-changed: auto-format all frontend code (changed files only)
+format-frontend-changed: frontend/node_modules
+	@echo 'running nx format:write'
+	cd frontend && npm run format:write
+
+.PHONY: check-format-frontend
+## check-format-frontend: check frontend code
+check-format-frontend: frontend/node_modules
+	@echo 'running nx format:check'
+	cd frontend && npx nx format:check
+
+.PHONY: check-format-frontend-changed
+## check-format-frontend-changed: check frontend code (changed files only)
+check-format-frontend-changed: frontend/node_modules
+	@echo 'running nx format:check'
+	cd frontend && npx nx format:check --base=origin/main
+
 .PHONY: format
-format: format-hs format-nix
+format: format-hs format-nix format-frontend
 
 .PHONY: format-changed
-format-changed: format-hs-changed format-nix
+format-changed: format-hs-changed format-nix format-frontend-changed
 
 .PHONY: check-format
-check-format: check-format-hs check-format-nix
+check-format: check-format-hs check-format-nix check-format-frontend
 
 .PHONY: check-format-changed
-check-format-changed: check-format-hs-changed check-format-nix
+check-format-changed: check-format-hs-changed check-format-nix check-format-frontend-changed
 
 .PHONY: lint-hs
 ## lint-hs: lint Haskell code using `hlint`
@@ -135,8 +159,22 @@ lint-shell-changed:
 		$(SHELLCHECK) $(CHANGED_SHELL_FILES); \
 	fi
 
+.PHONY: lint-frontend
+## lint-frontend: lint all frontend code
+lint-frontend: frontend/node_modules
+	@echo 'running nx lint'
+	cd frontend && npm run lint
+
+.PHONY: lint-frontend-changed
+## lint-frontend-changed: lint all frontend code
+lint-frontend-changed: frontend/node_modules
+	@echo 'running nx lint'
+	cd frontend && npx nx affected --target=lint --fix --parallel=3
+
 .PHONY: lint
-lint: lint-hs lint-shell check-format
+## lint: run all lint commands, and check formatting
+lint: lint-hs lint-shell lint-frontend check-format
 
 .PHONY: lint-changed
-lint-changed: lint-hs-changed lint-shell-changed check-format-changed
+## lint: run all lint commands, and check formatting (changed files only)
+lint-changed: lint-hs-changed lint-shell-changed lint-frontend-changed check-format-changed

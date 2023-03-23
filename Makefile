@@ -9,6 +9,7 @@ help:
 
 include ./scripts/make/build.mk
 include ./scripts/make/ci.mk
+include ./scripts/make/frontend.mk
 include ./scripts/make/ghcid.mk
 include ./scripts/make/legacy-tests.mk
 include ./scripts/make/lint.mk
