@@ -8,17 +8,19 @@ keywords:
 slug: images
 ---
 
-# Images and Screenshots
+# Images
 
 A picture says a thousand words. Try to use images and diagrams wherever you can if it will provide more clarity to the
 user.
+
+## Screenshots
 
 ### Scale
 
 - Screenshots should be captured at a browser viewport width of `1200px`. This helps keep scaling consistent.
 - You can use this
-  [Chrome extension](https://chrome.google.com/webstore/detail/window-resizer/kkelicaakdanhinjdeammmilcgefonfh?hl=en)
-  to quickly set your browser viewport to `1200px`
+  [Chrome extension](https://chrome.google.com/webstore/detail/window-resizer/kkelicaakdanhinjdeammmilcgefonfh?hl=en) to
+  quickly set your browser viewport to `1200px`
 - Don't zoom in or out.
 - When placed in situ in the documentation, the text in the image of a screenshot should closely match the text size of
   the page itself.
@@ -59,3 +61,70 @@ user.
 - Always add an `:::info Note` admonitions for new features detailing the version at which the feature is supported
   from.
 - Make sure prior versions of documentation are properly kept.
+
+## Animated images
+
+Animated images should be used sparingly and should be used to show a user how to perform a task.
+
+### Creating animated images
+
+- We use a tool called [ScreenStudio](https://www.screen.studio/) to create animated images.
+- This is a paid tool; if you don't have access to it, please ask someone on the docs team to create the animated image
+  for you.
+  - If you ask for an animated image, please provide a detailed description of what you want to show in the animated
+    image along with the steps you want to highlight.
+- If you are creating an animated image, please follow the guidelines below.
+
+### Guidelines
+
+- Use Google Chrome with the default dark theme.
+- Your browser window should be set to `1200px x 900px`.
+- Ensure your bookmark bar is hidden.
+- It also helps to
+  [disable autocomplete](https://support.iclasspro.com/hc/en-us/articles/218569268-How-Do-I-Disable-or-Clear-AutoFill-AutoComplete-Information-)
+  in the URL and search bars.
+- Carefully and deliberately perform the steps you want to show in the animated image.
+  - If needed, you can speed up the playback of your actions during editing.
+
+### Workflow
+
+#### Recording and editing
+
+- Create a new project in ScreenStudio.
+- Utilize this background image for a consistent look:
+  ![Background Image](https://user-images.githubusercontent.com/94021366/226903753-3958eb19-bd3f-4890-9743-5a4a3f03502d.jpg)
+- As you edit, ensure the camera doesn't zoom in and out constantly; deliberately select when you want to emphasize a
+  particular area of the screen using the zoom tool.
+- We speak from experience: ☝️ it helps to practice this a few times first!
+- When you are done, export the video as an mp4.
+
+#### Converting and compressing
+
+All videos should be converted and compressed to the webm format before being added to the docs. This can be done using
+[`ffmpeg`](https://ffmpeg.org/):
+
+```bash
+ ffmpeg -i <ORIGINAL>.mp4 -c vp9 -b:v 0 -crf 55 <DESIRED_FINAL_FILENAME>.webm
+```
+
+The `-crf` flag controls the quality of the video. The lower the value, the higher the quality. The default value is
+`23`. The range is `0-63`, with `0` being lossless and `63` being the worst possible quality. A value of `55` is
+generally considered to be a good balance between quality and file size.
+
+#### Adding to the docs
+
+Use the `<Player />` component to add the video to the docs. The component takes the following props:
+
+- `src`: The path to the video file.
+
+You can import the component inside any `.mdx` file like this:
+
+```jsx
+import Player from '@site/src/components/Player';
+```
+
+And then use it like this:
+
+```jsx
+<Player src="/img/<SUBDIRECTORY>/<FILENAME>.webm" />
+```
