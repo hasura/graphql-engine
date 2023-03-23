@@ -191,6 +191,7 @@ export const useSuggestedRelationships = ({
       return result;
     },
     enabled: isEnabled,
+    refetchOnWindowFocus: false,
   });
 
   const [isAddingSuggestedRelationship, setAddingSuggestedRelationship] =
