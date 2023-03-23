@@ -10,7 +10,6 @@ module Hasura.Server.AppStateRef
     getAppContext,
     getSchemaCache,
     getSchemaCacheWithVersion,
-    getSchemaCacheRef,
 
     -- * Utility
     logInconsistentMetadata,
@@ -55,7 +54,7 @@ data AppStateRef impl = AppStateRef
     -- it is an okay trade-off to pay for a higher throughput (I remember doing a
     -- bunch of benchmarks to test this hypothesis).
     _scrLock :: MVar (),
-    _scrCache :: AppState impl,
+    _scrCache :: IORef (AppState impl),
     -- | The gauge metric that tracks the current metadata version.
     --
     -- Invariant: This gauge must be updated via 'updateMetadataVersionGauge'
@@ -65,8 +64,8 @@ data AppStateRef impl = AppStateRef
 
 -- | A mutable reference to '(RebuildableSchemaCache, SchemaCacheVer)' and 'RebuildableAppContext'
 data AppState impl = AppState
-  { asSchemaCache :: IORef (RebuildableSchemaCache, SchemaCacheVer),
-    asAppCtx :: IORef (RebuildableAppContext impl)
+  { asSchemaCache :: (RebuildableSchemaCache, SchemaCacheVer),
+    asAppCtx :: RebuildableAppContext impl
   }
 
 -- | Build a new 'AppStateRef'
@@ -76,11 +75,11 @@ initialiseAppStateRef ::
   RebuildableSchemaCache ->
   RebuildableAppContext impl ->
   m (AppStateRef impl)
-initialiseAppStateRef serverMetrics rebuildableSchemaCache appCtx = liftIO $ do
+initialiseAppStateRef serverMetrics rebuildableSchemaCache rebuildableAppCtx = liftIO $ do
   cacheLock <- newMVar ()
-  !asSchemaCache <- newIORef (rebuildableSchemaCache, initSchemaCacheVer)
-  !asAppCtx <- newIORef appCtx
-  let cacheCell = AppState {..}
+
+  let appState = AppState (rebuildableSchemaCache, initSchemaCacheVer) rebuildableAppCtx
+  cacheCell <- newIORef appState
   let metadataVersionGauge = smSchemaCacheMetadataResourceVersion serverMetrics
   updateMetadataVersionGauge metadataVersionGauge rebuildableSchemaCache
   pure $ AppStateRef cacheLock cacheCell metadataVersionGauge
@@ -101,11 +100,10 @@ withSchemaCacheUpdate (AppStateRef lock cacheRef metadataVersionGauge) logger mL
   withMVarMasked lock $ \() -> do
     (!res, !newSC) <- action
     liftIO $ do
-      let AppState asSchemaCache _ = cacheRef
       -- update schemacache in IO reference
-      modifyIORef' asSchemaCache $ \appStateSchemaCache ->
-        let !newVer = incSchemaCacheVer (snd appStateSchemaCache)
-         in (newSC, newVer)
+      modifyIORef' cacheRef $ \appState ->
+        let !newVer = incSchemaCacheVer (snd $ asSchemaCache appState)
+         in appState {asSchemaCache = (newSC, newVer)}
 
       -- update metric with new metadata version
       updateMetadataVersionGauge metadataVersionGauge newSC
@@ -129,11 +127,11 @@ withSchemaCacheUpdate (AppStateRef lock cacheRef metadataVersionGauge) logger mL
 
 -- | Read the contents of the 'AppStateRef' to get the latest 'RebuildableSchemaCache' and 'SchemaCacheVer'
 readSchemaCacheRef :: AppStateRef impl -> IO (RebuildableSchemaCache, SchemaCacheVer)
-readSchemaCacheRef scRef = readIORef <$> asSchemaCache $ _scrCache scRef
+readSchemaCacheRef scRef = asSchemaCache <$> readIORef (_scrCache scRef)
 
 -- | Read the contents of the 'AppStateRef' to get the latest 'RebuildableAppContext'
 readAppContextRef :: AppStateRef impl -> IO (RebuildableAppContext impl)
-readAppContextRef scRef = readIORef <$> asAppCtx $ _scrCache scRef
+readAppContextRef scRef = asAppCtx <$> readIORef (_scrCache scRef)
 
 -- | Utility function. Read the latest 'SchemaCache' from the 'AppStateRef'.
 --
@@ -143,9 +141,6 @@ getSchemaCache asRef = lastBuiltSchemaCache . fst <$> readSchemaCacheRef asRef
 
 getSchemaCacheWithVersion :: AppStateRef impl -> IO (SchemaCache, SchemaCacheVer)
 getSchemaCacheWithVersion scRef = fmap (\(sc, ver) -> (lastBuiltSchemaCache sc, ver)) $ readSchemaCacheRef scRef
-
-getSchemaCacheRef :: AppStateRef impl -> IORef (RebuildableSchemaCache, SchemaCacheVer)
-getSchemaCacheRef = asSchemaCache . _scrCache
 
 -- | Utility function. Read the latest 'AppContext' from the 'AppStateRef'.
 getAppContext :: AppStateRef impl -> IO AppContext
