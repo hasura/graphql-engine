@@ -6,7 +6,6 @@ import { within } from '@storybook/testing-library';
 import {
   fireEvent,
   userEvent,
-  waitFor,
   waitForElementToBeRemoved,
 } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
@@ -663,41 +662,41 @@ export const StringColumns: ComponentStory<
 
   if (!tables || isEmpty(comparators)) return <>Loading</>;
   return (
-    <>
-      <RowPermissionsInput
-        onPermissionsChange={p => {
-          setPermissions(p);
-        }}
-        table={{ schema: 'public', name: 'Stuff' }}
-        tables={tables}
-        comparators={comparators}
-        permissions={{ name: { _eq: '' } }}
-      />
-      {/* State debugger. Used to test the current permissions value */}
-      <div className="invisible" data-testid="permissions-state">
-        {JSON.stringify(permissions)}
-      </div>
-    </>
+    <RowPermissionsInput
+      onPermissionsChange={p => {
+        setPermissions(p);
+        args.onPermissionsChange?.(p);
+      }}
+      table={{ schema: 'public', name: 'Stuff' }}
+      tables={tables}
+      comparators={comparators}
+      permissions={permissions}
+    />
   );
 };
 
 // Play function testing that string column with numbers inside are represented as text on the UI
 // Prevents regression where they were treated as numbers
-StringColumns.play = async ({ canvasElement }) => {
+StringColumns.play = async ({ canvasElement, args }) => {
   const canvas = within(canvasElement);
   // Wait until Loading is gone
   await waitForElementToBeRemoved(() => canvas.queryByText('Loading'), {
-    timeout: 50000,
+    timeout: 5000,
   });
 
-  // // Write a number in the input
+  // Write a number in the input
   await userEvent.type(canvas.getByTestId('name._eq-value-input'), '1337');
 
-  // Expect the input to have the number as text
-  await waitFor(async () => {
-    expect(await canvas.findByTestId('permissions-state')).toHaveTextContent(
-      '{"name":{"_eq":"1337"}}'
-    );
+  const onPermissionsChangeMock = args.onPermissionsChange as jest.Mock;
+
+  const latestPermissions =
+    onPermissionsChangeMock?.mock.calls[
+      onPermissionsChangeMock?.mock.calls.length - 1
+    ][0];
+  expect(latestPermissions).toEqual({
+    name: {
+      _eq: '1337',
+    },
   });
 };
 
@@ -705,7 +704,7 @@ export const NumberColumns: ComponentStory<
   typeof RowPermissionsInput
 > = args => {
   const [permissions, setPermissions] = useState<Permissions>({
-    id: { _eq: '' },
+    id: { _eq: '1234' },
   });
   const tables = usePermissionTables({
     dataSourceName: 'default',
@@ -715,39 +714,38 @@ export const NumberColumns: ComponentStory<
 
   if (!tables || isEmpty(comparators)) return <>Loading</>;
   return (
-    <>
-      <RowPermissionsInput
-        onPermissionsChange={p => {
-          setPermissions(p);
-        }}
-        table={{ schema: 'public', name: 'Stuff' }}
-        tables={tables}
-        comparators={comparators}
-        permissions={{ id: { _eq: '1234' } }}
-      />
-      {/* State debugger. Used to test the current permissions value */}
-      <div className="invisible" data-testid="permissions-state">
-        {JSON.stringify(permissions)}
-      </div>
-    </>
+    <RowPermissionsInput
+      onPermissionsChange={p => {
+        setPermissions(p);
+        args.onPermissionsChange?.(p);
+      }}
+      table={{ schema: 'public', name: 'Stuff' }}
+      tables={tables}
+      comparators={comparators}
+      permissions={permissions}
+    />
   );
 };
 
-NumberColumns.play = async ({ canvasElement }) => {
+NumberColumns.play = async ({ canvasElement, args }) => {
   const canvas = within(canvasElement);
   // Wait until Loading is gone
   await waitForElementToBeRemoved(() => canvas.queryByText('Loading'), {
-    timeout: 50000,
+    timeout: 5000,
   });
 
   // // Write a number in the input
   await userEvent.type(canvas.getByTestId('id._eq-value-input'), '1337');
 
-  // Expect the input to have the number as text
-  // Note it's not a number but a string
-  await waitFor(async () => {
-    expect(await canvas.findByTestId('permissions-state')).toHaveTextContent(
-      '{"id":{"_eq":"12341337"}}'
-    );
+  const onPermissionsChangeMock = args.onPermissionsChange as jest.Mock;
+
+  const latestPermissions =
+    onPermissionsChangeMock?.mock.calls[
+      onPermissionsChangeMock?.mock.calls.length - 1
+    ][0];
+  expect(latestPermissions).toEqual({
+    id: {
+      _eq: '12341337',
+    },
   });
 };
