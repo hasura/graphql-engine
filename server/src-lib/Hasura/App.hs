@@ -41,8 +41,8 @@ module Hasura.App
     initSubscriptionsState,
     initLockedEventsCtx,
     initSQLGenCtx,
-    migrateCatalogSchema,
-    readTlsAllowlist,
+    migrateCatalogAndFetchMetadata,
+    buildFirstSchemaCache,
     notifySchemaCacheSyncTx,
     parseArgs,
     runHGEServer,
@@ -136,12 +136,6 @@ import Hasura.SQL.Backend
 import Hasura.Server.API.Query (requiresAdmin)
 import Hasura.Server.App
 import Hasura.Server.AppStateRef
-  ( AppStateRef,
-    getAppContext,
-    getSchemaCache,
-    initialiseAppStateRef,
-    logInconsistentMetadata,
-  )
 import Hasura.Server.Auth
 import Hasura.Server.CheckUpdates (checkForUpdates)
 import Hasura.Server.Init
@@ -163,7 +157,6 @@ import Hasura.Session
 import Hasura.ShutdownLatch
 import Hasura.Tracing
 import Network.HTTP.Client qualified as HTTP
-import Network.HTTP.Client.Blocklisting (Blocklist)
 import Network.HTTP.Client.CreateManager (mkHttpManager)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp qualified as Warp
@@ -613,31 +606,44 @@ initialiseContext env BasicConnectionInfo {..} serveOptions@ServeOptions {..} li
           checkFeatureFlag'
           soApolloFederationStatus
 
-  -- Migrate the catalog and build the schema cache
-  (rebuildableSchemaCache, initialHttpManager) <-
-    lift . flip onException (flushLogger loggerCtx) $
-      migrateCatalogSchema
-        env
-        logger
-        metadataDbPool
-        bciDefaultPostgres
-        mempty
-        serverConfigCtx
-        (mkPgSourceResolver pgLogger)
-        mkMSSQLSourceResolver
-        soExtensionsSchema
+  -- Migrate the catalog and fetch the metdata
+  metadata <-
+    lift $
+      flip onException (flushLogger loggerCtx) $
+        migrateCatalogAndFetchMetadata
+          logger
+          metadataDbPool
+          bciDefaultPostgres
+          soEnableMaintenanceMode
+          soExtensionsSchema
+
+  -- Create the TLSAllowListRef, and the HTTP Manager
+  tlsAllowListRef <- liftIO $ createTLSAllowListRef $ networkTlsAllowlist $ _metaNetwork metadata
+  httpManager <- liftIO $ mkHttpManager (readTLSAllowList tlsAllowListRef) mempty
+
+  -- Create the schema cache
+  rebuildableSchemaCache <-
+    lift $
+      flip onException (flushLogger $ _lsLoggerCtx loggers) $
+        buildFirstSchemaCache
+          env
+          logger
+          serverConfigCtx
+          (mkPgSourceResolver pgLogger)
+          mkMSSQLSourceResolver
+          metadata
+          httpManager
 
   -- Start a background thread for listening schema sync events from other server instances,
   metaVersionRef <- liftIO $ STM.newEmptyTMVarIO
 
   -- Building the RebuildableAppContext, for more info on AppContext,
   -- see note [Hasura Application State]
-  rebuildableAppCtxE <- liftIO $ runExceptT (buildRebuildableAppContext (logger, initialHttpManager) serveOptions env)
+  rebuildableAppCtxE <- liftIO $ runExceptT (buildRebuildableAppContext (logger, httpManager) serveOptions env)
   !rebuildableAppCtx <- onLeft rebuildableAppCtxE $ \e -> throwErrExit InvalidEnvironmentVariableOptionsError $ T.unpack $ qeError e
 
   -- Initialise the 'AppStateRef' from 'RebuildableSchemaCacheRef' and 'RebuildableAppContext'
-  appStateRef <- initialiseAppStateRef serverMetrics rebuildableSchemaCache rebuildableAppCtx
-  finalHttpManager <- liftIO $ mkHttpManager (readTlsAllowlist appStateRef) mempty
+  appStateRef <- initialiseAppStateRef tlsAllowListRef serverMetrics rebuildableSchemaCache rebuildableAppCtx
 
   -- An interval of 0 indicates that no schema sync is required
   case soSchemaPollInterval of
@@ -647,7 +653,6 @@ initialiseContext env BasicConnectionInfo {..} serveOptions@ServeOptions {..} li
       void $ startSchemaSyncListenerThread logger metadataDbPool instanceId interval metaVersionRef
 
   subscriptionsState <- liftIO $ initSubscriptionsState logger liveQueryHook
-
   lockedEventsCtx <- liftIO $ initLockedEventsCtx
 
   let appEnv =
@@ -655,7 +660,7 @@ initialiseContext env BasicConnectionInfo {..} serveOptions@ServeOptions {..} li
           { appEnvPort = soPort,
             appEnvHost = soHost,
             appEnvMetadataDbPool = metadataDbPool,
-            appEnvManager = finalHttpManager,
+            appEnvManager = httpManager,
             appEnvLoggers = loggers,
             appEnvMetadataVersionRef = metaVersionRef,
             appEnvInstanceId = instanceId,
@@ -683,53 +688,38 @@ initialiseContext env BasicConnectionInfo {..} serveOptions@ServeOptions {..} li
           }
   pure (appStateRef, appEnv)
 
--- | helper function to initialize or migrate the @hdb_catalog@ schema (used by pro as well)
-migrateCatalogSchema ::
+-- | Runs catalogue migration, and returns the metadata that was fetched.
+--
+-- On success, this function logs the result of the migration, on failure it
+-- logs a 'catalog_migrate' error and throws a fatal error.
+migrateCatalogAndFetchMetadata ::
   (MonadIO m, MonadBaseControl IO m) =>
-  Env.Environment ->
   Logger Hasura ->
   PG.PGPool ->
   Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) ->
-  Blocklist ->
-  ServerConfigCtx ->
-  SourceResolver ('Postgres 'Vanilla) ->
-  SourceResolver ('MSSQL) ->
+  MaintenanceMode () ->
   ExtensionsSchema ->
-  m (RebuildableSchemaCache, HTTP.Manager)
-migrateCatalogSchema
-  env
+  m Metadata
+migrateCatalogAndFetchMetadata
   logger
   pool
   defaultSourceConfig
-  blockList
-  serverConfigCtx
-  pgSourceResolver
-  mssqlSourceResolver
+  maintenanceMode
   extensionsSchema = do
-    initialiseResult <- runExceptT $ do
-      -- TODO: should we allow the migration to happen during maintenance mode?
-      -- Allowing this can be a sanity check, to see if the hdb_catalog in the
-      -- DB has been set correctly
-      currentTime <- liftIO Clock.getCurrentTime
-      (migrationResult, metadata) <-
+    -- TODO: should we allow the migration to happen during maintenance mode?
+    -- Allowing this can be a sanity check, to see if the hdb_catalog in the
+    -- DB has been set correctly
+    currentTime <- liftIO Clock.getCurrentTime
+    result <-
+      runExceptT $
         PG.runTx pool (PG.Serializable, Just PG.ReadWrite) $
           migrateCatalog
             defaultSourceConfig
             extensionsSchema
-            (_sccMaintenanceMode serverConfigCtx)
+            maintenanceMode
             currentTime
-      let tlsAllowList = networkTlsAllowlist $ _metaNetwork metadata
-      httpManager <- liftIO $ mkHttpManager (pure tlsAllowList) blockList
-      let cacheBuildParams =
-            CacheBuildParams httpManager pgSourceResolver mssqlSourceResolver serverConfigCtx
-          buildReason = CatalogSync
-      schemaCache <-
-        runCacheBuild cacheBuildParams $
-          buildRebuildableSchemaCacheWithReason buildReason logger env metadata
-      pure (migrationResult, schemaCache, httpManager)
-
-    (migrationResult, schemaCache, httpManager) <-
-      initialiseResult `onLeft` \err -> do
+    case result of
+      Left err -> do
         unLogger
           logger
           StartupLog
@@ -738,8 +728,52 @@ migrateCatalogSchema
               slInfo = A.toJSON err
             }
         liftIO (throwErrJExit DatabaseMigrationError err)
-    unLogger logger migrationResult
-    pure (schemaCache, httpManager)
+      Right (migrationResult, metadata) -> do
+        unLogger logger migrationResult
+        pure metadata
+
+-- | Build the original 'RebuildableSchemaCache'.
+--
+-- On error, it logs a 'catalog_migrate' error and throws a fatal error. This
+-- misnomer is intentional: it is to preserve a previous behaviour of the code
+-- and avoid a breaking change.
+buildFirstSchemaCache ::
+  (MonadIO m) =>
+  Env.Environment ->
+  Logger Hasura ->
+  ServerConfigCtx ->
+  SourceResolver ('Postgres 'Vanilla) ->
+  SourceResolver ('MSSQL) ->
+  Metadata ->
+  HTTP.Manager ->
+  m RebuildableSchemaCache
+buildFirstSchemaCache
+  env
+  logger
+  serverConfigCtx
+  pgSourceResolver
+  mssqlSourceResolver
+  metadata
+  httpManager = do
+    let cacheBuildParams = CacheBuildParams httpManager pgSourceResolver mssqlSourceResolver serverConfigCtx
+        buildReason = CatalogSync
+    result <-
+      runExceptT $
+        runCacheBuild cacheBuildParams $
+          buildRebuildableSchemaCacheWithReason buildReason logger env metadata
+    result `onLeft` \err -> do
+      -- TODO: we used to bundle the first schema cache build with the catalog
+      -- migration, using the same error handler for both, meaning that an
+      -- error in the first schema cache build would be reported as
+      -- follows. Changing this will be a breaking change.
+      unLogger
+        logger
+        StartupLog
+          { slLogLevel = LevelError,
+            slKind = "catalog_migrate",
+            slInfo = A.toJSON err
+          }
+      liftIO (throwErrJExit DatabaseMigrationError err)
 
 -- | Event triggers live in the user's DB and other events
 --  (cron, one-off and async actions)
@@ -1258,11 +1292,6 @@ notifySchemaCacheSyncTx (MetadataResourceVersion resourceVersion) instanceId inv
       (PG.ViaJSON invalidations, resourceVersion, instanceId)
       True
   pure ()
-
-readTlsAllowlist :: AppStateRef impl -> IO [TlsAllow]
-readTlsAllowlist appStateRef = do
-  schemaCache <- getSchemaCache appStateRef
-  pure $ scTlsAllowlist schemaCache
 
 getCatalogStateTx :: PG.TxE QErr CatalogState
 getCatalogStateTx =

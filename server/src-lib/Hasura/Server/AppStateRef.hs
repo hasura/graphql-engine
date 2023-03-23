@@ -1,17 +1,21 @@
-{-# LANGUAGE CPP #-}
-
 module Hasura.Server.AppStateRef
-  ( AppStateRef (..),
+  ( -- * AppState
+    AppStateRef (..),
     AppState (..),
     initialiseAppStateRef,
     withSchemaCacheUpdate,
     readAppContextRef,
     readSchemaCacheRef,
-    getAppContext,
-    getSchemaCache,
-    getSchemaCacheWithVersion,
+
+    -- * TLS AllowList reference
+    TLSAllowListRef,
+    createTLSAllowListRef,
+    readTLSAllowList,
 
     -- * Utility
+    getSchemaCache,
+    getSchemaCacheWithVersion,
+    getAppContext,
     logInconsistentMetadata,
   )
 where
@@ -25,13 +29,15 @@ import Hasura.Logging qualified as L
 import Hasura.Prelude hiding (get, put)
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.Logging
 import Hasura.Server.Metrics
-  ( ServerMetrics (smSchemaCacheMetadataResourceVersion),
-  )
 import System.Metrics.Gauge (Gauge)
 import System.Metrics.Gauge qualified as Gauge
+
+--------------------------------------------------------------------------------
+-- AppState
 
 -- | A mutable reference to a 'AppState', plus
 --
@@ -68,20 +74,24 @@ data AppState impl = AppState
     asAppCtx :: RebuildableAppContext impl
   }
 
--- | Build a new 'AppStateRef'
+-- | Build a new 'AppStateRef'.
+--
+-- This function also updates the 'TLSAllowListRef' to make it point to the
+-- newly minted 'SchemaCacheRef'.
 initialiseAppStateRef ::
   MonadIO m =>
+  TLSAllowListRef impl ->
   ServerMetrics ->
   RebuildableSchemaCache ->
   RebuildableAppContext impl ->
   m (AppStateRef impl)
-initialiseAppStateRef serverMetrics rebuildableSchemaCache rebuildableAppCtx = liftIO $ do
+initialiseAppStateRef (TLSAllowListRef tlsAllowListRef) serverMetrics rebuildableSchemaCache rebuildableAppCtx = liftIO $ do
   cacheLock <- newMVar ()
-
   let appState = AppState (rebuildableSchemaCache, initSchemaCacheVer) rebuildableAppCtx
   cacheCell <- newIORef appState
   let metadataVersionGauge = smSchemaCacheMetadataResourceVersion serverMetrics
   updateMetadataVersionGauge metadataVersionGauge rebuildableSchemaCache
+  liftIO $ writeIORef tlsAllowListRef (Right cacheCell)
   pure $ AppStateRef cacheLock cacheCell metadataVersionGauge
 
 -- | Set the 'AppStateRef' to the 'RebuildableSchemaCache' produced by the
@@ -97,9 +107,9 @@ withSchemaCacheUpdate ::
   m (a, RebuildableSchemaCache) ->
   m a
 withSchemaCacheUpdate (AppStateRef lock cacheRef metadataVersionGauge) logger mLogCheckerTVar action =
-  withMVarMasked lock $ \() -> do
+  withMVarMasked lock $ const do
     (!res, !newSC) <- action
-    liftIO $ do
+    liftIO do
       -- update schemacache in IO reference
       modifyIORef' cacheRef $ \appState ->
         let !newVer = incSchemaCacheVer (snd $ asSchemaCache appState)
@@ -112,9 +122,9 @@ withSchemaCacheUpdate (AppStateRef lock cacheRef metadataVersionGauge) logger mL
           logInconsistentMetadata' = logInconsistentMetadata logger inconsistentObjectsList
       -- log any inconsistent objects only once and not everytime this method is called
       case mLogCheckerTVar of
-        Nothing -> do logInconsistentMetadata'
+        Nothing -> logInconsistentMetadata'
         Just logCheckerTVar -> do
-          logCheck <- liftIO $ STM.readTVarIO logCheckerTVar
+          logCheck <- STM.readTVarIO logCheckerTVar
           if null inconsistentObjectsList && logCheck
             then do
               STM.atomically $ STM.writeTVar logCheckerTVar False
@@ -123,38 +133,73 @@ withSchemaCacheUpdate (AppStateRef lock cacheRef metadataVersionGauge) logger mL
                 STM.atomically $ STM.writeTVar logCheckerTVar True
                 logInconsistentMetadata'
 
-    return res
-
--- | Read the contents of the 'AppStateRef' to get the latest 'RebuildableSchemaCache' and 'SchemaCacheVer'
-readSchemaCacheRef :: AppStateRef impl -> IO (RebuildableSchemaCache, SchemaCacheVer)
-readSchemaCacheRef scRef = asSchemaCache <$> readIORef (_scrCache scRef)
+    pure res
 
 -- | Read the contents of the 'AppStateRef' to get the latest 'RebuildableAppContext'
 readAppContextRef :: AppStateRef impl -> IO (RebuildableAppContext impl)
 readAppContextRef scRef = asAppCtx <$> readIORef (_scrCache scRef)
 
--- | Utility function. Read the latest 'SchemaCache' from the 'AppStateRef'.
+-- | Read the contents of the 'AppStateRef' to get the latest 'RebuildableSchemaCache' and 'SchemaCacheVer'
+readSchemaCacheRef :: AppStateRef impl -> IO (RebuildableSchemaCache, SchemaCacheVer)
+readSchemaCacheRef scRef = asSchemaCache <$> readIORef (_scrCache scRef)
+
+--------------------------------------------------------------------------------
+-- TLS Allow List
+
+-- | Reference to a TLS AllowList, used for dynamic TLS settings in the app's
+-- HTTP Manager.
 --
--- > getSchemaCache == fmap (lastBuiltSchemaCache . fst) . readAppStateRef
+-- This exists to break a chicken-and-egg problem in the initialisation of the
+-- engine: the IO action that dynamically reads the TLS settings reads it from
+-- the schema cache; but to build the schema cache we need a HTTP manager that
+-- has access to the TLS settings... In the past, we were using a temporary HTTP
+-- Manager to create the first schema cache, to then create the *real* Manager
+-- that would refer to the list in the schema cache. Now, instead, we only
+-- create one Manager, which uses a 'TLSAllowListRef' to dynamically access the
+-- Allow List.
+newtype TLSAllowListRef impl
+  = TLSAllowListRef
+      ( IORef (Either [TlsAllow] (IORef (AppState impl)))
+      )
+
+-- | Creates a new 'TLSAllowListRef' that points to the given list.
+createTLSAllowListRef :: [TlsAllow] -> IO (TLSAllowListRef impl)
+createTLSAllowListRef = fmap TLSAllowListRef . newIORef . Left
+
+-- | Reads the TLS AllowList by attempting to read from the schema cache, and
+-- defaulting to the list given when the ref was created.
+readTLSAllowList :: TLSAllowListRef impl -> IO [TlsAllow]
+readTLSAllowList (TLSAllowListRef ref) =
+  readIORef ref >>= \case
+    Right scRef -> scTlsAllowlist . lastBuiltSchemaCache . fst . asSchemaCache <$> readIORef scRef
+    Left list -> pure list
+
+--------------------------------------------------------------------------------
+-- Utility functions
+
+-- | Read the latest 'SchemaCache' from the 'AppStateRef'.
 getSchemaCache :: AppStateRef impl -> IO SchemaCache
 getSchemaCache asRef = lastBuiltSchemaCache . fst <$> readSchemaCacheRef asRef
 
+-- | Read the latest 'SchemaCache' and its version from the 'AppStateRef'.
 getSchemaCacheWithVersion :: AppStateRef impl -> IO (SchemaCache, SchemaCacheVer)
-getSchemaCacheWithVersion scRef = fmap (\(sc, ver) -> (lastBuiltSchemaCache sc, ver)) $ readSchemaCacheRef scRef
+getSchemaCacheWithVersion scRef = first lastBuiltSchemaCache <$> readSchemaCacheRef scRef
 
--- | Utility function. Read the latest 'AppContext' from the 'AppStateRef'.
+-- | Read the latest 'AppContext' from the 'AppStateRef'.
 getAppContext :: AppStateRef impl -> IO AppContext
 getAppContext asRef = lastBuiltAppContext <$> readAppContextRef asRef
 
--- | Utility function
+-- | Formats and logs a list of inconsistent metadata objects.
 logInconsistentMetadata :: L.Logger L.Hasura -> [InconsistentMetadata] -> IO ()
 logInconsistentMetadata logger objs =
   unless (null objs) $
     L.unLogger logger $
       mkInconsMetadataLog objs
 
--- Internal helper. Set the gauge metric to the metadata version of the schema
--- cache, if it exists.
+--------------------------------------------------------------------------------
+-- Local helpers
+
+-- | Set the gauge metric to the metadata version of the schema cache, if it exists.
 updateMetadataVersionGauge :: MonadIO m => Gauge -> RebuildableSchemaCache -> m ()
 updateMetadataVersionGauge metadataVersionGauge schemaCache = do
   let metadataVersion = scMetadataResourceVersion . lastBuiltSchemaCache $ schemaCache
