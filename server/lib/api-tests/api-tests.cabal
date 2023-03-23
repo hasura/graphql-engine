@@ -132,6 +132,7 @@ library
     Test.Databases.Postgres.BackendOnlyPermissionsSpec
     Test.Databases.Postgres.DataValidation.PermissionSpec
     Test.Databases.Postgres.JsonbSpec
+    Test.Databases.Postgres.LogicalModelsSpec
     Test.Databases.Postgres.TimestampSpec
     Test.Databases.Postgres.UniqueConstraintsSpec
     Test.Databases.SQLServer.DefaultValues.OnConflictSpec
