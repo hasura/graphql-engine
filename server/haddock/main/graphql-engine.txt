@@ -26939,8 +26939,11 @@ AppState :: (RebuildableSchemaCache, SchemaCacheVer) -> RebuildableAppContext im
 [asSchemaCache] :: AppState impl -> (RebuildableSchemaCache, SchemaCacheVer)
 [asAppCtx] :: AppState impl -> RebuildableAppContext impl
 
--- | Build a new <a>AppStateRef</a>
-initialiseAppStateRef :: MonadIO m => ServerMetrics -> RebuildableSchemaCache -> RebuildableAppContext impl -> m (AppStateRef impl)
+-- | Build a new <a>AppStateRef</a>.
+--   
+--   This function also updates the <a>TLSAllowListRef</a> to make it point
+--   to the newly minted <tt>SchemaCacheRef</tt>.
+initialiseAppStateRef :: MonadIO m => TLSAllowListRef impl -> ServerMetrics -> RebuildableSchemaCache -> RebuildableAppContext impl -> m (AppStateRef impl)
 
 -- | Set the <a>AppStateRef</a> to the <a>RebuildableSchemaCache</a>
 --   produced by the given action.
@@ -26950,27 +26953,44 @@ initialiseAppStateRef :: MonadIO m => ServerMetrics -> RebuildableSchemaCache ->
 withSchemaCacheUpdate :: (MonadIO m, MonadBaseControl IO m) => AppStateRef impl -> Logger Hasura -> Maybe (TVar Bool) -> m (a, RebuildableSchemaCache) -> m a
 
 -- | Read the contents of the <a>AppStateRef</a> to get the latest
---   <a>RebuildableSchemaCache</a> and <a>SchemaCacheVer</a>
-readSchemaCacheRef :: AppStateRef impl -> IO (RebuildableSchemaCache, SchemaCacheVer)
-
--- | Read the contents of the <a>AppStateRef</a> to get the latest
 --   <a>RebuildableAppContext</a>
 readAppContextRef :: AppStateRef impl -> IO (RebuildableAppContext impl)
 
--- | Utility function. Read the latest <a>SchemaCache</a> from the
---   <a>AppStateRef</a>.
+-- | Read the contents of the <a>AppStateRef</a> to get the latest
+--   <a>RebuildableSchemaCache</a> and <a>SchemaCacheVer</a>
+readSchemaCacheRef :: AppStateRef impl -> IO (RebuildableSchemaCache, SchemaCacheVer)
+
+-- | Reference to a TLS AllowList, used for dynamic TLS settings in the
+--   app's HTTP Manager.
 --   
---   <pre>
---   getSchemaCache == fmap (lastBuiltSchemaCache . fst) . readAppStateRef
---   </pre>
+--   This exists to break a chicken-and-egg problem in the initialisation
+--   of the engine: the IO action that dynamically reads the TLS settings
+--   reads it from the schema cache; but to build the schema cache we need
+--   a HTTP manager that has access to the TLS settings... In the past, we
+--   were using a temporary HTTP Manager to create the first schema cache,
+--   to then create the *real* Manager that would refer to the list in the
+--   schema cache. Now, instead, we only create one Manager, which uses a
+--   <a>TLSAllowListRef</a> to dynamically access the Allow List.
+data TLSAllowListRef impl
+
+-- | Creates a new <a>TLSAllowListRef</a> that points to the given list.
+createTLSAllowListRef :: [TlsAllow] -> IO (TLSAllowListRef impl)
+
+-- | Reads the TLS AllowList by attempting to read from the schema cache,
+--   and defaulting to the list given when the ref was created.
+readTLSAllowList :: TLSAllowListRef impl -> IO [TlsAllow]
+
+-- | Read the latest <a>SchemaCache</a> from the <a>AppStateRef</a>.
 getSchemaCache :: AppStateRef impl -> IO SchemaCache
+
+-- | Read the latest <a>SchemaCache</a> and its version from the
+--   <a>AppStateRef</a>.
 getSchemaCacheWithVersion :: AppStateRef impl -> IO (SchemaCache, SchemaCacheVer)
 
--- | Utility function. Read the latest <a>AppContext</a> from the
---   <a>AppStateRef</a>.
+-- | Read the latest <a>AppContext</a> from the <a>AppStateRef</a>.
 getAppContext :: AppStateRef impl -> IO AppContext
 
--- | Utility function
+-- | Formats and logs a list of inconsistent metadata objects.
 logInconsistentMetadata :: Logger Hasura -> [InconsistentMetadata] -> IO ()
 
 module Hasura.Server.SchemaUpdate
@@ -27694,9 +27714,18 @@ initLockedEventsCtx :: IO LockedEventsCtx
 --   to start the server.
 initialiseContext :: (ForkableMonadIO m, MonadCatch m) => Environment -> BasicConnectionInfo -> ServeOptions Hasura -> Maybe SubscriptionPostPollHook -> ServerMetrics -> PrometheusMetrics -> SamplingPolicy -> ManagedT m (AppStateRef Hasura, AppEnv)
 
--- | helper function to initialize or migrate the <tt>hdb_catalog</tt>
---   schema (used by pro as well)
-migrateCatalogSchema :: (MonadIO m, MonadBaseControl IO m) => Environment -> Logger Hasura -> PGPool -> Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) -> Blocklist -> ServerConfigCtx -> SourceResolver ('Postgres 'Vanilla) -> SourceResolver 'MSSQL -> ExtensionsSchema -> m (RebuildableSchemaCache, Manager)
+-- | Runs catalogue migration, and returns the metadata that was fetched.
+--   
+--   On success, this function logs the result of the migration, on failure
+--   it logs a <tt>catalog_migrate</tt> error and throws a fatal error.
+migrateCatalogAndFetchMetadata :: (MonadIO m, MonadBaseControl IO m) => Logger Hasura -> PGPool -> Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) -> MaintenanceMode () -> ExtensionsSchema -> m Metadata
+
+-- | Build the original <a>RebuildableSchemaCache</a>.
+--   
+--   On error, it logs a <tt>catalog_migrate</tt> error and throws a fatal
+--   error. This misnomer is intentional: it is to preserve a previous
+--   behaviour of the code and avoid a breaking change.
+buildFirstSchemaCache :: MonadIO m => Environment -> Logger Hasura -> ServerConfigCtx -> SourceResolver ('Postgres 'Vanilla) -> SourceResolver 'MSSQL -> Metadata -> Manager -> m RebuildableSchemaCache
 
 -- | If an exception is encountered , flush the log buffer and rethrow If
 --   we do not flush the log buffer on exception, then log lines may be
@@ -27731,7 +27760,6 @@ runHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStatele
 --   <a>runHGEServer</a> for documentation.
 mkHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication m, HttpLog m, HasAppEnv m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadExecutionLog m, MonadWSLog m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m, ProvidesHasuraServices m, MonadTrace m, MonadGetApiTimeLimit m) => (AppStateRef impl -> SpockT m ()) -> AppStateRef impl -> Store EmptyMetrics -> ManagedT m Application
 notifySchemaCacheSyncTx :: MetadataResourceVersion -> InstanceId -> CacheInvalidations -> TxE QErr ()
-readTlsAllowlist :: AppStateRef impl -> IO [TlsAllow]
 getCatalogStateTx :: TxE QErr CatalogState
 setCatalogStateTx :: CatalogStateType -> Value -> TxE QErr ()
 mkPgSourceResolver :: PGLogger -> SourceResolver ('Postgres 'Vanilla)
