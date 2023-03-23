@@ -24824,6 +24824,7 @@ RunSQL :: Text -> SourceName -> Bool -> Maybe Bool -> TxAccess -> RunSQL
 --   
 --   See Note [Checking metadata consistency in run_sql].
 isSchemaCacheBuildRequiredRunSQL :: RunSQL -> Bool
+isReadOnly :: RunSQL -> Bool
 
 -- | Used as an escape hatch to run raw SQL against a database.
 runRunSQL :: forall (pgKind :: PostgresKind) m. (BackendMetadata ('Postgres pgKind), ToMetadataFetchQuery pgKind, FetchTableMetadata pgKind, FetchFunctionMetadata pgKind, CacheRWM m, HasServerConfigCtx m, MetadataM m, MonadBaseControl IO m, MonadError QErr m, MonadIO m, MonadTrace m, UserInfoM m) => RunSQL -> m EncJSON
