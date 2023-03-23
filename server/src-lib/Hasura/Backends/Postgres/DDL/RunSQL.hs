@@ -14,6 +14,7 @@
 module Hasura.Backends.Postgres.DDL.RunSQL
   ( runRunSQL,
     RunSQL (..),
+    isReadOnly,
     isSchemaCacheBuildRequiredRunSQL,
   )
 where
@@ -80,8 +81,8 @@ instance FromJSON RunSQL where
     rSource <- o .:? "source" .!= defaultSource
     rCascade <- o .:? "cascade" .!= False
     rCheckMetadataConsistency <- o .:? "check_metadata_consistency"
-    isReadOnly <- o .:? "read_only" .!= False
-    let rTxAccessMode = if isReadOnly then PG.ReadOnly else PG.ReadWrite
+    readOnly <- o .:? "read_only" .!= False
+    let rTxAccessMode = if readOnly then PG.ReadOnly else PG.ReadWrite
     pure RunSQL {..}
 
 instance ToJSON RunSQL where
@@ -119,6 +120,12 @@ isSchemaCacheBuildRequiredRunSQL RunSQL {..} =
                 }
               "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b"
           )
+
+isReadOnly :: RunSQL -> Bool
+isReadOnly runsql =
+  case rTxAccessMode runsql of
+    PG.ReadOnly -> True
+    PG.ReadWrite -> False
 
 {- Note [Checking metadata consistency in run_sql]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

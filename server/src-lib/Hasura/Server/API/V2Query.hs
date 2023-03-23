@@ -204,9 +204,9 @@ queryModifiesUserDB = \case
   RQUpdate _ -> True
   RQDelete _ -> True
   RQCount _ -> False
-  RQRunSql _ -> True
-  RQCitusRunSql _ -> True
-  RQCockroachRunSql _ -> True
+  RQRunSql runsql -> not (Postgres.isReadOnly runsql)
+  RQCitusRunSql runsql -> not (Postgres.isReadOnly runsql)
+  RQCockroachRunSql runsql -> not (Postgres.isReadOnly runsql)
   RQMssqlRunSql _ -> True
   RQMysqlRunSql _ -> True
   RQBigqueryRunSql _ -> True
