@@ -2861,7 +2861,7 @@ tlccEventTriggerName :: TriggerName
 </span><span id="line-1058"></span><span>            </span><span class="annot"><span class="">[ST.st|
           SELECT id FROM hdb_catalog.event_log
           WHERE ((delivered = true OR error = true) AND trigger_name = $1)
-          AND created_at &lt; now() - interval '#{qRetentionPeriod}'
+          AND created_at &lt; (now() - interval '#{qRetentionPeriod}') AT TIME ZONE 'UTC'
           AND locked IS NULL
           LIMIT $2
         |]</span></span><span>
