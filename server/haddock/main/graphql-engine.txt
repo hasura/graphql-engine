@@ -26901,7 +26901,7 @@ module Hasura.Server.AppStateRef
 --   <a>SchemaCache</a>.</li>
 --   </ul>
 data AppStateRef impl
-AppStateRef :: MVar () -> AppState impl -> Gauge -> AppStateRef impl
+AppStateRef :: MVar () -> IORef (AppState impl) -> Gauge -> AppStateRef impl
 
 -- | The idea behind explicit locking here is to
 --   
@@ -26922,7 +26922,7 @@ AppStateRef :: MVar () -> AppState impl -> Gauge -> AppStateRef impl
 --   to pay for a higher throughput (I remember doing a bunch of benchmarks
 --   to test this hypothesis).
 [_scrLock] :: AppStateRef impl -> MVar ()
-[_scrCache] :: AppStateRef impl -> AppState impl
+[_scrCache] :: AppStateRef impl -> IORef (AppState impl)
 
 -- | The gauge metric that tracks the current metadata version.
 --   
@@ -26934,9 +26934,9 @@ AppStateRef :: MVar () -> AppState impl -> Gauge -> AppStateRef impl
 -- | A mutable reference to '(RebuildableSchemaCache, SchemaCacheVer)' and
 --   <a>RebuildableAppContext</a>
 data AppState impl
-AppState :: IORef (RebuildableSchemaCache, SchemaCacheVer) -> IORef (RebuildableAppContext impl) -> AppState impl
-[asSchemaCache] :: AppState impl -> IORef (RebuildableSchemaCache, SchemaCacheVer)
-[asAppCtx] :: AppState impl -> IORef (RebuildableAppContext impl)
+AppState :: (RebuildableSchemaCache, SchemaCacheVer) -> RebuildableAppContext impl -> AppState impl
+[asSchemaCache] :: AppState impl -> (RebuildableSchemaCache, SchemaCacheVer)
+[asAppCtx] :: AppState impl -> RebuildableAppContext impl
 
 -- | Build a new <a>AppStateRef</a>
 initialiseAppStateRef :: MonadIO m => ServerMetrics -> RebuildableSchemaCache -> RebuildableAppContext impl -> m (AppStateRef impl)
@@ -26964,7 +26964,6 @@ readAppContextRef :: AppStateRef impl -> IO (RebuildableAppContext impl)
 --   </pre>
 getSchemaCache :: AppStateRef impl -> IO SchemaCache
 getSchemaCacheWithVersion :: AppStateRef impl -> IO (SchemaCache, SchemaCacheVer)
-getSchemaCacheRef :: AppStateRef impl -> IORef (RebuildableSchemaCache, SchemaCacheVer)
 
 -- | Utility function. Read the latest <a>AppContext</a> from the
 --   <a>AppStateRef</a>.
