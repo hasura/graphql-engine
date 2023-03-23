@@ -1,6 +1,5 @@
 import { graphql, rest } from 'msw';
 import Endpoints from '../../../../Endpoints';
-import { SurveysResponseData } from '../../../Surveys';
 import {
   fetchSurveysDataResponse,
   mockMetadataUrl,
@@ -11,6 +10,7 @@ import {
   serverDownErrorMessage,
 } from './constants';
 import { OnboardingResponseData } from '../types';
+import { FetchAllSurveysDataQuery } from '../../../ControlPlane';
 
 type ResponseBodyOnSuccess = {
   status: 'success';
@@ -20,7 +20,7 @@ const controlPlaneApi = graphql.link(Endpoints.luxDataGraphql);
 
 export const mutationBaseHandlers = () => [
   controlPlaneApi.mutation<ResponseBodyOnSuccess>(
-    'addSurveyAnswer',
+    'addSurveyAnswerV2',
     (req, res, ctx) => {
       return res(
         ctx.status(200),
@@ -82,17 +82,24 @@ export const onboardingDataRunQueryClick = controlPlaneApi.query<
   return res(ctx.status(200), ctx.data(mockOnboardingData.runQueryClick));
 });
 
-export const fetchUnansweredSurveysHandler = controlPlaneApi.query<
-  SurveysResponseData['data']
->('fetchAllSurveysData', (req, res, ctx) => {
-  return res(ctx.status(200), ctx.data(fetchSurveysDataResponse.unanswered));
-});
+export const fetchUnansweredSurveysHandler =
+  controlPlaneApi.query<FetchAllSurveysDataQuery>(
+    'fetchAllSurveysData',
+    (req, res, ctx) => {
+      return res(
+        ctx.status(200),
+        ctx.data(fetchSurveysDataResponse.unanswered)
+      );
+    }
+  );
 
-export const fetchAnsweredSurveysHandler = controlPlaneApi.query<
-  SurveysResponseData['data']
->('fetchAllSurveysData', (req, res, ctx) => {
-  return res(ctx.status(200), ctx.data(fetchSurveysDataResponse.answered));
-});
+export const fetchAnsweredSurveysHandler =
+  controlPlaneApi.query<FetchAllSurveysDataQuery>(
+    'fetchAllSurveysData',
+    (req, res, ctx) => {
+      return res(ctx.status(200), ctx.data(fetchSurveysDataResponse.answered));
+    }
+  );
 
 export const fetchGithubMetadataHandler = rest.get(
   mockMetadataUrl,

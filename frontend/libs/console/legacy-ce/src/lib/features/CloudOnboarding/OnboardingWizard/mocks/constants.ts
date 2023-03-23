@@ -1,4 +1,7 @@
-import { SurveysResponseData } from '../../../Surveys';
+import {
+  FetchAllSurveysDataQuery,
+  Survey_V2_Question_Kind_Enum,
+} from '../../../ControlPlane';
 import {
   getMetadataUrl,
   getMigrationUrl,
@@ -183,75 +186,132 @@ export const mockOnboardingData: Record<
 
 export const fetchSurveysDataResponse: Record<
   string,
-  SurveysResponseData['data']
+  FetchAllSurveysDataQuery
 > = {
   unanswered: {
-    survey: [
+    survey_v2: [
       {
         survey_name: 'Hasura familiarity survey',
+        survey_title: null,
+        survey_description: null,
         survey_questions: [
           {
-            kind: 'radio',
+            id: '57bff905-4b33-4195-8091-3ecd30db87b0',
+            position: 1,
+            is_mandatory: true,
             question: 'How familiar are you with Hasura?',
-            id: '4595916a-1c5b-4d55-b7ca-11616131d1d3',
+            kind: 'radio' as Survey_V2_Question_Kind_Enum,
             survey_question_options: [
               {
-                option: 'new user',
-                id: 'dcd2480b-cc1b-4e1a-b111-27aed8b89b8b',
+                id: '05b532b4-2e2a-49a3-8ade-215107c4d64f',
+                position: 1,
+                option: "I'm completely new to Hasura",
+                template_config:
+                  '{ "react_icons_fa_component_name": "FaHeart" }',
+                additional_info_config: null,
               },
               {
-                option: 'active user',
-                id: '53ed19af-7ae7-4225-9969-13b06d9b8f66',
+                id: 'd6cd3f20-5add-4283-88c3-d112b7446369',
+                position: 1,
+                option:
+                  "I've used Hasura before but not actively developing right now",
+                template_config:
+                  '{ "react_icons_fa_component_name": "FaBookmark" }',
+                additional_info_config: null,
               },
               {
-                option: 'recurring user',
-                id: '8f81e3d0-f45b-40ba-9456-8865a5a1cb93',
+                id: '76c30481-a7cc-45b4-9bd0-7332a2fb8617',
+                position: 1,
+                option: "I'm already using Hasura (CE/Cloud) weekly/monthly",
+                template_config:
+                  '{ "react_icons_fa_component_name": "FaUser" }',
+                additional_info_config: null,
               },
               {
-                option: 'past user',
-                id: 'b25edd78-0af3-4448-8302-14e2b818c4c6',
+                id: '319bb5c4-9aa6-42eb-afce-3862c4bef3a7',
+                position: 1,
+                option: "I'm actively developing with Hasura (CE/Cloud) daily",
+                template_config:
+                  '{ "react_icons_fa_component_name": "FaStar" }',
+                additional_info_config: null,
               },
             ],
           },
         ],
+        survey_responses: [],
+        template_config:
+          '{ "survey_submit_text": "Submit", "survey_cancel_text": "Cancel" }',
       },
     ],
-    survey_question_answers: [],
   },
   answered: {
-    survey: [
+    survey_v2: [
       {
         survey_name: 'Hasura familiarity survey',
+        survey_title: null,
+        survey_description: null,
         survey_questions: [
           {
-            kind: 'radio',
+            id: '57bff905-4b33-4195-8091-3ecd30db87b0',
+            position: 1,
+            is_mandatory: true,
             question: 'How familiar are you with Hasura?',
-            id: '4595916a-1c5b-4d55-b7ca-11616131d1d3',
+            kind: 'radio' as Survey_V2_Question_Kind_Enum,
             survey_question_options: [
               {
-                option: 'new user',
-                id: 'dcd2480b-cc1b-4e1a-b111-27aed8b89b8b',
+                id: '05b532b4-2e2a-49a3-8ade-215107c4d64f',
+                position: 1,
+                option: "I'm completely new to Hasura",
+                template_config:
+                  '{ "react_icons_fa_component_name": "FaHeart" }',
+                additional_info_config: null,
               },
               {
-                option: 'active user',
-                id: '53ed19af-7ae7-4225-9969-13b06d9b8f66',
+                id: 'd6cd3f20-5add-4283-88c3-d112b7446369',
+                position: 1,
+                option:
+                  "I've used Hasura before but not actively developing right now",
+                template_config:
+                  '{ "react_icons_fa_component_name": "FaBookmark" }',
+                additional_info_config: null,
               },
               {
-                option: 'recurring user',
-                id: '8f81e3d0-f45b-40ba-9456-8865a5a1cb93',
+                id: '76c30481-a7cc-45b4-9bd0-7332a2fb8617',
+                position: 1,
+                option: "I'm already using Hasura (CE/Cloud) weekly/monthly",
+                template_config:
+                  '{ "react_icons_fa_component_name": "FaUser" }',
+                additional_info_config: null,
               },
               {
-                option: 'past user',
-                id: 'b25edd78-0af3-4448-8302-14e2b818c4c6',
+                id: '319bb5c4-9aa6-42eb-afce-3862c4bef3a7',
+                position: 1,
+                option: "I'm actively developing with Hasura (CE/Cloud) daily",
+                template_config:
+                  '{ "react_icons_fa_component_name": "FaStar" }',
+                additional_info_config: null,
               },
             ],
           },
         ],
-      },
-    ],
-    survey_question_answers: [
-      {
-        survey_question_id: '4595916a-1c5b-4d55-b7ca-11616131d1d3',
+        survey_responses: [
+          {
+            survey_response_answers: [
+              {
+                survey_question_id: '4595916a-1c5b-4d55-b7ca-11616131d1d3',
+                survey_response_answer_options: [
+                  {
+                    answer: null,
+                    additional_info: null,
+                    option_id: '319bb5c4-9aa6-42eb-afce-3862c4bef3a7',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        template_config:
+          '{ "survey_submit_text": "Submit", "survey_cancel_text": "Cancel" }',
       },
     ],
   },

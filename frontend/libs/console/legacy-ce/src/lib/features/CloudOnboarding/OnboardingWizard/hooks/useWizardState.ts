@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useFamiliaritySurveyData } from '../../../Surveys';
+import { useSurveysData } from '../../../Surveys';
 import { trackCustomEvent } from '../../../Analytics';
 import { useOnboardingData } from './useOnboardingData';
 import { getWizardState } from '../utils';
+import { AllowedSurveyNames } from '../../../Surveys/types';
 
 export type WizardState =
   | 'familiarity-survey'
@@ -20,28 +21,26 @@ export function useWizardState() {
   }, []);
 
   const {
-    showFamiliaritySurvey,
+    show: showSurvey,
     data: familiaritySurveyData,
-    onSkip: familiaritySurveyOnSkip,
-    onOptionClick: familiaritySurveyOnOptionClick,
-  } = useFamiliaritySurveyData();
+    onSubmit: familiaritySurveyOnOptionClick,
+  } = useSurveysData({ surveyName: AllowedSurveyNames.familiaritySurvey });
 
   const { data: onboardingData } = useOnboardingData();
 
   const [state, setState] = useState<WizardState>(
-    getWizardState(showFamiliaritySurvey, onboardingData)
+    getWizardState(showSurvey, onboardingData)
   );
 
   useEffect(() => {
-    const wizardState = getWizardState(showFamiliaritySurvey, onboardingData);
+    const wizardState = getWizardState(showSurvey, onboardingData);
     setState(wizardState);
-  }, [onboardingData, showFamiliaritySurvey]);
+  }, [onboardingData, showSurvey]);
 
   return {
     state,
     setState,
     familiaritySurveyData,
-    familiaritySurveyOnSkip,
     familiaritySurveyOnOptionClick,
   };
 }

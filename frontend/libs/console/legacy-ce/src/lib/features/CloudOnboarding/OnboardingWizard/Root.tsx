@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAppDispatch } from '../../../storeHooks';
-import { HasuraFamiliaritySurvey } from '../../Surveys';
+import { AllowedSurveyThemes, Survey } from '../../Surveys';
 import {
   ConnectDBScreen,
   TemplateSummary,
@@ -28,7 +28,6 @@ export function Root() {
     setState,
     familiaritySurveyData,
     familiaritySurveyOnOptionClick,
-    familiaritySurveyOnSkip,
   } = useWizardState();
 
   const transitionToTemplateSummary = () => {
@@ -46,10 +45,10 @@ export function Root() {
           header={dialogHeader}
           subHeader={familiaritySurveySubHeader}
         >
-          <HasuraFamiliaritySurvey
+          <Survey
+            theme={AllowedSurveyThemes.familiaritySurveyTheme}
+            onSubmit={familiaritySurveyOnOptionClick}
             data={familiaritySurveyData}
-            onSkip={familiaritySurveyOnSkip}
-            onOptionClick={familiaritySurveyOnOptionClick}
           />
         </DialogContainer>
       );

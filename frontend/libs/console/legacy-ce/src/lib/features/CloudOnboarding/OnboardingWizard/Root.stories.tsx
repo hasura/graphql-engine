@@ -1,8 +1,7 @@
-import React from 'react';
 import { ComponentMeta, Story } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 import { useQueryClient } from 'react-query';
-import { surveysQueryKey } from '../../../features/Surveys/constants';
+import { SurveyQueryKey } from '../../../features/Surveys';
 import { Root } from './Root';
 import {
   mutationBaseHandlers,
@@ -20,7 +19,7 @@ export default {
 export const WithSurvey: Story = () => {
   const queryClient = useQueryClient();
   // need to invalidate as useSurveysData hook is using a stale time
-  queryClient.invalidateQueries(surveysQueryKey, {
+  queryClient.invalidateQueries(SurveyQueryKey.fetchAllSurveyData, {
     refetchActive: false,
   });
 
@@ -39,7 +38,7 @@ WithSurvey.parameters = {
 export const WithoutSurvey: Story = () => {
   const queryClient = useQueryClient();
   // need to invalidate as `useSurveysData` hook is using a stale time
-  queryClient.invalidateQueries(surveysQueryKey, {
+  queryClient.invalidateQueries(SurveyQueryKey.fetchAllSurveyData, {
     refetchActive: false,
   });
 

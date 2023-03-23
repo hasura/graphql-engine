@@ -196,3 +196,55 @@ mutation triggerOneClickDeployment ($projectId: uuid!) {
   }
 }
 `);
+
+/**
+ * GraphQl query to fetch all surveys related data
+ */
+export const FETCH_ALL_SURVEYS_DATA = gql(`
+query fetchAllSurveysData($currentTime: timestamptz!) {
+  survey_v2(where: {_or: [{ended_at: {_gte: $currentTime}}, {ended_at: {_is_null: true}}]}) {
+    survey_name
+    survey_title
+    survey_description
+    survey_questions(where: {_or: [{ended_at: {_gte: $currentTime}}, {ended_at: {_is_null: true}}]}) {
+      id
+      position
+      question
+      kind
+      is_mandatory
+      survey_question_options(where: {_or: [{ended_at: {_gte: $currentTime}}, {ended_at: {_is_null: true}}]}) {
+        id
+        position
+        option
+        template_config
+        additional_info_config {
+          info_description
+          is_mandatory
+        }
+      }
+    }
+    template_config
+    survey_responses {
+      survey_response_answers {
+        survey_question_id
+        survey_response_answer_options {
+          answer
+          additional_info
+          option_id
+        }
+      }
+    }
+  }
+}
+`);
+
+/**
+ * GraphQl mutation to save the survey answer
+ */
+export const ADD_SURVEY_ANSWER = gql(`
+mutation addSurveyAnswerV2 ($responses: [SurveyResponseV2]!, $surveyName: String!, $projectID: uuid) {
+   saveSurveyAnswerV2(payload: {responses: $responses, surveyName: $surveyName, projectID: $projectID}) {
+     status
+   }
+ }
+ `);
