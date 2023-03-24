@@ -1,31 +1,34 @@
+import React, { useState } from 'react';
+import { FaAngleLeft, FaAngleRight } from 'react-icons/fa';
 import { useTrackTable } from '../..';
+import { Badge } from '../../../../new-components/Badge';
 import { Button } from '../../../../new-components/Button';
 import { CardedTable } from '../../../../new-components/CardedTable';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-import React, { useState } from 'react';
-import { useCheckRows } from '../hooks/useCheckRows';
-import { TrackableTable } from '../types';
-import { TableRow } from './TableRow';
 import {
   DEFAULT_PAGE_NUMBER,
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGE_SIZES,
 } from '../constants';
-import { FaAngleLeft, FaAngleRight } from 'react-icons/fa';
+import { useCheckRows } from '../hooks/useCheckRows';
+import { TrackableTable } from '../types';
 import { paginate, search } from '../utils';
 import { SearchBar } from './SearchBar';
-import { Badge } from '../../../../new-components/Badge';
+import { TableRow } from './TableRow';
 
-interface TrackTableProps {
+interface TableListProps {
   dataSourceName: string;
   tables: TrackableTable[];
+  mode: 'track' | 'untrack';
 }
 
-export const TrackedTables = (props: TrackTableProps) => {
+export const TableList = (props: TableListProps) => {
+  const { mode, dataSourceName, tables } = props;
+
   const [pageNumber, setPageNumber] = useState(DEFAULT_PAGE_NUMBER);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [searchText, setSearchText] = useState('');
-  const filteredTables = search(props.tables, searchText);
+  const filteredTables = search(tables, searchText);
 
   const checkboxRef = React.useRef<HTMLInputElement>(null);
 
@@ -37,19 +40,27 @@ export const TrackedTables = (props: TrackTableProps) => {
     checkboxRef.current.indeterminate = inputStatus === 'indeterminate';
   }, [inputStatus]);
 
-  const { untrackTables, loading } = useTrackTable(props.dataSourceName);
+  const { untrackTables, trackTables, loading } = useTrackTable(dataSourceName);
 
   const onClick = () => {
-    untrackTables(
-      filteredTables.filter(({ name }) => checkedIds.includes(name))
+    const tables = filteredTables.filter(({ name }) =>
+      checkedIds.includes(name)
     );
+    if (mode === 'track') {
+      untrackTables(tables);
+    } else {
+      trackTables(tables);
+    }
+
     reset();
   };
 
-  if (!props.tables.length) {
+  if (!tables.length) {
     return (
       <div className="space-y-4">
-        <IndicatorCard>No tracked tables found</IndicatorCard>
+        <IndicatorCard>{`No ${
+          mode === 'track' ? 'tracked' : 'untracked'
+        } tables found`}</IndicatorCard>
       </div>
     );
   }
@@ -65,15 +76,17 @@ export const TrackedTables = (props: TrackTableProps) => {
             isLoading={loading}
             loadingText="Please Wait"
           >
-            Untrack Selected ({checkedIds.length})
+            {`${mode === 'track' ? 'Untrack' : 'Track'} Selected (${
+              checkedIds.length
+            })`}
           </Button>
           <span className="border-r border-slate-300"></span>
           <div className="flex gap-2">
-            <SearchBar onSubmit={data => setSearchText(data)} />
+            <SearchBar onSearch={data => setSearchText(data)} />
             {searchText.length ? (
               <Badge>{filteredTables.length} results found</Badge>
             ) : null}
-          </div>{' '}
+          </div>
         </div>
 
         <div className="flex gap-1">
@@ -126,7 +139,7 @@ export const TrackedTables = (props: TrackTableProps) => {
             <TableRow
               key={table.id}
               table={table}
-              dataSourceName={props.dataSourceName}
+              dataSourceName={dataSourceName}
               checked={checkedIds.includes(table.id)}
               reset={reset}
               onChange={() => onCheck(table.id)}

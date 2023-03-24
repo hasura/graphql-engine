@@ -1,36 +1,38 @@
+import React from 'react';
 import { FaSearch } from 'react-icons/fa';
-import { z } from 'zod';
-import { Button } from '../../../../new-components/Button';
-import { InputField, SimpleForm } from '../../../../new-components/Form';
+import { Input } from '../../../../new-components/Form';
 
 type SearchBarProps = {
-  onSubmit: (searchText: string) => void;
+  onSearch: (searchText: string) => void;
 };
 
-const schema = z.object({
-  searchText: z.string().optional(),
-});
-
-export const SearchBar = (props: SearchBarProps) => {
-  const { onSubmit } = props;
+export const SearchBar = ({ onSearch }: SearchBarProps) => {
+  const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [value, setValue] = React.useState('');
 
   return (
-    <SimpleForm
-      schema={schema}
-      onSubmit={data => {
-        onSubmit(data.searchText ?? '');
-      }}
-    >
-      <div className="flex gap-2">
-        <InputField
-          name="searchText"
-          icon={<FaSearch />}
-          iconPosition="start"
-          noErrorPlaceholder
-          clearButton
-        />
-        <Button type="submit">Search</Button>
-      </div>
-    </SimpleForm>
+    <div className="flex gap-2">
+      <Input
+        name="searchText"
+        icon={<FaSearch />}
+        iconPosition="start"
+        noErrorPlaceholder
+        clearButton
+        fieldProps={{ value: value }}
+        onChange={e => {
+          setValue(e.target.value);
+
+          if (timer.current) clearTimeout(timer.current);
+
+          timer.current = setTimeout(() => {
+            onSearch(e.target.value);
+          }, 20);
+        }}
+        onClearButtonClick={() => {
+          setValue('');
+          onSearch('');
+        }}
+      />
+    </div>
   );
 };

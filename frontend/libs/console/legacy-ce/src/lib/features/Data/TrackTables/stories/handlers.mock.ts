@@ -87,7 +87,7 @@ function isUntrackTable(arg: any) {
   return arg.type === 'postgres_untrack_table';
 }
 
-const runSQLResponse: RunSQLResponse = {
+const runSQLResponse = (size = 1700): RunSQLResponse => ({
   result_type: 'TuplesOk',
   result: [
     ['table_name', 'table_schema', 'table_type'],
@@ -109,9 +109,9 @@ const runSQLResponse: RunSQLResponse = {
     ['InvoiceLineView', 'public', 'VIEW'],
     ['InvoiceView', 'public', 'VIEW'],
     ['TrackView', 'public', 'VIEW'],
-    ...createTables(1700),
+    ...createTables(size),
   ],
-};
+});
 
 function createTables(count: number) {
   const tables = [];
@@ -121,7 +121,7 @@ function createTables(count: number) {
   return tables;
 }
 
-export const handlers = () => [
+export const handlers = (amountOfTables = 1700) => [
   rest.post(`http://localhost:8080/v1/metadata`, async (req, res, ctx) => {
     const body = (await req.json()) as TMigration['query'];
     if (isTrackOrUntrackTable(body)) {
@@ -137,6 +137,6 @@ export const handlers = () => [
     return res(ctx.json({ ...metadata }));
   }),
   rest.post(`http://localhost:8080/v2/query`, (req, res, ctx) => {
-    return res(ctx.json(runSQLResponse));
+    return res(ctx.json(runSQLResponse(amountOfTables)));
   }),
 ];

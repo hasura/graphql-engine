@@ -2,9 +2,9 @@ import React from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { useTables } from './hooks/useTables';
 
-import { TrackedTables } from './components/TrackedTables';
-import { UntrackedTables } from './components/UntrackedTables';
+import { TableList } from './components/TableList';
 import Skeleton from 'react-loading-skeleton';
+import { TrackableTable } from './types';
 
 const classNames = {
   selected:
@@ -17,12 +17,35 @@ interface Props {
   dataSourceName: string;
 }
 
+const groupTables = (tables: TrackableTable[]) => {
+  const trackedTables: TrackableTable[] = [];
+  const untrackedTables: TrackableTable[] = [];
+
+  if (tables) {
+    //doing this in one loop to reduce the overhead for large data sets
+    tables.forEach(t => {
+      if (t.is_tracked) {
+        trackedTables.push(t);
+      } else {
+        untrackedTables.push(t);
+      }
+    });
+  }
+
+  return { trackedTables, untrackedTables };
+};
+
 export const TrackTables = ({ dataSourceName }: Props) => {
   const [tab, setTab] = React.useState<'tracked' | 'untracked'>('untracked');
 
   const { data, isLoading } = useTables({
     dataSourceName,
   });
+
+  const { trackedTables, untrackedTables } = React.useMemo(
+    () => groupTables(data ?? []),
+    [data]
+  );
 
   if (isLoading)
     return (
@@ -32,9 +55,6 @@ export const TrackTables = ({ dataSourceName }: Props) => {
     );
 
   if (!data) return <div className="px-md">Something went wrong</div>;
-
-  const trackedTables = data.filter(({ is_tracked }) => is_tracked);
-  const untrackedTables = data.filter(({ is_tracked }) => !is_tracked);
 
   return (
     <Tabs.Root
@@ -74,10 +94,15 @@ export const TrackTables = ({ dataSourceName }: Props) => {
       </Tabs.List>
 
       <Tabs.Content value="tracked" className="px-md">
-        <TrackedTables dataSourceName={dataSourceName} tables={trackedTables} />
+        <TableList
+          mode={'track'}
+          dataSourceName={dataSourceName}
+          tables={trackedTables}
+        />
       </Tabs.Content>
       <Tabs.Content value="untracked" className="px-md">
-        <UntrackedTables
+        <TableList
+          mode={'untrack'}
           dataSourceName={dataSourceName}
           tables={untrackedTables}
         />

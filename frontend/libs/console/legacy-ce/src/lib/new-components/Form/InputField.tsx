@@ -69,6 +69,10 @@ export type InputFieldProps<T extends z.infer<Schema>> =
      */
     clearButton?: boolean;
     /**
+     * Handler for when a user presses the clear button, and the state is cleared.
+     */
+    onClear?: () => void;
+    /**
      * The input field classes
      */
     inputClassName?: string;
@@ -87,6 +91,7 @@ export const InputField = <T extends z.infer<Schema>>({
   inputTransform,
   renderDescriptionLineBreaks = false,
   clearButton,
+  onClear,
   inputClassName,
   fieldProps = {},
   ...wrapperProps
@@ -129,6 +134,7 @@ export const InputField = <T extends z.infer<Schema>>({
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     setValue(name, '');
+    onClear?.();
   };
 
   return (

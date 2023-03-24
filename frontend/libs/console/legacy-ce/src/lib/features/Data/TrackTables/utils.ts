@@ -12,7 +12,6 @@ export const paginate = <T>(
 export const search = (tables: TrackableTable[], searchText: string) => {
   if (!searchText.length) return tables;
 
-  console.log(searchText, tables);
   return tables.filter(table =>
     table.name.toLowerCase().includes(searchText.toLowerCase())
   );

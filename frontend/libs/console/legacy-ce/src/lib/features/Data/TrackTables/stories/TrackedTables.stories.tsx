@@ -135,3 +135,9 @@ Untrack.play = async ({ canvasElement }) => {
     timeout: 2000,
   });
 };
+
+export const MassiveTableAmount = TrackedTables.bind({});
+
+MassiveTableAmount.parameters = {
+  msw: handlers(1000000),
+};
