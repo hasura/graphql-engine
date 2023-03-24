@@ -7,7 +7,6 @@ final: prev: {
           (hfinal: hprev: {
             # Tests don't compile as extra-source-files are missing
             dc-api = prev.haskell.lib.dontCheck (final.haskell.packages."${prev.ghcName}".callCabal2nix "dc-api" ../../server/lib/dc-api { });
-            lens-aeson = prev.haskell.packages."${prev.ghcName}".lens-aeson_1_2_2;
           });
       });
     };

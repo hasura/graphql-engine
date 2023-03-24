@@ -61,7 +61,6 @@ let
     pkgs.haskell.packages.${pkgs.ghcName}.happy
     pkgs.haskell.packages.${pkgs.ghcName}.haskell-language-server
     (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.hlint)
-    (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.hpack)
     pkgs.haskell.packages.${pkgs.ghcName}.hoogle
     pkgs.haskell.packages.${pkgs.ghcName}.hspec-discover
     (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.ormolu)
