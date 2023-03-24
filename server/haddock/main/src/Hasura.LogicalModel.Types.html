@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | A name for a logical model as it is recognized by the graphql schema.</span><span>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="local-6989586621690582613"><span id="local-6989586621690582614"></span></span><span class="hs-comment">-- | A name for a logical model as it is recognized by the graphql schema.</span><span>
 </span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.LogicalModel.Types</span><span>
 </span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier">LogicalModelName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier">NullableScalarType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
@@ -15,17 +15,18 @@
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">first</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
-</span><span id="line-18"></span><span>
-</span><span id="line-19"></span><span class="hs-comment">-- The name of a logical model. This appears as a root field name in the graphql schema.</span><span>
-</span><span id="line-20"></span><span id="local-6989586621690620088"><span id="local-6989586621690620089"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="LogicalModelName"><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-var">LogicalModelName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="LogicalModelName"><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-var">LogicalModelName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getLogicalModelName"><span class="annot"><span class="annottext">LogicalModelName -&gt; Name
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/template-haskell-2.18.0.0/src"><span class="hs-identifier">Language.Haskell.TH.Syntax</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/template-haskell-2.18.0.0/src"><span class="hs-identifier">Lift</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- The name of a logical model. This appears as a root field name in the graphql schema.</span><span>
+</span><span id="line-21"></span><span id="local-6989586621690582605"><span id="local-6989586621690582606"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="LogicalModelName"><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-var">LogicalModelName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="LogicalModelName"><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-var">LogicalModelName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getLogicalModelName"><span class="annot"><span class="annottext">LogicalModelName -&gt; Name
 </span><a href="Hasura.LogicalModel.Types.html#getLogicalModelName"><span class="hs-identifier hs-var hs-var">getLogicalModelName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-21"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690620079"><span id="local-6989586621690620084"><span class="annot"><span class="annottext">LogicalModelName -&gt; LogicalModelName -&gt; Bool
+</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690582596"><span id="local-6989586621690582601"><span class="annot"><span class="annottext">LogicalModelName -&gt; LogicalModelName -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: LogicalModelName -&gt; LogicalModelName -&gt; Bool
 $c/= :: LogicalModelName -&gt; LogicalModelName -&gt; Bool
 == :: LogicalModelName -&gt; LogicalModelName -&gt; Bool
 $c== :: LogicalModelName -&gt; LogicalModelName -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690620046"><span id="local-6989586621690620050"><span id="local-6989586621690620054"><span id="local-6989586621690620058"><span id="local-6989586621690620062"><span id="local-6989586621690620066"><span id="local-6989586621690620071"><span class="annot"><span class="annottext">Eq LogicalModelName
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690582563"><span id="local-6989586621690582567"><span id="local-6989586621690582571"><span id="local-6989586621690582575"><span id="local-6989586621690582579"><span id="local-6989586621690582583"><span id="local-6989586621690582588"><span class="annot"><span class="annottext">Eq LogicalModelName
 LogicalModelName -&gt; LogicalModelName -&gt; Bool
 LogicalModelName -&gt; LogicalModelName -&gt; Ordering
 LogicalModelName -&gt; LogicalModelName -&gt; LogicalModelName
@@ -53,7 +54,7 @@ $c&lt;= :: LogicalModelName -&gt; LogicalModelName -&gt; Bool
 $c&lt; :: LogicalModelName -&gt; LogicalModelName -&gt; Bool
 compare :: LogicalModelName -&gt; LogicalModelName -&gt; Ordering
 $ccompare :: LogicalModelName -&gt; LogicalModelName -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690620031"><span id="local-6989586621690620035"><span id="local-6989586621690620040"><span class="annot"><span class="annottext">Int -&gt; LogicalModelName -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690582548"><span id="local-6989586621690582552"><span id="local-6989586621690582557"><span class="annot"><span class="annottext">Int -&gt; LogicalModelName -&gt; ShowS
 [LogicalModelName] -&gt; ShowS
 LogicalModelName -&gt; String
 forall a.
@@ -64,7 +65,7 @@ show :: LogicalModelName -&gt; String
 $cshow :: LogicalModelName -&gt; String
 showsPrec :: Int -&gt; LogicalModelName -&gt; ShowS
 $cshowsPrec :: Int -&gt; LogicalModelName -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690620018"><span id="local-6989586621690620023"><span class="annot"><span class="annottext">Eq LogicalModelName
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690582535"><span id="local-6989586621690582540"><span class="annot"><span class="annottext">Eq LogicalModelName
 Int -&gt; LogicalModelName -&gt; Int
 LogicalModelName -&gt; Int
 forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -72,11 +73,11 @@ hash :: LogicalModelName -&gt; Int
 $chash :: LogicalModelName -&gt; Int
 hashWithSalt :: Int -&gt; LogicalModelName -&gt; Int
 $chashWithSalt :: Int -&gt; LogicalModelName -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690620012"><span class="annot"><span class="annottext">LogicalModelName -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690582529"><span class="annot"><span class="annottext">LogicalModelName -&gt; ()
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: LogicalModelName -&gt; ()
 $crnf :: LogicalModelName -&gt; ()
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690619992"><span id="local-6989586621690619996"><span id="local-6989586621690620000"><span id="local-6989586621690620005"><span class="annot"><span class="annottext">[LogicalModelName] -&gt; Value
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690582509"><span id="local-6989586621690582513"><span id="local-6989586621690582517"><span id="local-6989586621690582522"><span class="annot"><span class="annottext">[LogicalModelName] -&gt; Value
 [LogicalModelName] -&gt; Encoding
 LogicalModelName -&gt; Value
 LogicalModelName -&gt; Encoding
@@ -94,7 +95,7 @@ toEncoding :: LogicalModelName -&gt; Encoding
 $ctoEncoding :: LogicalModelName -&gt; Encoding
 toJSON :: LogicalModelName -&gt; Value
 $ctoJSON :: LogicalModelName -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690619982"><span id="local-6989586621690619987"><span class="annot"><span class="annottext">Value -&gt; Parser [LogicalModelName]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690582499"><span id="local-6989586621690582504"><span class="annot"><span class="annottext">Value -&gt; Parser [LogicalModelName]
 Value -&gt; Parser LogicalModelName
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -102,22 +103,181 @@ parseJSONList :: Value -&gt; Parser [LogicalModelName]
 $cparseJSONList :: Value -&gt; Parser [LogicalModelName]
 parseJSON :: Value -&gt; Parser LogicalModelName
 $cparseJSON :: Value -&gt; Parser LogicalModelName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690619977"><span class="annot"><span class="annottext">LogicalModelName -&gt; Text
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690582494"><span class="annot"><span class="annottext">LogicalModelName -&gt; Text
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: LogicalModelName -&gt; Text
 $ctoTxt :: LogicalModelName -&gt; Text
 </span><a href="Data.Text.Extended.html#C%3AToTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">)</span><span>
-</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall x. Rep LogicalModelName x -&gt; LogicalModelName
+</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690582456"><span id="local-6989586621690582458"><span id="local-6989586621690582460"><span id="local-6989586621690582462"><span id="local-6989586621690582464"><span id="local-6989586621690582466"><span id="local-6989586621690582468"><span id="local-6989586621690582470"><span id="local-6989586621690582472"><span id="local-6989586621690582474"><span id="local-6989586621690582476"><span id="local-6989586621690582478"><span id="local-6989586621690582481"><span id="local-6989586621690582485"><span class="annot"><span class="annottext">Typeable LogicalModelName
+LogicalModelName -&gt; DataType
+LogicalModelName -&gt; Constr
+(forall b. Data b =&gt; b -&gt; b)
+-&gt; LogicalModelName -&gt; LogicalModelName
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u.
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; LogicalModelName -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; LogicalModelName -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; LogicalModelName -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; LogicalModelName -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; LogicalModelName -&gt; m LogicalModelName
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; LogicalModelName -&gt; m LogicalModelName
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c LogicalModelName
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; LogicalModelName -&gt; c LogicalModelName
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c LogicalModelName)
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c LogicalModelName)
+gmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; LogicalModelName -&gt; m LogicalModelName
+$cgmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; LogicalModelName -&gt; m LogicalModelName
+gmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; LogicalModelName -&gt; m LogicalModelName
+$cgmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; LogicalModelName -&gt; m LogicalModelName
+gmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; LogicalModelName -&gt; m LogicalModelName
+$cgmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; LogicalModelName -&gt; m LogicalModelName
+gmapQi :: forall u.
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; LogicalModelName -&gt; u
+$cgmapQi :: forall u.
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; LogicalModelName -&gt; u
+gmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; LogicalModelName -&gt; [u]
+$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; LogicalModelName -&gt; [u]
+gmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; LogicalModelName -&gt; r
+$cgmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; LogicalModelName -&gt; r
+gmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; LogicalModelName -&gt; r
+$cgmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; LogicalModelName -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b)
+-&gt; LogicalModelName -&gt; LogicalModelName
+$cgmapT :: (forall b. Data b =&gt; b -&gt; b)
+-&gt; LogicalModelName -&gt; LogicalModelName
+dataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c LogicalModelName)
+$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c LogicalModelName)
+dataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c LogicalModelName)
+$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c LogicalModelName)
+dataTypeOf :: LogicalModelName -&gt; DataType
+$cdataTypeOf :: LogicalModelName -&gt; DataType
+toConstr :: LogicalModelName -&gt; Constr
+$ctoConstr :: LogicalModelName -&gt; Constr
+gunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c LogicalModelName
+$cgunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c LogicalModelName
+gfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; LogicalModelName -&gt; c LogicalModelName
+$cgfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; LogicalModelName -&gt; c LogicalModelName
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep LogicalModelName x -&gt; LogicalModelName
 forall x. LogicalModelName -&gt; Rep LogicalModelName x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep LogicalModelName x -&gt; LogicalModelName
 $cfrom :: forall x. LogicalModelName -&gt; Rep LogicalModelName x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-23"></span><span>
-</span><span id="line-24"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690619965"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-25"></span><span>  </span><span id="local-6989586621690619961"><span class="annot"><span class="annottext">codec :: JSONCodec LogicalModelName
-</span><a href="#local-6989586621690619961"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690582442"><span id="local-6989586621690582449"><span class="annot"><span class="annottext">forall t.
+(forall (m :: * -&gt; *). Quote m =&gt; t -&gt; m Exp)
+-&gt; (forall (m :: * -&gt; *). Quote m =&gt; t -&gt; Code m t) -&gt; Lift t
+forall (m :: * -&gt; *). Quote m =&gt; LogicalModelName -&gt; m Exp
+forall (m :: * -&gt; *).
+Quote m =&gt;
+LogicalModelName -&gt; Code m LogicalModelName
+liftTyped :: forall (m :: * -&gt; *).
+Quote m =&gt;
+LogicalModelName -&gt; Code m LogicalModelName
+$cliftTyped :: forall (m :: * -&gt; *).
+Quote m =&gt;
+LogicalModelName -&gt; Code m LogicalModelName
+lift :: forall (m :: * -&gt; *). Quote m =&gt; LogicalModelName -&gt; m Exp
+$clift :: forall (m :: * -&gt; *). Quote m =&gt; LogicalModelName -&gt; m Exp
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/template-haskell-2.18.0.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Lift</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690582433"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-26"></span><span>  </span><span id="local-6989586621690582429"><span class="annot"><span class="annottext">codec :: JSONCodec LogicalModelName
+</span><a href="#local-6989586621690582429"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
 (oldOutput -&gt; newOutput)
 -&gt; (newInput -&gt; oldInput)
 -&gt; Codec context oldInput oldOutput
@@ -126,21 +286,21 @@ $cfrom :: forall x. LogicalModelName -&gt; Rep LogicalModelName x
 </span><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-var">LogicalModelName</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName -&gt; Name
 </span><a href="Hasura.LogicalModel.Types.html#getLogicalModelName"><span class="hs-identifier hs-var">getLogicalModelName</span></a></span><span> </span><span class="annot"><span class="annottext">forall value. HasCodec value =&gt; JSONCodec value
 </span><span class="hs-identifier hs-var">codec</span></span><span>
-</span><span id="line-26"></span><span>
-</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690619957"><span id="local-6989586621690619959"><span class="annot"><span class="hs-identifier hs-type">FromJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span></span></span><span>
-</span><span id="line-28"></span><span>
-</span><span id="line-29"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690619952"><span id="local-6989586621690619954"><span class="annot"><span class="hs-identifier hs-type">ToJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span></span></span><span>
-</span><span id="line-30"></span><span>
-</span><span id="line-31"></span><span class="hs-comment">-- | A ScalarType that can be nullable with an optional description</span><span>
-</span><span id="line-32"></span><span id="local-6989586621690619949"><span id="local-6989586621690619950"></span></span><span class="hs-keyword">data</span><span> </span><span id="NullableScalarType"><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-var">NullableScalarType</span></a></span></span><span> </span><span id="local-6989586621690620274"><span class="annot"><a href="#local-6989586621690620274"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NullableScalarType"><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-var">NullableScalarType</span></a></span></span><span>
-</span><span id="line-33"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="nstType"><span class="annot"><span class="annottext">forall (b :: BackendType). NullableScalarType b -&gt; ScalarType b
-</span><a href="Hasura.LogicalModel.Types.html#nstType"><span class="hs-identifier hs-var hs-var">nstType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620274"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-34"></span><span>    </span><span id="nstNullable"><span class="annot"><span class="annottext">forall (b :: BackendType). NullableScalarType b -&gt; Bool
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690582425"><span id="local-6989586621690582427"><span class="annot"><span class="hs-identifier hs-type">FromJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span></span></span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690582420"><span id="local-6989586621690582422"><span class="annot"><span class="hs-identifier hs-type">ToJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span></span></span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- | A ScalarType that can be nullable with an optional description</span><span>
+</span><span id="line-33"></span><span id="local-6989586621690582417"><span id="local-6989586621690582418"></span></span><span class="hs-keyword">data</span><span> </span><span id="NullableScalarType"><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-var">NullableScalarType</span></a></span></span><span> </span><span id="local-6989586621690582836"><span class="annot"><a href="#local-6989586621690582836"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NullableScalarType"><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-var">NullableScalarType</span></a></span></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="nstType"><span class="annot"><span class="annottext">forall (b :: BackendType). NullableScalarType b -&gt; ScalarType b
+</span><a href="Hasura.LogicalModel.Types.html#nstType"><span class="hs-identifier hs-var hs-var">nstType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582836"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span id="nstNullable"><span class="annot"><span class="annottext">forall (b :: BackendType). NullableScalarType b -&gt; Bool
 </span><a href="Hasura.LogicalModel.Types.html#nstNullable"><span class="hs-identifier hs-var hs-var">nstNullable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-35"></span><span>    </span><span id="nstDescription"><span class="annot"><span class="annottext">forall (b :: BackendType). NullableScalarType b -&gt; Maybe Text
+</span><span id="line-36"></span><span>    </span><span id="nstDescription"><span class="annot"><span class="annottext">forall (b :: BackendType). NullableScalarType b -&gt; Maybe Text
 </span><a href="Hasura.LogicalModel.Types.html#nstDescription"><span class="hs-identifier hs-var hs-var">nstDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-36"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-37"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a.
+</span><span id="line-37"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 forall (b :: BackendType) x.
 Rep (NullableScalarType b) x -&gt; NullableScalarType b
@@ -151,105 +311,105 @@ Rep (NullableScalarType b) x -&gt; NullableScalarType b
 $cfrom :: forall (b :: BackendType) x.
 NullableScalarType b -&gt; Rep (NullableScalarType b) x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-38"></span><span>
-</span><span id="line-39"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690619940"><span id="local-6989586621690620270"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620270"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620270"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-40"></span><span>  </span><span id="local-6989586621690619931"><span class="annot"><span class="annottext">codec :: JSONCodec (NullableScalarType b)
-</span><a href="#local-6989586621690619931"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-41"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690582408"><span id="local-6989586621690582832"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582832"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582832"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-41"></span><span>  </span><span id="local-6989586621690582399"><span class="annot"><span class="annottext">codec :: JSONCodec (NullableScalarType b)
+</span><a href="#local-6989586621690582399"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
 Text -&gt; ValueCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">AC.CommentCodec</span></span><span>
-</span><span id="line-42"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span id="line-43"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;A scalar type that can be nullable with an optional description&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-43"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span id="line-44"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">AC.object</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). HasTag b =&gt; Text
-</span><a href="Hasura.Metadata.DTO.Utils.html#codecNamePrefix"><span class="hs-identifier hs-var">codecNamePrefix</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621690620270"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="Hasura.Metadata.DTO.Utils.html#codecNamePrefix"><span class="hs-identifier hs-var">codecNamePrefix</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621690582832"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;NullableScalarType&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-44"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span id="line-45"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall object. HasObjectCodec object =&gt; JSONObjectCodec object
 </span><span class="hs-identifier hs-var">AC.objectCodec</span></span><span>
-</span><span id="line-45"></span><span>
-</span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690620266"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620266"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasObjectCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620266"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-47"></span><span>  </span><span id="local-6989586621690619909"><span class="annot"><span class="annottext">objectCodec :: JSONObjectCodec (NullableScalarType b)
-</span><a href="#local-6989586621690619909"><span class="hs-identifier hs-var hs-var hs-var hs-var">objectCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-48"></span><span>    </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690582828"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582828"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasObjectCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582828"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-48"></span><span>  </span><span id="local-6989586621690582377"><span class="annot"><span class="annottext">objectCodec :: JSONObjectCodec (NullableScalarType b)
+</span><a href="#local-6989586621690582377"><span class="hs-identifier hs-var hs-var hs-var hs-var">objectCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 ScalarType b -&gt; Bool -&gt; Maybe Text -&gt; NullableScalarType b
 </span><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-var">NullableScalarType</span></a></span><span>
-</span><span id="line-49"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-50"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">AC.requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690619906"><span class="hs-identifier hs-var">columnDoc</span></a></span><span>
-</span><span id="line-50"></span><span>        </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><a href="#local-6989586621690582374"><span class="hs-identifier hs-var">columnDoc</span></a></span><span>
+</span><span id="line-51"></span><span>        </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). NullableScalarType b -&gt; ScalarType b
 </span><a href="Hasura.LogicalModel.Types.html#nstType"><span class="hs-identifier hs-var">nstType</span></a></span><span>
-</span><span id="line-51"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-52"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">AC.optionalFieldWithDefault</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;nullable&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690619903"><span class="hs-identifier hs-var">nullableDoc</span></a></span><span>
-</span><span id="line-52"></span><span>        </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><a href="#local-6989586621690582371"><span class="hs-identifier hs-var">nullableDoc</span></a></span><span>
+</span><span id="line-53"></span><span>        </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). NullableScalarType b -&gt; Bool
 </span><a href="Hasura.LogicalModel.Types.html#nstNullable"><span class="hs-identifier hs-var">nstNullable</span></a></span><span>
-</span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-54"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
 </span><span class="hs-identifier hs-var">AC.optionalField</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;description&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690619901"><span class="hs-identifier hs-var">descriptionDoc</span></a></span><span>
-</span><span id="line-54"></span><span>        </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><a href="#local-6989586621690582369"><span class="hs-identifier hs-var">descriptionDoc</span></a></span><span>
+</span><span id="line-55"></span><span>        </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). NullableScalarType b -&gt; Maybe Text
 </span><a href="Hasura.LogicalModel.Types.html#nstDescription"><span class="hs-identifier hs-var">nstDescription</span></a></span><span>
-</span><span id="line-55"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-56"></span><span>      </span><span id="local-6989586621690619906"><span class="annot"><span class="annottext">columnDoc :: Text
-</span><a href="#local-6989586621690619906"><span class="hs-identifier hs-var hs-var">columnDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-56"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-57"></span><span>      </span><span id="local-6989586621690582374"><span class="annot"><span class="annottext">columnDoc :: Text
+</span><a href="#local-6989586621690582374"><span class="hs-identifier hs-var hs-var">columnDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;The base scalar type&quot;</span></span><span>
-</span><span id="line-57"></span><span>      </span><span id="local-6989586621690619903"><span class="annot"><span class="annottext">nullableDoc :: Text
-</span><a href="#local-6989586621690619903"><span class="hs-identifier hs-var hs-var">nullableDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-58"></span><span>      </span><span id="local-6989586621690582371"><span class="annot"><span class="annottext">nullableDoc :: Text
+</span><a href="#local-6989586621690582371"><span class="hs-identifier hs-var hs-var">nullableDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Whether the type is nullable&quot;</span></span><span>
-</span><span id="line-58"></span><span>      </span><span id="local-6989586621690619901"><span class="annot"><span class="annottext">descriptionDoc :: Text
-</span><a href="#local-6989586621690619901"><span class="hs-identifier hs-var hs-var">descriptionDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-59"></span><span>      </span><span id="local-6989586621690582369"><span class="annot"><span class="annottext">descriptionDoc :: Text
+</span><a href="#local-6989586621690582369"><span class="hs-identifier hs-var hs-var">descriptionDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Optional description text which appears in the GraphQL Schema&quot;</span></span><span>
-</span><span id="line-59"></span><span>
-</span><span id="line-60"></span><span id="local-6989586621690619879"><span id="local-6989586621690619884"><span id="local-6989586621690619889"><span id="local-6989586621690619895"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">via</span><span>
-</span><span id="line-61"></span><span>  </span><span id="local-6989586621690620232"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620232"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
-</span><span id="line-62"></span><span>  </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-63"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620232"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620232"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
-</span><span id="line-64"></span><span>
-</span><span id="line-65"></span><span id="local-6989586621690619865"><span id="local-6989586621690619873"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621690620226"><span class="annot"><a href="#local-6989586621690620226"><span class="hs-keyword hs-type">stock</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620226"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620226"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
-</span><span id="line-66"></span><span>
-</span><span id="line-67"></span><span id="local-6989586621690619850"><span id="local-6989586621690619852"><span id="local-6989586621690619862"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621690620224"><span class="annot"><a href="#local-6989586621690620224"><span class="hs-keyword hs-type">stock</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620224"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620224"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
-</span><span id="line-68"></span><span>
-</span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690619843"><span id="local-6989586621690619845"><span id="local-6989586621690620223"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620223"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620223"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
-</span><span id="line-70"></span><span>
-</span><span id="line-71"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690619841"><span id="local-6989586621690620222"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620222"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620222"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
-</span><span id="line-72"></span><span>
-</span><span id="line-73"></span><span class="hs-comment">-----</span><span>
-</span><span id="line-74"></span><span>
-</span><span id="line-75"></span><span class="hs-keyword">data</span><span> </span><span id="MergedObject"><span class="annot"><a href="Hasura.LogicalModel.Types.html#MergedObject"><span class="hs-identifier hs-var">MergedObject</span></a></span></span><span> </span><span id="local-6989586621690620221"><span class="annot"><a href="#local-6989586621690620221"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621690620220"><span class="annot"><a href="#local-6989586621690620220"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MergedObject"><span class="annot"><a href="Hasura.LogicalModel.Types.html#MergedObject"><span class="hs-identifier hs-var">MergedObject</span></a></span></span><span>
-</span><span id="line-76"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="moFst"><span class="annot"><span class="annottext">forall a b. MergedObject a b -&gt; a
-</span><a href="Hasura.LogicalModel.Types.html#moFst"><span class="hs-identifier hs-var hs-var">moFst</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621690620221"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-77"></span><span>    </span><span id="moSnd"><span class="annot"><span class="annottext">forall a b. MergedObject a b -&gt; b
-</span><a href="Hasura.LogicalModel.Types.html#moSnd"><span class="hs-identifier hs-var hs-var">moSnd</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621690620220"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-78"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-79"></span><span>
-</span><span id="line-80"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690620211"><span id="local-6989586621690620212"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HasObjectCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621690620212"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasObjectCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621690620211"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasObjectCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#MergedObject"><span class="hs-identifier hs-type">MergedObject</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620212"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620211"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-81"></span><span>  </span><span id="local-6989586621690619829"><span class="annot"><span class="annottext">objectCodec :: JSONObjectCodec (MergedObject a b)
-</span><a href="#local-6989586621690619829"><span class="hs-identifier hs-var hs-var hs-var hs-var">objectCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. a -&gt; b -&gt; MergedObject a b
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span id="local-6989586621690582347"><span id="local-6989586621690582352"><span id="local-6989586621690582357"><span id="local-6989586621690582363"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">via</span><span>
+</span><span id="line-62"></span><span>  </span><span id="local-6989586621690582794"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582794"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-64"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582794"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582794"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span id="local-6989586621690582333"><span id="local-6989586621690582341"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621690582788"><span class="annot"><a href="#local-6989586621690582788"><span class="hs-keyword hs-type">stock</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582788"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582788"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span id="local-6989586621690582318"><span id="local-6989586621690582320"><span id="local-6989586621690582330"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621690582786"><span class="annot"><a href="#local-6989586621690582786"><span class="hs-keyword hs-type">stock</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582786"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582786"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690582311"><span id="local-6989586621690582313"><span id="local-6989586621690582785"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582785"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582785"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-71"></span><span>
+</span><span id="line-72"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690582309"><span id="local-6989586621690582784"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582784"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582784"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="hs-comment">-----</span><span>
+</span><span id="line-75"></span><span>
+</span><span id="line-76"></span><span class="hs-keyword">data</span><span> </span><span id="MergedObject"><span class="annot"><a href="Hasura.LogicalModel.Types.html#MergedObject"><span class="hs-identifier hs-var">MergedObject</span></a></span></span><span> </span><span id="local-6989586621690582783"><span class="annot"><a href="#local-6989586621690582783"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621690582782"><span class="annot"><a href="#local-6989586621690582782"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MergedObject"><span class="annot"><a href="Hasura.LogicalModel.Types.html#MergedObject"><span class="hs-identifier hs-var">MergedObject</span></a></span></span><span>
+</span><span id="line-77"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="moFst"><span class="annot"><span class="annottext">forall a b. MergedObject a b -&gt; a
+</span><a href="Hasura.LogicalModel.Types.html#moFst"><span class="hs-identifier hs-var hs-var">moFst</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621690582783"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-78"></span><span>    </span><span id="moSnd"><span class="annot"><span class="annottext">forall a b. MergedObject a b -&gt; b
+</span><a href="Hasura.LogicalModel.Types.html#moSnd"><span class="hs-identifier hs-var hs-var">moSnd</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621690582782"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690582773"><span id="local-6989586621690582774"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HasObjectCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621690582774"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasObjectCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621690582773"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasObjectCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#MergedObject"><span class="hs-identifier hs-type">MergedObject</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582774"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582773"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-82"></span><span>  </span><span id="local-6989586621690582297"><span class="annot"><span class="annottext">objectCodec :: JSONObjectCodec (MergedObject a b)
+</span><a href="#local-6989586621690582297"><span class="hs-identifier hs-var hs-var hs-var hs-var">objectCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. a -&gt; b -&gt; MergedObject a b
 </span><a href="Hasura.LogicalModel.Types.html#MergedObject"><span class="hs-identifier hs-var">MergedObject</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
 (oldOutput -&gt; Either String newOutput)
@@ -269,13 +429,13 @@ ObjectCodec oldInput output
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Right</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. MergedObject a b -&gt; b
 </span><a href="Hasura.LogicalModel.Types.html#moSnd"><span class="hs-identifier hs-var">moSnd</span></a></span><span> </span><span class="annot"><span class="annottext">forall object. HasObjectCodec object =&gt; JSONObjectCodec object
 </span><span class="hs-identifier hs-var">objectCodec</span></span><span>
-</span><span id="line-82"></span><span>
-</span><span id="line-83"></span><span class="hs-keyword">newtype</span><span> </span><span id="NameField"><span class="annot"><a href="Hasura.LogicalModel.Types.html#NameField"><span class="hs-identifier hs-var">NameField</span></a></span></span><span> </span><span id="local-6989586621690620203"><span class="annot"><a href="#local-6989586621690620203"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NameField"><span class="annot"><a href="Hasura.LogicalModel.Types.html#NameField"><span class="hs-identifier hs-var">NameField</span></a></span></span><span> </span><span class="hs-special">{</span><span id="nameField"><span class="annot"><span class="annottext">forall a. NameField a -&gt; a
-</span><a href="Hasura.LogicalModel.Types.html#nameField"><span class="hs-identifier hs-var hs-var">nameField</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621690620203"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-84"></span><span>
-</span><span id="line-85"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690620199"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621690620199"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasObjectCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NameField"><span class="hs-identifier hs-type">NameField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620199"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-86"></span><span>  </span><span id="local-6989586621690619819"><span class="annot"><span class="annottext">objectCodec :: JSONObjectCodec (NameField a)
-</span><a href="#local-6989586621690619819"><span class="hs-identifier hs-var hs-var hs-var hs-var">objectCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; NameField a
+</span><span id="line-83"></span><span>
+</span><span id="line-84"></span><span class="hs-keyword">newtype</span><span> </span><span id="NameField"><span class="annot"><a href="Hasura.LogicalModel.Types.html#NameField"><span class="hs-identifier hs-var">NameField</span></a></span></span><span> </span><span id="local-6989586621690582765"><span class="annot"><a href="#local-6989586621690582765"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NameField"><span class="annot"><a href="Hasura.LogicalModel.Types.html#NameField"><span class="hs-identifier hs-var">NameField</span></a></span></span><span> </span><span class="hs-special">{</span><span id="nameField"><span class="annot"><span class="annottext">forall a. NameField a -&gt; a
+</span><a href="Hasura.LogicalModel.Types.html#nameField"><span class="hs-identifier hs-var hs-var">nameField</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621690582765"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690582761"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621690582761"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasObjectCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NameField"><span class="hs-identifier hs-type">NameField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582761"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-87"></span><span>  </span><span id="local-6989586621690582287"><span class="annot"><span class="annottext">objectCodec :: JSONObjectCodec (NameField a)
+</span><a href="#local-6989586621690582287"><span class="hs-identifier hs-var hs-var hs-var hs-var">objectCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; NameField a
 </span><a href="Hasura.LogicalModel.Types.html#NameField"><span class="hs-identifier hs-var">NameField</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
@@ -287,63 +447,63 @@ ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall a. NameField a -&gt; a
 </span><a href="Hasura.LogicalModel.Types.html#nameField"><span class="hs-identifier hs-var">nameField</span></a></span><span>
-</span><span id="line-87"></span><span>
-</span><span id="line-88"></span><span class="hs-comment">-- we parse in as an array of NullableScalarTypeFromArray and then turn into</span><span>
-</span><span id="line-89"></span><span class="hs-comment">-- InsOrdHashMap because JSON objects cannot be depended on for ordering</span><span>
-</span><span id="line-90"></span><span class="annot"><a href="Hasura.LogicalModel.Types.html#nullableScalarTypeMapCodec"><span class="hs-identifier hs-type">nullableScalarTypeMapCodec</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-91"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690620198"><span class="annot"><a href="#local-6989586621690620198"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-92"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620198"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-93"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">AC.Codec</span></span><span>
-</span><span id="line-94"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span>
-</span><span id="line-95"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrd.InsOrdHashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620198"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620198"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-96"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrd.InsOrdHashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620198"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620198"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-97"></span><span id="nullableScalarTypeMapCodec"><span class="annot"><span class="annottext">nullableScalarTypeMapCodec :: forall (b :: BackendType).
+</span><span id="line-88"></span><span>
+</span><span id="line-89"></span><span class="hs-comment">-- we parse in as an array of NullableScalarTypeFromArray and then turn into</span><span>
+</span><span id="line-90"></span><span class="hs-comment">-- InsOrdHashMap because JSON objects cannot be depended on for ordering</span><span>
+</span><span id="line-91"></span><span class="annot"><a href="Hasura.LogicalModel.Types.html#nullableScalarTypeMapCodec"><span class="hs-identifier hs-type">nullableScalarTypeMapCodec</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-92"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690582760"><span class="annot"><a href="#local-6989586621690582760"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582760"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-94"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">AC.Codec</span></span><span>
+</span><span id="line-95"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span>
+</span><span id="line-96"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrd.InsOrdHashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582760"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582760"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-97"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrd.InsOrdHashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582760"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582760"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span id="nullableScalarTypeMapCodec"><span class="annot"><span class="annottext">nullableScalarTypeMapCodec :: forall (b :: BackendType).
 Backend b =&gt;
 Codec
   Value
   (InsOrdHashMap (Column b) (NullableScalarType b))
   (InsOrdHashMap (Column b) (NullableScalarType b))
 </span><a href="Hasura.LogicalModel.Types.html#nullableScalarTypeMapCodec"><span class="hs-identifier hs-var hs-var">nullableScalarTypeMapCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-98"></span><span>  </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
+</span><span id="line-99"></span><span>  </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
 (oldOutput -&gt; newOutput)
 -&gt; (newInput -&gt; oldInput)
 -&gt; Codec context oldInput oldOutput
 -&gt; Codec context newInput newOutput
 </span><span class="hs-identifier hs-var">AC.dimapCodec</span></span><span>
-</span><span id="line-99"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; InsOrdHashMap k v
+</span><span id="line-100"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">InsOrd.fromList</span></span><span>
-</span><span id="line-100"></span><span>        </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span id="line-101"></span><span>        </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span>
-</span><span id="line-101"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#MergedObject"><span class="hs-identifier hs-type">MergedObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NameField"><span class="hs-identifier hs-type">NameField</span></a></span><span> </span><span id="local-6989586621690619800"><span class="annot"><span class="annottext">Column b
-</span><a href="#local-6989586621690619800"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621690619799"><span class="annot"><span class="annottext">NullableScalarType b
-</span><a href="#local-6989586621690619799"><span class="hs-identifier hs-var">nst</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-102"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Column b
-</span><a href="#local-6989586621690619800"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NullableScalarType b
-</span><a href="#local-6989586621690619799"><span class="hs-identifier hs-var">nst</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-103"></span><span>          </span><span class="hs-special">)</span><span>
-</span><span id="line-104"></span><span>    </span><span class="hs-special">)</span><span>
-</span><span id="line-105"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621690619798"><span class="annot"><span class="annottext">Column b
-</span><a href="#local-6989586621690619798"><span class="hs-identifier hs-var">fld</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690619797"><span class="annot"><span class="annottext">NullableScalarType b
-</span><a href="#local-6989586621690619797"><span class="hs-identifier hs-var">nst</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a b. a -&gt; b -&gt; MergedObject a b
+</span><span id="line-102"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#MergedObject"><span class="hs-identifier hs-type">MergedObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NameField"><span class="hs-identifier hs-type">NameField</span></a></span><span> </span><span id="local-6989586621690582268"><span class="annot"><span class="annottext">Column b
+</span><a href="#local-6989586621690582268"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621690582267"><span class="annot"><span class="annottext">NullableScalarType b
+</span><a href="#local-6989586621690582267"><span class="hs-identifier hs-var">nst</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-103"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Column b
+</span><a href="#local-6989586621690582268"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NullableScalarType b
+</span><a href="#local-6989586621690582267"><span class="hs-identifier hs-var">nst</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-104"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-105"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621690582266"><span class="annot"><span class="annottext">Column b
+</span><a href="#local-6989586621690582266"><span class="hs-identifier hs-var">fld</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690582265"><span class="annot"><span class="annottext">NullableScalarType b
+</span><a href="#local-6989586621690582265"><span class="hs-identifier hs-var">nst</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a b. a -&gt; b -&gt; MergedObject a b
 </span><a href="Hasura.LogicalModel.Types.html#MergedObject"><span class="hs-identifier hs-var">MergedObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; NameField a
 </span><a href="Hasura.LogicalModel.Types.html#NameField"><span class="hs-identifier hs-var">NameField</span></a></span><span> </span><span class="annot"><span class="annottext">Column b
-</span><a href="#local-6989586621690619798"><span class="hs-identifier hs-var">fld</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">NullableScalarType b
-</span><a href="#local-6989586621690619797"><span class="hs-identifier hs-var">nst</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="#local-6989586621690582266"><span class="hs-identifier hs-var">fld</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">NullableScalarType b
+</span><a href="#local-6989586621690582265"><span class="hs-identifier hs-var">nst</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [(k, v)]
 </span><span class="hs-identifier hs-var">InsOrd.toList</span></span><span>
-</span><span id="line-106"></span><span>    </span><span class="hs-special">)</span><span>
-</span><span id="line-107"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-107"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-108"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall input output.
 ValueCodec input output -&gt; ValueCodec [input] [output]
 </span><span class="hs-identifier hs-var">AC.listCodec</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-108"></span><span>        </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-109"></span><span>        </span><span class="annot"><span class="annottext">forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">AC.object</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;NullableScalarType&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-109"></span><span>          </span><span class="annot"><span class="annottext">forall object. HasObjectCodec object =&gt; JSONObjectCodec object
-</span><span class="hs-identifier hs-var">AC.objectCodec</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#MergedObject"><span class="hs-identifier hs-type">MergedObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NameField"><span class="hs-identifier hs-type">NameField</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620198"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690620198"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-110"></span><span>    </span><span class="hs-special">)</span><span>
-</span><span id="line-111"></span></pre></body></html>
+</span><span id="line-110"></span><span>          </span><span class="annot"><span class="annottext">forall object. HasObjectCodec object =&gt; JSONObjectCodec object
+</span><span class="hs-identifier hs-var">AC.objectCodec</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#MergedObject"><span class="hs-identifier hs-type">MergedObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NameField"><span class="hs-identifier hs-type">NameField</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582760"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690582760"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-111"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-112"></span></pre></body></html>
