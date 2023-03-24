@@ -8,7 +8,7 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options), getBackendTypeConfig)
 import Harness.Yaml (shouldAtLeastBe, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -49,8 +49,8 @@ schema =
 
 -- ** Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   let simpleQuery :: Text
       simpleQuery = "SELECT thing / 2 AS divided FROM stuff"
 
@@ -66,7 +66,7 @@ tests opts = do
             expectedError = "Logical model \"some_logical_model\" not found in source \"" <> sourceName <> "\"."
 
         shouldReturnYaml
-          opts
+          (options testEnvironment)
           ( GraphqlEngine.postMetadataWithStatus
               400
               testEnvironment
@@ -181,7 +181,7 @@ tests opts = do
             expectedError = "Encountered conflicting definitions in the selection set for 'subscription_root' for field 'hasura_stuff' defined in [table hasura.stuff in source " <> sourceName <> ", logical_model hasura_stuff in source " <> sourceName <> "]. Fields must not be defined more than once across all sources."
 
         shouldReturnYaml
-          opts
+          (options testEnv)
           ( GraphqlEngine.postMetadataWithStatus
               500
               testEnv
@@ -216,7 +216,7 @@ tests opts = do
                 }
 
         shouldReturnYaml
-          opts
+          (options testEnv)
           ( GraphqlEngine.postMetadata
               testEnv
               (Schema.trackLogicalModelCommand source backendTypeMetadata conflictingLogicalModel)
@@ -226,7 +226,7 @@ tests opts = do
           |]
 
         shouldReturnYaml
-          opts
+          (options testEnv)
           ( GraphqlEngine.postMetadataWithStatus
               400
               testEnv
@@ -323,7 +323,7 @@ tests opts = do
                 }
 
         shouldReturnYaml
-          opts
+          (options testEnvironment)
           ( GraphqlEngine.postMetadataWithStatus
               400
               testEnvironment

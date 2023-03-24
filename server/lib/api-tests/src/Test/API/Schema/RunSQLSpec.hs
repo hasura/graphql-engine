@@ -9,7 +9,7 @@ import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
@@ -33,10 +33,8 @@ spec = do
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   it "`bigquery_run_sql` with invalid SQL returns an `INVALID_ARGUMENT` error" \testEnvironment -> do
     let actual =
           GraphqlEngine.postV2Query
@@ -68,4 +66,4 @@ tests opts = do
             path: $
           |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml (options testEnvironment) actual expected

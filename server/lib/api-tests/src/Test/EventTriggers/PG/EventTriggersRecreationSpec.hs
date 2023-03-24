@@ -14,7 +14,7 @@ import Harness.Quoter.Yaml
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -182,14 +182,14 @@ args:
 
 -- * Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests = do
   it "Creating an event trigger should create the SQL triggers" $ \(testEnvironment, (webhookServer, _)) -> do
     let schemaName :: Schema.SchemaName
         schemaName = Schema.getSchemaName testEnvironment
         webhookEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/hello"
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       ( GraphQLEngine.postMetadata
           testEnvironment
           [interpolateYaml|
@@ -282,7 +282,7 @@ args:
   sql: TRUNCATE #{schemaName}.ddl_history RESTART IDENTITY;
 |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       ( GraphQLEngine.postMetadata
           testEnvironment
           [yaml|
@@ -295,7 +295,7 @@ args:
          message: success
       |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       ( GraphQLEngine.postV2Query
           200
           testEnvironment
@@ -325,7 +325,7 @@ args:
   sql: TRUNCATE #{schemaName}.ddl_history RESTART IDENTITY;
 |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       ( GraphQLEngine.postMetadata
           testEnvironment
           [yaml|
@@ -340,7 +340,7 @@ args:
          message: success
       |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       ( GraphQLEngine.postV2Query
           200
           testEnvironment
@@ -374,7 +374,7 @@ args:
     ALTER TABLE #{schemaName}.users ADD COLUMN last_name TEXT;
 |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       ( GraphQLEngine.postV2Query
           200
           testEnvironment

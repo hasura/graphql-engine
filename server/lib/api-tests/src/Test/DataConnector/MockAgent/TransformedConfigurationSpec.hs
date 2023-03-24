@@ -100,8 +100,8 @@ sourceMetadata =
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-tests _opts = describe "Transformed Configuration Tests" $ do
+tests :: SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
+tests = describe "Transformed Configuration Tests" $ do
   mockAgentGraphqlTest "works with configuration transformation Kriti template" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =

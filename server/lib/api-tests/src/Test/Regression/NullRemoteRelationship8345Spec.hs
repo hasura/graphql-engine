@@ -21,7 +21,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.TestResource (Managed)
-import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment, focusFixtureLeft, focusFixtureRight, stopServer)
+import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment (options), focusFixtureLeft, focusFixtureRight, stopServer)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
@@ -510,8 +510,8 @@ rhsRemoteServerTeardown (_, server) = traverse_ stopServer server
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
-tests opts = do
+tests :: SpecWith (TestEnvironment, LocalTestTestEnvironment)
+tests = do
   it "joins album when artist is null" \(testEnvironment, _) -> do
     let query =
           [graphql|
@@ -537,7 +537,7 @@ tests opts = do
                artist: null
           |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
   it "joins artist when album is null" \(testEnvironment, _) -> do
@@ -565,7 +565,7 @@ tests opts = do
                  name: artist1
           |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
   it "joins both when nothing is null" \(testEnvironment, _) -> do
@@ -594,7 +594,7 @@ tests opts = do
                  name: artist1
           |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
   it "joins neither when both null" \(testEnvironment, _) -> do
@@ -621,6 +621,6 @@ tests opts = do
                artist: null
           |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse

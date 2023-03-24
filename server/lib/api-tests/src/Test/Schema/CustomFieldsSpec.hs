@@ -17,7 +17,7 @@ import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
@@ -67,11 +67,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   -- TODO: At the time of writing this, there's no easy way to make a
   -- subscription request in the tests-hspec. When we do support that, we can
   -- add a new test that tests the streaming subscription with the customized
@@ -102,7 +99,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml (options testEnvironment) actual expected
 
 --------------------------------------------------------------------------------
 -- Metadata

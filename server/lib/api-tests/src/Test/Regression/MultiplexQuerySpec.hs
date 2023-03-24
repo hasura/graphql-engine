@@ -110,21 +110,17 @@ setupFunctions testEnv =
 
 -- ** Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   -- Test subscriptions with two websocket clients. The database state for the following tests are shared.
   -- Tests involving computed fields
-  withSubscriptions (withSubscriptions' snd (multiplexedQueryComputedFieldsSpec opts))
+  withSubscriptions (withSubscriptions' snd multiplexedQueryComputedFieldsSpec)
   -- Tests involving custom functions
-  withSubscriptions (withSubscriptions' snd (multiplexedQueryCustomFunctionsSpec opts))
+  withSubscriptions (withSubscriptions' snd multiplexedQueryCustomFunctionsSpec)
 
 multiplexedQueryComputedFieldsSpec ::
-  Fixture.Options ->
   SpecWith (Value -> [Pair] -> IO SubscriptionHandle, (Value -> [Pair] -> IO SubscriptionHandle, TestEnvironment))
-multiplexedQueryComputedFieldsSpec opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+multiplexedQueryComputedFieldsSpec = do
   it "Multiplex query in subscriptions - computed fields" \(mkSubscriptionClient2, (mkSubscriptionClient1, testEnv)) -> do
     -- Make two identical graphql subscriptions with a valid and invalid query variable values.
     -- The invalid query should fail and shouldn't affect subscription with valid query.
@@ -147,30 +143,34 @@ multiplexedQueryComputedFieldsSpec opts = do
     subValid <- mkSubscriptionClient1 graphqlQuery $ mkVariables 2050
 
     -- check result from valid subscription
-    getNextResponse subValid
-      `shouldBe` [interpolateYaml|
-            data:
-              #{schemaName}_user:
-              - id: 1
-                name: user_1
-                get_future_age: 54
-              - id: 2
-                name: user_2
-                get_future_age: 50
+    shouldReturnYaml
+      (options testEnv)
+      (getNextResponse subValid)
+      [interpolateYaml|
+        data:
+          #{schemaName}_user:
+          - id: 1
+            name: user_1
+            get_future_age: 54
+          - id: 2
+            name: user_2
+            get_future_age: 50
        |]
 
     -- make subscription with past year, the query should result in an exception
     subInvalid <- mkSubscriptionClient2 graphqlQuery $ mkVariables 2000
 
     -- check result from invalid subscription
-    getNextResponse subInvalid
-      `shouldBe` [yaml|
-            errors:
-            - extensions:
-                code: unexpected
-                path: "$"
-              message: database query error
-         |]
+    shouldReturnYaml
+      (options testEnv)
+      (getNextResponse subInvalid)
+      [yaml|
+        errors:
+        - extensions:
+            code: unexpected
+            path: "$"
+          message: database query error
+       |]
 
     -- insert a row in the table and check the next response from valid subscription
     let insertRow :: IO Value
@@ -187,35 +187,35 @@ multiplexedQueryComputedFieldsSpec opts = do
               }
             |]
 
-    insertRow
-      `shouldBe` [interpolateYaml|
-      data:
-        insert_#{schemaName}_user:
-          affected_rows: 1
-    |]
+    shouldReturnYaml
+      (options testEnv)
+      insertRow
+      [interpolateYaml|
+        data:
+          insert_#{schemaName}_user:
+            affected_rows: 1
+      |]
 
-    getNextResponse subValid
-      `shouldBe` [interpolateYaml|
-            data:
-              #{schemaName}_user:
-              - id: 1
-                name: user_1
-                get_future_age: 54
-              - id: 2
-                name: user_2
-                get_future_age: 50
-              - id: 3
-                name: user_3
-                get_future_age: 45
+    shouldReturnYaml
+      (options testEnv)
+      (getNextResponse subValid)
+      [interpolateYaml|
+        data:
+          #{schemaName}_user:
+          - id: 1
+            name: user_1
+            get_future_age: 54
+          - id: 2
+            name: user_2
+            get_future_age: 50
+          - id: 3
+            name: user_3
+            get_future_age: 45
        |]
 
 multiplexedQueryCustomFunctionsSpec ::
-  Fixture.Options ->
   SpecWith (Value -> [Pair] -> IO SubscriptionHandle, (Value -> [Pair] -> IO SubscriptionHandle, TestEnvironment))
-multiplexedQueryCustomFunctionsSpec opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+multiplexedQueryCustomFunctionsSpec = do
   it "Multiplex query in subscriptions - custom functions" \(mkSubscriptionClient2, (mkSubscriptionClient1, testEnv)) -> do
     -- Make two identical graphql subscriptions with a valid and invalid query variable values.
     -- The invalid query should fail and shouldn't affect subscription with valid query.
@@ -238,27 +238,31 @@ multiplexedQueryCustomFunctionsSpec opts = do
     subValid <- mkSubscriptionClient1 graphqlQuery $ mkVariables 50 2050
 
     -- check result from valid subscription
-    getNextResponse subValid
-      `shouldBe` [interpolateYaml|
-            data:
-              #{schemaName}_fetch_users:
-              - id: 2
-                name: user_2
-                get_future_age: 50
+    shouldReturnYaml
+      (options testEnv)
+      (getNextResponse subValid)
+      [interpolateYaml|
+        data:
+          #{schemaName}_fetch_users:
+          - id: 2
+            name: user_2
+            get_future_age: 50
        |]
 
     -- make subscription with past year, the query should result in an exception
     subInvalid <- mkSubscriptionClient2 graphqlQuery $ mkVariables 50 2000
 
     -- check result from invalid subscription
-    getNextResponse subInvalid
-      `shouldBe` [yaml|
-            errors:
-            - extensions:
-                code: unexpected
-                path: "$"
-              message: database query error
-         |]
+    shouldReturnYaml
+      (options testEnv)
+      (getNextResponse subInvalid)
+      [yaml|
+        errors:
+        - extensions:
+            code: unexpected
+            path: "$"
+          message: database query error
+       |]
 
     -- insert a row in the table and check the next response from valid subscription
     let insertRow :: IO Value
@@ -275,21 +279,25 @@ multiplexedQueryCustomFunctionsSpec opts = do
               }
             |]
 
-    insertRow
-      `shouldBe` [interpolateYaml|
-      data:
-        insert_#{schemaName}_user:
-          affected_rows: 1
-    |]
+    shouldReturnYaml
+      (options testEnv)
+      insertRow
+      [interpolateYaml|
+        data:
+          insert_#{schemaName}_user:
+            affected_rows: 1
+      |]
 
-    getNextResponse subValid
-      `shouldBe` [interpolateYaml|
-            data:
-              #{schemaName}_fetch_users:
-              - id: 2
-                name: user_2
-                get_future_age: 50
-              - id: 4
-                name: user_4
-                get_future_age: 50
+    shouldReturnYaml
+      (options testEnv)
+      (getNextResponse subValid)
+      [interpolateYaml|
+        data:
+          #{schemaName}_fetch_users:
+          - id: 2
+            name: user_2
+            get_future_age: 50
+          - id: 4
+            name: user_4
+            get_future_age: 50
        |]

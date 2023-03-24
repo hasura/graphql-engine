@@ -19,7 +19,7 @@ import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -107,11 +107,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   describe "Permissions on queries" do
     it "Authors can't select another author's articles" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -140,7 +137,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
   it "Authors can select their own articles" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -171,7 +168,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml (options testEnvironment) actual expected
 
   it "User role can select published articles only" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -204,7 +201,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml (options testEnvironment) actual expected
 
 --------------------------------------------------------------------------------
 -- Metadata

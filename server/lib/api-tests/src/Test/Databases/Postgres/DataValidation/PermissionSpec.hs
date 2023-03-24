@@ -16,7 +16,7 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..))
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Network.HTTP.Types.Header (HeaderName)
@@ -57,11 +57,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   describe "Permissions involving array types" do
     it "Non-matching X-Hasura-Allowed-Ids should return no data" \testEnvironment -> do
       let headers :: [(HeaderName, ByteString)]
@@ -91,7 +88,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Matching X-Hasura-Allowed-Ids should return data" \testEnvironment -> do
       let headers :: [(HeaderName, ByteString)]
@@ -125,7 +122,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
 --------------------------------------------------------------------------------
 -- Metadata

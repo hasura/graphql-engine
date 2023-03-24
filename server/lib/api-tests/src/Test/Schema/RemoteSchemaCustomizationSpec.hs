@@ -12,7 +12,7 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.RemoteServer qualified as RemoteServer
 import Harness.Test.Fixture (Fixture (..))
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment, stopServer)
+import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment (options), stopServer)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -74,8 +74,8 @@ args:
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Server)
-tests opts = do
+tests :: SpecWith (TestEnvironment, Server)
+tests = do
   describe "Enums with customized remote schema" $ do
     it "works when enums are passed as a variable to an argument to a type name customized remote schema field" \(testEnvironment, _) -> do
       let query =
@@ -95,7 +95,7 @@ tests opts = do
                  |]
 
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         (GraphqlEngine.postGraphqlWithVariables testEnvironment query variables)
         expectedResponse
 
@@ -113,7 +113,7 @@ tests opts = do
                  |]
 
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         (GraphqlEngine.postGraphql testEnvironment query)
         expectedResponse
 
@@ -136,7 +136,7 @@ tests opts = do
                  |]
 
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         (GraphqlEngine.postGraphqlWithVariables testEnvironment query variables)
         expectedResponse
 
@@ -154,7 +154,7 @@ tests opts = do
                  |]
 
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         (GraphqlEngine.postGraphql testEnvironment query)
         expectedResponse
 

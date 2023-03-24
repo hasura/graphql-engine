@@ -17,10 +17,10 @@ import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
-import Test.Hspec (HasCallStack, SpecWith, describe, it)
+import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith GlobalTestEnvironment
 spec = do
@@ -69,11 +69,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: HasCallStack => IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests =
   describe "Permissions on mutations" do
     it "Author can update their name" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -107,7 +104,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Author can update_many their name" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -141,7 +138,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Author cannot update their id" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -175,7 +172,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Author cannot update_many their id" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -209,7 +206,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
 --------------------------------------------------------------------------------
 -- Metadata

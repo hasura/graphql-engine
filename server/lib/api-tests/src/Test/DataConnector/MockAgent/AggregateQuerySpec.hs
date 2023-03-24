@@ -85,8 +85,8 @@ sourceMetadata =
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-tests _opts = describe "Aggregate Query Tests" $ do
+tests :: SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
+tests = describe "Aggregate Query Tests" $ do
   mockAgentGraphqlTest "works with multiple nodes fields and through array relations" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =

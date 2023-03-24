@@ -23,7 +23,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (setupPermissionsAction)
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -120,11 +120,8 @@ permissions =
 -- the array relationship name differs in test due to the `Schema.mkArrayRelationshipName` helper
 -- in production, the relationship name would be `#{schemaName}_article_articles_aggregate`
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   it "Filters on aggregation predicate `count`" \testEnvironment -> do
     let schemaName = Schema.getSchemaName testEnvironment
 
@@ -159,7 +156,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml (options testEnvironment) actual expected
 
   it "Filters on aggregation predicate `bool_and` with one clause" \testEnvironment -> do
     let schemaName = Schema.getSchemaName testEnvironment
@@ -192,7 +189,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml (options testEnvironment) actual expected
 
   it "Filters on aggregation predicate `bool_and` with more than one clause" \testEnvironment -> do
     let schemaName = Schema.getSchemaName testEnvironment
@@ -227,7 +224,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml (options testEnvironment) actual expected
 
   it "Filters on aggregation predicate and other filters" \testEnvironment -> do
     let schemaName = Schema.getSchemaName testEnvironment
@@ -262,7 +259,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml (options testEnvironment) actual expected
 
   describe "Exactly one predicate should be specified" do
     it "Fails when no predicates are specified" \testEnvironment -> do
@@ -296,7 +293,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Fails when more than one predicate is specified" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
@@ -335,7 +332,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
   it "Respects select permissions on the column" \testEnvironment -> do
     let schemaName = Schema.getSchemaName testEnvironment
@@ -369,7 +366,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml (options testEnvironment) actual expected
 
   it "Respects select permissions on the row" \testEnvironment -> do
     let schemaName = Schema.getSchemaName testEnvironment
@@ -403,7 +400,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml (options testEnvironment) actual expected
 
   it "Respects 'aggregation queries' select permissions for a given role and table" \testEnvironment -> do
     let schemaName = Schema.getSchemaName testEnvironment
@@ -437,4 +434,4 @@ tests opts = do
               }
             |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml (options testEnvironment) actual expected

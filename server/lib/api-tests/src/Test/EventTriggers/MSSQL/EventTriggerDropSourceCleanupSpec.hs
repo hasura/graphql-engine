@@ -15,7 +15,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (permitTeardownFail)
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
@@ -72,12 +72,8 @@ authorsTable tableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
-  cleanupEventTriggersWhenSourceDropped opts
-
-cleanupEventTriggersWhenSourceDropped :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-cleanupEventTriggersWhenSourceDropped opts =
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests =
   describe "dropping a source with event triggers should remove 'hdb_catalog' schema and the SQL triggers created on the table" do
     it "check: inserting a new row invokes a event trigger" $
       \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
@@ -107,7 +103,7 @@ cleanupEventTriggersWhenSourceDropped opts =
 
         -- Insert a row into the table with event trigger
         shouldReturnYaml
-          opts
+          (options testEnvironment)
           (GraphqlEngine.postV2Query 200 testEnvironment insertQuery)
           expectedResponse
 
@@ -135,7 +131,7 @@ cleanupEventTriggersWhenSourceDropped opts =
 
         -- Dropping the source should remove 'hdb_catalog' and SQL triggers related to it
         shouldReturnYaml
-          opts
+          (options testEnvironment)
           (GraphqlEngine.postMetadata testEnvironment dropSourceQuery)
           dropSourceQueryExpectedRespnse
 
@@ -175,7 +171,7 @@ cleanupEventTriggersWhenSourceDropped opts =
         -- because the SQL triggers that were created by event triggers might try
         -- to write to a non existent 'hdb_catalog' schema.
         shouldReturnYaml
-          opts
+          (options testEnvironment)
           (GraphqlEngine.postV2Query 200 testEnvironment insertQuery)
           expectedResponse
 

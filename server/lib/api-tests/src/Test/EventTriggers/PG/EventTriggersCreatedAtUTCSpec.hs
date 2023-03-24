@@ -17,7 +17,7 @@ import Harness.Quoter.Yaml
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (fromObject, shouldReturnYaml)
 import Hasura.Base.Error (iResultToMaybe)
@@ -75,12 +75,8 @@ authorsTable =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
-  eventLogCreatedAtTest opts
-
-eventLogCreatedAtTest :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-eventLogCreatedAtTest opts =
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests =
   describe "created_at captures the correct value of the timestamp at which the event was created at." do
     it "inserting a row in a non UTC timezone shouldn't affect the value of the `created_at`" $
       \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
@@ -102,7 +98,7 @@ eventLogCreatedAtTest opts =
 
         -- Insert a row into the table with event trigger
         shouldReturnYaml
-          opts
+          (options testEnvironment)
           (GraphqlEngine.postV2Query 200 testEnvironment insertQuery)
           expectedResponse
 

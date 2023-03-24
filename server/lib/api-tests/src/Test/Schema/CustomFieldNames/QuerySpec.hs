@@ -79,11 +79,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests =
   describe "Queries using custom names" do
     it "Uses the custom field names in queries" \testEnvironment -> do
       let expected :: Value
@@ -109,7 +106,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
 --------------------------------------------------------------------------------
 -- Metadata

@@ -61,6 +61,6 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests _ = describe "Unique constraints" do
+tests :: SpecWith TestEnvironment
+tests = describe "Unique constraints" do
   it "Creates a schema with unique constraints" \_ -> pure @IO ()

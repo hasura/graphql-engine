@@ -33,8 +33,8 @@ spec =
 table :: Schema.Table
 table = (Schema.table "table1") {Schema.tableColumns = [Schema.column "id" Schema.TInt]}
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests _opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   describe "replace_metadata warnings for event trigger name" do
     it "should fail for creating trigger with invalid name and not allowing warnings" \testEnvironment -> do
       Postgres.createTable testEnvironment table

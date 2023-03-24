@@ -14,7 +14,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (permitTeardownFail)
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
@@ -71,12 +71,8 @@ authorsTable tableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
-  nextRetryAtTimezoneChange opts
-
-nextRetryAtTimezoneChange :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-nextRetryAtTimezoneChange opts =
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests =
   describe "event trigger retries if the event trigger is undelivered (and retries are available)" do
     -- The test checks that the event trigger retries as expected. In the test, we fire up the event trigger by adding a
     -- row to the table. We wait for a few seconds so the event has retried completely and then see if the number of
@@ -127,7 +123,7 @@ nextRetryAtTimezoneChange opts =
 
         -- Insert a row into the table with event trigger
         shouldReturnYaml
-          opts
+          (options testEnvironment)
           (GraphqlEngine.postV2Query 200 testEnvironment insertQuery)
           expectedResponse
 
@@ -145,7 +141,7 @@ nextRetryAtTimezoneChange opts =
         -- Check the retries column of hdb_catalog.event_log table to see that the event has been retried once (that is
         -- the event has tried to deliver 2 times in total)
         shouldReturnYaml
-          opts
+          (options testEnvironment)
           (GraphqlEngine.postV2Query 200 testEnvironment selectQuery)
           expectedTotalTries
 

@@ -12,7 +12,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..), permitTeardownFail)
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -73,12 +73,8 @@ authorsTable tableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
-  clearMetadataWithEventTriggersWithAutoCleanup opts
-
-clearMetadataWithEventTriggersWithAutoCleanup :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-clearMetadataWithEventTriggersWithAutoCleanup opts =
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests =
   describe "doing clear_metadata with an event trigger containing auto cleanup config should succeed" do
     it "remove source via replace_metadata, check that the event_log table is removed as well" $
       \(testEnvironment, (_, _)) -> do
@@ -96,7 +92,7 @@ clearMetadataWithEventTriggersWithAutoCleanup opts =
 
         -- Checking if the clear_metadata call was successful
         shouldReturnYaml
-          opts
+          (options testEnvironment)
           (GraphqlEngine.postMetadata testEnvironment clearMetadata)
           expectedResponse
 

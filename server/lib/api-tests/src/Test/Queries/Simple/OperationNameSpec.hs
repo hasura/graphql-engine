@@ -20,7 +20,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Protocol (withEachProtocol)
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -94,11 +94,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = describe "BasicFieldsSpec" do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = describe "BasicFieldsSpec" do
   describe "Use the `operationName` key" do
     it "Selects the correct operation" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
@@ -134,4 +131,4 @@ tests opts = describe "BasicFieldsSpec" do
                   }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected

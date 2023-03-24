@@ -29,7 +29,7 @@ import Data.List.NonEmpty qualified as NE
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
 import Harness.Yaml (shouldReturnYaml)
 import Test.Hspec (SpecWith, describe, it)
 import Test.Schema.RemoteRelationships.MetadataAPI.Common qualified as Common
@@ -51,24 +51,21 @@ spec = Fixture.runWithLocalTestEnvironment contexts tests
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Common.LocalTestTestEnvironment)
-tests opts = describe "clear-metadata-metadata-tests" do
-  clearMetadataTests opts
+tests :: SpecWith (TestEnvironment, Common.LocalTestTestEnvironment)
+tests = describe "clear-metadata-metadata-tests" do
+  describe "clear_metadata" do
+    it "clears the metadata" \(testEnvironment, _) -> do
+      let query =
+            [yaml|
+              type: clear_metadata
+              args : {}
+            |]
 
-clearMetadataTests :: Fixture.Options -> SpecWith (TestEnvironment, Common.LocalTestTestEnvironment)
-clearMetadataTests opts = describe "clear_metadata" do
-  it "clears the metadata" \(testEnvironment, _) -> do
-    let query =
-          [yaml|
-            type: clear_metadata
-            args : {}
-          |]
-
-        expectedResponse =
-          [yaml|
-            message: success
-          |]
-    shouldReturnYaml
-      opts
-      (GraphqlEngine.postMetadata testEnvironment query)
-      expectedResponse
+          expectedResponse =
+            [yaml|
+              message: success
+            |]
+      shouldReturnYaml
+        (options testEnvironment)
+        (GraphqlEngine.postMetadata testEnvironment query)
+        expectedResponse

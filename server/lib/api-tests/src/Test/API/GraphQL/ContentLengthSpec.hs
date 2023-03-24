@@ -56,8 +56,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests _opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   describe "GraphQL query contains a Content-Length response header" do
     it "checks for the header in a valid GraphQL query" \testEnvironment -> do
       let schemaName :: Schema.SchemaName

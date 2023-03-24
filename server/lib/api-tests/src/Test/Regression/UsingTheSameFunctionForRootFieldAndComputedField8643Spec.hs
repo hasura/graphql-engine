@@ -73,8 +73,8 @@ functionSetup testEnvironment =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests _opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   describe "Tracking the same function as a root field and as a computed field" do
     it "Does not give rise to metadata inconsistencies" \testEnvironment -> do
       let schemaName = T.unpack $ unSchemaName (getSchemaName testEnvironment)

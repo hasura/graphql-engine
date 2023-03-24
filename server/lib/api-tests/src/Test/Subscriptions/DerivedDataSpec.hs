@@ -17,7 +17,7 @@ import Harness.Subscriptions (getNextResponse, withSubscriptions)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -106,11 +106,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = withSubscriptions $ do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = withSubscriptions $ do
   describe "Subscriptions involving derived data" do
     it "Fetches derived data correctly" \(mkSubscription, testEnvironment) -> do
       let schemaName :: Schema.SchemaName
@@ -145,7 +142,7 @@ tests opts = withSubscriptions $ do
             actual :: IO Value
             actual = getNextResponse query
 
-        actual `shouldBe` expected
+        shouldReturnYaml (options testEnvironment) actual expected
 
       -- add some data
       do
@@ -169,7 +166,7 @@ tests opts = withSubscriptions $ do
                     }
                   }
                 |]
-        actual `shouldBe` expected
+        shouldReturnYaml (options testEnvironment) actual expected
 
       -- fetch the next response
       do
@@ -188,7 +185,7 @@ tests opts = withSubscriptions $ do
             actual :: IO Value
             actual = getNextResponse query
 
-        actual `shouldBe` expected
+        shouldReturnYaml (options testEnvironment) actual expected
 
 --------------------------------------------------------------------------------
 -- SQL

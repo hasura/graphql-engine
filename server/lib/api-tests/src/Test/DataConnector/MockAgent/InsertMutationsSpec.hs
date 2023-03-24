@@ -89,8 +89,8 @@ sourceMetadata =
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-tests _opts = do
+tests :: SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
+tests = do
   mockAgentGraphqlTest "insert multiple rows with insert permissions" $ \_testEnv performGraphqlRequest -> do
     let headers = [("X-Hasura-ArtistId", "2"), ("X-Hasura-Role", testRoleName)]
     let graphqlRequest =

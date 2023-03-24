@@ -74,8 +74,8 @@ spec = do
 
 --------------------------------------------------------------------------------
 
-schemaInspectionTests :: Fixture.Options -> SpecWith (TestEnvironment, ChinookTestEnv)
-schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
+schemaInspectionTests :: SpecWith (TestEnvironment, ChinookTestEnv)
+schemaInspectionTests = describe "Schema and Source Inspection" $ do
   describe "get_source_tables" $ do
     it "success" $ \(testEnvironment, Chinook.ChinookTestEnv {nameFormatting = NameFormatting {..}}) -> do
       let sortYamlArray :: J.Value -> IO J.Value
@@ -98,7 +98,7 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
               track = _nfFormatTableName ["Track"]
           shouldReturnYamlF
             sortYamlArray
-            opts
+            (options testEnvironment)
             ( GraphqlEngine.postMetadata
                 testEnvironment
                 [yaml|
@@ -149,7 +149,7 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
               artistForeignKeys = _nfFormatForeignKeyName "Artist"
           shouldReturnYamlF
             (pure . removeDescriptions)
-            opts
+            (options testEnvironment)
             ( ( GraphqlEngine.postMetadata
                   testEnvironment
                   [yaml|
@@ -207,7 +207,7 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
         (_, Nothing) -> pendingWith "Backend Type not found in testEnvironment"
         (Just backendCapabilities, Just backendString) -> do
           shouldReturnYaml
-            opts
+            (options testEnvironment)
             ( ( GraphqlEngine.postMetadata
                   testEnvironment
                   [yaml|
@@ -232,8 +232,8 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
               uri: null
             |]
 
-schemaCrudTests :: Fixture.Options -> SpecWith (TestEnvironment, ChinookTestEnv)
-schemaCrudTests opts = describe "A series of actions to setup and teardown a source with tracked tables and relationships" $ do
+schemaCrudTests :: SpecWith (TestEnvironment, ChinookTestEnv)
+schemaCrudTests = describe "A series of actions to setup and teardown a source with tracked tables and relationships" $ do
   describe "dc_add_agent" $ do
     it "Success" $ \(testEnvironment, _) -> do
       case ( backendServerUrl =<< getBackendTypeConfig testEnvironment,
@@ -243,7 +243,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
         (_, Nothing) -> pendingWith "Backend Type not found in testEnvironment"
         (Just serverString, Just backendString) -> do
           shouldReturnYaml
-            opts
+            (options testEnvironment)
             ( GraphqlEngine.postMetadata
                 testEnvironment
                 [yaml|
@@ -280,7 +280,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
                     available: true
                   |]
           shouldReturnYaml
-            opts
+            (options testEnvironment)
             ( GraphqlEngine.postMetadata
                 testEnvironment
                 [yaml|
@@ -329,7 +329,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
         Just (backendTypeString, sourceName) -> do
           let actionType = backendTypeString <> "_add_source"
           shouldReturnYaml
-            opts
+            (options testEnvironment)
             ( GraphqlEngine.postMetadata
                 testEnvironment
                 [yaml|
@@ -351,7 +351,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
           let actionType = backendType <> "_track_table"
               album = _nfFormatTableName ["Album"]
           shouldReturnYaml
-            opts
+            (options testEnvironment)
             ( GraphqlEngine.postMetadata
                 testEnvironment
                 [yaml|
@@ -390,7 +390,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
 
           let createObjectRelationAction = backendType <> "_create_object_relationship"
           shouldReturnYaml
-            opts
+            (options testEnvironment)
             ( GraphqlEngine.postMetadata
                 testEnvironment
                 [yaml|
@@ -422,7 +422,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
               artistTable = _nfFormatTableName ["Artist"]
               artistId = _nfFormatColumnName "ArtistId"
           shouldReturnYaml
-            opts
+            (options testEnvironment)
             ( GraphqlEngine.postMetadata
                 testEnvironment
                 [yaml|
@@ -452,7 +452,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
               artistTable = _nfFormatTableName ["Artist"]
               artistId = _nfFormatColumnName "ArtistId"
           shouldReturnYaml
-            opts
+            (options testEnvironment)
             ( GraphqlEngine.postMetadata
                 testEnvironment
                 [yaml|
@@ -514,7 +514,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
           let actionType = backendType <> "_drop_relationship"
               artistTable = _nfFormatTableName ["Artist"]
           shouldReturnYaml
-            opts
+            (options testEnvironment)
             ( GraphqlEngine.postMetadata
                 testEnvironment
                 [yaml|
@@ -541,7 +541,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
           let actionType = backendType <> "_untrack_table"
               artistTable = _nfFormatTableName ["Artist"]
           shouldReturnYaml
-            opts
+            (options testEnvironment)
             ( GraphqlEngine.postMetadata
                 testEnvironment
                 [yaml|
@@ -563,7 +563,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
         Just (backendType, sourceName) -> do
           let actionType = backendType <> "_drop_source"
           shouldReturnYaml
-            opts
+            (options testEnvironment)
             ( GraphqlEngine.postMetadata
                 testEnvironment
                 [yaml|
@@ -583,7 +583,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
         Just backendString -> do
           shouldReturnYaml
-            opts
+            (options testEnvironment)
             ( GraphqlEngine.postMetadata
                 testEnvironment
                 [yaml|

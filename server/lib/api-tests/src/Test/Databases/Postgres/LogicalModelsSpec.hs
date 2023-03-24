@@ -17,7 +17,7 @@ import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options), getBackendTypeConfig)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -69,12 +69,9 @@ schema =
       }
   ]
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
-      articleQuery :: Text
+tests :: SpecWith TestEnvironment
+tests = do
+  let articleQuery :: Text
       articleQuery =
         [PG.sql| select
                             id,
@@ -130,7 +127,7 @@ tests opts = do
                       excerpt: "I like to eat dog food I am a dogs..."
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Uses two queries with the same argument names and ensure they don't mess with one another" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -184,7 +181,7 @@ tests opts = do
                     - excerpt: "I like to eat..."
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Uses a one parameter query and uses it multiple times" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -230,7 +227,7 @@ tests opts = do
                     - excerpt: "I like to eat..."
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Uses a one parameter query, passing it a GraphQL variable" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -277,4 +274,4 @@ tests opts = do
                     - excerpt: "I like to eat dog food I am a dogs..."
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected

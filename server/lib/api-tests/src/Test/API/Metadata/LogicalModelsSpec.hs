@@ -14,7 +14,7 @@ import Harness.Quoter.Yaml.InterpolateYaml
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig, scalarTypeToText)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options), getBackendTypeConfig, scalarTypeToText)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -75,8 +75,8 @@ schema =
       }
   ]
 
-testAdminAccess :: Fixture.Options -> SpecWith TestEnvironment
-testAdminAccess opts = do
+testAdminAccess :: SpecWith TestEnvironment
+testAdminAccess = do
   let query :: Text
       query = "SELECT thing / {{denominator}} AS divided FROM stuff WHERE date = {{target_date}}"
 
@@ -101,7 +101,7 @@ testAdminAccess opts = do
             sourceName = BackendType.backendSourceName backendTypeMetadata
 
         shouldReturnYaml
-          opts
+          (options testEnvironment)
           ( GraphqlEngine.postMetadataWithStatusAndHeaders
               400
               testEnvironment
@@ -121,7 +121,7 @@ testAdminAccess opts = do
             sourceName = BackendType.backendSourceName backendTypeMetadata
 
         shouldReturnYaml
-          opts
+          (options testEnvironment)
           ( GraphqlEngine.postMetadataWithStatusAndHeaders
               400
               testEnvironment
@@ -143,7 +143,7 @@ testAdminAccess opts = do
             getRequestType = backendType <> "_get_logical_model"
 
         shouldReturnYaml
-          opts
+          (options testEnvironment)
           ( GraphqlEngine.postMetadataWithStatusAndHeaders
               400
               testEnvironment
@@ -165,8 +165,8 @@ testAdminAccess opts = do
 -- Test implementation --
 -------------------------
 
-testImplementation :: Fixture.Options -> SpecWith TestEnvironment
-testImplementation opts = do
+testImplementation :: SpecWith TestEnvironment
+testImplementation = do
   let simpleQuery :: Text
       simpleQuery = "SELECT thing / 2 AS divided FROM stuff"
 
@@ -210,7 +210,7 @@ testImplementation opts = do
               }
 
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         ( GraphqlEngine.postMetadataWithStatus
             400
             testEnvironment
@@ -248,7 +248,7 @@ testImplementation opts = do
       Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
@@ -322,7 +322,7 @@ testImplementation opts = do
       Schema.untrackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
@@ -339,8 +339,8 @@ testImplementation opts = do
 -- Test permissions --
 ----------------------
 
-testPermissions :: Fixture.Options -> SpecWith TestEnvironment
-testPermissions opts = do
+testPermissions :: SpecWith TestEnvironment
+testPermissions = do
   let simpleQuery :: Text
       simpleQuery = "SELECT thing / 2 AS divided FROM stuff"
 
@@ -368,7 +368,7 @@ testPermissions opts = do
       Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
@@ -390,7 +390,7 @@ testPermissions opts = do
         |]
 
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
@@ -434,7 +434,7 @@ testPermissions opts = do
       Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
@@ -462,7 +462,7 @@ testPermissions opts = do
         |]
 
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
@@ -486,8 +486,8 @@ testPermissions opts = do
                   type: #{scalarTypeToText testEnvironment Schema.TInt}
         |]
 
-testPermissionFailures :: Fixture.Options -> SpecWith TestEnvironment
-testPermissionFailures opts = do
+testPermissionFailures :: SpecWith TestEnvironment
+testPermissionFailures = do
   describe "Permission failures" do
     it "Fails to adds a select permission to a nonexisting source" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -495,7 +495,7 @@ testPermissionFailures opts = do
           createPermRequestType = backendType <> "_create_logical_model_select_permission"
 
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         ( GraphqlEngine.postMetadataWithStatus
             400
             testEnvironment
@@ -528,7 +528,7 @@ testPermissionFailures opts = do
           expectedError = "Logical model \"made_up_logical_model\" not found in source \"" <> sourceName <> "\"."
 
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         ( GraphqlEngine.postMetadataWithStatus
             400
             testEnvironment
@@ -558,7 +558,7 @@ testPermissionFailures opts = do
           dropPermRequestType = backendType <> "_drop_logical_model_select_permission"
 
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         ( GraphqlEngine.postMetadataWithStatus
             400
             testEnvironment
@@ -588,7 +588,7 @@ testPermissionFailures opts = do
           expectedError = "Logical model \"made_up_logical_model\" not found in source \"" <> sourceName <> "\"."
 
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         ( GraphqlEngine.postMetadataWithStatus
             400
             testEnvironment

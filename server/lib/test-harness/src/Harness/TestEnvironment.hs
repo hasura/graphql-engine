@@ -37,6 +37,7 @@ import Harness.Logging.Messages
 import Harness.Permissions.Types (Permission)
 import Harness.Services.Composed qualified as Services
 import Harness.Test.BackendType
+import Harness.Test.CustomOptions qualified as Custom
 import Harness.Test.FixtureName
 import Harness.Test.ScalarType
 import Hasura.Prelude
@@ -95,7 +96,9 @@ data TestEnvironment = TestEnvironment
     -- | the backend types of the tests
     fixtureName :: FixtureName,
     -- | The permissions we'd like to use for testing.
-    permissions :: TestingRole
+    permissions :: TestingRole,
+    -- | Custom fixture-specific options.
+    options :: Custom.Options
   }
 
 scalarTypeToText :: TestEnvironment -> ScalarType -> Text

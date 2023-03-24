@@ -54,8 +54,8 @@ sourceMetadata =
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-tests _opts = do
+tests :: SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
+tests = do
   describe "MetadataAPI Mock Tests" $ do
     mockAgentMetadataTest "Should perform a template transform when calling get_source_tables" $ \testEnvironment performMetadataRequest -> do
       sourceString <-

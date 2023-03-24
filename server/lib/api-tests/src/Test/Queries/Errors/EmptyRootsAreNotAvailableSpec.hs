@@ -14,7 +14,7 @@ import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -33,11 +33,8 @@ spec = do
     )
     tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = describe "empty roots" do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = describe "empty roots" do
   forM_ ["mutation_root", "subscription_root"] \name ->
     it ("should not have a " <> name) \testEnvironment -> do
       let actual :: IO Value
@@ -61,4 +58,4 @@ tests opts = describe "empty roots" do
                 __type: null
           |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected

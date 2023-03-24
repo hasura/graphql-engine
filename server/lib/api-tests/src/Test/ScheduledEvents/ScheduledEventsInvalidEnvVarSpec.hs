@@ -76,8 +76,8 @@ authorsTable tableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests _opts = do
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests = do
   scheduledEventsWithInvalidEnvVar
 
 scheduledEventsWithInvalidEnvVar :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))

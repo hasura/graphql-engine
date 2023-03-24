@@ -69,8 +69,8 @@ sourceMetadata =
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-tests _opts = describe "Order By Tests" $ do
+tests :: SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
+tests = describe "Order By Tests" $ do
   mockAgentGraphqlTest "can order by column" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =

@@ -270,13 +270,13 @@ setupMetadata testEnvironment =
 
 -- * Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   it "Query with computed fields" $ \testEnv -> do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      opts
+      (options testEnv)
       ( GraphqlEngine.postGraphql
           testEnv
           [graphql|
@@ -311,7 +311,7 @@ tests opts = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      opts
+      (options testEnv)
       ( GraphqlEngine.postGraphqlWithHeaders
           testEnv
           [("X-Hasura-Role", "user_1")]
@@ -347,7 +347,7 @@ tests opts = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      opts
+      (options testEnv)
       ( GraphqlEngine.postGraphqlWithHeaders
           testEnv
           [("X-Hasura-Role", "user_2")]
@@ -378,7 +378,7 @@ tests opts = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      opts
+      (options testEnv)
       ( GraphqlEngine.postGraphqlWithHeaders
           testEnv
           [("X-Hasura-Role", "user_2")]
@@ -410,7 +410,7 @@ tests opts = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      opts
+      (options testEnv)
       ( GraphqlEngine.postGraphql
           testEnv
           [graphql|
@@ -440,7 +440,7 @@ tests opts = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      opts
+      (options testEnv)
       ( GraphqlEngine.postGraphql
           testEnv
           [graphql|

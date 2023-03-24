@@ -18,7 +18,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (permitTeardownFail)
-import Harness.TestEnvironment (GlobalTestEnvironment, Server (..), TestEnvironment, getServer)
+import Harness.TestEnvironment (GlobalTestEnvironment, Server (..), TestEnvironment (options), getServer)
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
@@ -87,15 +87,15 @@ schema authorTableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
-  triggerListeningToAllColumnTests opts
-  triggerListeningToSpecificColumnsTests opts
-  dropTableContainingTriggerTest opts
-  renameTableContainingTriggerTests opts
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests = do
+  triggerListeningToAllColumnTests
+  triggerListeningToSpecificColumnsTests
+  dropTableContainingTriggerTest
+  renameTableContainingTriggerTests
 
-triggerListeningToAllColumnTests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-triggerListeningToAllColumnTests opts = do
+triggerListeningToAllColumnTests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+triggerListeningToAllColumnTests = do
   it
     ( "when a run_sql query drops a column of a table,"
         <> " it should not throw any error even when an event trigger"
@@ -105,7 +105,7 @@ triggerListeningToAllColumnTests opts = do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         ( GraphqlEngine.postV2Query
             200
             testEnvironment
@@ -125,7 +125,7 @@ result: null
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         ( GraphqlEngine.postV2Query
             200
             testEnvironment
@@ -154,8 +154,8 @@ new:
   id: '1'
                                         |]
 
-triggerListeningToSpecificColumnsTests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-triggerListeningToSpecificColumnsTests _ = do
+triggerListeningToSpecificColumnsTests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+triggerListeningToSpecificColumnsTests = do
   -- TODO: Use postWithHeadersStatus to match the errors instead of the call via getResponseBody
   it
     ( "when a run_sql query drops a column of a table"
@@ -198,8 +198,8 @@ error: 'cannot drop due to the following dependent objects: event-trigger #{sche
 code: dependency-error
                                         |]
 
-dropTableContainingTriggerTest :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-dropTableContainingTriggerTest opts = do
+dropTableContainingTriggerTest :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+dropTableContainingTriggerTest = do
   it
     ( "when a run_sql query drops a table"
         <> " dependency error should be thrown when an event trigger"
@@ -209,7 +209,7 @@ dropTableContainingTriggerTest opts = do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         ( GraphqlEngine.postV2Query
             200
             testEnvironment
@@ -225,8 +225,8 @@ result_type: CommandOk
 result: null
          |]
 
-renameTableContainingTriggerTests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-renameTableContainingTriggerTests opts = do
+renameTableContainingTriggerTests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+renameTableContainingTriggerTests = do
   it
     ( "when a run_sql query drops a column of a table"
         <> " should not throw any error even when an event trigger"
@@ -236,7 +236,7 @@ renameTableContainingTriggerTests opts = do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         ( GraphqlEngine.postV2Query
             200
             testEnvironment
@@ -256,7 +256,7 @@ renameTableContainingTriggerTests opts = do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         ( GraphqlEngine.postV2Query
             200
             testEnvironment

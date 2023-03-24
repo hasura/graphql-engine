@@ -278,20 +278,20 @@ rhsPostgresTeardown testEnvironment = Postgres.dropDatabase testEnvironment
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Server)
-tests opts = do
+tests :: SpecWith (TestEnvironment, Server)
+tests = do
   -- tests metadata API
   metadataAPITests
   -- ensures setup is correct
-  noJoinsTests opts
-  simpleTests opts
+  noJoinsTests
+  simpleTests
   -- joins on neither part of the union
-  joinArticleTests opts
+  joinArticleTests
   -- joins on parts of the union
-  joinWriterTests opts
-  joinArtistTests opts
+  joinWriterTests
+  joinArtistTests
   -- joins on deeply nested joins
-  deeplyNestedJoinTests opts
+  deeplyNestedJoinTests
 
 metadataAPITests :: SpecWith (TestEnvironment, Server)
 metadataAPITests = describe "metadata API" do
@@ -388,8 +388,8 @@ args:
 
 -- | Ensure we don't insert `__hasura_internal_typename` when there are no
 -- joins.
-noJoinsTests :: Fixture.Options -> SpecWith (TestEnvironment, Server)
-noJoinsTests opts = describe "simple joins" do
+noJoinsTests :: SpecWith (TestEnvironment, Server)
+noJoinsTests = describe "simple joins" do
   it "select objects without remote joins" \(testEnvironment, _) -> do
     let query =
           [graphql|
@@ -417,12 +417,12 @@ noJoinsTests opts = describe "simple joins" do
 
           |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
-simpleTests :: Fixture.Options -> SpecWith (TestEnvironment, Server)
-simpleTests opts = describe "simple joins" do
+simpleTests :: SpecWith (TestEnvironment, Server)
+simpleTests = describe "simple joins" do
   it "joins writer against articles" \(testEnvironment, _) -> do
     let query =
           [graphql|
@@ -445,7 +445,7 @@ simpleTests opts = describe "simple joins" do
                - title: Article2
           |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
   it "joins no writer against articles" \(testEnvironment, _) -> do
@@ -466,7 +466,7 @@ simpleTests opts = describe "simple joins" do
             writer: null
           |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
   it "joins artist against articles" \(testEnvironment, _) -> do
@@ -491,7 +491,7 @@ simpleTests opts = describe "simple joins" do
                - title: Article3
           |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
   it "joins no artist against articles" \(testEnvironment, _) -> do
@@ -512,12 +512,12 @@ simpleTests opts = describe "simple joins" do
             artist: null
           |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
-joinArticleTests :: Fixture.Options -> SpecWith (TestEnvironment, Server)
-joinArticleTests opts = describe "join from article object" do
+joinArticleTests :: SpecWith (TestEnvironment, Server)
+joinArticleTests = describe "join from article object" do
   it "does not join" \(testEnvironment, _) -> do
     let query =
           [graphql|
@@ -550,12 +550,12 @@ joinArticleTests opts = describe "join from article object" do
               title: "Article1"
           |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
-joinWriterTests :: Fixture.Options -> SpecWith (TestEnvironment, Server)
-joinWriterTests opts = describe "join from writer object" do
+joinWriterTests :: SpecWith (TestEnvironment, Server)
+joinWriterTests = describe "join from writer object" do
   it "joins against articles" \(testEnvironment, _) -> do
     let query =
           [graphql|
@@ -591,12 +591,12 @@ joinWriterTests opts = describe "join from writer object" do
                - title: Article2
           |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
-joinArtistTests :: Fixture.Options -> SpecWith (TestEnvironment, Server)
-joinArtistTests opts = describe "join from artist object" do
+joinArtistTests :: SpecWith (TestEnvironment, Server)
+joinArtistTests = describe "join from artist object" do
   it "joins against articles" \(testEnvironment, _) -> do
     let query =
           [graphql|
@@ -632,12 +632,12 @@ joinArtistTests opts = describe "join from artist object" do
                - title: Article3
           |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
-deeplyNestedJoinTests :: Fixture.Options -> SpecWith (TestEnvironment, Server)
-deeplyNestedJoinTests opts = describe "join from artist object" do
+deeplyNestedJoinTests :: SpecWith (TestEnvironment, Server)
+deeplyNestedJoinTests = describe "join from artist object" do
   it "joins ambiguously nested articles depending on the full path" \(testEnvironment, _) -> do
     let query =
           [graphql|
@@ -712,7 +712,7 @@ deeplyNestedJoinTests opts = describe "join from artist object" do
               __typename: Artist
           |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
   it "joins nested articles at different depths" \(testEnvironment, _) -> do
@@ -752,6 +752,6 @@ deeplyNestedJoinTests opts = describe "join from artist object" do
               __typename: Artist
           |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse

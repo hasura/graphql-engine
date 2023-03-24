@@ -57,11 +57,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   describe "Example test" do
     it "Works as expected" \testEnvironment -> do
       let expected :: Value
@@ -71,4 +68,4 @@ tests opts = do
           actual = pure Null
 
       testLogTrace testEnvironment ("A log message" :: Text)
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected

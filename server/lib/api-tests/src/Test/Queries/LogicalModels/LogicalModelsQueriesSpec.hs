@@ -14,7 +14,7 @@ import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options), getBackendTypeConfig)
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -57,8 +57,8 @@ schema =
       }
   ]
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   let query :: Text
       query = "SELECT * FROM (VALUES ('hello', 'world'), ('welcome', 'friend')) as t(\"one\", \"two\")"
 
@@ -70,9 +70,6 @@ tests opts = do
                 Schema.logicalModelColumn "two" Schema.TStr
               ]
           }
-
-      shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
 
   describe "Testing Logical Models" $ do
     it "Descriptions and nullability appear in the schema" $ \testEnvironment -> do
@@ -190,7 +187,7 @@ tests opts = do
               }
            |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Runs simple query with a basic where clause" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -219,7 +216,7 @@ tests opts = do
               }
            |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Runs a simple query using distinct_on and order_by" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -263,7 +260,7 @@ tests opts = do
               }
            |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Runs a simple query that takes no parameters" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -292,7 +289,7 @@ tests opts = do
               }
            |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Runs a simple query that takes one dummy parameter and order_by" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -332,7 +329,7 @@ tests opts = do
               }
            |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Runs a simple query that takes no parameters but ends with a comment" $ \testEnvironment -> do
       let spicyQuery :: Text
@@ -375,7 +372,7 @@ tests opts = do
               }
            |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Uses a column permission that we are allowed to access" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -395,7 +392,7 @@ tests opts = do
       Schema.trackLogicalModel source helloWorldPermLogicalModel testEnvironment
 
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
@@ -437,7 +434,7 @@ tests opts = do
               }
            |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Fails because we access a column we do not have permissions for" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -457,7 +454,7 @@ tests opts = do
       Schema.trackLogicalModel source helloWorldPermLogicalModel testEnvironment
 
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
@@ -500,7 +497,7 @@ tests opts = do
               }
            |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Using row permissions filters out some results" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -520,7 +517,7 @@ tests opts = do
       Schema.trackLogicalModel source helloWorldPermLogicalModel testEnvironment
 
       shouldReturnYaml
-        opts
+        (options testEnvironment)
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
@@ -564,4 +561,4 @@ tests opts = do
               }
            |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected

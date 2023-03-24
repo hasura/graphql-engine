@@ -65,11 +65,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = withSubscriptions $ do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = withSubscriptions do
   describe "Streaming subscriptions" do
     it "Receives new updates in order" \(mkSubscription, testEnvironment) -> do
       let schemaName :: Schema.SchemaName
@@ -93,13 +90,15 @@ tests opts = withSubscriptions $ do
           |]
           []
 
-      getNextResponse subscriptionHandle
-        `shouldBe` [yaml|
-        data:
-          hasura_example_stream:
-          - id: 1
-            name: "A"
-      |]
+      shouldReturnYaml
+        (options testEnvironment)
+        (getNextResponse subscriptionHandle)
+        [yaml|
+          data:
+            hasura_example_stream:
+            - id: 1
+              name: "A"
+        |]
 
       let addFirstRow :: IO Value
           addFirstRow =
@@ -115,20 +114,24 @@ tests opts = withSubscriptions $ do
                 }
               |]
 
-      addFirstRow
-        `shouldBe` [yaml|
-        data:
-          insert_hasura_example:
-            affected_rows: 1
-      |]
+      shouldReturnYaml
+        (options testEnvironment)
+        addFirstRow
+        [yaml|
+          data:
+            insert_hasura_example:
+              affected_rows: 1
+        |]
 
-      getNextResponse subscriptionHandle
-        `shouldBe` [yaml|
-        data:
-          hasura_example_stream:
-            - id: 2
-              name: "B"
-      |]
+      shouldReturnYaml
+        (options testEnvironment)
+        (getNextResponse subscriptionHandle)
+        [yaml|
+          data:
+            hasura_example_stream:
+              - id: 2
+                name: "B"
+        |]
 
       let addSecondRow :: IO Value
           addSecondRow =
@@ -144,20 +147,24 @@ tests opts = withSubscriptions $ do
                 }
               |]
 
-      addSecondRow
-        `shouldBe` [yaml|
-        data:
-          insert_hasura_example:
-            affected_rows: 1
-      |]
+      shouldReturnYaml
+        (options testEnvironment)
+        addSecondRow
+        [yaml|
+          data:
+            insert_hasura_example:
+              affected_rows: 1
+        |]
 
-      getNextResponse subscriptionHandle
-        `shouldBe` [yaml|
-        data:
-          hasura_example_stream:
-            - id: 3
-              name: "C"
-      |]
+      shouldReturnYaml
+        (options testEnvironment)
+        (getNextResponse subscriptionHandle)
+        [yaml|
+          data:
+            hasura_example_stream:
+              - id: 3
+                name: "C"
+        |]
 
       let twoSeconds = fromIntegral $ diffTimeToMicroSeconds (seconds 2)
           mapOutput = maybe (Left @String "Expecting no further messsages") pure

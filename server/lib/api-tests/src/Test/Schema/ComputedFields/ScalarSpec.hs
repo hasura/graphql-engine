@@ -124,13 +124,13 @@ setupMetadata testEnvironment =
 
 -- * Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   it "Query data from the authors table" $ \testEnv -> do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      opts
+      (options testEnv)
       ( GraphqlEngine.postGraphql
           testEnv
           [graphql|

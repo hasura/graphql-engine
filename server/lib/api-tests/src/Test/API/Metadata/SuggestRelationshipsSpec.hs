@@ -10,7 +10,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options), getBackendTypeConfig)
 import Harness.Yaml (mapObject, shouldReturnYamlF, sortArray)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -124,8 +124,8 @@ setupMetadata testEnv = do
 
 -- * Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   describe "Suggest Relationships" do
     it "Uses reciprocal object relations if there is a unique constraint on the FK column" $ \testEnv -> do
       let backendTypeMetadata = Maybe.fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnv
@@ -134,7 +134,7 @@ tests opts = do
 
       shouldReturnYamlF
         (pure . mapObject sortArray)
-        opts
+        (options testEnv)
         ( GraphqlEngine.postMetadataWithStatus
             200
             testEnv
@@ -216,7 +216,7 @@ tests opts = do
 
       shouldReturnYamlF
         (pure . mapObject sortArray)
-        opts
+        (options testEnv)
         ( GraphqlEngine.postMetadataWithStatus
             200
             testEnv
@@ -280,7 +280,7 @@ tests opts = do
 
       shouldReturnYamlF
         (pure . mapObject sortArray)
-        opts
+        (options testEnv)
         ( GraphqlEngine.postMetadataWithStatus
             200
             testEnv
@@ -300,7 +300,7 @@ tests opts = do
 
       shouldReturnYamlF
         (pure . mapObject sortArray)
-        opts
+        (options testEnv)
         ( GraphqlEngine.postMetadataWithStatus
             200
             testEnv

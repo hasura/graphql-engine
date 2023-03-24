@@ -15,7 +15,7 @@ import Harness.Quoter.Yaml
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
 import Harness.Yaml (shouldReturnOneOfYaml, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
@@ -76,14 +76,8 @@ schema =
 --
 -- Because of that, we use 'shouldReturnOneOfYaml' and list all of the possible
 -- (valid) expected results.
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBeOneOf :: IO Value -> [Value] -> IO ()
-      shouldBeOneOf = shouldReturnOneOfYaml opts
-
-      shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   it "Query by ID" \testEnvironment -> do
     let possibilities :: [Value]
         possibilities =
@@ -118,7 +112,7 @@ tests opts = do
                 }
               |]
 
-    actual `shouldBeOneOf` possibilities
+    shouldReturnOneOfYaml (options testEnvironment) actual possibilities
 
   it "Query limit 2" \testEnvironment -> do
     let possibilities :: [Value]
@@ -160,7 +154,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBeOneOf` possibilities
+    shouldReturnOneOfYaml (options testEnvironment) actual possibilities
 
   it "... where author name" \testEnvironment -> do
     let possibilities :: [Value]
@@ -196,7 +190,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBeOneOf` possibilities
+    shouldReturnOneOfYaml (options testEnvironment) actual possibilities
 
   it "Order by author id" \testEnvironment -> do
     let possibilities :: [Value]
@@ -238,7 +232,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBeOneOf` possibilities
+    shouldReturnOneOfYaml (options testEnvironment) actual possibilities
 
   it "Count articles" \testEnvironment -> do
     let expected :: Value
@@ -264,7 +258,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml (options testEnvironment) actual expected
 
 --------------------------------------------------------------------------------
 -- Metadata

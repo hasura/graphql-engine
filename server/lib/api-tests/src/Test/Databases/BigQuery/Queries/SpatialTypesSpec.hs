@@ -62,11 +62,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   describe "Geography scalar type" do
     it "Fetch geospatial data" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
@@ -105,7 +102,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Fetch geospatial data filtered on _st_equals" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
@@ -136,7 +133,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Fetch geospatial data filtered on _st_contains" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
@@ -167,7 +164,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Fetch geospatial data filtered on _st_intersects" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
@@ -197,7 +194,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Fetch geospatial data filtered on _st_within" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
@@ -227,7 +224,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Fetch geospatial data filtered on _st_d_within" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
@@ -257,7 +254,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Fetch geospatial data filtered on _st_touches" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
@@ -287,4 +284,4 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected

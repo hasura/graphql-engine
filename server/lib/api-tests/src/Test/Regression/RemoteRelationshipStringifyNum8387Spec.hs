@@ -330,8 +330,8 @@ rhsPostgresSetup (testEnvironment, _) = do
 -- Tests
 
 -- | Basic queries using *-to-DB joins
-testsWithFeatureOn :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-testsWithFeatureOn opts = describe "object-relationship (stringified numeric types)" $ do
+testsWithFeatureOn :: SpecWith (TestEnvironment, Maybe Server)
+testsWithFeatureOn = describe "object-relationship (stringified numeric types)" $ do
   -- fetches the relationship data
   it "related-data" $ \(testEnvironment, _) -> do
     let query =
@@ -356,13 +356,13 @@ testsWithFeatureOn opts = describe "object-relationship (stringified numeric typ
                     version: "1.075"
             |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
 -- | Expected behaviour when HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES is false
-testsWithFeatureOff :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-testsWithFeatureOff opts = describe "object-relationship (no stringified numeric types)" $ do
+testsWithFeatureOff :: SpecWith (TestEnvironment, Maybe Server)
+testsWithFeatureOff = describe "object-relationship (no stringified numeric types)" $ do
   -- fetches the relationship data
   it "related-data" $ \(testEnvironment, _) -> do
     let query =
@@ -387,6 +387,6 @@ testsWithFeatureOff opts = describe "object-relationship (no stringified numeric
                     version: 1.075
             |]
     shouldReturnYaml
-      opts
+      (options testEnvironment)
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse

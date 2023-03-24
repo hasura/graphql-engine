@@ -38,13 +38,13 @@ schema =
       }
   ]
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   it "Can query a table with a delimited identifier" $ \testEnv -> do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      opts
+      (options testEnv)
       ( postGraphql
           testEnv
           [graphql|

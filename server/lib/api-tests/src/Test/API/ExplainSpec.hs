@@ -60,8 +60,8 @@ schema =
       }
   ]
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests _opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   describe "Explaining queries" do
     it "Works as expected" \testEnvironment -> do
       -- All that matters to this test is that the call completes without error.

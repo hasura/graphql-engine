@@ -53,8 +53,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests _ =
+tests :: SpecWith TestEnvironment
+tests =
   -- All of the testing is done during setup.
   -- If setup succeeds and we have no conflicts, and this test will pass.
   it "Creates a schema without conflicts" \_ -> pure @IO ()

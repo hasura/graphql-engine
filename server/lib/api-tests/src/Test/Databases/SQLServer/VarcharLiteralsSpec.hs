@@ -17,7 +17,7 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it, shouldSatisfy)
@@ -85,12 +85,9 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
-      sqlShouldSatisfy :: IO Value -> (Text -> Bool) -> IO ()
+tests :: SpecWith TestEnvironment
+tests = do
+  let sqlShouldSatisfy :: IO Value -> (Text -> Bool) -> IO ()
       sqlShouldSatisfy ioVal predicate = do
         value <- ioVal
 
@@ -135,7 +132,7 @@ tests opts = do
             }
            |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml (options testEnvironment) actual expected
 
   it "Query comparing string with char" \testEnvironment -> do
     let expected =
@@ -159,7 +156,7 @@ tests opts = do
             }
            |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml (options testEnvironment) actual expected
 
   it "Query comparing string with nvarchar" \testEnvironment -> do
     let expected =
@@ -183,7 +180,7 @@ tests opts = do
             }
            |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml (options testEnvironment) actual expected
 
   it "Query comparing string with nchar" \testEnvironment -> do
     let expected =
@@ -207,7 +204,7 @@ tests opts = do
             }
            |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml (options testEnvironment) actual expected
 
   it "Query comparing non-ascii string with varchar" \testEnvironment -> do
     let expected =
@@ -231,7 +228,7 @@ tests opts = do
             }
            |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml (options testEnvironment) actual expected
 
   it "Query comparing non-ascii string with nvarchar" \testEnvironment -> do
     let expected =
@@ -255,7 +252,7 @@ tests opts = do
             }
            |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml (options testEnvironment) actual expected
 
   it "Explain comparing string with varchar" \testEnvironment -> do
     let actual :: IO Value

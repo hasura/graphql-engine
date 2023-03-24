@@ -128,8 +128,8 @@ sourceMetadata =
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-tests _opts = describe "Object Relationships Tests" $ do
+tests :: SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
+tests = describe "Object Relationships Tests" $ do
   mockAgentGraphqlTest "works with multiple object relationships" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =

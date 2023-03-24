@@ -103,11 +103,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   describe "Aggregation queries" do
     it "Fetch aggregated data of an object" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -158,7 +155,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Fetch aggregated data on nested objects" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -213,7 +210,7 @@ tests opts = do
                  name: Author 1
             |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Fetch aggregated count only" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -242,4 +239,4 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected

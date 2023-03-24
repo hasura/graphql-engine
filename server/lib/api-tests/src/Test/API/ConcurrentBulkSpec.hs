@@ -9,7 +9,6 @@ import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
-import Harness.Exceptions (HasCallStack)
 import Harness.GraphqlEngine
 import Harness.Quoter.Yaml
 import Harness.Test.BackendType qualified as BackendType
@@ -68,16 +67,14 @@ schema =
       }
   ]
 
-tests :: (TestEnvironment -> String -> IO Value) -> Fixture.Options -> SpecWith TestEnvironment
-tests query opts = do
-  let shouldBe :: HasCallStack => IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
+tests :: (TestEnvironment -> String -> IO Value) -> SpecWith TestEnvironment
+tests query =
   describe "'concurrent_bulk'" do
     it "returns the same results as regular 'bulk'" \testEnv -> do
       let actual = query testEnv "concurrent_bulk"
       expected <- query testEnv "bulk"
       show expected `shouldContain` "TuplesOk"
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnv) actual expected
 
     it "fails when a query is not read-only" \testEnv -> do
       let expected =
@@ -86,7 +83,7 @@ tests query opts = do
               error: Only read-only queries are allowed in a concurrent_bulk
               path: $
             |]
-      runSqlDrop testEnv `shouldBe` expected
+      shouldReturnYaml (options testEnv) (runSqlDrop testEnv) expected
 
 postgresRunSqlQuery :: TestEnvironment -> String -> IO Value
 postgresRunSqlQuery testEnvironment bulkType = do

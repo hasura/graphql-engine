@@ -24,7 +24,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Protocol (withEachProtocol)
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -80,7 +80,7 @@ spec = do
                     }
               ]
           )
-          . tests
+          tests
       )
 
 --------------------------------------------------------------------------------
@@ -114,11 +114,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   describe "Fetch a list of objects" do
     it "Fetch a list of authors" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -152,7 +149,7 @@ tests opts = do
                   name: Anjela
             |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected
 
     it "Fails on unknown fields" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -180,4 +177,4 @@ tests opts = do
                 message: 'field ''unknown'' not found in type: ''#{schemaName}_authors'''
             |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml (options testEnvironment) actual expected

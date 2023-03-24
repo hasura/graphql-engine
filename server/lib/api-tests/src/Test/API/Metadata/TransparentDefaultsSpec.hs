@@ -28,8 +28,8 @@ spec =
     )
     tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests _ = do
+tests :: SpecWith TestEnvironment
+tests = do
   describe "properties of metadata in the presence of defaults" do
     describe "without metadata modifications" do
       -- Note that this requires that the foobar agent is running. Reuses sqlite service.

@@ -13,7 +13,7 @@ import Harness.Quoter.Yaml
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
@@ -84,12 +84,8 @@ articlesTable tableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
-  duplicateTriggerNameNotAllowed opts
-
-duplicateTriggerNameNotAllowed :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-duplicateTriggerNameNotAllowed opts =
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests =
   describe "only unique trigger names are allowed" do
     it "check: inserting a new row invokes a event trigger" $
       \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
@@ -119,7 +115,7 @@ duplicateTriggerNameNotAllowed opts =
 
         -- Insert a row into the table with event trigger
         shouldReturnYaml
-          opts
+          (options testEnvironment)
           (GraphqlEngine.postV2Query 200 testEnvironment insertQuery)
           expectedResponse
 
@@ -160,7 +156,7 @@ duplicateTriggerNameNotAllowed opts =
 
         -- Creating a event trigger with duplicate name should fail
         shouldReturnYaml
-          opts
+          (options testEnvironment)
           (GraphqlEngine.postWithHeadersStatus 400 testEnvironment "/v1/metadata/" mempty createEventTriggerWithDuplicateName)
           createEventTriggerWithDuplicateNameExpectedResponse
 
@@ -177,7 +173,7 @@ duplicateTriggerNameNotAllowed opts =
 
         -- Creating a event trigger with duplicate name should fail
         shouldReturnYaml
-          opts
+          (options testEnvironment)
           (GraphqlEngine.postWithHeadersStatus 400 testEnvironment "/v1/metadata/" mempty replaceMetadata)
           replaceMetadataWithDuplicateNameExpectedResponse
 
