@@ -71,8 +71,14 @@ const Component = (props: ComponentProps) => {
   });
 
   const onSubmit = async (formData: PermissionsSchema) => {
-    await updatePermissions.submit(formData);
-    handleClose();
+    try {
+      await updatePermissions.submit(formData);
+      handleClose();
+    } catch (e) {
+      reset();
+      const newValues = getValues();
+      reset(newValues);
+    }
   };
 
   const handleDelete = async () => {
