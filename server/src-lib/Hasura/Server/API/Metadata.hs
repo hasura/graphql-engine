@@ -436,7 +436,7 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
         L.unLogger logger $
           SchemaSyncLog L.LevelInfo TTMetadataApi $
             String $
-              "Attempting to put new metadata in storage"
+              "Attempting to insert new metadata in storage"
         newResourceVersion <-
           Tracing.newSpan "setMetadata" $
             liftEitherM $
@@ -444,7 +444,7 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
         L.unLogger logger $
           SchemaSyncLog L.LevelInfo TTMetadataApi $
             String $
-              "Put new metadata in storage, received new resource version " <> tshow newResourceVersion
+              "Successfully inserted new metadata in storage with resource version: " <> showMetadataResourceVersion newResourceVersion
 
         -- notify schema cache sync
         Tracing.newSpan "notifySchemaCacheSync" $
@@ -453,7 +453,7 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
         L.unLogger logger $
           SchemaSyncLog L.LevelInfo TTMetadataApi $
             String $
-              "Sent schema cache sync notification at resource version " <> tshow newResourceVersion
+              "Inserted schema cache sync notification at resource version:" <> showMetadataResourceVersion newResourceVersion
 
         (_, modSchemaCache', _) <-
           Tracing.newSpan "setMetadataResourceVersionInSchemaCache" $

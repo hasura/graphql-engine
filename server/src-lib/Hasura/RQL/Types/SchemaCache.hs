@@ -100,6 +100,7 @@ module Hasura.RQL.Types.SchemaCache
     FunctionCache,
     CronTriggerInfo (..),
     MetadataResourceVersion (..),
+    showMetadataResourceVersion,
     initialResourceVersion,
     getLogicalModelBoolExpDeps,
     getBoolExpDeps,
@@ -168,10 +169,13 @@ import System.Cron.Types
 newtype MetadataResourceVersion = MetadataResourceVersion
   { getMetadataResourceVersion :: Int64
   }
-  deriving (Show, Eq, Num, FromJSON, ToJSON)
+  deriving (Eq, Num, FromJSON, ToJSON)
 
 initialResourceVersion :: MetadataResourceVersion
 initialResourceVersion = MetadataResourceVersion 0
+
+showMetadataResourceVersion :: MetadataResourceVersion -> Text
+showMetadataResourceVersion (MetadataResourceVersion version) = tshow version
 
 mkParentDep ::
   forall b.

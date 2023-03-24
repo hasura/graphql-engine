@@ -19,6 +19,7 @@ import Data.Aeson.Casing
 import Data.Aeson.TH
 import Data.HashMap.Strict qualified as HM
 import Data.HashSet qualified as HS
+import Data.Text qualified as T
 import Database.PG.Query qualified as PG
 import Hasura.App.State
 import Hasura.Base.Error
@@ -332,24 +333,31 @@ refreshSchemaCache
                 setMetadataResourceVersionInSchemaCache resourceVersion
                 logInfo logger threadType $
                   String $
-                    "Received metadata resource version "
-                      <> tshow resourceVersion
-                      <> " as an initial version. Not updating the schema cache."
+                    T.unwords
+                      [ "Received metadata resource version:",
+                        showMetadataResourceVersion resourceVersion,
+                        "as an initial version. Not updating the schema cache."
+                      ]
               Just engineResourceVersion ->
                 unless (engineResourceVersion == resourceVersion) $ do
                   logInfo logger threadType $
                     String $
-                      "Received metadata resource version "
-                        <> tshow resourceVersion
-                        <> ", different from the current engine resource version"
-                        <> tshow engineResourceVersion
-                        <> "."
+                      T.unwords
+                        [ "Received metadata resource version:",
+                          showMetadataResourceVersion resourceVersion <> ",",
+                          "different from the current engine resource version:",
+                          showMetadataResourceVersion engineResourceVersion <> ".",
+                          "Trying to update the schema cache."
+                        ]
 
                   (metadata, latestResourceVersion) <- liftEitherM fetchMetadata
+
                   logInfo logger threadType $
                     String $
-                      "Fetched metadata with resource version "
-                        <> tshow latestResourceVersion
+                      T.unwords
+                        [ "Fetched metadata with resource version:",
+                          showMetadataResourceVersion latestResourceVersion
+                        ]
 
                   notifications <- liftEitherM $ fetchMetadataNotifications engineResourceVersion appEnvInstanceId
 
@@ -357,12 +365,16 @@ refreshSchemaCache
                     [] -> do
                       logInfo logger threadType $
                         String $
-                          "Fetched metadata notifications and received no notifications. Not updating the schema cache."
+                          T.unwords
+                            [ "Fetched metadata notifications and received no notifications. Not updating the schema cache.",
+                              "Only setting resource version:",
+                              showMetadataResourceVersion latestResourceVersion,
+                              "in schema cache"
+                            ]
                       setMetadataResourceVersionInSchemaCache latestResourceVersion
                     _ -> do
                       logInfo logger threadType $
-                        String $
-                          "Fetched metadata notifications and received some notifications. Updating the schema cache."
+                        String "Fetched metadata notifications and received some notifications. Updating the schema cache."
                       let cacheInvalidations =
                             if any ((== (engineResourceVersion + 1)) . fst) notifications
                               then -- If (engineResourceVersion + 1) is in the list of notifications then
@@ -380,10 +392,11 @@ refreshSchemaCache
                                         BackendMap.lookup @'DataConnector $
                                           scBackendCache schemaCache
                                   }
-                      logInfo logger threadType $ object ["currentVersion" .= engineResourceVersion, "latestResourceVersion" .= latestResourceVersion]
                       buildSchemaCacheWithOptions CatalogSync cacheInvalidations metadata
                       setMetadataResourceVersionInSchemaCache latestResourceVersion
-                      logInfo logger threadType $ object ["message" .= ("Schema Version changed with notifications" :: Text)]
+                      logInfo logger threadType $
+                        String $
+                          "Schema cache updated with resource version: " <> showMetadataResourceVersion latestResourceVersion
         pure (msg, cache)
     onLeft respErr (logError logger threadType . TEQueryError)
 
