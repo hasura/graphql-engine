@@ -4,6 +4,7 @@ import { useTables } from './hooks/useTables';
 
 import { TrackedTables } from './components/TrackedTables';
 import { UntrackedTables } from './components/UntrackedTables';
+import Skeleton from 'react-loading-skeleton';
 
 const classNames = {
   selected:
@@ -23,7 +24,12 @@ export const TrackTables = ({ dataSourceName }: Props) => {
     dataSourceName,
   });
 
-  if (isLoading) return <div className="px-md">Loading...</div>;
+  if (isLoading)
+    return (
+      <div className="px-md">
+        <Skeleton count={8} height={25} />
+      </div>
+    );
 
   if (!data) return <div className="px-md">Something went wrong</div>;
 

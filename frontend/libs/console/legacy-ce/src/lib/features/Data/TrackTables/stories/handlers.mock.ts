@@ -102,8 +102,24 @@ const runSQLResponse: RunSQLResponse = {
     ['PlaylistTrack', 'public', 'BASE TABLE'],
     ['Genre', 'public', 'BASE TABLE'],
     ['MediaType', 'public', 'BASE TABLE'],
+    ['Country', 'public', 'BASE TABLE'],
+    ['State', 'public', 'BASE TABLE'],
+    ['City', 'public', 'BASE TABLE'],
+    ['CustomerList', 'public', 'VIEW'],
+    ['InvoiceLineView', 'public', 'VIEW'],
+    ['InvoiceView', 'public', 'VIEW'],
+    ['TrackView', 'public', 'VIEW'],
+    ...createTables(1700),
   ],
 };
+
+function createTables(count: number) {
+  const tables = [];
+  for (let i = 0; i < count; i++) {
+    tables.push([`table_${i}`, 'public', 'BASE TABLE']);
+  }
+  return tables;
+}
 
 export const handlers = () => [
   rest.post(`http://localhost:8080/v1/metadata`, async (req, res, ctx) => {
