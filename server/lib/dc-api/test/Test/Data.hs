@@ -74,7 +74,7 @@ schemaBS :: ByteString
 schemaBS = $(makeRelativeToProject "test/Test/Data/schema-tables.json" >>= embedFile)
 
 schemaTables :: [API.TableInfo]
-schemaTables = sortOn API._tiName . either error id . eitherDecodeStrict $ schemaBS
+schemaTables = either error id . eitherDecodeStrict $ schemaBS
 
 numericColumns :: [API.ColumnName]
 numericColumns = schemaTables >>= (API._tiColumns >>> mapMaybe (\API.ColumnInfo {..} -> if _ciType == API.ScalarType "number" then Just _ciName else Nothing))
