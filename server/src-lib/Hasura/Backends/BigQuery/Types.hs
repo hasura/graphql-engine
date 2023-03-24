@@ -50,6 +50,7 @@ module Hasura.Backends.BigQuery.Types
     Top (..),
     Value (..),
     Where (..),
+    With (..),
     WindowFunction (..),
     aggregateProjectionsFieldOrigin,
     doubleToBigDecimal,
@@ -96,6 +97,7 @@ import Data.Vector.Instances ()
 import Hasura.Base.Error
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
+import Hasura.LogicalModel.Metadata (InterpolatedQuery, LogicalModelName)
 import Hasura.Metadata.DTO.Utils (boundedEnumCodec)
 import Hasura.Prelude hiding (state)
 import Hasura.RQL.IR.BoolExp
@@ -105,7 +107,8 @@ import Language.Haskell.TH.Syntax hiding (location)
 import Text.ParserCombinators.ReadP (eof, readP_to_S)
 
 data Select = Select
-  { selectTop :: Top,
+  { selectWith :: Maybe With,
+    selectTop :: Top,
     selectAsStruct :: AsStruct,
     selectProjections :: NonEmpty Projection,
     selectFrom :: From,
@@ -118,7 +121,7 @@ data Select = Select
     selectCardinality :: Cardinality
   }
   deriving stock (Eq, Ord, Show, Generic, Data, Lift)
-  deriving anyclass (FromJSON, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 -- | Helper type allowing addition of extra fields used
 -- in PARTITION BY.
@@ -149,14 +152,14 @@ data ArrayAgg = ArrayAgg
     arrayAggTop :: Top
   }
   deriving stock (Eq, Ord, Show, Generic, Data, Lift)
-  deriving anyclass (FromJSON, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 data Reselect = Reselect
   { reselectProjections :: NonEmpty Projection,
     reselectWhere :: Where
   }
   deriving stock (Eq, Ord, Show, Generic, Data, Lift)
-  deriving anyclass (FromJSON, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 data OrderBy = OrderBy
   { orderByFieldName :: FieldName,
@@ -183,7 +186,7 @@ data FieldOrigin
   = NoOrigin
   | AggregateOrigin [Aliased Aggregate]
   deriving stock (Eq, Ord, Show, Generic, Data, Lift)
-  deriving anyclass (FromJSON, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 aggregateProjectionsFieldOrigin :: Projection -> FieldOrigin
 aggregateProjectionsFieldOrigin = \case
@@ -202,7 +205,7 @@ data Projection
   | ArrayEntityProjection EntityAlias (Aliased [FieldName])
   | WindowProjection (Aliased WindowFunction)
   deriving stock (Eq, Show, Generic, Data, Lift, Ord)
-  deriving anyclass (FromJSON, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 data WindowFunction
   = -- | ROW_NUMBER() OVER(PARTITION BY field)
@@ -220,7 +223,7 @@ data Join = Join
     joinRightTable :: EntityAlias
   }
   deriving stock (Eq, Ord, Show, Generic, Data, Lift)
-  deriving anyclass (FromJSON, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 data JoinProvenance
   = OrderByJoinProvenance
@@ -229,19 +232,19 @@ data JoinProvenance
   | ArrayJoinProvenance [Text]
   | MultiplexProvenance
   deriving stock (Eq, Ord, Show, Generic, Data, Lift)
-  deriving anyclass (FromJSON, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 data JoinSource
   = JoinSelect Select
   -- We're not using existingJoins at the moment, which was used to
   -- avoid re-joining on the same table twice.
   deriving stock (Eq, Ord, Show, Generic, Data, Lift)
-  deriving anyclass (FromJSON, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 newtype Where
   = Where [Expression]
   deriving stock (Eq, Ord, Show, Generic, Data, Lift)
-  deriving newtype (FromJSON, Hashable, Monoid, NFData, Semigroup)
+  deriving newtype (Hashable, Monoid, NFData, Semigroup)
 
 data Cardinality
   = Many
@@ -254,6 +257,11 @@ data AsStruct
   | AsStruct
   deriving stock (Eq, Ord, Show, Generic, Data, Lift)
   deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
+
+-- | A Common Table Expression clause.
+newtype With = With (NonEmpty (Aliased (InterpolatedQuery Expression)))
+  deriving stock (Data, Generic, Lift)
+  deriving newtype (Eq, Hashable, NFData, Ord, Semigroup, Show)
 
 data Top
   = NoTop
@@ -300,7 +308,7 @@ data Expression
     -- `argument_name` => 'argument_value'
     FunctionNamedArgument Text Expression
   deriving stock (Eq, Ord, Show, Generic, Data, Lift)
-  deriving anyclass (FromJSON, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 data JsonPath
   = RootPath
@@ -315,7 +323,7 @@ data Aggregate
   | OpAggregate Text Expression
   | TextAggregate Text
   deriving stock (Eq, Ord, Show, Generic, Data, Lift)
-  deriving anyclass (FromJSON, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 data Countable fieldname
   = StarCountable
@@ -336,29 +344,30 @@ data From
   | FromSelect (Aliased Select)
   | FromSelectJson (Aliased SelectJson)
   | FromFunction (Aliased SelectFromFunction)
+  | FromLogicalModel LogicalModelName
   deriving stock (Eq, Show, Generic, Data, Lift, Ord)
-  deriving anyclass (FromJSON, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 data SelectJson = SelectJson
   { selectJsonBody :: Expression,
     selectJsonFields :: [(ColumnName, ScalarType)]
   }
   deriving stock (Eq, Ord, Show, Generic, Data, Lift)
-  deriving anyclass (FromJSON, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 data SelectFromFunction = SelectFromFunction
   { sffFunctionName :: FunctionName,
     sffArguments :: [Expression]
   }
   deriving stock (Eq, Show, Generic, Data, Lift, Ord)
-  deriving anyclass (FromJSON, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 data OpenJson = OpenJson
   { openJsonExpression :: Expression,
     openJsonWith :: NonEmpty JsonFieldSpec
   }
   deriving stock (Eq, Ord, Show, Generic, Data, Lift)
-  deriving anyclass (FromJSON, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 data JsonFieldSpec
   = IntField Text

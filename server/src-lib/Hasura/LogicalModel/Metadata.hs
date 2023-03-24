@@ -39,6 +39,7 @@ import Hasura.RQL.Types.Common (SourceName, ToAesonPairs (toAesonPairs), default
 import Hasura.RQL.Types.Permission (SelPermDef, _pdRole)
 import Hasura.SQL.Backend
 import Hasura.Session (RoleName)
+import Language.Haskell.TH.Syntax (Lift)
 
 newtype RawQuery = RawQuery {getRawQuery :: Text}
   deriving newtype (Eq, Ord, Show, FromJSON, ToJSON)
@@ -54,7 +55,7 @@ data InterpolatedItem variable
     IIText Text
   | -- | a captured variable
     IIVariable variable
-  deriving stock (Eq, Ord, Show, Functor, Foldable, Data, Generic, Traversable)
+  deriving stock (Eq, Ord, Show, Functor, Foldable, Data, Generic, Lift, Traversable)
 
 -- | Converting an interpolated query back to text.
 --   Should roundtrip with the 'parseInterpolatedQuery'.
@@ -74,7 +75,7 @@ newtype InterpolatedQuery variable = InterpolatedQuery
   { getInterpolatedQuery :: [InterpolatedItem variable]
   }
   deriving newtype (Eq, Ord, Show, Generic)
-  deriving stock (Data, Functor, Foldable, Traversable)
+  deriving stock (Data, Functor, Foldable, Lift, Traversable)
 
 deriving newtype instance (Hashable variable) => Hashable (InterpolatedQuery variable)
 

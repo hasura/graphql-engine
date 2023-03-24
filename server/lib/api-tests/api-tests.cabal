@@ -126,6 +126,7 @@ library
     Test.DataConnector.MockAgent.UpdateMutationsSpec
     Test.DataConnector.QuerySpec
     Test.DataConnector.SelectPermissionsSpec
+    Test.Databases.BigQuery.LogicalModelsSpec
     Test.Databases.BigQuery.Queries.SpatialTypesSpec
     Test.Databases.BigQuery.Queries.TypeInterpretationSpec
     Test.Databases.BigQuery.Schema.ComputedFields.TableSpec

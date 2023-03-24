@@ -145,7 +145,7 @@ test-logical-models:
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		cabal run api-tests:exe:api-tests
 	HASURA_TEST_BACKEND_TYPE=BigQuery \
-		HSPEC_MATCH=Metadata.LogicalModel \
+		HSPEC_MATCH=LogicalModel \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		cabal run api-tests:exe:api-tests
 	HASURA_TEST_BACKEND_TYPE=SQLServer \

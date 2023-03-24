@@ -25,12 +25,15 @@ import Data.List (intersperse)
 import Data.List.NonEmpty qualified as NE
 import Data.String
 import Data.Text qualified as T
+import Data.Text.Extended qualified as T (toTxt)
 import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Builder (Builder)
 import Data.Text.Lazy.Builder qualified as LT
 import Data.Tuple
 import Data.Vector qualified as V
 import Hasura.Backends.BigQuery.Types
+import Hasura.LogicalModel.Metadata (InterpolatedItem (..), InterpolatedQuery (..))
+import Hasura.LogicalModel.Types (LogicalModelName (..))
 import Hasura.Prelude hiding (second)
 
 --------------------------------------------------------------------------------
@@ -184,10 +187,26 @@ fromSelect Select {..} = finalExpression
     fromAsStruct = \case
       AsStruct -> "AS STRUCT"
       NoAsStruct -> ""
+    interpolatedQuery = \case
+      IIText t -> UnsafeTextPrinter t <+> NewlinePrinter
+      IIVariable v -> fromExpression v
+    fromWith = \case
+      Just (With expressions) -> do
+        let go :: InterpolatedQuery Expression -> Printer
+            go = foldr ((<+>) . interpolatedQuery) "" . getInterpolatedQuery
+
+        "WITH "
+          <+> SepByPrinter
+            ("," <+> NewlinePrinter)
+            [ fromNameText alias <+> " AS " <+> parens (go thing)
+              | Aliased thing alias <- toList expressions
+            ]
+      Nothing -> ""
     inner =
       SepByPrinter
         NewlinePrinter
-        [ "SELECT ",
+        [ fromWith selectWith,
+          "SELECT ",
           fromAsStruct selectAsStruct,
           IndentPrinter 7 projections,
           "FROM " <+> IndentPrinter 5 (fromFrom selectFrom),
@@ -539,6 +558,8 @@ fromFrom =
             )
             selectFromFunction
         )
+    FromLogicalModel (LogicalModelName logicalModelName) ->
+      fromNameText (T.toTxt logicalModelName)
 
 fromTableName :: TableName -> Printer
 fromTableName TableName {tableName, tableNameSchema} =

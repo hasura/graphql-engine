@@ -6,6 +6,7 @@ module Hasura.Backends.BigQuery.FromIr
     Error (..),
     runFromIr,
     FromIr,
+    FromIrWriter (..),
     FromIrConfig (..),
     defaultFromIrConfig,
     bigQuerySourceConfigToFromIrConfig,
@@ -21,9 +22,13 @@ import Data.List.NonEmpty qualified as NE
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
 import Data.Text qualified as T
+import Data.Text.Extended qualified as T (toTxt)
 import Hasura.Backends.BigQuery.Instances.Types ()
 import Hasura.Backends.BigQuery.Source (BigQuerySourceConfig (..))
 import Hasura.Backends.BigQuery.Types as BigQuery
+import Hasura.LogicalModel.IR (LogicalModel (..))
+import Hasura.LogicalModel.Metadata (InterpolatedQuery)
+import Hasura.LogicalModel.Types (LogicalModelName (..))
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as Ir
 import Hasura.RQL.Types.Column qualified as Rql
@@ -100,9 +105,27 @@ instance Show Error where
 -- setting the current entity that a given field name refers to. See
 -- @fromColumn@.
 newtype FromIr a = FromIr
-  { unFromIr :: ReaderT FromIrReader (StateT FromIrState (Validate (NonEmpty Error))) a
+  { unFromIr ::
+      ReaderT
+        FromIrReader
+        ( StateT
+            FromIrState
+            ( WriterT
+                FromIrWriter
+                ( Validate (NonEmpty Error)
+                )
+            )
+        )
+        a
   }
   deriving (Functor, Applicative, Monad, MonadValidate (NonEmpty Error))
+
+-- | Collected from using a logical model in a query.
+--   Each entry here because a CTE to be prepended to the query.
+newtype FromIrWriter = FromIrWriter
+  { fromIrWriterLogicalModels :: Map LogicalModelName (InterpolatedQuery Expression)
+  }
+  deriving newtype (Semigroup, Monoid)
 
 data FromIrState = FromIrState
   { indices :: Map Text Int
@@ -160,11 +183,12 @@ data ParentSelectFromEntity
 --------------------------------------------------------------------------------
 -- Runners
 
-runFromIr :: FromIrConfig -> FromIr a -> Validate (NonEmpty Error) a
+runFromIr :: FromIrConfig -> FromIr a -> Validate (NonEmpty Error) (a, FromIrWriter)
 runFromIr config fromIr =
-  evalStateT
-    (runReaderT (unFromIr fromIr) (FromIrReader {config}))
-    (FromIrState {indices = mempty})
+  runWriterT $
+    evalStateT
+      (runReaderT (unFromIr fromIr) (FromIrReader {config}))
+      (FromIrState {indices = mempty})
 
 bigQuerySourceConfigToFromIrConfig :: BigQuerySourceConfig -> FromIrConfig
 bigQuerySourceConfigToFromIrConfig BigQuerySourceConfig {_scGlobalSelectLimit} =
@@ -237,6 +261,7 @@ fromSelectRows parentSelectFromEntity annSelectG = do
         | functionName nm == "unnest" -> fromUnnestedJSON json columns (map fst fields)
       Ir.FromFunction functionName (Rql.FunctionArgsExp positionalArgs namedArgs) Nothing ->
         fromFunction parentSelectFromEntity functionName positionalArgs namedArgs
+      Ir.FromLogicalModel logicalModel -> fromLogicalModel logicalModel
       _ -> refute (pure (FromTypeUnsupported from))
   Args
     { argsOrderBy,
@@ -258,7 +283,8 @@ fromSelectRows parentSelectFromEntity annSelectG = do
   globalTop <- getGlobalTop
   let select =
         Select
-          { selectCardinality = Many,
+          { selectWith = Nothing,
+            selectCardinality = Many,
             selectAsStruct = NoAsStruct,
             selectFinalWantedFields = pure (fieldTextNames fields),
             selectGroupBy = mempty,
@@ -441,7 +467,8 @@ fromSelectAggregate minnerJoinFields annSelectG = do
             }
   pure
     Select
-      { selectCardinality = One,
+      { selectWith = Nothing,
+        selectCardinality = One,
         selectAsStruct = NoAsStruct,
         selectFinalWantedFields = Nothing,
         selectGroupBy = mempty,
@@ -452,7 +479,8 @@ fromSelectAggregate minnerJoinFields annSelectG = do
             ( Aliased
                 { aliasedThing =
                     Select
-                      { selectProjections = innerProjections,
+                      { selectWith = Nothing,
+                        selectProjections = innerProjections,
                         selectAsStruct = NoAsStruct,
                         selectFrom,
                         selectJoins = argsJoins,
@@ -611,7 +639,8 @@ unfurlAnnotatedOrderByElement =
                     { joinSource =
                         JoinSelect
                           Select
-                            { selectCardinality = One,
+                            { selectWith = Nothing,
+                              selectCardinality = One,
                               selectAsStruct = NoAsStruct,
                               selectFinalWantedFields = Nothing,
                               selectGroupBy = mempty,
@@ -663,7 +692,8 @@ unfurlAnnotatedOrderByElement =
                       { joinSource =
                           JoinSelect
                             Select
-                              { selectCardinality = One,
+                              { selectWith = Nothing,
+                                selectCardinality = One,
                                 selectAsStruct = NoAsStruct,
                                 selectFinalWantedFields = Nothing,
                                 selectTop = NoTop,
@@ -771,6 +801,11 @@ fromAnnBoolExp ::
   ReaderT EntityAlias FromIr Expression
 fromAnnBoolExp = traverse fromAnnBoolExpFld >=> fromGBoolExp
 
+fromLogicalModel :: LogicalModel 'BigQuery Expression -> FromIr From
+fromLogicalModel LogicalModel {..} = FromIr do
+  tell (FromIrWriter (M.singleton lmRootFieldName lmInterpolatedQuery))
+  pure (FromLogicalModel lmRootFieldName)
+
 fromAnnBoolExpFld ::
   Ir.AnnBoolExpFld 'BigQuery Expression -> ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
@@ -787,7 +822,8 @@ fromAnnBoolExpFld =
       pure
         ( ExistsExpression
             Select
-              { selectCardinality = One,
+              { selectWith = Nothing,
+                selectCardinality = One,
                 selectAsStruct = NoAsStruct,
                 selectFinalWantedFields = Nothing,
                 selectGroupBy = mempty,
@@ -826,7 +862,8 @@ fromGExists Ir.GExists {_geTable, _geWhere} = do
     local (const (fromAlias selectFrom)) (fromGBoolExp _geWhere)
   pure
     Select
-      { selectCardinality = One,
+      { selectWith = Nothing,
+        selectCardinality = One,
         selectAsStruct = NoAsStruct,
         selectFinalWantedFields = Nothing,
         selectGroupBy = mempty,
@@ -1219,7 +1256,8 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
         joinSource =
           JoinSelect
             Select
-              { selectCardinality = One,
+              { selectWith = Nothing,
+                selectCardinality = One,
                 selectAsStruct = NoAsStruct,
                 selectFinalWantedFields,
                 selectGroupBy = mempty,
@@ -1324,7 +1362,8 @@ fromComputedFieldSelect = \case
     wrapUnnest from =
       let starSelect =
             Select
-              { selectTop = NoTop,
+              { selectWith = Nothing,
+                selectTop = NoTop,
                 selectAsStruct = AsStruct,
                 selectProjections = pure StarProjection,
                 selectFrom = from,
@@ -1468,7 +1507,8 @@ fromArrayRelationSelectG annRelationSelectG = do
 
   let joinSelect =
         Select
-          { selectCardinality = One,
+          { selectWith = Nothing,
+            selectCardinality = One,
             selectAsStruct = NoAsStruct,
             selectFinalWantedFields = selectFinalWantedFields select,
             selectTop = NoTop,
@@ -1498,7 +1538,8 @@ fromArrayRelationSelectG annRelationSelectG = do
                     { aliasedAlias = coerce (fromAlias (selectFrom select)),
                       aliasedThing =
                         Select
-                          { selectProjections =
+                          { selectWith = Nothing,
+                            selectProjections =
                               selectProjections select
                                 <> joinFieldProjections
                                 `appendToNonEmpty` foldMap @Maybe
@@ -1845,6 +1886,7 @@ fromAlias (FromQualifiedTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromSelect Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromSelectJson Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromFunction Aliased {aliasedAlias}) = EntityAlias aliasedAlias
+fromAlias (FromLogicalModel (LogicalModelName logicalModelName)) = EntityAlias (T.toTxt logicalModelName)
 
 fieldTextNames :: Ir.AnnFieldsG 'BigQuery Void Expression -> [Text]
 fieldTextNames = fmap (\(Rql.FieldName name, _) -> name)

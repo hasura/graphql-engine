@@ -15,11 +15,12 @@ import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend (Backend (..))
 import Language.GraphQL.Draft.Syntax qualified as G
+import Language.Haskell.TH.Syntax (Lift)
 
 -- The name of a logical model. This appears as a root field name in the graphql schema.
 newtype LogicalModelName = LogicalModelName {getLogicalModelName :: G.Name}
   deriving newtype (Eq, Ord, Show, Hashable, NFData, ToJSON, FromJSON, ToTxt)
-  deriving stock (Generic)
+  deriving stock (Data, Generic, Lift)
 
 instance HasCodec LogicalModelName where
   codec = dimapCodec LogicalModelName getLogicalModelName codec
