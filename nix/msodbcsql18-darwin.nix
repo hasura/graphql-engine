@@ -2,10 +2,10 @@
 { fetchurl, stdenv, lib, libiconv, unixODBC, fixDarwinDylibNames }:
 stdenv.mkDerivation rec {
   pname = "msodbcsql${versionMajor}";
-  version = "${versionMajor}.${versionMinor}.${versionAdditional}-1";
+  version = "${versionMajor}.${versionMinor}.${versionAdditional}";
 
   versionMajor = "18";
-  versionMinor = "1";
+  versionMinor = "2";
   versionAdditional = "1.1";
 
   src =
@@ -13,14 +13,14 @@ stdenv.mkDerivation rec {
     then
       fetchurl
         {
-          url = "https://download.microsoft.com/download/6/4/0/64006503-51e3-44f0-a6cd-a9b757d0d61b/msodbcsql18-18.1.1.1-arm64.tar.gz";
-          sha256 = "116xl8r2apr5b48jnq6myj9fwqs88yccw5176yfyzh4534fznj5x";
+          url = "https://download.microsoft.com/download/0/9/7/0976a30f-1710-4754-9445-bead058dd0c8/${pname}-${version}-arm64.tar.gz";
+          sha256 = "0q892l90vj6dvk20dvl84a84b28sh2l4a1kyrnxg4lxj5qm3kjbd";
         }
     else
       fetchurl
         {
-          url = "https://download.microsoft.com/download/6/4/0/64006503-51e3-44f0-a6cd-a9b757d0d61b/msodbcsql18-18.1.1.1-amd64.tar.gz";
-          sha256 = "1fn80byn1yihflznxcm9cpj42mpllnz54apnk9n46vzm2ng2lj6d";
+          url = "https://download.microsoft.com/download/0/9/7/0976a30f-1710-4754-9445-bead058dd0c8/${pname}-${version}-amd64.tar.gz";
+          sha256 = "07s2rbkf1n2b0wkzqbx657k0n2y9xl9k5fahr0vwb45xhz2i5ibs";
         };
 
   nativeBuildInputs = [
