@@ -4,7 +4,7 @@ module Main (main) where
 
 import Constants qualified
 import Control.Concurrent.MVar
-import Control.Monad.Trans.Managed (ManagedT (..))
+import Control.Monad.Trans.Managed (lowerManagedT)
 import Control.Natural ((:~>) (..))
 import Data.Aeson qualified as A
 import Data.ByteString.Lazy.Char8 qualified as BL
@@ -18,7 +18,7 @@ import Hasura.App
   ( AppM,
     BasicConnectionInfo (..),
     initMetadataConnectionInfo,
-    initialiseContext,
+    initialiseAppEnv,
     mkMSSQLSourceResolver,
     mkPgSourceResolver,
     runAppM,
@@ -121,8 +121,9 @@ main = do
                 ApolloFederationDisabled
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver serverConfigCtx
 
-        (_appStateRef, appEnv) <- runManagedT
-          ( initialiseContext
+        (_appInit, appEnv) <-
+          lowerManagedT $
+            initialiseAppEnv
               envMap
               globalCtx
               serveOptions
@@ -130,8 +131,6 @@ main = do
               serverMetrics
               prometheusMetrics
               sampleAlways
-          )
-          $ \(appStateRef, appEnv) -> return (appStateRef, appEnv)
 
         let run :: ExceptT QErr AppM a -> IO a
             run =

@@ -402,9 +402,10 @@ runApp serveOptions = do
         liftIO $ createServerMetrics $ EKG.subset ServerSubset store
       pure (EKG.subset EKG.emptyOf store, serverMetrics)
   prometheusMetrics <- makeDummyPrometheusMetrics
-  let managedServerCtx = App.initialiseContext env defaultConnInfo serveOptions Nothing serverMetrics prometheusMetrics sampleAlways
-  runManagedT managedServerCtx \(appCtx, appEnv) ->
-    App.runAppM appEnv $
+  let managedServerCtx = App.initialiseAppEnv env defaultConnInfo serveOptions Nothing serverMetrics prometheusMetrics sampleAlways
+  runManagedT managedServerCtx \(appInit, appEnv) ->
+    App.runAppM appEnv do
+      appCtx <- App.initialiseAppContext env serveOptions appInit
       lowerManagedT $
         App.runHGEServer
           (const $ pure ())

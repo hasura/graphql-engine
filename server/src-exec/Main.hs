@@ -92,19 +92,17 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
 
       prometheusMetrics <- makeDummyPrometheusMetrics
 
-      -- It'd be nice if we didn't have to call runManagedT twice here, but
-      -- there is a data dependency problem since the call to runPGMetadataStorageApp
-      -- below depends on appCtx.
-      runManagedT (initialiseContext env basicConnectionInfo serveOptions Nothing serverMetrics prometheusMetrics sampleAlways) $ \(appStateRef, appEnv) -> do
+      -- It'd be nice if we didn't have to call lowerManagedT twice here, but
+      -- there is a data dependency problem since the call to runAppM below
+      -- depends on appCtx.
+      runManagedT (initialiseAppEnv env basicConnectionInfo serveOptions Nothing serverMetrics prometheusMetrics sampleAlways) \(appInit, appEnv) -> do
         -- Catches the SIGTERM signal and initiates a graceful shutdown.
         -- Graceful shutdown for regular HTTP requests is already implemented in
         -- Warp, and is triggered by invoking the 'closeSocket' callback.
         -- We only catch the SIGTERM signal once, that is, if the user hits CTRL-C
         -- once again, we terminate the process immediately.
-
-        liftIO $ do
-          void $ Signals.installHandler Signals.sigTERM (Signals.CatchOnce (shutdownGracefully $ appEnvShutdownLatch appEnv)) Nothing
-          void $ Signals.installHandler Signals.sigINT (Signals.CatchOnce (shutdownGracefully $ appEnvShutdownLatch appEnv)) Nothing
+        void $ Signals.installHandler Signals.sigTERM (Signals.CatchOnce (shutdownGracefully $ appEnvShutdownLatch appEnv)) Nothing
+        void $ Signals.installHandler Signals.sigINT (Signals.CatchOnce (shutdownGracefully $ appEnvShutdownLatch appEnv)) Nothing
 
         let Loggers _ logger _ = appEnvLoggers appEnv
 
@@ -112,7 +110,8 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
           C.forkImmortal "ourIdleGC" logger $
             GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 
-        runAppM appEnv $
+        runAppM appEnv do
+          appStateRef <- initialiseAppContext env serveOptions appInit
           lowerManagedT $
             runHGEServer (const $ pure ()) appStateRef initTime Nothing ekgStore
     HCExport -> do
