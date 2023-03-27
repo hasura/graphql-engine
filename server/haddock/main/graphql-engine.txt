@@ -27667,7 +27667,16 @@ throwErrJExit :: (ToJSON a, MonadIO m) => forall b. ExitCode -> a -> m b
 accessDeniedErrMsg :: Text
 printJSON :: (ToJSON a, MonadIO m) => a -> m ()
 mkPGLogger :: Logger Hasura -> PGLogger
+
+-- | Create all loggers based on the set of enabled logs and chosen log
+--   level.
 mkLoggers :: (MonadIO m, MonadBaseControl IO m) => HashSet (EngineLogType Hasura) -> LogLevel -> ManagedT m Loggers
+
+-- | If an exception is thrown, and the process exits without the log
+--   buffer being flushed, we will be missing some log lines (see:
+--   <a>https://github.com/hasura/graphql-engine/issues/4772)</a>. This
+--   function forces a flush of the buffer.
+flushLogger :: MonadIO m => LoggerCtx impl -> m ()
 
 -- | Basic information required to connect to the metadata DB, and to the
 --   default Postgres DB if any.
@@ -27709,23 +27718,22 @@ initBasicConnectionInfo :: MonadIO m => Environment -> Maybe String -> PostgresC
 --   !!! throws a fatal error if the configuration is invalid
 resolvePostgresConnInfo :: MonadIO m => Environment -> UrlConf -> Maybe Int -> m ConnInfo
 
--- | The base app monad of the CE engine.
-data AppM a
-runAppM :: AppEnv -> AppM a -> IO a
+-- | Initializes or migrates the catalog and creates the <a>AppEnv</a>
+--   required to start the server, and also create the <a>AppInit</a> that
+--   needs to be threaded along the init code.
+--   
+--   For historical reasons, this function performs a few additional
+--   startup tasks that are not required to create the <a>AppEnv</a>, such
+--   as starting background processes and logging startup information. All
+--   of those are flagged with a comment marking them as a side-effect.
+initialiseAppEnv :: (ForkableMonadIO m, MonadCatch m) => Environment -> BasicConnectionInfo -> ServeOptions Hasura -> Maybe SubscriptionPostPollHook -> ServerMetrics -> PrometheusMetrics -> SamplingPolicy -> ManagedT m (AppInit, AppEnv)
 
--- | Parse cli arguments to graphql-engine executable.
-parseArgs :: EnabledLogTypes impl => Environment -> IO (HGEOptions (ServeOptions impl))
-
--- | Core logic to fork a poller thread to update the JWK based on the
---   expiry time specified in <tt>Expires</tt> header or
---   <tt>Cache-Control</tt> header
-updateJwkCtxThread :: ForkableMonadIO m => IO AppContext -> Manager -> Logger Hasura -> m Void
-initSubscriptionsState :: Logger Hasura -> Maybe SubscriptionPostPollHook -> IO SubscriptionsState
-initLockedEventsCtx :: IO LockedEventsCtx
-
--- | Initializes or migrates the catalog and returns the context required
---   to start the server.
-initialiseContext :: (ForkableMonadIO m, MonadCatch m) => Environment -> BasicConnectionInfo -> ServeOptions Hasura -> Maybe SubscriptionPostPollHook -> ServerMetrics -> PrometheusMetrics -> SamplingPolicy -> ManagedT m (AppStateRef Hasura, AppEnv)
+-- | Initializes the <a>AppContext</a> and returns a corresponding
+--   <a>AppStateRef</a>.
+--   
+--   This function is meant to be run in the app monad, which provides the
+--   <a>AppEnv</a>.
+initialiseAppContext :: (ForkableMonadIO m, HasAppEnv m) => Environment -> ServeOptions Hasura -> AppInit -> m (AppStateRef Hasura)
 
 -- | Runs catalogue migration, and returns the metadata that was fetched.
 --   
@@ -27739,12 +27747,20 @@ migrateCatalogAndFetchMetadata :: (MonadIO m, MonadBaseControl IO m) => Logger H
 --   error. This misnomer is intentional: it is to preserve a previous
 --   behaviour of the code and avoid a breaking change.
 buildFirstSchemaCache :: MonadIO m => Environment -> Logger Hasura -> ServerConfigCtx -> SourceResolver ('Postgres 'Vanilla) -> SourceResolver 'MSSQL -> Metadata -> Manager -> m RebuildableSchemaCache
+initSubscriptionsState :: Logger Hasura -> Maybe SubscriptionPostPollHook -> IO SubscriptionsState
+initLockedEventsCtx :: IO LockedEventsCtx
 
--- | If an exception is encountered , flush the log buffer and rethrow If
---   we do not flush the log buffer on exception, then log lines may be
---   missed See:
---   <a>https://github.com/hasura/graphql-engine/issues/4772</a>
-flushLogger :: MonadIO m => LoggerCtx impl -> m ()
+-- | The base app monad of the CE engine.
+data AppM a
+runAppM :: AppEnv -> AppM a -> IO a
+
+-- | Parse cli arguments to graphql-engine executable.
+parseArgs :: EnabledLogTypes impl => Environment -> IO (HGEOptions (ServeOptions impl))
+
+-- | Core logic to fork a poller thread to update the JWK based on the
+--   expiry time specified in <tt>Expires</tt> header or
+--   <tt>Cache-Control</tt> header
+updateJwkCtxThread :: ForkableMonadIO m => IO AppContext -> Manager -> Logger Hasura -> m Void
 
 -- | This function acts as the entrypoint for the graphql-engine webserver.
 --   

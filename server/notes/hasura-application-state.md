@@ -1,6 +1,6 @@
 This note is in [Hasura.App.State](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/App/State.hs#L56).
 It is referenced at:
-  - line 641 of [Hasura.App](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/App.hs#L641)
+  - line 531 of [Hasura.App](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/App.hs#L531)
 
 # Hasura Application State
 
