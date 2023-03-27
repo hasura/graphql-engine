@@ -602,12 +602,12 @@ buildFirstSchemaCache
   mssqlSourceResolver
   metadata
   httpManager = do
-    let cacheBuildParams = CacheBuildParams httpManager pgSourceResolver mssqlSourceResolver serverConfigCtx
+    let cacheBuildParams = CacheBuildParams httpManager pgSourceResolver mssqlSourceResolver
         buildReason = CatalogSync
     result <-
       runExceptT $
         runCacheBuild cacheBuildParams $
-          buildRebuildableSchemaCacheWithReason buildReason logger env metadata
+          buildRebuildableSchemaCacheWithReason buildReason logger env metadata serverConfigCtx
     result `onLeft` \err -> do
       -- TODO: we used to bundle the first schema cache build with the catalog
       -- migration, using the same error handler for both, meaning that an

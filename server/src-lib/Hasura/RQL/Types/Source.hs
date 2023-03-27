@@ -186,6 +186,10 @@ instance (MonadResolveSource m) => MonadResolveSource (ReaderT r m) where
   getPGSourceResolver = lift getPGSourceResolver
   getMSSQLSourceResolver = lift getMSSQLSourceResolver
 
+instance (MonadResolveSource m) => MonadResolveSource (StateT s m) where
+  getPGSourceResolver = lift getPGSourceResolver
+  getMSSQLSourceResolver = lift getMSSQLSourceResolver
+
 instance (MonadResolveSource m) => MonadResolveSource (Tracing.TraceT m) where
   getPGSourceResolver = lift getPGSourceResolver
   getMSSQLSourceResolver = lift getMSSQLSourceResolver

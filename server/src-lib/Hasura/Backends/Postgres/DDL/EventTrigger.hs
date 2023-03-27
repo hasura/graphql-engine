@@ -203,9 +203,9 @@ createMissingSQLTriggers ::
   ( MonadIO m,
     MonadError QErr m,
     MonadBaseControl IO m,
-    HasServerConfigCtx m,
     Backend ('Postgres pgKind)
   ) =>
+  ServerConfigCtx ->
   PGSourceConfig ->
   TableName ('Postgres pgKind) ->
   ([(ColumnInfo ('Postgres pgKind))], Maybe (PrimaryKey ('Postgres pgKind) (ColumnInfo ('Postgres pgKind)))) ->
@@ -213,15 +213,14 @@ createMissingSQLTriggers ::
   TriggerOnReplication ->
   TriggerOpsDef ('Postgres pgKind) ->
   m ()
-createMissingSQLTriggers sourceConfig table (allCols, _) triggerName triggerOnReplication opsDefinition = do
-  serverConfigCtx <- askServerConfigCtx
+createMissingSQLTriggers serverConfigCtx sourceConfig table (allCols, _) triggerName triggerOnReplication opsDefinition = do
   liftEitherM $
     runPgSourceWriteTx sourceConfig InternalRawQuery $ do
-      for_ (tdInsert opsDefinition) (doesSQLTriggerExist serverConfigCtx INSERT)
-      for_ (tdUpdate opsDefinition) (doesSQLTriggerExist serverConfigCtx UPDATE)
-      for_ (tdDelete opsDefinition) (doesSQLTriggerExist serverConfigCtx DELETE)
+      for_ (tdInsert opsDefinition) (doesSQLTriggerExist INSERT)
+      for_ (tdUpdate opsDefinition) (doesSQLTriggerExist UPDATE)
+      for_ (tdDelete opsDefinition) (doesSQLTriggerExist DELETE)
   where
-    doesSQLTriggerExist serverConfigCtx op opSpec = do
+    doesSQLTriggerExist op opSpec = do
       let opTriggerName = pgTriggerName op triggerName
       doesOpTriggerFunctionExist <-
         runIdentity . PG.getRow

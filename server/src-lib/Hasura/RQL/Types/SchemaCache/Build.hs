@@ -167,8 +167,7 @@ withRecordInconsistency f = proc (e, (metadataObject, s)) -> do
 -- operations for triggering a schema cache rebuild
 
 class (CacheRM m) => CacheRWM m where
-  buildSchemaCacheWithOptions ::
-    BuildReason -> CacheInvalidations -> Metadata -> m ()
+  buildSchemaCacheWithOptions :: BuildReason -> CacheInvalidations -> Metadata -> m ()
   setMetadataResourceVersionInSchemaCache :: MetadataResourceVersion -> m ()
 
 data BuildReason

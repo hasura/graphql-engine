@@ -388,15 +388,14 @@ runMetadataQuery ::
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
     MonadGetApiTimeLimit m,
-    UserInfoM m,
-    HasServerConfigCtx m
+    UserInfoM m
   ) =>
   AppContext ->
   RebuildableSchemaCache ->
   RQLMetadata ->
   m (EncJSON, RebuildableSchemaCache)
 runMetadataQuery appContext schemaCache RQLMetadata {..} = do
-  AppEnv {..} <- askAppEnv
+  appEnv@AppEnv {..} <- askAppEnv
   let logger = _lsLogger appEnvLoggers
   (metadata, currentResourceVersion) <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
   let exportsMetadata = \case
@@ -422,12 +421,13 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
         if (exportsMetadata _rqlMetadata || queryModifiesMetadata _rqlMetadata)
           then emptyMetadataDefaults
           else acMetadataDefaults appContext
+      serverConfigCtx = buildServerConfigCtx appEnv appContext
   ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
     runMetadataQueryM (acEnvironment appContext) currentResourceVersion _rqlMetadata
       -- TODO: remove this straight runReaderT that provides no actual new info
       & flip runReaderT logger
       & runMetadataT metadata metadataDefaults
-      & runCacheRWT schemaCache
+      & runCacheRWT serverConfigCtx schemaCache
   -- set modified metadata in storage
   if queryModifiesMetadata _rqlMetadata
     then case (appEnvEnableMaintenanceMode, appEnvEnableReadOnlyMode) of
@@ -458,7 +458,7 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
         (_, modSchemaCache', _) <-
           Tracing.newSpan "setMetadataResourceVersionInSchemaCache" $
             setMetadataResourceVersionInSchemaCache newResourceVersion
-              & runCacheRWT modSchemaCache
+              & runCacheRWT serverConfigCtx modSchemaCache
 
         pure (r, modSchemaCache')
       (MaintenanceModeEnabled (), ReadOnlyModeDisabled) ->

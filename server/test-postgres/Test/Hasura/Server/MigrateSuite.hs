@@ -86,15 +86,15 @@ instance
   CacheRWM (CacheRefT m)
   where
   buildSchemaCacheWithOptions reason invalidations metadata = do
-    scVar <- asks snd
+    (serverConfigCtx, scVar) <- ask
     modifyMVar scVar \schemaCache -> do
-      ((), cache, _) <- runCacheRWT schemaCache (buildSchemaCacheWithOptions reason invalidations metadata)
+      ((), cache, _) <- runCacheRWT serverConfigCtx schemaCache (buildSchemaCacheWithOptions reason invalidations metadata)
       pure (cache, ())
 
   setMetadataResourceVersionInSchemaCache resourceVersion = do
-    scVar <- asks snd
+    (serverConfigCtx, scVar) <- ask
     modifyMVar scVar \schemaCache -> do
-      ((), cache, _) <- runCacheRWT schemaCache (setMetadataResourceVersionInSchemaCache resourceVersion)
+      ((), cache, _) <- runCacheRWT serverConfigCtx schemaCache (setMetadataResourceVersionInSchemaCache resourceVersion)
       pure (cache, ())
 
 instance Example (MetadataT (CacheRefT m) ()) where
@@ -128,8 +128,9 @@ suite srcConfig pgExecCtx pgConnInfo = do
         liftIO $ putStrLn $ LBS.toString $ encode $ EngineLog t logLevel logType logDetail
 
       migrateCatalogAndBuildCache env time = do
+        serverConfigCtx <- askServerConfigCtx
         (migrationResult, metadata) <- runTx' pgExecCtx $ migrateCatalog (Just srcConfig) (ExtensionsSchema "public") MaintenanceModeDisabled time
-        (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache logger env metadata)
+        (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache logger env metadata serverConfigCtx)
 
       dropAndInit env time = lift do
         scVar <- asks snd

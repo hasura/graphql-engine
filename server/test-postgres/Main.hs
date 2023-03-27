@@ -119,7 +119,7 @@ main = do
                 emptyMetadataDefaults
                 (CheckFeatureFlag $ FF.checkFeatureFlag mempty)
                 ApolloFederationDisabled
-            cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver serverConfigCtx
+            cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver
 
         (_appInit, appEnv) <-
           lowerManagedT $
@@ -144,7 +144,7 @@ main = do
             snd
               <$> (liftEitherM . runExceptT . _pecRunTx pgContext (PGExecCtxInfo (Tx PG.ReadWrite Nothing) InternalRawQuery))
                 (migrateCatalog (Just sourceConfig) defaultPostgresExtensionsSchema maintenanceMode =<< liftIO getCurrentTime)
-          schemaCache <- runCacheBuild cacheBuildParams $ buildRebuildableSchemaCache logger envMap metadata
+          schemaCache <- runCacheBuild cacheBuildParams $ buildRebuildableSchemaCache logger envMap metadata serverConfigCtx
           pure (metadata, schemaCache)
 
         cacheRef <- newMVar schemaCache

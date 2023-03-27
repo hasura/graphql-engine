@@ -257,8 +257,7 @@ $(makeLenses ''BuildOutputs)
 data CacheBuildParams = CacheBuildParams
   { _cbpManager :: HTTP.Manager,
     _cbpPGSourceResolver :: SourceResolver ('Postgres 'Vanilla),
-    _cbpMSSQLSourceResolver :: SourceResolver 'MSSQL,
-    _cbpServerConfigCtx :: ServerConfigCtx
+    _cbpMSSQLSourceResolver :: SourceResolver 'MSSQL
   }
 
 -- | The monad in which @'RebuildableSchemaCache' is being run
@@ -277,9 +276,6 @@ newtype CacheBuild a = CacheBuild (ReaderT CacheBuildParams (ExceptT QErr IO) a)
 instance ProvidesNetwork CacheBuild where
   askHTTPManager = asks _cbpManager
 
-instance HasServerConfigCtx CacheBuild where
-  askServerConfigCtx = asks _cbpServerConfigCtx
-
 instance MonadResolveSource CacheBuild where
   getPGSourceResolver = asks _cbpPGSourceResolver
   getMSSQLSourceResolver = asks _cbpMSSQLSourceResolver
@@ -297,7 +293,6 @@ runCacheBuild params (CacheBuild m) = do
 runCacheBuildM ::
   ( MonadIO m,
     MonadError QErr m,
-    HasServerConfigCtx m,
     MonadResolveSource m,
     ProvidesNetwork m
   ) =>
@@ -309,13 +304,12 @@ runCacheBuildM m = do
       <$> askHTTPManager
       <*> getPGSourceResolver
       <*> getMSSQLSourceResolver
-      <*> askServerConfigCtx
   runCacheBuild params m
 
 data RebuildableSchemaCache = RebuildableSchemaCache
   { lastBuiltSchemaCache :: SchemaCache,
     _rscInvalidationMap :: InvalidationKeys,
-    _rscRebuild :: Inc.Rule (ReaderT BuildReason CacheBuild) (Metadata, InvalidationKeys, Maybe StoredIntrospection) SchemaCache
+    _rscRebuild :: Inc.Rule (ReaderT BuildReason CacheBuild) (Metadata, ServerConfigCtx, InvalidationKeys, Maybe StoredIntrospection) SchemaCache
   }
 
 bindErrorA ::

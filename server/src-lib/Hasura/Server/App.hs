@@ -156,25 +156,6 @@ instance MonadTrans Handler where
 instance Monad m => UserInfoM (Handler m) where
   askUserInfo = asks hcUser
 
-instance (HasAppEnv m) => HasServerConfigCtx (Handler m) where
-  askServerConfigCtx = Handler do
-    AppEnv {..} <- askAppEnv
-    AppContext {..} <- asks hcAppContext
-    pure
-      ServerConfigCtx
-        { _sccFunctionPermsCtx = acFunctionPermsCtx,
-          _sccRemoteSchemaPermsCtx = acRemoteSchemaPermsCtx,
-          _sccSQLGenCtx = acSQLGenCtx,
-          _sccMaintenanceMode = appEnvEnableMaintenanceMode,
-          _sccExperimentalFeatures = acExperimentalFeatures,
-          _sccEventingMode = appEnvEventingMode,
-          _sccReadOnlyMode = appEnvEnableReadOnlyMode,
-          _sccDefaultNamingConvention = acDefaultNamingConvention,
-          _sccMetadataDefaults = acMetadataDefaults,
-          _sccCheckFeatureFlag = appEnvCheckFeatureFlag,
-          _sccApolloFederationStatus = acApolloFederationStatus
-        }
-
 runHandler :: (HasResourceLimits m, MonadBaseControl IO m) => HandlerCtx -> Handler m a -> m (Either QErr a)
 runHandler ctx (Handler r) = do
   handlerLimit <- askHTTPHandlerLimit
@@ -448,8 +429,7 @@ v1QueryHandler ::
     MonadEventLogCleanup m,
     ProvidesNetwork m,
     MonadGetApiTimeLimit m,
-    UserInfoM m,
-    HasServerConfigCtx m
+    UserInfoM m
   ) =>
   (m (EncJSON, RebuildableSchemaCache) -> m EncJSON) ->
   RQLQuery ->
@@ -481,8 +461,7 @@ v1MetadataHandler ::
     HasAppEnv m,
     ProvidesNetwork m,
     MonadGetApiTimeLimit m,
-    UserInfoM m,
-    HasServerConfigCtx m
+    UserInfoM m
   ) =>
   (m (EncJSON, RebuildableSchemaCache) -> m EncJSON) ->
   RQLMetadata ->
@@ -511,8 +490,7 @@ v2QueryHandler ::
     HasAppEnv m,
     EB.MonadQueryTags m,
     ProvidesNetwork m,
-    UserInfoM m,
-    HasServerConfigCtx m
+    UserInfoM m
   ) =>
   (m (EncJSON, RebuildableSchemaCache) -> m EncJSON) ->
   V2Q.RQLQuery ->

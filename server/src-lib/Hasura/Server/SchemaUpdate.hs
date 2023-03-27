@@ -42,7 +42,6 @@ import Hasura.Server.AppStateRef
 import Hasura.Server.Logging
 import Hasura.Server.Types
 import Hasura.Services
-import Hasura.Session
 import Refined (NonNegative, Refined, unrefine)
 
 data ThreadError
@@ -260,44 +259,6 @@ processor
     metaVersion <- liftIO $ STM.atomically $ STM.takeTMVar metaVersionRef
     refreshSchemaCache metaVersion appStateRef TTProcessor logTVar
 
-newtype SchemaUpdateT m a = SchemaUpdateT (AppContext -> m a)
-  deriving
-    ( Functor,
-      Applicative,
-      Monad,
-      MonadError e,
-      MonadIO,
-      MonadMetadataStorage,
-      ProvidesNetwork,
-      MonadResolveSource
-    )
-    via (ReaderT AppContext m)
-  deriving (MonadTrans) via (ReaderT AppContext)
-
-runSchemaUpdate :: AppContext -> SchemaUpdateT m a -> m a
-runSchemaUpdate appContext (SchemaUpdateT action) = action appContext
-
-instance (Monad m) => UserInfoM (SchemaUpdateT m) where
-  askUserInfo = pure adminUserInfo
-
-instance (HasAppEnv m) => HasServerConfigCtx (SchemaUpdateT m) where
-  askServerConfigCtx = SchemaUpdateT \AppContext {..} -> do
-    AppEnv {..} <- askAppEnv
-    pure
-      ServerConfigCtx
-        { _sccFunctionPermsCtx = acFunctionPermsCtx,
-          _sccRemoteSchemaPermsCtx = acRemoteSchemaPermsCtx,
-          _sccSQLGenCtx = acSQLGenCtx,
-          _sccMaintenanceMode = appEnvEnableMaintenanceMode,
-          _sccExperimentalFeatures = acExperimentalFeatures,
-          _sccEventingMode = appEnvEventingMode,
-          _sccReadOnlyMode = appEnvEnableReadOnlyMode,
-          _sccDefaultNamingConvention = acDefaultNamingConvention,
-          _sccMetadataDefaults = acMetadataDefaults,
-          _sccCheckFeatureFlag = appEnvCheckFeatureFlag,
-          _sccApolloFederationStatus = acApolloFederationStatus
-        }
-
 refreshSchemaCache ::
   ( MonadIO m,
     MonadBaseControl IO m,
@@ -316,14 +277,15 @@ refreshSchemaCache
   appStateRef
   threadType
   logTVar = do
-    AppEnv {..} <- askAppEnv
+    appEnv@AppEnv {..} <- askAppEnv
     let logger = _lsLogger appEnvLoggers
     respErr <- runExceptT $
       withSchemaCacheUpdate appStateRef logger (Just logTVar) $ do
         rebuildableCache <- liftIO $ fst <$> readSchemaCacheRef appStateRef
         appContext <- liftIO $ getAppContext appStateRef
-        (msg, cache, _) <- runSchemaUpdate appContext $
-          runCacheRWT rebuildableCache $ do
+        let serverConfigCtx = buildServerConfigCtx appEnv appContext
+        (msg, cache, _) <-
+          runCacheRWT serverConfigCtx rebuildableCache $ do
             schemaCache <- askSchemaCache
             case scMetadataResourceVersion schemaCache of
               -- While starting up, the metadata resource version is set to nothing, so we want to set the version

@@ -186,15 +186,14 @@ runQuery ::
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
     MonadGetApiTimeLimit m,
-    UserInfoM m,
-    HasServerConfigCtx m
+    UserInfoM m
   ) =>
   AppContext ->
   RebuildableSchemaCache ->
   RQLQuery ->
   m (EncJSON, RebuildableSchemaCache)
 runQuery appContext sc query = do
-  AppEnv {..} <- askAppEnv
+  appEnv@AppEnv {..} <- askAppEnv
   let logger = _lsLogger appEnvLoggers
   when ((appEnvEnableReadOnlyMode == ReadOnlyModeEnabled) && queryModifiesUserDB query) $
     throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
@@ -206,6 +205,7 @@ runQuery appContext sc query = do
         if (exportsMetadata query)
           then emptyMetadataDefaults
           else acMetadataDefaults appContext
+      serverConfigCtx = buildServerConfigCtx appEnv appContext
 
   (metadata, currentResourceVersion) <- liftEitherM fetchMetadata
   ((result, updatedMetadata), updatedCache, invalidations) <-
@@ -213,7 +213,7 @@ runQuery appContext sc query = do
       -- TODO: remove this straight runReaderT that provides no actual new info
       & flip runReaderT logger
       & runMetadataT metadata metadataDefaults
-      & runCacheRWT sc
+      & runCacheRWT serverConfigCtx sc
   when (queryModifiesSchemaCache query) $ do
     case appEnvEnableMaintenanceMode of
       MaintenanceModeDisabled -> do

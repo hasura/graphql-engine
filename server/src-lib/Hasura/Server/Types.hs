@@ -141,6 +141,15 @@ data ReadOnlyMode = ReadOnlyModeEnabled | ReadOnlyModeDisabled
 data EventingMode = EventingEnabled | EventingDisabled
   deriving (Show, Eq)
 
+-- | This type represents an aggregate of different configuration options used
+-- throughout the engine. The fields are the union of a subset of 'AppEnv' and a
+-- subset of 'AppContext'.
+--
+-- This type should be considered as deprecated: avoid using it directly when
+-- you can use 'AppEnv' or 'AppContext', and avoid using the entirety of it when
+-- you only need a subset of the fields. Also avoid adding new fields if
+-- possible, but if you do so, make sure to adjust the @Eq@ instance
+-- accordingly.
 data ServerConfigCtx = ServerConfigCtx
   { _sccFunctionPermsCtx :: Options.InferFunctionPermissions,
     _sccRemoteSchemaPermsCtx :: Options.RemoteSchemaPermissions,
@@ -155,6 +164,28 @@ data ServerConfigCtx = ServerConfigCtx
     _sccCheckFeatureFlag :: CheckFeatureFlag,
     _sccApolloFederationStatus :: ApolloFederationStatus
   }
+
+-- We are currently using the entire 'ServerConfigCtx' as an input to the schema
+-- cache build, and it therefore requires an 'Eq' instance. However, only a few
+-- fields will change over time: those coming from the 'AppContext', and not
+-- those coming from the 'AppEnv'. Consequently, this instance only checks the
+-- relevant fields.
+--
+-- The way to fix this will be to use a smaller type as the input to the schema
+-- build, such as 'AppContext' (or, rather, a relevant subset), on which a
+-- "correct" @Eq@ instance can be defined.
+instance Eq ServerConfigCtx where
+  (==) = (==) `on` extractDynamicFields
+    where
+      extractDynamicFields ServerConfigCtx {..} =
+        ( _sccFunctionPermsCtx,
+          _sccRemoteSchemaPermsCtx,
+          _sccSQLGenCtx,
+          _sccExperimentalFeatures,
+          _sccDefaultNamingConvention,
+          _sccMetadataDefaults,
+          _sccApolloFederationStatus
+        )
 
 askMetadataDefaults :: HasServerConfigCtx m => m MetadataDefaults
 askMetadataDefaults = do

@@ -13,6 +13,9 @@ module Hasura.App.State
     -- * init functions
     buildRebuildableAppContext,
     initSQLGenCtx,
+
+    -- * server config
+    buildServerConfigCtx,
   )
 where
 
@@ -285,3 +288,27 @@ initSQLGenCtx experimentalFeatures stringifyNum dangerousBooleanCollapse =
         | EFBigQueryStringNumericInput `elem` experimentalFeatures = Options.EnableBigQueryStringNumericInput
         | otherwise = Options.DisableBigQueryStringNumericInput
    in SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters bigqueryStringNumericInput
+
+--------------------------------------------------------------------------------
+-- server config
+
+-- | We are trying to slowly get rid of 'HasServerConfigCtx' (and consequently
+-- of 'ServercConfigtx') in favour of smaller / more specific ad-hoc
+-- types. However, in the meantime, it is often required to builda
+-- 'ServerConfigCtx' at the boundary between parts of the code that use it and
+-- part of the code that use the new 'AppEnv' and 'AppContext'.
+buildServerConfigCtx :: AppEnv -> AppContext -> ServerConfigCtx
+buildServerConfigCtx AppEnv {..} AppContext {..} =
+  ServerConfigCtx
+    { _sccFunctionPermsCtx = acFunctionPermsCtx,
+      _sccRemoteSchemaPermsCtx = acRemoteSchemaPermsCtx,
+      _sccSQLGenCtx = acSQLGenCtx,
+      _sccMaintenanceMode = appEnvEnableMaintenanceMode,
+      _sccExperimentalFeatures = acExperimentalFeatures,
+      _sccEventingMode = appEnvEventingMode,
+      _sccReadOnlyMode = appEnvEnableReadOnlyMode,
+      _sccDefaultNamingConvention = acDefaultNamingConvention,
+      _sccMetadataDefaults = acMetadataDefaults,
+      _sccCheckFeatureFlag = appEnvCheckFeatureFlag,
+      _sccApolloFederationStatus = acApolloFederationStatus
+    }

@@ -233,6 +233,7 @@ createMissingSQLTriggers ::
     MonadError QErr m,
     MonadBaseControl IO m
   ) =>
+  ServerConfigCtx ->
   MSSQLSourceConfig ->
   TableName ->
   ([ColumnInfo 'MSSQL], Maybe (PrimaryKey 'MSSQL (ColumnInfo 'MSSQL))) ->
@@ -241,6 +242,7 @@ createMissingSQLTriggers ::
   TriggerOpsDef 'MSSQL ->
   m ()
 createMissingSQLTriggers
+  _serverConfigCtx
   sourceConfig
   table@(TableName tableNameText (SchemaName schemaText))
   (allCols, primaryKeyMaybe)
