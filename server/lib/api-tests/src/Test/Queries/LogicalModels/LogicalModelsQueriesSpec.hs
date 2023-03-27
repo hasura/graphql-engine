@@ -16,7 +16,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options), getBackendTypeConfig)
-import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
+import Harness.Yaml (shouldAtLeastBe, shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
@@ -78,6 +78,34 @@ tests = do
           }
 
   describe "Testing Logical Models" $ do
+    it "Explain works" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+
+      Schema.trackLogicalModel sourceName helloWorldLogicalModel testEnvironment
+
+      let explain :: Value
+          explain =
+            [graphql|
+              query {
+                hello_world_function (where: { two: { _eq: "world" } }){
+                  one
+                  two
+                }
+              }
+           |]
+
+          expected =
+            [interpolateYaml|
+              [{
+                  "field": "hello_world_function"
+                }]
+              |]
+
+      actual <- GraphqlEngine.postExplain testEnvironment explain
+
+      actual `shouldAtLeastBe` expected
+
     it "Descriptions and nullability appear in the schema" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
