@@ -169,6 +169,26 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
             readOnly={false}
             tableName={table.name}
           />
+          <FormLabel
+            title="Listen columns for update"
+            tooltip={tooltip.advancedOperationDescription}
+          />
+          {operations.update ? (
+            <div className="clear-both w-72">
+              <ColumnList
+                operationColumns={operationColumns}
+                table={table}
+                isAllColumnChecked={isAllColumnChecked}
+                readOnlyMode={readOnlyMode}
+                handleToggleAllColumn={handleToggleAllColumn}
+                handleOperationsColumnsChange={handleOperationsColumnsChange}
+              />
+            </div>
+          ) : (
+            <div className="clear-both w-80">
+              <i>Applicable only if update operation is selected.</i>
+            </div>
+          )}
         </div>
       </div>
       <hr className="my-md" />
@@ -224,28 +244,6 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
         }
       >
         <div>
-          <div>
-            <FormLabel
-              title="Listen columns for update"
-              tooltip={tooltip.advancedOperationDescription}
-            />
-            {operations.update ? (
-              <div className="clear-both w-72">
-                <ColumnList
-                  operationColumns={operationColumns}
-                  table={table}
-                  isAllColumnChecked={isAllColumnChecked}
-                  readOnlyMode={readOnlyMode}
-                  handleToggleAllColumn={handleToggleAllColumn}
-                  handleOperationsColumnsChange={handleOperationsColumnsChange}
-                />
-              </div>
-            ) : (
-              <div className="clear-both w-80">
-                <i>Applicable only if update operation is selected.</i>
-              </div>
-            )}
-          </div>
           <hr className="my-md" />
           <div className="mt-md">
             <h4 className={heading}>Retry Logic</h4>
