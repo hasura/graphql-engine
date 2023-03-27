@@ -52,6 +52,7 @@ export { remoteSchemaReducer } from './lib/components/Services/RemoteSchema';
 export { modalReducer } from './lib/store/modal/modal.reducer';
 
 export { metadataReducer } from './lib/metadata/reducer';
+export { HasuraMetadataV3 } from './lib/metadata/types';
 export { default as mainReducer } from './lib/components/Main/Actions';
 export { default as notificationsReducer } from './lib/components/Services/Common/notifications.reducer';
 

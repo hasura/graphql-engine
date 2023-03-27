@@ -1,5 +1,7 @@
-import { replaceMetadata, resetMetadata } from '../helpers/metadata';
+import { replaceMetadata } from '../helpers/metadata';
 import { postgres } from '../../data/manage-database/postgres.spec';
+import { HasuraMetadataV3 } from '@hasura/console-legacy-ce';
+import { readMetadata } from '../../actions/withTransform/utils/services/readMetadata';
 
 describe('check if remote schema to db relationships are created properly', () => {
   before(() => {
@@ -53,17 +55,17 @@ describe('check if remote schema to db relationships are created properly', () =
 
   it('verify creating a new rs-to-db relationship', () => {
     cy.visit('/remote-schemas/manage/source_rs/relationships');
-    cy.get('[data-test=add-a-new-rs-relationship').click();
-    cy.get('[data-test=radio-select-remoteDB').click();
-    cy.get('[data-test=rs-to-db-rel-name').type('RelationshipName');
-    cy.get('[data-test=select-rel-type').select('array');
-    cy.get('[data-test=select-source-type').select('Pokemon');
-    cy.get('[data-test=select-ref-db').select('default', { force: true });
-    cy.get('[data-test=select-ref-schema').select('public');
-    cy.get('[data-test=select-ref-table').select('destination_table');
+    cy.findByText('Add a new relationship').click();
+    cy.findByText('Remote Database').click();
+    cy.get('[name=relationshipName]').type('RelationshipName');
+    cy.get('[name=relationshipType]').select('array');
+    cy.get('[name=typeName]').select('Pokemon');
+    cy.get('[name=database]').select('default', { force: true });
+    cy.get('[name=schema]').select('public');
+    cy.get('[name=table]').select('destination_table');
     cy.get('[data-test=select-source-field').select('id');
     cy.get('[data-test=select-ref-col').select('name');
-    cy.get('[data-test=add-rs-relationship').click();
+    cy.findByRole('button', { name: 'Add Relationship' }).click();
 
     cy.get('[data-test=remote-schema-relationships-table').should('exist');
     cy.get('[data-test=remote-schema-relationships-table')
@@ -73,11 +75,30 @@ describe('check if remote schema to db relationships are created properly', () =
       'td',
       'RelationshipName'
     );
-  });
+    readMetadata().then((md: { body: HasuraMetadataV3 }) => {
+      cy.wrap(
+        md.body?.remote_schemas?.find(rs => rs?.name === 'source_rs')
+          ?.remote_relationships
+      ).toMatchSnapshot({ name: 'rs-to-db-relationship' });
+    });
 
-  after(() => {
-    //  reset the metadata
-    resetMetadata();
+    // delete rs-to-rs relationship
+    cy.visit('/remote-schemas/manage/source_rs/relationships', {
+      timeout: 10000,
+      onBeforeLoad(win) {
+        cy.stub(win, 'prompt').returns('RelationshipName');
+      },
+    });
+    cy.findByRole('button', { name: 'Remove' }).click();
+
+    //  delete both remote schemas
+    cy.visit('/remote-schemas/manage/source_rs/modify', {
+      timeout: 10000,
+      onBeforeLoad(win) {
+        cy.stub(win, 'prompt').returns('source_rs');
+      },
+    });
+    cy.findByRole('button', { name: 'Delete' }).click();
 
     // delete the table
     postgres.helpers.deleteTable('destination_table');
