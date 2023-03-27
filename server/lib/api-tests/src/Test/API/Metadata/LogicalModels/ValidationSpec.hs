@@ -2,6 +2,7 @@ module Test.API.Metadata.LogicalModels.ValidationSpec where
 
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
+import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
@@ -29,6 +30,11 @@ spec = do
             (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
               { Fixture.setupTeardown = \(testEnv, _) ->
                   [ Citus.setupTablesAction schema testEnv
+                  ]
+              },
+            (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
+              { Fixture.setupTeardown = \(testEnv, _) ->
+                  [ Cockroach.setupTablesAction schema testEnv
                   ]
               }
           ]

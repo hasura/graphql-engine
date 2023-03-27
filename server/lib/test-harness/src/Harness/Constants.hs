@@ -169,7 +169,7 @@ defaultCitusConnectionString =
 -- * Cockroach
 
 cockroachUser :: Text
-cockroachUser = "root"
+cockroachUser = "hasura"
 
 cockroachDb :: Text
 cockroachDb = "hasura"

@@ -61,5 +61,6 @@ instance BackendAPI ('Postgres 'Cockroach) where
                 . mkAnyBackend @('Postgres 'Cockroach)
             )
         ],
-        connectionTemplateCommands @('Postgres 'Cockroach)
+        connectionTemplateCommands @('Postgres 'Cockroach),
+        logicalModelsCommands @('Postgres 'Cockroach)
       ]
