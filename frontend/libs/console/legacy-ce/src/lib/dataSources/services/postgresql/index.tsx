@@ -384,6 +384,7 @@ const columnDataTypes = {
   BIGINT: 'bigint',
   BIGSERIAL: 'bigserial',
   BOOLEAN: 'boolean',
+  BOOL: 'bool',
   DATE: 'date',
   DATETIME: 'datetime',
   INTEGER: 'integer',

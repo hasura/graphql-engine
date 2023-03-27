@@ -134,7 +134,6 @@ export const ColumnRow = ({
         onInput={checkValueRadio}
         inputRef={valueInputRef}
         disabled={isDisabled}
-        tabIndex={2}
         placeholder={placeholder}
         onValueChange={onValueChange}
         onCheckValueRadio={onCheckValueRadio}

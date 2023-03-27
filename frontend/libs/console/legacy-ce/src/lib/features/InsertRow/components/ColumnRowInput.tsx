@@ -45,7 +45,10 @@ export const ColumnRowInput: React.VFC<ColumnRowInputProps> = ({
     return <JsonInput {...props} />;
   }
 
-  if (dataType === dataSource.columnDataTypes.BOOLEAN) {
+  if (
+    dataType === dataSource.columnDataTypes.BOOLEAN ||
+    dataType === dataSource.columnDataTypes.BOOL
+  ) {
     return (
       <BooleanInput
         checked={false}

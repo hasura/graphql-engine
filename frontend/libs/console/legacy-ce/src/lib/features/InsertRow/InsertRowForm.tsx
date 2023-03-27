@@ -133,7 +133,7 @@ export const InsertRowForm: React.VFC<InsertRowFormProps> = ({
             onChange={onChange}
             placeholder={column.placeholder}
             isDisabled={!column.insertable}
-            // disable if the column has no default value
+            // TODO-NEXT: disable if the column has no default value
             isDefaultDisabled={false}
             isNullDisabled={!column.nullable}
             resetToken={resetToken}

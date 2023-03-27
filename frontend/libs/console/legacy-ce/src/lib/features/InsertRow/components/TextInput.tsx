@@ -48,7 +48,6 @@ export const TextInput: React.VFC<TextInputProps> = ({
       type="text"
       className={clsx(inputTw, className || '')}
       disabled={disabled}
-      tabIndex={2}
       placeholder={placeholder}
     />
   );
