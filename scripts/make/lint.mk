@@ -99,7 +99,7 @@ format-frontend-changed: frontend/node_modules
 ## check-format-frontend: check frontend code
 check-format-frontend: frontend/node_modules
 	@echo 'running nx format:check'
-	cd frontend && npx nx format:check
+	cd frontend && npx nx format:check --base=origin/main
 
 .PHONY: check-format-frontend-changed
 ## check-format-frontend-changed: check frontend code (changed files only)
@@ -169,7 +169,7 @@ lint-frontend: frontend/node_modules
 ## lint-frontend-changed: lint all frontend code
 lint-frontend-changed: frontend/node_modules
 	@echo 'running nx lint'
-	cd frontend && npx nx affected --target=lint --fix --parallel=3
+	cd frontend && npx nx affected --target=lint --fix --parallel=3 --base=origin/main
 
 .PHONY: lint
 ## lint: run all lint commands, and check formatting
