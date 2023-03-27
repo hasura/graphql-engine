@@ -1,20 +1,14 @@
 ---
-description: Query response caching in Hasura Cloud
-sidebar_label: Response Caching ☁️🏢
-title: 'Cloud: Query response caching'
+title: Caching Config
 keywords:
-  - hasura
-  - docs
-  - cloud
-  - response
   - caching
-sidebar_position: 6
-sidebar_class_name: cloud-and-enterprise-icon
+  - queries
+  - query
+  - config
+sidebar_position: 3
 ---
 
-import HeadingIcon from '@site/src/components/HeadingIcon';
-
-# Query Response Caching
+# Caching Config
 
 <div className="badge badge--primary heading-badge">
   Available on: Cloud Standard, Cloud Professional, Cloud Enterprise, Self-hosted Enterprise
@@ -22,24 +16,17 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 ## Introduction
 
-Hasura Cloud and Enterprise Edition provide support for caching query responses, in order to improve performance for
-queries which are executed frequently. This includes Actions and queries against Remote Schemas.
+Hasura Cloud and Enterprise Edition provide support for caching query responses. This will drastically improve
+performance for queries which are executed frequently. This includes any GraphQL query including Actions and Remote
+Schemas.
 
-Cached responses are stored in for a period of time in a LRU (least-recently used) cache, and removed from the cache as
-needed based on usage.
+Cached responses are stored for a period of time in a LRU (least-recently used) cache, and removed from the cache as per
+a user-specified TTL (time-to-live) which defaults to 60 seconds.
 
-A query's response can be cached only if the following conditions hold:
+## Getting started
 
-- The query does **not** make use of `Remote Schemas` that has `forward_client_headers` (see
-  [RemoteSchemaDef](/api-reference/syntax-defs.mdx#remoteschemadef)) set to `true`.
-- The query **isn't** an `Action` that has `forward_client_headers` (see
-  [ActionDefinition](/api-reference/syntax-defs.mdx#actiondefinition)) set to `true`.
-- The response JSON is **under** 100KB in size
-
-## Enable caching
-
-In order to enable caching for a query response, or to return an existing response from the cache (if one exists),
-simply add the `@cached` directive to your query:
+In order to cache a query response, or to return an existing response from the cache (if one exists), simply add the
+`@cached` directive to your query:
 
 ```graphql
 query MyCachedQuery @cached {
@@ -52,6 +39,15 @@ query MyCachedQuery @cached {
 
 If the response was cached successfully, the HTTP response will include a `Cache-Control` header, whose value
 (`max-age={SECONDS}`) indicates the maximum number of seconds for the returned response to remain in the cache.
+
+A query's response can be cached only if the following conditions hold:
+
+- For queries using `Actions` or `Remote Schemas`, the query does **not** make use of `forward_client_headers` (see
+  [RemoteSchemaDef](/api-reference/syntax-defs.mdx#remoteschemadef) and
+  [ActionDefinition](/api-reference/syntax-defs.mdx#actiondefinition)).
+- The response JSON is **under** 100KB in size
+
+For self-hosted Enterprise Edition, refer to the [enable caching](/enterprise/caching.mdx) documentation.
 
 ## Controlling cache lifetime
 
@@ -88,17 +84,24 @@ query MyCachedQuery @cached(refresh: true) {
 
 Cache writes are rate limited, with a rate depending on your plan. The rate limit is based on the total number of bytes
 written to the cache in a sliding window. If you exceed the rate limit, the HTTP response will indicate this with a
-warning header: "Warning: 199 - cache-store-capacity-exceeded".
+warning header:
+
+```plaintext
+ Warning: 199 - cache-store-capacity-exceeded
+```
+
+:::info SLIDING WINDOW POLICIES
+
+A sliding window policy maintains a queue of a specified size, into which entities flow. When the queue is full and a
+new entity arrives, the oldest entity in the queue is removed from the window (FIFO).
+
+:::
 
 ## Session variables
 
-Queries using session variables are able to be cached.
-
-Please note:
-
-- A session variable will only influence the cache key for a query if it referenced by the execution plan. In practice
-  this means that session variables are only factored into cache keys if they are referenced in the permissions for a
-  query. See <https://hasura.io/docs/latest/api-reference/schema-metadata-api/permission/>
+A session variable will only influence the cache key for a query if it is referenced by the execution plan. In practice,
+this means that session variables are only factored into cache keys if they are referenced in the permissions for a
+query. See the [API permissions](/api-reference/metadata-api/permission.mdx) documentation for more information.
 
 ## Response headers
 
@@ -108,7 +111,7 @@ When you enable caching for a query, the following headers should be returned in
 - `X-Hasura-Query-Family-Cache-Key` - Key for the family of queries (ignores variable values)
 - `Cache-Control` - Value: `max-age={SECONDS}` - Seconds until cache expires for query
 
-These can be used by your application as you see fit, as well as by the cache clearing endpoints.
+These can be used by your application as you see fit, as well as by the cache-clearing endpoints.
 
 ## Clearing items from the cache
 

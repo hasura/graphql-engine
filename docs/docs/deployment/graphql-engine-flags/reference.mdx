@@ -208,8 +208,8 @@ for JSON encoding-decoding.
 
 ### Connections per Read-Replica
 
-The maximum number of Postgres connections per [read-replica](databases/database-config/read-replicas.mdx) that can be opened
-per stripe. When the maximum is reached we will block until a new connection becomes available, even if there is
+The maximum number of Postgres connections per [read-replica](databases/database-config/read-replicas.mdx) that can be
+opened per stripe. When the maximum is reached we will block until a new connection becomes available, even if there is
 capacity in other stripes.
 
 |                     |                                                                 |
@@ -584,7 +584,7 @@ This variable sets the level for [Hasura's logs](/deployment/logging.mdx#logging
 
 ### Max Cache Size
 
-The [maximum cache size](/queries/response-caching.mdx), measured in MB, for queries.
+The [maximum cache size](/enterprise/caching.mdx), measured in MB, for queries.
 
 |                     |                                                                                   |
 | ------------------- | --------------------------------------------------------------------------------- |

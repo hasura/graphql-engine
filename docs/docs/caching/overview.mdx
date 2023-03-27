@@ -1,0 +1,78 @@
+---
+description: Caching in Hasura Cloud and EE
+sidebar_label: Overview
+title: 'Hasura Caching'
+keywords:
+  - hasura
+  - docs
+  - cloud
+  - response
+  - caching
+sidebar_position: 1
+hide_table_of_contents: true
+sidebar_class_name: cloud-and-enterprise-icon
+---
+
+import HeadingIcon from '@site/src/components/HeadingIcon';
+import VersionedLink from '@site/src/components/VersionedLink';
+import Caching from '@site/static/icons/features/caching.svg';
+
+# <Caching /> Hasura Caching
+
+<div className="badge badge--primary heading-badge" style={{ marginBottom: `1rem` }}>
+  Available on: Cloud Standard, Cloud Professional, Cloud Enterprise, Self-hosted Enterprise
+</div>
+<div className="overview-header">
+  <div className="overview-text">
+    <p>
+      Hasura Cloud and Enterprise Editions provide a caching layer that can be used to cache the response of a GraphQL
+      query. This can help reduce the number of requests to your datasources and improve the performance of your
+      application.
+    </p>
+    <p>
+      You have full control over the cache lifetime and can choose to force the cache to refresh when you need to. With
+      Hasura Caching, your application is highly-optimized and performant, reducing the load on your servers.
+    </p>
+    <h4>Quick Links</h4>
+    <ul>
+      <li>
+        <VersionedLink to="/caching/quickstart/">Enable caching on a query in less than 30 seconds.</VersionedLink>
+      </li>
+    </ul>
+  </div>
+  <iframe
+    src="https://www.youtube.com/embed/QLaXWQmMF-8"
+    frameborder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+    allowFullScreen
+  />
+</div>
+
+## Using Hasura Caching
+
+<div className="overview-gallery">
+  <VersionedLink to="/caching/caching-config/#controlling-cache-lifetime/">
+    <div className="card">
+      <h3>Control the cache lifetime</h3>
+      <p>
+        Learn how to control the cache lifetime of a GraphQL query using the <code>ttl</code> argument.
+      </p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/caching/caching-config/#forcing-the-cache-to-refresh/">
+    <div className="card">
+      <h3>Force the cache to refresh</h3>
+      <p>
+        Learn how to force the cache to refresh when you need to using the <code>refresh</code> argument.
+      </p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/caching/caching-config/#clearing-items-from-the-cache/">
+    <div className="card">
+      <h3>Clear items from the cache</h3>
+      <p>
+        Learn how to clear items from the cache when you need to using the <code>pro</code> endpoint on your project.
+      </p>
+    </div>
+  </VersionedLink>
+</div>

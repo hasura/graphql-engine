@@ -1,0 +1,100 @@
+---
+description: Quickstart with Caching
+title: Quickstart
+keywords:
+  - caching
+  - queries
+  - query
+sidebar_position: 2
+---
+
+import SampleAppBlock from '@site/src/components/SampleAppBlock';
+import Thumbnail from '../../src/components/Thumbnail';
+import Player from '@site/src/components/Player';
+
+# Quickstart Caching
+
+By utilizing Hasura Engine's caching layer you will significantly improve the performance of queries while at the same
+time reduce the load on your data sources. This quickstart guide will walk you through the process of setting up caching
+for your GraphQL API.
+
+<SampleAppBlock />
+
+## Basic Caching
+
+To try out caching in the Console, simply click the "Cache" button in the GraphiQL panel in the API tab to add the
+`@cached` directive to your query in the editor. Of course, you can also write this out manually. For this example we
+are getting the `id` and `name` of all `products` in the database with:
+
+```graphql
+query MyProducts @cached {
+  products {
+    id
+    name
+  }
+}
+```
+
+You'll be able to see improvements in the response time of the query when the `@cached` directive is added.
+
+<Player src="/img/caching/caching_quickstart-demo_2-21-0.mp4" />
+
+## Setting the time-to-live (TTL)
+
+The `@cached` directive has an optional argument `ttl` which can be used to set the time-to-live (TTL) for the cache.
+
+The TTL is the time for which the cache is valid. After the TTL expires, the cache is invalidated and the next request
+will be a cache miss. The TTL is defined in an integer of seconds.
+
+```graphql
+query MyProducts @cached(ttl: 120) {
+  products {
+    id
+    name
+  }
+}
+```
+
+<Thumbnail
+  src="/img/caching/caching_ttl_2-21-0.png"
+  alt="Setting the time-to-live integer argument for
+the cached directive"
+/>
+
+:::tip DEFAULT TTL
+
+By default the TTL is set to 60 seconds.
+
+:::
+
+## Forcing a cache refresh
+
+The `@cached` directive has an optional boolean argument of `refresh` which can be used to force a cache refresh. This
+is useful when you want to ensure that the cache is refreshed after a mutation. When this argument is used the query
+will take the longer, non-cached time to execute.
+
+```graphql
+query MyProducts @cached(refresh: true) {
+  products {
+    id
+    name
+  }
+}
+```
+
+<Thumbnail
+  src="/img/caching/caching_force-refresh_2-21-0.png"
+  alt="Setting the refresh argument for the cached
+directive"
+/>
+
+
+## Recap
+
+What just happened? Well, you just supercharged your query performance using Hasura caching.
+
+You can now use the `@cached` directive to add caching to your queries, set the length of time they should live for
+with the TTL directive and force a cache refresh if you need to. 🎉
+
+[See the caching config section](/caching/caching-config.mdx) for a full description of the caching configuration
+options.
