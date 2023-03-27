@@ -33,6 +33,7 @@ export const runMetadataQuery = async <ResponseType>({
 type RunSqlArgs = {
   source: Pick<Source, 'kind' | 'name'>;
   sql: string;
+  readOnly?: boolean;
 };
 
 export type RunSQLSelectResponse = {
@@ -96,9 +97,14 @@ export const runGraphQL = async ({
 export const runSQL = async ({
   source,
   sql,
+  readOnly,
   httpClient,
 }: RunSqlArgs & NetworkArgs): Promise<RunSQLResponse> => {
   const type = getRunSqlType(source.kind as NativeDrivers);
+
+  const readOnlyArg =
+    readOnly === null || readOnly === undefined ? {} : { read_only: readOnly };
+
   const result = await runQuery<RunSQLResponse>({
     httpClient,
     body: {
@@ -106,6 +112,7 @@ export const runSQL = async ({
       args: {
         sql,
         source: source.name,
+        ...readOnlyArg,
       },
     },
   });
