@@ -30,7 +30,7 @@ export const useGDCTreeItemClick = (dispatch: Dispatch) => {
        */
       const isTableClicked = Object.keys(rest?.table || {}).length !== 0;
       if (isTableClicked) {
-        dispatch(_push(getRoute().table(database, rest.table)));
+        dispatch(_push(getRoute().table(database, rest.table, 'browse')));
       } else {
         dispatch(_push(getRoute().database(database)));
       }
