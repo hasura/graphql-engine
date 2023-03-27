@@ -33,7 +33,19 @@ export const Create: Story = () => {
 };
 
 export const Modify: Story = args => {
-  return <CronTriggers.Form {...args} />;
+  const [showSuccessText, setShowSuccessText] = React.useState(false);
+  const onSuccess = () => {
+    setShowSuccessText(true);
+  };
+
+  return (
+    <>
+      <CronTriggers.Form {...args} onSuccess={onSuccess} />;
+      <p data-testid="@onSuccess">
+        {showSuccessText ? 'Form saved successfully!' : null}
+      </p>
+    </>
+  );
 };
 
 Modify.args = {
@@ -106,7 +118,7 @@ Create.play = async ({ canvasElement }) => {
   );
 
   // --------------------------------------------------
-  // Step 5: Add request transform options
+  // Step 5: Add Headers
   await userEvent.click(canvas.getByText('Advanced Settings'));
 
   // Add request headers
@@ -187,6 +199,44 @@ Create.play = async ({ canvasElement }) => {
   // --------------------------------------------------
   // Step 7: Save the form and assert success by observing behaviour in UI
   await userEvent.click(canvas.getByText('Add Cron Trigger'));
+
+  // TODO: Ideally we should be checking if the success notification got fired, but our redux-based notifications does not work in storybook
+  waitFor(
+    async () => {
+      await expect(await canvas.findByTestId('@onSuccess')).toHaveTextContent(
+        'Form saved successfully!'
+      );
+    },
+    { timeout: 5000 }
+  );
+};
+
+Modify.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+
+  // Click the update button with any edit
+  await waitFor(
+    () => {
+      expect(canvas.getByText('Update Cron Trigger')).toBeVisible();
+    },
+    { timeout: 2000 }
+  );
+
+  // Step 1: Test cron schedule selector button
+  await userEvent.click(canvas.getByText('Frequently used crons'));
+  await userEvent.click(canvas.getByText('Every midnight'));
+  expect(canvas.getByRole('textbox', { name: 'Cron Schedule' })).toHaveValue(
+    '0 0 * * *'
+  );
+
+  // Step2: Remove request option tranform
+  await userEvent.click(canvas.getByText('Remove Request Options Transform'));
+
+  // Step3: Add payload transform
+  await userEvent.click(canvas.getByText('Add Payload Transform'));
+
+  // Step4: Save the form and assert success by observing behaviour in UI
+  await userEvent.click(canvas.getByText('Update Cron Trigger'));
 
   // TODO: Ideally we should be checking if the success notification got fired, but our redux-based notifications does not work in storybook
   waitFor(
