@@ -8,6 +8,7 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
+import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
@@ -43,6 +44,11 @@ spec =
             (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
               { Fixture.setupTeardown = \(testEnvironment, _) ->
                   [ Citus.setupTablesAction schema testEnvironment
+                  ]
+              },
+            (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
+              { Fixture.setupTeardown = \(testEnvironment, _) ->
+                  [ Sqlserver.setupTablesAction schema testEnvironment
                   ]
               }
           ]
@@ -244,50 +250,6 @@ tests = do
               [graphql|
               query {
                 hello_world_function (where: { two: { _eq: "world" } }){
-                  one
-                  two
-                }
-              }
-           |]
-
-      shouldReturnYaml (options testEnvironment) actual expected
-
-    it "Runs a simple query using distinct_on and order_by" $ \testEnvironment -> do
-      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
-          source = BackendType.backendSourceName backendTypeMetadata
-
-          queryWithDuplicates :: Text
-          queryWithDuplicates = "SELECT * FROM (VALUES ('hello', 'world'), ('hello', 'friend')) as t(\"one\", \"two\")"
-
-          helloWorldLogicalModelWithDuplicates :: Schema.LogicalModel
-          helloWorldLogicalModelWithDuplicates =
-            (Schema.logicalModel "hello_world_function" queryWithDuplicates)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "one" Schema.TStr,
-                    Schema.logicalModelColumn "two" Schema.TStr
-                  ]
-              }
-
-      Schema.trackLogicalModel source helloWorldLogicalModelWithDuplicates testEnvironment
-
-      let expected =
-            [yaml|
-                data:
-                  hello_world_function:
-                    - one: "hello"
-                      two: "world"
-              |]
-
-          actual :: IO Value
-          actual =
-            GraphqlEngine.postGraphql
-              testEnvironment
-              [graphql|
-              query {
-                hello_world_function (
-                  distinct_on: [one]
-                  order_by: [{one:asc}]
-                ){
                   one
                   two
                 }

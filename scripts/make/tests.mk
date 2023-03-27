@@ -153,8 +153,6 @@ test-logical-models:
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		cabal run api-tests:exe:api-tests
 
-
-
 .PHONY: py-tests
 ## py-tests: run the python-based test suite
 py-tests:

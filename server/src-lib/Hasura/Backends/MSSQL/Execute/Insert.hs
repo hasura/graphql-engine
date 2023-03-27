@@ -227,7 +227,7 @@ buildUpsertTx tableName insert ifMatched queryTags = do
   Tx.unitQueryE mutationMSSQLTxErrorHandler (insertValuesIntoTempTableQuery `withQueryTags` queryTags)
 
   -- Run the MERGE query and store the mutated rows in #inserted temporary table
-  merge <- runFromIr (toMerge tableName (_aiInsertObject $ _aiData insert) allTableColumns ifMatched)
+  merge <- qwdQuery <$> runFromIr (toMerge tableName (_aiInsertObject $ _aiData insert) allTableColumns ifMatched)
   let mergeQuery = toQueryFlat $ TQ.fromMerge merge
   Tx.unitQueryE mutationMSSQLTxErrorHandler (mergeQuery `withQueryTags` queryTags)
 
@@ -244,11 +244,11 @@ buildInsertResponseTx ::
   Tx.TxET QErr m (Text, Int)
 buildInsertResponseTx stringifyNum withAlias insert queryTags = do
   -- Generate a SQL SELECT statement which outputs the mutation response using the #inserted
-  mutationOutputSelect <- runFromIr $ mkMutationOutputSelect stringifyNum withAlias $ _aiOutput insert
+  mutationOutputSelect <- qwdQuery <$> runFromIr (mkMutationOutputSelect stringifyNum withAlias $ _aiOutput insert)
 
   -- The check constraint is translated to boolean expression
   let checkCondition = fst $ _aiCheckCondition $ _aiData insert
-  checkBoolExp <- runFromIr $ runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias)
+  checkBoolExp <- qwdQuery <$> runFromIr (runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias))
 
   let withSelect =
         emptySelect

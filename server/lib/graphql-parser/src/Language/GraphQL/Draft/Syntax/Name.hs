@@ -1,5 +1,5 @@
-{-# HLINT ignore "Use onNothing" #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# HLINT ignore "Use onNothing" #-}
 {-# LANGUAGE TemplateHaskellQuotes #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 

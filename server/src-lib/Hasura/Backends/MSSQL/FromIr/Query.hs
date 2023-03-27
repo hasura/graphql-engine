@@ -14,10 +14,12 @@ import Control.Applicative (getConst)
 import Control.Monad.Validate
 import Data.Aeson.Extended qualified as J
 import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.List.NonEmpty qualified as NE
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
 import Data.Proxy
+import Data.Text.Extended qualified as T
 import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.FromIr
@@ -25,11 +27,16 @@ import Hasura.Backends.MSSQL.FromIr
     FromIr,
     NameTemplate (..),
     generateAlias,
+    tellAfter,
+    tellBefore,
   )
 import Hasura.Backends.MSSQL.FromIr.Constants
 import Hasura.Backends.MSSQL.FromIr.Expression
 import Hasura.Backends.MSSQL.Instances.Types ()
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
+import Hasura.CustomReturnType (CustomReturnType (..))
+import Hasura.LogicalModel.IR qualified as IR
+import Hasura.LogicalModel.Types (LogicalModelName (..), NullableScalarType (..))
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Column qualified as IR
@@ -202,7 +209,7 @@ fromSelectRows annSelectG = do
       IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
       IR.FromIdentifier identifier -> pure $ FromIdentifier $ IR.unFIIdentifier identifier
       IR.FromFunction {} -> refute $ pure FunctionNotSupported
-      IR.FromLogicalModel {} -> refute $ pure LogicalModelNotSupported
+      IR.FromLogicalModel logicalModel -> fromLogicalModel logicalModel
   Args
     { argsOrderBy,
       argsWhere,
@@ -220,6 +227,7 @@ fromSelectRows annSelectG = do
   filterExpression <-
     runReaderT (fromGBoolExp permFilter) (fromAlias selectFrom)
   let selectProjections = map fieldSourceProjections fieldSources
+
   pure $
     emptySelect
       { selectOrderBy = argsOrderBy,
@@ -323,6 +331,35 @@ mkAggregateSelect Args {..} foreignKeyConditions filterExpression selectFrom agg
     | (index, (fieldName, projections)) <- aggregates
   ]
 
+fromLogicalModel :: IR.LogicalModel 'MSSQL Expression -> FromIr TSQL.From
+fromLogicalModel logicalModel = do
+  let logicalModelName = IR.lmRootFieldName logicalModel
+      logicalModelSql = IR.lmInterpolatedQuery logicalModel
+      logicalModelReturnType = IR.lmReturnType logicalModel
+
+      rawTempTableName = T.toTxt (getLogicalModelName logicalModelName)
+      aliasedTempTableName = Aliased (TempTableName rawTempTableName) rawTempTableName
+
+  let columns =
+        ( \(name, ty) ->
+            UnifiedColumn
+              { name = name,
+                type' = (nstType ty)
+              }
+        )
+          <$> InsOrd.toList (crtColumns logicalModelReturnType)
+
+  -- \| add create temp table to "the environment"
+  tellBefore (CreateTemp (TempTableName rawTempTableName) columns)
+
+  -- \| add insert into temp table
+  tellBefore (InsertTemp (TempTableName rawTempTableName) logicalModelSql)
+
+  -- \| when we're done, drop the temp table
+  tellAfter (DropTemp (TempTableName rawTempTableName))
+
+  pure $ TSQL.FromTempTable aliasedTempTableName
+
 fromSelectAggregate ::
   Maybe (EntityAlias, HashMap ColumnName ColumnName) ->
   IR.AnnSelectG 'MSSQL (IR.TableAggregateFieldG 'MSSQL Void) Expression ->
@@ -341,7 +378,7 @@ fromSelectAggregate
         IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
         IR.FromIdentifier identifier -> pure $ FromIdentifier $ IR.unFIIdentifier identifier
         IR.FromFunction {} -> refute $ pure FunctionNotSupported
-        IR.FromLogicalModel {} -> refute $ pure LogicalModelNotSupported
+        IR.FromLogicalModel logicalModel -> fromLogicalModel logicalModel
       -- Below: When we're actually a RHS of a query (of CROSS APPLY),
       -- then we'll have a LHS table that we're joining on. So we get the
       -- conditions expressions from the field mappings. The LHS table is

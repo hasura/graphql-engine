@@ -138,6 +138,7 @@ library
     Test.Databases.Postgres.UniqueConstraintsSpec
     Test.Databases.SQLServer.DefaultValues.OnConflictSpec
     Test.Databases.SQLServer.InsertVarcharColumnSpec
+    Test.Databases.SQLServer.LogicalModelsSpec
     Test.Databases.SQLServer.VarcharLiteralsSpec
     Test.EventTriggers.EventTriggersSpecialCharactersSpec
     Test.EventTriggers.MSSQL.EventTriggerDropSourceCleanupSpec

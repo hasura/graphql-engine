@@ -120,7 +120,8 @@ defaultBuildLogicalModelRootFields logicalModel@LogicalModelInfo {..} = runMaybe
                     LogicalModel
                       { lmRootFieldName = _lmiRootFieldName,
                         lmArgs,
-                        lmInterpolatedQuery = interpolatedQuery lmArgs
+                        lmInterpolatedQuery = interpolatedQuery lmArgs,
+                        lmReturnType = _lmiReturns
                       },
                 IR._asnPerm =
                   if roleName == adminRoleName

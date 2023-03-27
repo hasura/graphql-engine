@@ -4,6 +4,7 @@ module Hasura.LogicalModel.IR
   )
 where
 
+import Hasura.CustomReturnType
 import Hasura.LogicalModel.Metadata
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
@@ -16,7 +17,9 @@ data LogicalModel b field = LogicalModel
     -- | The raw sql to use in the query
     lmInterpolatedQuery :: InterpolatedQuery field,
     -- | The arguments passed to the query, if any.
-    lmArgs :: HashMap LogicalModelArgumentName (ColumnValue b)
+    lmArgs :: HashMap LogicalModelArgumentName (ColumnValue b),
+    -- | The return type of the logical model
+    lmReturnType :: CustomReturnType b
   }
   deriving (Functor, Foldable, Traversable)
 

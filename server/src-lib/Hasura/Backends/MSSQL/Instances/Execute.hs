@@ -97,16 +97,22 @@ msDBQueryPlan ::
   m (DBStepInfo 'MSSQL)
 msDBQueryPlan userInfo _env sourceName sourceConfig qrf _ _ = do
   let sessionVariables = _uiSession userInfo
-  statement <- planQuery sessionVariables qrf
+  (QueryWithDDL {qwdBeforeSteps, qwdAfterSteps, qwdQuery = statement}) <- planQuery sessionVariables qrf
   queryTags <- ask
+
   -- Append Query tags comment to the select statement
   let printer = fromSelect statement `withQueryTagsPrinter` queryTags
       queryString = ODBC.renderQuery (toQueryPretty printer)
 
-  pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) (runSelectQuery printer) ()
+  pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) (runSelectQuery printer qwdBeforeSteps qwdAfterSteps) ()
   where
-    runSelectQuery queryPrinter = OnBaseMonad do
-      let queryTx = encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat queryPrinter)
+    runSelectQuery queryPrinter beforeSteps afterSteps = OnBaseMonad do
+      let queryTx = do
+            let executeStep = Tx.unitQueryE defaultMSSQLTxErrorHandler . toQueryFlat . TQ.fromTempTableDDL
+            traverse_ executeStep beforeSteps
+            result <- encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat queryPrinter)
+            traverse_ executeStep afterSteps
+            pure result
       mssqlRunReadOnly (_mscExecCtx sourceConfig) (fmap withNoStatistics queryTx)
 
 runShowplan ::
@@ -133,7 +139,7 @@ msDBQueryExplain ::
   m (AB.AnyBackend DBStepInfo)
 msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf _ _ = do
   let sessionVariables = _uiSession userInfo
-  statement <- planQuery sessionVariables qrf
+  statement <- qwdQuery <$> planQuery sessionVariables qrf
   let query = toQueryPretty (fromSelect statement)
       queryString = ODBC.renderQuery query
       odbcQuery = OnBaseMonad $

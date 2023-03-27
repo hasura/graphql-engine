@@ -1,16 +1,13 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Access to the SQL
-module Test.Databases.Postgres.LogicalModelsSpec (spec) where
+module Test.Databases.SQLServer.LogicalModelsSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Data.Time.Calendar.OrdinalDate
 import Data.Time.Clock
-import Database.PG.Query qualified as PG
-import Harness.Backend.Citus qualified as Citus
-import Harness.Backend.Cockroach qualified as Cockroach
-import Harness.Backend.Postgres qualified as Postgres
+import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml (yaml)
@@ -18,8 +15,8 @@ import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options), getBackendTypeConfig)
-import Harness.Yaml (shouldReturnYaml)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig, options)
+import Harness.Yaml (shouldAtLeastBe, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
@@ -33,19 +30,9 @@ spec =
   Fixture.hgeWithEnv [(featureFlagForLogicalModels, "True")] $
     Fixture.runClean -- re-run fixture setup on every test
       ( NE.fromList
-          [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
+          [ (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
               { Fixture.setupTeardown = \(testEnvironment, _) ->
-                  [ Postgres.setupTablesAction schema testEnvironment
-                  ]
-              },
-            (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
-              { Fixture.setupTeardown = \(testEnvironment, _) ->
-                  [ Cockroach.setupTablesAction schema testEnvironment
-                  ]
-              },
-            (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
-              { Fixture.setupTeardown = \(testEnvironment, _) ->
-                  [ Citus.setupTablesAction schema testEnvironment
+                  [ Sqlserver.setupTablesAction schema testEnvironment
                   ]
               }
           ]
@@ -54,8 +41,6 @@ spec =
 
 -- ** Setup and teardown
 
--- we add and track a table here as it's the only way we can currently define a
--- return type
 schema :: [Schema.Table]
 schema =
   [ (table "article")
@@ -77,36 +62,31 @@ schema =
 
 tests :: SpecWith TestEnvironment
 tests = do
-  let articleQuery :: Text
-      articleQuery =
-        [PG.sql| select
-                            id,
-                            title,
-                            (substring(content, 1, {{length}}) || (case when length(content) < {{length}} then '' else '...' end)) as excerpt,
-                            date
-                          from article
-                      |]
+  let articleQuery :: Schema.SchemaName -> Text
+      articleQuery schemaName =
+        "select id, title,(substring(content, 1, {{length}}) + (case when len(content) < {{length}} then '' else '...' end)) as excerpt,date from [" <> Schema.unSchemaName schemaName <> "].[article]"
+
+      articleWithExcerptLogicalModel :: Text -> Schema.SchemaName -> Schema.LogicalModel
+      articleWithExcerptLogicalModel name schemaName =
+        (Schema.logicalModel name (articleQuery schemaName))
+          { Schema.logicalModelColumns =
+              [ Schema.logicalModelColumn "id" Schema.TInt,
+                Schema.logicalModelColumn "title" Schema.TStr,
+                Schema.logicalModelColumn "excerpt" Schema.TStr,
+                Schema.logicalModelColumn "date" Schema.TUTCTime
+              ],
+            Schema.logicalModelArguments =
+              [ Schema.logicalModelColumn "length" Schema.TInt
+              ]
+          }
 
   describe "Testing Logical Models" $ do
     it "Runs a simple query that takes one parameter and uses it multiple times" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
+          schemaName = Schema.getSchemaName testEnvironment
 
-          articleWithExcerptLogicalModel :: Schema.LogicalModel
-          articleWithExcerptLogicalModel =
-            (Schema.logicalModel "article_with_excerpt" articleQuery)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "id" Schema.TInt,
-                    Schema.logicalModelColumn "title" Schema.TStr,
-                    Schema.logicalModelColumn "excerpt" Schema.TStr,
-                    Schema.logicalModelColumn "date" Schema.TUTCTime
-                  ],
-                Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "length" Schema.TInt
-                  ]
-              }
-
-      Schema.trackLogicalModel source articleWithExcerptLogicalModel testEnvironment
+      Schema.trackLogicalModel source (articleWithExcerptLogicalModel "article_with_excerpt" schemaName) testEnvironment
 
       let actual :: IO Value
           actual =
@@ -129,7 +109,7 @@ tests = do
                   article_with_excerpt:
                     - id: 1
                       title: "Dogs"
-                      date: "2000-01-01T00:00:00"
+                      date: "00:00:00"
                       excerpt: "I like to eat dog food I am a dogs..."
               |]
 
@@ -138,29 +118,16 @@ tests = do
     it "Uses two queries with the same argument names and ensure they don't mess with one another" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
-
-          mkArticleWithExcerptLogicalModel :: Text -> Schema.LogicalModel
-          mkArticleWithExcerptLogicalModel name =
-            (Schema.logicalModel name articleQuery)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "id" Schema.TInt,
-                    Schema.logicalModelColumn "title" Schema.TStr,
-                    Schema.logicalModelColumn "excerpt" Schema.TStr,
-                    Schema.logicalModelColumn "date" Schema.TUTCTime
-                  ],
-                Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "length" Schema.TInt
-                  ]
-              }
+          schemaName = Schema.getSchemaName testEnvironment
 
       Schema.trackLogicalModel
         source
-        (mkArticleWithExcerptLogicalModel "article_with_excerpt_1")
+        (articleWithExcerptLogicalModel "article_with_excerpt_1" schemaName)
         testEnvironment
 
       Schema.trackLogicalModel
         source
-        (mkArticleWithExcerptLogicalModel "article_with_excerpt_2")
+        (articleWithExcerptLogicalModel "article_with_excerpt_2" schemaName)
         testEnvironment
 
       let actual :: IO Value
@@ -189,25 +156,12 @@ tests = do
 
       shouldReturnYaml (options testEnvironment) actual expected
 
-    it "Uses a one parameter query and uses it multiple times" $ \testEnvironment -> do
+    it "Uses the same one parameter query multiple times" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
+          schemaName = Schema.getSchemaName testEnvironment
 
-          articleWithExcerptLogicalModel :: Schema.LogicalModel
-          articleWithExcerptLogicalModel =
-            (Schema.logicalModel "article_with_excerpt" articleQuery)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "id" Schema.TInt,
-                    Schema.logicalModelColumn "title" Schema.TStr,
-                    Schema.logicalModelColumn "excerpt" Schema.TStr,
-                    Schema.logicalModelColumn "date" Schema.TUTCTime
-                  ],
-                Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "length" Schema.TInt
-                  ]
-              }
-
-      Schema.trackLogicalModel source articleWithExcerptLogicalModel testEnvironment
+      Schema.trackLogicalModel source (articleWithExcerptLogicalModel "article_with_excerpt" schemaName) testEnvironment
 
       let actual :: IO Value
           actual =
@@ -238,22 +192,9 @@ tests = do
     it "Uses a one parameter query, passing it a GraphQL variable" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
+          schemaName = Schema.getSchemaName testEnvironment
 
-          articleWithExcerptLogicalModel :: Schema.LogicalModel
-          articleWithExcerptLogicalModel =
-            (Schema.logicalModel "article_with_excerpt" articleQuery)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "id" Schema.TInt,
-                    Schema.logicalModelColumn "title" Schema.TStr,
-                    Schema.logicalModelColumn "excerpt" Schema.TStr,
-                    Schema.logicalModelColumn "date" Schema.TUTCTime
-                  ],
-                Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "length" Schema.TInt
-                  ]
-              }
-
-      Schema.trackLogicalModel source articleWithExcerptLogicalModel testEnvironment
+      Schema.trackLogicalModel source (articleWithExcerptLogicalModel "article_with_excerpt" schemaName) testEnvironment
 
       let variables =
             [yaml|
@@ -282,46 +223,42 @@ tests = do
 
       shouldReturnYaml (options testEnvironment) actual expected
 
-    it "Runs a simple query using distinct_on and order_by" $ \testEnvironment -> do
+    it "Runs a query that uses a built-in Stored Procedure" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-          queryWithDuplicates :: Text
-          queryWithDuplicates = "SELECT * FROM (VALUES ('hello', 'world'), ('hello', 'friend')) as t(\"one\", \"two\")"
+          goodQuery = "EXEC sp_databases"
 
-          helloWorldLogicalModelWithDuplicates :: Schema.LogicalModel
-          helloWorldLogicalModelWithDuplicates =
-            (Schema.logicalModel "hello_world_function" queryWithDuplicates)
+          useStoredProcedure :: Schema.LogicalModel
+          useStoredProcedure =
+            (Schema.logicalModel "use_stored_procedure" goodQuery)
               { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "one" Schema.TStr,
-                    Schema.logicalModelColumn "two" Schema.TStr
+                  [ Schema.logicalModelColumn "database_name" Schema.TStr,
+                    Schema.logicalModelColumn "database_size" Schema.TInt,
+                    Schema.logicalModelColumn "remarks" Schema.TStr
                   ]
               }
 
-      Schema.trackLogicalModel source helloWorldLogicalModelWithDuplicates testEnvironment
+      Schema.trackLogicalModel source useStoredProcedure testEnvironment
 
+      -- making an assumption here that an SQLServer instance will always have
+      -- a `master` database
       let expected =
             [yaml|
-                    data:
-                      hello_world_function:
-                        - one: "hello"
-                          two: "world"
-                  |]
+                data:
+                  use_stored_procedure:
+                    - database_name: "master"
+              |]
 
-          actual :: IO Value
-          actual =
-            GraphqlEngine.postGraphql
-              testEnvironment
-              [graphql|
-                      query {
-                        hello_world_function (
-                          distinct_on: [one]
-                          order_by: [{one:asc}]
-                        ){
-                          one
-                          two
-                        }
-                      }
-                   |]
+      actual <-
+        GraphqlEngine.postGraphql
+          testEnvironment
+          [graphql|
+              query {
+                use_stored_procedure {
+                  database_name
+                }
+              }
+           |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      actual `shouldAtLeastBe` expected

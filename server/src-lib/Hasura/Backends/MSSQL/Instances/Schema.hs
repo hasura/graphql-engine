@@ -35,6 +35,7 @@ import Hasura.GraphQL.Schema.Parser
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Update qualified as SU
+import Hasura.LogicalModel.Schema qualified as LogicalModels
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR
@@ -59,6 +60,7 @@ instance BackendSchema 'MSSQL where
   buildTableInsertMutationFields = GSB.buildTableInsertMutationFields backendInsertParser
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
   buildTableUpdateMutationFields = GSB.buildSingleBatchTableUpdateMutationFields id
+  buildLogicalModelRootFields = LogicalModels.defaultBuildLogicalModelRootFields
 
   buildFunctionQueryFields _ _ _ _ = pure []
   buildFunctionRelayQueryFields _ _ _ _ _ = pure []
@@ -97,6 +99,10 @@ instance BackendTableSelectSchema 'MSSQL where
   selectTable = defaultSelectTable
   selectTableAggregate = defaultSelectTableAggregate
   tableSelectionSet = defaultTableSelectionSet
+
+instance BackendCustomTypeSelectSchema 'MSSQL where
+  logicalModelArguments = defaultLogicalModelArgs
+  logicalModelSelectionSet = defaultLogicalModelSelectionSet
 
 instance BackendUpdateOperatorsSchema 'MSSQL where
   type UpdateOperators 'MSSQL = UpdateOperator
