@@ -251,6 +251,7 @@ setup tables' (testEnvironment, _) = do
             service_account: *serviceAccount
             project_id: *projectId
             datasets: [*schemaName]
+            retry_limit: 5
     |]
   -- Setup and track tables
   for_ tables $ \table -> do
