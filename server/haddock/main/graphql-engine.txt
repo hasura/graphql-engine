@@ -19186,6 +19186,10 @@ MetadataResourceVersion :: Int64 -> MetadataResourceVersion
 [getMetadataResourceVersion] :: MetadataResourceVersion -> Int64
 initialResourceVersion :: MetadataResourceVersion
 showMetadataResourceVersion :: MetadataResourceVersion -> Text
+data MetadataWithResourceVersion
+MetadataWithResourceVersion :: Metadata -> MetadataResourceVersion -> MetadataWithResourceVersion
+[_mwrvMetadata] :: MetadataWithResourceVersion -> Metadata
+[_mwrvResourceVersion] :: MetadataWithResourceVersion -> MetadataResourceVersion
 mkParentDep :: forall b. Backend b => SourceName -> TableName b -> SchemaDependency
 
 -- | When we depend on anything to do with logical models, we also declare
@@ -19329,7 +19333,7 @@ BackendInfoWrapper :: BackendInfo b -> BackendInfoWrapper (b :: BackendType)
 type BackendCache = BackendMap BackendInfoWrapper
 getBackendInfo :: forall b m. (CacheRM m, HasTag b) => m (Maybe (BackendInfo b))
 data SchemaCache
-SchemaCache :: SourceCache -> ActionCache -> RemoteSchemaMap -> InlinedAllowlist -> SchemaIntrospection -> HashMap RoleName (RoleContext GQLContext) -> GQLContext -> HashMap RoleName (RoleContext GQLContext) -> GQLContext -> DepMap -> [InconsistentMetadata] -> HashMap TriggerName CronTriggerInfo -> EndpointTrie GQLQueryWithText -> ApiLimit -> MetricsConfig -> Maybe MetadataResourceVersion -> SetGraphqlIntrospectionOptions -> [TlsAllow] -> QueryCollections -> BackendCache -> SourceHealthCheckCache -> SourcePingCache -> OpenTelemetryInfo -> SchemaCache
+SchemaCache :: SourceCache -> ActionCache -> RemoteSchemaMap -> InlinedAllowlist -> SchemaIntrospection -> HashMap RoleName (RoleContext GQLContext) -> GQLContext -> HashMap RoleName (RoleContext GQLContext) -> GQLContext -> DepMap -> [InconsistentMetadata] -> HashMap TriggerName CronTriggerInfo -> EndpointTrie GQLQueryWithText -> ApiLimit -> MetricsConfig -> MetadataResourceVersion -> SetGraphqlIntrospectionOptions -> [TlsAllow] -> QueryCollections -> BackendCache -> SourceHealthCheckCache -> SourcePingCache -> OpenTelemetryInfo -> SchemaCache
 [scSources] :: SchemaCache -> SourceCache
 [scActions] :: SchemaCache -> ActionCache
 [scRemoteSchemas] :: SchemaCache -> RemoteSchemaMap
@@ -19345,7 +19349,7 @@ SchemaCache :: SourceCache -> ActionCache -> RemoteSchemaMap -> InlinedAllowlist
 [scEndpoints] :: SchemaCache -> EndpointTrie GQLQueryWithText
 [scApiLimits] :: SchemaCache -> ApiLimit
 [scMetricsConfig] :: SchemaCache -> MetricsConfig
-[scMetadataResourceVersion] :: SchemaCache -> Maybe MetadataResourceVersion
+[scMetadataResourceVersion] :: SchemaCache -> MetadataResourceVersion
 [scSetGraphqlIntrospectionOptions] :: SchemaCache -> SetGraphqlIntrospectionOptions
 [scTlsAllowlist] :: SchemaCache -> [TlsAllow]
 [scQueryCollections] :: SchemaCache -> QueryCollections
@@ -19461,6 +19465,7 @@ instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.SchemaCache.MetadataRes
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.Types.SchemaCache.MetadataResourceVersion
 instance GHC.Num.Num Hasura.RQL.Types.SchemaCache.MetadataResourceVersion
 instance GHC.Classes.Eq Hasura.RQL.Types.SchemaCache.MetadataResourceVersion
+instance GHC.Classes.Eq Hasura.RQL.Types.SchemaCache.MetadataWithResourceVersion
 instance GHC.Classes.Eq Hasura.RQL.Types.SchemaCache.CronTriggerInfo
 instance GHC.Show.Show Hasura.RQL.Types.SchemaCache.CronTriggerInfo
 
@@ -19765,7 +19770,7 @@ instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.DataConnector.DCAddAgent
 -- | Functions for fetching and updating @<a>Metadata</a> in the catalog.
 module Hasura.RQL.DDL.Schema.Catalog
 fetchMetadataFromCatalog :: TxE QErr Metadata
-fetchMetadataAndResourceVersionFromCatalog :: TxE QErr (Metadata, MetadataResourceVersion)
+fetchMetadataAndResourceVersionFromCatalog :: TxE QErr MetadataWithResourceVersion
 fetchMetadataResourceVersionFromCatalog :: TxE QErr MetadataResourceVersion
 fetchMetadataNotificationsFromCatalog :: MetadataResourceVersion -> InstanceId -> TxE QErr [(MetadataResourceVersion, CacheInvalidations)]
 bumpMetadataVersionInCatalog :: TxE QErr ()
@@ -22141,7 +22146,7 @@ SchemaSyncEventProcessResult :: !Bool -> !CacheInvalidations -> SchemaSyncEventP
 --   required.
 class Monad m => MonadMetadataStorage m
 fetchMetadataResourceVersion :: MonadMetadataStorage m => m (Either QErr MetadataResourceVersion)
-fetchMetadata :: MonadMetadataStorage m => m (Either QErr (Metadata, MetadataResourceVersion))
+fetchMetadata :: MonadMetadataStorage m => m (Either QErr MetadataWithResourceVersion)
 fetchMetadataNotifications :: MonadMetadataStorage m => MetadataResourceVersion -> InstanceId -> m (Either QErr [(MetadataResourceVersion, CacheInvalidations)])
 setMetadata :: MonadMetadataStorage m => MetadataResourceVersion -> Metadata -> m (Either QErr MetadataResourceVersion)
 notifySchemaCacheSync :: MonadMetadataStorage m => MetadataResourceVersion -> InstanceId -> CacheInvalidations -> m (Either QErr ())
@@ -23475,22 +23480,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aDyh1. Lens' (CreateEventTriggerQuery b_aDyh1) TriggerOnReplication
-cteqCleanupConfig :: forall b_aDyh1. Lens' (CreateEventTriggerQuery b_aDyh1) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aDyh1. Lens' (CreateEventTriggerQuery b_aDyh1) (Maybe Text)
-cetqWebhook :: forall b_aDyh1. Lens' (CreateEventTriggerQuery b_aDyh1) (Maybe InputWebhook)
-cetqUpdate :: forall b_aDyh1. Lens' (CreateEventTriggerQuery b_aDyh1) (Maybe (SubscribeOpSpec b_aDyh1))
-cetqTable :: forall b_aDyh1. Lens' (CreateEventTriggerQuery b_aDyh1) (TableName b_aDyh1)
-cetqSource :: forall b_aDyh1. Lens' (CreateEventTriggerQuery b_aDyh1) SourceName
-cetqRetryConf :: forall b_aDyh1. Lens' (CreateEventTriggerQuery b_aDyh1) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aDyh1. Lens' (CreateEventTriggerQuery b_aDyh1) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aDyh1. Lens' (CreateEventTriggerQuery b_aDyh1) (Maybe RequestTransform)
-cetqReplace :: forall b_aDyh1. Lens' (CreateEventTriggerQuery b_aDyh1) Bool
-cetqName :: forall b_aDyh1. Lens' (CreateEventTriggerQuery b_aDyh1) TriggerName
-cetqInsert :: forall b_aDyh1. Lens' (CreateEventTriggerQuery b_aDyh1) (Maybe (SubscribeOpSpec b_aDyh1))
-cetqHeaders :: forall b_aDyh1. Lens' (CreateEventTriggerQuery b_aDyh1) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aDyh1. Lens' (CreateEventTriggerQuery b_aDyh1) (Maybe Bool)
-cetqDelete :: forall b_aDyh1. Lens' (CreateEventTriggerQuery b_aDyh1) (Maybe (SubscribeOpSpec b_aDyh1))
+cteqTriggerOnReplication :: forall b_aDyro. Lens' (CreateEventTriggerQuery b_aDyro) TriggerOnReplication
+cteqCleanupConfig :: forall b_aDyro. Lens' (CreateEventTriggerQuery b_aDyro) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aDyro. Lens' (CreateEventTriggerQuery b_aDyro) (Maybe Text)
+cetqWebhook :: forall b_aDyro. Lens' (CreateEventTriggerQuery b_aDyro) (Maybe InputWebhook)
+cetqUpdate :: forall b_aDyro. Lens' (CreateEventTriggerQuery b_aDyro) (Maybe (SubscribeOpSpec b_aDyro))
+cetqTable :: forall b_aDyro. Lens' (CreateEventTriggerQuery b_aDyro) (TableName b_aDyro)
+cetqSource :: forall b_aDyro. Lens' (CreateEventTriggerQuery b_aDyro) SourceName
+cetqRetryConf :: forall b_aDyro. Lens' (CreateEventTriggerQuery b_aDyro) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aDyro. Lens' (CreateEventTriggerQuery b_aDyro) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aDyro. Lens' (CreateEventTriggerQuery b_aDyro) (Maybe RequestTransform)
+cetqReplace :: forall b_aDyro. Lens' (CreateEventTriggerQuery b_aDyro) Bool
+cetqName :: forall b_aDyro. Lens' (CreateEventTriggerQuery b_aDyro) TriggerName
+cetqInsert :: forall b_aDyro. Lens' (CreateEventTriggerQuery b_aDyro) (Maybe (SubscribeOpSpec b_aDyro))
+cetqHeaders :: forall b_aDyro. Lens' (CreateEventTriggerQuery b_aDyro) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aDyro. Lens' (CreateEventTriggerQuery b_aDyro) (Maybe Bool)
+cetqDelete :: forall b_aDyro. Lens' (CreateEventTriggerQuery b_aDyro) (Maybe (SubscribeOpSpec b_aDyro))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
@@ -24113,7 +24118,7 @@ data CacheBuild a
 runCacheBuild :: (MonadIO m, MonadError QErr m) => CacheBuildParams -> CacheBuild a -> m a
 runCacheBuildM :: (MonadIO m, MonadError QErr m, MonadResolveSource m, ProvidesNetwork m) => CacheBuild a -> m a
 data RebuildableSchemaCache
-RebuildableSchemaCache :: SchemaCache -> InvalidationKeys -> Rule (ReaderT BuildReason CacheBuild) (Metadata, ServerConfigCtx, InvalidationKeys, Maybe StoredIntrospection) SchemaCache -> RebuildableSchemaCache
+RebuildableSchemaCache :: SchemaCache -> InvalidationKeys -> Rule (ReaderT BuildReason CacheBuild) (MetadataWithResourceVersion, ServerConfigCtx, InvalidationKeys, Maybe StoredIntrospection) SchemaCache -> RebuildableSchemaCache
 bindErrorA :: (ArrowChoice arr, ArrowKleisli m arr, ArrowError e arr, MonadError e m) => arr (m a) a
 withRecordDependencies :: ArrowWriter (Seq (Either im MetadataDependency)) arr => WriterA (Seq SchemaDependency) arr (e, s) a -> arr (e, (MetadataObject, (SchemaObjId, s))) a
 
@@ -24785,8 +24790,8 @@ resolveDependencies :: (ArrowKleisli m arr, QErrM m) => (BuildOutputs, [Metadata
 --   the implementation of building the schema cache and define handlers
 --   that trigger schema cache rebuilds.
 module Hasura.RQL.DDL.Schema.Cache
-buildRebuildableSchemaCache :: Logger Hasura -> Environment -> Metadata -> ServerConfigCtx -> CacheBuild RebuildableSchemaCache
-buildRebuildableSchemaCacheWithReason :: BuildReason -> Logger Hasura -> Environment -> Metadata -> ServerConfigCtx -> CacheBuild RebuildableSchemaCache
+buildRebuildableSchemaCache :: Logger Hasura -> Environment -> MetadataWithResourceVersion -> ServerConfigCtx -> CacheBuild RebuildableSchemaCache
+buildRebuildableSchemaCacheWithReason :: BuildReason -> Logger Hasura -> Environment -> MetadataWithResourceVersion -> ServerConfigCtx -> CacheBuild RebuildableSchemaCache
 data CacheRWT m a
 runCacheRWT :: Monad m => ServerConfigCtx -> RebuildableSchemaCache -> CacheRWT m a -> m (a, RebuildableSchemaCache, CacheInvalidations)
 instance Hasura.Services.Network.ProvidesNetwork m => Hasura.Services.Network.ProvidesNetwork (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
@@ -26282,7 +26287,7 @@ MRInitialized :: MigrationResult
 -- | old catalog version
 MRMigrated :: Text -> MigrationResult
 MRMaintanenceMode :: MigrationResult
-migrateCatalog :: forall m. (MonadTx m, MonadIO m, MonadBaseControl IO m) => Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) -> ExtensionsSchema -> MaintenanceMode () -> UTCTime -> m (MigrationResult, Metadata)
+migrateCatalog :: forall m. (MonadTx m, MonadIO m, MonadBaseControl IO m) => Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) -> ExtensionsSchema -> MaintenanceMode () -> UTCTime -> m (MigrationResult, MetadataWithResourceVersion)
 downgradeCatalog :: forall m. (MonadIO m, MonadTx m) => Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) -> DowngradeOptions -> UTCTime -> m MigrationResult
 instance GHC.Classes.Eq Hasura.Server.Migrate.MigrationResult
 instance GHC.Show.Show Hasura.Server.Migrate.MigrationResult
@@ -27784,14 +27789,14 @@ initialiseAppContext :: (ForkableMonadIO m, HasAppEnv m) => Environment -> Serve
 --   
 --   On success, this function logs the result of the migration, on failure
 --   it logs a <tt>catalog_migrate</tt> error and throws a fatal error.
-migrateCatalogAndFetchMetadata :: (MonadIO m, MonadBaseControl IO m) => Logger Hasura -> PGPool -> Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) -> MaintenanceMode () -> ExtensionsSchema -> m Metadata
+migrateCatalogAndFetchMetadata :: (MonadIO m, MonadBaseControl IO m) => Logger Hasura -> PGPool -> Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) -> MaintenanceMode () -> ExtensionsSchema -> m MetadataWithResourceVersion
 
 -- | Build the original <a>RebuildableSchemaCache</a>.
 --   
 --   On error, it logs a <tt>catalog_migrate</tt> error and throws a fatal
 --   error. This misnomer is intentional: it is to preserve a previous
 --   behaviour of the code and avoid a breaking change.
-buildFirstSchemaCache :: MonadIO m => Environment -> Logger Hasura -> ServerConfigCtx -> SourceResolver ('Postgres 'Vanilla) -> SourceResolver 'MSSQL -> Metadata -> Manager -> m RebuildableSchemaCache
+buildFirstSchemaCache :: MonadIO m => Environment -> Logger Hasura -> ServerConfigCtx -> SourceResolver ('Postgres 'Vanilla) -> SourceResolver 'MSSQL -> MetadataWithResourceVersion -> Manager -> m RebuildableSchemaCache
 initSubscriptionsState :: Logger Hasura -> Maybe SubscriptionPostPollHook -> IO SubscriptionsState
 initLockedEventsCtx :: IO LockedEventsCtx
 
