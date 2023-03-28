@@ -115,7 +115,14 @@ generally considered to be a good balance between quality and file size.
 
 Use the `<Player />` component to add the video to the docs. The component takes the following props:
 
-- `src`: The path to the video file.
+| Prop           | Type    | Description                                            | Required | Default |
+| -------------- | ------- | ------------------------------------------------------ | -------- | ------- |
+| `src`          | string  | The path to the video file.                            | Yes      |         |
+| `autoPlay`     | boolean | Whether the video should autoplay when the page loads. |          | `true`  |
+| `loop`         | boolean | Whether the video should loop when it reaches the end. |          | `true`  |
+| `muted`        | boolean | Whether the video should be muted.                     |          | `true`  |
+| `playsInline`  | boolean | Whether the video should play inline.                  |          | `true`  |
+| `showControls` | boolean | Whether the video should show controls.                |          | `false` |
 
 You can import the component inside any `.mdx` file like this:
 

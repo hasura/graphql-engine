@@ -1,11 +1,21 @@
 import React from 'react';
 import styles from './styles.module.scss';
 
-const Player = ({ src }) => {
+type PlayerProps = {
+  src: string;
+  autoPlay?: boolean;
+  loop?: boolean;
+  muted?: boolean;
+  playsInline?: boolean;
+  showControls?: boolean;
+};
+
+const Player = (props: PlayerProps) => {
+  const { src, autoPlay = true, loop = true, muted = true, playsInline = true, showControls = false } = props;
   const resolvedVideo = require(`@site/static${src}`).default;
   return (
     <div className={`${styles['player']}`}>
-      <video autoPlay loop muted playsInline>
+      <video autoPlay={autoPlay} loop={loop} muted={muted} playsInline={playsInline} controls={showControls}>
         <source src={resolvedVideo} type="video/webm" />
       </video>
     </div>
