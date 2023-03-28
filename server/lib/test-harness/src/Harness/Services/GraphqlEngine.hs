@@ -9,6 +9,7 @@ module Harness.Services.GraphqlEngine
     spawnServer,
     emptyHgeConfig,
     hgePost,
+    hgePostGraphql,
   )
 where
 
@@ -280,10 +281,10 @@ hgeLogRelayThread logger hgeOutput = do
     logParser = json' <* (option () (void (string "\n")) <|> endOfInput)
 
 hgePost ::
-  ( Has HgeServerInstance a,
-    Has Logger a
+  ( Has HgeServerInstance env,
+    Has Logger env
   ) =>
-  a ->
+  env ->
   Int ->
   Text ->
   Http.RequestHeaders ->
@@ -296,3 +297,13 @@ hgePost env statusCode path headers requestBody = do
   responseBody <- withFrozenCallStack $ Http.postValueWithStatus statusCode fullUrl headers requestBody
   testLogMessage env $ LogHGEResponse path responseBody
   return responseBody
+
+hgePostGraphql ::
+  ( Has HgeServerInstance env,
+    Has Logger env
+  ) =>
+  env ->
+  Value ->
+  IO Value
+hgePostGraphql env query = do
+  hgePost env 200 "/v1/graphql" [] (object ["query" .= query])

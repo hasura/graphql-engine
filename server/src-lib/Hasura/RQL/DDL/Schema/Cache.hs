@@ -92,6 +92,7 @@ import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.SQL.Tag
+import Hasura.Server.Init.FeatureFlag qualified as FF
 import Hasura.Server.Migrate.Version
 import Hasura.Server.Types
 import Hasura.Services
@@ -624,6 +625,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, serverConfigCtx, inv
         ArrowKleisli m arr,
         ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadError QErr m,
+        MonadIO m,
         BackendMetadata b,
         GetAggregationPredicatesDeps b
       ) =>
@@ -722,30 +724,50 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, serverConfigCtx, inv
 
       let functionCache = mapFromL _fiSQLName $ catMaybes functionCacheMaybes
 
+      areLogicalModelsEnabled <-
+        bindA
+          -< do
+            let CheckFeatureFlag checkFeatureFlag = _sccCheckFeatureFlag serverConfigCtx
+            liftIO @m $ checkFeatureFlag FF.logicalModelInterface
+
+      let mkLogicalModelMetadataObject :: LogicalModelMetadata b -> MetadataObject
+          mkLogicalModelMetadataObject lmm =
+            ( MetadataObject
+                ( MOSourceObjId sourceName $
+                    AB.mkAnyBackend $
+                      SMOLogicalModel @b (_lmmRootFieldName lmm)
+                )
+                (toJSON lmm)
+            )
+
       logicalModelCacheMaybes <-
         interpretWriter
           -< for
             (OMap.elems logicalModels)
-            \LogicalModelMetadata {..} -> runExceptT do
-              fieldInfoMap <- case toFieldInfo _lmmReturns of
-                Nothing -> pure mempty
-                Just fields -> pure (mapFromL fieldInfoName fields)
+            \lmm@LogicalModelMetadata {..} ->
+              withRecordInconsistencyM (mkLogicalModelMetadataObject lmm) $ do
+                unless areLogicalModelsEnabled $
+                  throw400 InvalidConfiguration "The Logical Models feature is disabled"
 
-              logicalModelPermissions <-
-                buildLogicalModelPermissions sourceName tableCoreInfos _lmmRootFieldName fieldInfoMap _lmmSelectPermissions orderedRoles
+                fieldInfoMap <- case toFieldInfo _lmmReturns of
+                  Nothing -> pure mempty
+                  Just fields -> pure (mapFromL fieldInfoName fields)
 
-              pure
-                LogicalModelInfo
-                  { _lmiRootFieldName = _lmmRootFieldName,
-                    _lmiCode = _lmmCode,
-                    _lmiReturns = _lmmReturns,
-                    _lmiArguments = _lmmArguments,
-                    _lmiPermissions = logicalModelPermissions,
-                    _lmiDescription = _lmmDescription
-                  }
+                logicalModelPermissions <-
+                  buildLogicalModelPermissions sourceName tableCoreInfos _lmmRootFieldName fieldInfoMap _lmmSelectPermissions orderedRoles
+
+                pure
+                  LogicalModelInfo
+                    { _lmiRootFieldName = _lmmRootFieldName,
+                      _lmiCode = _lmmCode,
+                      _lmiReturns = _lmmReturns,
+                      _lmiArguments = _lmmArguments,
+                      _lmiPermissions = logicalModelPermissions,
+                      _lmiDescription = _lmmDescription
+                    }
 
       let logicalModelCache :: LogicalModelCache b
-          logicalModelCache = mapFromL _lmiRootFieldName (mapMaybe eitherToMaybe logicalModelCacheMaybes)
+          logicalModelCache = mapFromL _lmiRootFieldName (catMaybes logicalModelCacheMaybes)
 
       returnA -< SourceInfo sourceName tableCache functionCache logicalModelCache sourceConfig queryTagsConfig resolvedCustomization
 

@@ -23,11 +23,13 @@ withPostgresSource ::
   SpecWith (PostgresSource, a) ->
   SpecWith a
 withPostgresSource sourceName specs =
-  flip aroundWith specs \action env -> do
-    pg_add_source env sourceName
-    -- TODO assert that res is a success result
-    -- TODO: use 'managed'?
-    action (PostgresSource sourceName, env)
+  -- We mark "Postgres" to interoperate with HASURA_TEST_BACKEND_TYPE.
+  describe "Postgres" $
+    flip aroundWith specs \action env -> do
+      pg_add_source env sourceName
+      -- TODO assert that res is a success result
+      -- TODO: use 'managed'?
+      action (PostgresSource sourceName, env)
 
 pg_add_source ::
   ( Has Logger env,
