@@ -39,10 +39,10 @@
 </span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier">Language.GraphQL.Draft.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
 </span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
 </span><span id="line-41"></span><span>
-</span><span id="line-42"></span><span id="local-6989586621690564595"><span id="local-6989586621690564596"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="CollectionName"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionName"><span class="hs-identifier hs-var">CollectionName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CollectionName"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionName"><span class="hs-identifier hs-var">CollectionName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unCollectionName"><span class="annot"><span class="annottext">CollectionName -&gt; NonEmptyText
+</span><span id="line-42"></span><span id="local-6989586621690565843"><span id="local-6989586621690565844"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="CollectionName"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionName"><span class="hs-identifier hs-var">CollectionName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CollectionName"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionName"><span class="hs-identifier hs-var">CollectionName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unCollectionName"><span class="annot"><span class="annottext">CollectionName -&gt; NonEmptyText
 </span><a href="Hasura.RQL.Types.QueryCollection.html#unCollectionName"><span class="hs-identifier hs-var hs-var">unCollectionName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-43"></span><span>  </span><span class="hs-keyword">deriving</span><span>
-</span><span id="line-44"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621690564583"><span id="local-6989586621690564585"><span id="local-6989586621690564591"><span class="annot"><span class="annottext">Int -&gt; CollectionName -&gt; ShowS
+</span><span id="line-44"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621690565831"><span id="local-6989586621690565833"><span id="local-6989586621690565839"><span class="annot"><span class="annottext">Int -&gt; CollectionName -&gt; ShowS
 [CollectionName] -&gt; ShowS
 CollectionName -&gt; String
 forall a.
@@ -54,14 +54,14 @@ $cshow :: CollectionName -&gt; String
 showsPrec :: Int -&gt; CollectionName -&gt; ShowS
 $cshowsPrec :: Int -&gt; CollectionName -&gt; ShowS
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-45"></span><span>      </span><span id="local-6989586621690564575"><span id="local-6989586621690564580"><span class="annot"><span class="annottext">CollectionName -&gt; CollectionName -&gt; Bool
+</span><span id="line-45"></span><span>      </span><span id="local-6989586621690565823"><span id="local-6989586621690565828"><span class="annot"><span class="annottext">CollectionName -&gt; CollectionName -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: CollectionName -&gt; CollectionName -&gt; Bool
 $c/= :: CollectionName -&gt; CollectionName -&gt; Bool
 == :: CollectionName -&gt; CollectionName -&gt; Bool
 $c== :: CollectionName -&gt; CollectionName -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-46"></span><span>      </span><span id="local-6989586621690564542"><span id="local-6989586621690564546"><span id="local-6989586621690564550"><span id="local-6989586621690564554"><span id="local-6989586621690564558"><span id="local-6989586621690564562"><span id="local-6989586621690564567"><span class="annot"><span class="annottext">Eq CollectionName
+</span><span id="line-46"></span><span>      </span><span id="local-6989586621690565790"><span id="local-6989586621690565794"><span id="local-6989586621690565798"><span id="local-6989586621690565802"><span id="local-6989586621690565806"><span id="local-6989586621690565810"><span id="local-6989586621690565815"><span class="annot"><span class="annottext">Eq CollectionName
 CollectionName -&gt; CollectionName -&gt; Bool
 CollectionName -&gt; CollectionName -&gt; Ordering
 CollectionName -&gt; CollectionName -&gt; CollectionName
@@ -90,7 +90,7 @@ $c&lt; :: CollectionName -&gt; CollectionName -&gt; Bool
 compare :: CollectionName -&gt; CollectionName -&gt; Ordering
 $ccompare :: CollectionName -&gt; CollectionName -&gt; Ordering
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-47"></span><span>      </span><span id="local-6989586621690564529"><span id="local-6989586621690564534"><span class="annot"><span class="annottext">Eq CollectionName
+</span><span id="line-47"></span><span>      </span><span id="local-6989586621690565777"><span id="local-6989586621690565782"><span class="annot"><span class="annottext">Eq CollectionName
 Int -&gt; CollectionName -&gt; Int
 CollectionName -&gt; Int
 forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -99,7 +99,7 @@ $chash :: CollectionName -&gt; Int
 hashWithSalt :: Int -&gt; CollectionName -&gt; Int
 $chashWithSalt :: Int -&gt; CollectionName -&gt; Int
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-48"></span><span>      </span><span id="local-6989586621690564510"><span id="local-6989586621690564514"><span id="local-6989586621690564518"><span id="local-6989586621690564523"><span class="annot"><span class="annottext">[CollectionName] -&gt; Value
+</span><span id="line-48"></span><span>      </span><span id="local-6989586621690565758"><span id="local-6989586621690565762"><span id="local-6989586621690565766"><span id="local-6989586621690565771"><span class="annot"><span class="annottext">[CollectionName] -&gt; Value
 [CollectionName] -&gt; Encoding
 CollectionName -&gt; Value
 CollectionName -&gt; Encoding
@@ -118,7 +118,7 @@ $ctoEncoding :: CollectionName -&gt; Encoding
 toJSON :: CollectionName -&gt; Value
 $ctoJSON :: CollectionName -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-49"></span><span>      </span><span id="local-6989586621690564499"><span id="local-6989586621690564504"><span class="annot"><span class="annottext">ToJSONKeyFunction [CollectionName]
+</span><span id="line-49"></span><span>      </span><span id="local-6989586621690565747"><span id="local-6989586621690565752"><span class="annot"><span class="annottext">ToJSONKeyFunction [CollectionName]
 ToJSONKeyFunction CollectionName
 forall a.
 ToJSONKeyFunction a -&gt; ToJSONKeyFunction [a] -&gt; ToJSONKey a
@@ -127,7 +127,7 @@ $ctoJSONKeyList :: ToJSONKeyFunction [CollectionName]
 toJSONKey :: ToJSONKeyFunction CollectionName
 $ctoJSONKey :: ToJSONKeyFunction CollectionName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-50"></span><span>      </span><span id="local-6989586621690564488"><span id="local-6989586621690564493"><span class="annot"><span class="annottext">Value -&gt; Parser [CollectionName]
+</span><span id="line-50"></span><span>      </span><span id="local-6989586621690565736"><span id="local-6989586621690565741"><span class="annot"><span class="annottext">Value -&gt; Parser [CollectionName]
 Value -&gt; Parser CollectionName
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -136,17 +136,17 @@ $cparseJSONList :: Value -&gt; Parser [CollectionName]
 parseJSON :: Value -&gt; Parser CollectionName
 $cparseJSON :: Value -&gt; Parser CollectionName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-51"></span><span>      </span><span id="local-6989586621690564482"><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text CollectionName
+</span><span id="line-51"></span><span>      </span><span id="local-6989586621690565730"><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text CollectionName
 forall a. (Maybe ByteString -&gt; Either Text a) -&gt; FromCol a
 fromCol :: Maybe ByteString -&gt; Either Text CollectionName
 $cfromCol :: Maybe ByteString -&gt; Either Text CollectionName
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">PG.FromCol</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-52"></span><span>      </span><span id="local-6989586621690564475"><span class="annot"><span class="annottext">CollectionName -&gt; PrepArg
+</span><span id="line-52"></span><span>      </span><span id="local-6989586621690565723"><span class="annot"><span class="annottext">CollectionName -&gt; PrepArg
 forall a. (a -&gt; PrepArg) -&gt; ToPrepArg a
 toPrepVal :: CollectionName -&gt; PrepArg
 $ctoPrepVal :: CollectionName -&gt; PrepArg
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">PG.ToPrepArg</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-53"></span><span>      </span><span id="local-6989586621690564468"><span class="annot"><span class="annottext">CollectionName -&gt; Text
+</span><span id="line-53"></span><span>      </span><span id="local-6989586621690565716"><span class="annot"><span class="annottext">CollectionName -&gt; Text
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: CollectionName -&gt; Text
 $ctoTxt :: CollectionName -&gt; Text
@@ -160,8 +160,8 @@ $cfrom :: forall x. CollectionName -&gt; Rep CollectionName x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span>
 </span><span id="line-55"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-56"></span><span>
-</span><span id="line-57"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690564456"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionName"><span class="hs-identifier hs-type">CollectionName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-58"></span><span>  </span><span id="local-6989586621690564452"><span class="annot"><span class="annottext">codec :: JSONCodec CollectionName
+</span><span id="line-57"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690565704"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionName"><span class="hs-identifier hs-type">CollectionName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-58"></span><span>  </span><span id="local-6989586621690565700"><span class="annot"><span class="annottext">codec :: JSONCodec CollectionName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
 (oldOutput -&gt; newOutput)
 -&gt; (newInput -&gt; oldInput)
@@ -172,9 +172,9 @@ $cfrom :: forall x. CollectionName -&gt; Rep CollectionName x
 </span><a href="Hasura.RQL.Types.QueryCollection.html#unCollectionName"><span class="hs-identifier hs-var">unCollectionName</span></a></span><span> </span><span class="annot"><span class="annottext">forall value. HasCodec value =&gt; JSONCodec value
 </span><span class="hs-identifier hs-var">codec</span></span><span>
 </span><span id="line-59"></span><span>
-</span><span id="line-60"></span><span id="local-6989586621690564449"><span id="local-6989586621690564450"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="QueryName"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#QueryName"><span class="hs-identifier hs-var">QueryName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryName"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#QueryName"><span class="hs-identifier hs-var">QueryName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unQueryName"><span class="annot"><span class="annottext">QueryName -&gt; NonEmptyText
+</span><span id="line-60"></span><span id="local-6989586621690565697"><span id="local-6989586621690565698"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="QueryName"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#QueryName"><span class="hs-identifier hs-var">QueryName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryName"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#QueryName"><span class="hs-identifier hs-var">QueryName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unQueryName"><span class="annot"><span class="annottext">QueryName -&gt; NonEmptyText
 </span><a href="Hasura.RQL.Types.QueryCollection.html#unQueryName"><span class="hs-identifier hs-var hs-var">unQueryName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-61"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690564439"><span id="local-6989586621690564441"><span id="local-6989586621690564445"><span class="annot"><span class="annottext">Int -&gt; QueryName -&gt; ShowS
+</span><span id="line-61"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690565687"><span id="local-6989586621690565689"><span id="local-6989586621690565693"><span class="annot"><span class="annottext">Int -&gt; QueryName -&gt; ShowS
 [QueryName] -&gt; ShowS
 QueryName -&gt; String
 forall a.
@@ -185,13 +185,13 @@ show :: QueryName -&gt; String
 $cshow :: QueryName -&gt; String
 showsPrec :: Int -&gt; QueryName -&gt; ShowS
 $cshowsPrec :: Int -&gt; QueryName -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564433"><span id="local-6989586621690564437"><span class="annot"><span class="annottext">QueryName -&gt; QueryName -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565681"><span id="local-6989586621690565685"><span class="annot"><span class="annottext">QueryName -&gt; QueryName -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: QueryName -&gt; QueryName -&gt; Bool
 $c/= :: QueryName -&gt; QueryName -&gt; Bool
 == :: QueryName -&gt; QueryName -&gt; Bool
 $c== :: QueryName -&gt; QueryName -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564402"><span id="local-6989586621690564406"><span id="local-6989586621690564410"><span id="local-6989586621690564414"><span id="local-6989586621690564418"><span id="local-6989586621690564422"><span id="local-6989586621690564426"><span class="annot"><span class="annottext">Eq QueryName
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565650"><span id="local-6989586621690565654"><span id="local-6989586621690565658"><span id="local-6989586621690565662"><span id="local-6989586621690565666"><span id="local-6989586621690565670"><span id="local-6989586621690565674"><span class="annot"><span class="annottext">Eq QueryName
 QueryName -&gt; QueryName -&gt; Bool
 QueryName -&gt; QueryName -&gt; Ordering
 QueryName -&gt; QueryName -&gt; QueryName
@@ -219,11 +219,11 @@ $c&lt;= :: QueryName -&gt; QueryName -&gt; Bool
 $c&lt; :: QueryName -&gt; QueryName -&gt; Bool
 compare :: QueryName -&gt; QueryName -&gt; Ordering
 $ccompare :: QueryName -&gt; QueryName -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564397"><span class="annot"><span class="annottext">QueryName -&gt; ()
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565645"><span class="annot"><span class="annottext">QueryName -&gt; ()
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: QueryName -&gt; ()
 $crnf :: QueryName -&gt; ()
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564385"><span id="local-6989586621690564389"><span class="annot"><span class="annottext">Eq QueryName
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565633"><span id="local-6989586621690565637"><span class="annot"><span class="annottext">Eq QueryName
 Int -&gt; QueryName -&gt; Int
 QueryName -&gt; Int
 forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -231,7 +231,7 @@ hash :: QueryName -&gt; Int
 $chash :: QueryName -&gt; Int
 hashWithSalt :: Int -&gt; QueryName -&gt; Int
 $chashWithSalt :: Int -&gt; QueryName -&gt; Int
-</span><a href="#local-6989586621690564385"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564369"><span id="local-6989586621690564373"><span id="local-6989586621690564377"><span id="local-6989586621690564381"><span class="annot"><span class="annottext">[QueryName] -&gt; Value
+</span><a href="#local-6989586621690565633"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565617"><span id="local-6989586621690565621"><span id="local-6989586621690565625"><span id="local-6989586621690565629"><span class="annot"><span class="annottext">[QueryName] -&gt; Value
 [QueryName] -&gt; Encoding
 QueryName -&gt; Value
 QueryName -&gt; Encoding
@@ -249,7 +249,7 @@ toEncoding :: QueryName -&gt; Encoding
 $ctoEncoding :: QueryName -&gt; Encoding
 toJSON :: QueryName -&gt; Value
 $ctoJSON :: QueryName -&gt; Value
-</span><a href="#local-6989586621690564369"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564360"><span id="local-6989586621690564364"><span class="annot"><span class="annottext">ToJSONKeyFunction [QueryName]
+</span><a href="#local-6989586621690565617"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565608"><span id="local-6989586621690565612"><span class="annot"><span class="annottext">ToJSONKeyFunction [QueryName]
 ToJSONKeyFunction QueryName
 forall a.
 ToJSONKeyFunction a -&gt; ToJSONKeyFunction [a] -&gt; ToJSONKey a
@@ -257,7 +257,7 @@ toJSONKeyList :: ToJSONKeyFunction [QueryName]
 $ctoJSONKeyList :: ToJSONKeyFunction [QueryName]
 toJSONKey :: ToJSONKeyFunction QueryName
 $ctoJSONKey :: ToJSONKeyFunction QueryName
-</span><a href="#local-6989586621690564360"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564351"><span id="local-6989586621690564355"><span class="annot"><span class="annottext">Value -&gt; Parser [QueryName]
+</span><a href="#local-6989586621690565608"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565599"><span id="local-6989586621690565603"><span class="annot"><span class="annottext">Value -&gt; Parser [QueryName]
 Value -&gt; Parser QueryName
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -265,11 +265,11 @@ parseJSONList :: Value -&gt; Parser [QueryName]
 $cparseJSONList :: Value -&gt; Parser [QueryName]
 parseJSON :: Value -&gt; Parser QueryName
 $cparseJSON :: Value -&gt; Parser QueryName
-</span><a href="#local-6989586621690564351"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564346"><span class="annot"><span class="annottext">QueryName -&gt; Text
+</span><a href="#local-6989586621690565599"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565594"><span class="annot"><span class="annottext">QueryName -&gt; Text
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: QueryName -&gt; Text
 $ctoTxt :: QueryName -&gt; Text
-</span><a href="#local-6989586621690564346"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep QueryName x -&gt; QueryName
+</span><a href="#local-6989586621690565594"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep QueryName x -&gt; QueryName
 forall x. QueryName -&gt; Rep QueryName x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
@@ -277,9 +277,9 @@ $cto :: forall x. Rep QueryName x -&gt; QueryName
 $cfrom :: forall x. QueryName -&gt; Rep QueryName x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-62"></span><span>
-</span><span id="line-63"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690564337"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#QueryName"><span class="hs-identifier hs-type">QueryName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-64"></span><span>  </span><span id="local-6989586621690564335"><span class="annot"><span class="annottext">codec :: JSONCodec QueryName
-</span><a href="#local-6989586621690564335"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
+</span><span id="line-63"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690565585"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#QueryName"><span class="hs-identifier hs-type">QueryName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-64"></span><span>  </span><span id="local-6989586621690565583"><span class="annot"><span class="annottext">codec :: JSONCodec QueryName
+</span><a href="#local-6989586621690565583"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
 (oldOutput -&gt; newOutput)
 -&gt; (newInput -&gt; oldInput)
 -&gt; Codec context oldInput oldOutput
@@ -291,7 +291,7 @@ $cfrom :: forall x. QueryName -&gt; Rep QueryName x
 </span><span id="line-65"></span><span>
 </span><span id="line-66"></span><span class="hs-keyword">newtype</span><span> </span><span id="GQLQuery"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQuery"><span class="hs-identifier hs-var">GQLQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="GQLQuery"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQuery"><span class="hs-identifier hs-var">GQLQuery</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unGQLQuery"><span class="annot"><span class="annottext">GQLQuery -&gt; ExecutableDocument Name
 </span><a href="Hasura.RQL.Types.QueryCollection.html#unGQLQuery"><span class="hs-identifier hs-var hs-var">unGQLQuery</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.ExecutableDocument</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-67"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690564323"><span id="local-6989586621690564325"><span id="local-6989586621690564331"><span class="annot"><span class="annottext">Int -&gt; GQLQuery -&gt; ShowS
+</span><span id="line-67"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690565571"><span id="local-6989586621690565573"><span id="local-6989586621690565579"><span class="annot"><span class="annottext">Int -&gt; GQLQuery -&gt; ShowS
 [GQLQuery] -&gt; ShowS
 GQLQuery -&gt; String
 forall a.
@@ -302,13 +302,13 @@ show :: GQLQuery -&gt; String
 $cshow :: GQLQuery -&gt; String
 showsPrec :: Int -&gt; GQLQuery -&gt; ShowS
 $cshowsPrec :: Int -&gt; GQLQuery -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564314"><span id="local-6989586621690564320"><span class="annot"><span class="annottext">GQLQuery -&gt; GQLQuery -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565562"><span id="local-6989586621690565568"><span class="annot"><span class="annottext">GQLQuery -&gt; GQLQuery -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: GQLQuery -&gt; GQLQuery -&gt; Bool
 $c/= :: GQLQuery -&gt; GQLQuery -&gt; Bool
 == :: GQLQuery -&gt; GQLQuery -&gt; Bool
 $c== :: GQLQuery -&gt; GQLQuery -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564274"><span id="local-6989586621690564279"><span id="local-6989586621690564284"><span id="local-6989586621690564289"><span id="local-6989586621690564294"><span id="local-6989586621690564299"><span id="local-6989586621690564305"><span class="annot"><span class="annottext">Eq GQLQuery
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565522"><span id="local-6989586621690565527"><span id="local-6989586621690565532"><span id="local-6989586621690565537"><span id="local-6989586621690565542"><span id="local-6989586621690565547"><span id="local-6989586621690565553"><span class="annot"><span class="annottext">Eq GQLQuery
 GQLQuery -&gt; GQLQuery -&gt; Bool
 GQLQuery -&gt; GQLQuery -&gt; Ordering
 GQLQuery -&gt; GQLQuery -&gt; GQLQuery
@@ -336,11 +336,11 @@ $c&lt;= :: GQLQuery -&gt; GQLQuery -&gt; Bool
 $c&lt; :: GQLQuery -&gt; GQLQuery -&gt; Bool
 compare :: GQLQuery -&gt; GQLQuery -&gt; Ordering
 $ccompare :: GQLQuery -&gt; GQLQuery -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564267"><span class="annot"><span class="annottext">GQLQuery -&gt; ()
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565515"><span class="annot"><span class="annottext">GQLQuery -&gt; ()
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: GQLQuery -&gt; ()
 $crnf :: GQLQuery -&gt; ()
-</span><a href="#local-6989586621690564267"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564251"><span id="local-6989586621690564257"><span class="annot"><span class="annottext">Eq GQLQuery
+</span><a href="#local-6989586621690565515"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565499"><span id="local-6989586621690565505"><span class="annot"><span class="annottext">Eq GQLQuery
 Int -&gt; GQLQuery -&gt; Int
 GQLQuery -&gt; Int
 forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -348,7 +348,7 @@ hash :: GQLQuery -&gt; Int
 $chash :: GQLQuery -&gt; Int
 hashWithSalt :: Int -&gt; GQLQuery -&gt; Int
 $chashWithSalt :: Int -&gt; GQLQuery -&gt; Int
-</span><a href="#local-6989586621690564251"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564231"><span id="local-6989586621690564235"><span id="local-6989586621690564239"><span id="local-6989586621690564244"><span class="annot"><span class="annottext">[GQLQuery] -&gt; Value
+</span><a href="#local-6989586621690565499"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565479"><span id="local-6989586621690565483"><span id="local-6989586621690565487"><span id="local-6989586621690565492"><span class="annot"><span class="annottext">[GQLQuery] -&gt; Value
 [GQLQuery] -&gt; Encoding
 GQLQuery -&gt; Value
 GQLQuery -&gt; Encoding
@@ -366,7 +366,7 @@ toEncoding :: GQLQuery -&gt; Encoding
 $ctoEncoding :: GQLQuery -&gt; Encoding
 toJSON :: GQLQuery -&gt; Value
 $ctoJSON :: GQLQuery -&gt; Value
-</span><a href="#local-6989586621690564231"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564221"><span id="local-6989586621690564226"><span class="annot"><span class="annottext">Value -&gt; Parser [GQLQuery]
+</span><a href="#local-6989586621690565479"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565469"><span id="local-6989586621690565474"><span class="annot"><span class="annottext">Value -&gt; Parser [GQLQuery]
 Value -&gt; Parser GQLQuery
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -374,11 +374,11 @@ parseJSONList :: Value -&gt; Parser [GQLQuery]
 $cparseJSONList :: Value -&gt; Parser [GQLQuery]
 parseJSON :: Value -&gt; Parser GQLQuery
 $cparseJSON :: Value -&gt; Parser GQLQuery
-</span><a href="#local-6989586621690564221"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690565469"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-68"></span><span>
-</span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690564215"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQuery"><span class="hs-identifier hs-type">GQLQuery</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-70"></span><span>  </span><span id="local-6989586621690564214"><span class="annot"><span class="annottext">codec :: JSONCodec GQLQuery
-</span><a href="#local-6989586621690564214"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
+</span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690565463"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQuery"><span class="hs-identifier hs-type">GQLQuery</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621690565462"><span class="annot"><span class="annottext">codec :: JSONCodec GQLQuery
+</span><a href="#local-6989586621690565462"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
 (oldOutput -&gt; newOutput)
 -&gt; (newInput -&gt; oldInput)
 -&gt; Codec context oldInput oldOutput
@@ -388,9 +388,9 @@ $cparseJSON :: Value -&gt; Parser GQLQuery
 </span><a href="Hasura.RQL.Types.QueryCollection.html#unGQLQuery"><span class="hs-identifier hs-var">unGQLQuery</span></a></span><span> </span><span class="annot"><span class="annottext">JSONCodec (ExecutableDocument Name)
 </span><a href="Autodocodec.Extended.html#graphQLExecutableDocumentCodec"><span class="hs-identifier hs-var">graphQLExecutableDocumentCodec</span></a></span><span>
 </span><span id="line-71"></span><span>
-</span><span id="line-72"></span><span id="local-6989586621690564212"><span id="local-6989586621690564213"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="GQLQueryWithText"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-var">GQLQueryWithText</span></a></span></span><span>
+</span><span id="line-72"></span><span id="local-6989586621690565460"><span id="local-6989586621690565461"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="GQLQueryWithText"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-var">GQLQueryWithText</span></a></span></span><span>
 </span><span id="line-73"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="GQLQueryWithText"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-var">GQLQueryWithText</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQuery"><span class="hs-identifier hs-type">GQLQuery</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-74"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690564200"><span id="local-6989586621690564202"><span id="local-6989586621690564209"><span class="annot"><span class="annottext">Int -&gt; GQLQueryWithText -&gt; ShowS
+</span><span id="line-74"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690565448"><span id="local-6989586621690565450"><span id="local-6989586621690565457"><span class="annot"><span class="annottext">Int -&gt; GQLQueryWithText -&gt; ShowS
 [GQLQueryWithText] -&gt; ShowS
 GQLQueryWithText -&gt; String
 forall a.
@@ -401,13 +401,13 @@ show :: GQLQueryWithText -&gt; String
 $cshow :: GQLQueryWithText -&gt; String
 showsPrec :: Int -&gt; GQLQueryWithText -&gt; ShowS
 $cshowsPrec :: Int -&gt; GQLQueryWithText -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564190"><span id="local-6989586621690564197"><span class="annot"><span class="annottext">GQLQueryWithText -&gt; GQLQueryWithText -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565438"><span id="local-6989586621690565445"><span class="annot"><span class="annottext">GQLQueryWithText -&gt; GQLQueryWithText -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: GQLQueryWithText -&gt; GQLQueryWithText -&gt; Bool
 $c/= :: GQLQueryWithText -&gt; GQLQueryWithText -&gt; Bool
 == :: GQLQueryWithText -&gt; GQLQueryWithText -&gt; Bool
 $c== :: GQLQueryWithText -&gt; GQLQueryWithText -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564143"><span id="local-6989586621690564149"><span id="local-6989586621690564155"><span id="local-6989586621690564161"><span id="local-6989586621690564167"><span id="local-6989586621690564173"><span id="local-6989586621690564180"><span class="annot"><span class="annottext">Eq GQLQueryWithText
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565391"><span id="local-6989586621690565397"><span id="local-6989586621690565403"><span id="local-6989586621690565409"><span id="local-6989586621690565415"><span id="local-6989586621690565421"><span id="local-6989586621690565428"><span class="annot"><span class="annottext">Eq GQLQueryWithText
 GQLQueryWithText -&gt; GQLQueryWithText -&gt; Bool
 GQLQueryWithText -&gt; GQLQueryWithText -&gt; Ordering
 GQLQueryWithText -&gt; GQLQueryWithText -&gt; GQLQueryWithText
@@ -435,17 +435,17 @@ $c&lt;= :: GQLQueryWithText -&gt; GQLQueryWithText -&gt; Bool
 $c&lt; :: GQLQueryWithText -&gt; GQLQueryWithText -&gt; Bool
 compare :: GQLQueryWithText -&gt; GQLQueryWithText -&gt; Ordering
 $ccompare :: GQLQueryWithText -&gt; GQLQueryWithText -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564135"><span class="annot"><span class="annottext">GQLQueryWithText -&gt; ()
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565383"><span class="annot"><span class="annottext">GQLQueryWithText -&gt; ()
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: GQLQueryWithText -&gt; ()
 $crnf :: GQLQueryWithText -&gt; ()
-</span><a href="#local-6989586621690564135"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep GQLQueryWithText x -&gt; GQLQueryWithText
+</span><a href="#local-6989586621690565383"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep GQLQueryWithText x -&gt; GQLQueryWithText
 forall x. GQLQueryWithText -&gt; Rep GQLQueryWithText x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep GQLQueryWithText x -&gt; GQLQueryWithText
 $cfrom :: forall x. GQLQueryWithText -&gt; Rep GQLQueryWithText x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564115"><span id="local-6989586621690564122"><span class="annot"><span class="annottext">Eq GQLQueryWithText
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565363"><span id="local-6989586621690565370"><span class="annot"><span class="annottext">Eq GQLQueryWithText
 Int -&gt; GQLQueryWithText -&gt; Int
 GQLQueryWithText -&gt; Int
 forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -453,86 +453,86 @@ hash :: GQLQueryWithText -&gt; Int
 $chash :: GQLQueryWithText -&gt; Int
 hashWithSalt :: Int -&gt; GQLQueryWithText -&gt; Int
 $chashWithSalt :: Int -&gt; GQLQueryWithText -&gt; Int
-</span><a href="#local-6989586621690564115"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690565363"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-75"></span><span>
-</span><span id="line-76"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690564107"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-type">GQLQueryWithText</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-77"></span><span>  </span><span id="local-6989586621690564104"><span class="annot"><span class="annottext">codec :: JSONCodec GQLQueryWithText
-</span><a href="#local-6989586621690564104"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
+</span><span id="line-76"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690565355"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-type">GQLQueryWithText</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-77"></span><span>  </span><span id="local-6989586621690565352"><span class="annot"><span class="annottext">codec :: JSONCodec GQLQueryWithText
+</span><a href="#local-6989586621690565352"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
 (oldOutput -&gt; Either String newOutput)
 -&gt; (newInput -&gt; oldInput)
 -&gt; Codec context oldInput oldOutput
 -&gt; Codec context newInput newOutput
 </span><span class="hs-identifier hs-var">bimapCodec</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String GQLQueryWithText
-</span><a href="#local-6989586621690564103"><span class="hs-identifier hs-var">dec</span></a></span><span> </span><span class="annot"><span class="annottext">GQLQueryWithText -&gt; Text
-</span><a href="#local-6989586621690564102"><span class="hs-identifier hs-var">enc</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690565351"><span class="hs-identifier hs-var">dec</span></a></span><span> </span><span class="annot"><span class="annottext">GQLQueryWithText -&gt; Text
+</span><a href="#local-6989586621690565350"><span class="hs-identifier hs-var">enc</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall value. HasCodec value =&gt; JSONCodec value
 </span><span class="hs-identifier hs-var">codec</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-78"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-79"></span><span>      </span><span id="local-6989586621690564103"><span class="annot"><span class="annottext">dec :: Text -&gt; Either String GQLQueryWithText
-</span><a href="#local-6989586621690564103"><span class="hs-identifier hs-var hs-var">dec</span></a></span></span><span> </span><span id="local-6989586621690564099"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690564099"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall e1 e2 a. (e1 -&gt; e2) -&gt; Either e1 a -&gt; Either e2 a
+</span><span id="line-79"></span><span>      </span><span id="local-6989586621690565351"><span class="annot"><span class="annottext">dec :: Text -&gt; Either String GQLQueryWithText
+</span><a href="#local-6989586621690565351"><span class="hs-identifier hs-var hs-var">dec</span></a></span></span><span> </span><span id="local-6989586621690565347"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690565347"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall e1 e2 a. (e1 -&gt; e2) -&gt; Either e1 a -&gt; Either e2 a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">mapLeft</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">(Text, GQLQuery) -&gt; GQLQueryWithText
 </span><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-var">GQLQueryWithText</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690564099"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="#local-6989586621690565347"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">ExecutableDocument Name -&gt; GQLQuery
 </span><a href="Hasura.RQL.Types.QueryCollection.html#GQLQuery"><span class="hs-identifier hs-var">GQLQuery</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text (ExecutableDocument Name)
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">G.parseExecutableDoc</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690564099"><span class="hs-identifier hs-var">t</span></a></span><span>
-</span><span id="line-80"></span><span>      </span><span id="local-6989586621690564102"><span class="annot"><span class="annottext">enc :: GQLQueryWithText -&gt; Text
-</span><a href="#local-6989586621690564102"><span class="hs-identifier hs-var hs-var">enc</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-type">GQLQueryWithText</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690564093"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690564093"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GQLQuery
+</span><a href="#local-6989586621690565347"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-80"></span><span>      </span><span id="local-6989586621690565350"><span class="annot"><span class="annottext">enc :: GQLQueryWithText -&gt; Text
+</span><a href="#local-6989586621690565350"><span class="hs-identifier hs-var hs-var">enc</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-type">GQLQueryWithText</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690565341"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690565341"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GQLQuery
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690564093"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621690565341"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-81"></span><span>
-</span><span id="line-82"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690564090"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-type">GQLQueryWithText</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-83"></span><span>  </span><span id="local-6989586621690564084"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser GQLQueryWithText
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span id="local-6989586621690564082"><span class="annot"><span class="annottext">v :: Value
-</span><a href="#local-6989586621690564082"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621690564080"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690564080"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text, GQLQuery) -&gt; GQLQueryWithText
+</span><span id="line-82"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690565338"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-type">GQLQueryWithText</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-83"></span><span>  </span><span id="local-6989586621690565332"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser GQLQueryWithText
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span id="local-6989586621690565330"><span class="annot"><span class="annottext">v :: Value
+</span><a href="#local-6989586621690565330"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621690565328"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690565328"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text, GQLQuery) -&gt; GQLQueryWithText
 </span><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-var">GQLQueryWithText</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690564080"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="#local-6989586621690565328"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621690564082"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621690565330"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-84"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;expecting String for GraphQL query&quot;</span></span><span>
 </span><span id="line-85"></span><span>
-</span><span id="line-86"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690564073"><span id="local-6989586621690564075"><span id="local-6989586621690564077"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-type">GQLQueryWithText</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-87"></span><span>  </span><span id="local-6989586621690564072"><span class="annot"><span class="annottext">toJSON :: GQLQueryWithText -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-type">GQLQueryWithText</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690564070"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690564070"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GQLQuery
+</span><span id="line-86"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690565321"><span id="local-6989586621690565323"><span id="local-6989586621690565325"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-type">GQLQueryWithText</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-87"></span><span>  </span><span id="local-6989586621690565320"><span class="annot"><span class="annottext">toJSON :: GQLQueryWithText -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-type">GQLQueryWithText</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690565318"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690565318"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GQLQuery
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">String</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690564070"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621690565318"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-88"></span><span>
 </span><span id="line-89"></span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#getGQLQuery"><span class="hs-identifier hs-type">getGQLQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-type">GQLQueryWithText</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQuery"><span class="hs-identifier hs-type">GQLQuery</span></a></span><span>
 </span><span id="line-90"></span><span id="getGQLQuery"><span class="annot"><span class="annottext">getGQLQuery :: GQLQueryWithText -&gt; GQLQuery
-</span><a href="Hasura.RQL.Types.QueryCollection.html#getGQLQuery"><span class="hs-identifier hs-var hs-var">getGQLQuery</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-type">GQLQueryWithText</span></a></span><span> </span><span id="local-6989586621690564069"><span class="annot"><span class="annottext">(Text, GQLQuery)
-</span><a href="#local-6989586621690564069"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; b
+</span><a href="Hasura.RQL.Types.QueryCollection.html#getGQLQuery"><span class="hs-identifier hs-var hs-var">getGQLQuery</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-type">GQLQueryWithText</span></a></span><span> </span><span id="local-6989586621690565317"><span class="annot"><span class="annottext">(Text, GQLQuery)
+</span><a href="#local-6989586621690565317"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">snd</span></a></span><span> </span><span class="annot"><span class="annottext">(Text, GQLQuery)
-</span><a href="#local-6989586621690564069"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621690565317"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-91"></span><span>
 </span><span id="line-92"></span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#getGQLQueryText"><span class="hs-identifier hs-type">getGQLQueryText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-type">GQLQueryWithText</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-93"></span><span id="getGQLQueryText"><span class="annot"><span class="annottext">getGQLQueryText :: GQLQueryWithText -&gt; Text
-</span><a href="Hasura.RQL.Types.QueryCollection.html#getGQLQueryText"><span class="hs-identifier hs-var hs-var">getGQLQueryText</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-type">GQLQueryWithText</span></a></span><span> </span><span id="local-6989586621690564068"><span class="annot"><span class="annottext">(Text, GQLQuery)
-</span><a href="#local-6989586621690564068"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; a
+</span><a href="Hasura.RQL.Types.QueryCollection.html#getGQLQueryText"><span class="hs-identifier hs-var hs-var">getGQLQueryText</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-type">GQLQueryWithText</span></a></span><span> </span><span id="local-6989586621690565316"><span class="annot"><span class="annottext">(Text, GQLQuery)
+</span><a href="#local-6989586621690565316"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fst</span></a></span><span> </span><span class="annot"><span class="annottext">(Text, GQLQuery)
-</span><a href="#local-6989586621690564068"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621690565316"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-94"></span><span>
-</span><span id="line-95"></span><span id="local-6989586621690564066"><span id="local-6989586621690564067"></span></span><span class="hs-keyword">data</span><span> </span><span id="ListedQuery"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#ListedQuery"><span class="hs-identifier hs-var">ListedQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ListedQuery"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#ListedQuery"><span class="hs-identifier hs-var">ListedQuery</span></a></span></span><span>
+</span><span id="line-95"></span><span id="local-6989586621690565314"><span id="local-6989586621690565315"></span></span><span class="hs-keyword">data</span><span> </span><span id="ListedQuery"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#ListedQuery"><span class="hs-identifier hs-var">ListedQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ListedQuery"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#ListedQuery"><span class="hs-identifier hs-var">ListedQuery</span></a></span></span><span>
 </span><span id="line-96"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_lqName"><span class="annot"><span class="annottext">ListedQuery -&gt; QueryName
 </span><a href="Hasura.RQL.Types.QueryCollection.html#_lqName"><span class="hs-identifier hs-var hs-var">_lqName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#QueryName"><span class="hs-identifier hs-type">QueryName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-97"></span><span>    </span><span id="_lqQuery"><span class="annot"><span class="annottext">ListedQuery -&gt; GQLQueryWithText
 </span><a href="Hasura.RQL.Types.QueryCollection.html#_lqQuery"><span class="hs-identifier hs-var hs-var">_lqQuery</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-type">GQLQueryWithText</span></a></span><span>
 </span><span id="line-98"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-99"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690564054"><span id="local-6989586621690564056"><span id="local-6989586621690564061"><span class="annot"><span class="annottext">Int -&gt; ListedQuery -&gt; ShowS
+</span><span id="line-99"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690565302"><span id="local-6989586621690565304"><span id="local-6989586621690565309"><span class="annot"><span class="annottext">Int -&gt; ListedQuery -&gt; ShowS
 [ListedQuery] -&gt; ShowS
 ListedQuery -&gt; String
 forall a.
@@ -543,13 +543,13 @@ show :: ListedQuery -&gt; String
 $cshow :: ListedQuery -&gt; String
 showsPrec :: Int -&gt; ListedQuery -&gt; ShowS
 $cshowsPrec :: Int -&gt; ListedQuery -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564048"><span id="local-6989586621690564052"><span class="annot"><span class="annottext">ListedQuery -&gt; ListedQuery -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565296"><span id="local-6989586621690565300"><span class="annot"><span class="annottext">ListedQuery -&gt; ListedQuery -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: ListedQuery -&gt; ListedQuery -&gt; Bool
 $c/= :: ListedQuery -&gt; ListedQuery -&gt; Bool
 == :: ListedQuery -&gt; ListedQuery -&gt; Bool
 $c== :: ListedQuery -&gt; ListedQuery -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564025"><span id="local-6989586621690564027"><span id="local-6989586621690564030"><span id="local-6989586621690564033"><span id="local-6989586621690564036"><span id="local-6989586621690564040"><span id="local-6989586621690564044"><span class="annot"><span class="annottext">Eq ListedQuery
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565273"><span id="local-6989586621690565275"><span id="local-6989586621690565278"><span id="local-6989586621690565281"><span id="local-6989586621690565284"><span id="local-6989586621690565288"><span id="local-6989586621690565292"><span class="annot"><span class="annottext">Eq ListedQuery
 ListedQuery -&gt; ListedQuery -&gt; Bool
 ListedQuery -&gt; ListedQuery -&gt; Ordering
 ListedQuery -&gt; ListedQuery -&gt; ListedQuery
@@ -585,13 +585,13 @@ $cto :: forall x. Rep ListedQuery x -&gt; ListedQuery
 $cfrom :: forall x. ListedQuery -&gt; Rep ListedQuery x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-100"></span><span>
-</span><span id="line-101"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690564021"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#ListedQuery"><span class="hs-identifier hs-type">ListedQuery</span></a></span></span><span>
+</span><span id="line-101"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690565269"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#ListedQuery"><span class="hs-identifier hs-type">ListedQuery</span></a></span></span><span>
 </span><span id="line-102"></span><span>
-</span><span id="line-103"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690564015"><span id="local-6989586621690564017"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#ListedQuery"><span class="hs-identifier hs-type">ListedQuery</span></a></span></span></span><span>
+</span><span id="line-103"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690565263"><span id="local-6989586621690565265"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#ListedQuery"><span class="hs-identifier hs-type">ListedQuery</span></a></span></span></span><span>
 </span><span id="line-104"></span><span>
-</span><span id="line-105"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690564012"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#ListedQuery"><span class="hs-identifier hs-type">ListedQuery</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-106"></span><span>  </span><span id="local-6989586621690564001"><span class="annot"><span class="annottext">codec :: JSONCodec ListedQuery
-</span><a href="#local-6989586621690564001"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-105"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690565260"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#ListedQuery"><span class="hs-identifier hs-type">ListedQuery</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-106"></span><span>  </span><span id="local-6989586621690565249"><span class="annot"><span class="annottext">codec :: JSONCodec ListedQuery
+</span><a href="#local-6989586621690565249"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-107"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">AC.object</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -616,12 +616,12 @@ ObjectCodec oldInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">ListedQuery -&gt; GQLQueryWithText
 </span><a href="Hasura.RQL.Types.QueryCollection.html#_lqQuery"><span class="hs-identifier hs-var">_lqQuery</span></a></span><span>
 </span><span id="line-111"></span><span>
-</span><span id="line-112"></span><span class="hs-special">$</span><span id="local-6989586621690563962"><span id="local-6989586621690563964"><span id="local-6989586621690563973"><span id="local-6989586621690563985"><span id="local-6989586621690563987"><span id="local-6989586621690563997"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ListedQuery</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
+</span><span id="line-112"></span><span class="hs-special">$</span><span id="local-6989586621690565210"><span id="local-6989586621690565212"><span id="local-6989586621690565221"><span id="local-6989586621690565233"><span id="local-6989586621690565235"><span id="local-6989586621690565245"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ListedQuery</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
 </span><span id="line-113"></span><span>
-</span><span id="line-114"></span><span id="local-6989586621690563939"><span id="local-6989586621690563940"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="CollectionDef"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionDef"><span class="hs-identifier hs-var">CollectionDef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CollectionDef"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionDef"><span class="hs-identifier hs-var">CollectionDef</span></a></span></span><span>
+</span><span id="line-114"></span><span id="local-6989586621690565187"><span id="local-6989586621690565188"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="CollectionDef"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionDef"><span class="hs-identifier hs-var">CollectionDef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CollectionDef"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionDef"><span class="hs-identifier hs-var">CollectionDef</span></a></span></span><span>
 </span><span id="line-115"></span><span>  </span><span class="hs-special">{</span><span id="_cdQueries"><span class="annot"><span class="annottext">CollectionDef -&gt; [ListedQuery]
 </span><a href="Hasura.RQL.Types.QueryCollection.html#_cdQueries"><span class="hs-identifier hs-var hs-var">_cdQueries</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#ListedQuery"><span class="hs-identifier hs-type">ListedQuery</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
-</span><span id="line-116"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690563927"><span id="local-6989586621690563929"><span id="local-6989586621690563935"><span class="annot"><span class="annottext">Int -&gt; CollectionDef -&gt; ShowS
+</span><span id="line-116"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690565175"><span id="local-6989586621690565177"><span id="local-6989586621690565183"><span class="annot"><span class="annottext">Int -&gt; CollectionDef -&gt; ShowS
 [CollectionDef] -&gt; ShowS
 CollectionDef -&gt; String
 forall a.
@@ -632,7 +632,7 @@ show :: CollectionDef -&gt; String
 $cshow :: CollectionDef -&gt; String
 showsPrec :: Int -&gt; CollectionDef -&gt; ShowS
 $cshowsPrec :: Int -&gt; CollectionDef -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690563919"><span id="local-6989586621690563925"><span class="annot"><span class="annottext">CollectionDef -&gt; CollectionDef -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565167"><span id="local-6989586621690565173"><span class="annot"><span class="annottext">CollectionDef -&gt; CollectionDef -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: CollectionDef -&gt; CollectionDef -&gt; Bool
 $c/= :: CollectionDef -&gt; CollectionDef -&gt; Bool
@@ -644,15 +644,15 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep CollectionDef x -&gt; CollectionDef
 $cfrom :: forall x. CollectionDef -&gt; Rep CollectionDef x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690563910"><span class="annot"><span class="annottext">CollectionDef -&gt; ()
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565158"><span class="annot"><span class="annottext">CollectionDef -&gt; ()
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: CollectionDef -&gt; ()
 $crnf :: CollectionDef -&gt; ()
-</span><a href="#local-6989586621690563910"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690565158"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-117"></span><span>
-</span><span id="line-118"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690563902"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionDef"><span class="hs-identifier hs-type">CollectionDef</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-119"></span><span>  </span><span id="local-6989586621690563895"><span class="annot"><span class="annottext">codec :: JSONCodec CollectionDef
-</span><a href="#local-6989586621690563895"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-118"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690565150"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionDef"><span class="hs-identifier hs-type">CollectionDef</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-119"></span><span>  </span><span id="local-6989586621690565143"><span class="annot"><span class="annottext">codec :: JSONCodec CollectionDef
+</span><a href="#local-6989586621690565143"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-120"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">AC.object</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -669,10 +669,10 @@ ObjectCodec oldInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">CollectionDef -&gt; [ListedQuery]
 </span><a href="Hasura.RQL.Types.QueryCollection.html#_cdQueries"><span class="hs-identifier hs-var">_cdQueries</span></a></span><span>
 </span><span id="line-123"></span><span>
-</span><span id="line-124"></span><span class="hs-special">$</span><span id="local-6989586621690563868"><span id="local-6989586621690563870"><span id="local-6989586621690563876"><span id="local-6989586621690563884"><span id="local-6989586621690563886"><span id="local-6989586621690563893"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">CollectionDef</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
+</span><span id="line-124"></span><span class="hs-special">$</span><span id="local-6989586621690565116"><span id="local-6989586621690565118"><span id="local-6989586621690565124"><span id="local-6989586621690565132"><span id="local-6989586621690565134"><span id="local-6989586621690565141"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">CollectionDef</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
 </span><span id="line-125"></span><span class="hs-special">$</span><span id="cdQueries"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">CollectionDef</span><span class="hs-special">)</span></span><span>
 </span><span id="line-126"></span><span>
-</span><span id="line-127"></span><span id="local-6989586621690563852"><span id="local-6989586621690563853"></span></span><span class="hs-keyword">data</span><span> </span><span id="CreateCollection"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CreateCollection"><span class="hs-identifier hs-var">CreateCollection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CreateCollection"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CreateCollection"><span class="hs-identifier hs-var">CreateCollection</span></a></span></span><span>
+</span><span id="line-127"></span><span id="local-6989586621690565100"><span id="local-6989586621690565101"></span></span><span class="hs-keyword">data</span><span> </span><span id="CreateCollection"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CreateCollection"><span class="hs-identifier hs-var">CreateCollection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CreateCollection"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CreateCollection"><span class="hs-identifier hs-var">CreateCollection</span></a></span></span><span>
 </span><span id="line-128"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_ccName"><span class="annot"><span class="annottext">CreateCollection -&gt; CollectionName
 </span><a href="Hasura.RQL.Types.QueryCollection.html#_ccName"><span class="hs-identifier hs-var hs-var">_ccName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionName"><span class="hs-identifier hs-type">CollectionName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-129"></span><span>    </span><span id="_ccDefinition"><span class="annot"><span class="annottext">CreateCollection -&gt; CollectionDef
@@ -680,7 +680,7 @@ ObjectCodec oldInput output
 </span><span id="line-130"></span><span>    </span><span id="_ccComment"><span class="annot"><span class="annottext">CreateCollection -&gt; Maybe Text
 </span><a href="Hasura.RQL.Types.QueryCollection.html#_ccComment"><span class="hs-identifier hs-var hs-var">_ccComment</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-131"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-132"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690563836"><span id="local-6989586621690563838"><span id="local-6989586621690563846"><span class="annot"><span class="annottext">Int -&gt; CreateCollection -&gt; ShowS
+</span><span id="line-132"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690565084"><span id="local-6989586621690565086"><span id="local-6989586621690565094"><span class="annot"><span class="annottext">Int -&gt; CreateCollection -&gt; ShowS
 [CreateCollection] -&gt; ShowS
 CreateCollection -&gt; String
 forall a.
@@ -691,7 +691,7 @@ show :: CreateCollection -&gt; String
 $cshow :: CreateCollection -&gt; String
 showsPrec :: Int -&gt; CreateCollection -&gt; ShowS
 $cshowsPrec :: Int -&gt; CreateCollection -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690563827"><span id="local-6989586621690563834"><span class="annot"><span class="annottext">CreateCollection -&gt; CreateCollection -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690565075"><span id="local-6989586621690565082"><span class="annot"><span class="annottext">CreateCollection -&gt; CreateCollection -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: CreateCollection -&gt; CreateCollection -&gt; Bool
 $c/= :: CreateCollection -&gt; CreateCollection -&gt; Bool
@@ -705,9 +705,9 @@ $cto :: forall x. Rep CreateCollection x -&gt; CreateCollection
 $cfrom :: forall x. CreateCollection -&gt; Rep CreateCollection x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-133"></span><span>
-</span><span id="line-134"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690563821"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CreateCollection"><span class="hs-identifier hs-type">CreateCollection</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-135"></span><span>  </span><span id="local-6989586621690563810"><span class="annot"><span class="annottext">codec :: JSONCodec CreateCollection
-</span><a href="#local-6989586621690563810"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-134"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690565069"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CreateCollection"><span class="hs-identifier hs-type">CreateCollection</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-135"></span><span>  </span><span id="local-6989586621690565058"><span class="annot"><span class="annottext">codec :: JSONCodec CreateCollection
+</span><a href="#local-6989586621690565058"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-136"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">AC.object</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -742,7 +742,7 @@ ObjectCodec oldInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">CreateCollection -&gt; Maybe Text
 </span><a href="Hasura.RQL.Types.QueryCollection.html#_ccComment"><span class="hs-identifier hs-var">_ccComment</span></a></span><span>
 </span><span id="line-141"></span><span>
-</span><span id="line-142"></span><span class="hs-special">$</span><span id="local-6989586621690563766"><span id="local-6989586621690563768"><span id="local-6989586621690563778"><span id="local-6989586621690563792"><span id="local-6989586621690563794"><span id="local-6989586621690563808"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">CreateCollection</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
+</span><span id="line-142"></span><span class="hs-special">$</span><span id="local-6989586621690565014"><span id="local-6989586621690565016"><span id="local-6989586621690565026"><span id="local-6989586621690565040"><span id="local-6989586621690565042"><span id="local-6989586621690565056"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">CreateCollection</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
 </span><span id="line-143"></span><span class="hs-special">$</span><span id="ccComment"><span id="ccDefinition"><span id="ccName"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">CreateCollection</span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-144"></span><span>
 </span><span id="line-145"></span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#collectionQueries"><span class="hs-identifier hs-type">collectionQueries</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CreateCollection"><span class="hs-identifier hs-type">CreateCollection</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.ExecutableDocument</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">]</span><span>
@@ -759,13 +759,13 @@ ObjectCodec oldInput output
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">CreateCollection -&gt; CollectionDef
 </span><a href="Hasura.RQL.Types.QueryCollection.html#_ccDefinition"><span class="hs-identifier hs-var">_ccDefinition</span></a></span><span>
 </span><span id="line-147"></span><span>
-</span><span id="line-148"></span><span id="local-6989586621690563727"><span id="local-6989586621690563728"></span></span><span class="hs-keyword">data</span><span> </span><span id="RenameCollection"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#RenameCollection"><span class="hs-identifier hs-var">RenameCollection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RenameCollection"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#RenameCollection"><span class="hs-identifier hs-var">RenameCollection</span></a></span></span><span>
+</span><span id="line-148"></span><span id="local-6989586621690564975"><span id="local-6989586621690564976"></span></span><span class="hs-keyword">data</span><span> </span><span id="RenameCollection"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#RenameCollection"><span class="hs-identifier hs-var">RenameCollection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RenameCollection"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#RenameCollection"><span class="hs-identifier hs-var">RenameCollection</span></a></span></span><span>
 </span><span id="line-149"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rcName"><span class="annot"><span class="annottext">RenameCollection -&gt; CollectionName
 </span><a href="Hasura.RQL.Types.QueryCollection.html#_rcName"><span class="hs-identifier hs-var hs-var">_rcName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionName"><span class="hs-identifier hs-type">CollectionName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-150"></span><span>    </span><span id="_rcNewName"><span class="annot"><span class="annottext">RenameCollection -&gt; CollectionName
 </span><a href="Hasura.RQL.Types.QueryCollection.html#_rcNewName"><span class="hs-identifier hs-var hs-var">_rcNewName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionName"><span class="hs-identifier hs-type">CollectionName</span></a></span><span>
 </span><span id="line-151"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-152"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690563715"><span id="local-6989586621690563717"><span id="local-6989586621690563722"><span class="annot"><span class="annottext">Int -&gt; RenameCollection -&gt; ShowS
+</span><span id="line-152"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690564963"><span id="local-6989586621690564965"><span id="local-6989586621690564970"><span class="annot"><span class="annottext">Int -&gt; RenameCollection -&gt; ShowS
 [RenameCollection] -&gt; ShowS
 RenameCollection -&gt; String
 forall a.
@@ -776,7 +776,7 @@ show :: RenameCollection -&gt; String
 $cshow :: RenameCollection -&gt; String
 showsPrec :: Int -&gt; RenameCollection -&gt; ShowS
 $cshowsPrec :: Int -&gt; RenameCollection -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690563709"><span id="local-6989586621690563713"><span class="annot"><span class="annottext">RenameCollection -&gt; RenameCollection -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564957"><span id="local-6989586621690564961"><span class="annot"><span class="annottext">RenameCollection -&gt; RenameCollection -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: RenameCollection -&gt; RenameCollection -&gt; Bool
 $c/= :: RenameCollection -&gt; RenameCollection -&gt; Bool
@@ -790,7 +790,7 @@ $cto :: forall x. Rep RenameCollection x -&gt; RenameCollection
 $cfrom :: forall x. RenameCollection -&gt; Rep RenameCollection x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-153"></span><span>
-</span><span id="line-154"></span><span class="hs-special">$</span><span id="local-6989586621690563676"><span id="local-6989586621690563678"><span id="local-6989586621690563685"><span id="local-6989586621690563694"><span id="local-6989586621690563696"><span id="local-6989586621690563704"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RenameCollection</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
+</span><span id="line-154"></span><span class="hs-special">$</span><span id="local-6989586621690564924"><span id="local-6989586621690564926"><span id="local-6989586621690564933"><span id="local-6989586621690564942"><span id="local-6989586621690564944"><span id="local-6989586621690564952"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RenameCollection</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
 </span><span id="line-155"></span><span class="hs-special">$</span><span id="rcNewName"><span id="rcName"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RenameCollection</span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-156"></span><span>
 </span><span id="line-157"></span><span class="hs-keyword">data</span><span> </span><span id="DropCollection"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#DropCollection"><span class="hs-identifier hs-var">DropCollection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DropCollection"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#DropCollection"><span class="hs-identifier hs-var">DropCollection</span></a></span></span><span>
@@ -799,7 +799,7 @@ $cfrom :: forall x. RenameCollection -&gt; Rep RenameCollection x
 </span><span id="line-159"></span><span>    </span><span id="_dcCascade"><span class="annot"><span class="annottext">DropCollection -&gt; Bool
 </span><a href="Hasura.RQL.Types.QueryCollection.html#_dcCascade"><span class="hs-identifier hs-var hs-var">_dcCascade</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span>
 </span><span id="line-160"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-161"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690563640"><span id="local-6989586621690563642"><span id="local-6989586621690563648"><span class="annot"><span class="annottext">Int -&gt; DropCollection -&gt; ShowS
+</span><span id="line-161"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690564888"><span id="local-6989586621690564890"><span id="local-6989586621690564896"><span class="annot"><span class="annottext">Int -&gt; DropCollection -&gt; ShowS
 [DropCollection] -&gt; ShowS
 DropCollection -&gt; String
 forall a.
@@ -810,7 +810,7 @@ show :: DropCollection -&gt; String
 $cshow :: DropCollection -&gt; String
 showsPrec :: Int -&gt; DropCollection -&gt; ShowS
 $cshowsPrec :: Int -&gt; DropCollection -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690563633"><span id="local-6989586621690563638"><span class="annot"><span class="annottext">DropCollection -&gt; DropCollection -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564881"><span id="local-6989586621690564886"><span class="annot"><span class="annottext">DropCollection -&gt; DropCollection -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: DropCollection -&gt; DropCollection -&gt; Bool
 $c/= :: DropCollection -&gt; DropCollection -&gt; Bool
@@ -818,7 +818,7 @@ $c/= :: DropCollection -&gt; DropCollection -&gt; Bool
 $c== :: DropCollection -&gt; DropCollection -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-162"></span><span>
-</span><span id="line-163"></span><span class="hs-special">$</span><span id="local-6989586621690563601"><span id="local-6989586621690563603"><span id="local-6989586621690563610"><span id="local-6989586621690563620"><span id="local-6989586621690563622"><span id="local-6989586621690563631"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">DropCollection</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
+</span><span id="line-163"></span><span class="hs-special">$</span><span id="local-6989586621690564849"><span id="local-6989586621690564851"><span id="local-6989586621690564858"><span id="local-6989586621690564868"><span id="local-6989586621690564870"><span id="local-6989586621690564879"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">DropCollection</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
 </span><span id="line-164"></span><span>
 </span><span id="line-165"></span><span class="hs-keyword">data</span><span> </span><span id="AddQueryToCollection"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#AddQueryToCollection"><span class="hs-identifier hs-var">AddQueryToCollection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AddQueryToCollection"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#AddQueryToCollection"><span class="hs-identifier hs-var">AddQueryToCollection</span></a></span></span><span>
 </span><span id="line-166"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_aqtcCollectionName"><span class="annot"><span class="annottext">AddQueryToCollection -&gt; CollectionName
@@ -828,7 +828,7 @@ $c== :: DropCollection -&gt; DropCollection -&gt; Bool
 </span><span id="line-168"></span><span>    </span><span id="_aqtcQuery"><span class="annot"><span class="annottext">AddQueryToCollection -&gt; GQLQueryWithText
 </span><a href="Hasura.RQL.Types.QueryCollection.html#_aqtcQuery"><span class="hs-identifier hs-var hs-var">_aqtcQuery</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-type">GQLQueryWithText</span></a></span><span>
 </span><span id="line-169"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-170"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690563576"><span id="local-6989586621690563578"><span id="local-6989586621690563584"><span class="annot"><span class="annottext">Int -&gt; AddQueryToCollection -&gt; ShowS
+</span><span id="line-170"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690564824"><span id="local-6989586621690564826"><span id="local-6989586621690564832"><span class="annot"><span class="annottext">Int -&gt; AddQueryToCollection -&gt; ShowS
 [AddQueryToCollection] -&gt; ShowS
 AddQueryToCollection -&gt; String
 forall a.
@@ -839,7 +839,7 @@ show :: AddQueryToCollection -&gt; String
 $cshow :: AddQueryToCollection -&gt; String
 showsPrec :: Int -&gt; AddQueryToCollection -&gt; ShowS
 $cshowsPrec :: Int -&gt; AddQueryToCollection -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690563569"><span id="local-6989586621690563574"><span class="annot"><span class="annottext">AddQueryToCollection -&gt; AddQueryToCollection -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564817"><span id="local-6989586621690564822"><span class="annot"><span class="annottext">AddQueryToCollection -&gt; AddQueryToCollection -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: AddQueryToCollection -&gt; AddQueryToCollection -&gt; Bool
 $c/= :: AddQueryToCollection -&gt; AddQueryToCollection -&gt; Bool
@@ -847,7 +847,7 @@ $c/= :: AddQueryToCollection -&gt; AddQueryToCollection -&gt; Bool
 $c== :: AddQueryToCollection -&gt; AddQueryToCollection -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-171"></span><span>
-</span><span id="line-172"></span><span class="hs-special">$</span><span id="local-6989586621690563531"><span id="local-6989586621690563533"><span id="local-6989586621690563542"><span id="local-6989586621690563554"><span id="local-6989586621690563556"><span id="local-6989586621690563567"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">AddQueryToCollection</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
+</span><span id="line-172"></span><span class="hs-special">$</span><span id="local-6989586621690564779"><span id="local-6989586621690564781"><span id="local-6989586621690564790"><span id="local-6989586621690564802"><span id="local-6989586621690564804"><span id="local-6989586621690564815"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">AddQueryToCollection</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
 </span><span id="line-173"></span><span>
 </span><span id="line-174"></span><span class="hs-keyword">data</span><span> </span><span id="DropQueryFromCollection"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#DropQueryFromCollection"><span class="hs-identifier hs-var">DropQueryFromCollection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DropQueryFromCollection"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#DropQueryFromCollection"><span class="hs-identifier hs-var">DropQueryFromCollection</span></a></span></span><span>
 </span><span id="line-175"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_dqfcCollectionName"><span class="annot"><span class="annottext">DropQueryFromCollection -&gt; CollectionName
@@ -855,7 +855,7 @@ $c== :: AddQueryToCollection -&gt; AddQueryToCollection -&gt; Bool
 </span><span id="line-176"></span><span>    </span><span id="_dqfcQueryName"><span class="annot"><span class="annottext">DropQueryFromCollection -&gt; QueryName
 </span><a href="Hasura.RQL.Types.QueryCollection.html#_dqfcQueryName"><span class="hs-identifier hs-var hs-var">_dqfcQueryName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#QueryName"><span class="hs-identifier hs-type">QueryName</span></a></span><span>
 </span><span id="line-177"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-178"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690563505"><span id="local-6989586621690563507"><span id="local-6989586621690563512"><span class="annot"><span class="annottext">Int -&gt; DropQueryFromCollection -&gt; ShowS
+</span><span id="line-178"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690564753"><span id="local-6989586621690564755"><span id="local-6989586621690564760"><span class="annot"><span class="annottext">Int -&gt; DropQueryFromCollection -&gt; ShowS
 [DropQueryFromCollection] -&gt; ShowS
 DropQueryFromCollection -&gt; String
 forall a.
@@ -866,7 +866,7 @@ show :: DropQueryFromCollection -&gt; String
 $cshow :: DropQueryFromCollection -&gt; String
 showsPrec :: Int -&gt; DropQueryFromCollection -&gt; ShowS
 $cshowsPrec :: Int -&gt; DropQueryFromCollection -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690563499"><span id="local-6989586621690563503"><span class="annot"><span class="annottext">DropQueryFromCollection -&gt; DropQueryFromCollection -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690564747"><span id="local-6989586621690564751"><span class="annot"><span class="annottext">DropQueryFromCollection -&gt; DropQueryFromCollection -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: DropQueryFromCollection -&gt; DropQueryFromCollection -&gt; Bool
 $c/= :: DropQueryFromCollection -&gt; DropQueryFromCollection -&gt; Bool
@@ -874,7 +874,7 @@ $c/= :: DropQueryFromCollection -&gt; DropQueryFromCollection -&gt; Bool
 $c== :: DropQueryFromCollection -&gt; DropQueryFromCollection -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-179"></span><span>
-</span><span id="line-180"></span><span class="hs-special">$</span><span id="local-6989586621690563469"><span id="local-6989586621690563471"><span id="local-6989586621690563478"><span id="local-6989586621690563487"><span id="local-6989586621690563489"><span id="local-6989586621690563497"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">DropQueryFromCollection</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
+</span><span id="line-180"></span><span class="hs-special">$</span><span id="local-6989586621690564717"><span id="local-6989586621690564719"><span id="local-6989586621690564726"><span id="local-6989586621690564735"><span id="local-6989586621690564737"><span id="local-6989586621690564745"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">DropQueryFromCollection</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
 </span><span id="line-181"></span><span>
 </span><span id="line-182"></span><span class="hs-keyword">type</span><span> </span><span id="QueryCollections"><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#QueryCollections"><span class="hs-identifier hs-var">QueryCollections</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionName"><span class="hs-identifier hs-type">CollectionName</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CreateCollection"><span class="hs-identifier hs-type">CreateCollection</span></a></span><span>
 </span><span id="line-183"></span></pre></body></html>
