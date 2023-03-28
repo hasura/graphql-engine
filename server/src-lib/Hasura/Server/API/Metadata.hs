@@ -397,7 +397,7 @@ runMetadataQuery ::
 runMetadataQuery appContext schemaCache RQLMetadata {..} = do
   appEnv@AppEnv {..} <- askAppEnv
   let logger = _lsLogger appEnvLoggers
-  (metadata, currentResourceVersion) <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
+  MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
   let exportsMetadata = \case
         RMV1 (RMExportMetadata _) -> True
         RMV2 (RMV2ExportMetadata _) -> True

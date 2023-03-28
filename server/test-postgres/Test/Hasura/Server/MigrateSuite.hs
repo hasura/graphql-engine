@@ -129,8 +129,8 @@ suite srcConfig pgExecCtx pgConnInfo = do
 
       migrateCatalogAndBuildCache env time = do
         serverConfigCtx <- askServerConfigCtx
-        (migrationResult, metadata) <- runTx' pgExecCtx $ migrateCatalog (Just srcConfig) (ExtensionsSchema "public") MaintenanceModeDisabled time
-        (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache logger env metadata serverConfigCtx)
+        (migrationResult, metadataWithVersion) <- runTx' pgExecCtx $ migrateCatalog (Just srcConfig) (ExtensionsSchema "public") MaintenanceModeDisabled time
+        (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache logger env metadataWithVersion serverConfigCtx)
 
       dropAndInit env time = lift do
         scVar <- asks snd

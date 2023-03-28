@@ -366,7 +366,7 @@ resolvePostgresConnInfo env dbUrlConf (fromMaybe 1 -> retries) = do
 -- but that aren't needed in the rest of the application.
 data AppInit = AppInit
   { aiTLSAllowListRef :: TLSAllowListRef Hasura,
-    aiMetadata :: Metadata
+    aiMetadataWithResourceVersion :: MetadataWithResourceVersion
   }
 
 -- | Initializes or migrates the catalog and creates the 'AppEnv' required to
@@ -416,7 +416,7 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
       (liftIO . PG.destroyPGPool)
 
   -- Migrate the catalog and fetch the metdata.
-  metadata <-
+  metadataWithVersion <-
     lift $
       flip onException (flushLogger loggerCtx) $
         migrateCatalogAndFetchMetadata
@@ -427,6 +427,7 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
           soExtensionsSchema
 
   -- Create the TLSAllowListRef and the HTTP Manager.
+  let metadata = _mwrvMetadata metadataWithVersion
   tlsAllowListRef <- liftIO $ createTLSAllowListRef $ networkTlsAllowlist $ _metaNetwork metadata
   httpManager <- liftIO $ mkHttpManager (readTLSAllowList tlsAllowListRef) mempty
 
@@ -454,7 +455,7 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
   pure
     ( AppInit
         { aiTLSAllowListRef = tlsAllowListRef,
-          aiMetadata = metadata
+          aiMetadataWithResourceVersion = metadataWithVersion
         },
       AppEnv
         { appEnvPort = soPort,
@@ -524,7 +525,7 @@ initialiseAppContext env serveOptions@ServeOptions {..} AppInit {..} = do
       serverConfigCtx
       (mkPgSourceResolver pgLogger)
       mkMSSQLSourceResolver
-      aiMetadata
+      aiMetadataWithResourceVersion
       appEnvManager
 
   -- Build the RebuildableAppContext.
@@ -546,7 +547,7 @@ migrateCatalogAndFetchMetadata ::
   Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) ->
   MaintenanceMode () ->
   ExtensionsSchema ->
-  m Metadata
+  m MetadataWithResourceVersion
 migrateCatalogAndFetchMetadata
   logger
   pool
@@ -575,9 +576,9 @@ migrateCatalogAndFetchMetadata
               slInfo = A.toJSON err
             }
         liftIO (throwErrJExit DatabaseMigrationError err)
-      Right (migrationResult, metadata) -> do
+      Right (migrationResult, metadataWithVersion) -> do
         unLogger logger migrationResult
-        pure metadata
+        pure metadataWithVersion
 
 -- | Build the original 'RebuildableSchemaCache'.
 --
@@ -591,7 +592,7 @@ buildFirstSchemaCache ::
   ServerConfigCtx ->
   SourceResolver ('Postgres 'Vanilla) ->
   SourceResolver ('MSSQL) ->
-  Metadata ->
+  MetadataWithResourceVersion ->
   HTTP.Manager ->
   m RebuildableSchemaCache
 buildFirstSchemaCache
@@ -600,14 +601,14 @@ buildFirstSchemaCache
   serverConfigCtx
   pgSourceResolver
   mssqlSourceResolver
-  metadata
+  metadataWithVersion
   httpManager = do
     let cacheBuildParams = CacheBuildParams httpManager pgSourceResolver mssqlSourceResolver
         buildReason = CatalogSync
     result <-
       runExceptT $
         runCacheBuild cacheBuildParams $
-          buildRebuildableSchemaCacheWithReason buildReason logger env metadata serverConfigCtx
+          buildRebuildableSchemaCacheWithReason buildReason logger env metadataWithVersion serverConfigCtx
     result `onLeft` \err -> do
       -- TODO: we used to bundle the first schema cache build with the catalog
       -- migration, using the same error handler for both, meaning that an

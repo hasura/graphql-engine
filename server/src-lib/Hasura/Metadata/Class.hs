@@ -86,7 +86,7 @@ TODO: Reference to open issue or rfc?
 class Monad m => MonadMetadataStorage m where
   -- Metadata
   fetchMetadataResourceVersion :: m (Either QErr MetadataResourceVersion)
-  fetchMetadata :: m (Either QErr (Metadata, MetadataResourceVersion))
+  fetchMetadata :: m (Either QErr MetadataWithResourceVersion)
   fetchMetadataNotifications :: MetadataResourceVersion -> InstanceId -> m (Either QErr [(MetadataResourceVersion, CacheInvalidations)])
   setMetadata :: MetadataResourceVersion -> Metadata -> m (Either QErr MetadataResourceVersion)
   notifySchemaCacheSync :: MetadataResourceVersion -> InstanceId -> CacheInvalidations -> m (Either QErr ())

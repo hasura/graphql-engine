@@ -141,7 +141,7 @@ action/function.
 buildRebuildableSchemaCache ::
   Logger Hasura ->
   Env.Environment ->
-  Metadata ->
+  MetadataWithResourceVersion ->
   ServerConfigCtx ->
   CacheBuild RebuildableSchemaCache
 buildRebuildableSchemaCache =
@@ -151,13 +151,13 @@ buildRebuildableSchemaCacheWithReason ::
   BuildReason ->
   Logger Hasura ->
   Env.Environment ->
-  Metadata ->
+  MetadataWithResourceVersion ->
   ServerConfigCtx ->
   CacheBuild RebuildableSchemaCache
-buildRebuildableSchemaCacheWithReason reason logger env metadata serverConfigCtx = do
+buildRebuildableSchemaCacheWithReason reason logger env metadataWithVersion serverConfigCtx = do
   result <-
     flip runReaderT reason $
-      Inc.build (buildSchemaCacheRule logger env) (metadata, serverConfigCtx, initialInvalidationKeys, Nothing)
+      Inc.build (buildSchemaCacheRule logger env) (metadataWithVersion, serverConfigCtx, initialInvalidationKeys, Nothing)
 
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
 
@@ -230,13 +230,13 @@ instance
   buildSchemaCacheWithOptions buildReason invalidations metadata = CacheRWT do
     serverConfigCtx <- ask
     (RebuildableSchemaCache lastBuiltSC invalidationKeys rule, oldInvalidations) <- get
-    let metadataVersion = scMetadataResourceVersion lastBuiltSC
+    let metadataWithVersion = MetadataWithResourceVersion metadata $ scMetadataResourceVersion lastBuiltSC
         newInvalidationKeys = invalidateKeys invalidations invalidationKeys
     result <-
       runCacheBuildM $
         flip runReaderT buildReason $
-          Inc.build rule (metadata, serverConfigCtx, newInvalidationKeys, Nothing)
-    let schemaCache = (Inc.result result) {scMetadataResourceVersion = metadataVersion}
+          Inc.build rule (metadataWithVersion, serverConfigCtx, newInvalidationKeys, Nothing)
+    let schemaCache = Inc.result result
         prunedInvalidationKeys = pruneInvalidationKeys schemaCache newInvalidationKeys
         !newCache = RebuildableSchemaCache schemaCache prunedInvalidationKeys (Inc.rebuildRule result)
         !newInvalidations = oldInvalidations <> invalidations
@@ -254,7 +254,7 @@ instance
       ( rebuildableSchemaCache
           { lastBuiltSchemaCache =
               (lastBuiltSchemaCache rebuildableSchemaCache)
-                { scMetadataResourceVersion = Just resourceVersion
+                { scMetadataResourceVersion = resourceVersion
                 }
           },
         invalidations
@@ -334,8 +334,8 @@ buildSchemaCacheRule ::
   ) =>
   Logger Hasura ->
   Env.Environment ->
-  (Metadata, ServerConfigCtx, InvalidationKeys, Maybe StoredIntrospection) `arr` SchemaCache
-buildSchemaCacheRule logger env = proc (metadataNoDefaults, serverConfigCtx, invalidationKeys, storedIntrospection) -> do
+  (MetadataWithResourceVersion, ServerConfigCtx, InvalidationKeys, Maybe StoredIntrospection) `arr` SchemaCache
+buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDefaults resourceVersion, serverConfigCtx, invalidationKeys, storedIntrospection) -> do
   invalidationKeysDep <- Inc.newDependency -< invalidationKeys
   let metadataDefaults = _sccMetadataDefaults serverConfigCtx
       metadata@Metadata {..} = overrideMetadataDefaults metadataNoDefaults metadataDefaults
@@ -426,7 +426,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, serverConfigCtx, inv
               <> inconsistentQueryCollections,
           scApiLimits = _metaApiLimits,
           scMetricsConfig = _metaMetricsConfig,
-          scMetadataResourceVersion = Nothing,
+          scMetadataResourceVersion = resourceVersion,
           scSetGraphqlIntrospectionOptions = _metaSetGraphqlIntrospectionOptions,
           scTlsAllowlist = networkTlsAllowlist _metaNetwork,
           scQueryCollections = _metaQueryCollections,

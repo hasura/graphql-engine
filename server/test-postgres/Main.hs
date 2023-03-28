@@ -34,6 +34,7 @@ import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata (emptyMetadataDefaults)
 import Hasura.RQL.Types.ResizePool
+import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.Server.Init
 import Hasura.Server.Init.FeatureFlag as FF
@@ -140,12 +141,12 @@ main = do
 
         -- why are we building the schema cache here? it's already built in initialiseContext
         (metadata, schemaCache) <- run do
-          metadata <-
+          metadataWithVersion <-
             snd
               <$> (liftEitherM . runExceptT . _pecRunTx pgContext (PGExecCtxInfo (Tx PG.ReadWrite Nothing) InternalRawQuery))
                 (migrateCatalog (Just sourceConfig) defaultPostgresExtensionsSchema maintenanceMode =<< liftIO getCurrentTime)
-          schemaCache <- runCacheBuild cacheBuildParams $ buildRebuildableSchemaCache logger envMap metadata serverConfigCtx
-          pure (metadata, schemaCache)
+          schemaCache <- runCacheBuild cacheBuildParams $ buildRebuildableSchemaCache logger envMap metadataWithVersion serverConfigCtx
+          pure (_mwrvMetadata metadataWithVersion, schemaCache)
 
         cacheRef <- newMVar schemaCache
         pure $ NT (run . flip MigrateSuite.runCacheRefT (serverConfigCtx, cacheRef) . fmap fst . runMetadataT metadata emptyMetadataDefaults)

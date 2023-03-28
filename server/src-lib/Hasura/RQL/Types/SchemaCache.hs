@@ -102,6 +102,7 @@ module Hasura.RQL.Types.SchemaCache
     MetadataResourceVersion (..),
     showMetadataResourceVersion,
     initialResourceVersion,
+    MetadataWithResourceVersion (..),
     getLogicalModelBoolExpDeps,
     getBoolExpDeps,
     InlinedAllowlist,
@@ -176,6 +177,12 @@ initialResourceVersion = MetadataResourceVersion 0
 
 showMetadataResourceVersion :: MetadataResourceVersion -> Text
 showMetadataResourceVersion (MetadataResourceVersion version) = tshow version
+
+data MetadataWithResourceVersion = MetadataWithResourceVersion
+  { _mwrvMetadata :: Metadata,
+    _mwrvResourceVersion :: MetadataResourceVersion
+  }
+  deriving (Eq)
 
 mkParentDep ::
   forall b.
@@ -553,7 +560,7 @@ data SchemaCache = SchemaCache
     scEndpoints :: EndpointTrie GQLQueryWithText,
     scApiLimits :: ApiLimit,
     scMetricsConfig :: MetricsConfig,
-    scMetadataResourceVersion :: Maybe MetadataResourceVersion,
+    scMetadataResourceVersion :: MetadataResourceVersion,
     scSetGraphqlIntrospectionOptions :: SetGraphqlIntrospectionOptions,
     scTlsAllowlist :: [TlsAllow],
     scQueryCollections :: QueryCollections,

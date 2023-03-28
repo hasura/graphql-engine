@@ -203,4 +203,4 @@ logInconsistentMetadata logger objs =
 updateMetadataVersionGauge :: MonadIO m => Gauge -> RebuildableSchemaCache -> m ()
 updateMetadataVersionGauge metadataVersionGauge schemaCache = do
   let metadataVersion = scMetadataResourceVersion . lastBuiltSchemaCache $ schemaCache
-  liftIO $ traverse_ (Gauge.set metadataVersionGauge . getMetadataResourceVersion) metadataVersion
+  liftIO $ Gauge.set metadataVersionGauge $ getMetadataResourceVersion metadataVersion

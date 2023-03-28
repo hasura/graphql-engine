@@ -51,6 +51,7 @@ import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.ScheduledTrigger
+import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.RemoteSchema.MetadataAPI
@@ -207,7 +208,7 @@ runQuery appContext sc query = do
           else acMetadataDefaults appContext
       serverConfigCtx = buildServerConfigCtx appEnv appContext
 
-  (metadata, currentResourceVersion) <- liftEitherM fetchMetadata
+  MetadataWithResourceVersion metadata currentResourceVersion <- liftEitherM fetchMetadata
   ((result, updatedMetadata), updatedCache, invalidations) <-
     runQueryM (acEnvironment appContext) query
       -- TODO: remove this straight runReaderT that provides no actual new info

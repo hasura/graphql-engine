@@ -42,6 +42,7 @@ import Hasura.RQL.DML.Types
   )
 import Hasura.RQL.DML.Update
 import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.SchemaCache (MetadataWithResourceVersion (MetadataWithResourceVersion))
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.SQL.Backend
@@ -123,7 +124,7 @@ runQuery appContext schemaCache rqlQuery = do
     throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
   let serverConfigCtx = buildServerConfigCtx appEnv appContext
-  (metadata, currentResourceVersion) <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
+  MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
   ((result, updatedMetadata), updatedCache, invalidations) <-
     runQueryM (acEnvironment appContext) rqlQuery
       -- We can use defaults here unconditionally, since there is no MD export function in V2Query

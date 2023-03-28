@@ -309,7 +309,7 @@ runCacheBuildM m = do
 data RebuildableSchemaCache = RebuildableSchemaCache
   { lastBuiltSchemaCache :: SchemaCache,
     _rscInvalidationMap :: InvalidationKeys,
-    _rscRebuild :: Inc.Rule (ReaderT BuildReason CacheBuild) (Metadata, ServerConfigCtx, InvalidationKeys, Maybe StoredIntrospection) SchemaCache
+    _rscRebuild :: Inc.Rule (ReaderT BuildReason CacheBuild) (MetadataWithResourceVersion, ServerConfigCtx, InvalidationKeys, Maybe StoredIntrospection) SchemaCache
   }
 
 bindErrorA ::
