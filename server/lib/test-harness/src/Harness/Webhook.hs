@@ -47,14 +47,14 @@ run = mkTestResource do
   port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
   eventsQueueChan <- Chan.newChan
   let eventsQueue = EventsQueue eventsQueueChan
-      extractEventDataInsertIntoEventQueue jsonPathString = do
+      extractEventDataInsertIntoEventQueue = do
         req <- Spock.request
         body <- liftIO $ Wai.strictRequestBody req
         let jsonBody = Aeson.decode body
         let eventDataPayload =
               -- Only extract the data payload from the request body
               let mkJSONPathE = either (error . T.unpack) id . parseJSONPath
-                  eventJSONPath = mkJSONPathE jsonPathString
+                  eventJSONPath = mkJSONPathE "$.event.data"
                in iResultToMaybe =<< executeJSONPath eventJSONPath <$> jsonBody
         liftIO $
           Chan.writeChan eventsQueueChan $
@@ -69,14 +69,11 @@ run = mkTestResource do
           Spock.json $
             Aeson.String "world"
         Spock.post "/echo" $ do
-          extractEventDataInsertIntoEventQueue "$.event.data"
+          extractEventDataInsertIntoEventQueue
           Spock.json $ Aeson.object ["success" Aeson..= True]
         Spock.post "/nextRetry" $ do
-          extractEventDataInsertIntoEventQueue "$.event.data"
+          extractEventDataInsertIntoEventQueue
           Spock.setStatus HTTP.status503
-        Spock.post "/whole_event_payload" $ do
-          extractEventDataInsertIntoEventQueue "$"
-          Spock.json $ Aeson.object ["success" Aeson..= True]
 
   let server = Server {port = fromIntegral port, urlPrefix, thread}
   pure

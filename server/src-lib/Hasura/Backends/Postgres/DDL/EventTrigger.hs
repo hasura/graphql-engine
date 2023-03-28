@@ -1058,7 +1058,7 @@ deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
             [ST.st|
           SELECT id FROM hdb_catalog.event_log
           WHERE ((delivered = true OR error = true) AND trigger_name = $1)
-          AND created_at < (now() - interval '#{qRetentionPeriod}') AT TIME ZONE 'UTC'
+          AND created_at < now() - interval '#{qRetentionPeriod}'
           AND locked IS NULL
           LIMIT $2
         |]
