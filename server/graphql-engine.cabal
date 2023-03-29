@@ -307,6 +307,7 @@ common lib-depends
                      , postgresql-binary
                      , postgresql-libpq
                      , pretty-simple
+                     , prettyprinter
                      , process
                      , profunctors
                      , refined
