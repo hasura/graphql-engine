@@ -41,7 +41,7 @@ CREATE TABLE hdb_catalog.event_log
   delivered BOOLEAN NOT NULL DEFAULT FALSE,
   error BOOLEAN NOT NULL DEFAULT FALSE,
   tries INTEGER NOT NULL DEFAULT 0,
-  created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'utc'),
+  created_at TIMESTAMP DEFAULT NOW(),
   /* when locked IS NULL the event is unlocked and can be processed */
   locked TIMESTAMPTZ,
   next_retry_at TIMESTAMP,
@@ -67,7 +67,7 @@ CREATE TABLE hdb_catalog.event_invocation_logs
   status INTEGER,
   request JSON,
   response JSON,
-  created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'utc')
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
 /* This index improves the performance of deletes by event_id, so that if somebody
