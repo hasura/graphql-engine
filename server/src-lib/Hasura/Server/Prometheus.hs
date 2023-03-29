@@ -60,7 +60,11 @@ data EventTriggerMetrics = EventTriggerMetrics
     eventWebhookProcessingTime :: Histogram,
     eventProcessingTime :: Histogram,
     eventTriggerBytesReceived :: Counter,
-    eventTriggerBytesSent :: Counter
+    eventTriggerBytesSent :: Counter,
+    eventProcessedTotalSuccess :: Counter,
+    eventProcessedTotalFailure :: Counter,
+    eventInvocationTotalSuccess :: Counter,
+    eventInvocationTotalFailure :: Counter
   }
 
 -- | Create dummy mutable references without associating them to a metrics
@@ -99,6 +103,10 @@ makeDummyEventTriggerMetrics = do
   eventProcessingTime <- Histogram.new []
   eventTriggerBytesReceived <- Counter.new
   eventTriggerBytesSent <- Counter.new
+  eventProcessedTotalSuccess <- Counter.new
+  eventProcessedTotalFailure <- Counter.new
+  eventInvocationTotalSuccess <- Counter.new
+  eventInvocationTotalFailure <- Counter.new
   pure EventTriggerMetrics {..}
 
 --------------------------------------------------------------------------------

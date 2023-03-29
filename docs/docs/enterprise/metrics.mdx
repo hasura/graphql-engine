@@ -123,6 +123,20 @@ curl 'http://127.0.0.1:8080/v1/metrics' -H 'Authorization: Bearer <secret>'
     <td>Compare this number to the <a href="/latest/deployment/graphql-engine-flags/reference/#events-http-pool-size">HTTP pool size</a>. Consider increasing it if the metric is near the current configured value.</td>
   </tr>
   <tr>
+    <td><code>hasura_event_processed_total</code></td>
+    <td>Total number of events processed</td>
+    <td>Counter</td>
+    <td>&#8226; "status": success|failed</td>
+    <td>Represents the Event Trigger egress.</td>
+  </tr>
+  <tr>
+    <td><code>hasura_event_invocations_total</code></td>
+    <td>Total number of events invoked</td>
+    <td>Counter</td>
+    <td>&#8226; "status": success|failed</td>
+    <td>Represents the Event Trigger webhook HTTP requests made.</td>
+  </tr>
+  <tr>
     <td><code>hasura_postgres_connections</code></td>
     <td>Current number of active PostgreSQL connections</td>
     <td>Gauge</td>
