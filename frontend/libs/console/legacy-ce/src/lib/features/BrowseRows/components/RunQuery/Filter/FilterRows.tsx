@@ -53,10 +53,9 @@ export const FilterRows = ({
   };
 
   const columnOptions: SelectItem[] = columns.map(column => {
-    const value = column.graphQLProperties?.name ?? column.name;
     return {
       label: column.name,
-      value,
+      value: column.name,
     };
   });
 
