@@ -21,7 +21,7 @@
 </span><span id="line-21"></span><span>
 </span><span id="line-22"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-23"></span><span>
-</span><span id="line-24"></span><span id="local-6989586621690591173"><span id="local-6989586621690591174"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="Identifier"><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#Identifier"><span class="hs-identifier hs-var">Identifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Identifier"><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#Identifier"><span class="hs-identifier hs-var">Identifier</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getIdentifier"><span class="annot"><span class="annottext">Identifier -&gt; Text
+</span><span id="line-24"></span><span id="local-6989586621690592536"><span id="local-6989586621690592537"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="Identifier"><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#Identifier"><span class="hs-identifier hs-var">Identifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Identifier"><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#Identifier"><span class="hs-identifier hs-var">Identifier</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getIdentifier"><span class="annot"><span class="annottext">Identifier -&gt; Text
 </span><a href="Hasura.Server.Init.FeatureFlag.html#getIdentifier"><span class="hs-identifier hs-var hs-var">getIdentifier</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
 </span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall x. Rep Identifier x -&gt; Identifier
 forall x. Identifier -&gt; Rep Identifier x
@@ -30,13 +30,13 @@ forall a.
 $cto :: forall x. Rep Identifier x -&gt; Identifier
 $cfrom :: forall x. Identifier -&gt; Rep Identifier x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-26"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690591162"><span id="local-6989586621690591166"><span class="annot"><span class="annottext">Identifier -&gt; Identifier -&gt; Bool
+</span><span id="line-26"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690592525"><span id="local-6989586621690592529"><span class="annot"><span class="annottext">Identifier -&gt; Identifier -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: Identifier -&gt; Identifier -&gt; Bool
 $c/= :: Identifier -&gt; Identifier -&gt; Bool
 == :: Identifier -&gt; Identifier -&gt; Bool
 $c== :: Identifier -&gt; Identifier -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690591152"><span id="local-6989586621690591156"><span class="annot"><span class="annottext">Value -&gt; Parser [Identifier]
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690592515"><span id="local-6989586621690592519"><span class="annot"><span class="annottext">Value -&gt; Parser [Identifier]
 Value -&gt; Parser Identifier
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -44,7 +44,7 @@ parseJSONList :: Value -&gt; Parser [Identifier]
 $cparseJSONList :: Value -&gt; Parser [Identifier]
 parseJSON :: Value -&gt; Parser Identifier
 $cparseJSON :: Value -&gt; Parser Identifier
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690591135"><span id="local-6989586621690591139"><span id="local-6989586621690591143"><span id="local-6989586621690591147"><span class="annot"><span class="annottext">[Identifier] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690592498"><span id="local-6989586621690592502"><span id="local-6989586621690592506"><span id="local-6989586621690592510"><span class="annot"><span class="annottext">[Identifier] -&gt; Value
 [Identifier] -&gt; Encoding
 Identifier -&gt; Value
 Identifier -&gt; Encoding
@@ -63,7 +63,7 @@ $ctoEncoding :: Identifier -&gt; Encoding
 toJSON :: Identifier -&gt; Value
 $ctoJSON :: Identifier -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690591126"><span id="local-6989586621690591128"><span class="annot"><span class="annottext">Eq Identifier
+</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690592489"><span id="local-6989586621690592491"><span class="annot"><span class="annottext">Eq Identifier
 Int -&gt; Identifier -&gt; Int
 Identifier -&gt; Int
 forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -73,7 +73,7 @@ hashWithSalt :: Int -&gt; Identifier -&gt; Int
 $chashWithSalt :: Int -&gt; Identifier -&gt; Int
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-28"></span><span>
-</span><span id="line-29"></span><span id="local-6989586621690591123"><span id="local-6989586621690591124"></span></span><span class="hs-keyword">data</span><span> </span><span id="FeatureFlag"><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-var">FeatureFlag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FeatureFlag"><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-var">FeatureFlag</span></a></span></span><span>
+</span><span id="line-29"></span><span id="local-6989586621690592486"><span id="local-6989586621690592487"></span></span><span class="hs-keyword">data</span><span> </span><span id="FeatureFlag"><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-var">FeatureFlag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FeatureFlag"><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-var">FeatureFlag</span></a></span></span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="ffIdentifier"><span class="annot"><span class="annottext">FeatureFlag -&gt; Identifier
 </span><a href="Hasura.Server.Init.FeatureFlag.html#ffIdentifier"><span class="hs-identifier hs-var hs-var">ffIdentifier</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#Identifier"><span class="hs-identifier hs-type">Identifier</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-31"></span><span>    </span><span id="ffDefaultValue"><span class="annot"><span class="annottext">FeatureFlag -&gt; Bool
@@ -83,7 +83,7 @@ $chashWithSalt :: Int -&gt; Identifier -&gt; Int
 </span><span id="line-33"></span><span>    </span><span id="ffEnvVar"><span class="annot"><span class="annottext">FeatureFlag -&gt; String
 </span><a href="Hasura.Server.Init.FeatureFlag.html#ffEnvVar"><span class="hs-identifier hs-var hs-var">ffEnvVar</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">String</span></a></span><span>
 </span><span id="line-34"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690591107"><span id="local-6989586621690591116"><span class="annot"><span class="annottext">FeatureFlag -&gt; FeatureFlag -&gt; Bool
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690592470"><span id="local-6989586621690592479"><span class="annot"><span class="annottext">FeatureFlag -&gt; FeatureFlag -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: FeatureFlag -&gt; FeatureFlag -&gt; Bool
 $c/= :: FeatureFlag -&gt; FeatureFlag -&gt; Bool
@@ -96,7 +96,7 @@ forall a.
 $cto :: forall x. Rep FeatureFlag x -&gt; FeatureFlag
 $cfrom :: forall x. FeatureFlag -&gt; Rep FeatureFlag x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690591098"><span id="local-6989586621690591100"><span class="annot"><span class="annottext">Eq FeatureFlag
+</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690592461"><span id="local-6989586621690592463"><span class="annot"><span class="annottext">Eq FeatureFlag
 Int -&gt; FeatureFlag -&gt; Int
 FeatureFlag -&gt; Int
 forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -104,7 +104,7 @@ hash :: FeatureFlag -&gt; Int
 $chash :: FeatureFlag -&gt; Int
 hashWithSalt :: Int -&gt; FeatureFlag -&gt; Int
 $chashWithSalt :: Int -&gt; FeatureFlag -&gt; Int
-</span><a href="#local-6989586621690591098"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690591094"><span id="local-6989586621690591096"><span class="annot"><span class="annottext">Value -&gt; Parser [FeatureFlag]
+</span><a href="#local-6989586621690592461"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690592457"><span id="local-6989586621690592459"><span class="annot"><span class="annottext">Value -&gt; Parser [FeatureFlag]
 Value -&gt; Parser FeatureFlag
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -112,7 +112,7 @@ parseJSONList :: Value -&gt; Parser [FeatureFlag]
 $cparseJSONList :: Value -&gt; Parser [FeatureFlag]
 parseJSON :: Value -&gt; Parser FeatureFlag
 $cparseJSON :: Value -&gt; Parser FeatureFlag
-</span><a href="#local-6989586621690591094"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690591086"><span id="local-6989586621690591088"><span id="local-6989586621690591090"><span id="local-6989586621690591092"><span class="annot"><span class="annottext">[FeatureFlag] -&gt; Value
+</span><a href="#local-6989586621690592457"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690592449"><span id="local-6989586621690592451"><span id="local-6989586621690592453"><span id="local-6989586621690592455"><span class="annot"><span class="annottext">[FeatureFlag] -&gt; Value
 [FeatureFlag] -&gt; Encoding
 FeatureFlag -&gt; Value
 FeatureFlag -&gt; Encoding
@@ -130,35 +130,35 @@ toEncoding :: FeatureFlag -&gt; Encoding
 $ctoEncoding :: FeatureFlag -&gt; Encoding
 toJSON :: FeatureFlag -&gt; Value
 $ctoJSON :: FeatureFlag -&gt; Value
-</span><a href="#local-6989586621690591086"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690592449"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-37"></span><span>
 </span><span id="line-38"></span><span class="hs-comment">-- | In OSS we look for a environment variable or fall back to the default</span><span>
 </span><span id="line-39"></span><span class="hs-comment">-- value</span><span>
 </span><span id="line-40"></span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#checkFeatureFlag"><span class="hs-identifier hs-type">checkFeatureFlag</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span>
 </span><span id="line-41"></span><span id="checkFeatureFlag"><span class="annot"><span class="annottext">checkFeatureFlag :: Environment -&gt; FeatureFlag -&gt; IO Bool
-</span><a href="Hasura.Server.Init.FeatureFlag.html#checkFeatureFlag"><span class="hs-identifier hs-var hs-var">checkFeatureFlag</span></a></span></span><span> </span><span id="local-6989586621690591085"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621690591085"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">ffEnvVar :: FeatureFlag -&gt; String
-</span><a href="Hasura.Server.Init.FeatureFlag.html#ffEnvVar"><span class="hs-identifier hs-var">ffEnvVar</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621690591084"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690591084"><span class="hs-identifier hs-var">envVar</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ffDefaultValue :: FeatureFlag -&gt; Bool
-</span><a href="Hasura.Server.Init.FeatureFlag.html#ffDefaultValue"><span class="hs-identifier hs-var">ffDefaultValue</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621690591083"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690591083"><span class="hs-identifier hs-var">defaultValue</span></a></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Server.Init.FeatureFlag.html#checkFeatureFlag"><span class="hs-identifier hs-var hs-var">checkFeatureFlag</span></a></span></span><span> </span><span id="local-6989586621690592448"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621690592448"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">ffEnvVar :: FeatureFlag -&gt; String
+</span><a href="Hasura.Server.Init.FeatureFlag.html#ffEnvVar"><span class="hs-identifier hs-var">ffEnvVar</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621690592447"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690592447"><span class="hs-identifier hs-var">envVar</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ffDefaultValue :: FeatureFlag -&gt; Bool
+</span><a href="Hasura.Server.Init.FeatureFlag.html#ffDefaultValue"><span class="hs-identifier hs-var">ffDefaultValue</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621690592446"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690592446"><span class="hs-identifier hs-var">defaultValue</span></a></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-42"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; String -&gt; Maybe String
 </span><a href="Data.Environment.html#lookupEnv"><span class="hs-identifier hs-var">Env.lookupEnv</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621690591085"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690591084"><span class="hs-identifier hs-var">envVar</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-43"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690591081"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690591081"><span class="hs-identifier hs-var">found</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="#local-6989586621690592448"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690592447"><span class="hs-identifier hs-var">envVar</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690592444"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690592444"><span class="hs-identifier hs-var">found</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690591083"><span class="hs-identifier hs-var">defaultValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Read a =&gt; String -&gt; Maybe a
+</span><a href="#local-6989586621690592446"><span class="hs-identifier hs-var">defaultValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Read a =&gt; String -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">readMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690591081"><span class="hs-identifier hs-var">found</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690592444"><span class="hs-identifier hs-var">found</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-44"></span><span>    </span><span class="annot"><span class="annottext">Maybe String
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690591083"><span class="hs-identifier hs-var">defaultValue</span></a></span><span>
+</span><a href="#local-6989586621690592446"><span class="hs-identifier hs-var">defaultValue</span></a></span><span>
 </span><span id="line-45"></span><span>
 </span><span id="line-46"></span><span class="hs-keyword">newtype</span><span> </span><span id="CheckFeatureFlag"><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#CheckFeatureFlag"><span class="hs-identifier hs-var">CheckFeatureFlag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CheckFeatureFlag"><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#CheckFeatureFlag"><span class="hs-identifier hs-var">CheckFeatureFlag</span></a></span></span><span> </span><span class="hs-special">{</span><span id="runCheckFeatureFlag"><span class="annot"><span class="annottext">CheckFeatureFlag -&gt; FeatureFlag -&gt; IO Bool
 </span><a href="Hasura.Server.Init.FeatureFlag.html#runCheckFeatureFlag"><span class="hs-identifier hs-var hs-var">runCheckFeatureFlag</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">}</span><span>
