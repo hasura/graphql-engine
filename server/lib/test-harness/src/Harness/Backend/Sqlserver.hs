@@ -35,9 +35,9 @@ import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Logging
 import Harness.Quoter.Yaml (yaml)
+import Harness.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
+import Harness.Schema qualified as Schema
 import Harness.Test.BackendType (BackendType (SQLServer), BackendTypeConfig (..))
-import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
 import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Prelude

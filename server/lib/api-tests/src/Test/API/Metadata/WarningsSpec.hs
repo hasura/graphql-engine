@@ -8,9 +8,9 @@ import Data.Maybe qualified as Maybe
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postMetadata, postMetadataWithStatus, postMetadata_)
 import Harness.Quoter.Yaml
+import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment
 import Hasura.Prelude
 import Test.Hspec

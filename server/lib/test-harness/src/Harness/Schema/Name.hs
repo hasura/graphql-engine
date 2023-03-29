@@ -1,6 +1,6 @@
 -- | This module defines `SchemaName`, for naming DB schemas/datasets used in
 -- tests
-module Harness.Test.SchemaName (SchemaName (..), getSchemaName) where
+module Harness.Schema.Name (SchemaName (..), getSchemaName) where
 
 import Data.Aeson (ToJSON (..))
 import Data.String

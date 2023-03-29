@@ -12,9 +12,9 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine
 import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml (yaml)
+import Harness.Schema qualified as Schema
 import Harness.Subscriptions
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude

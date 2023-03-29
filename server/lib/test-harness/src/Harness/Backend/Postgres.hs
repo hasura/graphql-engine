@@ -56,16 +56,16 @@ import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (interpolateYaml)
-import Harness.Services.PostgresDb qualified as Postgres
-import Harness.Test.BackendType (BackendTypeConfig)
-import Harness.Test.BackendType qualified as BackendType
-import Harness.Test.Schema
+import Harness.Schema
   ( BackendScalarType (..),
     BackendScalarValue (..),
     ScalarValue (..),
     SchemaName (..),
   )
-import Harness.Test.Schema qualified as Schema
+import Harness.Schema qualified as Schema
+import Harness.Services.PostgresDb qualified as Postgres
+import Harness.Test.BackendType (BackendTypeConfig)
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.SetupAction (SetupAction (..))
 import Harness.TestEnvironment (GlobalTestEnvironment (..), TestEnvironment (..), TestingMode (..))
 import Hasura.Prelude

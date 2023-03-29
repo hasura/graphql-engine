@@ -143,6 +143,9 @@ library
     Harness.Quoter.Yaml
     Harness.Quoter.Yaml.InterpolateYaml
     Harness.RemoteServer
+    Harness.Schema
+    Harness.Schema.Name
+    Harness.Schema.Table
     Harness.Services.Composed
     Harness.Services.GraphqlEngine
     Harness.Services.Metadata
@@ -156,13 +159,11 @@ library
     Harness.Test.Introspection
     Harness.Test.Protocol
     Harness.Test.ScalarType
-    Harness.Test.Schema
-    Harness.Test.SchemaName
     Harness.Test.SetupAction
     Harness.Test.TestResource
     Harness.TestEnvironment
-    Harness.Webhook
     Harness.WebSockets
+    Harness.Webhook
     Harness.Yaml
 
   other-modules:

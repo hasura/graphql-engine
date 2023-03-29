@@ -4,9 +4,9 @@ module Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec 
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Harness.Backend.Postgres qualified as Postgres
+import Harness.Schema
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction qualified as SetupAction
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
 import Hasura.Prelude
