@@ -212,6 +212,11 @@
           lhs: "Control.Concurrent.threadDelay"
           rhs: "Control.Concurrent.Extended.sleep"
           note: "Please use `sleep` instead (and read the docs!)"
+      - error:
+          name: "avoid InsecurelyShowDetails"
+          lhs: "Hasura.Backends.BigQuery.Execute.InsecurelyShowDetails"
+          rhs: "Hasura.Backends.BigQuery.Execute.HideDetails"
+          note: "Using 'InsecurelyShowDetails' could potentially expose sensitive information."
       - suggest:
           name: "avoid Control.Concurrent.Async.Lifted.Safe.async"
           lhs: "Control.Concurrent.Async.Lifted.Safe.async"

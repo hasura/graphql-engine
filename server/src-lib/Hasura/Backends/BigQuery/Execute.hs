@@ -141,13 +141,21 @@ executeProblemMessage :: ShowDetails -> ExecuteProblem -> Text
 executeProblemMessage showDetails = \case
   GetJobDecodeProblem err -> "Fetching BigQuery job status, cannot decode HTTP response; " <> tshow err
   CreateQueryJobDecodeProblem err -> "Creating BigQuery job, cannot decode HTTP response: " <> tshow err
-  ExecuteRunBigQueryProblem _ -> "Cannot execute BigQuery request"
-  InsertDatasetDecodeProblem _ -> "Cannot create BigQuery dataset"
+  ExecuteRunBigQueryProblem err ->
+    "Cannot execute BigQuery request" <> showErr err
+  InsertDatasetDecodeProblem err ->
+    "Cannot create BigQuery dataset" <> showErr err
   RESTRequestNonOK status body ->
     let summary = "BigQuery HTTP request failed with status " <> tshow (statusCode status) <> " " <> tshow (statusMessage status)
      in case showDetails of
           HideDetails -> summary
           InsecurelyShowDetails -> summary <> " and body:\n" <> LT.toStrict (LT.decodeUtf8 (Aeson.encode body))
+  where
+    showErr :: forall a. Show a => a -> Text
+    showErr err =
+      case showDetails of
+        HideDetails -> ""
+        InsecurelyShowDetails -> ":\n" <> tshow err
 
 -- | Execute monad; as queries are performed, the record sets are
 -- stored in the map.

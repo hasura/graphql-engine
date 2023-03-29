@@ -1,3 +1,4 @@
+{- HLINT ignore "avoid InsecurelyShowDetails" -}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
