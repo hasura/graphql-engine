@@ -20,8 +20,12 @@ export const Entry = ({
   const isDisabled = k === '_where' && isEmpty(table);
   const operators = useOperators({ path });
   const operator = operators.find(o => o.name === k);
-
-  if (operator?.name === '_contains' || operator?.name === '_contained_in') {
+  if (
+    operator?.name === '_contains' ||
+    operator?.name === '_contained_in' ||
+    operator?.type === 'geometric' ||
+    operator?.type === 'geometric_geographic'
+  ) {
     return (
       <div
         style={{ marginLeft: 8 + (path.length + 1) * 4 + 'px' }}

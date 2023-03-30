@@ -31,7 +31,20 @@ export const ValueInputType = ({
       />
     );
   }
-  if (operator?.type === 'jsonb' && operator?.inputStructure === 'object') {
+  // && operator?.inputStructure === 'object')
+  if (
+    operator?.type === 'json' ||
+    operator?.type === 'jsonb' ||
+    comparatorName === '_st_d_within' ||
+    comparatorName === '_st_within' ||
+    comparatorName === '_st_3d_d_within' ||
+    comparatorName === '_st_contains' ||
+    comparatorName === '_st_crosses' ||
+    comparatorName === '_st_intersects' ||
+    comparatorName === '_st_touches' ||
+    comparatorName === '_st_overlaps' ||
+    comparatorName === '_st_crosses'
+  ) {
     return (
       <ObjectValueInput
         componentLevelId={componentLevelId}
@@ -40,7 +53,6 @@ export const ValueInputType = ({
       />
     );
   }
-
   return (
     <input
       data-testid={componentLevelId}

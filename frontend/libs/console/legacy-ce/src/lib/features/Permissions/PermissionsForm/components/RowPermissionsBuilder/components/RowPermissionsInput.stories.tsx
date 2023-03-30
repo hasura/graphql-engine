@@ -9,7 +9,10 @@ import {
   waitForElementToBeRemoved,
 } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
-import { tables } from './__tests__/fixtures/tables';
+import {
+  tables,
+  tableWithGeolocationSupport,
+} from './__tests__/fixtures/tables';
 import { comparators } from './__tests__/fixtures/comparators';
 import { usePermissionTables } from '../hooks/usePermissionTables';
 import { usePermissionComparators } from '../hooks/usePermissionComparators';
@@ -322,6 +325,26 @@ export const BooleanArrayTypeRoot: ComponentStory<
           'title',
           '$',
         ],
+      },
+    }}
+  />
+);
+
+export const StringObjectType: ComponentStory<
+  typeof RowPermissionsInput
+> = args => (
+  <RowPermissionsInput
+    onPermissionsChange={action('onPermissionsChange')}
+    table={{ name: 'user_location', schema: 'public' }}
+    tables={tableWithGeolocationSupport}
+    comparators={comparators}
+    permissions={{
+      location: {
+        _st_d_within: {
+          distance: 100000,
+          from: { coordinates: [1.4, 2.5], type: 'Point' },
+          use_spheroid: false,
+        },
       },
     }}
   />
@@ -748,4 +771,14 @@ NumberColumns.play = async ({ canvasElement, args }) => {
       _eq: '12341337',
     },
   });
+};
+
+StringObjectType.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+
+  // Test that it is handled like a string input field i.e. not creating input fields recursively
+  const input = await canvas.getByTestId('location._st_d_within-value-input');
+  expect(input).toHaveValue(
+    '{"distance":100000,"from":{"coordinates":[1.4,2.5],"type":"Point"},"use_spheroid":false}'
+  );
 };
