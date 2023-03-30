@@ -36,7 +36,7 @@ import System.Exit qualified as Sys
 import System.Metrics qualified as EKG
 import System.Posix.Signals qualified as Signals
 
-{-# ANN main ("HLINT: ignore Use env_from_function_argument" :: String) #-}
+{-# ANN main ("HLINT: ignore avoid getEnvironment" :: String) #-}
 main :: IO ()
 main = maybeWithGhcDebug $ do
   catch

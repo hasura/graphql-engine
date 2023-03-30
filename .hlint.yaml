@@ -228,12 +228,12 @@
           rhs: "Control.Concurrent.Async.Lifted.Safe.withAsync"
           note: "Please use 'Control.Control.Concurrent.Async.Lifted.Safe.withAsync' or our 'forkImmortal' instead for more robust threading."
       - suggest:
-          name: "avoid System.Environment.getEnvironment"
+          name: "avoid getEnvironment"
           lhs: "System.Environment.getEnvironment"
           rhs: "env_from_function_argument"
           note: "Instead of 'getEnvironment', use the environment from the server context, typically accessible as a function argument"
       - suggest:
-          name: "avoid Data.Environment.getEnvironment"
+          name: "avoid getEnvironment"
           lhs: "Data.Environment.getEnvironment"
           rhs:  "env_from_function_argument"
           note: "Instead of 'getEnvironment', use the environment from the server context, typically accessible as a function argument"
@@ -243,13 +243,13 @@
 # Exceptions to our own rules
 
 - ignore:
-    within: ["Harness.**", "Spec", "Spec.**", "SpecHook", "Test.**"]
+    within: ["Harness.**", "Spec", "Spec.**", "SpecHook", "Test.**", "Hasura.QuickCheck.**"]
     name:
       - "avoid Control.Concurrent.threadDelay"
       - "avoid Control.Concurrent.Async.Lifted.Safe.async"
       - "avoid Control.Concurrent.forkIO"
-      - "avoid System.Environment.getEnvironment"
-      - "avoid Data.Environment.getEnvironment"
+      - "avoid getEnvironment"
+      - "avoid Language.GraphQL.Draft.Syntax.unsafeMkName"
 
 - ignore:
     within: ["Language.GraphQL.Draft.**"]
