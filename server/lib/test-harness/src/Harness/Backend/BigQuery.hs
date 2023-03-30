@@ -233,7 +233,8 @@ setup tables' (testEnvironment, _) = do
                 }
           )
           tables'
-  serviceAccount <- getServiceAccount
+  -- add metadata using env var name so not to log the key
+  let serviceAccountEnvVar = Constants.bigqueryServiceKeyVar
   projectId <- getProjectId
   -- create the dataset
   createDataset schemaName
@@ -249,7 +250,8 @@ setup tables' (testEnvironment, _) = do
           kind: *backendType
           tables: []
           configuration:
-            service_account: *serviceAccount
+            service_account: 
+              from_env: *serviceAccountEnvVar
             project_id: *projectId
             datasets: [*schemaName]
             retry_limit: 5

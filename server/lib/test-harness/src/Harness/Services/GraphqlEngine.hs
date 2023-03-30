@@ -28,6 +28,7 @@ import Data.Vector (fromList)
 import Harness.Exceptions
 import Harness.Http qualified as Http
 import Harness.Logging
+import Harness.PassthroughEnvVars
 import Harness.Services.PostgresDb
 import Hasura.Prelude
 import Network.HTTP.Simple qualified as Http
@@ -65,20 +66,22 @@ emptyHgeConfig = HgeConfig []
 -- crashes. Ensuring that would require making Hge listen for heartbeats, or
 -- use a helper process that does.
 withHge ::
-  ( Has HgeBinPath a,
-    Has PostgresServerUrl a,
-    Has Logger a
+  ( Has HgeBinPath env,
+    Has PostgresServerUrl env,
+    Has Logger env,
+    Has PassthroughEnvVars env
   ) =>
   HgeConfig ->
-  SpecWith (HgeServerInstance, a) ->
-  SpecWith a
+  SpecWith (HgeServerInstance, env) ->
+  SpecWith env
 withHge hgeConfig specs = do
-  flip aroundWith specs \action a -> runManaged do
-    let hgeBin = getter a
-        pgUrl = getter a
-    let logger = getter @Logger a
-    server <- spawnServer logger pgUrl hgeBin hgeConfig
-    liftIO $ action (server, a)
+  flip aroundWith specs \action env -> runManaged do
+    let hgeBin = getter env
+        pgUrl = getter env
+        logger = getter @Logger env
+        passthroughEnvVars = getter env
+    server <- spawnServer logger pgUrl hgeBin hgeConfig passthroughEnvVars
+    liftIO $ action (server, env)
 
 -- | spin up a Manager HGE instance and check it is healthy
 spawnServer ::
@@ -86,10 +89,12 @@ spawnServer ::
   PostgresServerUrl ->
   HgeBinPath ->
   HgeConfig ->
+  PassthroughEnvVars ->
   Managed HgeServerInstance
-spawnServer logger pgUrl (HgeBinPath hgeBinPath) (HgeConfig {hgeConfigEnvironmentVars}) = do
+spawnServer logger pgUrl (HgeBinPath hgeBinPath) (HgeConfig {hgeConfigEnvironmentVars}) (PassthroughEnvVars envVars) = do
   freshDb <- mkFreshPostgresDb logger pgUrl
-  let metadataDbUrl = mkFreshDbConnectionString pgUrl freshDb
+  let allEnv = hgeConfigEnvironmentVars <> envVars
+      metadataDbUrl = mkFreshDbConnectionString pgUrl freshDb
   ((_, Just hgeStdOut, Just hgeStdErr, _), port) <-
     managed
       ( bracket
@@ -112,7 +117,7 @@ spawnServer logger pgUrl (HgeBinPath hgeBinPath) (HgeConfig {hgeConfigEnvironmen
                     { env =
                         Just $
                           ("HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT", "0")
-                            : hgeConfigEnvironmentVars,
+                            : allEnv,
                       std_out = CreatePipe,
                       std_err = CreatePipe,
                       create_group = True

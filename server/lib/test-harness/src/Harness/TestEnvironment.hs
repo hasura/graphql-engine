@@ -5,6 +5,7 @@
 module Harness.TestEnvironment
   ( TestEnvironment (..),
     GlobalTestEnvironment (..),
+    PassthroughEnvVars (..),
     Protocol (..),
     Server (..),
     TestingMode (..),
@@ -26,13 +27,9 @@ module Harness.TestEnvironment
   )
 where
 
-import Control.Concurrent.Async (Async)
 import Control.Concurrent.Async qualified as Async
-import Data.Char qualified
 import Data.Has
-import Data.UUID (UUID)
-import Data.Word
-import Database.PostgreSQL.Simple.Options (Options)
+import Harness.GlobalTestEnvironment
 import Harness.Logging.Messages
 import Harness.Permissions.Types (Permission)
 import Harness.Services.Composed qualified as Services
@@ -40,52 +37,11 @@ import Harness.Test.BackendType
 import Harness.Test.CustomOptions qualified as Custom
 import Harness.Test.FixtureName
 import Harness.Test.ScalarType
+import Harness.UniqueTestId
 import Harness.Yaml
 import Hasura.Prelude
-import Network.WebSockets qualified as WS
 import System.Process (readProcess)
 import Text.Pretty.Simple
-
-newtype UniqueTestId = UniqueTestId {getUniqueTestId :: UUID}
-
--- | Sanitise UUID for use in BigQuery dataset name
--- must be alphanumeric (plus underscores)
-instance Show UniqueTestId where
-  show (UniqueTestId uuid) =
-    fmap
-      ( \a ->
-          if Data.Char.isAlphaNum a
-            then a
-            else '_'
-      )
-      . show
-      $ uuid
-
--- | static information across an entire test suite run
-data GlobalTestEnvironment = GlobalTestEnvironment
-  { -- | shared function to log information from tests
-    logger :: Logger,
-    -- | the mode in which we're running the tests. See 'TestingMode' for
-    -- details'.
-    testingMode :: TestingMode,
-    -- | connection details for the instance of HGE we're connecting to
-    server :: Server,
-    -- | The protocol with which we make server requests.
-    requestProtocol :: Protocol,
-    servicesConfig :: Services.TestServicesConfig
-  }
-
-instance Has Logger GlobalTestEnvironment where
-  getter = logger
-  modifier f x = x {logger = f (logger x)}
-
-instance Has GlobalTestEnvironment TestEnvironment where
-  getter = globalEnvironment
-  modifier f x = x {globalEnvironment = f (globalEnvironment x)}
-
-instance Show GlobalTestEnvironment where
-  show GlobalTestEnvironment {server} =
-    "<GlobalTestEnvironment: " ++ urlPrefix server ++ ":" ++ show (port server) ++ " >"
 
 -- | A testEnvironment that's passed to all tests.
 data TestEnvironment = TestEnvironment
@@ -112,10 +68,6 @@ scalarTypeToText TestEnvironment {fixtureName} = case fixtureName of
 -- the given permissions will be applied.
 data TestingRole = Admin | NonAdmin [Permission]
 
--- | How should we make requests to `graphql-engine`? Both WebSocket- and HTTP-
--- based requests are supported.
-data Protocol = HTTP | WebSocket WS.Connection
-
 instance Has Logger TestEnvironment where
   getter = logger . globalEnvironment
   modifier f x =
@@ -129,17 +81,9 @@ instance Has Logger TestEnvironment where
             }
       }
 
-instance Has Services.TestServicesConfig GlobalTestEnvironment where
-  getter = servicesConfig
-  modifier f x = x {servicesConfig = f (servicesConfig x)}
-
-instance Has Services.HgeBinPath GlobalTestEnvironment where
-  getter = getter . getter @Services.TestServicesConfig
-  modifier f = modifier (modifier @_ @Services.TestServicesConfig f)
-
-instance Has Services.PostgresServerUrl GlobalTestEnvironment where
-  getter = getter . getter @Services.TestServicesConfig
-  modifier f = modifier (modifier @_ @Services.TestServicesConfig f)
+instance Has GlobalTestEnvironment TestEnvironment where
+  getter = globalEnvironment
+  modifier f x = x {globalEnvironment = f (globalEnvironment x)}
 
 instance Has Services.TestServicesConfig TestEnvironment where
   getter = getter . getter @GlobalTestEnvironment
@@ -196,45 +140,9 @@ focusFixtureRight testEnv =
         _ -> error "Could not focus on right-hand FixtureName"
     }
 
--- | Credentials for our testing modes. See 'SpecHook.setupTestingMode' for the
--- practical consequences of this type.
-data TestingMode
-  = -- | run all tests, unfiltered
-    TestEverything
-  | -- | run only tests containing this BackendType (or a RemoteSchema, so
-    -- those aren't missed)
-    TestBackend BackendType
-  | -- | run "all the other tests"
-    TestNoBackends
-  | -- | test a Postgres-compatible using a custom connection string
-    TestNewPostgresVariant Options
-  deriving (Eq, Ord, Show)
-
--- | Information about a server that we're working with.
-data Server = Server
-  { -- | The port to connect on.
-    port :: Word16,
-    -- | The full URI prefix e.g. http://localhost
-    urlPrefix :: String,
-    -- | The thread that the server is running on, so we can stop it later.
-    thread :: Async ()
-  }
-
-instance Show Server where
-  show = serverUrl
-
 -- | Retrieve the 'Server' associated with some 'TestEnvironment'.
 getServer :: TestEnvironment -> Server
 getServer TestEnvironment {globalEnvironment} = server globalEnvironment
-
--- | Extracts the full URL prefix and port number from a given 'Server'.
---
--- @
---   > serverUrl (Server 8080 "http://localhost" someThreadId)
---   "http://localhost:8080"
--- @
-serverUrl :: Server -> String
-serverUrl Server {urlPrefix, port} = urlPrefix ++ ":" ++ show port
 
 -- | Retrieve the 'TestingMode' associated with some 'TestEnvironment'
 getTestingMode :: TestEnvironment -> TestingMode

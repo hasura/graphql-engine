@@ -133,10 +133,12 @@ library
     Harness.DataConnectorAgent
     Harness.Env
     Harness.Exceptions
+    Harness.GlobalTestEnvironment
     Harness.GraphqlEngine
     Harness.Http
     Harness.Logging
     Harness.Logging.Messages
+    Harness.PassthroughEnvVars
     Harness.Permissions
     Harness.PytestPortedCompat
     Harness.Quoter.Graphql
@@ -162,6 +164,7 @@ library
     Harness.Test.SetupAction
     Harness.Test.TestResource
     Harness.TestEnvironment
+    Harness.UniqueTestId
     Harness.WebSockets
     Harness.Webhook
     Harness.Yaml

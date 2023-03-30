@@ -132,6 +132,7 @@ hgeWithEnv env = do
             (getter globalTestEnvironment)
             (getter globalTestEnvironment)
             hgeConfig
+            (getter globalTestEnvironment)
         liftIO $ useHgeInTestEnvironment globalTestEnvironment hgeServerInstance >>= specs
     )
 
