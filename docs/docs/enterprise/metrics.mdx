@@ -146,6 +146,46 @@ curl 'http://127.0.0.1:8080/v1/metrics' -H 'Authorization: Bearer <secret>'
     </td>
     <td>Compare this to <a href="/latest/api-reference/syntax-defs/#pgpoolsettings">pool settings</a>.</td>
   </tr>
+  <tr>
+  <td><code>hasura_cron_events_invocation_total</code></td>
+  <td>Total number of cron events invoked</td>
+  <td>Counter</td>
+  <td>&#8226; "status": success|failed<br /></td>
+  <td>Total number of invocations made for cron events.</td>
+</tr>
+<tr>
+  <td><code>hasura_cron_events_processed_total</code></td>
+  <td>Total number of cron events processed</td>
+  <td>Counter</td>
+  <td>&#8226; "status": success|failed<br /></td>
+  <td>
+    Compare this to <code>hasura_cron_events_invocation_total</code>. A high difference between the two metrics
+    indicates high failure rate of the cron webhook.
+  </td>
+</tr>
+<tr>
+  <td><code>hasura_oneoff_events_invocation_total</code></td>
+  <td>Total number of one-off events invoked</td>
+  <td>Counter</td>
+  <td>&#8226; "status": success|failed<br /></td>
+  <td>Total number of invocations made for one-off events.</td>
+</tr>
+
+<tr>
+  <td>
+    <code>hasura_oneoff_events_processed_total</code>
+  </td>
+  <td>Total number of one-off events processed</td>
+  <td>Counter</td>
+  <td>
+    &#8226; "status": success|failed
+    <br />
+  </td>
+  <td>
+    Compare this to <code>hasura_oneoff_events_invocation_total</code>. A high difference between the two metrics
+    indicates high failure rate of the one-off webhook.
+  </td>
+</tr>
 
 </table>
 

@@ -1323,7 +1323,7 @@ mkHGEServer setupHook appStateRef ekgStore = do
           logger
           scheduledEventsStatsLogger
           appEnvManager
-          appEnvPrometheusMetrics
+          (pmScheduledTriggerMetrics appEnvPrometheusMetrics)
           (getSchemaCache appStateRef)
           lockedEventsCtx
 

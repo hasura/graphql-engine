@@ -14,6 +14,7 @@ module Hasura.Server.Prometheus
     decWarpThreads,
     incWebsocketConnections,
     decWebsocketConnections,
+    ScheduledTriggerMetrics (..),
   )
 where
 
@@ -39,8 +40,7 @@ data PrometheusMetrics = PrometheusMetrics
     pmWebSocketBytesSent :: Counter,
     pmActionBytesReceived :: Counter,
     pmActionBytesSent :: Counter,
-    pmScheduledTriggerBytesReceived :: Counter,
-    pmScheduledTriggerBytesSent :: Counter
+    pmScheduledTriggerMetrics :: ScheduledTriggerMetrics
   }
 
 data GraphQLRequestMetrics = GraphQLRequestMetrics
@@ -67,6 +67,19 @@ data EventTriggerMetrics = EventTriggerMetrics
     eventInvocationTotalFailure :: Counter
   }
 
+data ScheduledTriggerMetrics = ScheduledTriggerMetrics
+  { stmScheduledTriggerBytesReceived :: Counter,
+    stmScheduledTriggerBytesSent :: Counter,
+    stmCronEventsInvocationTotalSuccess :: Counter,
+    stmCronEventsInvocationTotalFailure :: Counter,
+    stmOneOffEventsInvocationTotalSuccess :: Counter,
+    stmOneOffEventsInvocationTotalFailure :: Counter,
+    stmCronEventsProcessedTotalSuccess :: Counter,
+    stmCronEventsProcessedTotalFailure :: Counter,
+    stmOneOffEventsProcessedTotalSuccess :: Counter,
+    stmOneOffEventsProcessedTotalFailure :: Counter
+  }
+
 -- | Create dummy mutable references without associating them to a metrics
 -- store.
 makeDummyPrometheusMetrics :: IO PrometheusMetrics
@@ -79,8 +92,7 @@ makeDummyPrometheusMetrics = do
   pmWebSocketBytesSent <- Counter.new
   pmActionBytesReceived <- Counter.new
   pmActionBytesSent <- Counter.new
-  pmScheduledTriggerBytesReceived <- Counter.new
-  pmScheduledTriggerBytesSent <- Counter.new
+  pmScheduledTriggerMetrics <- makeDummyScheduledTriggerMetrics
   pure PrometheusMetrics {..}
 
 makeDummyGraphQLRequestMetrics :: IO GraphQLRequestMetrics
@@ -108,6 +120,20 @@ makeDummyEventTriggerMetrics = do
   eventInvocationTotalSuccess <- Counter.new
   eventInvocationTotalFailure <- Counter.new
   pure EventTriggerMetrics {..}
+
+makeDummyScheduledTriggerMetrics :: IO ScheduledTriggerMetrics
+makeDummyScheduledTriggerMetrics = do
+  stmScheduledTriggerBytesReceived <- Counter.new
+  stmScheduledTriggerBytesSent <- Counter.new
+  stmCronEventsInvocationTotalSuccess <- Counter.new
+  stmCronEventsInvocationTotalFailure <- Counter.new
+  stmOneOffEventsInvocationTotalSuccess <- Counter.new
+  stmOneOffEventsInvocationTotalFailure <- Counter.new
+  stmCronEventsProcessedTotalSuccess <- Counter.new
+  stmCronEventsProcessedTotalFailure <- Counter.new
+  stmOneOffEventsProcessedTotalSuccess <- Counter.new
+  stmOneOffEventsProcessedTotalFailure <- Counter.new
+  pure ScheduledTriggerMetrics {..}
 
 --------------------------------------------------------------------------------
 
