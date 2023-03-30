@@ -134,6 +134,7 @@ export const QuickAdd = (props: QuickAddProps) => {
             className: 'z-[101]',
           },
         }}
+        zIndex="z-[102]"
         items={[
           [...quickOperations, ...graphiqlQueries].map(operation => (
             <div
