@@ -33,14 +33,14 @@ module Hasura.Backends.DataConnector.Adapter.Types
   )
 where
 
-import Autodocodec (HasCodec (codec), optionalField', requiredFieldWith')
+import Autodocodec (HasCodec (codec), optionalField', requiredField', requiredFieldWith')
 import Autodocodec qualified as AC
 import Autodocodec.Extended (baseUrlCodec)
 import Control.Lens (makeLenses)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, genericParseJSON, genericToJSON)
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as J
-import Data.Aeson.Types (toJSONKeyText)
+import Data.Aeson.Types (parseEither, toJSONKeyText)
 import Data.Data (Typeable)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NonEmpty
@@ -81,10 +81,22 @@ instance FromJSON ConnSourceConfig where
       Just _ -> ConnSourceConfig <$> o J..: "value" <*> o J..:? "template" <*> (o J..:? "timeout")
       Nothing -> ConnSourceConfig (API.Config o) Nothing <$> (o J..:? "timeout")
 
--- TODO: Write a proper codec, and use it to derive FromJSON and ToJSON
--- instances.
 instance HasCodec ConnSourceConfig where
-  codec = AC.named "DataConnectorConnConfiguration" $ placeholderCodecViaJSON
+  codec = AC.bimapCodec dec enc $ AC.possiblyJointEitherCodec withValueProp inlineConfig
+    where
+      withValueProp =
+        AC.object "DataConnectorConnSourceConfig" $
+          ConnSourceConfig
+            <$> requiredField' "value" AC..= value
+            <*> optionalField' "template" AC..= template
+            <*> optionalField' "timeout" AC..= timeout
+      inlineConfig = codec @API.Config
+
+      dec (Left config) = Right config
+      dec (Right config@(API.Config jsonObj)) =
+        parseEither (\o -> ConnSourceConfig config Nothing <$> (o J..:? "timeout")) jsonObj
+
+      enc = Left
 
 --------------------------------------------------------------------------------
 
@@ -101,6 +113,24 @@ sourceTimeoutMicroseconds = \case
   SourceTimeoutSeconds s -> s * 1000000
   SourceTimeoutMilliseconds m -> m * 1000
   SourceTimeoutMicroseconds u -> u
+
+instance HasCodec SourceTimeout where
+  codec =
+    AC.dimapCodec dec enc $
+      AC.disjointEitherCodec secondsCodec $
+        AC.disjointEitherCodec millisecondsCodec microsecondsCodec
+    where
+      secondsCodec = AC.object "DataConnectorSourceTimeoutSeconds" $ requiredFieldWith' "seconds" AC.scientificCodec
+      millisecondsCodec = AC.object "DataConnectorSourceTimeoutMilliseconds" $ requiredFieldWith' "milliseconds" AC.scientificCodec
+      microsecondsCodec = AC.object "DataConnectorSourceTimeoutMicroseconds" $ requiredFieldWith' "microseconds" AC.scientificCodec
+
+      dec (Left n) = SourceTimeoutSeconds $ round n
+      dec (Right (Left n)) = SourceTimeoutMilliseconds $ round n
+      dec (Right (Right n)) = SourceTimeoutMicroseconds $ round n
+
+      enc (SourceTimeoutSeconds n) = Left $ fromIntegral n
+      enc (SourceTimeoutMilliseconds n) = Right $ Left $ fromIntegral n
+      enc (SourceTimeoutMicroseconds n) = Right $ Right $ fromIntegral n
 
 instance FromJSON SourceTimeout where
   parseJSON = J.withObject "SourceTimeout" \o ->

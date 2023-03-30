@@ -3158,6 +3158,12 @@
                 },
                 "type": "object"
             },
+            "Config": {
+                "additionalProperties": {
+                    "additionalProperties": true
+                },
+                "type": "object"
+            },
             "ConnectionTemplate": {
                 "description": "https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconnectiontemplate",
                 "nullable": true,
@@ -3312,9 +3318,65 @@
                 },
                 "type": "object"
             },
-            "DataConnectorConnConfiguration": {
-                "additionalProperties": true,
-                "description": "value with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+            "DataConnectorConnSourceConfig": {
+                "properties": {
+                    "template": {
+                        "type": "string"
+                    },
+                    "timeout": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/DataConnectorSourceTimeoutSeconds"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DataConnectorSourceTimeoutMilliseconds"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DataConnectorSourceTimeoutMicroseconds"
+                            }
+                        ]
+                    },
+                    "value": {
+                        "$ref": "#/components/schemas/Config"
+                    }
+                },
+                "required": [
+                    "value"
+                ],
+                "type": "object"
+            },
+            "DataConnectorSourceTimeoutMicroseconds": {
+                "properties": {
+                    "microseconds": {
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "microseconds"
+                ],
+                "type": "object"
+            },
+            "DataConnectorSourceTimeoutMilliseconds": {
+                "properties": {
+                    "milliseconds": {
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "milliseconds"
+                ],
+                "type": "object"
+            },
+            "DataConnectorSourceTimeoutSeconds": {
+                "properties": {
+                    "seconds": {
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "seconds"
+                ],
+                "type": "object"
             },
             "DataConnectorOptions": {
                 "properties": {
@@ -3800,7 +3862,15 @@
             "DataconnectorSourceMetadata": {
                 "properties": {
                     "configuration": {
-                        "$ref": "#/components/schemas/DataConnectorConnConfiguration"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DataConnectorConnSourceConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/Config"
+                            }
+                        ]
                     },
                     "custom_return_types": {
                         "default": [],
