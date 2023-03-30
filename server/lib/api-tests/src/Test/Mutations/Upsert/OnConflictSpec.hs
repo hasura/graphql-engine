@@ -16,7 +16,7 @@ import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
@@ -164,7 +164,7 @@ tests = do
                   published_on: '2018-06-15'
           |]
 
-    shouldReturnYaml (options testEnvironment) actual expected
+    shouldReturnYaml testEnvironment actual expected
 
   it "Update selected columns on conflict using a filter" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -217,7 +217,7 @@ tests = do
                   author_id: 2
           |]
 
-    shouldReturnYaml (options testEnvironment) actual expected
+    shouldReturnYaml testEnvironment actual expected
 
   it "Ignore request on conflict" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -251,7 +251,7 @@ tests = do
                 affected_rows: 0
           |]
 
-    shouldReturnYaml (options testEnvironment) actual expected
+    shouldReturnYaml testEnvironment actual expected
 
   it "Upsert in nested mutations" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -298,4 +298,4 @@ tests = do
                 affected_rows: 2
           |]
 
-    shouldReturnYaml (options testEnvironment) actual expected
+    shouldReturnYaml testEnvironment actual expected

@@ -68,4 +68,4 @@ tests = do
           actual = pure Null
 
       testLogTrace testEnvironment ("A log message" :: Text)
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected

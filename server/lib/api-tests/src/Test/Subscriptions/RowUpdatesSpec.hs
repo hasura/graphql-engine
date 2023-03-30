@@ -91,7 +91,7 @@ tests = do
             actual :: IO Value
             actual = getNextResponse query
 
-        shouldReturnYaml (options testEnvironment) actual expected
+        shouldReturnYaml testEnvironment actual expected
 
       -- add some data
       do
@@ -115,7 +115,7 @@ tests = do
                     }
                   }
                 |]
-        shouldReturnYaml (options testEnvironment) actual expected
+        shouldReturnYaml testEnvironment actual expected
 
       -- fetch the next response
       do
@@ -130,7 +130,7 @@ tests = do
                       name: "B"
               |]
 
-        shouldReturnYaml (options testEnvironment) (getNextResponse query) expected
+        shouldReturnYaml testEnvironment (getNextResponse query) expected
 
   withSubscriptions do
     it "Multiplexes" \(mkSubscription, testEnvironment) -> do
@@ -162,7 +162,7 @@ tests = do
           []
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         (getNextResponse subIdEq3)
         [yaml|
           data:
@@ -170,7 +170,7 @@ tests = do
         |]
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         (getNextResponse subIdEq4)
         [yaml|
           data:
@@ -202,10 +202,10 @@ tests = do
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         (getNextResponse subIdEq3)
         [yaml|
           data:
@@ -215,7 +215,7 @@ tests = do
         |]
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         (getNextResponse subIdEq4)
         [yaml|
           data:
@@ -254,7 +254,7 @@ tests = do
             actual :: IO Value
             actual = getNextResponse query
 
-        shouldReturnYaml (options testEnvironment) actual expected
+        shouldReturnYaml testEnvironment actual expected
 
       -- add some data
       do
@@ -278,7 +278,7 @@ tests = do
                     }
                   }
                 |]
-        shouldReturnYaml (options testEnvironment) actual expected
+        shouldReturnYaml testEnvironment actual expected
 
       -- fetch the next response
       do
@@ -291,7 +291,7 @@ tests = do
                       name: "Alice"
               |]
 
-        shouldReturnYaml (options testEnvironment) (getNextResponse query) expected
+        shouldReturnYaml testEnvironment (getNextResponse query) expected
 
       -- add another alice
       do
@@ -315,7 +315,7 @@ tests = do
                     }
                   }
                 |]
-        shouldReturnYaml (options testEnvironment) actual expected
+        shouldReturnYaml testEnvironment actual expected
 
       -- fetch the next response
       do
@@ -330,4 +330,4 @@ tests = do
                       name: "Alice"
               |]
 
-        shouldReturnYaml (options testEnvironment) (getNextResponse query) expected
+        shouldReturnYaml testEnvironment (getNextResponse query) expected

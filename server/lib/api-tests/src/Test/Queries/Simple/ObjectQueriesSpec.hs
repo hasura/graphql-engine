@@ -24,7 +24,7 @@ import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Protocol (withEachProtocol)
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -149,7 +149,7 @@ tests = do
                   name: Anjela
             |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Fails on unknown fields" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -177,4 +177,4 @@ tests = do
                 message: 'field ''unknown'' not found in type: ''#{schemaName}_authors'''
             |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected

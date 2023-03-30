@@ -91,7 +91,7 @@ tests = withSubscriptions do
           []
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         (getNextResponse subscriptionHandle)
         [yaml|
           data:
@@ -115,7 +115,7 @@ tests = withSubscriptions do
               |]
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         addFirstRow
         [yaml|
           data:
@@ -124,7 +124,7 @@ tests = withSubscriptions do
         |]
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         (getNextResponse subscriptionHandle)
         [yaml|
           data:
@@ -148,7 +148,7 @@ tests = withSubscriptions do
               |]
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         addSecondRow
         [yaml|
           data:
@@ -157,7 +157,7 @@ tests = withSubscriptions do
         |]
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         (getNextResponse subscriptionHandle)
         [yaml|
           data:

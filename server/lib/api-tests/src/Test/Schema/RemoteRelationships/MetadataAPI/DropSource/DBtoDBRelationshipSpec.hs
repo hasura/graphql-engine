@@ -38,7 +38,7 @@ import Data.Maybe qualified as Unsafe (fromJust)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -72,7 +72,7 @@ tests = describe "drop-source-metadata-tests" do
               message: success
             |]
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         (GraphqlEngine.postMetadata testEnvironment query)
         expectedDropSourceResponse
 

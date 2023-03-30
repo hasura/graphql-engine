@@ -19,7 +19,7 @@ import Harness.Schema qualified as Schema
 import Harness.Subscriptions
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options), getBackendTypeConfig)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it, shouldContain)
@@ -138,7 +138,7 @@ tests = do
               actual :: IO Value
               actual = getNextResponse query
 
-          shouldReturnYaml (options testEnvironment) actual expected
+          shouldReturnYaml testEnvironment actual expected
 
         -- add a row
         do
@@ -179,7 +179,7 @@ tests = do
               actual :: IO Value
               actual = getNextResponse query
 
-          shouldReturnYaml (options testEnvironment) actual expected
+          shouldReturnYaml testEnvironment actual expected
 
         -- delete a row
         do
@@ -211,4 +211,4 @@ tests = do
               actual :: IO Value
               actual = getNextResponse query
 
-          shouldReturnYaml (options testEnvironment) actual expected
+          shouldReturnYaml testEnvironment actual expected

@@ -74,7 +74,7 @@ tests query =
       let actual = query testEnv "concurrent_bulk"
       expected <- query testEnv "bulk"
       show expected `shouldContain` "TuplesOk"
-      shouldReturnYaml (options testEnv) actual expected
+      shouldReturnYaml testEnv actual expected
 
     it "fails when a query is not read-only" \testEnv -> do
       let expected =
@@ -83,7 +83,7 @@ tests query =
               error: Only read-only queries are allowed in a concurrent_bulk
               path: $
             |]
-      shouldReturnYaml (options testEnv) (runSqlDrop testEnv) expected
+      shouldReturnYaml testEnv (runSqlDrop testEnv) expected
 
 postgresRunSqlQuery :: TestEnvironment -> String -> IO Value
 postgresRunSqlQuery testEnvironment bulkType = do

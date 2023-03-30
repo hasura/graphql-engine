@@ -106,7 +106,7 @@ tests =
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
 --------------------------------------------------------------------------------
 -- Metadata

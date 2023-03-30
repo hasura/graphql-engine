@@ -17,7 +17,7 @@ import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -104,7 +104,7 @@ tests =
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Author can update_many their name" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -138,7 +138,7 @@ tests =
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Author cannot update their id" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -172,7 +172,7 @@ tests =
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Author cannot update_many their id" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -206,7 +206,7 @@ tests =
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
 --------------------------------------------------------------------------------
 -- Metadata

@@ -19,7 +19,7 @@ import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -137,7 +137,7 @@ tests = do
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
   it "Authors can select their own articles" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -168,7 +168,7 @@ tests = do
               }
             |]
 
-    shouldReturnYaml (options testEnvironment) actual expected
+    shouldReturnYaml testEnvironment actual expected
 
   it "User role can select published articles only" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -201,7 +201,7 @@ tests = do
               }
             |]
 
-    shouldReturnYaml (options testEnvironment) actual expected
+    shouldReturnYaml testEnvironment actual expected
 
 --------------------------------------------------------------------------------
 -- Metadata

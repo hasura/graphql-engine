@@ -18,7 +18,7 @@ import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Introspection (introspectEnums, introspectTypes)
 import Harness.Test.SetupAction (setupPermissionsAction)
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it, shouldContain)
@@ -132,7 +132,7 @@ tests =
                       }
                     |]
 
-          shouldReturnYaml (options testEnvironment) actual expected
+          shouldReturnYaml testEnvironment actual expected
 
         do
           let expected :: Value
@@ -160,4 +160,4 @@ tests =
                     }
                   |]
 
-          shouldReturnYaml (options testEnvironment) actual expected
+          shouldReturnYaml testEnvironment actual expected

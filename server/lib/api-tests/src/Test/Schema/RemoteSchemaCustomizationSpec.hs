@@ -12,7 +12,7 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.RemoteServer qualified as RemoteServer
 import Harness.Test.Fixture (Fixture (..))
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment (options), stopServer)
+import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment, stopServer)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -95,7 +95,7 @@ tests = do
                  |]
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         (GraphqlEngine.postGraphqlWithVariables testEnvironment query variables)
         expectedResponse
 
@@ -113,7 +113,7 @@ tests = do
                  |]
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         (GraphqlEngine.postGraphql testEnvironment query)
         expectedResponse
 
@@ -136,7 +136,7 @@ tests = do
                  |]
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         (GraphqlEngine.postGraphqlWithVariables testEnvironment query variables)
         expectedResponse
 
@@ -154,7 +154,7 @@ tests = do
                  |]
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         (GraphqlEngine.postGraphql testEnvironment query)
         expectedResponse
 

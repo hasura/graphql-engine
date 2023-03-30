@@ -901,7 +901,7 @@ executionTests = describe "execution" do
                - title: album3_artist1
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -928,7 +928,7 @@ executionTests = describe "execution" do
                albums: []
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -955,7 +955,7 @@ executionTests = describe "execution" do
                albums: null
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -995,7 +995,7 @@ executionTests = describe "execution" do
                albums: null
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -1043,7 +1043,7 @@ permissionTests = describe "permission" do
                albums: null
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -1086,7 +1086,7 @@ permissionTests = describe "permission" do
               - __typename: #{rhsSchema}_album
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -1115,7 +1115,7 @@ permissionTests = describe "permission" do
               - name: name
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -1145,7 +1145,7 @@ permissionTests = describe "permission" do
               - name: name
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -1177,7 +1177,7 @@ permissionTests = describe "permission" do
                - title: album2_artist1
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -1208,7 +1208,7 @@ permissionTests = describe "permission" do
                  - title: album1_artist1
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -1240,7 +1240,7 @@ permissionTests = describe "permission" do
                - title: album2_artist1
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -1280,7 +1280,7 @@ permissionTests = describe "permission" do
                  - title: album2_artist1
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -1320,6 +1320,6 @@ permissionTests = describe "permission" do
                  - title: album2_artist1
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse

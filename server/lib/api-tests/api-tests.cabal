@@ -57,6 +57,7 @@ library
     , aeson-pretty
     , base
     , bytestring
+    , containers
     , data-has
     , dc-api
     , directory

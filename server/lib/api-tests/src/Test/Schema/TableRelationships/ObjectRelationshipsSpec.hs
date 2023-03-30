@@ -22,7 +22,7 @@ import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Test.BackendType (BackendType (..))
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -174,7 +174,7 @@ tests backend = describe "Object relationships" do
               }
             |]
 
-    shouldReturnYaml (options testEnvironment) actual expected
+    shouldReturnYaml testEnvironment actual expected
 
   unless (backend == BigQuery) do
     describe "Null relationships" do
@@ -211,4 +211,4 @@ tests backend = describe "Object relationships" do
                   }
                 |]
 
-        shouldReturnYaml (options testEnvironment) actual expected
+        shouldReturnYaml testEnvironment actual expected

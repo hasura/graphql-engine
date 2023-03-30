@@ -18,7 +18,7 @@ import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.SetupAction (permitTeardownFail)
-import Harness.TestEnvironment (GlobalTestEnvironment, Server (..), TestEnvironment (options), getServer)
+import Harness.TestEnvironment (GlobalTestEnvironment, Server (..), TestEnvironment, getServer)
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
@@ -105,7 +105,7 @@ triggerListeningToAllColumnTests = do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postV2Query
             200
             testEnvironment
@@ -125,7 +125,7 @@ result: null
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postV2Query
             200
             testEnvironment
@@ -209,7 +209,7 @@ dropTableContainingTriggerTest = do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postV2Query
             200
             testEnvironment
@@ -236,7 +236,7 @@ renameTableContainingTriggerTests = do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postV2Query
             200
             testEnvironment
@@ -256,7 +256,7 @@ renameTableContainingTriggerTests = do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postV2Query
             200
             testEnvironment

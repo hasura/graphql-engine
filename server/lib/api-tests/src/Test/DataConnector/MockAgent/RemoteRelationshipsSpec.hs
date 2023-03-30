@@ -20,7 +20,7 @@ import Harness.Schema (Table (..))
 import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
@@ -481,7 +481,7 @@ errorTests = do
         schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       ( GraphqlEngine.postMetadataWithStatus
           400
           testEnv

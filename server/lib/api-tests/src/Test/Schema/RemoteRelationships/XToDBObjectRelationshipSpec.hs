@@ -38,7 +38,7 @@ import Harness.Test.TestResource (Managed)
 import Harness.TestEnvironment
   ( GlobalTestEnvironment,
     Server,
-    TestEnvironment (options, uniqueTestId),
+    TestEnvironment (uniqueTestId),
     focusFixtureLeft,
     focusFixtureRight,
     stopServer,
@@ -1103,7 +1103,7 @@ executionTests = describe "execution" $ do
                  title: album1_artist1
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -1129,7 +1129,7 @@ executionTests = describe "execution" $ do
                album: null
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -1166,7 +1166,7 @@ executionTests = describe "execution" $ do
                album: null
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -1219,7 +1219,7 @@ permissionTests = describe "permission" $ do
                album: null
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -1258,7 +1258,7 @@ permissionTests = describe "permission" $ do
                 __typename: #{rhsSchema}_album
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -1314,6 +1314,6 @@ schemaTests =
               - name: title
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse

@@ -14,7 +14,7 @@ import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.SetupAction (permitTeardownFail)
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
@@ -102,7 +102,7 @@ tests =
 
         -- Insert a row into the table with event trigger
         shouldReturnYaml
-          (options testEnvironment)
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment insertQuery)
           expectedResponse
 
@@ -132,7 +132,7 @@ tests =
 
         -- Untracking the table should remove the SQL triggers on the table
         shouldReturnYaml
-          (options testEnvironment)
+          testEnvironment
           (GraphqlEngine.postMetadata testEnvironment untrackTableQuery)
           untrackTableQueryExpectedResponse
 
@@ -165,7 +165,7 @@ tests =
         -- If the clean-up did not happen properly this insert query would add
         -- entries to the 'hdb_catalog.event_log' table
         shouldReturnYaml
-          (options testEnvironment)
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment checkIfTriggerExists)
           expectedResponse
 

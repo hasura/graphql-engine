@@ -11,7 +11,7 @@ import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Auth.Authorization.DisableRootFields.Common
@@ -153,7 +153,7 @@ metadataValidationTests :: SpecWith TestEnvironment
 metadataValidationTests = describe "EnablePKRootField Validation test " $ do
   it "a role not having access to the primary key column(s) should not be allowed to enable the primary key root field" $ \testEnvironment -> do
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       ( GraphqlEngine.postWithHeadersStatus
           400
           testEnvironment
@@ -212,19 +212,19 @@ graphQLTests = describe "EnablePKRootFieldSpec GraphQL tests" $ do
   let userHeaders = [("x-hasura-role", "user"), ("x-hasura-user-id", "1")]
   it "query root: 'list' root field is disabled and not accessible" $ \testEnvironment -> do
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (listQuery testEnvironment))
       (listRFDisabledExpectedResponse testEnvironment)
 
   it "query root: 'pk' root field is accessible" $ \testEnvironment -> do
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (pkQuery testEnvironment))
       (pkRFEnabledExpectedResponse testEnvironment)
 
   it "query root: 'aggregate' root field is disabled and not accessible" $ \testEnvironment -> do
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (aggregateQuery testEnvironment))
       (aggRFDisabledExpectedResponse testEnvironment)
 
@@ -242,7 +242,7 @@ graphQLTests = describe "EnablePKRootFieldSpec GraphQL tests" $ do
           |]
 
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders queryTypesIntrospection)
       expectedResponse
 
@@ -257,6 +257,6 @@ graphQLTests = describe "EnablePKRootFieldSpec GraphQL tests" $ do
           |]
 
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders subscriptionTypesIntrospection)
       expectedResponse

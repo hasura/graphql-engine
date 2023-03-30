@@ -356,7 +356,7 @@ testsWithFeatureOn = describe "object-relationship (stringified numeric types)" 
                     version: "1.075"
             |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -387,6 +387,6 @@ testsWithFeatureOff = describe "object-relationship (no stringified numeric type
                     version: 1.075
             |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse

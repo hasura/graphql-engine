@@ -23,7 +23,7 @@ import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -122,7 +122,7 @@ tests =
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Doesn't return the field when @include(if: false) and @skip(if: false)" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
@@ -149,7 +149,7 @@ tests =
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Doesn't return the field when @include(if: false) and @skip(if: true)" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
@@ -176,7 +176,7 @@ tests =
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Doesn't return the field when @include(if: true) and @skip(if: true)" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
@@ -204,4 +204,4 @@ tests =
               |]
               ["variables" .= object ["skip" .= True, "include" .= True]]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected

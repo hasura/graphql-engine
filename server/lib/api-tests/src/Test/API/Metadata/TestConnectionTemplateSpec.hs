@@ -72,7 +72,7 @@ tests = do
   describe "test_connection_template negative tests" do
     it "should fail for other backends" $ \testEnv -> do
       shouldReturnYaml
-        (options testEnv)
+        testEnv
         ( GraphqlEngine.postMetadataWithStatus
             400
             testEnv
@@ -90,7 +90,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnv
           sourceName = Fixture.backendSourceName backendTypeMetadata
       shouldReturnYaml
-        (options testEnv)
+        testEnv
         ( GraphqlEngine.postMetadataWithStatus
             400
             testEnv

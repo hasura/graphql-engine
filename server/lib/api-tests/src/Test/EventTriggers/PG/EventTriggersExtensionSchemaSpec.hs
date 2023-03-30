@@ -16,7 +16,7 @@ import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.SetupAction (permitTeardownFail)
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
@@ -104,7 +104,7 @@ tests =
 
         -- Insert a row into the table with event trigger
         shouldReturnYaml
-          (options testEnvironment)
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment insertQuery)
           expectedResponse
 
@@ -161,7 +161,7 @@ tests =
 
 --     -- Insert a row into the table with event trigger
 --     shouldReturnYaml
---       (options testEnvironment)
+--       testEnvironment
 --       (GraphqlEngine.postV2Query 200 testEnvironment insertQuery)
 --       expectedResponse
 

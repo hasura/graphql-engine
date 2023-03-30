@@ -283,7 +283,7 @@ setupTestEnvironment name globalTestEnvironment options = do
             uniqueTestId = uniqueTestId,
             globalEnvironment = globalTestEnvironment,
             permissions = Admin,
-            options = options
+            _options = options
           }
 
   -- create source databases

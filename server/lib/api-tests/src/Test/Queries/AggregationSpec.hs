@@ -155,7 +155,7 @@ tests = do
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Fetch aggregated data on nested objects" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -210,7 +210,7 @@ tests = do
                  name: Author 1
             |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Fetch aggregated count only" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -239,4 +239,4 @@ tests = do
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected

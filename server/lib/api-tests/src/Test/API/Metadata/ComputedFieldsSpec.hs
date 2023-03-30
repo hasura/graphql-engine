@@ -14,7 +14,7 @@ import Harness.Schema (SchemaName (..), Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.SetupAction qualified as SetupAction
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
@@ -140,7 +140,7 @@ tests = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       ( GraphqlEngine.postMetadataWithStatus
           400
           testEnv
@@ -191,7 +191,7 @@ code: invalid-configuration
     -- The function 'fetch_articles' is not defined with 'RETURNS TABLE<>' clause,
     -- we need to provide `return_table` in the payload
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       ( GraphqlEngine.postMetadataWithStatus
           400
           testEnv
@@ -249,7 +249,7 @@ code: invalid-configuration
     -- The function 'fetch_articles' is not defined with 'RETURNS TABLE<>' clause,
     -- we need to provide `return_table` in the payload
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       ( GraphqlEngine.postMetadataWithStatus
           400
           testEnv
@@ -311,7 +311,7 @@ code: invalid-configuration
     -- we don't need to provide 'return_table' in the payload as the returning fields are inferred
     -- from the function definition
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       ( GraphqlEngine.postMetadataWithStatus
           400
           testEnv
@@ -371,7 +371,7 @@ code: invalid-configuration
 
     -- The function 'function_no_args' has no input arguments
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       ( GraphqlEngine.postMetadataWithStatus
           400
           testEnv
@@ -430,7 +430,7 @@ code: invalid-configuration
     -- The function 'add_int' returns a scalar value of type 'INT64', as of now we do not support
     -- scalar computed fields.
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       ( GraphqlEngine.postMetadataWithStatus
           400
           testEnv
@@ -481,7 +481,7 @@ code: invalid-configuration
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       ( GraphqlEngine.postMetadataWithStatus
           400
           testEnv

@@ -18,7 +18,7 @@ import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -102,7 +102,7 @@ tests =
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Hides columns with defaults from the schema" \testEnvironment -> do
       let expected :: Value
@@ -138,7 +138,7 @@ tests =
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Hides columns with session-given defaults from the schema" \testEnvironment -> do
       let expected :: Value
@@ -174,7 +174,7 @@ tests =
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Allows admin roles to insert into columns with defaults" \testEnvironment -> do
       let expected :: Value
@@ -208,7 +208,7 @@ tests =
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
 --------------------------------------------------------------------------------
 -- Metadata

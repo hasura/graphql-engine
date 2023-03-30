@@ -10,7 +10,7 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Auth.Authorization.DisableRootFields.Common
@@ -97,19 +97,19 @@ tests = describe "DisableAllRootFieldsSpec" $ do
   let userHeaders = [("X-Hasura-Role", "user"), ("X-Hasura-User-Id", "1")]
   it "query root: 'list' root field is disabled and not accessible" $ \testEnvironment -> do
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (listQuery testEnvironment))
       (listRFDisabledExpectedResponse testEnvironment)
 
   it "query root: 'pk' root field is disabled and not accessible" $ \testEnvironment -> do
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (pkQuery testEnvironment))
       (pkRFDisabledExpectedResponse testEnvironment)
 
   it "query root: 'aggregate' root field is disabled and not accessible" $ \testEnvironment -> do
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (aggregateQuery testEnvironment))
       (aggRFDisabledExpectedResponse testEnvironment)
 
@@ -124,7 +124,7 @@ tests = describe "DisableAllRootFieldsSpec" $ do
           |]
 
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders queryTypesIntrospection)
       expectedResponse
 
@@ -137,6 +137,6 @@ tests = describe "DisableAllRootFieldsSpec" $ do
           |]
 
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders subscriptionTypesIntrospection)
       expectedResponse

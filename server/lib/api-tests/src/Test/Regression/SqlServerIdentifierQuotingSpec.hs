@@ -44,7 +44,7 @@ tests = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       ( postGraphql
           testEnv
           [graphql|

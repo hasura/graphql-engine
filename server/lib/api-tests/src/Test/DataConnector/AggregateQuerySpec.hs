@@ -19,7 +19,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.TestEnvironment qualified as TE
 import Harness.Yaml (shouldReturnYaml, shouldReturnYamlF)
 import Hasura.Prelude
@@ -48,7 +48,7 @@ nodeTests :: SpecWith (TestEnvironment, a)
 nodeTests = describe "Nodes Tests" $ do
   it "works with simple query" $ \(testEnvironment, _) ->
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       ( GraphqlEngine.postGraphql
           testEnvironment
           [graphql|
@@ -74,7 +74,7 @@ nodeTests = describe "Nodes Tests" $ do
 
   it "works with multiple nodes fields" $ \(testEnvironment, _) ->
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       ( GraphqlEngine.postGraphql
           testEnvironment
           [graphql|
@@ -104,7 +104,7 @@ nodeTests = describe "Nodes Tests" $ do
   it "works with object relations" $ \(testEnvironment, _) -> do
     -- NOTE: Ordering is required due to datasets non-matching orders
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       ( GraphqlEngine.postGraphql
           testEnvironment
           [graphql|
@@ -138,8 +138,8 @@ nodeTests = describe "Nodes Tests" $ do
         sortYamlArray _ = fail "Should return Array"
 
     shouldReturnYamlF
+      testEnvironment
       (Lens.traverseOf (key "data" . key "Artist_aggregate" . key "nodes" . _Array . traverse . key "Albums" . key "nodes") sortYamlArray)
-      (options testEnvironment)
       ( GraphqlEngine.postGraphql
           testEnvironment
           [graphql|
@@ -178,7 +178,7 @@ aggregateTests =
   describe "Aggregate Tests" $ do
     it "works with count queries" $ \(testEnvironment, _) ->
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -278,7 +278,7 @@ aggregateTests =
       if (fmap Fixture.backendType (TE.getBackendTypeConfig testEnvironment) == Just Fixture.DataConnectorReference)
         then
           shouldReturnYaml
-            (options testEnvironment)
+            testEnvironment
             ( GraphqlEngine.postGraphql
                 testEnvironment
                 referenceQuery
@@ -286,7 +286,7 @@ aggregateTests =
             referenceResults
         else
           shouldReturnYaml
-            (options testEnvironment)
+            testEnvironment
             ( GraphqlEngine.postGraphql
                 testEnvironment
                 generalQuery
@@ -295,7 +295,7 @@ aggregateTests =
 
     it "min and max works on string fields" $ \(testEnvironment, _) ->
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -326,7 +326,7 @@ aggregateTests =
     it "works across array relationships from regular queries" $ \(testEnvironment, _) -> do
       -- NOTE: Ordering is added to allow SQLite chinook dataset to return ordered results
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -370,7 +370,7 @@ aggregateTests =
     it "works across array relationships from aggregate queries via nodes" $ \(testEnvironment, _) -> do
       -- NOTE: Ordering present so that out-of-order rows are sorted for SQLite
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -417,7 +417,7 @@ aggregateTests =
       when ((fmap Fixture.backendType (TE.getBackendTypeConfig testEnvironment)) /= Just Fixture.DataConnectorReference) do
         pendingWith "Agent does not support 'longest' and 'shortest' custom aggregate functions"
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|

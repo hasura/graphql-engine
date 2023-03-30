@@ -114,7 +114,7 @@ tests =
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Updates" \testEnvironment -> do
       let expected :: Value
@@ -145,7 +145,7 @@ tests =
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Deletes" \testEnvironment -> do
       let expected :: Value
@@ -175,7 +175,7 @@ tests =
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
 --------------------------------------------------------------------------------
 -- Metadata

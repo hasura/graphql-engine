@@ -17,7 +17,7 @@ import Harness.Schema qualified as Schema
 import Harness.Services.PostgresDb qualified as Postgres
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.SetupAction (permitTeardownFail)
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -96,7 +96,7 @@ tests =
 
         -- Checking if the replace_metadata was successful
         shouldReturnYaml
-          (options testEnvironment)
+          testEnvironment
           (GraphqlEngine.postMetadata testEnvironment replaceMetadata)
           expectedResponse
 

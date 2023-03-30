@@ -16,7 +16,7 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Network.HTTP.Types.Header (HeaderName)
@@ -98,7 +98,7 @@ tests = do
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Delete root field should be accesible" \testEnvironment -> do
       let expected :: Value
@@ -122,7 +122,7 @@ tests = do
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
   describe "Backend-only fields should not be exposed to a role with `backend_only` set to `true` but `X-Hasura-use-backend-only-permissions` set to `false`" do
     let headers :: [(HeaderName, ByteString)]
@@ -159,7 +159,7 @@ tests = do
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Delete root field should not be accesible" \testEnvironment -> do
       let expected :: Value
@@ -185,7 +185,7 @@ tests = do
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
   describe "Backend-only fields should be exposed to a role with `backend_only` set to `false`" do
     let headers =
@@ -219,7 +219,7 @@ tests = do
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Delete root field should be accesible" \testEnvironment -> do
       let expected :: Value
@@ -243,7 +243,7 @@ tests = do
                 }
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
 --------------------------------------------------------------------------------
 -- Metadata

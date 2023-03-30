@@ -39,7 +39,7 @@ tests = do
   describe "reloading the metadata" do
     it "flags missing tables as inconsistent" \testEnvironment -> do
       let shouldReturnYaml :: IO Value -> Value -> IO ()
-          shouldReturnYaml = Yaml.shouldReturnYaml (options testEnvironment)
+          shouldReturnYaml = Yaml.shouldReturnYaml testEnvironment
 
       Postgres.createTable testEnvironment table
 
@@ -56,7 +56,7 @@ tests = do
 
     it "recognizes when tables have become consistent" \testEnvironment -> do
       let shouldReturnYaml :: IO Value -> Value -> IO ()
-          shouldReturnYaml = Yaml.shouldReturnYaml (options testEnvironment)
+          shouldReturnYaml = Yaml.shouldReturnYaml testEnvironment
 
       postMetadata testEnvironment (replaceMetadataWithTable testEnvironment)
         `shouldReturnYaml` expectedInconsistentYaml Nothing testEnvironment
@@ -75,14 +75,14 @@ tests = do
   describe "replacing the metadata" do
     it "flags missing tables as inconsistent" \testEnvironment -> do
       let shouldReturnYaml :: IO Value -> Value -> IO ()
-          shouldReturnYaml = Yaml.shouldReturnYaml (options testEnvironment)
+          shouldReturnYaml = Yaml.shouldReturnYaml testEnvironment
 
       postMetadata testEnvironment (replaceMetadataWithTable testEnvironment)
         `shouldReturnYaml` expectedInconsistentYaml Nothing testEnvironment
 
     it "recognizes when tables have become consistent" \testEnvironment -> do
       let shouldReturnYaml :: IO Value -> Value -> IO ()
-          shouldReturnYaml = Yaml.shouldReturnYaml (options testEnvironment)
+          shouldReturnYaml = Yaml.shouldReturnYaml testEnvironment
 
       postMetadata testEnvironment (replaceMetadataWithTable testEnvironment)
         `shouldReturnYaml` expectedInconsistentYaml Nothing testEnvironment
@@ -99,7 +99,7 @@ tests = do
   describe "replacing metadata with already present inconsistency" do
     it "drop table for an already inconsistent table with event trigger" \testEnvironment -> do
       let shouldReturnYaml :: IO Value -> Value -> IO ()
-          shouldReturnYaml = Yaml.shouldReturnYaml (options testEnvironment)
+          shouldReturnYaml = Yaml.shouldReturnYaml testEnvironment
 
       Postgres.createTable testEnvironment table
       _ <- postMetadata testEnvironment (setupMetadataWithTableAndEventTrigger testEnvironment)
@@ -112,7 +112,7 @@ tests = do
 
     it "drop source for an already inconsistent source" \testEnvironment -> do
       let shouldReturnYaml :: IO Value -> Value -> IO ()
-          shouldReturnYaml = Yaml.shouldReturnYaml (options testEnvironment)
+          shouldReturnYaml = Yaml.shouldReturnYaml testEnvironment
 
       _ <- postMetadata testEnvironment (setupMetadataWithInconsistentSource testEnvironment)
       postMetadata testEnvironment repaceMetadataRemoveInconsistentSource

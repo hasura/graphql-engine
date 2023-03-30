@@ -17,7 +17,7 @@ import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Subscriptions (getNextResponse, withSubscriptions)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -142,7 +142,7 @@ tests = withSubscriptions $ do
             actual :: IO Value
             actual = getNextResponse query
 
-        shouldReturnYaml (options testEnvironment) actual expected
+        shouldReturnYaml testEnvironment actual expected
 
       -- add some data
       do
@@ -166,7 +166,7 @@ tests = withSubscriptions $ do
                     }
                   }
                 |]
-        shouldReturnYaml (options testEnvironment) actual expected
+        shouldReturnYaml testEnvironment actual expected
 
       -- fetch the next response
       do
@@ -185,7 +185,7 @@ tests = withSubscriptions $ do
             actual :: IO Value
             actual = getNextResponse query
 
-        shouldReturnYaml (options testEnvironment) actual expected
+        shouldReturnYaml testEnvironment actual expected
 
 --------------------------------------------------------------------------------
 -- SQL

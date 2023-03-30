@@ -17,7 +17,6 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.SetupAction (SetupAction (..), permitTeardownFail)
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
-import Harness.Yaml (fromObject)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it, shouldBe)
 
@@ -129,3 +128,7 @@ postgresSetup testEnvironment webhookServer = do
           num_retries: 1
           retry_interval_seconds: 5
     |]
+
+fromObject :: Value -> Object
+fromObject (Object x) = x
+fromObject v = error $ "fromObject: Expected object, received" <> show v

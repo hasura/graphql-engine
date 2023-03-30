@@ -276,7 +276,7 @@ tests = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       ( GraphqlEngine.postGraphql
           testEnv
           [graphql|
@@ -311,7 +311,7 @@ tests = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       ( GraphqlEngine.postGraphqlWithHeaders
           testEnv
           [("X-Hasura-Role", "user_1")]
@@ -347,7 +347,7 @@ tests = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       ( GraphqlEngine.postGraphqlWithHeaders
           testEnv
           [("X-Hasura-Role", "user_2")]
@@ -378,7 +378,7 @@ tests = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       ( GraphqlEngine.postGraphqlWithHeaders
           testEnv
           [("X-Hasura-Role", "user_2")]
@@ -410,7 +410,7 @@ tests = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       ( GraphqlEngine.postGraphql
           testEnv
           [graphql|
@@ -440,7 +440,7 @@ tests = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       ( GraphqlEngine.postGraphql
           testEnv
           [graphql|

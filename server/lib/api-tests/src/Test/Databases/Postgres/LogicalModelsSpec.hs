@@ -18,7 +18,7 @@ import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options), getBackendTypeConfig)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -133,7 +133,7 @@ tests = do
                       excerpt: "I like to eat dog food I am a dogs..."
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Uses two queries with the same argument names and ensure they don't mess with one another" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -187,7 +187,7 @@ tests = do
                     - excerpt: "I like to eat..."
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Uses a one parameter query and uses it multiple times" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -233,7 +233,7 @@ tests = do
                     - excerpt: "I like to eat..."
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Uses a one parameter query, passing it a GraphQL variable" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -280,7 +280,7 @@ tests = do
                     - excerpt: "I like to eat dog food I am a dogs..."
               |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Runs a simple query using distinct_on and order_by" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -324,4 +324,4 @@ tests = do
                       }
                    |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected

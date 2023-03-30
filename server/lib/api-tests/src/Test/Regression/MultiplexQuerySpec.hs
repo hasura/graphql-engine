@@ -144,7 +144,7 @@ multiplexedQueryComputedFieldsSpec = do
 
     -- check result from valid subscription
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       (getNextResponse subValid)
       [interpolateYaml|
         data:
@@ -162,7 +162,7 @@ multiplexedQueryComputedFieldsSpec = do
 
     -- check result from invalid subscription
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       (getNextResponse subInvalid)
       [yaml|
         errors:
@@ -188,7 +188,7 @@ multiplexedQueryComputedFieldsSpec = do
             |]
 
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       insertRow
       [interpolateYaml|
         data:
@@ -197,7 +197,7 @@ multiplexedQueryComputedFieldsSpec = do
       |]
 
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       (getNextResponse subValid)
       [interpolateYaml|
         data:
@@ -239,7 +239,7 @@ multiplexedQueryCustomFunctionsSpec = do
 
     -- check result from valid subscription
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       (getNextResponse subValid)
       [interpolateYaml|
         data:
@@ -254,7 +254,7 @@ multiplexedQueryCustomFunctionsSpec = do
 
     -- check result from invalid subscription
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       (getNextResponse subInvalid)
       [yaml|
         errors:
@@ -280,7 +280,7 @@ multiplexedQueryCustomFunctionsSpec = do
             |]
 
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       insertRow
       [interpolateYaml|
         data:
@@ -289,7 +289,7 @@ multiplexedQueryCustomFunctionsSpec = do
       |]
 
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       (getNextResponse subValid)
       [interpolateYaml|
         data:

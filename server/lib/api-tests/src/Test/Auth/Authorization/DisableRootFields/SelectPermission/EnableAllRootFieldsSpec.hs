@@ -11,7 +11,7 @@ import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Auth.Authorization.DisableRootFields.Common
@@ -147,7 +147,7 @@ tests = describe "EnableAllRootFieldsSpec" $ do
         schemaName = Schema.getSchemaName testEnvironment
 
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (listQuery testEnvironment))
       [interpolateYaml|
         data:
@@ -158,13 +158,13 @@ tests = describe "EnableAllRootFieldsSpec" $ do
 
   it "query root: 'pk' root field is accessible" $ \testEnvironment -> do
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (pkQuery testEnvironment))
       (pkRFEnabledExpectedResponse testEnvironment)
 
   it "query root: 'aggregate' root field is accessible" $ \testEnvironment -> do
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (aggregateQuery testEnvironment))
       (aggRFEnabledExpectedResponse testEnvironment)
 
@@ -184,6 +184,6 @@ tests = describe "EnableAllRootFieldsSpec" $ do
           |]
 
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders queryTypesIntrospection)
       expectedResponse

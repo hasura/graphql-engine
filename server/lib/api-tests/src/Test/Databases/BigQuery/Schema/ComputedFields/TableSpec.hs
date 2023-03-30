@@ -172,7 +172,7 @@ tests = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       ( GraphqlEngine.postGraphql
           testEnv
           [graphql|
@@ -209,7 +209,7 @@ tests = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       ( GraphqlEngine.postGraphql
           testEnv
           [graphql|
@@ -248,7 +248,7 @@ tests = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       ( GraphqlEngine.postGraphql
           testEnv
           [graphql|
@@ -289,7 +289,7 @@ tests = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      (options testEnv)
+      testEnv
       ( GraphqlEngine.postGraphql
           testEnv
           [graphql|

@@ -22,7 +22,7 @@ import Harness.Services.Metadata
 import Harness.Services.PostgresSource
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options), getBackendTypeConfig, scalarTypeToText)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig, scalarTypeToText)
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -116,7 +116,7 @@ testAdminAccess = do
             sourceName = BackendType.backendSourceName backendTypeMetadata
 
         shouldReturnYaml
-          (options testEnvironment)
+          testEnvironment
           ( GraphqlEngine.postMetadataWithStatusAndHeaders
               400
               testEnvironment
@@ -136,7 +136,7 @@ testAdminAccess = do
             sourceName = BackendType.backendSourceName backendTypeMetadata
 
         shouldReturnYaml
-          (options testEnvironment)
+          testEnvironment
           ( GraphqlEngine.postMetadataWithStatusAndHeaders
               400
               testEnvironment
@@ -158,7 +158,7 @@ testAdminAccess = do
             getRequestType = backendType <> "_get_logical_model"
 
         shouldReturnYaml
-          (options testEnvironment)
+          testEnvironment
           ( GraphqlEngine.postMetadataWithStatusAndHeaders
               400
               testEnvironment
@@ -225,7 +225,7 @@ testImplementation = do
               }
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postMetadataWithStatus
             400
             testEnvironment
@@ -263,7 +263,7 @@ testImplementation = do
       Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
@@ -337,7 +337,7 @@ testImplementation = do
       Schema.untrackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
@@ -383,7 +383,7 @@ testPermissions = do
       Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
@@ -405,7 +405,7 @@ testPermissions = do
         |]
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
@@ -449,7 +449,7 @@ testPermissions = do
       Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
@@ -477,7 +477,7 @@ testPermissions = do
         |]
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
@@ -510,7 +510,7 @@ testPermissionFailures = do
           createPermRequestType = backendType <> "_create_logical_model_select_permission"
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postMetadataWithStatus
             400
             testEnvironment
@@ -543,7 +543,7 @@ testPermissionFailures = do
           expectedError = "Logical model \"made_up_logical_model\" not found in source \"" <> sourceName <> "\"."
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postMetadataWithStatus
             400
             testEnvironment
@@ -573,7 +573,7 @@ testPermissionFailures = do
           dropPermRequestType = backendType <> "_drop_logical_model_select_permission"
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postMetadataWithStatus
             400
             testEnvironment
@@ -603,7 +603,7 @@ testPermissionFailures = do
           expectedError = "Logical model \"made_up_logical_model\" not found in source \"" <> sourceName <> "\"."
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postMetadataWithStatus
             400
             testEnvironment

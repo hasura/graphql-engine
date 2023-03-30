@@ -417,7 +417,7 @@ noJoinsTests = describe "simple joins" do
 
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -445,7 +445,7 @@ simpleTests = describe "simple joins" do
                - title: Article2
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
   it "joins no writer against articles" \(testEnvironment, _) -> do
@@ -466,7 +466,7 @@ simpleTests = describe "simple joins" do
             writer: null
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
   it "joins artist against articles" \(testEnvironment, _) -> do
@@ -491,7 +491,7 @@ simpleTests = describe "simple joins" do
                - title: Article3
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
   it "joins no artist against articles" \(testEnvironment, _) -> do
@@ -512,7 +512,7 @@ simpleTests = describe "simple joins" do
             artist: null
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -550,7 +550,7 @@ joinArticleTests = describe "join from article object" do
               title: "Article1"
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -591,7 +591,7 @@ joinWriterTests = describe "join from writer object" do
                - title: Article2
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -632,7 +632,7 @@ joinArtistTests = describe "join from artist object" do
                - title: Article3
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -712,7 +712,7 @@ deeplyNestedJoinTests = describe "join from artist object" do
               __typename: Artist
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
   it "joins nested articles at different depths" \(testEnvironment, _) -> do
@@ -752,6 +752,6 @@ deeplyNestedJoinTests = describe "join from artist object" do
               __typename: Artist
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse

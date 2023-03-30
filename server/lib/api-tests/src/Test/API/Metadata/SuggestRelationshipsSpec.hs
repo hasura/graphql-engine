@@ -10,7 +10,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options), getBackendTypeConfig)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
 import Harness.Yaml (mapObject, shouldReturnYamlF, sortArray)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -133,8 +133,8 @@ tests = do
           schemaName = Schema.unSchemaName $ Schema.getSchemaName testEnv
 
       shouldReturnYamlF
+        testEnv
         (pure . mapObject sortArray)
-        (options testEnv)
         ( GraphqlEngine.postMetadataWithStatus
             200
             testEnv
@@ -215,8 +215,8 @@ tests = do
           sourceName = Fixture.backendSourceName backendTypeMetadata
 
       shouldReturnYamlF
+        testEnv
         (pure . mapObject sortArray)
-        (options testEnv)
         ( GraphqlEngine.postMetadataWithStatus
             200
             testEnv
@@ -279,8 +279,8 @@ tests = do
           sourceName = Fixture.backendSourceName backendTypeMetadata
 
       shouldReturnYamlF
+        testEnv
         (pure . mapObject sortArray)
-        (options testEnv)
         ( GraphqlEngine.postMetadataWithStatus
             200
             testEnv
@@ -299,8 +299,8 @@ tests = do
           sourceName = Fixture.backendSourceName backendTypeMetadata
 
       shouldReturnYamlF
+        testEnv
         (pure . mapObject sortArray)
-        (options testEnv)
         ( GraphqlEngine.postMetadataWithStatus
             200
             testEnv

@@ -21,7 +21,7 @@ import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Protocol (withEachProtocol)
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -120,7 +120,7 @@ tests =
                   name: Justin
             |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Lookup with (missing) primary key" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -146,7 +146,7 @@ tests =
                 #{schemaName}_authors_by_pk: null
             |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Fails on missing tables" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -176,7 +176,7 @@ tests =
                   field '#{schemaName}_unknown_by_pk' not found in type: 'query_root'
             |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Fails on missing fields" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -205,7 +205,7 @@ tests =
                   field 'unknown' not found in type: '#{schemaName}_authors'
             |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Fails on missing primary key value" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -234,7 +234,7 @@ tests =
                   missing required field 'id'
             |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Fails on empty query" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -262,4 +262,4 @@ tests =
                   not a valid graphql query
             |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected

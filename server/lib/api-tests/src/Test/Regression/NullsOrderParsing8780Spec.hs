@@ -10,7 +10,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec
@@ -96,7 +96,7 @@ postgresTests = do
                       name: Author 2
                 |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postV2Query 200 testEnvironment queryYaml)
       expectedYaml
 
@@ -141,6 +141,6 @@ postgresTests = do
                 |]
 
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postV2Query 200 testEnvironment queryYaml)
       expectedYaml

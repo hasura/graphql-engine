@@ -11,7 +11,7 @@ import Harness.Quoter.Yaml
 import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -112,7 +112,7 @@ tests =
                     - False
               |]
         shouldReturnYaml
-          (options testEnvironment)
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment getTriggerInfoQuery)
           expectedResponseForEnablingTriggers
 
@@ -145,7 +145,7 @@ tests =
                     - True
               |]
         shouldReturnYaml
-          (options testEnvironment)
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment getTriggerInfoQuery)
           expectedResponseForDisablingTriggers
 

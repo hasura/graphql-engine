@@ -16,7 +16,7 @@ import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options), getBackendTypeConfig)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
 import Harness.Yaml (shouldAtLeastBe, shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -227,7 +227,7 @@ tests = do
               }
            |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Runs simple query with a basic where clause" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -256,7 +256,7 @@ tests = do
               }
            |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Runs a simple query that takes no parameters" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -285,7 +285,7 @@ tests = do
               }
            |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Runs a simple query that takes one dummy parameter and order_by" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -325,7 +325,7 @@ tests = do
               }
            |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Runs a simple query that takes no parameters but ends with a comment" $ \testEnvironment -> do
       let spicyQuery :: Text
@@ -368,7 +368,7 @@ tests = do
               }
            |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Uses a column permission that we are allowed to access" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -388,7 +388,7 @@ tests = do
       Schema.trackLogicalModel source helloWorldPermLogicalModel testEnvironment
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
@@ -430,7 +430,7 @@ tests = do
               }
            |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Fails because we access a column we do not have permissions for" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -450,7 +450,7 @@ tests = do
       Schema.trackLogicalModel source helloWorldPermLogicalModel testEnvironment
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
@@ -493,7 +493,7 @@ tests = do
               }
            |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Using row permissions filters out some results" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -513,7 +513,7 @@ tests = do
       Schema.trackLogicalModel source helloWorldPermLogicalModel testEnvironment
 
       shouldReturnYaml
-        (options testEnvironment)
+        testEnvironment
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
@@ -557,4 +557,4 @@ tests = do
               }
            |]
 
-      shouldReturnYaml (options testEnvironment) actual expected
+      shouldReturnYaml testEnvironment actual expected

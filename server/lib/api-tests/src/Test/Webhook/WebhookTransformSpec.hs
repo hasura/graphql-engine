@@ -8,7 +8,7 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (options))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -73,6 +73,6 @@ verifyTransformation testEnvironment baseUrlTemplate queryParamTemplate expected
         |]
 
   shouldReturnYaml
-    (options testEnvironment)
+    testEnvironment
     (GraphqlEngine.postMetadata testEnvironment responseTransformQuery)
     expectedResponse

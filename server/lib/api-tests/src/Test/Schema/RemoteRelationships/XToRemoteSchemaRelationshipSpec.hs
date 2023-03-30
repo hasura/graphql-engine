@@ -702,7 +702,7 @@ executionTests = describe "execution" do
                  title: album1_artist1
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -728,7 +728,7 @@ executionTests = describe "execution" do
                album: null
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -765,7 +765,7 @@ executionTests = describe "execution" do
                album: null
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -821,6 +821,6 @@ schemaTests =
               - name: title
           |]
     shouldReturnYaml
-      (options testEnvironment)
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse

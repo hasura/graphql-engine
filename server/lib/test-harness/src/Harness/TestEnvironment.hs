@@ -40,6 +40,7 @@ import Harness.Test.BackendType
 import Harness.Test.CustomOptions qualified as Custom
 import Harness.Test.FixtureName
 import Harness.Test.ScalarType
+import Harness.Yaml
 import Hasura.Prelude
 import Network.WebSockets qualified as WS
 import System.Process (readProcess)
@@ -98,7 +99,7 @@ data TestEnvironment = TestEnvironment
     -- | The permissions we'd like to use for testing.
     permissions :: TestingRole,
     -- | Custom fixture-specific options.
-    options :: Custom.Options
+    _options :: Custom.Options
   }
 
 scalarTypeToText :: TestEnvironment -> ScalarType -> Text
@@ -262,3 +263,10 @@ testLogShow testEnv =
 -- This should ideally be replaced with more specific logging functions.
 testLogHarness :: TraceString a => TestEnvironment -> a -> IO ()
 testLogHarness testEnv = testLogMessage testEnv . logHarness
+
+-- Compatibility with the new, componentised fixtures:
+
+instance Has ShouldReturnYamlF TestEnvironment where
+  getter testEnvironment = ShouldReturnYamlF (shouldReturnYamlFInternal (_options testEnvironment))
+
+  modifier = error "not implementable: modifier @ShouldReturnYamlF @TestEnvironment"
