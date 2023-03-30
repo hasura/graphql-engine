@@ -3345,6 +3345,20 @@
                 ],
                 "type": "object"
             },
+            "DataConnectorOptions": {
+                "properties": {
+                    "display_name": {
+                        "type": "string"
+                    },
+                    "uri": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "uri"
+                ],
+                "type": "object"
+            },
             "DataConnectorSourceTimeoutMicroseconds": {
                 "properties": {
                     "microseconds": {
@@ -3375,20 +3389,6 @@
                 },
                 "required": [
                     "seconds"
-                ],
-                "type": "object"
-            },
-            "DataConnectorOptions": {
-                "properties": {
-                    "display_name": {
-                        "type": "string"
-                    },
-                    "uri": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "uri"
                 ],
                 "type": "object"
             },
