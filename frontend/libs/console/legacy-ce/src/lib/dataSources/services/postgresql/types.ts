@@ -63,6 +63,7 @@ export interface PostgresTrigger {
   trigger_schema: string;
   action_statement: string;
   action_orientation: string;
+  action_condition: string;
   event_manipulation: string;
 }
 
