@@ -6,7 +6,6 @@ module Hasura.GraphQL.Execute.Backend
     ExecutionPlan,
     ExecutionStep (..),
     ExplainPlan (..),
-    MonadQueryTags (..),
     OnBaseMonad (..),
     convertRemoteSourceRelationship,
   )
@@ -18,10 +17,8 @@ import Data.Aeson.Casing qualified as J
 import Data.Aeson.Ordered qualified as JO
 import Data.Environment as Env
 import Data.Kind (Type)
-import Data.Tagged
 import Data.Text.Extended
 import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
-import Database.PG.Query qualified as PG
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Action.Types (ActionExecutionPlan)
@@ -32,20 +29,17 @@ import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.Prelude
 import Hasura.QueryTags
-import Hasura.RQL.DDL.Schema.Cache (CacheRWT)
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column (ColumnType, fromCol)
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.QueryTags (QueryTagsConfig)
 import Hasura.RQL.Types.ResultCustomization
-import Hasura.RQL.Types.SchemaCache.Build (MetadataT (..))
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Session
-import Hasura.Tracing (MonadTrace, TraceT)
+import Hasura.Tracing (MonadTrace)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
 
@@ -328,28 +322,3 @@ data ExecutionStep where
 -- independent. In the future, when we implement a client-side dataloader and generalized joins,
 -- this will need to be changed into an annotated tree.
 type ExecutionPlan = RootFieldMap ExecutionStep
-
--- TODO: move this to a new module.
-class (Monad m) => MonadQueryTags m where
-  -- | Creates Query Tags. These are appended to the Generated SQL.
-  -- Helps users to use native database monitoring tools to get some 'application-context'.
-  createQueryTags ::
-    QueryTagsAttributes -> Maybe QueryTagsConfig -> Tagged m QueryTagsComment
-
-instance (MonadQueryTags m) => MonadQueryTags (ReaderT r m) where
-  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (ReaderT r m) QueryTagsComment
-
-instance (MonadQueryTags m) => MonadQueryTags (ExceptT e m) where
-  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (ExceptT e m) QueryTagsComment
-
-instance (MonadQueryTags m) => MonadQueryTags (TraceT m) where
-  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (TraceT m) QueryTagsComment
-
-instance (MonadQueryTags m) => MonadQueryTags (PG.TxET QErr m) where
-  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (PG.TxET QErr m) QueryTagsComment
-
-instance (MonadQueryTags m) => MonadQueryTags (MetadataT m) where
-  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (MetadataT m) QueryTagsComment
-
-instance (MonadQueryTags m) => MonadQueryTags (CacheRWT m) where
-  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (CacheRWT m) QueryTagsComment

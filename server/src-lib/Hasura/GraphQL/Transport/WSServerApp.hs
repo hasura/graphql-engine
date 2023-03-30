@@ -14,7 +14,6 @@ import Data.ByteString.Char8 qualified as B (pack)
 import Data.Text (pack)
 import Hasura.App.State
 import Hasura.GraphQL.Execute qualified as E
-import Hasura.GraphQL.Execute.Backend qualified as EB
 import Hasura.GraphQL.Logging
 import Hasura.GraphQL.Transport.HTTP (MonadExecuteQuery)
 import Hasura.GraphQL.Transport.Instances ()
@@ -25,6 +24,7 @@ import Hasura.GraphQL.Transport.WebSocket.Types
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
+import Hasura.QueryTags
 import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.AppStateRef
 import Hasura.Server.Auth (UserAuthentication)
@@ -54,7 +54,7 @@ createWSServerApp ::
     MonadExecutionLog m,
     MonadExecuteQuery m,
     MonadMetadataStorage m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     HasResourceLimits m,
     ProvidesNetwork m,
     Tracing.MonadTrace m

@@ -17,7 +17,6 @@ import Data.These (These (..))
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute qualified as E
-import Hasura.GraphQL.Execute.Backend qualified as EB
 import Hasura.GraphQL.Logging (MonadExecutionLog, MonadQueryLog)
 import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.GraphQL.Parser.Name qualified as GName
@@ -27,6 +26,7 @@ import Hasura.HTTP
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
+import Hasura.QueryTags
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.QueryCollection
@@ -106,7 +106,7 @@ runCustomEndpoint ::
     MonadExecutionLog m,
     GH.MonadExecuteQuery m,
     MonadMetadataStorage m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     HasResourceLimits m,
     ProvidesNetwork m
   ) =>

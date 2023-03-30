@@ -25,9 +25,9 @@ import Hasura.Backends.MySQL.SQL qualified as MySQL
 import Hasura.Backends.Postgres.DDL.RunSQL qualified as Postgres
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.GraphQL.Execute.Backend
 import Hasura.Metadata.Class
 import Hasura.Prelude
+import Hasura.QueryTags
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DML.Count
 import Hasura.RQL.DML.Delete

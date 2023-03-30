@@ -26,11 +26,11 @@ import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.QueryTags
+import Hasura.QueryTags.Types
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
-import Hasura.RQL.Types.QueryTags
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (RequestId (..))

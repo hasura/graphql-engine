@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Hasura.RQL.Types.QueryTags
+module Hasura.QueryTags.Types
   ( QueryTagsConfig (..),
     QueryTagsFormat (..),
     defaultQueryTagsConfig,

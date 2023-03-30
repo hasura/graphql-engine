@@ -66,6 +66,7 @@ import Hasura.GraphQL.Transport.WebSocket.Types
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
+import Hasura.QueryTags
 import Hasura.RQL.Types.Common (MetricsConfig (_mcAnalyzeQueryVariables))
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.SchemaCache (scApiLimits, scMetricsConfig)
@@ -411,7 +412,7 @@ onStart ::
     MonadExecuteQuery m,
     MC.MonadBaseControl IO m,
     MonadMetadataStorage m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     HasResourceLimits m,
     ProvidesNetwork m
   ) =>
@@ -1014,7 +1015,7 @@ onMessage ::
     MonadExecuteQuery m,
     MC.MonadBaseControl IO m,
     MonadMetadataStorage m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     HasResourceLimits m,
     ProvidesNetwork m,
     Tracing.MonadTrace m

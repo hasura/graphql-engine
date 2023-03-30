@@ -66,6 +66,7 @@ import Hasura.HTTP
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
+import Hasura.QueryTags
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
@@ -309,7 +310,7 @@ runGQ ::
     MonadTrace m,
     MonadExecuteQuery m,
     MonadMetadataStorage m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     HasResourceLimits m,
     ProvidesNetwork m
   ) =>
@@ -745,7 +746,7 @@ runGQBatched ::
     MonadTrace m,
     MonadExecuteQuery m,
     MonadMetadataStorage m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     HasResourceLimits m,
     ProvidesNetwork m
   ) =>

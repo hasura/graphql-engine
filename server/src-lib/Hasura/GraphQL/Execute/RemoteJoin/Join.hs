@@ -30,6 +30,7 @@ import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqOutgoing, GQLReqUnparsed, _
 import Hasura.GraphQL.Transport.Instances ()
 import Hasura.Logging qualified as L
 import Hasura.Prelude
+import Hasura.QueryTags
 import Hasura.RQL.Types.Common
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
@@ -56,7 +57,7 @@ processRemoteJoins ::
   ( MonadError QErr m,
     MonadIO m,
     MonadBaseControl IO m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     MonadQueryLog m,
     MonadExecutionLog m,
     Tracing.MonadTrace m,
@@ -128,7 +129,7 @@ processRemoteJoins requestId logger env requestHeaders userInfo lhs maybeJoinTre
 -- allowing it to be used in tests.
 foldJoinTreeWith ::
   ( MonadError QErr m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     Traversable f
   ) =>
   Env.Environment ->

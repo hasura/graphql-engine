@@ -87,6 +87,7 @@ import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata (..), CustomRe
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..), LogicalModelName)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
+import Hasura.QueryTags.Types
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
@@ -101,7 +102,6 @@ import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.QueryTags
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Roles

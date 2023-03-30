@@ -1,4 +1,5 @@
 {-# LANGUAGE Arrows #-}
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -48,6 +49,7 @@ import Hasura.LogicalModel.Cache (LogicalModelCache, LogicalModelInfo (..))
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.Metadata.Class
 import Hasura.Prelude
+import Hasura.QueryTags
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ApiLimit (MonadGetApiTimeLimit (..))
 import Hasura.RQL.DDL.CustomTypes
@@ -174,7 +176,7 @@ newtype CacheRWT m a
     -- should ultimately be reduced to 'AppContext', or even better a relevant
     -- subset thereof.
     CacheRWT (ReaderT ServerConfigCtx (StateT (RebuildableSchemaCache, CacheInvalidations) m) a)
-  deriving
+  deriving newtype
     ( Functor,
       Applicative,
       Monad,
@@ -188,6 +190,7 @@ newtype CacheRWT m a
       MonadBaseControl b,
       ProvidesNetwork
     )
+  deriving anyclass (MonadQueryTags)
 
 instance Monad m => HasServerConfigCtx (CacheRWT m) where
   askServerConfigCtx = CacheRWT ask

@@ -1,4 +1,5 @@
 {-# LANGUAGE Arrows #-}
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -49,6 +50,7 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Analyse
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Prelude
+import Hasura.QueryTags
 import Hasura.RQL.Types.Allowlist (NormalizedQuery, unNormalizedQuery)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Endpoint
@@ -221,7 +223,7 @@ instance (CacheRWM m) => CacheRWM (PG.TxET QErr m) where
   setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
 
 newtype MetadataT m a = MetadataT {unMetadataT :: StateT Metadata m a}
-  deriving
+  deriving newtype
     ( Functor,
       Applicative,
       Monad,
@@ -239,6 +241,7 @@ newtype MetadataT m a = MetadataT {unMetadataT :: StateT Metadata m a}
       MonadBaseControl b,
       ProvidesNetwork
     )
+  deriving anyclass (MonadQueryTags)
 
 instance (Monad m) => MetadataM (MetadataT m) where
   getMetadata = MetadataT get

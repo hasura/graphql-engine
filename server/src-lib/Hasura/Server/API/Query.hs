@@ -19,10 +19,10 @@ import Hasura.App.State
 import Hasura.Backends.Postgres.DDL.RunSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.GraphQL.Execute.Backend
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
+import Hasura.QueryTags
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ApiLimit
 import Hasura.RQL.DDL.ComputedField

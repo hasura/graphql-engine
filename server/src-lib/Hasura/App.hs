@@ -102,7 +102,6 @@ import Hasura.GraphQL.Execute
   )
 import Hasura.GraphQL.Execute.Action
 import Hasura.GraphQL.Execute.Action.Subscription
-import Hasura.GraphQL.Execute.Backend qualified as EB
 import Hasura.GraphQL.Execute.Subscription.Poll qualified as ES
 import Hasura.GraphQL.Execute.Subscription.State qualified as ES
 import Hasura.GraphQL.Logging (MonadExecutionLog (..), MonadQueryLog (..))
@@ -760,7 +759,7 @@ instance MonadResolveSource AppM where
   getPGSourceResolver = asks (mkPgSourceResolver . _lsPgLogger . appEnvLoggers)
   getMSSQLSourceResolver = return mkMSSQLSourceResolver
 
-instance EB.MonadQueryTags AppM where
+instance MonadQueryTags AppM where
   createQueryTags _attributes _qtSourceConfig = return $ emptyQueryTagsComment
 
 instance MonadEventLogCleanup AppM where
@@ -894,7 +893,7 @@ runHGEServer ::
     HasResourceLimits m,
     MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
     MonadTrace m,
@@ -986,7 +985,7 @@ mkHGEServer ::
     HasResourceLimits m,
     MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
     MonadTrace m,

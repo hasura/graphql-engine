@@ -29,6 +29,7 @@ import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.GraphQL.Transport.Instances ()
 import Hasura.Metadata.Class
 import Hasura.Prelude
+import Hasura.QueryTags
 import Hasura.RQL.IR
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB

@@ -40,6 +40,7 @@ import Hasura.GraphQL.Execute.RemoteJoin.Types
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Transport.Instances ()
 import Hasura.Prelude
+import Hasura.QueryTags
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.SQL.AnyBackend qualified as AB
@@ -53,7 +54,7 @@ import Network.HTTP.Types qualified as HTTP
 -- | Construct and execute a call to a source for a remote join.
 makeSourceJoinCall ::
   Environment ->
-  (EB.MonadQueryTags m, MonadError QErr m) =>
+  (MonadQueryTags m, MonadError QErr m) =>
   -- | Function to dispatch a request to a source.
   (AB.AnyBackend SourceJoinCall -> m BL.ByteString) ->
   -- | User information.
@@ -98,7 +99,7 @@ data SourceJoinCall b = SourceJoinCall
 -- Step 1: building the source call
 
 buildSourceJoinCall ::
-  (EB.BackendExecute b, EB.MonadQueryTags m, MonadError QErr m) =>
+  (EB.BackendExecute b, MonadQueryTags m, MonadError QErr m) =>
   Environment ->
   UserInfo ->
   FieldName ->

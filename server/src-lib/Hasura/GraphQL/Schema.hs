@@ -47,6 +47,7 @@ import Hasura.GraphQL.Schema.Typename (MkTypename (..))
 import Hasura.LogicalModel.Cache (LogicalModelCache, _lmiPermissions)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
+import Hasura.QueryTags.Types
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
@@ -55,7 +56,6 @@ import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission
-import Hasura.RQL.Types.QueryTags
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization as SC

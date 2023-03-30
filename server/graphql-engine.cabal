@@ -819,7 +819,6 @@ library
                      , Hasura.RQL.Types.OpenTelemetry
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
-                     , Hasura.RQL.Types.QueryTags
                      , Hasura.RQL.Types.Relationships.Local
                      , Hasura.RQL.Types.Relationships.Remote
                      , Hasura.RQL.Types.Relationships.ToSource
@@ -1004,6 +1003,7 @@ library
                      , Hasura.SQL.Value
                      , Hasura.SQL.WKT
                      , Hasura.QueryTags
+                     , Hasura.QueryTags.Types
                      , Network.HTTP.Client.Transformable
                      , Network.HTTP.Client.DynamicTlsPermissions
                      , Network.HTTP.Client.Restricted

@@ -52,7 +52,6 @@ import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute qualified as E
-import Hasura.GraphQL.Execute.Backend qualified as EB
 import Hasura.GraphQL.Execute.Subscription.State qualified as ES
 import Hasura.GraphQL.Explain qualified as GE
 import Hasura.GraphQL.Logging (MonadExecutionLog, MonadQueryLog)
@@ -65,6 +64,7 @@ import Hasura.HTTP
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude hiding (get, put)
+import Hasura.QueryTags
 import Hasura.RQL.DDL.ApiLimit (MonadGetApiTimeLimit)
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup)
 import Hasura.RQL.DDL.Schema
@@ -140,7 +140,7 @@ newtype Handler m a = Handler (ReaderT HandlerCtx (ExceptT QErr m) a)
       MonadEventLogCleanup,
       MonadQueryLog,
       MonadExecutionLog,
-      EB.MonadQueryTags,
+      MonadQueryTags,
       GH.MonadExecuteQuery,
       MonadMetadataApiAuthorization,
       MonadMetadataStorage,
@@ -424,7 +424,7 @@ v1QueryHandler ::
     MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     HasAppEnv m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     MonadEventLogCleanup m,
     ProvidesNetwork m,
     MonadGetApiTimeLimit m,
@@ -487,7 +487,7 @@ v2QueryHandler ::
     MonadMetadataStorage m,
     MonadResolveSource m,
     HasAppEnv m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     ProvidesNetwork m,
     UserInfoM m
   ) =>
@@ -522,7 +522,7 @@ v1Alpha1GQHandler ::
     MonadError QErr m,
     MonadReader HandlerCtx m,
     MonadMetadataStorage m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     HasResourceLimits m,
     ProvidesNetwork m
   ) =>
@@ -552,7 +552,7 @@ v1GQHandler ::
     MonadError QErr m,
     MonadReader HandlerCtx m,
     MonadMetadataStorage m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     HasResourceLimits m,
     ProvidesNetwork m
   ) =>
@@ -572,7 +572,7 @@ v1GQRelayHandler ::
     MonadError QErr m,
     MonadReader HandlerCtx m,
     MonadMetadataStorage m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     HasResourceLimits m,
     ProvidesNetwork m
   ) =>
@@ -587,7 +587,7 @@ gqlExplainHandler ::
     MonadError QErr m,
     MonadReader HandlerCtx m,
     MonadMetadataStorage m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     MonadTrace m
   ) =>
   GE.GQLExplain ->
@@ -726,7 +726,7 @@ mkWaiApp ::
     HasResourceLimits m,
     MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     MonadEventLogCleanup m,
     ProvidesNetwork m,
     MonadGetApiTimeLimit m
@@ -771,7 +771,7 @@ httpApp ::
     MonadMetadataStorageQueryAPI m,
     HasResourceLimits m,
     MonadResolveSource m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     MonadEventLogCleanup m,
     ProvidesNetwork m,
     MonadGetApiTimeLimit m
