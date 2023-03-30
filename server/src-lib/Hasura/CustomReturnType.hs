@@ -15,7 +15,7 @@ import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.SQL.Backend (BackendType)
 
--- | Description of a custom return type for a Logical Model
+-- | Description of a custom return type tied specifically to a Logical Model
 data CustomReturnType (b :: BackendType) = CustomReturnType
   { crtColumns :: InsOrd.InsOrdHashMap (Column b) (NullableScalarType b),
     crtDescription :: Maybe Text

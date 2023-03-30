@@ -724,7 +724,11 @@ library
                      , Hasura.ShutdownLatch
 
                      , Hasura.CustomReturnType
+                     , Hasura.CustomReturnType.API
+                     , Hasura.CustomReturnType.Cache
                      , Hasura.CustomReturnType.Common
+                     , Hasura.CustomReturnType.Metadata
+                     , Hasura.CustomReturnType.Types
 
                      , Hasura.EncJSON
                      , Hasura.GraphQL.Execute.Query

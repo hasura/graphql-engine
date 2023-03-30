@@ -95,6 +95,7 @@ library
     Test.API.ExplainSpec
     Test.API.GraphQL.ContentLengthSpec
     Test.API.Metadata.ComputedFieldsSpec
+    Test.API.Metadata.CustomTypeSpec
     Test.API.Metadata.InconsistentSpec
     Test.API.Metadata.LogicalModelsSpec
     Test.API.Metadata.LogicalModels.ValidationSpec

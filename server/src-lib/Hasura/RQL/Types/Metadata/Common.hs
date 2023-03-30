@@ -14,6 +14,7 @@ module Hasura.RQL.Types.Metadata.Common
     ComputedFieldMetadata (..),
     ComputedFields,
     CronTriggers,
+    CustomReturnTypes,
     Endpoints,
     LogicalModels,
     EventTriggers,
@@ -48,6 +49,7 @@ module Hasura.RQL.Types.Metadata.Common
     smTables,
     smCustomization,
     smLogicalModels,
+    smCustomReturnTypes,
     smHealthCheckConfig,
     sourcesCodec,
     tmArrayRelationships,
@@ -81,6 +83,7 @@ import Data.List.Extended qualified as L
 import Data.Maybe (fromJust)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
+import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata (..), CustomReturnTypeName)
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..), LogicalModelName)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
@@ -403,6 +406,8 @@ type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 
 type LogicalModels b = InsOrdHashMap LogicalModelName (LogicalModelMetadata b)
 
+type CustomReturnTypes b = InsOrdHashMap CustomReturnTypeName (CustomReturnTypeMetadata b)
+
 type Endpoints = InsOrdHashMap EndpointName CreateEndpoint
 
 type Actions = InsOrdHashMap ActionName ActionMetadata
@@ -418,6 +423,7 @@ data SourceMetadata b = SourceMetadata
     _smTables :: Tables b,
     _smFunctions :: Functions b,
     _smLogicalModels :: LogicalModels b,
+    _smCustomReturnTypes :: CustomReturnTypes b,
     _smConfiguration :: SourceConnConfiguration b,
     _smQueryTags :: Maybe QueryTagsConfig,
     _smCustomization :: SourceCustomization,
@@ -437,6 +443,7 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadat
     _smTables <- oMapFromL _tmTable <$> o .: "tables"
     _smFunctions <- oMapFromL _fmFunction <$> o .:? "functions" .!= []
     _smLogicalModels <- oMapFromL _lmmRootFieldName <$> o .:? "logical_models" .!= []
+    _smCustomReturnTypes <- oMapFromL _ctmName <$> o .:? "custom_return_types" .!= []
     _smConfiguration <- o .: "configuration"
     _smQueryTags <- o .:? "query_tags"
     _smCustomization <- o .:? "customization" .!= emptySourceCustomization
@@ -497,6 +504,8 @@ instance Backend b => HasCodec (SourceMetadata b) where
           .== _smFunctions
         <*> optionalFieldOrNullWithOmittedDefaultWith' "logical_models" (sortedElemsCodec _lmmRootFieldName) mempty
           .== _smLogicalModels
+        <*> optionalFieldOrNullWithOmittedDefaultWith' "custom_return_types" (sortedElemsCodec _ctmName) mempty
+          .== _smCustomReturnTypes
         <*> requiredField' "configuration"
           .== _smConfiguration
         <*> optionalFieldOrNull' "query_tags"
@@ -530,6 +539,7 @@ mkSourceMetadata name backendSourceKind config customization healthCheckConfig =
         @b
         name
         backendSourceKind
+        mempty
         mempty
         mempty
         mempty

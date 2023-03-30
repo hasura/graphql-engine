@@ -25,6 +25,7 @@ import Data.Aeson.Ordered qualified as AO
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Text.Extended qualified as T
 import Data.Vector qualified as Vector
+import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata (..))
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
@@ -115,12 +116,13 @@ sourcesToOrdJSONList sources =
   where
     sourceMetaToOrdJSON :: BackendSourceMetadata -> AO.Value
     sourceMetaToOrdJSON (BackendSourceMetadata exists) =
-      AB.dispatchAnyBackend @Backend exists $ \(SourceMetadata _smName _smKind _smTables _smFunctions _smLogicalModels _smConfiguration _smQueryTags _smCustomization _smHealthCheckConfig :: SourceMetadata b) ->
+      AB.dispatchAnyBackend @Backend exists $ \(SourceMetadata _smName _smKind _smTables _smFunctions _smLogicalModels _smCustomReturnTypes _smConfiguration _smQueryTags _smCustomization _smHealthCheckConfig :: SourceMetadata b) ->
         let sourceNamePair = ("name", AO.toOrdered _smName)
             sourceKindPair = ("kind", AO.toOrdered _smKind)
             tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems _smTables)
             functionsPair = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction _smFunctions
             logicalModelsPair = listToMaybeOrdPairSort "logical_models" AO.toOrdered _lmmRootFieldName (OM.elems _smLogicalModels)
+            customReturnTypesPair = listToMaybeOrdPairSort "custom_return_types" AO.toOrdered _ctmName (OM.elems _smCustomReturnTypes)
             configurationPair = [("configuration", AO.toOrdered _smConfiguration)]
             queryTagsConfigPair = maybe [] (\queryTagsConfig -> [("query_tags", AO.toOrdered queryTagsConfig)]) _smQueryTags
 
@@ -132,6 +134,7 @@ sourcesToOrdJSONList sources =
               [sourceNamePair, sourceKindPair, tablesPair]
                 <> maybeToList functionsPair
                 <> maybeToList logicalModelsPair
+                <> maybeToList customReturnTypesPair
                 <> configurationPair
                 <> queryTagsConfigPair
                 <> customizationPair

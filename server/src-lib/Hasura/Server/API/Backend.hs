@@ -23,6 +23,7 @@ module Hasura.Server.API.Backend
     computedFieldCommands,
     connectionTemplateCommands,
     logicalModelsCommands,
+    customReturnTypesCommands,
   )
 where
 
@@ -174,4 +175,11 @@ logicalModelsCommands =
     commandParser "untrack_logical_model" $ RMUntrackLogicalModel . mkAnyBackend @b,
     commandParser "create_logical_model_select_permission" $ RMCreateSelectLogicalModelPermission . mkAnyBackend @b,
     commandParser "drop_logical_model_select_permission" $ RMDropSelectLogicalModelPermission . mkAnyBackend @b
+  ]
+
+customReturnTypesCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+customReturnTypesCommands =
+  [ commandParser "get_custom_return_type" $ RMGetCustomReturnType . mkAnyBackend @b,
+    commandParser "track_custom_return_type" $ RMTrackCustomReturnType . mkAnyBackend @b,
+    commandParser "untrack_custom_return_type" $ RMUntrackCustomReturnType . mkAnyBackend @b
   ]

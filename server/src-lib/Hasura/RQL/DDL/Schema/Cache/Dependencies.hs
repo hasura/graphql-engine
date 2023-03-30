@@ -298,6 +298,7 @@ deleteMetadataObject = \case
       SMOFunction name -> siFunctions %~ M.delete name
       SMOFunctionPermission functionName role ->
         siFunctions . ix functionName . fiPermissions %~ M.delete role
+      SMOCustomReturnType name -> siCustomReturnTypes %~ M.delete name
       SMOLogicalModel name -> siLogicalModels %~ M.delete name
       SMOLogicalModelObj logicalModelName logicalModelObjectId ->
         siLogicalModels . ix logicalModelName %~ case logicalModelObjectId of

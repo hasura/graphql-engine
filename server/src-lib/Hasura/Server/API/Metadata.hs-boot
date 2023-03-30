@@ -3,6 +3,7 @@ module Hasura.Server.API.Metadata
   )
 where
 
+import Hasura.CustomReturnType.API qualified as CustomReturnType
 import Hasura.LogicalModel.API qualified as LogicalModels
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
@@ -93,6 +94,10 @@ data RQLMetadataV1
   | RMUntrackLogicalModel !(AnyBackend LogicalModels.UntrackLogicalModel)
   | RMCreateSelectLogicalModelPermission !(AnyBackend (LogicalModels.CreateLogicalModelPermission SelPerm))
   | RMDropSelectLogicalModelPermission !(AnyBackend LogicalModels.DropLogicalModelPermission)
+  | -- Custom types
+    RMGetCustomReturnType !(AnyBackend CustomReturnType.GetCustomReturnType)
+  | RMTrackCustomReturnType !(AnyBackend CustomReturnType.TrackCustomReturnType)
+  | RMUntrackCustomReturnType !(AnyBackend CustomReturnType.UntrackCustomReturnType)
   | -- Tables event triggers
     RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)

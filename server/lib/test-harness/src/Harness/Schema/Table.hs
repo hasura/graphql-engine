@@ -21,6 +21,8 @@ module Harness.Schema.Table
     logicalModel,
     LogicalModelColumn (..),
     logicalModelColumn,
+    CustomType (..),
+    customType,
     quotedValue,
     unquotedValue,
     backendScalarValue,
@@ -178,3 +180,18 @@ columnNull name typ = (column name typ) {columnNullable = True}
 -- | Helper to construct UTCTime using @%F %T@ format. For e.g. @YYYY-MM-DD HH:MM:SS@
 parseUTCTimeOrError :: String -> ScalarValue
 parseUTCTimeOrError = VUTCTime . parseTimeOrError True defaultTimeLocale "%F %T"
+
+data CustomType = CustomType
+  { customTypeName :: Text,
+    customTypeColumns :: [LogicalModelColumn],
+    customTypeDescription :: Maybe Text
+  }
+  deriving (Show, Eq)
+
+customType :: Text -> CustomType
+customType customTypeName =
+  CustomType
+    { customTypeName,
+      customTypeColumns = mempty,
+      customTypeDescription = Nothing
+    }

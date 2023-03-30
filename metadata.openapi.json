@@ -635,6 +635,38 @@
                 ],
                 "type": "object"
             },
+            "BigqueryCustomReturnTypeMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the custom return type",
+                        "items": {
+                            "$ref": "#/components/schemas/NullableScalarType"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a custom return type",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/BigquerySelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
+                ],
+                "type": "object"
+            },
             "BigqueryDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -976,6 +1008,14 @@
                 "properties": {
                     "configuration": {
                         "$ref": "#/components/schemas/BigQueryConnSourceConfig"
+                    },
+                    "custom_return_types": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/BigqueryCustomReturnTypeMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
@@ -1347,6 +1387,38 @@
                 },
                 "required": [
                     "columns"
+                ],
+                "type": "object"
+            },
+            "CitusCustomReturnTypeMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the custom return type",
+                        "items": {
+                            "$ref": "#/components/schemas/NullableScalarType"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a custom return type",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CitusSelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
                 ],
                 "type": "object"
             },
@@ -1820,6 +1892,14 @@
                     "configuration": {
                         "$ref": "#/components/schemas/PostgresConnConfiguration"
                     },
+                    "custom_return_types": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CitusCustomReturnTypeMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -2200,6 +2280,38 @@
                 },
                 "required": [
                     "columns"
+                ],
+                "type": "object"
+            },
+            "CockroachCustomReturnTypeMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the custom return type",
+                        "items": {
+                            "$ref": "#/components/schemas/NullableScalarType"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a custom return type",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CockroachSelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
                 ],
                 "type": "object"
             },
@@ -2672,6 +2784,14 @@
                 "properties": {
                     "configuration": {
                         "$ref": "#/components/schemas/PostgresConnConfiguration"
+                    },
+                    "custom_return_types": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CockroachCustomReturnTypeMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
@@ -3234,6 +3354,38 @@
                 ],
                 "type": "object"
             },
+            "DataconnectorCustomReturnTypeMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the custom return type",
+                        "items": {
+                            "$ref": "#/components/schemas/NullableScalarType"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a custom return type",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/DataconnectorSelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
+                ],
+                "type": "object"
+            },
             "DataconnectorDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -3588,6 +3740,14 @@
                 "properties": {
                     "configuration": {
                         "$ref": "#/components/schemas/DataConnectorConnConfiguration"
+                    },
+                    "custom_return_types": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/DataconnectorCustomReturnTypeMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
@@ -4614,6 +4774,38 @@
                 ],
                 "type": "object"
             },
+            "MssqlCustomReturnTypeMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the custom return type",
+                        "items": {
+                            "$ref": "#/components/schemas/NullableScalarType"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a custom return type",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MssqlSelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
+                ],
+                "type": "object"
+            },
             "MssqlDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -5075,6 +5267,14 @@
                     "configuration": {
                         "$ref": "#/components/schemas/MSSQLConnConfiguration"
                     },
+                    "custom_return_types": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MssqlCustomReturnTypeMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -5524,6 +5724,38 @@
                 ],
                 "type": "object"
             },
+            "MysqlCustomReturnTypeMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the custom return type",
+                        "items": {
+                            "$ref": "#/components/schemas/NullableScalarType"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a custom return type",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MysqlSelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
+                ],
+                "type": "object"
+            },
             "MysqlDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -5921,6 +6153,14 @@
                 "properties": {
                     "configuration": {
                         "$ref": "#/components/schemas/MySQLConnSourceConfig"
+                    },
+                    "custom_return_types": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MysqlCustomReturnTypeMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
@@ -6539,6 +6779,38 @@
                 ],
                 "type": "object"
             },
+            "PostgresCustomReturnTypeMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the custom return type",
+                        "items": {
+                            "$ref": "#/components/schemas/NullableScalarType"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a custom return type",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/PostgresSelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
+                ],
+                "type": "object"
+            },
             "PostgresDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -7120,6 +7392,14 @@
                 "properties": {
                     "configuration": {
                         "$ref": "#/components/schemas/PostgresConnConfiguration"
+                    },
+                    "custom_return_types": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/PostgresCustomReturnTypeMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"

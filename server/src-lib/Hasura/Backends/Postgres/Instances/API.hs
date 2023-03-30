@@ -24,6 +24,7 @@ instance BackendAPI ('Postgres 'Vanilla) where
         eventTriggerCommands @('Postgres 'Vanilla),
         computedFieldCommands @('Postgres 'Vanilla),
         logicalModelsCommands @('Postgres 'Vanilla),
+        customReturnTypesCommands @('Postgres 'Vanilla),
         [ commandParser
             "set_table_is_enum"
             ( RMPgSetTableIsEnum

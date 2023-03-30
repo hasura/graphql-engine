@@ -17,6 +17,11 @@ module Harness.Schema
     LogicalModelColumn (..),
     trackLogicalModelCommand,
     untrackLogicalModelCommand,
+    CustomType (..),
+    trackCustomType,
+    trackCustomTypeCommand,
+    untrackCustomType,
+    untrackCustomTypeCommand,
     resolveTableSchema,
     resolveReferenceSchema,
     trackTable,
@@ -515,6 +520,72 @@ untrackLogicalModel source logMod testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
 
   let command = untrackLogicalModelCommand source backendTypeMetadata logMod
+
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    command
+
+trackCustomTypeCommand :: String -> BackendTypeConfig -> CustomType -> Value
+trackCustomTypeCommand sourceName backendTypeConfig (CustomType {customTypeDescription, customTypeName, customTypeColumns}) =
+  -- return type is an array of items
+  let returnTypeToJson =
+        Aeson.Array
+          . V.fromList
+          . fmap
+            ( \LogicalModelColumn {..} ->
+                let descriptionPair = case logicalModelColumnDescription of
+                      Just desc -> [(K.fromText "description", Aeson.String desc)]
+                      Nothing -> []
+                 in Aeson.object $
+                      [ (K.fromText "name", Aeson.String logicalModelColumnName),
+                        (K.fromText "type", Aeson.String ((BackendType.backendScalarType backendTypeConfig) logicalModelColumnType)),
+                        (K.fromText "nullable", Aeson.Bool logicalModelColumnNullable)
+                      ]
+                        <> descriptionPair
+            )
+
+      columns = returnTypeToJson customTypeColumns
+
+      -- need to make this only appear if it's Just, for now fall back to empty
+      -- string for lols
+      description = fromMaybe "" customTypeDescription
+
+      backendType = BackendType.backendTypeString backendTypeConfig
+
+      requestType = backendType <> "_track_custom_return_type"
+   in [yaml|
+        type: *requestType
+        args:
+          source: *sourceName
+          description: *description 
+          name: *customTypeName
+          fields: *columns
+      |]
+
+trackCustomType :: HasCallStack => String -> CustomType -> TestEnvironment -> IO ()
+trackCustomType sourceName ctmType testEnvironment = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+
+  let command = trackCustomTypeCommand sourceName backendTypeMetadata ctmType
+
+  GraphqlEngine.postMetadata_ testEnvironment command
+
+untrackCustomTypeCommand :: String -> BackendTypeConfig -> CustomType -> Value
+untrackCustomTypeCommand source backendTypeMetadata CustomType {customTypeName} =
+  let backendType = BackendType.backendTypeString backendTypeMetadata
+      requestType = backendType <> "_untrack_custom_return_type"
+   in [yaml|
+      type: *requestType
+      args:
+        source: *source
+        name: *customTypeName
+    |]
+
+untrackCustomType :: HasCallStack => String -> CustomType -> TestEnvironment -> IO ()
+untrackCustomType source ctmType testEnvironment = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+
+  let command = untrackCustomTypeCommand source backendTypeMetadata ctmType
 
   GraphqlEngine.postMetadata_
     testEnvironment

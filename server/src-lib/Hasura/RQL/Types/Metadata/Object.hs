@@ -44,6 +44,7 @@ import Data.Text.Extended
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
+import Hasura.CustomReturnType.Types
 import Hasura.LogicalModel.Types
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
@@ -85,6 +86,7 @@ data SourceMetadataObjId b
   | SMOTableObj (TableName b) TableMetadataObjId
   | SMOLogicalModel LogicalModelName
   | SMOLogicalModelObj LogicalModelName LogicalModelMetadataObjId
+  | SMOCustomReturnType CustomReturnTypeName
   deriving (Generic)
 
 deriving instance (Backend b) => Show (SourceMetadataObjId b)
@@ -148,6 +150,7 @@ moiTypeName = \case
       SMOLogicalModel _ -> "logical_model"
       SMOLogicalModelObj _ logicalModelObjectId -> case logicalModelObjectId of
         LMMOPerm _ permType -> permTypeToCode permType <> "_permission"
+      SMOCustomReturnType _ -> "custom_type"
       SMOFunctionPermission _ _ -> "function_permission"
       SMOTableObj _ tableObjectId -> case tableObjectId of
         MTORel _ relType -> relTypeToTxt relType <> "_relation"
@@ -199,6 +202,7 @@ moiName objectId =
           <> toTxt functionName
           <> " in source "
           <> toTxt source
+      SMOCustomReturnType name -> toTxt name <> " in source " <> toTxt source
       SMOLogicalModel name -> toTxt name <> " in source " <> toTxt source
       SMOLogicalModelObj logicalModelName logicalModelObjectId -> do
         let objectName :: Text

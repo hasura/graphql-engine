@@ -36,7 +36,9 @@ import Data.Sequence qualified as Seq
 import Data.Set qualified as S
 import Data.Text.Extended
 import Hasura.Base.Error
+import Hasura.CustomReturnType.Cache (CustomReturnTypeCache, CustomReturnTypeInfo (..))
 import Hasura.CustomReturnType.Common (toFieldInfo)
+import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata (..))
 import Hasura.EncJSON
 import Hasura.GraphQL.Schema (buildGQLContext)
 import Hasura.GraphQL.Schema.NamingCase
@@ -642,7 +644,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
       )
         `arr` (SourceInfo b)
     buildSource = proc (serverConfigCtx, allSources, sourceMetadata, sourceConfig, tablesRawInfo, eventTriggerInfoMaps, _dbTables, dbFunctions, remoteSchemaMap, orderedRoles) -> do
-      let SourceMetadata sourceName _backendKind tables functions logicalModels _ queryTagsConfig sourceCustomization _healthCheckConfig = sourceMetadata
+      let SourceMetadata sourceName _backendKind tables functions logicalModels customReturnTypes _ queryTagsConfig sourceCustomization _healthCheckConfig = sourceMetadata
           tablesMetadata = OMap.elems tables
           (_, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
           alignTableMap :: HashMap (TableName b) a -> HashMap (TableName b) c -> HashMap (TableName b) (a, c)
@@ -769,7 +771,37 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
       let logicalModelCache :: LogicalModelCache b
           logicalModelCache = mapFromL _lmiRootFieldName (catMaybes logicalModelCacheMaybes)
 
-      returnA -< SourceInfo sourceName tableCache functionCache logicalModelCache sourceConfig queryTagsConfig resolvedCustomization
+      let mkCustomReturnTypeMetadataObject :: CustomReturnTypeMetadata b -> MetadataObject
+          mkCustomReturnTypeMetadataObject ctm =
+            ( MetadataObject
+                ( MOSourceObjId sourceName $
+                    AB.mkAnyBackend $
+                      SMOCustomReturnType @b (_ctmName ctm)
+                )
+                (toJSON ctm)
+            )
+
+      customReturnTypeCacheMaybes <-
+        interpretWriter
+          -< for
+            (OMap.elems customReturnTypes)
+            \ctm@CustomReturnTypeMetadata {..} ->
+              withRecordInconsistencyM (mkCustomReturnTypeMetadataObject ctm) $ do
+                unless areLogicalModelsEnabled $
+                  throw400 InvalidConfiguration "The Logical Models feature is disabled"
+
+                pure
+                  CustomReturnTypeInfo
+                    { _ctiName = _ctmName,
+                      _ctiFields = _ctmFields,
+                      _ctiPermissions = mempty,
+                      _ctiDescription = _ctmDescription
+                    }
+
+      let customReturnTypesCache :: CustomReturnTypeCache b
+          customReturnTypesCache = mapFromL _ctiName (catMaybes customReturnTypeCacheMaybes)
+
+      returnA -< SourceInfo sourceName tableCache functionCache logicalModelCache customReturnTypesCache sourceConfig queryTagsConfig resolvedCustomization
 
     buildAndCollectInfo ::
       forall arr m.
@@ -798,7 +830,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
             HS.fromList $
               concat $
                 OMap.elems sources >>= \(BackendSourceMetadata e) ->
-                  AB.dispatchAnyBackend @Backend e \(SourceMetadata _ _ tables _functions _customSQL _ _ _ _) -> do
+                  AB.dispatchAnyBackend @Backend e \(SourceMetadata _ _ tables _functions _logicalModels _customReturnTypes _ _ _ _) -> do
                     table <- OMap.elems tables
                     pure $
                       OMap.keys (_tmInsertPermissions table)

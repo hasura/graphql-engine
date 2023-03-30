@@ -321,6 +321,7 @@ spec = do
           _siTables = makeTableCache [albumTableInfo, trackTableInfo],
           _siFunctions = mempty,
           _siLogicalModels = mempty,
+          _siCustomReturnTypes = mempty,
           _siConfiguration = notImplementedYet "SourceConfig",
           _siQueryTagsConfig = Nothing,
           _siCustomization = ResolvedSourceCustomization mempty mempty HasuraCase Nothing

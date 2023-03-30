@@ -38,6 +38,7 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (dquote, dquoteList, (<<>))
 import Hasura.Base.Error
+import Hasura.CustomReturnType.API
 import Hasura.EncJSON
 import Hasura.Logging qualified as HL
 import Hasura.LogicalModel.API
@@ -151,6 +152,7 @@ runClearMetadata _ = do
                         @b
                         defaultSource
                         (_smKind @b s)
+                        mempty
                         mempty
                         mempty
                         mempty
@@ -702,6 +704,7 @@ purgeMetadataObj = \case
       SMOTable qt -> dropTableInMetadata @b source qt
       SMOFunction qf -> dropFunctionInMetadata @b source qf
       SMOFunctionPermission qf rn -> dropFunctionPermissionInMetadata @b source qf rn
+      SMOCustomReturnType crt -> dropCustomReturnTypeInMetadata @b source crt
       SMOLogicalModel lm -> dropLogicalModelInMetadata @b source lm
       SMOLogicalModelObj logicalModelName logicalModelMetadataObjId ->
         MetadataModifier $
