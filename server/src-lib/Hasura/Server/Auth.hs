@@ -3,6 +3,7 @@
 module Hasura.Server.Auth
   ( getUserInfoWithExpTime,
     AuthMode (..),
+    compareAuthMode,
     setupAuthMode,
     AdminSecretHash,
     unsafeMkAdminSecretHash,
@@ -97,7 +98,25 @@ data AuthMode
   | AMAdminSecret !(Set.HashSet AdminSecretHash) !(Maybe RoleName)
   | AMAdminSecretAndHook !(Set.HashSet AdminSecretHash) !AuthHook
   | AMAdminSecretAndJWT !(Set.HashSet AdminSecretHash) ![JWTCtx] !(Maybe RoleName)
-  deriving (Show, Eq)
+  deriving (Eq, Show)
+
+-- | In case JWT is used as an authentication mode, the JWKs are stored inside JWTCtx
+-- as an `IORef`. `IORef` has pointer equality, so we need to compare the values
+-- inside the `IORef` to check if the `JWTCtx` is same.
+compareAuthMode :: AuthMode -> AuthMode -> IO Bool
+compareAuthMode authMode authMode' = do
+  case (authMode, authMode') of
+    ((AMAdminSecretAndJWT adminSecretHash jwtCtx roleName), (AMAdminSecretAndJWT adminSecretHash' jwtCtx' roleName')) -> do
+      -- Since keyConfig of JWTCtx is an IORef it is necessary to extract the value before checking the equality
+      isJwtCtxSame <- zipWithM compareJWTConfig jwtCtx jwtCtx'
+      return $ (adminSecretHash == adminSecretHash') && (and isJwtCtxSame) && (roleName == roleName')
+    _ -> return $ authMode == authMode'
+  where
+    compareJWTConfig :: JWTCtx -> JWTCtx -> IO Bool
+    compareJWTConfig (JWTCtx url keyConfigRef audM iss claims allowedSkew headers) (JWTCtx url' keyConfigRef' audM' iss' claims' allowedSkew' headers') = do
+      keyConfig <- readIORef keyConfigRef
+      keyConfig' <- readIORef keyConfigRef'
+      return $ (url, keyConfig, audM, iss, claims, allowedSkew, headers) == (url', keyConfig', audM', iss', claims', allowedSkew', headers')
 
 -- | Validate the user's requested authentication configuration, launching any
 -- required maintenance threads for JWT etc.

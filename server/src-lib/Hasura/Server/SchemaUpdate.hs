@@ -36,7 +36,7 @@ import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.AppStateRef
   ( AppStateRef,
     getAppContext,
-    readSchemaCacheRef,
+    getRebuildableSchemaCacheWithVersion,
     withSchemaCacheUpdate,
   )
 import Hasura.Server.Logging
@@ -281,7 +281,7 @@ refreshSchemaCache
     let logger = _lsLogger appEnvLoggers
     respErr <- runExceptT $
       withSchemaCacheUpdate appStateRef logger (Just logTVar) $ do
-        rebuildableCache <- liftIO $ fst <$> readSchemaCacheRef appStateRef
+        rebuildableCache <- liftIO $ fst <$> getRebuildableSchemaCacheWithVersion appStateRef
         appContext <- liftIO $ getAppContext appStateRef
         let serverConfigCtx = buildServerConfigCtx appEnv appContext
         (msg, cache, _) <-

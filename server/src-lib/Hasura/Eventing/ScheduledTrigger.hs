@@ -400,7 +400,7 @@ processScheduledTriggers ::
     MonadMetadataStorage m,
     MonadBaseControl IO m
   ) =>
-  Env.Environment ->
+  IO Env.Environment ->
   L.Logger L.Hasura ->
   FetchedScheduledEventsStatsLogger ->
   HTTP.Manager ->
@@ -408,10 +408,11 @@ processScheduledTriggers ::
   IO SchemaCache ->
   LockedEventsCtx ->
   m (Forever m)
-processScheduledTriggers env logger statsLogger httpMgr scheduledTriggerMetrics getSC LockedEventsCtx {..} = do
+processScheduledTriggers getEnvHook logger statsLogger httpMgr scheduledTriggerMetrics getSC LockedEventsCtx {..} = do
   return $
     Forever () $
       const do
+        env <- liftIO getEnvHook
         getScheduledEventsForDelivery >>= \case
           Left e -> logInternalError e
           Right (cronEvents, oneOffEvents) -> do

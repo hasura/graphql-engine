@@ -11,12 +11,10 @@ import Control.Exception.Lifted
 import Control.Monad.Trans.Control qualified as MC
 import Data.Aeson (object, toJSON, (.=))
 import Data.ByteString.Char8 qualified as B (pack)
-import Data.Environment qualified as Env
 import Data.Text (pack)
 import Hasura.App.State
 import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Execute.Backend qualified as EB
-import Hasura.GraphQL.Execute.Subscription.State qualified as ES
 import Hasura.GraphQL.Logging
 import Hasura.GraphQL.Transport.HTTP (MonadExecuteQuery)
 import Hasura.GraphQL.Transport.Instances ()
@@ -29,10 +27,9 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.AppStateRef
-import Hasura.Server.Auth (AuthMode, UserAuthentication)
+import Hasura.Server.Auth (UserAuthentication)
 import Hasura.Server.Init.Config
-  ( KeepAliveDelay,
-    WSConnectionInitTimeout,
+  ( WSConnectionInitTimeout,
   )
 import Hasura.Server.Limits
 import Hasura.Server.Metrics (ServerMetrics (..))
@@ -41,10 +38,8 @@ import Hasura.Server.Prometheus
     decWebsocketConnections,
     incWebsocketConnections,
   )
-import Hasura.Server.Types (ReadOnlyMode)
 import Hasura.Services.Network
 import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Client qualified as HTTP
 import Network.WebSockets qualified as WS
 import System.Metrics.Gauge qualified as EKG.Gauge
 
@@ -64,14 +59,12 @@ createWSServerApp ::
     ProvidesNetwork m,
     Tracing.MonadTrace m
   ) =>
-  Env.Environment ->
   HashSet (L.EngineLogType L.Hasura) ->
-  AuthMode ->
   WSServerEnv impl ->
   WSConnectionInitTimeout ->
+  -- | aka generalized 'WS.ServerApp'
   WS.HasuraServerApp m
---   -- ^ aka generalized 'WS.ServerApp'
-createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ipAddress !pendingConn -> do
+createWSServerApp enabledLogTypes serverEnv connInitTimeout = \ !ipAddress !pendingConn -> do
   let getMetricsConfig = scMetricsConfig <$> getSchemaCache (_wseAppStateRef serverEnv)
   WS.createServerApp getMetricsConfig connInitTimeout (_wseServer serverEnv) prometheusMetrics handlers ipAddress pendingConn
   where
@@ -85,6 +78,7 @@ createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ip
     serverMetrics = _wseServerMetrics serverEnv
     prometheusMetrics = _wsePrometheusMetrics serverEnv
 
+    getAuthMode = acAuthMode <$> getAppContext (_wseAppStateRef serverEnv)
     wsActions = mkWSActions logger
 
     -- Mask async exceptions during event processing to help maintain integrity of mutable vars:
@@ -96,7 +90,7 @@ createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ip
 
     onMessageHandler conn bs sp =
       mask_ $
-        onMessage env enabledLogTypes authMode serverEnv conn bs (wsActions sp)
+        onMessage enabledLogTypes getAuthMode serverEnv conn bs (wsActions sp)
 
     onCloseHandler conn = mask_ do
       liftIO $ EKG.Gauge.dec $ smWebsocketConnections serverMetrics
@@ -107,46 +101,35 @@ stopWSServerApp :: WSServerEnv impl -> IO ()
 stopWSServerApp wsEnv = WS.shutdown (_wseServer wsEnv)
 
 createWSServerEnv ::
-  (MonadIO m) =>
-  L.Logger L.Hasura ->
-  ES.SubscriptionsState ->
+  ( HasAppEnv m,
+    MonadIO m
+  ) =>
   AppStateRef impl ->
-  HTTP.Manager ->
-  ReadOnlyMode ->
-  KeepAliveDelay ->
-  ServerMetrics ->
-  PrometheusMetrics ->
-  Tracing.SamplingPolicy ->
   m (WSServerEnv impl)
-createWSServerEnv
-  logger
-  lqState
-  appStateRef
-  httpManager
-  readOnlyMode
-  keepAliveDelay
-  serverMetrics
-  prometheusMetrics
-  traceSamplingPolicy = do
-    AppContext {..} <- liftIO $ getAppContext appStateRef
-    wsServer <- liftIO $ STM.atomically $ WS.createWSServer logger
-    pure $
-      WSServerEnv
-        logger
-        lqState
-        acLiveQueryOptions
-        acStreamQueryOptions
-        appStateRef
-        httpManager
-        acCorsPolicy
-        acSQLGenCtx
-        readOnlyMode
-        wsServer
-        acEnableAllowlist
-        keepAliveDelay
-        serverMetrics
-        prometheusMetrics
-        traceSamplingPolicy
+createWSServerEnv appStateRef = do
+  AppEnv {..} <- askAppEnv
+  let getCorsPolicy = acCorsPolicy <$> getAppContext appStateRef
+      logger = _lsLogger appEnvLoggers
+
+  AppContext {acEnableAllowlist, acAuthMode} <- liftIO $ getAppContext appStateRef
+  allowlist <- liftIO $ scAllowlist <$> getSchemaCache appStateRef
+  corsPolicy <- liftIO getCorsPolicy
+
+  wsServer <- liftIO $ STM.atomically $ WS.createWSServer acAuthMode acEnableAllowlist allowlist corsPolicy logger
+
+  pure $
+    WSServerEnv
+      (_lsLogger appEnvLoggers)
+      appEnvSubscriptionState
+      appStateRef
+      appEnvManager
+      getCorsPolicy
+      appEnvEnableReadOnlyMode
+      wsServer
+      appEnvWebSocketKeepAlive
+      appEnvServerMetrics
+      appEnvPrometheusMetrics
+      appEnvTraceSamplingPolicy
 
 mkWSActions :: L.Logger L.Hasura -> WSSubProtocol -> WS.WSActions WSConnData
 mkWSActions logger subProtocol =

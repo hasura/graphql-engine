@@ -18,6 +18,9 @@ import GHC.Debug.Stub
 import GHC.TypeLits (Symbol)
 import Hasura.App
 import Hasura.App.State
+  ( AppEnv (..),
+    Loggers (..),
+  )
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Connection.Settings
 import Hasura.GC qualified as GC

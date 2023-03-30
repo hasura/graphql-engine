@@ -378,7 +378,7 @@ streamingSubscriptionPollingSpec srcConfig = do
               dummyPromMetrics
               subscriberMetadata
               subscriptionState
-              subOptions
+              (pure (subOptions, subOptions))
               SNDefault
               dummyParamQueryHash
               Nothing

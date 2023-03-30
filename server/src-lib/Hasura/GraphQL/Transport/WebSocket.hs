@@ -31,7 +31,6 @@ import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as LBS
 import Data.CaseInsensitive qualified as CI
 import Data.Dependent.Map qualified as DM
-import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
@@ -42,6 +41,7 @@ import Data.Text.Encoding qualified as TE
 import Data.Time.Clock qualified as TC
 import Data.Word (Word16)
 import GHC.AssertNF.CPP
+import Hasura.App.State
 import Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -360,7 +360,7 @@ onConn wsId requestHead ipAddress onConnHActions = do
 
     enforceCors origin reqHdrs = do
       (L.Logger logger) <- asks _wseLogger
-      corsPolicy <- asks _wseCorsPolicy
+      corsPolicy <- liftIO =<< asks _wseCorsPolicy
       case cpConfig corsPolicy of
         CCAllowAll -> return reqHdrs
         CCDisabled readCookie ->
@@ -415,7 +415,6 @@ onStart ::
     HasResourceLimits m,
     ProvidesNetwork m
   ) =>
-  Env.Environment ->
   HashSet (L.EngineLogType L.Hasura) ->
   WSServerEnv impl ->
   WSConn ->
@@ -423,7 +422,7 @@ onStart ::
   StartMsg ->
   WS.WSActions WSConnData ->
   m ()
-onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg opId q) onMessageActions = catchAndIgnore $ do
+onStart enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg opId q) onMessageActions = catchAndIgnore $ do
   timerTot <- startTimer
   op <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
   let opName = _grOperationName q
@@ -453,6 +452,10 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
         ExceptT (Either GQExecError QErr) (ExceptT () m) a ->
         ExceptT (Either GQExecError QErr) (ExceptT () m) a
       runLimits = withErr Right $ runResourceLimits operationLimit
+
+  env <- liftIO $ acEnvironment <$> getAppContext appStateRef
+  sqlGenCtx <- liftIO $ acSQLGenCtx <$> getAppContext appStateRef
+  enableAL <- liftIO $ acEnableAllowlist <$> getAppContext appStateRef
 
   reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q requestId
   reqParsed <- onLeft reqParsedE (withComplete . preExecErr requestId Nothing)
@@ -772,6 +775,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
       Maybe RJ.RemoteJoins ->
       ExceptT (Either GQExecError QErr) (ExceptT () m) AnnotatedResponsePart
     runRemoteGQ requestId reqUnparsed fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins = do
+      env <- liftIO $ acEnvironment <$> getAppContext appStateRef
       (telemTimeIO_DT, _respHdrs, resp) <-
         doQErr $
           E.execRemoteGQ env userInfo reqHdrs (rsDef rsi) gqlReq
@@ -793,20 +797,18 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
     WSServerEnv
       logger
       subscriptionsState
-      lqOpts
-      streamQOpts
       appStateRef
       _
       _
-      sqlGenCtx
       readOnlyMode
       _
-      enableAL
       _keepAliveDelay
       _serverMetrics
       prometheusMetrics
       _ = serverEnv
 
+    -- Hook to retrieve the latest subscription options(live query + stream query options) from the `appStateRef`
+    getSubscriptionOptions = fmap (\appCtx -> (acLiveQueryOptions appCtx, acStreamQueryOptions appCtx)) (getAppContext appStateRef)
     gqlMetrics = pmGraphQLRequestMetrics prometheusMetrics
 
     WSConnData userInfoR opMap errRespTy queryType = WS.getData wsConn
@@ -911,7 +913,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
               (_wsePrometheusMetrics serverEnv)
               subscriberMetadata
               subscriptionsState
-              lqOpts
+              getSubscriptionOptions
               sourceName
               parameterizedQueryHash
               opName
@@ -938,7 +940,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
             (_wsePrometheusMetrics serverEnv)
             subscriberMetadata
             subscriptionsState
-            streamQOpts
+            getSubscriptionOptions
             sourceName
             parameterizedQueryHash
             opName
@@ -1017,15 +1019,14 @@ onMessage ::
     ProvidesNetwork m,
     Tracing.MonadTrace m
   ) =>
-  Env.Environment ->
   HashSet (L.EngineLogType L.Hasura) ->
-  AuthMode ->
+  IO AuthMode ->
   WSServerEnv impl ->
   WSConn ->
   LBS.ByteString ->
   WS.WSActions WSConnData ->
   m ()
-onMessage env enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions =
+onMessage enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions =
   Tracing.newTrace (_wseTraceSamplingPolicy serverEnv) "websocket" do
     case J.eitherDecode msgRaw of
       Left e -> do
@@ -1049,7 +1050,7 @@ onMessage env enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions 
                 if _mcAnalyzeQueryVariables (scMetricsConfig schemaCache)
                   then CaptureQueryVariables
                   else DoNotCaptureQueryVariables
-          onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables startMsg onMessageActions
+          onStart enabledLogTypes serverEnv wsConn shouldCaptureVariables startMsg onMessageActions
         CMStop stopMsg -> onStop serverEnv wsConn stopMsg
         -- specfic to graphql-ws
         CMPing mPayload -> onPing wsConn mPayload
@@ -1107,14 +1108,14 @@ onConnInit ::
   L.Logger L.Hasura ->
   HTTP.Manager ->
   WSConn ->
-  AuthMode ->
+  IO AuthMode ->
   Maybe ConnParams ->
   -- | this is the message handler for handling errors on initializing a from the client connection
   WS.WSOnErrorMessageAction WSConnData ->
   -- | this is the message handler for handling "keep-alive" messages to the client
   WS.WSKeepAliveMessageAction WSConnData ->
   m ()
-onConnInit logger manager wsConn authMode connParamsM onConnInitErrAction keepAliveMessageAction = do
+onConnInit logger manager wsConn getAuthMode connParamsM onConnInitErrAction keepAliveMessageAction = do
   -- TODO(from master): what should be the behaviour of connection_init message when a
   -- connection is already iniatilized? Currently, we seem to be doing
   -- something arbitrary which isn't correct. Ideally, we should stick to
@@ -1124,6 +1125,7 @@ onConnInit logger manager wsConn authMode connParamsM onConnInitErrAction keepAl
   -- 'not initialised'. This means that there is no reason for the
   -- connection to be in `CSInitError` state.
   connState <- liftIO (STM.readTVarIO (_wscUser $ WS.getData wsConn))
+  authMode <- liftIO $ getAuthMode
   case getIpAddress connState of
     Left err -> unexpectedInitError err
     Right ipAddress -> do

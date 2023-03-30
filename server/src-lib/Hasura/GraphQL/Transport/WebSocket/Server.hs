@@ -18,7 +18,8 @@ module Hasura.GraphQL.Transport.WebSocket.Server
     WSLog (WSLog),
     WSOnErrorMessageAction,
     WSQueueResponse (WSQueueResponse),
-    WSServer,
+    WSServer (..),
+    websocketConnectionReaper,
     closeConn,
     sendMsgAndCloseConn,
     createServerApp,
@@ -37,6 +38,8 @@ where
 
 import Control.Concurrent.Async qualified as A
 import Control.Concurrent.Async.Lifted.Safe qualified as LA
+import Control.Concurrent.Extended (sleep)
+import Control.Concurrent.STM (readTVarIO)
 import Control.Concurrent.STM qualified as STM
 import Control.Exception.Lifted
 import Control.Monad.Trans.Control qualified as MC
@@ -60,7 +63,10 @@ import Hasura.GraphQL.Transport.WebSocket.Protocol
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (MetricsConfig (..))
-import Hasura.Server.Init.Config (WSConnectionInitTimeout (..))
+import Hasura.RQL.Types.SchemaCache
+import Hasura.Server.Auth (AuthMode, compareAuthMode)
+import Hasura.Server.Cors (CorsPolicy)
+import Hasura.Server.Init.Config (AllowListStatus (..), WSConnectionInitTimeout (..))
 import Hasura.Server.Prometheus
   ( PrometheusMetrics (..),
   )
@@ -162,6 +168,15 @@ instance L.ToEngineLog WSLog L.Hasura where
   toEngineLog wsLog =
     (L.LevelDebug, L.ELTInternal L.ILTWsServer, J.toJSON wsLog)
 
+data WSReaperThreadLog = WSReaperThreadLog
+  { _wrtlMessage :: Text
+  }
+  deriving (Show)
+
+instance L.ToEngineLog WSReaperThreadLog L.Hasura where
+  toEngineLog (WSReaperThreadLog message) =
+    (L.LevelInfo, L.ELTInternal L.ILTWsServer, J.toJSON message)
+
 data WSQueueResponse = WSQueueResponse
   { _wsqrMessage :: !BL.ByteString,
     -- | extra metadata that we use for other actions, such as print log
@@ -219,16 +234,30 @@ data ServerStatus a
   | ShuttingDown
 
 data WSServer a = WSServer
-  { _wssLogger :: !(L.Logger L.Hasura),
+  { _wssLogger :: L.Logger L.Hasura,
+    -- | Keep track of the security sensitive user configuration to perform
+    -- maintenance actions
+    _wssSecuritySensitiveUserConfig :: STM.TVar SecuritySensitiveUserConfig,
     -- | See e.g. createServerApp.onAccept for how we use STM to preserve consistency
-    _wssStatus :: !(STM.TVar (ServerStatus a))
+    _wssStatus :: STM.TVar (ServerStatus a)
   }
 
-createWSServer :: L.Logger L.Hasura -> STM.STM (WSServer a)
-createWSServer logger = do
+-- These are security sensitive user configuration. That is, if any of the
+-- following config changes, we need to perform maintenance actions like closing
+-- all websocket connections
+data SecuritySensitiveUserConfig = SecuritySensitiveUserConfig
+  { ssucAuthMode :: AuthMode,
+    ssucEnableAllowlist :: AllowListStatus,
+    ssucAllowlist :: InlinedAllowlist,
+    ssucCorsPolicy :: CorsPolicy
+  }
+
+createWSServer :: AuthMode -> AllowListStatus -> InlinedAllowlist -> CorsPolicy -> L.Logger L.Hasura -> STM.STM (WSServer a)
+createWSServer authMode enableAllowlist allowlist corsPolicy logger = do
   connMap <- STMMap.new
+  userConfRef <- STM.newTVar $ SecuritySensitiveUserConfig authMode enableAllowlist allowlist corsPolicy
   serverStatus <- STM.newTVar (AcceptingConns connMap)
-  return $ WSServer logger serverStatus
+  return $ WSServer logger userConfRef serverStatus
 
 closeAllWith ::
   (BL.ByteString -> WSConn a -> IO ()) ->
@@ -308,6 +337,82 @@ data WSHandlers m a = WSHandlers
     _hOnClose :: OnCloseH m a
   }
 
+-- | The background thread responsible for closing all websocket connections
+-- when security sensitive user configuration changes. It checks for changes in
+-- the auth mode, allowlist and cors config, and invalidates/closes all
+-- connections if there are any changes.
+websocketConnectionReaper :: IO (AuthMode, AllowListStatus, CorsPolicy) -> IO SchemaCache -> WSServer a -> IO Void
+websocketConnectionReaper getLatestConfig getSchemaCache (WSServer (L.Logger writeLog) userConfRef serverStatus) =
+  forever $ do
+    (currAuthMode, currEnableAllowlist, currCorsPolicy) <- getLatestConfig
+    currAllowlist <- scAllowlist <$> getSchemaCache
+    SecuritySensitiveUserConfig prevAuthMode prevEnableAllowlist prevAllowlist prevCorsPolicy <- readTVarIO userConfRef
+    -- check and close all connections if required
+    checkAndReapConnections
+      (currAuthMode, prevAuthMode)
+      (currCorsPolicy, prevCorsPolicy)
+      (currEnableAllowlist, prevEnableAllowlist)
+      (currAllowlist, prevAllowlist)
+    sleep $ seconds 1
+  where
+    closeAllConnectionsWithReason ::
+      String ->
+      BL.ByteString ->
+      (SecuritySensitiveUserConfig -> SecuritySensitiveUserConfig) ->
+      IO ()
+    closeAllConnectionsWithReason logMsg reason updateConf = do
+      writeLog $
+        WSReaperThreadLog $
+          fromString $
+            logMsg
+      conns <- STM.atomically $ do
+        STM.modifyTVar' userConfRef updateConf
+        flushConnMap serverStatus
+      closeAllWith (flip forceConnReconnect) reason conns
+
+    -- Close all connections based on -
+    -- if CorsPolicy changed -> close
+    -- if AuthMode changed -> close
+    -- if AllowlistEnabled -> enabled from disabled -> close
+    -- if AllowlistEnabled -> allowlist collection changed -> close
+    checkAndReapConnections (currAuthMode, prevAuthMode) (currCorsPolicy, prevCorsPolicy) (currEnableAllowlist, prevEnableAllowlist) (currAllowlist, prevAllowlist) = do
+      hasAuthModeChanged <- not <$> compareAuthMode currAuthMode prevAuthMode
+      let hasCorsPolicyChanged = currCorsPolicy /= prevCorsPolicy
+          hasAllowlistEnabled = prevEnableAllowlist == AllowListDisabled && currEnableAllowlist == AllowListEnabled
+          hasAllowlistUpdated =
+            (prevEnableAllowlist == AllowListEnabled && currEnableAllowlist == AllowListEnabled) && (currAllowlist /= prevAllowlist)
+      if
+          -- if CORS policy has changed, close all connections
+          | hasCorsPolicyChanged ->
+              closeAllConnectionsWithReason
+                "closing all websocket connections as the cors policy changed"
+                "cors policy changed"
+                (\conf -> conf {ssucCorsPolicy = currCorsPolicy})
+          -- if any auth config has changed, close all connections
+          | hasAuthModeChanged ->
+              closeAllConnectionsWithReason
+                "closing all websocket connections as the auth mode changed"
+                "auth mode changed"
+                (\conf -> conf {ssucAuthMode = currAuthMode})
+          -- In case of allowlist, we need to check if the allowlist has changed.
+          -- If the allowlist is disabled, we keep all the connections
+          -- as is.
+          -- If the allowlist is enabled from a disabled state, we need to close all the
+          -- connections.
+          | hasAllowlistEnabled ->
+              closeAllConnectionsWithReason
+                "closing all websocket connections as allow list is enabled"
+                "allow list enabled"
+                (\conf -> conf {ssucEnableAllowlist = currEnableAllowlist})
+          -- If the allowlist is already enabled and there are any changes made to the
+          -- allowlist, we need to close all the connections.
+          | hasAllowlistUpdated ->
+              closeAllConnectionsWithReason
+                "closing all websocket connections as the allow list has been updated"
+                "allow list updated"
+                (\conf -> conf {ssucAllowlist = currAllowlist})
+          | otherwise -> pure ()
+
 createServerApp ::
   (MonadIO m, MC.MonadBaseControl IO m, LA.Forall (LA.Pure m), MonadWSLog m) =>
   IO MetricsConfig ->
@@ -319,7 +424,7 @@ createServerApp ::
   -- | aka WS.ServerApp
   HasuraServerApp m
 {-# INLINE createServerApp #-}
-createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger writeLog) serverStatus) prometheusMetrics wsHandlers !ipAddress !pendingConn = do
+createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger writeLog) _ serverStatus) prometheusMetrics wsHandlers !ipAddress !pendingConn = do
   wsId <- WSId <$> liftIO UUID.nextRandom
   logWSLog logger $ WSLog wsId EConnectionRequest Nothing
   -- NOTE: this timer is specific to `graphql-ws`. the server has to close the connection
@@ -477,10 +582,11 @@ createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger wr
         logWSLog logger $ WSLog (_wcConnId wsConn) EClosed Nothing
 
 shutdown :: WSServer a -> IO ()
-shutdown (WSServer (L.Logger writeLog) serverStatus) = do
+shutdown (WSServer (L.Logger writeLog) _ serverStatus) = do
   writeLog $ L.debugT "Shutting websockets server down"
   conns <- STM.atomically $ do
     conns <- flushConnMap serverStatus
     STM.writeTVar serverStatus ShuttingDown
-    return conns
+    pure conns
+
   closeAllWith (flip forceConnReconnect) "shutting server down" conns

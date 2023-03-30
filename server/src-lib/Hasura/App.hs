@@ -113,6 +113,7 @@ import Hasura.GraphQL.Transport.HTTP
 import Hasura.GraphQL.Transport.HTTP.Protocol (toParsed)
 import Hasura.GraphQL.Transport.WSServerApp qualified as WS
 import Hasura.GraphQL.Transport.WebSocket.Server qualified as WS
+import Hasura.GraphQL.Transport.WebSocket.Types (WSServerEnv (..))
 import Hasura.Logging
 import Hasura.Metadata.Class
 import Hasura.PingSources
@@ -1006,17 +1007,7 @@ mkHGEServer setupHook appStateRef ekgStore = do
   AppEnv {..} <- lift askAppEnv
   let Loggers loggerCtx logger _ = appEnvLoggers
 
-  wsServerEnv <-
-    WS.createWSServerEnv
-      (_lsLogger appEnvLoggers)
-      appEnvSubscriptionState
-      appStateRef
-      appEnvManager
-      appEnvEnableReadOnlyMode
-      appEnvWebSocketKeepAlive
-      appEnvServerMetrics
-      appEnvPrometheusMetrics
-      appEnvTraceSamplingPolicy
+  wsServerEnv <- lift $ WS.createWSServerEnv appStateRef
 
   HasuraApp app actionSubState stopWsServer <-
     lift $
@@ -1082,24 +1073,24 @@ mkHGEServer setupHook appStateRef ekgStore = do
             (scSourcePingConfig <$> getSchemaCache appStateRef)
         )
 
+  -- initialise the websocket connection reaper thread
+  _websocketConnectionReaperThread <-
+    C.forkManagedT "websocket connection reaper thread" logger $
+      liftIO $
+        WS.websocketConnectionReaper getLatestConfigForWSServer getSchemaCache' (_wseServer wsServerEnv)
+
+  dbUid <-
+    getMetadataDbUid `onLeftM` throwErrJExit DatabaseMigrationError
+  pgVersion <-
+    liftIO (runExceptT $ PG.runTx appEnvMetadataDbPool (PG.ReadCommitted, Nothing) $ getPgVersion)
+      `onLeftM` throwErrJExit DatabaseMigrationError
+
+  lift . unLogger logger $ mkGenericLog @Text LevelInfo "telemetry" telemetryNotice
+
   -- start a background thread for telemetry
   _telemetryThread <-
-    if isTelemetryEnabled acEnableTelemetry
-      then do
-        lift . unLogger logger $ mkGenericLog @Text LevelInfo "telemetry" telemetryNotice
-
-        dbUid <-
-          getMetadataDbUid `onLeftM` throwErrJExit DatabaseMigrationError
-        pgVersion <-
-          liftIO (runExceptT $ PG.runTx appEnvMetadataDbPool (PG.ReadCommitted, Nothing) $ getPgVersion)
-            `onLeftM` throwErrJExit DatabaseMigrationError
-
-        telemetryThread <-
-          C.forkManagedT "runTelemetry" logger $
-            liftIO $
-              runTelemetry logger appEnvManager (getSchemaCache appStateRef) dbUid appEnvInstanceId pgVersion acExperimentalFeatures
-        return $ Just telemetryThread
-      else return Nothing
+    C.forkManagedT "runTelemetry" logger $
+      runTelemetry logger appStateRef dbUid pgVersion
 
   -- forking a dedicated polling thread to dynamically get the latest JWK settings
   -- set by the user and update the JWK accordingly. This will help in applying the
@@ -1118,6 +1109,12 @@ mkHGEServer setupHook appStateRef ekgStore = do
       return $ case resp of
         Right _ -> False
         Left err -> qeCode err == ConcurrentUpdate
+
+    getLatestConfigForWSServer =
+      fmap
+        (\appCtx -> (acAuthMode appCtx, acEnableAllowlist appCtx, acCorsPolicy appCtx))
+        (getAppContext appStateRef)
+    getSchemaCache' = getSchemaCache appStateRef
 
     prepareScheduledEvents (Logger logger) = do
       liftIO $ logger $ mkGenericLog @Text LevelInfo "scheduled_triggers" "preparing data"
@@ -1250,37 +1247,31 @@ mkHGEServer setupHook appStateRef ekgStore = do
 
     startAsyncActionsPollerThread logger lockedEventsCtx actionSubState = do
       AppEnv {..} <- lift askAppEnv
-      AppContext {..} <- liftIO $ getAppContext appStateRef
-      -- start a background thread to handle async actions
-      case acAsyncActionsFetchInterval of
-        Skip -> pure () -- Don't start the poller thread
-        Interval (unrefine -> sleepTime) -> do
-          let label = "asyncActionsProcessor"
-              asyncActionGracefulShutdownAction =
-                ( liftWithStateless \lowerIO ->
-                    ( waitForProcessingAction
-                        logger
-                        "async_actions"
-                        (length <$> readTVarIO (leActionEvents lockedEventsCtx))
-                        (MetadataDBShutdownAction (hoist lowerIO (shutdownAsyncActions lockedEventsCtx)))
-                        (unrefine appEnvGracefulShutdownTimeout)
-                    )
+      let label = "asyncActionsProcessor"
+          asyncActionGracefulShutdownAction =
+            ( liftWithStateless \lowerIO ->
+                ( waitForProcessingAction
+                    logger
+                    "async_actions"
+                    (length <$> readTVarIO (leActionEvents lockedEventsCtx))
+                    (MetadataDBShutdownAction (hoist lowerIO (shutdownAsyncActions lockedEventsCtx)))
+                    (unrefine appEnvGracefulShutdownTimeout)
                 )
+            )
 
-          void
-            $ C.forkManagedTWithGracefulShutdown
-              label
-              logger
-              (C.ThreadShutdown asyncActionGracefulShutdownAction)
-            $ asyncActionsProcessor
-              -- TODO: puru: send IO hook for acEnvironment
-              acEnvironment
-              logger
-              (getSchemaCache appStateRef)
-              (leActionEvents lockedEventsCtx)
-              appEnvPrometheusMetrics
-              sleepTime
-              Nothing
+      -- start a background thread to handle async actions
+      void
+        $ C.forkManagedTWithGracefulShutdown
+          label
+          logger
+          (C.ThreadShutdown asyncActionGracefulShutdownAction)
+        $ asyncActionsProcessor
+          (acEnvironment <$> getAppContext appStateRef)
+          logger
+          (getSchemaCache appStateRef)
+          (acAsyncActionsFetchInterval <$> getAppContext appStateRef)
+          (leActionEvents lockedEventsCtx)
+          Nothing
 
       -- start a background thread to handle async action live queries
       void $
@@ -1289,7 +1280,6 @@ mkHGEServer setupHook appStateRef ekgStore = do
 
     startScheduledEventsPollerThread logger lockedEventsCtx = do
       AppEnv {..} <- lift askAppEnv
-      AppContext {..} <- liftIO $ getAppContext appStateRef
       -- prepare scheduled triggers
       lift $ prepareScheduledEvents logger
 
@@ -1318,8 +1308,7 @@ mkHGEServer setupHook appStateRef ekgStore = do
           logger
           (C.ThreadShutdown scheduledEventsGracefulShutdownAction)
         $ processScheduledTriggers
-          -- TODO: puru: send IO hook for acEnvironment
-          acEnvironment
+          (acEnvironment <$> getAppContext appStateRef)
           logger
           scheduledEventsStatsLogger
           appEnvManager
