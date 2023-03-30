@@ -3147,6 +3147,64 @@ instance GHC.Base.Monad Hasura.GraphQL.Analyse.Analysis
 instance GHC.Base.Applicative Hasura.GraphQL.Analyse.Analysis
 instance GHC.Base.Functor Hasura.GraphQL.Analyse.Analysis
 
+module Hasura.QueryTags.Types
+data QueryTagsFormat
+Standard :: QueryTagsFormat
+SQLCommenter :: QueryTagsFormat
+
+-- | QueryTagsConfig is the configuration created by the users to control
+--   query tags
+--   
+--   This config let's hasura know about the following: 1. In what format
+--   should the query tags be created 2. Should they be appended to the SQL
+--   3. Should the request id be part of the query tags (which varies on
+--   each request and will cause prepared statements to be re-prepared
+--   every time)
+--   
+--   FWIW, <a>QueryTagsConfig</a> are coupled along with the Source
+--   metadata. So you can also think <a>QueryTagsConfig</a> as the query
+--   tags configuration for each source.
+--   
+--   The workflow is something like this:
+--   
+--   <ol>
+--   <li>The <a>QueryTagsConfig</a> for a source is created from the
+--   metadata we get from the user.</li>
+--   <li>This configuration is packaged (for the lack of better word) along
+--   with SourceConfigWith</li>
+--   <li>These query tags configuration are extracted from the
+--   <tt>SourceConfigWith</tt> in the <tt>mkDBQueryPlan</tt>,
+--   <tt>mkDBMutationPlan</tt>, <tt>mkDBSubscriptionPlan</tt> functions and
+--   are passed along to the point where the actual SQL generation takes
+--   place</li>
+--   </ol>
+--   
+--   Note that, it is important for <a>QueryTagsConfig</a> to be a part of
+--   <tt>SourceConfigWith</tt> because that's the only sane way (that we
+--   can think of) the `mkDB..Plan` functions can get the QueryTagsConfig.
+data QueryTagsConfig
+QueryTagsConfig :: !Bool -> !QueryTagsFormat -> !Bool -> QueryTagsConfig
+[_qtcDisabled] :: QueryTagsConfig -> !Bool
+[_qtcFormat] :: QueryTagsConfig -> !QueryTagsFormat
+[_qtcOmitRequestId] :: QueryTagsConfig -> !Bool
+defaultQueryTagsConfig :: QueryTagsConfig
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.QueryTags.Types.QueryTagsConfig
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.QueryTags.Types.QueryTagsConfig
+instance Autodocodec.Class.HasCodec Hasura.QueryTags.Types.QueryTagsConfig
+instance GHC.Generics.Generic Hasura.QueryTags.Types.QueryTagsFormat
+instance GHC.Classes.Eq Hasura.QueryTags.Types.QueryTagsFormat
+instance GHC.Show.Show Hasura.QueryTags.Types.QueryTagsFormat
+instance GHC.Generics.Generic Hasura.QueryTags.Types.QueryTagsConfig
+instance GHC.Classes.Eq Hasura.QueryTags.Types.QueryTagsConfig
+instance GHC.Show.Show Hasura.QueryTags.Types.QueryTagsConfig
+instance Data.Hashable.Class.Hashable Hasura.QueryTags.Types.QueryTagsConfig
+instance Control.DeepSeq.NFData Hasura.QueryTags.Types.QueryTagsConfig
+instance Data.Hashable.Class.Hashable Hasura.QueryTags.Types.QueryTagsFormat
+instance Control.DeepSeq.NFData Hasura.QueryTags.Types.QueryTagsFormat
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.QueryTags.Types.QueryTagsFormat
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.QueryTags.Types.QueryTagsFormat
+instance Autodocodec.Class.HasCodec Hasura.QueryTags.Types.QueryTagsFormat
+
 module Hasura.RQL.DDL.Headers
 data HeaderConf
 HeaderConf :: HeaderName -> HeaderValue -> HeaderConf
@@ -3595,64 +3653,6 @@ instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.QueryCollection.GQLQuer
 instance Autodocodec.Class.HasCodec Hasura.RQL.Types.QueryCollection.GQLQuery
 instance Autodocodec.Class.HasCodec Hasura.RQL.Types.QueryCollection.QueryName
 instance Autodocodec.Class.HasCodec Hasura.RQL.Types.QueryCollection.CollectionName
-
-module Hasura.RQL.Types.QueryTags
-data QueryTagsFormat
-Standard :: QueryTagsFormat
-SQLCommenter :: QueryTagsFormat
-
--- | QueryTagsConfig is the configuration created by the users to control
---   query tags
---   
---   This config let's hasura know about the following: 1. In what format
---   should the query tags be created 2. Should they be appended to the SQL
---   3. Should the request id be part of the query tags (which varies on
---   each request and will cause prepared statements to be re-prepared
---   every time)
---   
---   FWIW, <a>QueryTagsConfig</a> are coupled along with the Source
---   metadata. So you can also think <a>QueryTagsConfig</a> as the query
---   tags configuration for each source.
---   
---   The workflow is something like this:
---   
---   <ol>
---   <li>The <a>QueryTagsConfig</a> for a source is created from the
---   metadata we get from the user.</li>
---   <li>This configuration is packaged (for the lack of better word) along
---   with SourceConfigWith</li>
---   <li>These query tags configuration are extracted from the
---   <tt>SourceConfigWith</tt> in the <tt>mkDBQueryPlan</tt>,
---   <tt>mkDBMutationPlan</tt>, <tt>mkDBSubscriptionPlan</tt> functions and
---   are passed along to the point where the actual SQL generation takes
---   place</li>
---   </ol>
---   
---   Note that, it is important for <a>QueryTagsConfig</a> to be a part of
---   <tt>SourceConfigWith</tt> because that's the only sane way (that we
---   can think of) the `mkDB..Plan` functions can get the QueryTagsConfig.
-data QueryTagsConfig
-QueryTagsConfig :: !Bool -> !QueryTagsFormat -> !Bool -> QueryTagsConfig
-[_qtcDisabled] :: QueryTagsConfig -> !Bool
-[_qtcFormat] :: QueryTagsConfig -> !QueryTagsFormat
-[_qtcOmitRequestId] :: QueryTagsConfig -> !Bool
-defaultQueryTagsConfig :: QueryTagsConfig
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.QueryTags.QueryTagsConfig
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.Types.QueryTags.QueryTagsConfig
-instance Autodocodec.Class.HasCodec Hasura.RQL.Types.QueryTags.QueryTagsConfig
-instance GHC.Generics.Generic Hasura.RQL.Types.QueryTags.QueryTagsFormat
-instance GHC.Classes.Eq Hasura.RQL.Types.QueryTags.QueryTagsFormat
-instance GHC.Show.Show Hasura.RQL.Types.QueryTags.QueryTagsFormat
-instance GHC.Generics.Generic Hasura.RQL.Types.QueryTags.QueryTagsConfig
-instance GHC.Classes.Eq Hasura.RQL.Types.QueryTags.QueryTagsConfig
-instance GHC.Show.Show Hasura.RQL.Types.QueryTags.QueryTagsConfig
-instance Data.Hashable.Class.Hashable Hasura.RQL.Types.QueryTags.QueryTagsConfig
-instance Control.DeepSeq.NFData Hasura.RQL.Types.QueryTags.QueryTagsConfig
-instance Data.Hashable.Class.Hashable Hasura.RQL.Types.QueryTags.QueryTagsFormat
-instance Control.DeepSeq.NFData Hasura.RQL.Types.QueryTags.QueryTagsFormat
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.QueryTags.QueryTagsFormat
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.Types.QueryTags.QueryTagsFormat
-instance Autodocodec.Class.HasCodec Hasura.RQL.Types.QueryTags.QueryTagsFormat
 
 
 -- | Types related to resizing a connection pool
@@ -17156,7 +17156,7 @@ instance Hasura.RQL.Types.Source.MonadResolveSource m => Hasura.RQL.Types.Source
 instance Hasura.RQL.Types.Source.MonadResolveSource m => Hasura.RQL.Types.Source.MonadResolveSource (Database.PG.Query.Transaction.TxET Hasura.Base.Error.QErr m)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.Types.Source.DBObjectsIntrospection b)
 instance Hasura.Logging.ToEngineLog (Hasura.RQL.Types.Source.DBObjectsIntrospection b) Hasura.Logging.Hasura
-instance (Hasura.RQL.Types.Backend.Backend b, Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.Types.Table.TableCache b), Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.Types.Function.FunctionCache b), Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.Cache.LogicalModelCache b), Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.QueryTags.QueryTagsConfig, Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.SourceCustomization.SourceCustomization) => Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.Types.Source.SourceInfo b)
+instance (Hasura.RQL.Types.Backend.Backend b, Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.Types.Table.TableCache b), Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.Types.Function.FunctionCache b), Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.Cache.LogicalModelCache b), Data.Aeson.Types.ToJSON.ToJSON Hasura.QueryTags.Types.QueryTagsConfig, Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.SourceCustomization.SourceCustomization) => Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.Types.Source.SourceInfo b)
 
 module Hasura.PingSources
 
@@ -18690,6 +18690,17 @@ MutationMetadata :: Maybe RequestId -> Maybe Name -> RootFieldAlias -> Parameter
 data LivequeryMetadata
 LivequeryMetadata :: RootFieldAlias -> ParameterizedQueryHash -> LivequeryMetadata
 encodeQueryTags :: QueryTags -> QueryTagsAttributes
+class (Monad m) => MonadQueryTags m
+
+-- | Creates Query Tags. These are appended to the Generated SQL. Helps
+--   users to use native database monitoring tools to get some
+--   'application-context'.
+createQueryTags :: MonadQueryTags m => QueryTagsAttributes -> Maybe QueryTagsConfig -> Tagged m QueryTagsComment
+
+-- | Creates Query Tags. These are appended to the Generated SQL. Helps
+--   users to use native database monitoring tools to get some
+--   'application-context'.
+createQueryTags :: forall t n. (MonadQueryTags m, m ~ t n, MonadQueryTags n) => QueryTagsAttributes -> Maybe QueryTagsConfig -> Tagged m QueryTagsComment
 instance GHC.Classes.Eq Hasura.QueryTags.QueryTagsComment
 instance GHC.Show.Show Hasura.QueryTags.QueryTagsComment
 instance GHC.Classes.Eq Hasura.QueryTags.QueryTagsAttributes
@@ -18698,6 +18709,8 @@ instance GHC.Show.Show Hasura.QueryTags.QueryMetadata
 instance GHC.Show.Show Hasura.QueryTags.MutationMetadata
 instance GHC.Show.Show Hasura.QueryTags.LivequeryMetadata
 instance GHC.Show.Show Hasura.QueryTags.QueryTags
+instance Hasura.QueryTags.MonadQueryTags m => Hasura.QueryTags.MonadQueryTags (Control.Monad.Trans.Reader.ReaderT r m)
+instance Hasura.QueryTags.MonadQueryTags m => Hasura.QueryTags.MonadQueryTags (Control.Monad.Trans.Except.ExceptT e m)
 
 module Hasura.Backends.MSSQL.Execute.QueryTags
 withQueryTags :: Query -> QueryTagsComment -> Query
@@ -19032,10 +19045,10 @@ ActionRemoteRelationshipSelect :: HashMap FieldName Name -> r -> ActionRemoteRel
 --   an execution tree is constructed so that a backend is absolved of
 --   dealing with remote relationships.
 [_arrsRelationship] :: ActionRemoteRelationshipSelect r -> r
-_ACFNestedObject :: forall r_auJms. Prism' (ActionFieldG r_auJms) (Name, ActionFieldsG r_auJms)
-_ACFExpression :: forall r_auJms. Prism' (ActionFieldG r_auJms) Text
-_ACFRemote :: forall r_auJms. Prism' (ActionFieldG r_auJms) (ActionRemoteRelationshipSelect r_auJms)
-_ACFScalar :: forall r_auJms. Prism' (ActionFieldG r_auJms) Name
+_ACFNestedObject :: forall r_auJAR. Prism' (ActionFieldG r_auJAR) (Name, ActionFieldsG r_auJAR)
+_ACFExpression :: forall r_auJAR. Prism' (ActionFieldG r_auJAR) Text
+_ACFRemote :: forall r_auJAR. Prism' (ActionFieldG r_auJAR) (ActionRemoteRelationshipSelect r_auJAR)
+_ACFScalar :: forall r_auJAR. Prism' (ActionFieldG r_auJAR) Name
 data AnnActionExecution (r :: Type)
 AnnActionExecution :: ActionName -> GraphQLType -> ActionFieldsG r -> Value -> ActionOutputFields -> EnvRecord ResolvedWebhook -> [HeaderConf] -> Bool -> Timeout -> Maybe RequestTransform -> Maybe MetadataResponseTransform -> AnnActionExecution (r :: Type)
 [_aaeName] :: AnnActionExecution (r :: Type) -> ActionName
@@ -19089,30 +19102,30 @@ ASINoSource :: ActionSourceInfo b
 
 -- | All relationships refer to tables in one source
 ASISource :: SourceName -> SourceConfig b -> ActionSourceInfo b
-aaaqStringifyNum :: forall b_auJJZ r_auJK0. Lens' (AnnActionAsyncQuery b_auJJZ r_auJK0) StringifyNumbers
-aaaqSource :: forall b_auJJZ r_auJK0. Lens' (AnnActionAsyncQuery b_auJJZ r_auJK0) (ActionSourceInfo b_auJJZ)
-aaaqOutputType :: forall b_auJJZ r_auJK0. Lens' (AnnActionAsyncQuery b_auJJZ r_auJK0) GraphQLType
-aaaqName :: forall b_auJJZ r_auJK0. Lens' (AnnActionAsyncQuery b_auJJZ r_auJK0) ActionName
-aaaqForwardClientHeaders :: forall b_auJJZ r_auJK0. Lens' (AnnActionAsyncQuery b_auJJZ r_auJK0) Bool
-aaaqFields :: forall b_auJJZ r_auJK0 r_auKj5. Lens (AnnActionAsyncQuery b_auJJZ r_auJK0) (AnnActionAsyncQuery b_auJJZ r_auKj5) (AsyncActionQueryFieldsG r_auJK0) (AsyncActionQueryFieldsG r_auKj5)
-aaaqDefinitionList :: forall b_auJJZ r_auJK0. Lens' (AnnActionAsyncQuery b_auJJZ r_auJK0) [(Column b_auJJZ, ScalarType b_auJJZ)]
-aaaqActionId :: forall b_auJJZ r_auJK0. Lens' (AnnActionAsyncQuery b_auJJZ r_auJK0) ActionId
-aaeWebhook :: forall r_auJK3. Lens' (AnnActionExecution r_auJK3) (EnvRecord ResolvedWebhook)
-aaeTimeOut :: forall r_auJK3. Lens' (AnnActionExecution r_auJK3) Timeout
-aaeResponseTransform :: forall r_auJK3. Lens' (AnnActionExecution r_auJK3) (Maybe MetadataResponseTransform)
-aaeRequestTransform :: forall r_auJK3. Lens' (AnnActionExecution r_auJK3) (Maybe RequestTransform)
-aaePayload :: forall r_auJK3. Lens' (AnnActionExecution r_auJK3) Value
-aaeOutputType :: forall r_auJK3. Lens' (AnnActionExecution r_auJK3) GraphQLType
-aaeOutputFields :: forall r_auJK3. Lens' (AnnActionExecution r_auJK3) ActionOutputFields
-aaeName :: forall r_auJK3. Lens' (AnnActionExecution r_auJK3) ActionName
-aaeHeaders :: forall r_auJK3. Lens' (AnnActionExecution r_auJK3) [HeaderConf]
-aaeForwardClientHeaders :: forall r_auJK3. Lens' (AnnActionExecution r_auJK3) Bool
-aaeFields :: forall r_auJK3 r_auKpQ. Lens (AnnActionExecution r_auJK3) (AnnActionExecution r_auKpQ) (ActionFieldsG r_auJK3) (ActionFieldsG r_auKpQ)
-_AsyncErrors :: forall r_auJK2. Prism' (AsyncActionQueryFieldG r_auJK2) ()
-_AsyncCreatedAt :: forall r_auJK2. Prism' (AsyncActionQueryFieldG r_auJK2) ()
-_AsyncId :: forall r_auJK2. Prism' (AsyncActionQueryFieldG r_auJK2) ()
-_AsyncOutput :: forall r_auKyT r_auJK2. Prism (AsyncActionQueryFieldG r_auKyT) (AsyncActionQueryFieldG r_auJK2) (ActionFieldsG r_auKyT) (ActionFieldsG r_auJK2)
-_AsyncTypename :: forall r_auJK2. Prism' (AsyncActionQueryFieldG r_auJK2) Text
+aaaqStringifyNum :: forall b_auJYo r_auJYp. Lens' (AnnActionAsyncQuery b_auJYo r_auJYp) StringifyNumbers
+aaaqSource :: forall b_auJYo r_auJYp. Lens' (AnnActionAsyncQuery b_auJYo r_auJYp) (ActionSourceInfo b_auJYo)
+aaaqOutputType :: forall b_auJYo r_auJYp. Lens' (AnnActionAsyncQuery b_auJYo r_auJYp) GraphQLType
+aaaqName :: forall b_auJYo r_auJYp. Lens' (AnnActionAsyncQuery b_auJYo r_auJYp) ActionName
+aaaqForwardClientHeaders :: forall b_auJYo r_auJYp. Lens' (AnnActionAsyncQuery b_auJYo r_auJYp) Bool
+aaaqFields :: forall b_auJYo r_auJYp r_auKxu. Lens (AnnActionAsyncQuery b_auJYo r_auJYp) (AnnActionAsyncQuery b_auJYo r_auKxu) (AsyncActionQueryFieldsG r_auJYp) (AsyncActionQueryFieldsG r_auKxu)
+aaaqDefinitionList :: forall b_auJYo r_auJYp. Lens' (AnnActionAsyncQuery b_auJYo r_auJYp) [(Column b_auJYo, ScalarType b_auJYo)]
+aaaqActionId :: forall b_auJYo r_auJYp. Lens' (AnnActionAsyncQuery b_auJYo r_auJYp) ActionId
+aaeWebhook :: forall r_auJYs. Lens' (AnnActionExecution r_auJYs) (EnvRecord ResolvedWebhook)
+aaeTimeOut :: forall r_auJYs. Lens' (AnnActionExecution r_auJYs) Timeout
+aaeResponseTransform :: forall r_auJYs. Lens' (AnnActionExecution r_auJYs) (Maybe MetadataResponseTransform)
+aaeRequestTransform :: forall r_auJYs. Lens' (AnnActionExecution r_auJYs) (Maybe RequestTransform)
+aaePayload :: forall r_auJYs. Lens' (AnnActionExecution r_auJYs) Value
+aaeOutputType :: forall r_auJYs. Lens' (AnnActionExecution r_auJYs) GraphQLType
+aaeOutputFields :: forall r_auJYs. Lens' (AnnActionExecution r_auJYs) ActionOutputFields
+aaeName :: forall r_auJYs. Lens' (AnnActionExecution r_auJYs) ActionName
+aaeHeaders :: forall r_auJYs. Lens' (AnnActionExecution r_auJYs) [HeaderConf]
+aaeForwardClientHeaders :: forall r_auJYs. Lens' (AnnActionExecution r_auJYs) Bool
+aaeFields :: forall r_auJYs r_auKEf. Lens (AnnActionExecution r_auJYs) (AnnActionExecution r_auKEf) (ActionFieldsG r_auJYs) (ActionFieldsG r_auKEf)
+_AsyncErrors :: forall r_auJYr. Prism' (AsyncActionQueryFieldG r_auJYr) ()
+_AsyncCreatedAt :: forall r_auJYr. Prism' (AsyncActionQueryFieldG r_auJYr) ()
+_AsyncId :: forall r_auJYr. Prism' (AsyncActionQueryFieldG r_auJYr) ()
+_AsyncOutput :: forall r_auKNi r_auJYr. Prism (AsyncActionQueryFieldG r_auKNi) (AsyncActionQueryFieldG r_auJYr) (ActionFieldsG r_auKNi) (ActionFieldsG r_auJYr)
+_AsyncTypename :: forall r_auJYr. Prism' (AsyncActionQueryFieldG r_auJYr) Text
 instance Data.Traversable.Traversable Hasura.RQL.IR.Action.AnnActionExecution
 instance Data.Foldable.Foldable Hasura.RQL.IR.Action.AnnActionExecution
 instance GHC.Base.Functor Hasura.RQL.IR.Action.AnnActionExecution
@@ -19649,6 +19662,7 @@ withNewInconsistentObjsCheck :: (QErrM m, CacheRM m) => m a -> m a
 --   static analysis over the saved queries and reports any inconsistenties
 --   with the current schema.
 getInconsistentQueryCollections :: SchemaIntrospection -> QueryCollections -> ((CollectionName, ListedQuery) -> MetadataObject) -> EndpointTrie GQLQueryWithText -> [NormalizedQuery] -> [InconsistentMetadata]
+instance Hasura.QueryTags.MonadQueryTags m => Hasura.QueryTags.MonadQueryTags (Hasura.RQL.Types.SchemaCache.Build.MetadataT m)
 instance Hasura.Services.Network.ProvidesNetwork m => Hasura.Services.Network.ProvidesNetwork (Hasura.RQL.Types.SchemaCache.Build.MetadataT m)
 instance Control.Monad.Trans.Control.MonadBaseControl b m => Control.Monad.Trans.Control.MonadBaseControl b (Hasura.RQL.Types.SchemaCache.Build.MetadataT m)
 instance Control.Monad.Base.MonadBase b m => Control.Monad.Base.MonadBase b (Hasura.RQL.Types.SchemaCache.Build.MetadataT m)
@@ -23622,22 +23636,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aDPvH. Lens' (CreateEventTriggerQuery b_aDPvH) TriggerOnReplication
-cteqCleanupConfig :: forall b_aDPvH. Lens' (CreateEventTriggerQuery b_aDPvH) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aDPvH. Lens' (CreateEventTriggerQuery b_aDPvH) (Maybe Text)
-cetqWebhook :: forall b_aDPvH. Lens' (CreateEventTriggerQuery b_aDPvH) (Maybe InputWebhook)
-cetqUpdate :: forall b_aDPvH. Lens' (CreateEventTriggerQuery b_aDPvH) (Maybe (SubscribeOpSpec b_aDPvH))
-cetqTable :: forall b_aDPvH. Lens' (CreateEventTriggerQuery b_aDPvH) (TableName b_aDPvH)
-cetqSource :: forall b_aDPvH. Lens' (CreateEventTriggerQuery b_aDPvH) SourceName
-cetqRetryConf :: forall b_aDPvH. Lens' (CreateEventTriggerQuery b_aDPvH) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aDPvH. Lens' (CreateEventTriggerQuery b_aDPvH) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aDPvH. Lens' (CreateEventTriggerQuery b_aDPvH) (Maybe RequestTransform)
-cetqReplace :: forall b_aDPvH. Lens' (CreateEventTriggerQuery b_aDPvH) Bool
-cetqName :: forall b_aDPvH. Lens' (CreateEventTriggerQuery b_aDPvH) TriggerName
-cetqInsert :: forall b_aDPvH. Lens' (CreateEventTriggerQuery b_aDPvH) (Maybe (SubscribeOpSpec b_aDPvH))
-cetqHeaders :: forall b_aDPvH. Lens' (CreateEventTriggerQuery b_aDPvH) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aDPvH. Lens' (CreateEventTriggerQuery b_aDPvH) (Maybe Bool)
-cetqDelete :: forall b_aDPvH. Lens' (CreateEventTriggerQuery b_aDPvH) (Maybe (SubscribeOpSpec b_aDPvH))
+cteqTriggerOnReplication :: forall b_aDPOG. Lens' (CreateEventTriggerQuery b_aDPOG) TriggerOnReplication
+cteqCleanupConfig :: forall b_aDPOG. Lens' (CreateEventTriggerQuery b_aDPOG) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aDPOG. Lens' (CreateEventTriggerQuery b_aDPOG) (Maybe Text)
+cetqWebhook :: forall b_aDPOG. Lens' (CreateEventTriggerQuery b_aDPOG) (Maybe InputWebhook)
+cetqUpdate :: forall b_aDPOG. Lens' (CreateEventTriggerQuery b_aDPOG) (Maybe (SubscribeOpSpec b_aDPOG))
+cetqTable :: forall b_aDPOG. Lens' (CreateEventTriggerQuery b_aDPOG) (TableName b_aDPOG)
+cetqSource :: forall b_aDPOG. Lens' (CreateEventTriggerQuery b_aDPOG) SourceName
+cetqRetryConf :: forall b_aDPOG. Lens' (CreateEventTriggerQuery b_aDPOG) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aDPOG. Lens' (CreateEventTriggerQuery b_aDPOG) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aDPOG. Lens' (CreateEventTriggerQuery b_aDPOG) (Maybe RequestTransform)
+cetqReplace :: forall b_aDPOG. Lens' (CreateEventTriggerQuery b_aDPOG) Bool
+cetqName :: forall b_aDPOG. Lens' (CreateEventTriggerQuery b_aDPOG) TriggerName
+cetqInsert :: forall b_aDPOG. Lens' (CreateEventTriggerQuery b_aDPOG) (Maybe (SubscribeOpSpec b_aDPOG))
+cetqHeaders :: forall b_aDPOG. Lens' (CreateEventTriggerQuery b_aDPOG) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aDPOG. Lens' (CreateEventTriggerQuery b_aDPOG) (Maybe Bool)
+cetqDelete :: forall b_aDPOG. Lens' (CreateEventTriggerQuery b_aDPOG) (Maybe (SubscribeOpSpec b_aDPOG))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
@@ -24838,232 +24852,6 @@ instance GHC.Base.Monad Hasura.GraphQL.Execute.RemoteJoin.Collect.Collector
 instance GHC.Base.Applicative Hasura.GraphQL.Execute.RemoteJoin.Collect.Collector
 instance GHC.Base.Functor Hasura.GraphQL.Execute.RemoteJoin.Collect.Collector
 
-module Hasura.RemoteSchema.MetadataAPI.Core
-
--- | The payload for <tt>add_remote_schema</tt>, and a component of
---   <a>Metadata</a>.
-data AddRemoteSchemaQuery
-AddRemoteSchemaQuery :: RemoteSchemaName -> RemoteSchemaDef -> Maybe Text -> AddRemoteSchemaQuery
-
--- | An internal identifier for this remote schema.
-[_arsqName] :: AddRemoteSchemaQuery -> RemoteSchemaName
-[_arsqDefinition] :: AddRemoteSchemaQuery -> RemoteSchemaDef
-
--- | An opaque description or comment. We might display this in the UI, for
---   instance.
-[_arsqComment] :: AddRemoteSchemaQuery -> Maybe Text
-newtype RemoteSchemaNameQuery
-RemoteSchemaNameQuery :: RemoteSchemaName -> RemoteSchemaNameQuery
-[_rsnqName] :: RemoteSchemaNameQuery -> RemoteSchemaName
-runAddRemoteSchema :: (QErrM m, CacheRWM m, MonadIO m, ProvidesNetwork m, MetadataM m, MonadTrace m) => Environment -> AddRemoteSchemaQuery -> m EncJSON
-runRemoveRemoteSchema :: (QErrM m, UserInfoM m, CacheRWM m, MetadataM m) => RemoteSchemaNameQuery -> m EncJSON
-runReloadRemoteSchema :: (QErrM m, CacheRWM m, MetadataM m) => RemoteSchemaNameQuery -> m EncJSON
-runIntrospectRemoteSchema :: (CacheRM m, QErrM m) => RemoteSchemaNameQuery -> m EncJSON
-runUpdateRemoteSchema :: (QErrM m, CacheRWM m, MonadIO m, ProvidesNetwork m, MetadataM m, MonadTrace m) => Environment -> AddRemoteSchemaQuery -> m EncJSON
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RemoteSchema.MetadataAPI.Core.RemoteSchemaNameQuery
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RemoteSchema.MetadataAPI.Core.RemoteSchemaNameQuery
-instance GHC.Classes.Eq Hasura.RemoteSchema.MetadataAPI.Core.RemoteSchemaNameQuery
-instance GHC.Show.Show Hasura.RemoteSchema.MetadataAPI.Core.RemoteSchemaNameQuery
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RemoteSchema.MetadataAPI.Core.AddRemoteSchemaQuery
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RemoteSchema.MetadataAPI.Core.AddRemoteSchemaQuery
-instance GHC.Generics.Generic Hasura.RemoteSchema.MetadataAPI.Core.AddRemoteSchemaQuery
-instance GHC.Classes.Eq Hasura.RemoteSchema.MetadataAPI.Core.AddRemoteSchemaQuery
-instance GHC.Show.Show Hasura.RemoteSchema.MetadataAPI.Core.AddRemoteSchemaQuery
-instance Control.DeepSeq.NFData Hasura.RemoteSchema.MetadataAPI.Core.AddRemoteSchemaQuery
-
-module Hasura.RemoteSchema.MetadataAPI
-
-module Hasura.RQL.DDL.Schema.Cache.Fields
-addNonColumnFields :: forall b m. (MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m, BackendMetadata b) => HashMap SourceName (AnyBackend PartiallyResolvedSource) -> SourceName -> HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)) -> FieldInfoMap (ColumnInfo b) -> PartiallyResolvedRemoteSchemaMap -> DBFunctionsMetadata b -> NonColumnTableInputs b -> m (FieldInfoMap (FieldInfo b))
-
-module Hasura.RQL.DDL.Schema.Cache.Dependencies
-
--- | Processes collected <tt>CIDependency</tt> values into a <a>DepMap</a>,
---   performing integrity checking to ensure the dependencies actually
---   exist. If a dependency is missing, its transitive dependents are
---   removed from the cache, and <a>InconsistentMetadata</a>s are returned.
-resolveDependencies :: (ArrowKleisli m arr, QErrM m) => (BuildOutputs, [MetadataDependency]) `arr` (BuildOutputs, [InconsistentMetadata], DepMap)
-
-
--- | Top-level functions concerned specifically with operations on the
---   schema cache, such as rebuilding it from the catalog and incorporating
---   schema changes. See the module documentation for
---   <a>Hasura.RQL.DDL.Schema</a> for more details.
---   
---   <b>Note</b>: this module is <b>mutually recursive</b> with other
---   <tt>Hasura.RQL.DDL.Schema.*</tt> modules, which both define pieces of
---   the implementation of building the schema cache and define handlers
---   that trigger schema cache rebuilds.
-module Hasura.RQL.DDL.Schema.Cache
-buildRebuildableSchemaCache :: Logger Hasura -> Environment -> MetadataWithResourceVersion -> ServerConfigCtx -> CacheBuild RebuildableSchemaCache
-buildRebuildableSchemaCacheWithReason :: BuildReason -> Logger Hasura -> Environment -> MetadataWithResourceVersion -> ServerConfigCtx -> CacheBuild RebuildableSchemaCache
-data CacheRWT m a
-runCacheRWT :: Monad m => ServerConfigCtx -> RebuildableSchemaCache -> CacheRWT m a -> m (a, RebuildableSchemaCache, CacheInvalidations)
-instance Hasura.Services.Network.ProvidesNetwork m => Hasura.Services.Network.ProvidesNetwork (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-instance Control.Monad.Trans.Control.MonadBaseControl b m => Control.Monad.Trans.Control.MonadBaseControl b (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-instance Control.Monad.Base.MonadBase b m => Control.Monad.Base.MonadBase b (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-instance Hasura.Tracing.Class.MonadTrace m => Hasura.Tracing.Class.MonadTrace (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-instance Hasura.Metadata.Class.MonadMetadataStorageQueryAPI m => Hasura.Metadata.Class.MonadMetadataStorageQueryAPI (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-instance Hasura.Metadata.Class.MonadMetadataStorage m => Hasura.Metadata.Class.MonadMetadataStorage (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-instance Hasura.Session.UserInfoM m => Hasura.Session.UserInfoM (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-instance Control.Monad.Error.Class.MonadError e m => Control.Monad.Error.Class.MonadError e (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-instance Control.Monad.IO.Class.MonadIO m => Control.Monad.IO.Class.MonadIO (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-instance GHC.Base.Monad m => GHC.Base.Monad (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-instance GHC.Base.Monad m => GHC.Base.Applicative (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-instance GHC.Base.Functor m => GHC.Base.Functor (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-instance GHC.Generics.Generic (Hasura.RQL.DDL.Schema.Cache.BackendInfoAndSourceMetadata b)
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.RQL.DDL.Schema.Cache.BackendInfoAndSourceMetadata b)
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.RQL.DDL.Schema.Cache.BackendInfoAndSourceMetadata b)
-instance GHC.Base.Monad m => Hasura.Server.Types.HasServerConfigCtx (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-instance Control.Monad.Reader.Class.MonadReader r m => Control.Monad.Reader.Class.MonadReader r (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-instance Hasura.RQL.DDL.EventTrigger.MonadEventLogCleanup m => Hasura.RQL.DDL.EventTrigger.MonadEventLogCleanup (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-instance Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit m => Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-instance Control.Monad.Trans.Class.MonadTrans Hasura.RQL.DDL.Schema.Cache.CacheRWT
-instance GHC.Base.Monad m => Hasura.RQL.Types.SchemaCache.CacheRM (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-instance (Control.Monad.IO.Class.MonadIO m, Control.Monad.Error.Class.MonadError Hasura.Base.Error.QErr m, Hasura.Services.Network.ProvidesNetwork m, Hasura.RQL.Types.Source.MonadResolveSource m) => Hasura.RQL.Types.SchemaCache.Build.CacheRWM (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-
-
--- | This module (along with the various <tt>Hasura.RQL.DDL.Schema.*</tt>
---   modules) provides operations to load and modify the Hasura catalog and
---   schema cache.
---   
---   <ul>
---   <li>The <i>catalog</i> refers to the set of PostgreSQL tables and
---   views that store all schema information known by Hasura. This includes
---   any tracked Postgres tables, views, and functions, all remote schemas,
---   and any additionaly Hasura-specific information such as permissions
---   and relationships.</li>
---   </ul>
---   
---   Primitive functions for loading and modifying the catalog are defined
---   in <a>Hasura.RQL.DDL.Schema.Catalog</a>, but most uses are wrapped by
---   other functions to synchronize catalog information with the
---   information in the schema cache.
---   
---   <ul>
---   <li>The <i>schema cache</i> is a process-global value of type
---   <tt>SchemaCache</tt> that stores an in-memory representation of the
---   data stored in the catalog. The in-memory representation is not
---   identical to the data in the catalog, since it has some
---   post-processing applied to it in order to make it easier to consume
---   for other parts of the system, such as GraphQL schema generation. For
---   example, although column information is represented by
---   <tt>RawColumnInfo</tt>, the schema cache contains “processed”
---   <tt>ColumnInfo</tt> values, instead.</li>
---   </ul>
---   
---   Ultimately, the catalog is the source of truth for all information
---   contained in the schema cache, but to avoid rebuilding the entire
---   schema cache on every change to the catalog, various functions
---   incrementally update the cache when they modify the catalog.
-module Hasura.RQL.DDL.Schema
-data RunSQLRes
-RunSQLRes :: Text -> Value -> RunSQLRes
-[rrResultType] :: RunSQLRes -> Text
-[rrResult] :: RunSQLRes -> Value
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Schema.RunSQLRes
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Schema.RunSQLRes
-instance Database.PG.Query.Class.FromRes Hasura.RQL.DDL.Schema.RunSQLRes
-instance GHC.Classes.Eq Hasura.RQL.DDL.Schema.RunSQLRes
-instance GHC.Show.Show Hasura.RQL.DDL.Schema.RunSQLRes
-
-module Hasura.RQL.DDL.Relationship.Rename
-data RenameRel b
-runRenameRel :: forall b m. (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) => RenameRel b -> m EncJSON
-instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.Relationship.Rename.RenameRel b)
-
-
--- | Postgres DDL RunSQL
---   
---   Escape hatch for running raw SQL against a postgres database.
---   
---   <a>runRunSQL</a> executes the provided raw SQL.
---   
---   <a>isSchemaCacheBuildRequiredRunSQL</a> checks for known
---   schema-mutating keywords in the raw SQL text.
---   
---   See <a>V2Query</a> and <a>Query</a>.
-module Hasura.Backends.Postgres.DDL.RunSQL
-data RunSQL
-RunSQL :: Text -> SourceName -> Bool -> Maybe Bool -> TxAccess -> RunSQL
-[rSql] :: RunSQL -> Text
-[rSource] :: RunSQL -> SourceName
-[rCascade] :: RunSQL -> Bool
-[rCheckMetadataConsistency] :: RunSQL -> Maybe Bool
-[rTxAccessMode] :: RunSQL -> TxAccess
-
--- | Check for known schema-mutating keywords in the raw SQL text.
---   
---   See Note [Checking metadata consistency in run_sql].
-isSchemaCacheBuildRequiredRunSQL :: RunSQL -> Bool
-isReadOnly :: RunSQL -> Bool
-
--- | Used as an escape hatch to run raw SQL against a database.
-runRunSQL :: forall (pgKind :: PostgresKind) m. (BackendMetadata ('Postgres pgKind), ToMetadataFetchQuery pgKind, FetchTableMetadata pgKind, FetchFunctionMetadata pgKind, CacheRWM m, HasServerConfigCtx m, MetadataM m, MonadBaseControl IO m, MonadError QErr m, MonadIO m, MonadTrace m, UserInfoM m) => RunSQL -> m EncJSON
-instance GHC.Classes.Eq Hasura.Backends.Postgres.DDL.RunSQL.RunSQL
-instance GHC.Show.Show Hasura.Backends.Postgres.DDL.RunSQL.RunSQL
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.Postgres.DDL.RunSQL.RunSQL
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.Postgres.DDL.RunSQL.RunSQL
-
-module Hasura.Backends.MySQL.SQL
-data RunSQL
-RunSQL :: Text -> SourceName -> RunSQL
-[_Sql] :: RunSQL -> Text
-[_Source] :: RunSQL -> SourceName
-runSQL :: (MonadIO m, CacheRWM m, MonadError QErr m, MetadataM m) => RunSQL -> m EncJSON
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.MySQL.SQL.RunSQL
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.MySQL.SQL.RunSQL
-instance GHC.Classes.Eq Hasura.Backends.MySQL.SQL.RunSQL
-instance GHC.Show.Show Hasura.Backends.MySQL.SQL.RunSQL
-
-
--- | MSSQL DDL RunSQL
---   
---   Provides primitives for running raw text SQL on MSSQL backends.
-module Hasura.Backends.MSSQL.DDL.RunSQL
-data MSSQLRunSQL
-MSSQLRunSQL :: Text -> SourceName -> Bool -> Maybe Bool -> MSSQLRunSQL
-[_mrsSql] :: MSSQLRunSQL -> Text
-[_mrsSource] :: MSSQLRunSQL -> SourceName
-[_mrsCascade] :: MSSQLRunSQL -> Bool
-[_mrsCheckMetadataConsistency] :: MSSQLRunSQL -> Maybe Bool
-runSQL :: forall m. (MonadIO m, MonadBaseControl IO m, CacheRWM m, MonadError QErr m, MetadataM m) => MSSQLRunSQL -> m EncJSON
-isSchemaCacheBuildRequiredRunSQL :: MSSQLRunSQL -> Bool
-instance GHC.Classes.Eq Hasura.Backends.MSSQL.DDL.RunSQL.MSSQLRunSQL
-instance GHC.Show.Show Hasura.Backends.MSSQL.DDL.RunSQL.MSSQLRunSQL
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.MSSQL.DDL.RunSQL.MSSQLRunSQL
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.MSSQL.DDL.RunSQL.MSSQLRunSQL
-
-module Hasura.Backends.DataConnector.Adapter.RunSQL
-data DataConnectorRunSQL
-DataConnectorRunSQL :: SourceName -> Text -> DataConnectorRunSQL
-[_dcSource] :: DataConnectorRunSQL -> SourceName
-[_dcSql] :: DataConnectorRunSQL -> Text
-runSQL :: forall m. (MonadIO m, CacheRWM m, MonadError QErr m, MetadataM m) => DataConnectorName -> DataConnectorRunSQL -> m EncJSON
-instance GHC.Classes.Eq Hasura.Backends.DataConnector.Adapter.RunSQL.DataConnectorRunSQL
-instance GHC.Show.Show Hasura.Backends.DataConnector.Adapter.RunSQL.DataConnectorRunSQL
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.DataConnector.Adapter.RunSQL.DataConnectorRunSQL
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.Adapter.RunSQL.DataConnectorRunSQL
-
-
--- | Working example:
---   
---   $ curl -XPOST <a>http://localhost:8080/v2/query</a> -d @- &lt;&lt;EOF
---   { "type":"bigquery_run_sql", "args": { "sql":"select 3 * 4 as foo,
---   "Hello, World!" as bar", "source":"chinook" } } EOF
---   {"result_type":<a>TuplesOk</a>,"result":[["foo","bar"],["12","Hello,
---   World!"]]}
-module Hasura.Backends.BigQuery.DDL.RunSQL
-data BigQueryRunSQL
-runSQL :: (MonadIO m, CacheRWM m, MonadError QErr m, MetadataM m) => BigQueryRunSQL -> m EncJSON
-
--- | The SQL query in the request is ignored
-runDatabaseInspection :: (MonadIO m, CacheRWM m, MonadError QErr m, MetadataM m) => BigQueryRunSQL -> m EncJSON
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.BigQuery.DDL.RunSQL.BigQueryRunSQL
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.BigQuery.DDL.RunSQL.BigQueryRunSQL
-instance GHC.Classes.Eq Hasura.Backends.BigQuery.DDL.RunSQL.BigQueryRunSQL
-instance GHC.Show.Show Hasura.Backends.BigQuery.DDL.RunSQL.BigQueryRunSQL
-
 module Hasura.GraphQL.Execute.Backend
 
 -- | This typeclass enacapsulates how a given backend translates a root
@@ -25166,21 +24954,9 @@ data ExecutionStep
 --   a client-side dataloader and generalized joins, this will need to be
 --   changed into an annotated tree.
 type ExecutionPlan = RootFieldMap ExecutionStep
-class (Monad m) => MonadQueryTags m
-
--- | Creates Query Tags. These are appended to the Generated SQL. Helps
---   users to use native database monitoring tools to get some
---   'application-context'.
-createQueryTags :: MonadQueryTags m => QueryTagsAttributes -> Maybe QueryTagsConfig -> Tagged m QueryTagsComment
 instance GHC.Generics.Generic Hasura.GraphQL.Execute.Backend.ExplainPlan
 instance GHC.Classes.Eq Hasura.GraphQL.Execute.Backend.ExplainPlan
 instance GHC.Show.Show Hasura.GraphQL.Execute.Backend.ExplainPlan
-instance Hasura.GraphQL.Execute.Backend.MonadQueryTags m => Hasura.GraphQL.Execute.Backend.MonadQueryTags (Control.Monad.Trans.Reader.ReaderT r m)
-instance Hasura.GraphQL.Execute.Backend.MonadQueryTags m => Hasura.GraphQL.Execute.Backend.MonadQueryTags (Control.Monad.Trans.Except.ExceptT e m)
-instance Hasura.GraphQL.Execute.Backend.MonadQueryTags m => Hasura.GraphQL.Execute.Backend.MonadQueryTags (Hasura.Tracing.Monad.TraceT m)
-instance Hasura.GraphQL.Execute.Backend.MonadQueryTags m => Hasura.GraphQL.Execute.Backend.MonadQueryTags (Database.PG.Query.Transaction.TxET Hasura.Base.Error.QErr m)
-instance Hasura.GraphQL.Execute.Backend.MonadQueryTags m => Hasura.GraphQL.Execute.Backend.MonadQueryTags (Hasura.RQL.Types.SchemaCache.Build.MetadataT m)
-instance Hasura.GraphQL.Execute.Backend.MonadQueryTags m => Hasura.GraphQL.Execute.Backend.MonadQueryTags (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Backend.ExplainPlan
 instance GHC.Base.Functor (Hasura.GraphQL.Execute.Backend.OnBaseMonad t)
 
@@ -25463,6 +25239,233 @@ instance Hasura.GraphQL.Execute.Backend.BackendExecute 'Hasura.SQL.Backend.BigQu
 
 module Hasura.Backends.BigQuery.Instances.Transport
 instance Hasura.GraphQL.Transport.Backend.BackendTransport 'Hasura.SQL.Backend.BigQuery
+
+module Hasura.RemoteSchema.MetadataAPI.Core
+
+-- | The payload for <tt>add_remote_schema</tt>, and a component of
+--   <a>Metadata</a>.
+data AddRemoteSchemaQuery
+AddRemoteSchemaQuery :: RemoteSchemaName -> RemoteSchemaDef -> Maybe Text -> AddRemoteSchemaQuery
+
+-- | An internal identifier for this remote schema.
+[_arsqName] :: AddRemoteSchemaQuery -> RemoteSchemaName
+[_arsqDefinition] :: AddRemoteSchemaQuery -> RemoteSchemaDef
+
+-- | An opaque description or comment. We might display this in the UI, for
+--   instance.
+[_arsqComment] :: AddRemoteSchemaQuery -> Maybe Text
+newtype RemoteSchemaNameQuery
+RemoteSchemaNameQuery :: RemoteSchemaName -> RemoteSchemaNameQuery
+[_rsnqName] :: RemoteSchemaNameQuery -> RemoteSchemaName
+runAddRemoteSchema :: (QErrM m, CacheRWM m, MonadIO m, ProvidesNetwork m, MetadataM m, MonadTrace m) => Environment -> AddRemoteSchemaQuery -> m EncJSON
+runRemoveRemoteSchema :: (QErrM m, UserInfoM m, CacheRWM m, MetadataM m) => RemoteSchemaNameQuery -> m EncJSON
+runReloadRemoteSchema :: (QErrM m, CacheRWM m, MetadataM m) => RemoteSchemaNameQuery -> m EncJSON
+runIntrospectRemoteSchema :: (CacheRM m, QErrM m) => RemoteSchemaNameQuery -> m EncJSON
+runUpdateRemoteSchema :: (QErrM m, CacheRWM m, MonadIO m, ProvidesNetwork m, MetadataM m, MonadTrace m) => Environment -> AddRemoteSchemaQuery -> m EncJSON
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RemoteSchema.MetadataAPI.Core.RemoteSchemaNameQuery
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RemoteSchema.MetadataAPI.Core.RemoteSchemaNameQuery
+instance GHC.Classes.Eq Hasura.RemoteSchema.MetadataAPI.Core.RemoteSchemaNameQuery
+instance GHC.Show.Show Hasura.RemoteSchema.MetadataAPI.Core.RemoteSchemaNameQuery
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RemoteSchema.MetadataAPI.Core.AddRemoteSchemaQuery
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RemoteSchema.MetadataAPI.Core.AddRemoteSchemaQuery
+instance GHC.Generics.Generic Hasura.RemoteSchema.MetadataAPI.Core.AddRemoteSchemaQuery
+instance GHC.Classes.Eq Hasura.RemoteSchema.MetadataAPI.Core.AddRemoteSchemaQuery
+instance GHC.Show.Show Hasura.RemoteSchema.MetadataAPI.Core.AddRemoteSchemaQuery
+instance Control.DeepSeq.NFData Hasura.RemoteSchema.MetadataAPI.Core.AddRemoteSchemaQuery
+
+module Hasura.RemoteSchema.MetadataAPI
+
+module Hasura.RQL.DDL.Schema.Cache.Fields
+addNonColumnFields :: forall b m. (MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m, BackendMetadata b) => HashMap SourceName (AnyBackend PartiallyResolvedSource) -> SourceName -> HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)) -> FieldInfoMap (ColumnInfo b) -> PartiallyResolvedRemoteSchemaMap -> DBFunctionsMetadata b -> NonColumnTableInputs b -> m (FieldInfoMap (FieldInfo b))
+
+module Hasura.RQL.DDL.Schema.Cache.Dependencies
+
+-- | Processes collected <tt>CIDependency</tt> values into a <a>DepMap</a>,
+--   performing integrity checking to ensure the dependencies actually
+--   exist. If a dependency is missing, its transitive dependents are
+--   removed from the cache, and <a>InconsistentMetadata</a>s are returned.
+resolveDependencies :: (ArrowKleisli m arr, QErrM m) => (BuildOutputs, [MetadataDependency]) `arr` (BuildOutputs, [InconsistentMetadata], DepMap)
+
+
+-- | Top-level functions concerned specifically with operations on the
+--   schema cache, such as rebuilding it from the catalog and incorporating
+--   schema changes. See the module documentation for
+--   <a>Hasura.RQL.DDL.Schema</a> for more details.
+--   
+--   <b>Note</b>: this module is <b>mutually recursive</b> with other
+--   <tt>Hasura.RQL.DDL.Schema.*</tt> modules, which both define pieces of
+--   the implementation of building the schema cache and define handlers
+--   that trigger schema cache rebuilds.
+module Hasura.RQL.DDL.Schema.Cache
+buildRebuildableSchemaCache :: Logger Hasura -> Environment -> MetadataWithResourceVersion -> ServerConfigCtx -> CacheBuild RebuildableSchemaCache
+buildRebuildableSchemaCacheWithReason :: BuildReason -> Logger Hasura -> Environment -> MetadataWithResourceVersion -> ServerConfigCtx -> CacheBuild RebuildableSchemaCache
+data CacheRWT m a
+runCacheRWT :: Monad m => ServerConfigCtx -> RebuildableSchemaCache -> CacheRWT m a -> m (a, RebuildableSchemaCache, CacheInvalidations)
+instance Hasura.QueryTags.MonadQueryTags m => Hasura.QueryTags.MonadQueryTags (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+instance Hasura.Services.Network.ProvidesNetwork m => Hasura.Services.Network.ProvidesNetwork (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+instance Control.Monad.Trans.Control.MonadBaseControl b m => Control.Monad.Trans.Control.MonadBaseControl b (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+instance Control.Monad.Base.MonadBase b m => Control.Monad.Base.MonadBase b (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+instance Hasura.Tracing.Class.MonadTrace m => Hasura.Tracing.Class.MonadTrace (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+instance Hasura.Metadata.Class.MonadMetadataStorageQueryAPI m => Hasura.Metadata.Class.MonadMetadataStorageQueryAPI (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+instance Hasura.Metadata.Class.MonadMetadataStorage m => Hasura.Metadata.Class.MonadMetadataStorage (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+instance Hasura.Session.UserInfoM m => Hasura.Session.UserInfoM (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+instance Control.Monad.Error.Class.MonadError e m => Control.Monad.Error.Class.MonadError e (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+instance Control.Monad.IO.Class.MonadIO m => Control.Monad.IO.Class.MonadIO (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+instance GHC.Base.Monad m => GHC.Base.Monad (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+instance GHC.Base.Monad m => GHC.Base.Applicative (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+instance GHC.Base.Functor m => GHC.Base.Functor (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+instance GHC.Generics.Generic (Hasura.RQL.DDL.Schema.Cache.BackendInfoAndSourceMetadata b)
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.RQL.DDL.Schema.Cache.BackendInfoAndSourceMetadata b)
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.RQL.DDL.Schema.Cache.BackendInfoAndSourceMetadata b)
+instance GHC.Base.Monad m => Hasura.Server.Types.HasServerConfigCtx (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+instance Control.Monad.Reader.Class.MonadReader r m => Control.Monad.Reader.Class.MonadReader r (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+instance Hasura.RQL.DDL.EventTrigger.MonadEventLogCleanup m => Hasura.RQL.DDL.EventTrigger.MonadEventLogCleanup (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+instance Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit m => Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+instance Control.Monad.Trans.Class.MonadTrans Hasura.RQL.DDL.Schema.Cache.CacheRWT
+instance GHC.Base.Monad m => Hasura.RQL.Types.SchemaCache.CacheRM (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+instance (Control.Monad.IO.Class.MonadIO m, Control.Monad.Error.Class.MonadError Hasura.Base.Error.QErr m, Hasura.Services.Network.ProvidesNetwork m, Hasura.RQL.Types.Source.MonadResolveSource m) => Hasura.RQL.Types.SchemaCache.Build.CacheRWM (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
+
+
+-- | This module (along with the various <tt>Hasura.RQL.DDL.Schema.*</tt>
+--   modules) provides operations to load and modify the Hasura catalog and
+--   schema cache.
+--   
+--   <ul>
+--   <li>The <i>catalog</i> refers to the set of PostgreSQL tables and
+--   views that store all schema information known by Hasura. This includes
+--   any tracked Postgres tables, views, and functions, all remote schemas,
+--   and any additionaly Hasura-specific information such as permissions
+--   and relationships.</li>
+--   </ul>
+--   
+--   Primitive functions for loading and modifying the catalog are defined
+--   in <a>Hasura.RQL.DDL.Schema.Catalog</a>, but most uses are wrapped by
+--   other functions to synchronize catalog information with the
+--   information in the schema cache.
+--   
+--   <ul>
+--   <li>The <i>schema cache</i> is a process-global value of type
+--   <tt>SchemaCache</tt> that stores an in-memory representation of the
+--   data stored in the catalog. The in-memory representation is not
+--   identical to the data in the catalog, since it has some
+--   post-processing applied to it in order to make it easier to consume
+--   for other parts of the system, such as GraphQL schema generation. For
+--   example, although column information is represented by
+--   <tt>RawColumnInfo</tt>, the schema cache contains “processed”
+--   <tt>ColumnInfo</tt> values, instead.</li>
+--   </ul>
+--   
+--   Ultimately, the catalog is the source of truth for all information
+--   contained in the schema cache, but to avoid rebuilding the entire
+--   schema cache on every change to the catalog, various functions
+--   incrementally update the cache when they modify the catalog.
+module Hasura.RQL.DDL.Schema
+data RunSQLRes
+RunSQLRes :: Text -> Value -> RunSQLRes
+[rrResultType] :: RunSQLRes -> Text
+[rrResult] :: RunSQLRes -> Value
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Schema.RunSQLRes
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Schema.RunSQLRes
+instance Database.PG.Query.Class.FromRes Hasura.RQL.DDL.Schema.RunSQLRes
+instance GHC.Classes.Eq Hasura.RQL.DDL.Schema.RunSQLRes
+instance GHC.Show.Show Hasura.RQL.DDL.Schema.RunSQLRes
+
+module Hasura.RQL.DDL.Relationship.Rename
+data RenameRel b
+runRenameRel :: forall b m. (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) => RenameRel b -> m EncJSON
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.Relationship.Rename.RenameRel b)
+
+
+-- | Postgres DDL RunSQL
+--   
+--   Escape hatch for running raw SQL against a postgres database.
+--   
+--   <a>runRunSQL</a> executes the provided raw SQL.
+--   
+--   <a>isSchemaCacheBuildRequiredRunSQL</a> checks for known
+--   schema-mutating keywords in the raw SQL text.
+--   
+--   See <a>V2Query</a> and <a>Query</a>.
+module Hasura.Backends.Postgres.DDL.RunSQL
+data RunSQL
+RunSQL :: Text -> SourceName -> Bool -> Maybe Bool -> TxAccess -> RunSQL
+[rSql] :: RunSQL -> Text
+[rSource] :: RunSQL -> SourceName
+[rCascade] :: RunSQL -> Bool
+[rCheckMetadataConsistency] :: RunSQL -> Maybe Bool
+[rTxAccessMode] :: RunSQL -> TxAccess
+
+-- | Check for known schema-mutating keywords in the raw SQL text.
+--   
+--   See Note [Checking metadata consistency in run_sql].
+isSchemaCacheBuildRequiredRunSQL :: RunSQL -> Bool
+isReadOnly :: RunSQL -> Bool
+
+-- | Used as an escape hatch to run raw SQL against a database.
+runRunSQL :: forall (pgKind :: PostgresKind) m. (BackendMetadata ('Postgres pgKind), ToMetadataFetchQuery pgKind, FetchTableMetadata pgKind, FetchFunctionMetadata pgKind, CacheRWM m, HasServerConfigCtx m, MetadataM m, MonadBaseControl IO m, MonadError QErr m, MonadIO m, MonadTrace m, UserInfoM m) => RunSQL -> m EncJSON
+instance GHC.Classes.Eq Hasura.Backends.Postgres.DDL.RunSQL.RunSQL
+instance GHC.Show.Show Hasura.Backends.Postgres.DDL.RunSQL.RunSQL
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.Postgres.DDL.RunSQL.RunSQL
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.Postgres.DDL.RunSQL.RunSQL
+
+module Hasura.Backends.MySQL.SQL
+data RunSQL
+RunSQL :: Text -> SourceName -> RunSQL
+[_Sql] :: RunSQL -> Text
+[_Source] :: RunSQL -> SourceName
+runSQL :: (MonadIO m, CacheRWM m, MonadError QErr m, MetadataM m) => RunSQL -> m EncJSON
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.MySQL.SQL.RunSQL
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.MySQL.SQL.RunSQL
+instance GHC.Classes.Eq Hasura.Backends.MySQL.SQL.RunSQL
+instance GHC.Show.Show Hasura.Backends.MySQL.SQL.RunSQL
+
+
+-- | MSSQL DDL RunSQL
+--   
+--   Provides primitives for running raw text SQL on MSSQL backends.
+module Hasura.Backends.MSSQL.DDL.RunSQL
+data MSSQLRunSQL
+MSSQLRunSQL :: Text -> SourceName -> Bool -> Maybe Bool -> MSSQLRunSQL
+[_mrsSql] :: MSSQLRunSQL -> Text
+[_mrsSource] :: MSSQLRunSQL -> SourceName
+[_mrsCascade] :: MSSQLRunSQL -> Bool
+[_mrsCheckMetadataConsistency] :: MSSQLRunSQL -> Maybe Bool
+runSQL :: forall m. (MonadIO m, MonadBaseControl IO m, CacheRWM m, MonadError QErr m, MetadataM m) => MSSQLRunSQL -> m EncJSON
+isSchemaCacheBuildRequiredRunSQL :: MSSQLRunSQL -> Bool
+instance GHC.Classes.Eq Hasura.Backends.MSSQL.DDL.RunSQL.MSSQLRunSQL
+instance GHC.Show.Show Hasura.Backends.MSSQL.DDL.RunSQL.MSSQLRunSQL
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.MSSQL.DDL.RunSQL.MSSQLRunSQL
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.MSSQL.DDL.RunSQL.MSSQLRunSQL
+
+module Hasura.Backends.DataConnector.Adapter.RunSQL
+data DataConnectorRunSQL
+DataConnectorRunSQL :: SourceName -> Text -> DataConnectorRunSQL
+[_dcSource] :: DataConnectorRunSQL -> SourceName
+[_dcSql] :: DataConnectorRunSQL -> Text
+runSQL :: forall m. (MonadIO m, CacheRWM m, MonadError QErr m, MetadataM m) => DataConnectorName -> DataConnectorRunSQL -> m EncJSON
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.Adapter.RunSQL.DataConnectorRunSQL
+instance GHC.Show.Show Hasura.Backends.DataConnector.Adapter.RunSQL.DataConnectorRunSQL
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.DataConnector.Adapter.RunSQL.DataConnectorRunSQL
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.Adapter.RunSQL.DataConnectorRunSQL
+
+
+-- | Working example:
+--   
+--   $ curl -XPOST <a>http://localhost:8080/v2/query</a> -d @- &lt;&lt;EOF
+--   { "type":"bigquery_run_sql", "args": { "sql":"select 3 * 4 as foo,
+--   "Hello, World!" as bar", "source":"chinook" } } EOF
+--   {"result_type":<a>TuplesOk</a>,"result":[["foo","bar"],["12","Hello,
+--   World!"]]}
+module Hasura.Backends.BigQuery.DDL.RunSQL
+data BigQueryRunSQL
+runSQL :: (MonadIO m, CacheRWM m, MonadError QErr m, MetadataM m) => BigQueryRunSQL -> m EncJSON
+
+-- | The SQL query in the request is ignored
+runDatabaseInspection :: (MonadIO m, CacheRWM m, MonadError QErr m, MetadataM m) => BigQueryRunSQL -> m EncJSON
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.BigQuery.DDL.RunSQL.BigQueryRunSQL
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.BigQuery.DDL.RunSQL.BigQueryRunSQL
+instance GHC.Classes.Eq Hasura.Backends.BigQuery.DDL.RunSQL.BigQueryRunSQL
+instance GHC.Show.Show Hasura.Backends.BigQuery.DDL.RunSQL.BigQueryRunSQL
 
 module Hasura.RQL.DDL.GraphqlSchemaIntrospection
 runSetGraphqlSchemaIntrospectionOptions :: (MonadError QErr m, MetadataM m, CacheRWM m) => SetGraphqlIntrospectionOptions -> m EncJSON
@@ -27834,7 +27837,7 @@ instance Hasura.Metadata.Class.MonadMetadataStorageQueryAPI m => Hasura.Metadata
 instance Hasura.Metadata.Class.MonadMetadataStorage m => Hasura.Metadata.Class.MonadMetadataStorage (Hasura.Server.App.Handler m)
 instance Hasura.Server.App.MonadMetadataApiAuthorization m => Hasura.Server.App.MonadMetadataApiAuthorization (Hasura.Server.App.Handler m)
 instance Hasura.GraphQL.Transport.HTTP.MonadExecuteQuery m => Hasura.GraphQL.Transport.HTTP.MonadExecuteQuery (Hasura.Server.App.Handler m)
-instance Hasura.GraphQL.Execute.Backend.MonadQueryTags m => Hasura.GraphQL.Execute.Backend.MonadQueryTags (Hasura.Server.App.Handler m)
+instance Hasura.QueryTags.MonadQueryTags m => Hasura.QueryTags.MonadQueryTags (Hasura.Server.App.Handler m)
 instance Hasura.GraphQL.Logging.ExecutionLog.MonadExecutionLog m => Hasura.GraphQL.Logging.ExecutionLog.MonadExecutionLog (Hasura.Server.App.Handler m)
 instance Hasura.GraphQL.Logging.QueryLog.MonadQueryLog m => Hasura.GraphQL.Logging.QueryLog.MonadQueryLog (Hasura.Server.App.Handler m)
 instance Hasura.RQL.DDL.EventTrigger.MonadEventLogCleanup m => Hasura.RQL.DDL.EventTrigger.MonadEventLogCleanup (Hasura.Server.App.Handler m)
@@ -28042,7 +28045,7 @@ instance Hasura.GraphQL.Logging.QueryLog.MonadQueryLog Hasura.App.AppM
 instance Hasura.GraphQL.Logging.ExecutionLog.MonadExecutionLog Hasura.App.AppM
 instance Hasura.GraphQL.Transport.WebSocket.Server.MonadWSLog Hasura.App.AppM
 instance Hasura.RQL.Types.Source.MonadResolveSource Hasura.App.AppM
-instance Hasura.GraphQL.Execute.Backend.MonadQueryTags Hasura.App.AppM
+instance Hasura.QueryTags.MonadQueryTags Hasura.App.AppM
 instance Hasura.RQL.DDL.EventTrigger.MonadEventLogCleanup Hasura.App.AppM
 instance Hasura.RQL.DDL.ApiLimit.MonadGetApiTimeLimit Hasura.App.AppM
 instance Hasura.Metadata.Class.MonadMetadataStorage Hasura.App.AppM
