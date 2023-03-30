@@ -62,6 +62,8 @@ parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value 
         "_like" -> parseLike
         "$nlike" -> parseNlike
         "_nlike" -> parseNlike
+        "$is_null" -> parseIsNull
+        "_is_null" -> parseIsNull
         "_st_contains" -> ABackendSpecific <$> parseGeometryOrGeographyOp ASTContains
         "$st_contains" -> ABackendSpecific <$> parseGeometryOrGeographyOp ASTContains
         "_st_equals" -> ABackendSpecific <$> parseGeometryOrGeographyOp ASTEquals
@@ -93,6 +95,7 @@ parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value 
         parseLte = ALTE <$> parseOne
         parseLike = guardType stringTypes >> ALIKE <$> parseOne
         parseNlike = guardType stringTypes >> ANLIKE <$> parseOne
+        parseIsNull = bool ANISNOTNULL ANISNULL <$> parseVal
 
         parseGeometryOp f =
           guardType [GeometryType] >> f <$> parseOneNoSess colTy val
@@ -110,3 +113,6 @@ parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value 
             " is of type "
               <> ty <<> "; this operator works only on columns of type "
               <> T.intercalate "/" (map dquote expTys)
+
+        parseVal :: (J.FromJSON a) => m a
+        parseVal = decodeValue val
