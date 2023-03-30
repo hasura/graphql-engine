@@ -23770,7 +23770,7 @@ module Hasura.Eventing.ScheduledTrigger
 -- | runCronEventsGenerator makes sure that all the cron triggers have an
 --   adequate buffer of cron events.
 runCronEventsGenerator :: (MonadIO m, MonadMetadataStorage m) => Logger Hasura -> FetchedCronTriggerStatsLogger -> IO SchemaCache -> m void
-processScheduledTriggers :: (MonadIO m, MonadTrace m, MonadMetadataStorage m, MonadBaseControl IO m) => Environment -> Logger Hasura -> FetchedScheduledEventsStatsLogger -> Manager -> ScheduledTriggerMetrics -> IO SchemaCache -> LockedEventsCtx -> m (Forever m)
+processScheduledTriggers :: (MonadIO m, MonadTrace m, MonadMetadataStorage m, MonadBaseControl IO m) => IO Environment -> Logger Hasura -> FetchedScheduledEventsStatsLogger -> Manager -> ScheduledTriggerMetrics -> IO SchemaCache -> LockedEventsCtx -> m (Forever m)
 
 -- | Get cron trigger stats for cron jobs with fewer than 100 future
 --   reified events in the database
@@ -23986,43 +23986,6 @@ instance GHC.Show.Show Hasura.Server.Telemetry.Types.PermissionMetric
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Telemetry.Types.RelationshipMetric
 instance GHC.Classes.Eq Hasura.Server.Telemetry.Types.RelationshipMetric
 instance GHC.Show.Show Hasura.Server.Telemetry.Types.RelationshipMetric
-
-
--- | Send anonymized metrics to the telemetry server regarding usage of
---   various features of Hasura.
---   
---   The general workflow for telemetry is as follows:
---   
---   <ol>
---   <li>We generate metrics for each backend in the graphql-engine code
---   and send it to <a>telemetryUrl</a>. The relevant types can be found in
---   <a>Hasura.Server.Telemetry.Types</a>.</li>
---   <li>The <a>telemetryUrl</a> endpoint is handled by code in:
---   <a>https://github.com/hasura/hasura-analytics/tree/hge-upgrade</a>,
---   specifically <a>manager/main.go</a> and <a>manager/analytics.go</a>.
---   This server endpoint receives the telemetry payload and sends it to
---   another graphql-engine which runs locally and is backed by a postgres
---   database. The database schema for the telemetry endpoint can also be
---   found in the same repo under <a>hge/migrations/</a>.</li>
---   <li>The information from the postgres db can be viewed in Metabase:
---   <a>https://metabase.telemetry.hasura.io/browse/2/schema/public</a>.</li>
---   </ol>
---   
---   For more information about telemetry in general, visit the user-facing
---   docs on the topic:
---   <a>https://hasura.io/docs/latest/graphql/core/guides/telemetry</a>.
-module Hasura.Server.Telemetry
-mkTelemetryLog :: Text -> Text -> Maybe TelemetryHttpError -> TelemetryLog
-
--- | An infinite loop that sends updated telemetry data (<a>Metrics</a>)
---   every 24 hours. The send time depends on when the server was started
---   and will naturally drift.
-runTelemetry :: Logger Hasura -> Manager -> IO SchemaCache -> MetadataDbId -> InstanceId -> PGVersion -> HashSet ExperimentalFeature -> IO void
-instance GHC.Show.Show Hasura.Server.Telemetry.TelemetryHttpError
-instance GHC.Show.Show Hasura.Server.Telemetry.TelemetryLog
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Telemetry.TelemetryLog
-instance Hasura.Logging.ToEngineLog Hasura.Server.Telemetry.TelemetryLog Hasura.Logging.Hasura
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Telemetry.TelemetryHttpError
 
 
 -- | <h1>Remote Schema Permissions Validation</h1>
@@ -25418,32 +25381,6 @@ withUserVars :: SessionVariables -> PrepArgMap -> PrepArgMap
 instance GHC.Show.Show Hasura.Backends.Postgres.Execute.Prepare.PlanningSt
 instance GHC.Classes.Eq Hasura.Backends.Postgres.Execute.Prepare.PlanningSt
 
-module Hasura.GraphQL.Execute.Action
-fetchActionLogResponses :: (MonadError QErr m, MonadMetadataStorage m, Foldable t) => t ActionId -> m (ActionLogResponseMap, Bool)
-runActionExecution :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m, MonadTrace m, MonadMetadataStorage m) => UserInfo -> ActionExecutionPlan -> m (DiffTime, (EncJSON, Maybe ResponseHeaders))
-
--- | Synchronously execute webhook handler and resolve response to action
---   "output"
-resolveActionExecution :: Manager -> Environment -> Logger Hasura -> PrometheusMetrics -> AnnActionExecution Void -> ActionExecContext -> Maybe GQLQueryText -> ActionExecution
-
--- | Resolve asynchronous action mutation which returns only the action
---   uuid
-resolveActionMutationAsync :: (MonadMetadataStorage m, MonadError QErr m) => AnnActionMutationAsync -> [Header] -> SessionVariables -> m ActionId
-
--- | See Note: [Resolving async action query]
-resolveAsyncActionQuery :: UserInfo -> AnnActionAsyncQuery ('Postgres 'Vanilla) Void -> AsyncActionQueryExecution (UnpreparedValue ('Postgres 'Vanilla))
-
--- | Process async actions from hdb_catalog.hdb_action_log table. This
---   functions is executed in a background thread. See Note [Async action
---   architecture] above
-asyncActionsProcessor :: forall m. (MonadIO m, MonadBaseControl IO m, Forall (Pure m), MonadMetadataStorage m, ProvidesNetwork m, MonadTrace m) => Environment -> Logger Hasura -> IO SchemaCache -> TVar (Set LockedActionEventId) -> PrometheusMetrics -> Milliseconds -> Maybe GQLQueryText -> m (Forever m)
-insertActionTx :: ActionName -> SessionVariables -> [Header] -> Value -> TxE QErr ActionId
-fetchUndeliveredActionEventsTx :: TxE QErr [ActionLogItem]
-setActionStatusTx :: ActionId -> AsyncActionStatus -> TxE QErr ()
-fetchActionResponseTx :: ActionId -> TxE QErr ActionLogResponse
-clearActionDataTx :: ActionName -> TxE QErr ()
-setProcessingActionLogsToPendingTx :: LockedActionIdArray -> TxE QErr ()
-
 
 -- | Postgres Instances Execute
 --   
@@ -25709,6 +25646,12 @@ AMAdminSecret :: !HashSet AdminSecretHash -> !Maybe RoleName -> AuthMode
 AMAdminSecretAndHook :: !HashSet AdminSecretHash -> !AuthHook -> AuthMode
 AMAdminSecretAndJWT :: !HashSet AdminSecretHash -> ![JWTCtx] -> !Maybe RoleName -> AuthMode
 
+-- | In case JWT is used as an authentication mode, the JWKs are stored
+--   inside JWTCtx as an <tt>IORef</tt>. <tt>IORef</tt> has pointer
+--   equality, so we need to compare the values inside the <tt>IORef</tt>
+--   to check if the <a>JWTCtx</a> is same.
+compareAuthMode :: AuthMode -> AuthMode -> IO Bool
+
 -- | Validate the user's requested authentication configuration, launching
 --   any required maintenance threads for JWT etc.
 --   
@@ -25725,8 +25668,8 @@ getUserInfoWithExpTime :: forall m. (MonadIO m, MonadBaseControl IO m, MonadErro
 getUserInfoWithExpTime_ :: forall m mgr logger. (MonadIO m, MonadError QErr m) => (logger -> mgr -> AuthHook -> [Header] -> Maybe ReqsText -> m (UserInfo, Maybe UTCTime, [Header])) -> ([JWTCtx] -> [Header] -> Maybe RoleName -> m (UserInfo, Maybe UTCTime, [Header])) -> logger -> mgr -> [Header] -> AuthMode -> Maybe ReqsText -> m (UserInfo, Maybe UTCTime, [Header])
 instance GHC.Classes.Eq Hasura.Server.Auth.AdminSecretHash
 instance GHC.Classes.Ord Hasura.Server.Auth.AdminSecretHash
-instance GHC.Classes.Eq Hasura.Server.Auth.AuthMode
 instance GHC.Show.Show Hasura.Server.Auth.AuthMode
+instance GHC.Classes.Eq Hasura.Server.Auth.AuthMode
 instance Data.Hashable.Class.Hashable Hasura.Server.Auth.AdminSecretHash
 instance GHC.Show.Show Hasura.Server.Auth.AdminSecretHash
 
@@ -26550,7 +26493,17 @@ closeConn :: WSConn a -> ByteString -> IO ()
 sendMsgAndCloseConn :: WSConn a -> Word16 -> ByteString -> ServerMsg -> IO ()
 sendMsg :: WSConn a -> WSQueueResponse -> IO ()
 data WSServer a
-createWSServer :: Logger Hasura -> STM (WSServer a)
+WSServer :: Logger Hasura -> TVar SecuritySensitiveUserConfig -> TVar (ServerStatus a) -> WSServer a
+[_wssLogger] :: WSServer a -> Logger Hasura
+
+-- | Keep track of the security sensitive user configuration to perform
+--   maintenance actions
+[_wssSecuritySensitiveUserConfig] :: WSServer a -> TVar SecuritySensitiveUserConfig
+
+-- | See e.g. createServerApp.onAccept for how we use STM to preserve
+--   consistency
+[_wssStatus] :: WSServer a -> TVar (ServerStatus a)
+createWSServer :: AuthMode -> AllowListStatus -> InlinedAllowlist -> CorsPolicy -> Logger Hasura -> STM (WSServer a)
 data AcceptWith a
 AcceptWith :: !a -> !AcceptRequest -> !WSConn a -> IO () -> !WSConn a -> IO () -> AcceptWith a
 
@@ -26594,8 +26547,16 @@ type HasuraServerApp m = IpAddress -> PendingConnection -> m ()
 --   handlers are used.
 data WSHandlers m a
 WSHandlers :: (WSId -> RequestHead -> IpAddress -> WSSubProtocol -> m (Either RejectRequest (AcceptWith a))) -> (WSConn a -> ByteString -> WSSubProtocol -> m ()) -> OnCloseH m a -> WSHandlers m a
+
+-- | The background thread responsible for closing all websocket
+--   connections when security sensitive user configuration changes. It
+--   checks for changes in the auth mode, allowlist and cors config, and
+--   invalidates/closes all connections if there are any changes.
+websocketConnectionReaper :: IO (AuthMode, AllowListStatus, CorsPolicy) -> IO SchemaCache -> WSServer a -> IO Void
 createServerApp :: (MonadIO m, MonadBaseControl IO m, Forall (Pure m), MonadWSLog m) => IO MetricsConfig -> WSConnectionInitTimeout -> WSServer a -> PrometheusMetrics -> WSHandlers m a -> HasuraServerApp m
 shutdown :: WSServer a -> IO ()
+instance GHC.Show.Show Hasura.GraphQL.Transport.WebSocket.Server.WSReaperThreadLog
+instance Hasura.Logging.ToEngineLog Hasura.GraphQL.Transport.WebSocket.Server.WSReaperThreadLog Hasura.Logging.Hasura
 instance Hasura.GraphQL.Transport.WebSocket.Server.MonadWSLog m => Hasura.GraphQL.Transport.WebSocket.Server.MonadWSLog (Control.Monad.Trans.Except.ExceptT e m)
 instance Hasura.GraphQL.Transport.WebSocket.Server.MonadWSLog m => Hasura.GraphQL.Transport.WebSocket.Server.MonadWSLog (Control.Monad.Trans.Reader.ReaderT r m)
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Transport.WebSocket.Server.WSLog
@@ -26945,10 +26906,10 @@ type LiveQuerySubscriberDetails = SubscriberDetails CohortKey
 type StreamingSubscriberDetails = SubscriberDetails (CohortKey, TVar CursorVariableValues)
 
 -- | Fork a thread handling a regular (live query) subscription
-addLiveQuery :: forall b. BackendTransport b => Logger Hasura -> ServerMetrics -> PrometheusMetrics -> SubscriberMetadata -> SubscriptionsState -> LiveQueriesOptions -> SourceName -> ParameterizedQueryHash -> Maybe OperationName -> RequestId -> SubscriptionQueryPlan b (MultiplexedQuery b) -> OnChange -> IO LiveQuerySubscriberDetails
+addLiveQuery :: forall b. BackendTransport b => Logger Hasura -> ServerMetrics -> PrometheusMetrics -> SubscriberMetadata -> SubscriptionsState -> IO (LiveQueriesOptions, StreamQueriesOptions) -> SourceName -> ParameterizedQueryHash -> Maybe OperationName -> RequestId -> SubscriptionQueryPlan b (MultiplexedQuery b) -> OnChange -> IO LiveQuerySubscriberDetails
 
 -- | Fork a thread handling a streaming subscription
-addStreamSubscriptionQuery :: forall b. BackendTransport b => Logger Hasura -> ServerMetrics -> PrometheusMetrics -> SubscriberMetadata -> SubscriptionsState -> StreamQueriesOptions -> SourceName -> ParameterizedQueryHash -> Maybe OperationName -> RequestId -> Name -> SubscriptionQueryPlan b (MultiplexedQuery b) -> OnChange -> IO StreamingSubscriberDetails
+addStreamSubscriptionQuery :: forall b. BackendTransport b => Logger Hasura -> ServerMetrics -> PrometheusMetrics -> SubscriberMetadata -> SubscriptionsState -> IO (LiveQueriesOptions, StreamQueriesOptions) -> SourceName -> ParameterizedQueryHash -> Maybe OperationName -> RequestId -> Name -> SubscriptionQueryPlan b (MultiplexedQuery b) -> OnChange -> IO StreamingSubscriberDetails
 removeLiveQuery :: Logger Hasura -> ServerMetrics -> PrometheusMetrics -> SubscriptionsState -> LiveQuerySubscriberDetails -> IO ()
 removeStreamingQuery :: Logger Hasura -> ServerMetrics -> PrometheusMetrics -> SubscriptionsState -> StreamingSubscriberDetails -> IO ()
 
@@ -26993,14 +26954,6 @@ type AsyncActionSubscriptionState = TMap OperationId AsyncActionQueryLive
 addAsyncActionLiveQuery :: AsyncActionSubscriptionState -> OperationId -> NonEmpty ActionId -> (QErr -> IO ()) -> LiveAsyncActionQuery -> IO ()
 removeAsyncActionLiveQuery :: AsyncActionSubscriptionState -> OperationId -> IO ()
 instance GHC.Show.Show a => GHC.Show.Show (Hasura.GraphQL.Execute.Subscription.State.SubscriberDetails a)
-
-
--- | Module related to async action query subscriptions
-module Hasura.GraphQL.Execute.Action.Subscription
-
--- | A forever running thread which processes async action subscriptions.
---   See Note [Async action subscriptions]
-asyncActionSubscriptionsProcessor :: (MonadIO m, MonadMetadataStorage m) => AsyncActionSubscriptionState -> m void
 
 module Hasura.App.State
 data RebuildableAppContext impl
@@ -27095,6 +27048,10 @@ askAppEnv :: HasAppEnv m => m AppEnv
 -- | Function to build the <a>AppContext</a> (given the
 --   <a>ServeOptions</a>) for the first time
 buildRebuildableAppContext :: (Logger Hasura, Manager) -> ServeOptions impl -> Environment -> ExceptT QErr IO (RebuildableAppContext impl)
+
+-- | Function to rebuild the <a>AppContext</a> from a given
+--   <a>RebuildableAppContext</a> and a new <a>ServeOptions</a>
+rebuildRebuildableAppContext :: (MonadIO m, MonadError QErr m) => (Logger Hasura, Manager) -> RebuildableAppContext impl -> ServeOptions impl -> Environment -> m (RebuildableAppContext impl)
 initSQLGenCtx :: HashSet ExperimentalFeature -> StringifyNumbers -> DangerouslyCollapseBooleans -> SQLGenCtx
 
 -- | We are trying to slowly get rid of <a>HasServerConfigCtx</a> (and
@@ -27174,7 +27131,7 @@ readAppContextRef :: AppStateRef impl -> IO (RebuildableAppContext impl)
 
 -- | Read the contents of the <a>AppStateRef</a> to get the latest
 --   <a>RebuildableSchemaCache</a> and <a>SchemaCacheVer</a>
-readSchemaCacheRef :: AppStateRef impl -> IO (RebuildableSchemaCache, SchemaCacheVer)
+getRebuildableSchemaCacheWithVersion :: AppStateRef impl -> IO (RebuildableSchemaCache, SchemaCacheVer)
 
 -- | Reference to a TLS AllowList, used for dynamic TLS settings in the
 --   app's HTTP Manager.
@@ -27208,6 +27165,43 @@ getAppContext :: AppStateRef impl -> IO AppContext
 
 -- | Formats and logs a list of inconsistent metadata objects.
 logInconsistentMetadata :: Logger Hasura -> [InconsistentMetadata] -> IO ()
+
+
+-- | Send anonymized metrics to the telemetry server regarding usage of
+--   various features of Hasura.
+--   
+--   The general workflow for telemetry is as follows:
+--   
+--   <ol>
+--   <li>We generate metrics for each backend in the graphql-engine code
+--   and send it to <a>telemetryUrl</a>. The relevant types can be found in
+--   <a>Hasura.Server.Telemetry.Types</a>.</li>
+--   <li>The <a>telemetryUrl</a> endpoint is handled by code in:
+--   <a>https://github.com/hasura/hasura-analytics/tree/hge-upgrade</a>,
+--   specifically <a>manager/main.go</a> and <a>manager/analytics.go</a>.
+--   This server endpoint receives the telemetry payload and sends it to
+--   another graphql-engine which runs locally and is backed by a postgres
+--   database. The database schema for the telemetry endpoint can also be
+--   found in the same repo under <a>hge/migrations/</a>.</li>
+--   <li>The information from the postgres db can be viewed in Metabase:
+--   <a>https://metabase.telemetry.hasura.io/browse/2/schema/public</a>.</li>
+--   </ol>
+--   
+--   For more information about telemetry in general, visit the user-facing
+--   docs on the topic:
+--   <a>https://hasura.io/docs/latest/graphql/core/guides/telemetry</a>.
+module Hasura.Server.Telemetry
+mkTelemetryLog :: Text -> Text -> Maybe TelemetryHttpError -> TelemetryLog
+
+-- | An infinite loop that sends updated telemetry data (<a>Metrics</a>)
+--   every 24 hours. The send time depends on when the server was started
+--   and will naturally drift.
+runTelemetry :: forall m impl. (MonadIO m, HasAppEnv m) => Logger Hasura -> AppStateRef impl -> MetadataDbId -> PGVersion -> m Void
+instance GHC.Show.Show Hasura.Server.Telemetry.TelemetryHttpError
+instance GHC.Show.Show Hasura.Server.Telemetry.TelemetryLog
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Telemetry.TelemetryLog
+instance Hasura.Logging.ToEngineLog Hasura.Server.Telemetry.TelemetryLog Hasura.Logging.Hasura
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Telemetry.TelemetryHttpError
 
 module Hasura.Server.SchemaUpdate
 
@@ -27441,6 +27435,40 @@ instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.DataConnector
 module Hasura.Backends.BigQuery.Instances.API
 instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.BigQuery
 
+module Hasura.GraphQL.Execute.Action
+fetchActionLogResponses :: (MonadError QErr m, MonadMetadataStorage m, Foldable t) => t ActionId -> m (ActionLogResponseMap, Bool)
+runActionExecution :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m, MonadTrace m, MonadMetadataStorage m) => UserInfo -> ActionExecutionPlan -> m (DiffTime, (EncJSON, Maybe ResponseHeaders))
+
+-- | Synchronously execute webhook handler and resolve response to action
+--   "output"
+resolveActionExecution :: Manager -> Environment -> Logger Hasura -> PrometheusMetrics -> AnnActionExecution Void -> ActionExecContext -> Maybe GQLQueryText -> ActionExecution
+
+-- | Resolve asynchronous action mutation which returns only the action
+--   uuid
+resolveActionMutationAsync :: (MonadMetadataStorage m, MonadError QErr m) => AnnActionMutationAsync -> [Header] -> SessionVariables -> m ActionId
+
+-- | See Note: [Resolving async action query]
+resolveAsyncActionQuery :: UserInfo -> AnnActionAsyncQuery ('Postgres 'Vanilla) Void -> AsyncActionQueryExecution (UnpreparedValue ('Postgres 'Vanilla))
+
+-- | Process async actions from hdb_catalog.hdb_action_log table. This
+--   functions is executed in a background thread. See Note [Async action
+--   architecture] above
+asyncActionsProcessor :: forall m. (HasAppEnv m, MonadIO m, MonadBaseControl IO m, Forall (Pure m), MonadMetadataStorage m, MonadTrace m) => IO Environment -> Logger Hasura -> IO SchemaCache -> IO OptionalInterval -> TVar (Set LockedActionEventId) -> Maybe GQLQueryText -> m (Forever m)
+insertActionTx :: ActionName -> SessionVariables -> [Header] -> Value -> TxE QErr ActionId
+fetchUndeliveredActionEventsTx :: TxE QErr [ActionLogItem]
+setActionStatusTx :: ActionId -> AsyncActionStatus -> TxE QErr ()
+fetchActionResponseTx :: ActionId -> TxE QErr ActionLogResponse
+clearActionDataTx :: ActionName -> TxE QErr ()
+setProcessingActionLogsToPendingTx :: LockedActionIdArray -> TxE QErr ()
+
+
+-- | Module related to async action query subscriptions
+module Hasura.GraphQL.Execute.Action.Subscription
+
+-- | A forever running thread which processes async action subscriptions.
+--   See Note [Async action subscriptions]
+asyncActionSubscriptionsProcessor :: (MonadIO m, MonadMetadataStorage m) => AsyncActionSubscriptionState -> m void
+
 module Hasura.GraphQL.Execute.Common
 
 -- | Typeclass representing safety checks (if any) that need to be
@@ -27544,18 +27572,14 @@ WsClientState :: !UserInfo -> !Maybe UTCTime -> ![Header] -> !IpAddress -> WsCli
 data WSConnData
 WSConnData :: !TVar WSConnState -> !OperationMap -> !ErrRespType -> !GraphQLQueryType -> WSConnData
 data WSServerEnv impl
-WSServerEnv :: !Logger Hasura -> !SubscriptionsState -> !LiveQueriesOptions -> !StreamQueriesOptions -> AppStateRef impl -> !Manager -> !CorsPolicy -> !SQLGenCtx -> ReadOnlyMode -> !WSServer -> !AllowListStatus -> !KeepAliveDelay -> !ServerMetrics -> !PrometheusMetrics -> !SamplingPolicy -> WSServerEnv impl
+WSServerEnv :: !Logger Hasura -> !SubscriptionsState -> AppStateRef impl -> !Manager -> IO CorsPolicy -> ReadOnlyMode -> !WSServer -> !KeepAliveDelay -> !ServerMetrics -> !PrometheusMetrics -> !SamplingPolicy -> WSServerEnv impl
 [_wseLogger] :: WSServerEnv impl -> !Logger Hasura
 [_wseSubscriptionState] :: WSServerEnv impl -> !SubscriptionsState
-[_wseLiveQueriesOption] :: WSServerEnv impl -> !LiveQueriesOptions
-[_wseStreamQueriesOptions] :: WSServerEnv impl -> !StreamQueriesOptions
 [_wseAppStateRef] :: WSServerEnv impl -> AppStateRef impl
 [_wseHManager] :: WSServerEnv impl -> !Manager
-[_wseCorsPolicy] :: WSServerEnv impl -> !CorsPolicy
-[_wseSQLCtx] :: WSServerEnv impl -> !SQLGenCtx
+[_wseCorsPolicy] :: WSServerEnv impl -> IO CorsPolicy
 [_wseReadOnlyMode] :: WSServerEnv impl -> ReadOnlyMode
 [_wseServer] :: WSServerEnv impl -> !WSServer
-[_wseEnableAllowlist] :: WSServerEnv impl -> !AllowListStatus
 [_wseKeepAliveDelay] :: WSServerEnv impl -> !KeepAliveDelay
 [_wseServerMetrics] :: WSServerEnv impl -> !ServerMetrics
 [_wsePrometheusMetrics] :: WSServerEnv impl -> !PrometheusMetrics
@@ -27694,7 +27718,7 @@ module Hasura.GraphQL.Transport.WebSocket
 sendMsg :: MonadIO m => WSConn -> ServerMsg -> m ()
 sendCloseWithMsg :: MonadIO m => Logger Hasura -> WSConn -> ServerErrorCode -> Maybe ServerMsg -> Maybe Word16 -> m ()
 onConn :: (MonadIO m, MonadReader (WSServerEnv impl) m) => OnConnH m WSConnData
-onMessage :: (MonadIO m, UserAuthentication m, MonadGQLExecutionCheck m, MonadQueryLog m, MonadExecutionLog m, MonadExecuteQuery m, MonadBaseControl IO m, MonadMetadataStorage m, MonadQueryTags m, HasResourceLimits m, ProvidesNetwork m, MonadTrace m) => Environment -> HashSet (EngineLogType Hasura) -> AuthMode -> WSServerEnv impl -> WSConn -> ByteString -> WSActions WSConnData -> m ()
+onMessage :: (MonadIO m, UserAuthentication m, MonadGQLExecutionCheck m, MonadQueryLog m, MonadExecutionLog m, MonadExecuteQuery m, MonadBaseControl IO m, MonadMetadataStorage m, MonadQueryTags m, HasResourceLimits m, ProvidesNetwork m, MonadTrace m) => HashSet (EngineLogType Hasura) -> IO AuthMode -> WSServerEnv impl -> WSConn -> ByteString -> WSActions WSConnData -> m ()
 onClose :: MonadIO m => Logger Hasura -> ServerMetrics -> PrometheusMetrics -> SubscriptionsState -> WSConn -> m ()
 instance Hasura.Logging.ToEngineLog Hasura.GraphQL.Transport.WebSocket.WSLog Hasura.Logging.Hasura
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Transport.WebSocket.WSLogInfo
@@ -27709,9 +27733,9 @@ instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Transport.WebSocket.OpDet
 instance GHC.Classes.Eq Hasura.GraphQL.Transport.WebSocket.OpDetail
 
 module Hasura.GraphQL.Transport.WSServerApp
-createWSServerApp :: (MonadIO m, MonadBaseControl IO m, Forall (Pure m), UserAuthentication m, MonadGQLExecutionCheck m, MonadWSLog m, MonadQueryLog m, MonadExecutionLog m, MonadExecuteQuery m, MonadMetadataStorage m, MonadQueryTags m, HasResourceLimits m, ProvidesNetwork m, MonadTrace m) => Environment -> HashSet (EngineLogType Hasura) -> AuthMode -> WSServerEnv impl -> WSConnectionInitTimeout -> HasuraServerApp m
+createWSServerApp :: (MonadIO m, MonadBaseControl IO m, Forall (Pure m), UserAuthentication m, MonadGQLExecutionCheck m, MonadWSLog m, MonadQueryLog m, MonadExecutionLog m, MonadExecuteQuery m, MonadMetadataStorage m, MonadQueryTags m, HasResourceLimits m, ProvidesNetwork m, MonadTrace m) => HashSet (EngineLogType Hasura) -> WSServerEnv impl -> WSConnectionInitTimeout -> HasuraServerApp m
 stopWSServerApp :: WSServerEnv impl -> IO ()
-createWSServerEnv :: MonadIO m => Logger Hasura -> SubscriptionsState -> AppStateRef impl -> Manager -> ReadOnlyMode -> KeepAliveDelay -> ServerMetrics -> PrometheusMetrics -> SamplingPolicy -> m (WSServerEnv impl)
+createWSServerEnv :: (HasAppEnv m, MonadIO m) => AppStateRef impl -> m (WSServerEnv impl)
 
 module Hasura.GraphQL.Explain
 data GQLExplain
