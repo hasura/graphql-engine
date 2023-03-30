@@ -9,36 +9,33 @@ describe('Console CE', () => {
     cy.get('[data-test="graphiql-explorer-link"]').contains('GraphiQL');
 
     // Go to data tab
-    cy.get('[data-test="data-tab-link"]').click();
+    cy.findByTestId('Nav bar').findByText('Data').click();
 
     // Data tab is loaded
-    cy.get('[data-test="sql-link"]').contains('SQL');
+    cy.findByTestId('Data Manager').contains('Data Manager');
 
     // Go to action tab
-    cy.get('[data-test="actions-tab-link"]').click();
+    cy.findByTestId('Nav bar').findByText('Actions').click();
 
     // Action tab is loaded
-    cy.get('[data-test="data-create-actions"]').contains('Create');
+    cy.findByTestId('data-create-actions').contains('Create');
 
     // Go to remote schema tab
-    cy.get('[data-test="remote schemas-tab-link"]').click();
+    cy.findByTestId('Nav bar').findByText('Remote Schemas').click();
 
     // Remote schema tab is loaded
-    cy.get('[data-test="data-create-remote-schemas"]').contains('Add');
+    cy.findByTestId('data-create-remote-schemas').contains('Add');
 
     // Go to the event tab
-    cy.get('[data-test="events-tab-link"]').click();
+    cy.findByTestId('Nav bar').findByText('Events').click();
 
     // Event tab is loaded
-    cy.get('[data-test="data-create-trigger"]').contains('Create');
+    cy.findByTestId('data-create-trigger').contains('Create');
 
-    // Temporary disable the settings check because
-    // `<a href="/settings">...</a>`
-    //  is being covered by another element:
-    //  `<div class="font-semibold text-base w-full" style="color: rgb(54, 156, 199);">Telemetry</div>`
     // Go to the settings page
-    // cy.get('[href="/settings"]').click();
+    cy.get('[href$="/settings"]').click();
+
     // Setting page is loaded
-    // cy.get('[data-test="data-export-metadata"]').contains('Export metadata');
+    cy.findByTestId('data-export-metadata').contains('Export metadata');
   });
 });

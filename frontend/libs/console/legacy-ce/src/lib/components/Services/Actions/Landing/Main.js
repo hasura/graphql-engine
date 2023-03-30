@@ -44,7 +44,7 @@ class Landing extends React.Component {
         <div className="ml-md">
           <Button
             icon={<FaEdit />}
-            data-test="data-create-actions"
+            data-testid="data-create-actions"
             mode="primary"
             onClick={handleClick}
           >

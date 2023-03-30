@@ -58,7 +58,11 @@ const DataPageContainer = ({
               : ''
           }
         >
-          <Link className={styles.linkBorder} to={`/data/manage`}>
+          <Link
+            data-testid="Data Manager"
+            className={styles.linkBorder}
+            to={`/data/manage`}
+          >
             Data Manager
           </Link>
 
