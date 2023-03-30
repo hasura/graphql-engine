@@ -1,4 +1,5 @@
 {-# LANGUAGE Arrows #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Base.Error
   ( Code (..),
@@ -49,10 +50,16 @@ module Hasura.Base.Error
     indexedForM_,
     indexedMapM_,
     indexedTraverseA_,
+    -- Lens related
+    qeInternalLens,
+    _ExtraExtensions,
+    _ExtraInternal,
+    _HideInconsistencies,
   )
 where
 
 import Control.Arrow.Extended
+import Control.Lens (makeLensesFor, makePrisms)
 import Data.Aeson
 import Data.Aeson.Internal
 import Data.Aeson.Key qualified as K
@@ -446,3 +453,7 @@ runAesonParser p =
 
 decodeValue :: (FromJSON a, QErrM m) => Value -> m a
 decodeValue = liftIResult . ifromJSON
+
+-- Template haskell code
+$(makeLensesFor [("qeInternal", "qeInternalLens")] ''QErr)
+$(makePrisms ''QErrExtra)
