@@ -627,6 +627,9 @@ deriving newtype instance (Semigroup (BackendConfig b)) => Semigroup (BackendCon
 
 deriving newtype instance (Monoid (BackendConfig b)) => Monoid (BackendConfigWrapper b)
 
+instance Backend b => HasCodec (BackendConfigWrapper b) where
+  codec = dimapCodec BackendConfigWrapper unBackendConfigWrapper codec
+
 data CatalogStateType
   = CSTCli
   | CSTConsole

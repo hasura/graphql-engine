@@ -9,11 +9,11 @@ import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Environment (Environment)
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.Extended qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as HashSet
+import Data.Map.Strict qualified as Map
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text.Extended (toTxt, (<<>), (<>>))
@@ -86,7 +86,7 @@ resolveBackendInfo' ::
     ProvidesNetwork m
   ) =>
   Logger Hasura ->
-  (Inc.Dependency (Maybe (HashMap DC.DataConnectorName Inc.InvalidationKey)), InsOrdHashMap DC.DataConnectorName DC.DataConnectorOptions) `arr` HashMap DC.DataConnectorName DC.DataConnectorInfo
+  (Inc.Dependency (Maybe (HashMap DC.DataConnectorName Inc.InvalidationKey)), Map.Map DC.DataConnectorName DC.DataConnectorOptions) `arr` HashMap DC.DataConnectorName DC.DataConnectorInfo
 resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
   maybeDataConnectorCapabilities <-
     (|
@@ -94,7 +94,7 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
         ( \dataConnectorName dataConnectorOptions -> do
             getDataConnectorCapabilitiesIfNeeded -< (invalidationKeys, dataConnectorName, dataConnectorOptions)
         )
-      |) (OMap.toHashMap optionsMap)
+      |) (toHashMap optionsMap)
   returnA -< HashMap.catMaybes maybeDataConnectorCapabilities
   where
     getDataConnectorCapabilitiesIfNeeded ::
@@ -123,6 +123,8 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
           capabilitiesAction API.CapabilitiesResponse {..} = pure $ DC.DataConnectorInfo options _crCapabilities _crConfigSchemaResponse _crDisplayName _crReleaseName
 
       capabilitiesCase defaultAction capabilitiesAction errorAction capabilitiesU
+
+    toHashMap = HashMap.fromList . Map.toList
 
 resolveSourceConfig' ::
   ( MonadIO m,
@@ -172,7 +174,7 @@ resolveSourceConfig'
 
 getDataConnectorInfo :: (MonadError QErr m) => DC.DataConnectorName -> HashMap DC.DataConnectorName DC.DataConnectorInfo -> m DC.DataConnectorInfo
 getDataConnectorInfo dataConnectorName backendInfo =
-  onNothing (Map.lookup dataConnectorName backendInfo) $
+  onNothing (HashMap.lookup dataConnectorName backendInfo) $
     throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <<> " was not found in the data connector backend info")
 
 resolveDatabaseMetadata' ::
@@ -181,7 +183,7 @@ resolveDatabaseMetadata' ::
   DC.SourceConfig ->
   m (Either QErr (DBObjectsIntrospection 'DataConnector))
 resolveDatabaseMetadata' _ DC.SourceConfig {_scSchema = API.SchemaResponse {..}, ..} =
-  let tables = Map.fromList $ do
+  let tables = HashMap.fromList $ do
         API.TableInfo {..} <- _srTables
         let primaryKeyColumns = Seq.fromList $ coerce <$> _tiPrimaryKey
         let meta =

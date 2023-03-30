@@ -279,47 +279,54 @@ schemaCrudTests = describe "A series of actions to setup and teardown a source w
                     display_name: *backendDisplayName
                     available: true
                   |]
+          let sortSources =
+                Lens.over
+                  (key "sources" . _Array)
+                  (Vector.fromList . sortOn (Lens.^.. key "kind") . Vector.toList)
           shouldReturnYaml
             testEnvironment
-            ( GraphqlEngine.postMetadata
-                testEnvironment
-                [yaml|
-                type: list_source_kinds
-                args: {}
-              |]
+            ( sortSources
+                <$> GraphqlEngine.postMetadata
+                  testEnvironment
+                  [yaml|
+                  type: list_source_kinds
+                  args: {}
+                |]
             )
-            [yaml|
-              sources:
-              - builtin: true
-                kind: pg
-                display_name: pg
-                available: true
-              - builtin: true
-                kind: citus
-                display_name: citus
-                available: true
-              - builtin: true
-                kind: cockroach
-                display_name: cockroach
-                available: true
-              - builtin: true
-                kind: mssql
-                display_name: mssql
-                available: true
-              - builtin: true
-                kind: bigquery
-                display_name: bigquery
-                available: true
-              - builtin: true
-                kind: mysql
-                display_name: mysql
-                available: true
-              - *dataConnectorSource
-              - builtin: false
-                display_name: "FOOBARDB"
-                kind: foobar
-                available: true
-            |]
+            ( sortSources
+                [yaml|
+                  sources:
+                  - builtin: true
+                    kind: pg
+                    display_name: pg
+                    available: true
+                  - builtin: true
+                    kind: citus
+                    display_name: citus
+                    available: true
+                  - builtin: true
+                    kind: cockroach
+                    display_name: cockroach
+                    available: true
+                  - builtin: true
+                    kind: mssql
+                    display_name: mssql
+                    available: true
+                  - builtin: true
+                    kind: bigquery
+                    display_name: bigquery
+                    available: true
+                  - builtin: true
+                    kind: mysql
+                    display_name: mysql
+                    available: true
+                  - builtin: false
+                    display_name: "FOOBARDB"
+                    kind: foobar
+                    available: true
+                  - *dataConnectorSource
+                |]
+            )
 
   describe "<kind>_add_source" $ do
     it "success" $ \(testEnvironment, Chinook.ChinookTestEnv {..}) -> do

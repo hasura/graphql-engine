@@ -40,6 +40,7 @@ import Data.Has
 import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.Map.Strict qualified as Map
 import Data.Text.Extended
 import Data.Text.Extended qualified as Text.E
 import Hasura.Backends.DataConnector.API (errorResponseSummary, schemaCase)
@@ -452,7 +453,7 @@ lookupSourceMetadata sourceName sources =
 lookupDataConnectorOptions :: (MonadError QErr m) => DC.Types.DataConnectorName -> BackendMap.BackendMap BackendConfigWrapper -> m DC.Types.DataConnectorOptions
 lookupDataConnectorOptions dcName bmap =
   let backendConfig = Metadata.unBackendConfigWrapper <$> BackendMap.lookup @'Backend.DataConnector bmap
-   in (InsOrdHashMap.lookup dcName =<< backendConfig)
+   in (Map.lookup dcName =<< backendConfig)
         `onNothing` (Error.throw400 Error.DataConnectorError ("Data connector named " <> Text.E.toTxt dcName <> " was not found in the data connector backend config"))
 
 querySourceSchema ::

@@ -14,6 +14,9 @@ where
 
 --------------------------------------------------------------------------------
 
+import Autodocodec (HasCodec (codec), ObjectCodec, optionalFieldWith')
+import Autodocodec qualified as AC
+import Autodocodec.Extended (typeableName)
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Extended
 import Data.Aeson.Key qualified as Key
@@ -22,12 +25,13 @@ import Data.Data
 import Data.Kind (Type)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
+import Data.Text (stripSuffix)
 import Data.Text.Extended (toTxt)
 import Hasura.Incremental.Internal.Dependency (Dependency (..), selectD)
 import Hasura.Incremental.Select
 import Hasura.Prelude hiding (empty, lookup, modify)
 import Hasura.SQL.AnyBackend
-import Hasura.SQL.Backend (BackendType)
+import Hasura.SQL.Backend (BackendType (..), supportedBackends)
 import Hasura.SQL.Tag (BackendTag, HasTag, backendTag, reify)
 
 --------------------------------------------------------------------------------
@@ -41,6 +45,40 @@ newtype BackendMap (i :: BackendType -> Type) = BackendMap (Map BackendType (Any
 deriving newtype instance i `SatisfiesForAllBackends` Show => Show (BackendMap i)
 
 deriving newtype instance i `SatisfiesForAllBackends` Eq => Eq (BackendMap i)
+
+instance
+  ( i `SatisfiesForAllBackends` HasCodec,
+    i `SatisfiesForAllBackends` Typeable
+  ) =>
+  HasCodec (BackendMap i)
+  where
+  codec =
+    AC.object ("BackendMap_" <> objectNameSuffix) $
+      foldl'
+        foldBackendType
+        (pure mempty)
+        supportedBackends
+    where
+      foldBackendType :: ObjectCodec (BackendMap i) (BackendMap i) -> BackendType -> ObjectCodec (BackendMap i) (BackendMap i)
+      foldBackendType accum backendType = insertEntry backendType <$> accum <*> entryCodec backendType
+
+      entryCodec :: BackendType -> ObjectCodec (BackendMap i) (Maybe (AnyBackend i))
+      entryCodec backendType = optionalFieldWith' (toTxt backendType) (anyBackendCodec backendType) AC..= extractEntry backendType
+
+      insertEntry :: BackendType -> BackendMap i -> Maybe (AnyBackend i) -> BackendMap i
+      insertEntry backendType (BackendMap m) entry = case entry of
+        Just v -> BackendMap $ Map.insert backendType v m
+        Nothing -> BackendMap m
+
+      extractEntry backendType (BackendMap m) = Map.lookup backendType m
+
+      -- We need some distinguishing text for each instantiation of @i@.
+      -- I don't know how to get that from a type with kind @BackendType -> Type@.
+      -- So I'm applying @i@ to an arbitrary backend type, and attempting to
+      -- remove the portion of generated text specific to that type.
+      objectNameSuffix =
+        let t = typeableName @(i 'DataConnector)
+         in fromMaybe t $ stripSuffix "__DataConnector" t
 
 instance i `SatisfiesForAllBackends` FromJSON => FromJSON (BackendMap i) where
   parseJSON =

@@ -374,6 +374,53 @@
                 ],
                 "type": "object"
             },
+            "BackendMap_BackendConfigWrapper": {
+                "properties": {
+                    "bigquery": {
+                        "items": {
+                            "type": "null"
+                        },
+                        "type": "array"
+                    },
+                    "citus": {
+                        "items": {
+                            "type": "null"
+                        },
+                        "type": "array"
+                    },
+                    "cockroach": {
+                        "items": {
+                            "type": "null"
+                        },
+                        "type": "array"
+                    },
+                    "dataconnector": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/DataConnectorOptions"
+                        },
+                        "type": "object"
+                    },
+                    "mssql": {
+                        "items": {
+                            "type": "null"
+                        },
+                        "type": "array"
+                    },
+                    "mysql": {
+                        "items": {
+                            "type": "null"
+                        },
+                        "type": "array"
+                    },
+                    "postgres": {
+                        "items": {
+                            "type": "null"
+                        },
+                        "type": "array"
+                    }
+                },
+                "type": "object"
+            },
             "BigQueryComputedFieldDefinition": {
                 "properties": {
                     "argument_mapping": {
@@ -3269,6 +3316,20 @@
                 "additionalProperties": true,
                 "description": "value with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
             },
+            "DataConnectorOptions": {
+                "properties": {
+                    "display_name": {
+                        "type": "string"
+                    },
+                    "uri": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "uri"
+                ],
+                "type": "object"
+            },
             "DataconnectorArrRelUsingFKeyOnMultipleColumns": {
                 "properties": {
                     "columns": {
@@ -4585,8 +4646,7 @@
                         "$ref": "#/components/schemas/ApiLimit"
                     },
                     "backend_configs": {
-                        "additionalProperties": true,
-                        "description": "TODO\n\n\nobject with unspecified properties - this is a placeholder that will eventually be replaced with a more detailed description"
+                        "$ref": "#/components/schemas/BackendMap_BackendConfigWrapper"
                     },
                     "cron_triggers": {
                         "default": [],

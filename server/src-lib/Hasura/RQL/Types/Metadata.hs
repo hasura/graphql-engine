@@ -57,7 +57,6 @@ import Data.Monoid (Dual (..), Endo (..))
 import Hasura.Incremental qualified as Inc
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata, LogicalModelName, lmmSelectPermissions)
 import Hasura.Metadata.DTO.MetadataV3 (MetadataV3 (..))
-import Hasura.Metadata.DTO.Placeholder (IsPlaceholder (placeholder))
 import Hasura.Prelude
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
@@ -543,10 +542,6 @@ metadataToDTO
         metaV3InheritedRoles = inheritedRoles,
         metaV3GraphqlSchemaIntrospection = introspectionDisabledRoles,
         metaV3Network = networkConfig,
-        metaV3BackendConfigs = placeholder . objectFromOrdJSON <$> backendConfigsToOrdJSON backendConfigs,
+        metaV3BackendConfigs = backendConfigs,
         metaV3OpenTelemetryConfig = openTelemetryConfig
       }
-    where
-      -- This is a /partial/ function to unwrap a JSON object
-      objectFromOrdJSON (AO.Object obj) = obj
-      objectFromOrdJSON _ = error "expected an object"

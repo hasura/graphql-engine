@@ -33,8 +33,9 @@ module Hasura.Backends.DataConnector.Adapter.Types
   )
 where
 
-import Autodocodec (HasCodec (codec))
+import Autodocodec (HasCodec (codec), optionalField', requiredFieldWith')
 import Autodocodec qualified as AC
+import Autodocodec.Extended (baseUrlCodec)
 import Control.Lens (makeLenses)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, genericParseJSON, genericToJSON)
 import Data.Aeson qualified as J
@@ -176,6 +177,13 @@ data DataConnectorOptions = DataConnectorOptions
     _dcoDisplayName :: Maybe Text
   }
   deriving stock (Eq, Ord, Show, Generic)
+
+instance HasCodec DataConnectorOptions where
+  codec =
+    AC.object "DataConnectorOptions" $
+      DataConnectorOptions
+        <$> requiredFieldWith' "uri" baseUrlCodec AC..= _dcoUri
+        <*> optionalField' "display_name" AC..= _dcoDisplayName
 
 instance FromJSON DataConnectorOptions where
   parseJSON = genericParseJSON hasuraJSON

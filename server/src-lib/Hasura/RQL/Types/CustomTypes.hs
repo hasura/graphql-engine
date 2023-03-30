@@ -47,7 +47,7 @@ where
 
 import Autodocodec (HasCodec (codec), bimapCodec, dimapCodec, optionalField', optionalFieldWith', optionalFieldWithDefault', optionalFieldWithOmittedDefault', requiredField', requiredFieldWith')
 import Autodocodec qualified as AC
-import Autodocodec.Extended (graphQLEnumValueCodec, graphQLFieldDescriptionCodec, graphQLFieldNameCodec)
+import Autodocodec.Extended (graphQLEnumValueCodec, graphQLFieldDescriptionCodec, graphQLFieldNameCodec, typeableName)
 import Control.Lens.TH (makeLenses)
 import Data.Aeson ((.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as J
@@ -60,7 +60,6 @@ import Data.Typeable (Typeable)
 import Hasura.Backends.Postgres.Instances.Types ()
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.GraphQL.Parser.Name qualified as GName
-import Hasura.Metadata.DTO.Utils (typeableName)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column

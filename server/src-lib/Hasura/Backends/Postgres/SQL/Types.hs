@@ -58,6 +58,7 @@ where
 
 import Autodocodec (HasCodec (codec), dimapCodec, optionalFieldWithDefault', parseAlternative, requiredField')
 import Autodocodec qualified as AC
+import Autodocodec.Extended (typeableName)
 import Data.Aeson
 import Data.Aeson.Encoding (text)
 import Data.Aeson.Key qualified as K
@@ -77,7 +78,6 @@ import Hasura.Base.Error
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Name qualified as GName
-import Hasura.Metadata.DTO.Utils (typeableName)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
