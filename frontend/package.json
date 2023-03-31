@@ -174,7 +174,8 @@
     "uuid": "8.3.2",
     "valid-url": "1.0.9",
     "xstate": "^4.30.1",
-    "zod": "3.20.2"
+    "zod": "3.20.2",
+    "zustand": "^4.3.6"
   },
   "devDependencies": {
     "@babel/core": "7.12.13",
@@ -356,6 +357,7 @@
     "ts-jest": "29.0.5",
     "ts-node": "10.9.1",
     "tslib": "^2.3.0",
+    "type-fest": "^3.6.1",
     "typescript": "4.9.5",
     "unplugin-dynamic-asset-loader": "1.0.0",
     "url-loader": "^4.1.1",
