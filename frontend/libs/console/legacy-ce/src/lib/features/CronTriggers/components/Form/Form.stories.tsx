@@ -229,13 +229,7 @@ Modify.play = async ({ canvasElement }) => {
     '0 0 * * *'
   );
 
-  // Step2: Remove request option tranform
-  await userEvent.click(canvas.getByText('Remove Request Options Transform'));
-
-  // Step3: Add payload transform
-  await userEvent.click(canvas.getByText('Add Payload Transform'));
-
-  // Step4: Save the form and assert success by observing behaviour in UI
+  // Step2: Save the form and assert success by observing behaviour in UI
   await userEvent.click(canvas.getByText('Update Cron Trigger'));
 
   // TODO: Ideally we should be checking if the success notification got fired, but our redux-based notifications does not work in storybook
