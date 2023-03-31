@@ -67,14 +67,13 @@ spec = do
           ]
 
   Fixture.hgeWithEnv [(featureFlagForLogicalModels, "True")] do
-    -- do not need to run isolated
     traverse_
       (Fixture.runClean fixtures)
-      [testAdminAccess, testPermissionFailures]
-    -- need to run isolated
-    traverse_
-      (Fixture.runClean fixtures)
-      [testImplementation, testPermissions]
+      [ testAdminAccess,
+        testImplementation,
+        testPermissions,
+        testPermissionFailures
+      ]
 
   metadataHandlingWhenDisabledSpec
 

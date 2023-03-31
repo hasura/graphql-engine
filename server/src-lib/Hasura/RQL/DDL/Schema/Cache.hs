@@ -736,30 +736,30 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
             liftIO @m $ checkFeatureFlag FF.logicalModelInterface
 
       let mkCustomReturnTypeMetadataObject :: CustomReturnTypeMetadata b -> MetadataObject
-          mkCustomReturnTypeMetadataObject ctm =
+          mkCustomReturnTypeMetadataObject crtm =
             ( MetadataObject
                 ( MOSourceObjId sourceName $
                     AB.mkAnyBackend $
-                      SMOCustomReturnType @b (_ctmName ctm)
+                      SMOCustomReturnType @b (_crtmName crtm)
                 )
-                (toJSON ctm)
+                (toJSON crtm)
             )
 
       customReturnTypeCacheMaybes <-
         interpretWriter
           -< for
             (OMap.elems customReturnTypes)
-            \ctm@CustomReturnTypeMetadata {..} ->
-              withRecordInconsistencyM (mkCustomReturnTypeMetadataObject ctm) $ do
+            \crtm@CustomReturnTypeMetadata {..} ->
+              withRecordInconsistencyM (mkCustomReturnTypeMetadataObject crtm) $ do
                 unless areLogicalModelsEnabled $
                   throw400 InvalidConfiguration "The Logical Models feature is disabled"
 
                 pure
                   CustomReturnTypeInfo
-                    { _ctiName = _ctmName,
-                      _ctiFields = _ctmFields,
+                    { _ctiName = _crtmName,
+                      _ctiFields = _crtmFields,
                       _ctiPermissions = mempty,
-                      _ctiDescription = _ctmDescription
+                      _ctiDescription = _crtmDescription
                     }
 
       let customReturnTypesCache :: CustomReturnTypeCache b

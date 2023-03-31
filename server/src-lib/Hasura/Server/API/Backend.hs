@@ -181,5 +181,7 @@ customReturnTypesCommands :: forall (b :: BackendType). Backend b => [CommandPar
 customReturnTypesCommands =
   [ commandParser "get_custom_return_type" $ RMGetCustomReturnType . mkAnyBackend @b,
     commandParser "track_custom_return_type" $ RMTrackCustomReturnType . mkAnyBackend @b,
-    commandParser "untrack_custom_return_type" $ RMUntrackCustomReturnType . mkAnyBackend @b
+    commandParser "untrack_custom_return_type" $ RMUntrackCustomReturnType . mkAnyBackend @b,
+    commandParser "create_custom_return_type_select_permission" $ RMCreateSelectCustomReturnTypePermission . mkAnyBackend @b,
+    commandParser "drop_custom_return_type_select_permission" $ RMDropSelectCustomReturnTypePermission . mkAnyBackend @b
   ]

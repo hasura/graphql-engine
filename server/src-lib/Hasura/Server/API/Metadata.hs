@@ -143,6 +143,8 @@ data RQLMetadataV1
     RMGetCustomReturnType !(AnyBackend CustomReturnType.GetCustomReturnType)
   | RMTrackCustomReturnType !(AnyBackend CustomReturnType.TrackCustomReturnType)
   | RMUntrackCustomReturnType !(AnyBackend CustomReturnType.UntrackCustomReturnType)
+  | RMCreateSelectCustomReturnTypePermission !(AnyBackend (CustomReturnType.CreateCustomReturnTypePermission SelPerm))
+  | RMDropSelectCustomReturnTypePermission !(AnyBackend CustomReturnType.DropCustomReturnTypePermission)
   | -- Tables event triggers
     RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)
@@ -501,11 +503,13 @@ queryModifiesMetadata = \case
       RMGetLogicalModel _ -> False
       RMTrackLogicalModel _ -> True
       RMUntrackLogicalModel _ -> True
+      RMCreateSelectLogicalModelPermission _ -> True
+      RMDropSelectLogicalModelPermission _ -> True
       RMGetCustomReturnType _ -> False
       RMTrackCustomReturnType _ -> True
       RMUntrackCustomReturnType _ -> True
-      RMCreateSelectLogicalModelPermission _ -> True
-      RMDropSelectLogicalModelPermission _ -> True
+      RMCreateSelectCustomReturnTypePermission _ -> True
+      RMDropSelectCustomReturnTypePermission _ -> True
       RMBulk qs -> any queryModifiesMetadata qs
       -- We used to assume that the fallthrough was True,
       -- but it is better to be explicit here to warn when new constructors are added.
@@ -698,6 +702,8 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMGetCustomReturnType q -> dispatchMetadata CustomReturnType.runGetCustomReturnType q
   RMTrackCustomReturnType q -> dispatchMetadata CustomReturnType.runTrackCustomReturnType q
   RMUntrackCustomReturnType q -> dispatchMetadata CustomReturnType.runUntrackCustomReturnType q
+  RMCreateSelectCustomReturnTypePermission q -> dispatchMetadata CustomReturnType.runCreateSelectCustomReturnTypePermission q
+  RMDropSelectCustomReturnTypePermission q -> dispatchMetadata CustomReturnType.runDropSelectCustomReturnTypePermission q
   RMCreateEventTrigger q ->
     dispatchMetadataAndEventTrigger
       ( validateTransforms

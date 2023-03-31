@@ -443,7 +443,7 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadat
     _smTables <- oMapFromL _tmTable <$> o .: "tables"
     _smFunctions <- oMapFromL _fmFunction <$> o .:? "functions" .!= []
     _smLogicalModels <- oMapFromL _lmmRootFieldName <$> o .:? "logical_models" .!= []
-    _smCustomReturnTypes <- oMapFromL _ctmName <$> o .:? "custom_return_types" .!= []
+    _smCustomReturnTypes <- oMapFromL _crtmName <$> o .:? "custom_return_types" .!= []
     _smConfiguration <- o .: "configuration"
     _smQueryTags <- o .:? "query_tags"
     _smCustomization <- o .:? "customization" .!= emptySourceCustomization
@@ -504,7 +504,7 @@ instance Backend b => HasCodec (SourceMetadata b) where
           .== _smFunctions
         <*> optionalFieldOrNullWithOmittedDefaultWith' "logical_models" (sortedElemsCodec _lmmRootFieldName) mempty
           .== _smLogicalModels
-        <*> optionalFieldOrNullWithOmittedDefaultWith' "custom_return_types" (sortedElemsCodec _ctmName) mempty
+        <*> optionalFieldOrNullWithOmittedDefaultWith' "custom_return_types" (sortedElemsCodec _crtmName) mempty
           .== _smCustomReturnTypes
         <*> requiredField' "configuration"
           .== _smConfiguration

@@ -69,10 +69,10 @@ spec = do
   describe "Validation" do
     let crtm =
           CustomReturnTypeMetadata
-            { _ctmName = CustomReturnTypeName (G.unsafeMkName "custom_return_type_name"),
-              _ctmFields = mempty,
-              _ctmDescription = Nothing,
-              _ctmSelectPermissions = mempty
+            { _crtmName = CustomReturnTypeName (G.unsafeMkName "custom_return_type_name"),
+              _crtmFields = mempty,
+              _crtmDescription = Nothing,
+              _crtmSelectPermissions = mempty
             }
 
         lmm =

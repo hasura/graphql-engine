@@ -1,13 +1,19 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.CustomReturnType.Metadata
   ( CustomReturnTypeMetadata (..),
     CustomReturnTypeName (..),
+    crtmName,
+    crtmFields,
+    crtmDescription,
+    crtmSelectPermissions,
   )
 where
 
 import Autodocodec (Autodocodec (Autodocodec), HasCodec)
 import Autodocodec qualified as AC
+import Control.Lens (makeLenses)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec)
@@ -22,12 +28,14 @@ import Hasura.Session (RoleName)
 
 -- | Description of a custom return type for use in metadata (before schema cache)
 data CustomReturnTypeMetadata (b :: BackendType) = CustomReturnTypeMetadata
-  { _ctmName :: CustomReturnTypeName,
-    _ctmFields :: InsOrd.InsOrdHashMap (Column b) (NullableScalarType b),
-    _ctmDescription :: Maybe Text,
-    _ctmSelectPermissions :: InsOrdHashMap RoleName (SelPermDef b)
+  { _crtmName :: CustomReturnTypeName,
+    _crtmFields :: InsOrd.InsOrdHashMap (Column b) (NullableScalarType b),
+    _crtmDescription :: Maybe Text,
+    _crtmSelectPermissions :: InsOrdHashMap RoleName (SelPermDef b)
   }
   deriving (Generic)
+
+makeLenses ''CustomReturnTypeMetadata
 
 instance (Backend b) => HasCodec (CustomReturnTypeMetadata b) where
   codec =
@@ -36,13 +44,13 @@ instance (Backend b) => HasCodec (CustomReturnTypeMetadata b) where
       $ AC.object (codecNamePrefix @b <> "CustomReturnTypeMetadata")
       $ CustomReturnTypeMetadata
         <$> AC.requiredField "name" nameDoc
-          AC..= _ctmName
+          AC..= _crtmName
         <*> AC.requiredFieldWith "fields" nullableScalarTypeMapCodec fieldsDoc
-          AC..= _ctmFields
+          AC..= _crtmFields
         <*> AC.optionalField "description" descriptionDoc
-          AC..= _ctmDescription
+          AC..= _crtmDescription
         <*> optSortedList "select_permissions" _pdRole
-          AC..= _ctmSelectPermissions
+          AC..= _crtmSelectPermissions
     where
       nameDoc = "A name for a custom return type"
       fieldsDoc = "Return types for the custom return type"

@@ -98,6 +98,8 @@ data RQLMetadataV1
     RMGetCustomReturnType !(AnyBackend CustomReturnType.GetCustomReturnType)
   | RMTrackCustomReturnType !(AnyBackend CustomReturnType.TrackCustomReturnType)
   | RMUntrackCustomReturnType !(AnyBackend CustomReturnType.UntrackCustomReturnType)
+  | RMCreateSelectCustomReturnTypePermission !(AnyBackend (CustomReturnType.CreateCustomReturnTypePermission SelPerm))
+  | RMDropSelectCustomReturnTypePermission !(AnyBackend CustomReturnType.DropCustomReturnTypePermission)
   | -- Tables event triggers
     RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)

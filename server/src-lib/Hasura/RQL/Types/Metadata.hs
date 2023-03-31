@@ -22,6 +22,7 @@ module Hasura.RQL.Types.Metadata
     emptyMetadata,
     emptyMetadataDefaults,
     functionMetadataSetter,
+    customReturnTypeMetadataSetter,
     logicalModelMetadataSetter,
     metaActions,
     metaAllowlist,
@@ -54,6 +55,7 @@ import Data.Aeson.TH
 import Data.Aeson.Types
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Monoid (Dual (..), Endo (..))
+import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata, CustomReturnTypeName)
 import Hasura.Incremental qualified as Inc
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata, LogicalModelName, lmmSelectPermissions)
 import Hasura.Metadata.DTO.MetadataV3 (MetadataV3 (..))
@@ -275,6 +277,16 @@ functionMetadataSetter ::
   ASetter' Metadata (FunctionMetadata b)
 functionMetadataSetter source function =
   metaSources . ix source . toSourceMetadata . smFunctions . ix function
+
+-- | A lens setter for the metadata of a custom return type as identified by the
+-- source name and root field name.
+customReturnTypeMetadataSetter ::
+  (Backend b) =>
+  SourceName ->
+  CustomReturnTypeName ->
+  ASetter' Metadata (CustomReturnTypeMetadata b)
+customReturnTypeMetadataSetter source name =
+  metaSources . ix source . toSourceMetadata . smCustomReturnTypes . ix name
 
 -- | A lens setter for the metadata of a logical model as identified by the
 -- source name and root field name.

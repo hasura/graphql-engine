@@ -164,7 +164,7 @@ logicalModelToPreparedStatement customReturnType model = do
 
       returnedColumnNames :: Text
       returnedColumnNames =
-        commaSeparated $ InsOrd.keys (_ctmFields customReturnType)
+        commaSeparated $ InsOrd.keys (_crtmFields customReturnType)
 
       wrapInCTE :: Text -> Text
       wrapInCTE query =

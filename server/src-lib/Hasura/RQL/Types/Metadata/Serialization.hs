@@ -122,7 +122,7 @@ sourcesToOrdJSONList sources =
             tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems _smTables)
             functionsPair = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction _smFunctions
             logicalModelsPair = listToMaybeOrdPairSort "logical_models" AO.toOrdered _lmmRootFieldName (OM.elems _smLogicalModels)
-            customReturnTypesPair = listToMaybeOrdPairSort "custom_return_types" AO.toOrdered _ctmName (OM.elems _smCustomReturnTypes)
+            customReturnTypesPair = listToMaybeOrdPairSort "custom_return_types" AO.toOrdered _crtmName (OM.elems _smCustomReturnTypes)
             configurationPair = [("configuration", AO.toOrdered _smConfiguration)]
             queryTagsConfigPair = maybe [] (\queryTagsConfig -> [("query_tags", AO.toOrdered queryTagsConfig)]) _smQueryTags
 

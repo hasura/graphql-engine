@@ -39,10 +39,12 @@ spec = do
           ]
 
   Fixture.hgeWithEnv [(featureFlagForLogicalModels, "True")] do
-    -- need to run isolated
     traverse_
       (Fixture.runClean fixtures)
-      [testImplementation]
+      [ testImplementation,
+        testPermissions,
+        testPermissionFailures
+      ]
 
 -- ** Setup and teardown
 
@@ -181,4 +183,244 @@ testImplementation = do
           code: constraint-violation
           error: Custom type "nice" still being used by logical model "logical_model".
           path: $.args
+        |]
+
+----------------------
+-- Test permissions --
+----------------------
+
+testPermissions :: SpecWith TestEnvironment
+testPermissions = do
+  let customReturnType :: Schema.CustomType
+      customReturnType =
+        (Schema.customType "divided_stuff")
+          { Schema.customTypeColumns =
+              [ (Schema.logicalModelColumn "divided" Schema.TInt)
+                  { Schema.logicalModelColumnDescription = Just "a divided thing"
+                  }
+              ]
+          }
+
+  describe "Permissions" do
+    it "Adds a custom return type with a select permission and returns a 200" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+          backendType = BackendType.backendTypeString backendTypeMetadata
+
+      Schema.trackCustomType sourceName customReturnType testEnvironment
+
+      shouldReturnYaml
+        testEnvironment
+        ( GraphqlEngine.postMetadata
+            testEnvironment
+            [interpolateYaml|
+              type: bulk
+              args:
+                - type: #{backendType}_create_custom_return_type_select_permission
+                  args:
+                    source: #{sourceName}
+                    name: divided_stuff
+                    role: "test"
+                    permission:
+                      columns:
+                        - divided
+                      filter: {}
+            |]
+        )
+        [yaml|
+          - message: success
+        |]
+
+      shouldReturnYaml
+        testEnvironment
+        ( GraphqlEngine.postMetadata
+            testEnvironment
+            [interpolateYaml|
+              type: #{backendType}_get_custom_return_type
+              args:
+                source: #{sourceName}
+            |]
+        )
+        [interpolateYaml|
+          - name: divided_stuff
+            description: ''
+            fields:
+            - description: a divided thing
+              name: divided
+              nullable: false
+              type: integer
+            select_permissions:
+              - role: "test"
+                permission:
+                  columns:
+                    - divided
+                  filter: {}
+        |]
+
+    it "Adds a logical model, removes it, and returns 200" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+          backendType = BackendType.backendTypeString backendTypeMetadata
+
+      Schema.trackCustomType sourceName customReturnType testEnvironment
+
+      shouldReturnYaml
+        testEnvironment
+        ( GraphqlEngine.postMetadata
+            testEnvironment
+            [interpolateYaml|
+              type: bulk
+              args:
+                - type: #{backendType}_create_custom_return_type_select_permission
+                  args:
+                    source: #{sourceName}
+                    name: divided_stuff
+                    role: "test"
+                    permission:
+                      columns:
+                        - divided
+                      filter: {}
+                - type: #{backendType}_drop_custom_return_type_select_permission
+                  args:
+                    source: #{sourceName}
+                    name: divided_stuff
+                    role: "test"
+            |]
+        )
+        [yaml|
+          - message: success
+          - message: success
+        |]
+
+      shouldReturnYaml
+        testEnvironment
+        ( GraphqlEngine.postMetadata
+            testEnvironment
+            [interpolateYaml|
+              type: #{backendType}_get_custom_return_type
+              args:
+                source: #{sourceName}
+            |]
+        )
+        [interpolateYaml|
+          - name: divided_stuff
+            description: ''
+            fields:
+            - description: a divided thing
+              name: divided
+              nullable: false
+              type: integer
+        |]
+
+testPermissionFailures :: SpecWith TestEnvironment
+testPermissionFailures = do
+  describe "Permission failures" do
+    it "Fails to adds a select permission to a nonexisting source" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          backendType = BackendType.backendTypeString backendTypeMetadata
+
+      shouldReturnYaml
+        testEnvironment
+        ( GraphqlEngine.postMetadataWithStatus
+            400
+            testEnvironment
+            [interpolateYaml|
+              type: bulk
+              args:
+                - type: #{backendType}_create_custom_return_type_select_permission
+                  args:
+                    source: made_up_source
+                    name: divided_stuff
+                    role: "test"
+                    permission:
+                      columns:
+                        - divided
+                      filter: {}
+            |]
+        )
+        [yaml|
+          code: not-found
+          error: "Source \"made_up_source\" not found."
+          path: "$.args[0].args"
+        |]
+
+    it "Fails to adds a select permission to a nonexisting custom return type" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+          backendType = BackendType.backendTypeString backendTypeMetadata
+
+      shouldReturnYaml
+        testEnvironment
+        ( GraphqlEngine.postMetadataWithStatus
+            400
+            testEnvironment
+            [interpolateYaml|
+              type: bulk
+              args:
+                - type: #{backendType}_create_custom_return_type_select_permission
+                  args:
+                    source: #{sourceName}
+                    name: made_up_custom_return_type
+                    role: "test"
+                    permission:
+                      columns:
+                        - divided
+                      filter: {}
+            |]
+        )
+        [interpolateYaml|
+          code: "not-found"
+          error: Custom return type "made_up_custom_return_type" not found in source "#{sourceName}".
+          path: "$.args[0].args"
+        |]
+
+    it "Fails to drop a select permission on a nonexisting source" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          backendType = BackendType.backendTypeString backendTypeMetadata
+
+      shouldReturnYaml
+        testEnvironment
+        ( GraphqlEngine.postMetadataWithStatus
+            400
+            testEnvironment
+            [interpolateYaml|
+              type: #{backendType}_drop_custom_return_type_select_permission
+              args:
+                source: made_up_source
+                name: made_up_custom_return_type
+                role: "test"
+                permission:
+                  columns:
+                    - divided
+                  filter: {}
+            |]
+        )
+        [interpolateYaml|
+          code: not-found
+          error: "Source \"made_up_source\" not found."
+          path: "$.args"
+        |]
+
+    it "Fails to drop a select permission from a nonexisting custom return type" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+          backendType = BackendType.backendTypeString backendTypeMetadata
+
+      shouldReturnYaml
+        testEnvironment
+        ( GraphqlEngine.postMetadataWithStatus
+            400
+            testEnvironment
+            [interpolateYaml|
+              type: #{backendType}_drop_custom_return_type_select_permission
+              args:
+                source: #{sourceName}
+                name: made_up_custom_return_type
+                role: "test"
+            |]
+        )
+        [interpolateYaml|
+          code: "not-found"
+          error: Custom return type "made_up_custom_return_type" not found in source "#{sourceName}".
+          path: "$.args"
         |]
