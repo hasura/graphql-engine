@@ -13,6 +13,7 @@ import {
 } from '../AppState';
 import {
   ADMIN_SECRET_ERROR,
+  clearAdminSecretState,
   UPDATE_DATA_HEADERS,
 } from '@hasura/console-legacy-ce';
 import { getFeaturesCompatibility } from '../../helpers/versionUtils';
@@ -425,6 +426,7 @@ const clearCollaboratorSignInState = () => {
           removeHeaderFromLS(globals.collabLabel);
           removeHeaderFromLS(globals.patLabel);
           clearPATState();
+          clearAdminSecretState();
           initLS();
           dispatch(push(`${globals.urlPrefix}/login`));
         })
