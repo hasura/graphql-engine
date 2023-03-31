@@ -433,26 +433,9 @@ addSource sourceName sourceConfig testEnvironment = do
       |]
 
 trackLogicalModelCommand :: String -> BackendTypeConfig -> LogicalModel -> Value
-trackLogicalModelCommand sourceName backendTypeConfig (LogicalModel {logicalModelReturnTypeDescription, logicalModelName, logicalModelArguments, logicalModelQuery, logicalModelColumns}) =
-  -- return type is an array of items
-  let returnTypeToJson =
-        Aeson.Array
-          . V.fromList
-          . fmap
-            ( \LogicalModelColumn {..} ->
-                let descriptionPair = case logicalModelColumnDescription of
-                      Just desc -> [(K.fromText "description", Aeson.String desc)]
-                      Nothing -> []
-                 in Aeson.object $
-                      [ (K.fromText "name", Aeson.String logicalModelColumnName),
-                        (K.fromText "type", Aeson.String ((BackendType.backendScalarType backendTypeConfig) logicalModelColumnType)),
-                        (K.fromText "nullable", Aeson.Bool logicalModelColumnNullable)
-                      ]
-                        <> descriptionPair
-            )
-
-      -- arguments are a map from name to type details
-      argsToJson =
+trackLogicalModelCommand sourceName backendTypeConfig (LogicalModel {logicalModelName, logicalModelArguments, logicalModelQuery, logicalModelReturnType}) =
+  -- arguments are a map from name to type details
+  let argsToJson =
         Aeson.object
           . fmap
             ( \LogicalModelColumn {..} ->
@@ -472,16 +455,6 @@ trackLogicalModelCommand sourceName backendTypeConfig (LogicalModel {logicalMode
 
       arguments = argsToJson logicalModelArguments
 
-      columns = returnTypeToJson logicalModelColumns
-
-      returnTypePair = case logicalModelReturnTypeDescription of
-        Just desc -> [("description", Aeson.String desc)]
-        Nothing -> []
-
-      returns =
-        Aeson.object $
-          [(K.fromText "columns", columns)] <> returnTypePair
-
       backendType = BackendType.backendTypeString backendTypeConfig
 
       requestType = backendType <> "_track_logical_model"
@@ -493,7 +466,7 @@ trackLogicalModelCommand sourceName backendTypeConfig (LogicalModel {logicalMode
           root_field_name: *logicalModelName 
           code: *logicalModelQuery
           arguments: *arguments
-          returns: *returns
+          returns: *logicalModelReturnType
       |]
 
 trackLogicalModel :: HasCallStack => String -> LogicalModel -> TestEnvironment -> IO ()

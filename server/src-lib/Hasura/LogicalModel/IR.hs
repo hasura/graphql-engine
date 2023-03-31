@@ -4,7 +4,7 @@ module Hasura.LogicalModel.IR
   )
 where
 
-import Hasura.CustomReturnType
+import Hasura.CustomReturnType.IR
 import Hasura.LogicalModel.Metadata
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend

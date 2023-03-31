@@ -77,10 +77,25 @@ tests = do
 
       helloWorldLogicalModel :: Schema.LogicalModel
       helloWorldLogicalModel =
-        (Schema.logicalModel "hello_world_function" query)
-          { Schema.logicalModelColumns =
+        (Schema.logicalModel "hello_world_function" query "hello_world_function")
+
+      helloWorldReturnType :: Schema.CustomType
+      helloWorldReturnType =
+        (Schema.customType "hello_world_function")
+          { Schema.customTypeColumns =
               [ Schema.logicalModelColumn "one" Schema.TStr,
                 Schema.logicalModelColumn "two" Schema.TStr
+              ]
+          }
+
+      articleWithExcerptReturnType :: Schema.CustomType
+      articleWithExcerptReturnType =
+        (Schema.customType "article_with_excerpt")
+          { Schema.customTypeColumns =
+              [ Schema.logicalModelColumn "id" Schema.TInt,
+                Schema.logicalModelColumn "title" Schema.TStr,
+                Schema.logicalModelColumn "excerpt" Schema.TStr,
+                Schema.logicalModelColumn "date" Schema.TUTCTime
               ]
           }
 
@@ -91,10 +106,10 @@ tests = do
 
           nullableQuery = "SELECT thing / 2 AS divided, null as something_nullable FROM stuff"
 
-          descriptionsAndNullableLogicalModel :: Schema.LogicalModel
-          descriptionsAndNullableLogicalModel =
-            (Schema.logicalModel "divided_stuff" nullableQuery)
-              { Schema.logicalModelColumns =
+          descriptionsAndNullableReturnType :: Schema.CustomType
+          descriptionsAndNullableReturnType =
+            (Schema.customType "divided_stuff")
+              { Schema.customTypeColumns =
                   [ (Schema.logicalModelColumn "divided" Schema.TInt)
                       { Schema.logicalModelColumnDescription = Just "A divided thing"
                       },
@@ -103,12 +118,18 @@ tests = do
                         Schema.logicalModelColumnNullable = True
                       }
                   ],
-                Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "unused" Schema.TInt
-                  ],
-                Schema.logicalModelReturnTypeDescription = Just "Return type description"
+                Schema.customTypeDescription = Just "Return type description"
               }
 
+          descriptionsAndNullableLogicalModel :: Schema.LogicalModel
+          descriptionsAndNullableLogicalModel =
+            (Schema.logicalModel "divided_stuff" nullableQuery "divided_stuff")
+              { Schema.logicalModelArguments =
+                  [ Schema.logicalModelColumn "unused" Schema.TInt
+                  ]
+              }
+
+      Schema.trackCustomType sourceName descriptionsAndNullableReturnType testEnvironment
       Schema.trackLogicalModel sourceName descriptionsAndNullableLogicalModel testEnvironment
 
       let queryTypesIntrospection :: Value
@@ -175,6 +196,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
+      Schema.trackCustomType source helloWorldReturnType testEnvironment
       Schema.trackLogicalModel source helloWorldLogicalModel testEnvironment
 
       let expected =
@@ -205,6 +227,8 @@ tests = do
     it "Runs simple query with a basic where clause" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
+
+      Schema.trackCustomType source helloWorldReturnType testEnvironment
 
       Schema.trackLogicalModel source helloWorldLogicalModel testEnvironment
 
@@ -240,12 +264,9 @@ tests = do
 
           helloWorldLogicalModelWithDuplicates :: Schema.LogicalModel
           helloWorldLogicalModelWithDuplicates =
-            (Schema.logicalModel "hello_world_function" queryWithDuplicates)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "one" Schema.TStr,
-                    Schema.logicalModelColumn "two" Schema.TStr
-                  ]
-              }
+            (Schema.logicalModel "hello_world_function" queryWithDuplicates "hello_world_function")
+
+      Schema.trackCustomType source helloWorldReturnType testEnvironment
 
       Schema.trackLogicalModel source helloWorldLogicalModelWithDuplicates testEnvironment
 
@@ -279,6 +300,8 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
 
+      Schema.trackCustomType sourceName helloWorldReturnType testEnvironment
+
       Schema.trackLogicalModel sourceName helloWorldLogicalModel testEnvironment
 
       let expected =
@@ -310,15 +333,13 @@ tests = do
 
           helloWorldLogicalModelWithDummyArgument :: Schema.LogicalModel
           helloWorldLogicalModelWithDummyArgument =
-            (Schema.logicalModel "hello_world_function_with_dummy" query)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "one" Schema.TStr,
-                    Schema.logicalModelColumn "two" Schema.TStr
-                  ],
-                Schema.logicalModelArguments =
+            (Schema.logicalModel "hello_world_function_with_dummy" query "hello_world_function")
+              { Schema.logicalModelArguments =
                   [ Schema.logicalModelColumn "dummy" Schema.TStr
                   ]
               }
+
+      Schema.trackCustomType source helloWorldReturnType testEnvironment
 
       Schema.trackLogicalModel source helloWorldLogicalModelWithDummyArgument testEnvironment
 
@@ -353,12 +374,9 @@ tests = do
 
           helloCommentLogicalModel :: Schema.LogicalModel
           helloCommentLogicalModel =
-            (Schema.logicalModel "hello_comment_function" spicyQuery)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "one" Schema.TStr,
-                    Schema.logicalModelColumn "two" Schema.TStr
-                  ]
-              }
+            (Schema.logicalModel "hello_comment_function" spicyQuery "hello_world_function")
+
+      Schema.trackCustomType source helloWorldReturnType testEnvironment
 
       Schema.trackLogicalModel source helloCommentLogicalModel testEnvironment
 
@@ -395,12 +413,9 @@ tests = do
 
           helloWorldPermLogicalModel :: Schema.LogicalModel
           helloWorldPermLogicalModel =
-            (Schema.logicalModel "hello_world_perms" query)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "one" Schema.TStr,
-                    Schema.logicalModelColumn "two" Schema.TStr
-                  ]
-              }
+            (Schema.logicalModel "hello_world_perms" query "hello_world_function")
+
+      Schema.trackCustomType source helloWorldReturnType testEnvironment
 
       Schema.trackLogicalModel source helloWorldPermLogicalModel testEnvironment
 
@@ -457,12 +472,9 @@ tests = do
 
           helloWorldPermLogicalModel :: Schema.LogicalModel
           helloWorldPermLogicalModel =
-            (Schema.logicalModel "hello_world_perms" query)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "one" Schema.TStr,
-                    Schema.logicalModelColumn "two" Schema.TStr
-                  ]
-              }
+            (Schema.logicalModel "hello_world_perms" query "hello_world_function")
+
+      Schema.trackCustomType source helloWorldReturnType testEnvironment
 
       Schema.trackLogicalModel source helloWorldPermLogicalModel testEnvironment
 
@@ -520,12 +532,9 @@ tests = do
 
           helloWorldPermLogicalModel :: Schema.LogicalModel
           helloWorldPermLogicalModel =
-            (Schema.logicalModel "hello_world_perms" query)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "one" Schema.TStr,
-                    Schema.logicalModelColumn "two" Schema.TStr
-                  ]
-              }
+            (Schema.logicalModel "hello_world_perms" query "hello_world_function")
+
+      Schema.trackCustomType source helloWorldReturnType testEnvironment
 
       Schema.trackLogicalModel source helloWorldPermLogicalModel testEnvironment
 
@@ -601,17 +610,13 @@ tests = do
 
           articleWithExcerptLogicalModel :: Schema.LogicalModel
           articleWithExcerptLogicalModel =
-            (Schema.logicalModel "article_with_excerpt" (articleQuery schemaName))
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "id" Schema.TInt,
-                    Schema.logicalModelColumn "title" Schema.TStr,
-                    Schema.logicalModelColumn "excerpt" Schema.TStr,
-                    Schema.logicalModelColumn "date" Schema.TUTCTime
-                  ],
-                Schema.logicalModelArguments =
+            (Schema.logicalModel "article_with_excerpt" (articleQuery schemaName) "article_with_excerpt")
+              { Schema.logicalModelArguments =
                   [ Schema.logicalModelColumn "length" Schema.TInt
                   ]
               }
+
+      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackLogicalModel source articleWithExcerptLogicalModel testEnvironment
 
@@ -651,17 +656,13 @@ tests = do
 
           mkArticleWithExcerptLogicalModel :: Text -> Schema.LogicalModel
           mkArticleWithExcerptLogicalModel name =
-            (Schema.logicalModel name (articleQuery schemaName))
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "id" Schema.TInt,
-                    Schema.logicalModelColumn "title" Schema.TStr,
-                    Schema.logicalModelColumn "excerpt" Schema.TStr,
-                    Schema.logicalModelColumn "date" Schema.TUTCTime
-                  ],
-                Schema.logicalModelArguments =
+            (Schema.logicalModel name (articleQuery schemaName) "article_with_excerpt")
+              { Schema.logicalModelArguments =
                   [ Schema.logicalModelColumn "length" Schema.TInt
                   ]
               }
+
+      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackLogicalModel
         source
@@ -708,17 +709,13 @@ tests = do
 
           articleWithExcerptLogicalModel :: Schema.LogicalModel
           articleWithExcerptLogicalModel =
-            (Schema.logicalModel "article_with_excerpt" (articleQuery schemaName))
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "id" Schema.TInt,
-                    Schema.logicalModelColumn "title" Schema.TStr,
-                    Schema.logicalModelColumn "excerpt" Schema.TStr,
-                    Schema.logicalModelColumn "date" Schema.TUTCTime
-                  ],
-                Schema.logicalModelArguments =
+            (Schema.logicalModel "article_with_excerpt" (articleQuery schemaName) "article_with_excerpt")
+              { Schema.logicalModelArguments =
                   [ Schema.logicalModelColumn "length" Schema.TInt
                   ]
               }
+
+      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackLogicalModel source articleWithExcerptLogicalModel testEnvironment
 
@@ -757,17 +754,13 @@ tests = do
 
           articleWithExcerptLogicalModel :: Schema.LogicalModel
           articleWithExcerptLogicalModel =
-            (Schema.logicalModel "article_with_excerpt" (articleQuery schemaName))
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "id" Schema.TInt,
-                    Schema.logicalModelColumn "title" Schema.TStr,
-                    Schema.logicalModelColumn "excerpt" Schema.TStr,
-                    Schema.logicalModelColumn "date" Schema.TUTCTime
-                  ],
-                Schema.logicalModelArguments =
+            (Schema.logicalModel "article_with_excerpt" (articleQuery schemaName) "article_with_excerpt")
+              { Schema.logicalModelArguments =
                   [ Schema.logicalModelColumn "length" Schema.TInt
                   ]
               }
+
+      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackLogicalModel source articleWithExcerptLogicalModel testEnvironment
 

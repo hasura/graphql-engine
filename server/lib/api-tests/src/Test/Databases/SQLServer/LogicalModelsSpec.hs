@@ -66,16 +66,21 @@ tests = do
       articleQuery schemaName =
         "select id, title,(substring(content, 1, {{length}}) + (case when len(content) < {{length}} then '' else '...' end)) as excerpt,date from [" <> Schema.unSchemaName schemaName <> "].[article]"
 
-      articleWithExcerptLogicalModel :: Text -> Schema.SchemaName -> Schema.LogicalModel
-      articleWithExcerptLogicalModel name schemaName =
-        (Schema.logicalModel name (articleQuery schemaName))
-          { Schema.logicalModelColumns =
+      articleWithExcerptReturnType :: Schema.CustomType
+      articleWithExcerptReturnType =
+        (Schema.customType "article_with_excerpt")
+          { Schema.customTypeColumns =
               [ Schema.logicalModelColumn "id" Schema.TInt,
                 Schema.logicalModelColumn "title" Schema.TStr,
                 Schema.logicalModelColumn "excerpt" Schema.TStr,
                 Schema.logicalModelColumn "date" Schema.TUTCTime
-              ],
-            Schema.logicalModelArguments =
+              ]
+          }
+
+      articleWithExcerptLogicalModel :: Text -> Schema.SchemaName -> Schema.LogicalModel
+      articleWithExcerptLogicalModel name schemaName =
+        (Schema.logicalModel name (articleQuery schemaName) "article_with_excerpt")
+          { Schema.logicalModelArguments =
               [ Schema.logicalModelColumn "length" Schema.TInt
               ]
           }
@@ -85,6 +90,8 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
           schemaName = Schema.getSchemaName testEnvironment
+
+      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackLogicalModel source (articleWithExcerptLogicalModel "article_with_excerpt" schemaName) testEnvironment
 
@@ -119,6 +126,8 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
           schemaName = Schema.getSchemaName testEnvironment
+
+      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackLogicalModel
         source
@@ -161,6 +170,8 @@ tests = do
           source = BackendType.backendSourceName backendTypeMetadata
           schemaName = Schema.getSchemaName testEnvironment
 
+      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
+
       Schema.trackLogicalModel source (articleWithExcerptLogicalModel "article_with_excerpt" schemaName) testEnvironment
 
       let actual :: IO Value
@@ -193,6 +204,8 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
           schemaName = Schema.getSchemaName testEnvironment
+
+      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackLogicalModel source (articleWithExcerptLogicalModel "article_with_excerpt" schemaName) testEnvironment
 
@@ -229,15 +242,21 @@ tests = do
 
           goodQuery = "EXEC sp_databases"
 
-          useStoredProcedure :: Schema.LogicalModel
-          useStoredProcedure =
-            (Schema.logicalModel "use_stored_procedure" goodQuery)
-              { Schema.logicalModelColumns =
+          storedProcedureReturnType :: Schema.CustomType
+          storedProcedureReturnType =
+            (Schema.customType "stored_procedure")
+              { Schema.customTypeColumns =
                   [ Schema.logicalModelColumn "database_name" Schema.TStr,
                     Schema.logicalModelColumn "database_size" Schema.TInt,
                     Schema.logicalModelColumn "remarks" Schema.TStr
                   ]
               }
+
+          useStoredProcedure :: Schema.LogicalModel
+          useStoredProcedure =
+            (Schema.logicalModel "use_stored_procedure" goodQuery "stored_procedure")
+
+      Schema.trackCustomType source storedProcedureReturnType testEnvironment
 
       Schema.trackLogicalModel source useStoredProcedure testEnvironment
 

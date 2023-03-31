@@ -113,21 +113,19 @@ logicalModelColumn name colType =
 
 data LogicalModel = LogicalModel
   { logicalModelName :: Text,
-    logicalModelColumns :: [LogicalModelColumn],
+    logicalModelReturnType :: Text,
     logicalModelQuery :: Text,
-    logicalModelArguments :: [LogicalModelColumn],
-    logicalModelReturnTypeDescription :: Maybe Text
+    logicalModelArguments :: [LogicalModelColumn]
   }
   deriving (Show, Eq)
 
-logicalModel :: Text -> Text -> LogicalModel
-logicalModel logicalModelName query =
+logicalModel :: Text -> Text -> Text -> LogicalModel
+logicalModel logicalModelName query returnType =
   LogicalModel
     { logicalModelName,
-      logicalModelColumns = mempty,
+      logicalModelReturnType = returnType,
       logicalModelQuery = query,
-      logicalModelArguments = mempty,
-      logicalModelReturnTypeDescription = Nothing
+      logicalModelArguments = mempty
     }
 
 -- | Foreign keys for backends that support it.

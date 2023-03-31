@@ -69,7 +69,7 @@ spec = do
   Fixture.hgeWithEnv [(featureFlagForLogicalModels, "True")] do
     -- do not need to run isolated
     traverse_
-      (Fixture.run fixtures)
+      (Fixture.runClean fixtures)
       [testAdminAccess, testPermissionFailures]
     -- need to run isolated
     traverse_
@@ -90,6 +90,16 @@ schema =
       }
   ]
 
+dividedStuffReturnType :: Schema.CustomType
+dividedStuffReturnType =
+  (Schema.customType "divided_stuff")
+    { Schema.customTypeColumns =
+        [ (Schema.logicalModelColumn "divided" Schema.TInt)
+            { Schema.logicalModelColumnDescription = Just "a divided thing"
+            }
+        ]
+    }
+
 testAdminAccess :: SpecWith TestEnvironment
 testAdminAccess = do
   let query :: Text
@@ -98,13 +108,8 @@ testAdminAccess = do
   describe "Admin access" do
     let dividedStuffLogicalModel :: Schema.LogicalModel
         dividedStuffLogicalModel =
-          (Schema.logicalModel "divided_stuff" query)
-            { Schema.logicalModelColumns =
-                [ (Schema.logicalModelColumn "divided" Schema.TInt)
-                    { Schema.logicalModelColumnDescription = Just "a divided thing"
-                    }
-                ],
-              Schema.logicalModelArguments =
+          (Schema.logicalModel "divided_stuff" query "divided_stuff")
+            { Schema.logicalModelArguments =
                 [ Schema.logicalModelColumn "denominator" Schema.TInt,
                   Schema.logicalModelColumn "target_date" Schema.TUTCTime
                 ]
@@ -114,6 +119,8 @@ testAdminAccess = do
       \testEnvironment -> do
         let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
             sourceName = BackendType.backendSourceName backendTypeMetadata
+
+        Schema.trackCustomType sourceName dividedStuffReturnType testEnvironment
 
         shouldReturnYaml
           testEnvironment
@@ -134,6 +141,8 @@ testAdminAccess = do
       \testEnvironment -> do
         let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
             sourceName = BackendType.backendSourceName backendTypeMetadata
+
+        Schema.trackCustomType sourceName dividedStuffReturnType testEnvironment
 
         shouldReturnYaml
           testEnvironment
@@ -185,7 +194,7 @@ testImplementation = do
   let simpleQuery :: Text
       simpleQuery = "SELECT thing / 2 AS divided FROM stuff"
 
-  let query :: Text
+      query :: Text
       query = "SELECT thing / {{denominator}} AS divided FROM stuff WHERE date = {{target_date}}"
 
   describe "Implementation" $ do
@@ -195,16 +204,12 @@ testImplementation = do
 
           dividedStuffLogicalModel :: Schema.LogicalModel
           dividedStuffLogicalModel =
-            (Schema.logicalModel "divided_stuff" simpleQuery)
-              { Schema.logicalModelColumns =
-                  [ (Schema.logicalModelColumn "divided" Schema.TInt)
-                      { Schema.logicalModelColumnDescription = Just "a divided thing"
-                      }
-                  ],
-                Schema.logicalModelArguments =
+            (Schema.logicalModel "divided_stuff" simpleQuery "divided_stuff")
+              { Schema.logicalModelArguments =
                   [Schema.logicalModelColumn "unused" Schema.TInt]
               }
 
+      Schema.trackCustomType sourceName dividedStuffReturnType testEnvironment
       Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 
     it "Adding a logical model of a function with broken SQL returns a 400" $ \testEnvironment -> do
@@ -214,13 +219,8 @@ testImplementation = do
 
           brokenQueryLogicalModel :: Schema.LogicalModel
           brokenQueryLogicalModel =
-            (Schema.logicalModel "divided_stuff" brokenQuery)
-              { Schema.logicalModelColumns =
-                  [ (Schema.logicalModelColumn "divided" Schema.TInt)
-                      { Schema.logicalModelColumnDescription = Just "a divided thing"
-                      }
-                  ],
-                Schema.logicalModelArguments =
+            (Schema.logicalModel "divided_stuff" brokenQuery "divided_stuff")
+              { Schema.logicalModelArguments =
                   [Schema.logicalModelColumn "unused" Schema.TInt]
               }
 
@@ -248,18 +248,14 @@ testImplementation = do
 
           dividedStuffLogicalModel :: Schema.LogicalModel
           dividedStuffLogicalModel =
-            (Schema.logicalModel rootfield query)
-              { Schema.logicalModelColumns =
-                  [ (Schema.logicalModelColumn "divided" Schema.TInt)
-                      { Schema.logicalModelColumnDescription = Just "a divided thing"
-                      }
-                  ],
-                Schema.logicalModelArguments =
+            (Schema.logicalModel rootfield query "divided_stuff")
+              { Schema.logicalModelArguments =
                   [ Schema.logicalModelColumn "denominator" Schema.TInt,
                     Schema.logicalModelColumn "target_date" Schema.TUTCTime
                   ]
               }
 
+      Schema.trackCustomType sourceName dividedStuffReturnType testEnvironment
       Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 
       shouldReturnYaml
@@ -282,12 +278,7 @@ testImplementation = do
               target_date:
                 type: #{scalarTypeToText testEnvironment Schema.TUTCTime}
                 nullable: false
-            returns:
-              columns:
-                  - name: divided
-                    type: #{scalarTypeToText testEnvironment Schema.TInt}
-                    nullable: false
-                    description: "a divided thing"
+            returns: divided_stuff
         |]
 
     it "Drops a logical model of a function and returns a 200" $ \testEnvironment -> do
@@ -296,20 +287,16 @@ testImplementation = do
 
           dividedStuffLogicalModel :: Schema.LogicalModel
           dividedStuffLogicalModel =
-            (Schema.logicalModel "divided_stuff" query)
-              { Schema.logicalModelColumns =
-                  [ (Schema.logicalModelColumn "divided" Schema.TInt)
-                      { Schema.logicalModelColumnDescription = Just "a divided thing"
-                      }
-                  ],
-                Schema.logicalModelArguments =
+            (Schema.logicalModel "divided_stuff" query "divided_stuff")
+              { Schema.logicalModelArguments =
                   [ Schema.logicalModelColumn "denominator" Schema.TInt,
                     Schema.logicalModelColumn "target_date" Schema.TUTCTime
                   ]
               }
 
-      Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
+      Schema.trackCustomType sourceName dividedStuffReturnType testEnvironment
 
+      Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
       Schema.untrackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 
     it "Checks the logical model of a function can be deleted" $ \testEnvironment -> do
@@ -320,18 +307,14 @@ testImplementation = do
 
           dividedStuffLogicalModel :: Schema.LogicalModel
           dividedStuffLogicalModel =
-            (Schema.logicalModel "divided_stuff" query)
-              { Schema.logicalModelColumns =
-                  [ (Schema.logicalModelColumn "divided" Schema.TInt)
-                      { Schema.logicalModelColumnDescription = Just "a divided thing"
-                      }
-                  ],
-                Schema.logicalModelArguments =
+            (Schema.logicalModel "divided_stuff" query "divided_stuff")
+              { Schema.logicalModelArguments =
                   [ Schema.logicalModelColumn "denominator" Schema.TInt,
                     Schema.logicalModelColumn "target_date" Schema.TUTCTime
                   ]
               }
 
+      Schema.trackCustomType sourceName dividedStuffReturnType testEnvironment
       Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 
       Schema.untrackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
@@ -350,6 +333,68 @@ testImplementation = do
           []
         |]
 
+    it "Fails to add a logical model with a non-existent return type" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+
+          dividedStuffLogicalModel :: Schema.LogicalModel
+          dividedStuffLogicalModel =
+            (Schema.logicalModel "divided_stuff" query "bad_return_type")
+              { Schema.logicalModelArguments =
+                  [ Schema.logicalModelColumn "denominator" Schema.TInt,
+                    Schema.logicalModelColumn "target_date" Schema.TUTCTime
+                  ]
+              }
+
+      shouldReturnYaml
+        testEnvironment
+        ( GraphqlEngine.postMetadataWithStatus 400 testEnvironment $
+            Schema.trackLogicalModelCommand sourceName backendTypeMetadata dividedStuffLogicalModel
+        )
+        [yaml|
+          code: not-found
+          error: Custom return type "bad_return_type" not found.
+          path: $.args
+        |]
+
+    it "Adds two logical models with the same return type" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+
+          logicalModelOne :: Schema.LogicalModel
+          logicalModelOne =
+            (Schema.logicalModel "first" query "divided_stuff")
+              { Schema.logicalModelArguments =
+                  [ Schema.logicalModelColumn "denominator" Schema.TInt,
+                    Schema.logicalModelColumn "target_date" Schema.TUTCTime
+                  ]
+              }
+
+          logicalModelTwo :: Schema.LogicalModel
+          logicalModelTwo =
+            (Schema.logicalModel "second" query "divided_stuff")
+              { Schema.logicalModelArguments =
+                  [ Schema.logicalModelColumn "denominator" Schema.TInt,
+                    Schema.logicalModelColumn "target_date" Schema.TUTCTime
+                  ]
+              }
+
+      Schema.trackCustomType sourceName dividedStuffReturnType testEnvironment
+
+      shouldReturnYaml
+        testEnvironment
+        ( GraphqlEngine.postMetadata testEnvironment $
+            Schema.trackLogicalModelCommand sourceName backendTypeMetadata logicalModelOne
+        )
+        [yaml| message: success |]
+
+      shouldReturnYaml
+        testEnvironment
+        ( GraphqlEngine.postMetadata testEnvironment $
+            Schema.trackLogicalModelCommand sourceName backendTypeMetadata logicalModelTwo
+        )
+        [yaml| message: success |]
+
 ----------------------
 -- Test permissions --
 ----------------------
@@ -362,13 +407,8 @@ testPermissions = do
   describe "Permissions" do
     let dividedStuffLogicalModel :: Schema.LogicalModel
         dividedStuffLogicalModel =
-          (Schema.logicalModel "divided_stuff" simpleQuery)
-            { Schema.logicalModelColumns =
-                [ (Schema.logicalModelColumn "divided" Schema.TInt)
-                    { Schema.logicalModelColumnDescription = Just "a divided thing"
-                    }
-                ],
-              Schema.logicalModelArguments =
+          (Schema.logicalModel "divided_stuff" simpleQuery "divided_stuff")
+            { Schema.logicalModelArguments =
                 [ Schema.logicalModelColumn "unused" Schema.TInt
                 ]
             }
@@ -380,6 +420,7 @@ testPermissions = do
           createPermRequestType = backendType <> "_create_logical_model_select_permission"
           getRequestType = backendType <> "_get_logical_model"
 
+      Schema.trackCustomType sourceName dividedStuffReturnType testEnvironment
       Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 
       shouldReturnYaml
@@ -427,12 +468,7 @@ testPermissions = do
                   columns:
                     - divided
                   filter: {}
-            returns:
-              columns:
-                - name: divided
-                  description: a divided thing
-                  nullable: false
-                  type: #{scalarTypeToText testEnvironment Schema.TInt}
+            returns: "divided_stuff"
         |]
 
     it "Adds a logical model, removes it, and returns 200" $ \testEnvironment -> do
@@ -446,6 +482,7 @@ testPermissions = do
           dropPermRequestType = backendType <> "_drop_logical_model_select_permission"
           getRequestType = backendType <> "_get_logical_model"
 
+      Schema.trackCustomType sourceName dividedStuffReturnType testEnvironment
       Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 
       shouldReturnYaml
@@ -493,12 +530,7 @@ testPermissions = do
               unused:
                 type: #{scalarTypeToText testEnvironment Schema.TInt}
                 nullable: false
-            returns:
-              columns:
-                - name: divided
-                  description: a divided thing
-                  nullable: false
-                  type: #{scalarTypeToText testEnvironment Schema.TInt}
+            returns: divided_stuff
         |]
 
 testPermissionFailures :: SpecWith TestEnvironment
@@ -634,6 +666,9 @@ metadataHandlingWhenDisabledSpec = do
       $ withPostgresSource "default"
       $ do
         it "`replace_metadata` does not report any inconsistent objects" $ \env -> do
+          let command = Schema.trackCustomTypeCommand "default" Postgres.backendTypeMetadata dividedStuffReturnType
+          _ <- hgePost env 200 "/v1/metadata" [] command
+
           currentMetadata <- export_metadata env
           actual <- replace_metadata env (metadataWithLogicalModel currentMetadata)
 
@@ -644,6 +679,9 @@ metadataHandlingWhenDisabledSpec = do
               |]
 
         it "They do appear in the schema" $ \env -> do
+          let command = Schema.trackCustomTypeCommand "default" Postgres.backendTypeMetadata dividedStuffReturnType
+          _ <- hgePost env 200 "/v1/metadata" [] command
+
           currentMetadata <- export_metadata env
           _res <- replace_metadata env (metadataWithLogicalModel currentMetadata)
 
@@ -660,26 +698,6 @@ metadataHandlingWhenDisabledSpec = do
   describe "When logical models are disabled" do
     withHge emptyHgeConfig $ do
       withPostgresSource "default" $ do
-        it "`replace_metadata` preserves logical models" $ \env -> do
-          currentMetadata <- export_metadata env
-          _ <- replace_metadata env (metadataWithLogicalModel currentMetadata)
-          actual <- export_metadata env
-          actual `shouldBeYaml` (metadataWithLogicalModel currentMetadata)
-
-        it "`replace_metadata` reports inconsistent objects" $ \env -> do
-          currentMetadata <- export_metadata env
-          actual <- replace_metadata env (metadataWithLogicalModel currentMetadata)
-
-          actual
-            `shouldBeYaml` [yaml|
-              inconsistent_objects:
-                - definition: *logicalModelsMetadata
-                  name: logical_model divided_stuff in source default
-                  reason: 'Inconsistent object: The Logical Models feature is disabled'
-                  type: logical_model
-              is_consistent: false
-            |]
-
         it "They do not appear in the schema" $ \env -> do
           currentMetadata <- export_metadata env
           _res <- replace_metadata env (metadataWithLogicalModel currentMetadata)
@@ -700,12 +718,7 @@ metadataHandlingWhenDisabledSpec = do
               nullable: false
               type: int
           code: SELECT {{divided}} as divided
-          returns:
-            columns:
-              - name: divided
-                description: a divided thing
-                nullable: false
-                type: integer
+          returns: "divided_stuff"
           root_field_name: divided_stuff
       |]
 

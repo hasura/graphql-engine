@@ -16,7 +16,7 @@ where
 
 import Control.Lens (makeLenses)
 import Data.Aeson (ToJSON (toJSON), genericToJSON)
-import Hasura.CustomReturnType (CustomReturnType)
+import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo)
 import Hasura.LogicalModel.Metadata (InterpolatedQuery, LogicalModelArgumentName, LogicalModelName)
 import Hasura.LogicalModel.Types (NullableScalarType)
 import Hasura.Prelude
@@ -31,7 +31,7 @@ type LogicalModelCache b = HashMap LogicalModelName (LogicalModelInfo b)
 data LogicalModelInfo (b :: BackendType) = LogicalModelInfo
   { _lmiRootFieldName :: LogicalModelName,
     _lmiCode :: InterpolatedQuery LogicalModelArgumentName,
-    _lmiReturns :: CustomReturnType b,
+    _lmiReturns :: CustomReturnTypeInfo b,
     _lmiArguments :: HashMap LogicalModelArgumentName (NullableScalarType b),
     _lmiPermissions :: RolePermInfoMap b,
     _lmiDescription :: Maybe Text

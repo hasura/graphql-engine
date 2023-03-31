@@ -735,45 +735,6 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
             let CheckFeatureFlag checkFeatureFlag = _sccCheckFeatureFlag serverConfigCtx
             liftIO @m $ checkFeatureFlag FF.logicalModelInterface
 
-      let mkLogicalModelMetadataObject :: LogicalModelMetadata b -> MetadataObject
-          mkLogicalModelMetadataObject lmm =
-            ( MetadataObject
-                ( MOSourceObjId sourceName $
-                    AB.mkAnyBackend $
-                      SMOLogicalModel @b (_lmmRootFieldName lmm)
-                )
-                (toJSON lmm)
-            )
-
-      logicalModelCacheMaybes <-
-        interpretWriter
-          -< for
-            (OMap.elems logicalModels)
-            \lmm@LogicalModelMetadata {..} ->
-              withRecordInconsistencyM (mkLogicalModelMetadataObject lmm) $ do
-                unless areLogicalModelsEnabled $
-                  throw400 InvalidConfiguration "The Logical Models feature is disabled"
-
-                fieldInfoMap <- case toFieldInfo _lmmReturns of
-                  Nothing -> pure mempty
-                  Just fields -> pure (mapFromL fieldInfoName fields)
-
-                logicalModelPermissions <-
-                  buildLogicalModelPermissions sourceName tableCoreInfos _lmmRootFieldName fieldInfoMap _lmmSelectPermissions orderedRoles
-
-                pure
-                  LogicalModelInfo
-                    { _lmiRootFieldName = _lmmRootFieldName,
-                      _lmiCode = _lmmCode,
-                      _lmiReturns = _lmmReturns,
-                      _lmiArguments = _lmmArguments,
-                      _lmiPermissions = logicalModelPermissions,
-                      _lmiDescription = _lmmDescription
-                    }
-
-      let logicalModelCache :: LogicalModelCache b
-          logicalModelCache = mapFromL _lmiRootFieldName (catMaybes logicalModelCacheMaybes)
-
       let mkCustomReturnTypeMetadataObject :: CustomReturnTypeMetadata b -> MetadataObject
           mkCustomReturnTypeMetadataObject ctm =
             ( MetadataObject
@@ -803,6 +764,50 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
 
       let customReturnTypesCache :: CustomReturnTypeCache b
           customReturnTypesCache = mapFromL _ctiName (catMaybes customReturnTypeCacheMaybes)
+
+      let mkLogicalModelMetadataObject :: LogicalModelMetadata b -> MetadataObject
+          mkLogicalModelMetadataObject lmm =
+            ( MetadataObject
+                ( MOSourceObjId sourceName $
+                    AB.mkAnyBackend $
+                      SMOLogicalModel @b (_lmmRootFieldName lmm)
+                )
+                (toJSON lmm)
+            )
+
+      logicalModelCacheMaybes <-
+        interpretWriter
+          -< for
+            (OMap.elems logicalModels)
+            \lmm@LogicalModelMetadata {..} ->
+              withRecordInconsistencyM (mkLogicalModelMetadataObject lmm) $ do
+                unless areLogicalModelsEnabled $
+                  throw400 InvalidConfiguration "The Logical Models feature is disabled"
+
+                customReturnType <-
+                  onNothing
+                    (M.lookup _lmmReturns customReturnTypesCache)
+                    (throw400 InvalidConfiguration ("The custom return type " <> toTxt _lmmReturns <> " could not be found"))
+
+                fieldInfoMap <- case toFieldInfo customReturnType of
+                  Nothing -> pure mempty
+                  Just fields -> pure (mapFromL fieldInfoName fields)
+
+                logicalModelPermissions <-
+                  buildLogicalModelPermissions sourceName tableCoreInfos _lmmRootFieldName fieldInfoMap _lmmSelectPermissions orderedRoles
+
+                pure
+                  LogicalModelInfo
+                    { _lmiRootFieldName = _lmmRootFieldName,
+                      _lmiCode = _lmmCode,
+                      _lmiReturns = customReturnType,
+                      _lmiArguments = _lmmArguments,
+                      _lmiPermissions = logicalModelPermissions,
+                      _lmiDescription = _lmmDescription
+                    }
+
+      let logicalModelCache :: LogicalModelCache b
+          logicalModelCache = mapFromL _lmiRootFieldName (catMaybes logicalModelCacheMaybes)
 
       returnA -< SourceInfo sourceName tableCache functionCache logicalModelCache customReturnTypesCache sourceConfig queryTagsConfig resolvedCustomization
 

@@ -47,7 +47,7 @@ import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
-import Hasura.CustomReturnType (CustomReturnType (..))
+import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo (..))
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
@@ -529,11 +529,11 @@ defaultLogicalModelSelectionSet name logicalModelInfo = runMaybeT $ do
   let allowedColumns =
         filter
           (isSelectable . fst)
-          (InsOrd.toList (crtColumns (_lmiReturns logicalModelInfo)))
+          (InsOrd.toList (_ctiFields (_lmiReturns logicalModelInfo)))
 
   parsers <- traverse parseField allowedColumns
 
-  let description = G.Description <$> crtDescription (_lmiReturns logicalModelInfo)
+  let description = G.Description <$> _ctiDescription (_lmiReturns logicalModelInfo)
 
       -- We entirely ignore Relay for now.
       implementsInterfaces = mempty
@@ -701,7 +701,7 @@ logicalModelWhereArg ::
     AggregationPredicatesSchema b
   ) =>
   G.Name ->
-  CustomReturnType b ->
+  CustomReturnTypeInfo b ->
   SchemaT r m (InputFieldsParser n (Maybe (IR.AnnBoolExp b (IR.UnpreparedValue b))))
 logicalModelWhereArg name customReturnType = do
   boolExpParser <- customTypeBoolExp name customReturnType
@@ -720,7 +720,7 @@ logicalModelOrderByArg ::
   ( MonadBuildSchema b r m n
   ) =>
   G.Name ->
-  CustomReturnType b ->
+  CustomReturnTypeInfo b ->
   SchemaT r m (InputFieldsParser n (Maybe (NonEmpty (IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)))))
 logicalModelOrderByArg name customReturnType = do
   tCase <- retrieve $ _rscNamingConvention . _siCustomization @b
@@ -742,17 +742,17 @@ logicalModelDistinctArg ::
   ( MonadBuildSchema b r m n
   ) =>
   G.Name ->
-  CustomReturnType b ->
+  CustomReturnTypeInfo b ->
   SchemaT r m (InputFieldsParser n (Maybe (NonEmpty (Column b))))
 logicalModelDistinctArg name customReturnType = do
   tCase <- retrieve $ _rscNamingConvention . _siCustomization @b
 
   let maybeColumnDefinitions =
-        traverse definitionFromTypeRow (InsOrd.keys (crtColumns customReturnType))
+        traverse definitionFromTypeRow (InsOrd.keys (_ctiFields customReturnType))
           >>= NE.nonEmpty
 
   case (,) <$> G.mkName "_enum_name" <*> maybeColumnDefinitions of
-    Nothing -> throw500 $ "Error creating an enum name for custom type " <> tshow customReturnType
+    Nothing -> throw500 $ "Error creating an enum name for custom type " <> tshow (_ctiName customReturnType)
     Just (enum', columnDefinitions) -> do
       let enumName = name <> enum'
           description = Nothing
@@ -1216,7 +1216,7 @@ defaultLogicalModelArgs ::
     AggregationPredicatesSchema b
   ) =>
   G.Name ->
-  CustomReturnType b ->
+  CustomReturnTypeInfo b ->
   SchemaT r m (InputFieldsParser n (SelectArgs b))
 defaultLogicalModelArgs name customReturnType = do
   whereParser <- logicalModelWhereArg name customReturnType

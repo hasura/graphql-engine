@@ -45,7 +45,8 @@ instance BackendAPI ('Postgres 'Citus) where
         relationshipCommands @('Postgres 'Citus),
         remoteRelationshipCommands @('Postgres 'Citus),
         connectionTemplateCommands @('Postgres 'Citus),
-        logicalModelsCommands @('Postgres 'Citus)
+        logicalModelsCommands @('Postgres 'Citus),
+        customReturnTypesCommands @('Postgres 'Citus)
       ]
 
 instance BackendAPI ('Postgres 'Cockroach) where
@@ -63,5 +64,6 @@ instance BackendAPI ('Postgres 'Cockroach) where
             )
         ],
         connectionTemplateCommands @('Postgres 'Cockroach),
-        logicalModelsCommands @('Postgres 'Cockroach)
+        logicalModelsCommands @('Postgres 'Cockroach),
+        customReturnTypesCommands @('Postgres 'Cockroach)
       ]

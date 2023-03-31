@@ -88,25 +88,35 @@ tests = do
                       |]
 
   describe "Testing Logical Models" $ do
+    let articleWithExcerptReturnType :: Schema.CustomType
+        articleWithExcerptReturnType =
+          (Schema.customType "article_with_excerpt")
+            { Schema.customTypeColumns =
+                [ Schema.logicalModelColumn "id" Schema.TInt,
+                  Schema.logicalModelColumn "title" Schema.TStr,
+                  Schema.logicalModelColumn "excerpt" Schema.TStr,
+                  Schema.logicalModelColumn "date" Schema.TUTCTime
+                ]
+            }
+
+        mkArticleWithExcerptLogicalModel :: Text -> Schema.LogicalModel
+        mkArticleWithExcerptLogicalModel name =
+          (Schema.logicalModel name articleQuery "article_with_excerpt")
+            { Schema.logicalModelArguments =
+                [ Schema.logicalModelColumn "length" Schema.TInt
+                ]
+            }
+
     it "Runs a simple query that takes one parameter and uses it multiple times" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-          articleWithExcerptLogicalModel :: Schema.LogicalModel
-          articleWithExcerptLogicalModel =
-            (Schema.logicalModel "article_with_excerpt" articleQuery)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "id" Schema.TInt,
-                    Schema.logicalModelColumn "title" Schema.TStr,
-                    Schema.logicalModelColumn "excerpt" Schema.TStr,
-                    Schema.logicalModelColumn "date" Schema.TUTCTime
-                  ],
-                Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "length" Schema.TInt
-                  ]
-              }
+      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
 
-      Schema.trackLogicalModel source articleWithExcerptLogicalModel testEnvironment
+      Schema.trackLogicalModel
+        source
+        (mkArticleWithExcerptLogicalModel "article_with_excerpt")
+        testEnvironment
 
       let actual :: IO Value
           actual =
@@ -139,19 +149,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-          mkArticleWithExcerptLogicalModel :: Text -> Schema.LogicalModel
-          mkArticleWithExcerptLogicalModel name =
-            (Schema.logicalModel name articleQuery)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "id" Schema.TInt,
-                    Schema.logicalModelColumn "title" Schema.TStr,
-                    Schema.logicalModelColumn "excerpt" Schema.TStr,
-                    Schema.logicalModelColumn "date" Schema.TUTCTime
-                  ],
-                Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "length" Schema.TInt
-                  ]
-              }
+      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackLogicalModel
         source
@@ -193,21 +191,12 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-          articleWithExcerptLogicalModel :: Schema.LogicalModel
-          articleWithExcerptLogicalModel =
-            (Schema.logicalModel "article_with_excerpt" articleQuery)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "id" Schema.TInt,
-                    Schema.logicalModelColumn "title" Schema.TStr,
-                    Schema.logicalModelColumn "excerpt" Schema.TStr,
-                    Schema.logicalModelColumn "date" Schema.TUTCTime
-                  ],
-                Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "length" Schema.TInt
-                  ]
-              }
+      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
 
-      Schema.trackLogicalModel source articleWithExcerptLogicalModel testEnvironment
+      Schema.trackLogicalModel
+        source
+        (mkArticleWithExcerptLogicalModel "article_with_excerpt")
+        testEnvironment
 
       let actual :: IO Value
           actual =
@@ -239,21 +228,12 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-          articleWithExcerptLogicalModel :: Schema.LogicalModel
-          articleWithExcerptLogicalModel =
-            (Schema.logicalModel "article_with_excerpt" articleQuery)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "id" Schema.TInt,
-                    Schema.logicalModelColumn "title" Schema.TStr,
-                    Schema.logicalModelColumn "excerpt" Schema.TStr,
-                    Schema.logicalModelColumn "date" Schema.TUTCTime
-                  ],
-                Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "length" Schema.TInt
-                  ]
-              }
+      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
 
-      Schema.trackLogicalModel source articleWithExcerptLogicalModel testEnvironment
+      Schema.trackLogicalModel
+        source
+        (mkArticleWithExcerptLogicalModel "article_with_excerpt")
+        testEnvironment
 
       let variables =
             [yaml|
@@ -289,14 +269,20 @@ tests = do
           queryWithDuplicates :: Text
           queryWithDuplicates = "SELECT * FROM (VALUES ('hello', 'world'), ('hello', 'friend')) as t(\"one\", \"two\")"
 
-          helloWorldLogicalModelWithDuplicates :: Schema.LogicalModel
-          helloWorldLogicalModelWithDuplicates =
-            (Schema.logicalModel "hello_world_function" queryWithDuplicates)
-              { Schema.logicalModelColumns =
+          helloWorldReturnType :: Schema.CustomType
+          helloWorldReturnType =
+            (Schema.customType "hello_world_function")
+              { Schema.customTypeColumns =
                   [ Schema.logicalModelColumn "one" Schema.TStr,
                     Schema.logicalModelColumn "two" Schema.TStr
                   ]
               }
+
+          helloWorldLogicalModelWithDuplicates :: Schema.LogicalModel
+          helloWorldLogicalModelWithDuplicates =
+            (Schema.logicalModel "hello_world_function" queryWithDuplicates "hello_world_function")
+
+      Schema.trackCustomType source helloWorldReturnType testEnvironment
 
       Schema.trackLogicalModel source helloWorldLogicalModelWithDuplicates testEnvironment
 

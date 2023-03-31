@@ -8,6 +8,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Environment qualified as Env
 import Hasura.Base.Error
+import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata)
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
@@ -191,9 +192,10 @@ class
     (MonadIO m, MonadError QErr m) =>
     Env.Environment ->
     SourceConnConfiguration b ->
+    CustomReturnTypeMetadata b ->
     LogicalModelMetadata b ->
     m ()
-  validateLogicalModel _ _ _ =
+  validateLogicalModel _ _ _ _ =
     throw500 "validateLogicalModel: not implemented for this backend."
 
   -- | Allows the backend to control whether or not a particular source supports being

@@ -5,7 +5,7 @@ where
 
 import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.Text.Extended (ToTxt (toTxt))
-import Hasura.CustomReturnType (CustomReturnType (..))
+import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo (..))
 import Hasura.LogicalModel.Types (NullableScalarType (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend (..))
@@ -13,11 +13,11 @@ import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnTy
 import Hasura.RQL.Types.Table (FieldInfo (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 
-toFieldInfo :: forall b. (Backend b) => CustomReturnType b -> Maybe [FieldInfo b]
+toFieldInfo :: forall b. (Backend b) => CustomReturnTypeInfo b -> Maybe [FieldInfo b]
 toFieldInfo customReturnType =
   traverseWithIndex
     (\i -> fmap FIColumn . customTypeToColumnInfo i)
-    (InsOrd.toList (crtColumns customReturnType))
+    (InsOrd.toList (_ctiFields customReturnType))
   where
     traverseWithIndex :: (Applicative m) => (Int -> aa -> m bb) -> [aa] -> m [bb]
     traverseWithIndex f = zipWithM f [0 ..]

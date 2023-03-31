@@ -30,7 +30,7 @@ import Data.Aeson qualified as Aeson
 import Data.Bifunctor (first)
 import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec)
 import Data.Text qualified as T
-import Hasura.CustomReturnType (CustomReturnType)
+import Hasura.CustomReturnType.Metadata (CustomReturnTypeName)
 import Hasura.LogicalModel.Types (LogicalModelName (..), NullableScalarType)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude hiding (first)
@@ -128,7 +128,7 @@ instance NFData LogicalModelArgumentName
 data LogicalModelMetadata (b :: BackendType) = LogicalModelMetadata
   { _lmmRootFieldName :: LogicalModelName,
     _lmmCode :: InterpolatedQuery LogicalModelArgumentName,
-    _lmmReturns :: CustomReturnType b,
+    _lmmReturns :: CustomReturnTypeName,
     _lmmArguments :: HashMap LogicalModelArgumentName (NullableScalarType b),
     _lmmSelectPermissions :: InsOrdHashMap RoleName (SelPermDef b),
     _lmmDescription :: Maybe Text

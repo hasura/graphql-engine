@@ -12,7 +12,7 @@ import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.CustomReturnType (CustomReturnType)
+import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo)
 import Hasura.CustomReturnType.Common (toFieldInfo)
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
@@ -70,7 +70,7 @@ customTypeOrderByExp ::
   ( MonadBuildSchema b r m n
   ) =>
   G.Name ->
-  CustomReturnType b ->
+  CustomReturnTypeInfo b ->
   SchemaT r m (Parser 'Input n [IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)])
 customTypeOrderByExp name customReturnType =
   case toFieldInfo customReturnType of

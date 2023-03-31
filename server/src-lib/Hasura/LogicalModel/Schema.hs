@@ -6,6 +6,7 @@ module Hasura.LogicalModel.Schema (defaultBuildLogicalModelRootFields) where
 import Data.Has (Has (getter))
 import Data.HashMap.Strict qualified as HM
 import Data.Monoid (Ap (Ap, getAp))
+import Hasura.CustomReturnType.Schema
 import Hasura.GraphQL.Schema.Backend
   ( BackendCustomTypeSelectSchema (..),
     BackendSchema (columnParser),
@@ -101,6 +102,8 @@ defaultBuildLogicalModelRootFields logicalModel@LogicalModelInfo {..} = runMaybe
             }
         Nothing -> IR.TablePerm gBoolExpTrue Nothing
 
+  let customReturnTypeIR = buildCustomReturnType _lmiReturns
+
   pure $
     P.setFieldParserOrigin (MO.MOSourceObjId sourceName (mkAnyBackend $ MO.SMOLogicalModel @b _lmiRootFieldName)) $
       P.subselection
@@ -121,7 +124,7 @@ defaultBuildLogicalModelRootFields logicalModel@LogicalModelInfo {..} = runMaybe
                       { lmRootFieldName = _lmiRootFieldName,
                         lmArgs,
                         lmInterpolatedQuery = interpolatedQuery lmArgs,
-                        lmReturnType = _lmiReturns
+                        lmReturnType = customReturnTypeIR
                       },
                 IR._asnPerm =
                   if roleName == adminRoleName

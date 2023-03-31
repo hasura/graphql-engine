@@ -15,5 +15,6 @@ instance BackendAPI 'BigQuery where
         relationshipCommands @'BigQuery,
         remoteRelationshipCommands @'BigQuery,
         computedFieldCommands @'BigQuery,
-        logicalModelsCommands @'BigQuery
+        logicalModelsCommands @'BigQuery,
+        customReturnTypesCommands @'BigQuery
       ]

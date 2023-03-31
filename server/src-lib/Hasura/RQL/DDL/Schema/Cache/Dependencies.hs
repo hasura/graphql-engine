@@ -14,7 +14,7 @@ import Data.List (nub)
 import Data.Monoid (First)
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.CustomReturnType (crtColumns)
+import Hasura.CustomReturnType.Cache (_ctiFields)
 import Hasura.LogicalModel.Cache (lmiPermissions, _lmiReturns)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal (permissionIsDefined)
@@ -179,7 +179,7 @@ pruneDanglingDependents cache =
                         <> " permission defined on logical model "
                         <> logicalModelName <<> " for role " <>> roleName
                 LMOCol column ->
-                  unless (InsOrd.member column (crtColumns (_lmiReturns logicalModel))) do
+                  unless (InsOrd.member column (_ctiFields (_lmiReturns logicalModel))) do
                     Left ("Could not find column " <> column <<> " in logical model " <>> logicalModelName)
             SOITableObj tableName tableObjectId -> do
               tableInfo <- resolveTable sourceInfo tableName

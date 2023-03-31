@@ -34,7 +34,7 @@ import Hasura.Backends.MSSQL.FromIr.Constants
 import Hasura.Backends.MSSQL.FromIr.Expression
 import Hasura.Backends.MSSQL.Instances.Types ()
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
-import Hasura.CustomReturnType (CustomReturnType (..))
+import Hasura.CustomReturnType.IR (CustomReturnType (..))
 import Hasura.LogicalModel.IR qualified as IR
 import Hasura.LogicalModel.Types (LogicalModelName (..), NullableScalarType (..))
 import Hasura.Prelude
@@ -347,7 +347,7 @@ fromLogicalModel logicalModel = do
                 type' = (nstType ty)
               }
         )
-          <$> InsOrd.toList (crtColumns logicalModelReturnType)
+          <$> InsOrd.toList (crtFields logicalModelReturnType)
 
   -- \| add create temp table to "the environment"
   tellBefore (CreateTemp (TempTableName rawTempTableName) columns)

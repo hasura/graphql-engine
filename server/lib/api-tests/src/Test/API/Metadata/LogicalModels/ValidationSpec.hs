@@ -20,7 +20,7 @@ featureFlagForLogicalModels = "HASURA_FF_LOGICAL_MODEL_INTERFACE"
 spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.hgeWithEnv [(featureFlagForLogicalModels, "True")] do
-    Fixture.run
+    Fixture.runClean
       ( NE.fromList
           [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
               { Fixture.setupTeardown = \(testEnv, _) ->
@@ -60,6 +60,23 @@ tests = do
   let simpleQuery :: Text
       simpleQuery = "SELECT thing / 2 AS divided FROM stuff"
 
+      conflictingReturnType :: Schema.CustomType
+      conflictingReturnType =
+        (Schema.customType "conflicting")
+          { Schema.customTypeColumns =
+              [ Schema.logicalModelColumn "thing" Schema.TInt,
+                Schema.logicalModelColumn "date" Schema.TUTCTime
+              ]
+          }
+
+      dividedReturnType :: Schema.CustomType
+      dividedReturnType =
+        (Schema.customType "divided_stuff")
+          { Schema.customTypeColumns =
+              [ Schema.logicalModelColumn "divided" Schema.TInt
+              ]
+          }
+
   describe "Validation fails on untrack a logical model" do
     it "when a logical model does not exist" $
       \testEnvironment -> do
@@ -67,7 +84,7 @@ tests = do
             sourceName = BackendType.backendSourceName backendTypeMetadata
 
             nonExistentLogicalModel :: Schema.LogicalModel
-            nonExistentLogicalModel = Schema.logicalModel "some_logical_model" ""
+            nonExistentLogicalModel = Schema.logicalModel "some_logical_model" "" ""
 
             expectedError = "Logical model \"some_logical_model\" not found in source \"" <> sourceName <> "\"."
 
@@ -102,17 +119,14 @@ tests = do
 
             syntaxErrorLogicalModel :: Schema.LogicalModel
             syntaxErrorLogicalModel =
-              (Schema.logicalModel "divided_stuff" spicyQuery)
-                { Schema.logicalModelColumns =
-                    [ (Schema.logicalModelColumn "divided" Schema.TInt)
-                        { Schema.logicalModelColumnDescription = Just "A divided thing"
-                        }
-                    ],
-                  Schema.logicalModelArguments =
+              (Schema.logicalModel "divided_stuff" spicyQuery "divided_stuff")
+                { Schema.logicalModelArguments =
                     [ Schema.logicalModelColumn "denominator" Schema.TInt,
                       Schema.logicalModelColumn "target_date" Schema.TUTCTime
                     ]
                 }
+
+        Schema.trackCustomType sourceName dividedReturnType testEnvironment
 
         actual <-
           GraphqlEngine.postMetadataWithStatus
@@ -132,13 +146,8 @@ tests = do
 
             brokenLogicalModel :: Schema.LogicalModel
             brokenLogicalModel =
-              (Schema.logicalModel "divided_stuff" spicyQuery)
-                { Schema.logicalModelColumns =
-                    [ (Schema.logicalModelColumn "divided" Schema.TInt)
-                        { Schema.logicalModelColumnDescription = Just "A divided thing"
-                        }
-                    ],
-                  Schema.logicalModelArguments =
+              (Schema.logicalModel "divided_stuff" spicyQuery "divided_stuff")
+                { Schema.logicalModelArguments =
                     [ Schema.logicalModelColumn "denominator" Schema.TInt,
                       Schema.logicalModelColumn "target_date" Schema.TUTCTime
                     ]
@@ -153,6 +162,8 @@ tests = do
                       message: "relation \"does_not_exist\" does not exist"
                       status_code: "42P01"
               |]
+
+        Schema.trackCustomType sourceName dividedReturnType testEnvironment
 
         actual <-
           GraphqlEngine.postMetadataWithStatus
@@ -173,18 +184,16 @@ tests = do
 
             conflictingLogicalModel :: Schema.LogicalModel
             conflictingLogicalModel =
-              (Schema.logicalModel (Schema.unSchemaName schemaName <> "_stuff") spicyQuery)
-                { Schema.logicalModelColumns =
-                    [ Schema.logicalModelColumn "thing" Schema.TInt,
-                      Schema.logicalModelColumn "date" Schema.TUTCTime
-                    ],
-                  Schema.logicalModelArguments =
+              (Schema.logicalModel (Schema.unSchemaName schemaName <> "_stuff") spicyQuery "conflicting")
+                { Schema.logicalModelArguments =
                     [ Schema.logicalModelColumn "denominator" Schema.TInt,
                       Schema.logicalModelColumn "target_date" Schema.TUTCTime
                     ]
                 }
 
             expectedError = "Encountered conflicting definitions in the selection set for 'subscription_root' for field 'hasura_stuff' defined in [table hasura.stuff in source " <> sourceName <> ", logical_model hasura_stuff in source " <> sourceName <> "]. Fields must not be defined more than once across all sources."
+
+        Schema.trackCustomType sourceName conflictingReturnType testEnv
 
         shouldReturnYaml
           testEnv
@@ -210,16 +219,14 @@ tests = do
 
             conflictingLogicalModel :: Schema.LogicalModel
             conflictingLogicalModel =
-              (Schema.logicalModel (Schema.unSchemaName schemaName <> "_stuff_exist") spicyQuery)
-                { Schema.logicalModelColumns =
-                    [ Schema.logicalModelColumn "thing" Schema.TInt,
-                      Schema.logicalModelColumn "date" Schema.TUTCTime
-                    ],
-                  Schema.logicalModelArguments =
+              (Schema.logicalModel (Schema.unSchemaName schemaName <> "_stuff_exist") spicyQuery "conflicting")
+                { Schema.logicalModelArguments =
                     [ Schema.logicalModelColumn "denominator" Schema.TInt,
                       Schema.logicalModelColumn "target_date" Schema.TUTCTime
                     ]
                 }
+
+        Schema.trackCustomType source conflictingReturnType testEnv
 
         shouldReturnYaml
           testEnv
@@ -253,11 +260,8 @@ tests = do
 
             brokenTypesLogicalModel :: Schema.LogicalModel
             brokenTypesLogicalModel =
-              (Schema.logicalModel "divided_falling" query)
-                { Schema.logicalModelColumns =
-                    [ Schema.logicalModelColumn "divided" Schema.TInt
-                    ],
-                  Schema.logicalModelArguments =
+              (Schema.logicalModel "divided_falling" query "divided_stuff")
+                { Schema.logicalModelArguments =
                     [ Schema.logicalModelColumn "denominator" Schema.TStr
                     ]
                 }
@@ -267,6 +271,8 @@ tests = do
                   code: validation-failed
                   error: Failed to validate query
                 |]
+
+        Schema.trackCustomType sourceName dividedReturnType testEnvironment
 
         actual <-
           GraphqlEngine.postMetadataWithStatus
@@ -292,16 +298,23 @@ tests = do
 
             query = "SELECT {{text}} AS not_text"
 
-            brokenColumnsLogicalModel :: Schema.LogicalModel
-            brokenColumnsLogicalModel =
-              (Schema.logicalModel "text_failing" query)
-                { Schema.logicalModelColumns =
-                    [ Schema.logicalModelColumn "text" Schema.TStr
-                    ],
-                  Schema.logicalModelArguments =
+            brokenColumnsReturn :: Schema.CustomType
+            brokenColumnsReturn =
+              (Schema.customType "failing")
+                { Schema.customTypeColumns =
                     [ Schema.logicalModelColumn "text" Schema.TStr
                     ]
                 }
+
+            brokenColumnsLogicalModel :: Schema.LogicalModel
+            brokenColumnsLogicalModel =
+              (Schema.logicalModel "text_failing" query "failing")
+                { Schema.logicalModelArguments =
+                    [ Schema.logicalModelColumn "text" Schema.TStr
+                    ]
+                }
+
+        Schema.trackCustomType sourceName brokenColumnsReturn testEnvironment
 
         actual <-
           GraphqlEngine.postMetadataWithStatus
@@ -320,13 +333,9 @@ tests = do
 
             missingArgsLogicalModel :: Schema.LogicalModel
             missingArgsLogicalModel =
-              (Schema.logicalModel "divided_falling" query)
-                { Schema.logicalModelColumns =
-                    [ Schema.logicalModelColumn "divided" Schema.TInt
-                    ],
-                  Schema.logicalModelArguments =
-                    []
-                }
+              (Schema.logicalModel "divided_falling" query "divided_stuff")
+
+        Schema.trackCustomType sourceName dividedReturnType testEnvironment
 
         shouldReturnYaml
           testEnvironment
@@ -349,15 +358,14 @@ tests = do
 
             dividedStuffLogicalModel :: Schema.LogicalModel
             dividedStuffLogicalModel =
-              (Schema.logicalModel "divided_stuff2" simpleQuery)
-                { Schema.logicalModelColumns =
-                    [ Schema.logicalModelColumn "divided" Schema.TInt
-                    ],
-                  Schema.logicalModelArguments =
+              (Schema.logicalModel "divided_stuff2" simpleQuery "divided_stuff")
+                { Schema.logicalModelArguments =
                     [ Schema.logicalModelColumn "denominator" Schema.TInt,
                       Schema.logicalModelColumn "target_date" Schema.TUTCTime
                     ]
                 }
+
+        Schema.trackCustomType sourceName dividedReturnType testEnvironment
 
         Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
 

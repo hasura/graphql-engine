@@ -97,6 +97,10 @@ instance Has Services.PostgresServerUrl TestEnvironment where
   getter = getter . getter @GlobalTestEnvironment
   modifier f = modifier (modifier @_ @GlobalTestEnvironment f)
 
+instance Has PassthroughEnvVars TestEnvironment where
+  getter = getter . getter @GlobalTestEnvironment
+  modifier f = modifier (modifier @_ @GlobalTestEnvironment f)
+
 instance Show TestEnvironment where
   show TestEnvironment {globalEnvironment} =
     "<TestEnvironment: " ++ urlPrefix (server globalEnvironment) ++ ":" ++ show (port (server globalEnvironment)) ++ " >"

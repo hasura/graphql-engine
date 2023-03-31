@@ -662,26 +662,6 @@
                 ],
                 "type": "object"
             },
-            "BigqueryCustomReturnType": {
-                "description": "A return type for a logical model.",
-                "properties": {
-                    "columns": {
-                        "description": "Return types for the logical model",
-                        "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
-                        },
-                        "type": "array"
-                    },
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "columns"
-                ],
-                "type": "object"
-            },
             "BigqueryCustomReturnTypeMetadata": {
                 "description": "A return type.",
                 "properties": {
@@ -849,7 +829,8 @@
                         "type": "string"
                     },
                     "returns": {
-                        "$ref": "#/components/schemas/BigqueryCustomReturnType"
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
                     },
                     "root_field_name": {
                         "description": "Root field name for the logical model",
@@ -1417,26 +1398,6 @@
                 ],
                 "type": "object"
             },
-            "CitusCustomReturnType": {
-                "description": "A return type for a logical model.",
-                "properties": {
-                    "columns": {
-                        "description": "Return types for the logical model",
-                        "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
-                        },
-                        "type": "array"
-                    },
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "columns"
-                ],
-                "type": "object"
-            },
             "CitusCustomReturnTypeMetadata": {
                 "description": "A return type.",
                 "properties": {
@@ -1707,7 +1668,8 @@
                         "type": "string"
                     },
                     "returns": {
-                        "$ref": "#/components/schemas/CitusCustomReturnType"
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
                     },
                     "root_field_name": {
                         "description": "Root field name for the logical model",
@@ -2310,26 +2272,6 @@
                 ],
                 "type": "object"
             },
-            "CockroachCustomReturnType": {
-                "description": "A return type for a logical model.",
-                "properties": {
-                    "columns": {
-                        "description": "Return types for the logical model",
-                        "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
-                        },
-                        "type": "array"
-                    },
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "columns"
-                ],
-                "type": "object"
-            },
             "CockroachCustomReturnTypeMetadata": {
                 "description": "A return type.",
                 "properties": {
@@ -2600,7 +2542,8 @@
                         "type": "string"
                     },
                     "returns": {
-                        "$ref": "#/components/schemas/CockroachCustomReturnType"
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
                     },
                     "root_field_name": {
                         "description": "Root field name for the logical model",
@@ -3457,26 +3400,6 @@
                 ],
                 "type": "object"
             },
-            "DataconnectorCustomReturnType": {
-                "description": "A return type for a logical model.",
-                "properties": {
-                    "columns": {
-                        "description": "Return types for the logical model",
-                        "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
-                        },
-                        "type": "array"
-                    },
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "columns"
-                ],
-                "type": "object"
-            },
             "DataconnectorCustomReturnTypeMetadata": {
                 "description": "A return type.",
                 "properties": {
@@ -3648,7 +3571,8 @@
                         "type": "string"
                     },
                     "returns": {
-                        "$ref": "#/components/schemas/DataconnectorCustomReturnType"
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
                     },
                     "root_field_name": {
                         "description": "Root field name for the logical model",
@@ -4884,26 +4808,6 @@
                 ],
                 "type": "object"
             },
-            "MssqlCustomReturnType": {
-                "description": "A return type for a logical model.",
-                "properties": {
-                    "columns": {
-                        "description": "Return types for the logical model",
-                        "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
-                        },
-                        "type": "array"
-                    },
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "columns"
-                ],
-                "type": "object"
-            },
             "MssqlCustomReturnTypeMetadata": {
                 "description": "A return type.",
                 "properties": {
@@ -5166,7 +5070,8 @@
                         "type": "string"
                     },
                     "returns": {
-                        "$ref": "#/components/schemas/MssqlCustomReturnType"
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
                     },
                     "root_field_name": {
                         "description": "Root field name for the logical model",
@@ -5834,26 +5739,6 @@
                 ],
                 "type": "object"
             },
-            "MysqlCustomReturnType": {
-                "description": "A return type for a logical model.",
-                "properties": {
-                    "columns": {
-                        "description": "Return types for the logical model",
-                        "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
-                        },
-                        "type": "array"
-                    },
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "columns"
-                ],
-                "type": "object"
-            },
             "MysqlCustomReturnTypeMetadata": {
                 "description": "A return type.",
                 "properties": {
@@ -6022,7 +5907,8 @@
                         "type": "string"
                     },
                     "returns": {
-                        "$ref": "#/components/schemas/MysqlCustomReturnType"
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
                     },
                     "root_field_name": {
                         "description": "Root field name for the logical model",
@@ -6889,26 +6775,6 @@
                 ],
                 "type": "object"
             },
-            "PostgresCustomReturnType": {
-                "description": "A return type for a logical model.",
-                "properties": {
-                    "columns": {
-                        "description": "Return types for the logical model",
-                        "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
-                        },
-                        "type": "array"
-                    },
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "columns"
-                ],
-                "type": "object"
-            },
             "PostgresCustomReturnTypeMetadata": {
                 "description": "A return type.",
                 "properties": {
@@ -7179,7 +7045,8 @@
                         "type": "string"
                     },
                     "returns": {
-                        "$ref": "#/components/schemas/PostgresCustomReturnType"
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
                     },
                     "root_field_name": {
                         "description": "Root field name for the logical model",

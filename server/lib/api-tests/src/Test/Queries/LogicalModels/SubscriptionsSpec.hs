@@ -95,18 +95,25 @@ tests = do
                 from article
               |]
 
-            articleWithExcerptLogicalModel :: Schema.LogicalModel
-            articleWithExcerptLogicalModel =
-              (Schema.logicalModel "article_with_excerpt" spicyQuery)
-                { Schema.logicalModelColumns =
+            articleWithExcerptReturnType :: Schema.CustomType
+            articleWithExcerptReturnType =
+              (Schema.customType "article_with_excerpt")
+                { Schema.customTypeColumns =
                     [ Schema.logicalModelColumn "id" Schema.TInt,
                       Schema.logicalModelColumn "title" Schema.TStr,
                       Schema.logicalModelColumn "excerpt" Schema.TStr,
                       Schema.logicalModelColumn "date" Schema.TUTCTime
-                    ],
-                  Schema.logicalModelArguments =
+                    ]
+                }
+
+            articleWithExcerptLogicalModel :: Schema.LogicalModel
+            articleWithExcerptLogicalModel =
+              (Schema.logicalModel "article_with_excerpt" spicyQuery "article_with_excerpt")
+                { Schema.logicalModelArguments =
                     [Schema.logicalModelColumn "length" Schema.TInt]
                 }
+
+        Schema.trackCustomType sourceName articleWithExcerptReturnType testEnvironment
 
         Schema.trackLogicalModel sourceName articleWithExcerptLogicalModel testEnvironment
 

@@ -1,4 +1,4 @@
-{-# HLINT ignore "Use mkName" #-}
+{-# HLINT ignore "avoid Language.GraphQL.Draft.Syntax.unsafeMkName" #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
@@ -12,7 +12,7 @@ import Data.HashMap.Strict qualified as HM
 import Hasura.Backends.Postgres.Instances.LogicalModels
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Base.Error
-import Hasura.CustomReturnType
+import Hasura.CustomReturnType.Metadata
 import Hasura.LogicalModel.Metadata
 import Hasura.LogicalModel.Types
 import Hasura.Prelude hiding (first)
@@ -67,11 +67,19 @@ spec = do
       parseInterpolatedQuery rawSQL `shouldBe` Left "Found '{{' without a matching closing '}}'"
 
   describe "Validation" do
-    let lmm =
+    let crtm =
+          CustomReturnTypeMetadata
+            { _ctmName = CustomReturnTypeName (G.unsafeMkName "custom_return_type_name"),
+              _ctmFields = mempty,
+              _ctmDescription = Nothing,
+              _ctmSelectPermissions = mempty
+            }
+
+        lmm =
           LogicalModelMetadata
             { _lmmRootFieldName = LogicalModelName (G.unsafeMkName "root_field_name"),
               _lmmCode = InterpolatedQuery mempty,
-              _lmmReturns = CustomReturnType mempty mempty,
+              _lmmReturns = CustomReturnTypeName (G.unsafeMkName "custom_return_type_name"),
               _lmmArguments = mempty,
               _lmmSelectPermissions = mempty,
               _lmmDescription = mempty
@@ -79,7 +87,7 @@ spec = do
 
     it "Rejects undeclared variables" do
       let Right code = parseInterpolatedQuery "SELECT {{hey}}"
-      let actual :: Either QErr Text = runExcept $ logicalModelToPreparedStatement lmm {_lmmCode = code}
+      let actual :: Either QErr Text = runExcept $ logicalModelToPreparedStatement crtm lmm {_lmmCode = code}
 
       (first showQErr actual) `shouldSatisfy` isLeft
       let Left err = actual
@@ -90,6 +98,7 @@ spec = do
       let actual :: Either QErr Text =
             runExcept $
               logicalModelToPreparedStatement
+                crtm
                 lmm
                   { _lmmCode = code,
                     _lmmArguments =
@@ -108,6 +117,7 @@ spec = do
       let actual :: Either QErr Text =
             runExcept $
               logicalModelToPreparedStatement
+                crtm
                 lmm
                   { _lmmCode = code,
                     _lmmArguments =

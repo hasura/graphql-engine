@@ -74,19 +74,25 @@ tests = do
   let query :: Text
       query = "SELECT * FROM (VALUES ('hello', 'world'), ('welcome', 'friend')) as t(\"one\", \"two\")"
 
-      helloWorldLogicalModel :: Schema.LogicalModel
-      helloWorldLogicalModel =
-        (Schema.logicalModel "hello_world_function" query)
-          { Schema.logicalModelColumns =
+      helloWorldReturnType :: Schema.CustomType
+      helloWorldReturnType =
+        (Schema.customType "hello_world_function")
+          { Schema.customTypeColumns =
               [ Schema.logicalModelColumn "one" Schema.TStr,
                 Schema.logicalModelColumn "two" Schema.TStr
               ]
           }
 
+      helloWorldLogicalModel :: Schema.LogicalModel
+      helloWorldLogicalModel =
+        (Schema.logicalModel "hello_world_function" query "hello_world_function")
+
   describe "Testing Logical Models" $ do
     it "Explain works" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
+
+      Schema.trackCustomType sourceName helloWorldReturnType testEnvironment
 
       Schema.trackLogicalModel sourceName helloWorldLogicalModel testEnvironment
 
@@ -118,10 +124,10 @@ tests = do
 
           nullableQuery = "SELECT thing / 2 AS divided, null as something_nullable FROM stuff"
 
-          descriptionsAndNullableLogicalModel :: Schema.LogicalModel
-          descriptionsAndNullableLogicalModel =
-            (Schema.logicalModel "divided_stuff" nullableQuery)
-              { Schema.logicalModelColumns =
+          descriptionsAndNullableReturnType :: Schema.CustomType
+          descriptionsAndNullableReturnType =
+            (Schema.customType "divided_stuff")
+              { Schema.customTypeColumns =
                   [ (Schema.logicalModelColumn "divided" Schema.TInt)
                       { Schema.logicalModelColumnDescription = Just "A divided thing"
                       },
@@ -130,12 +136,18 @@ tests = do
                         Schema.logicalModelColumnNullable = True
                       }
                   ],
-                Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "unused" Schema.TInt
-                  ],
-                Schema.logicalModelReturnTypeDescription = Just "Return type description"
+                Schema.customTypeDescription = Just "Return type description"
               }
 
+          descriptionsAndNullableLogicalModel :: Schema.LogicalModel
+          descriptionsAndNullableLogicalModel =
+            (Schema.logicalModel "divided_stuff" nullableQuery "divided_stuff")
+              { Schema.logicalModelArguments =
+                  [ Schema.logicalModelColumn "unused" Schema.TInt
+                  ]
+              }
+
+      Schema.trackCustomType sourceName descriptionsAndNullableReturnType testEnvironment
       Schema.trackLogicalModel sourceName descriptionsAndNullableLogicalModel testEnvironment
 
       let queryTypesIntrospection :: Value
@@ -202,6 +214,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
+      Schema.trackCustomType source helloWorldReturnType testEnvironment
       Schema.trackLogicalModel source helloWorldLogicalModel testEnvironment
 
       let expected =
@@ -233,6 +246,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
+      Schema.trackCustomType source helloWorldReturnType testEnvironment
       Schema.trackLogicalModel source helloWorldLogicalModel testEnvironment
 
       let expected =
@@ -262,6 +276,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
 
+      Schema.trackCustomType sourceName helloWorldReturnType testEnvironment
       Schema.trackLogicalModel sourceName helloWorldLogicalModel testEnvironment
 
       let expected =
@@ -293,15 +308,13 @@ tests = do
 
           helloWorldLogicalModelWithDummyArgument :: Schema.LogicalModel
           helloWorldLogicalModelWithDummyArgument =
-            (Schema.logicalModel "hello_world_function_with_dummy" query)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "one" Schema.TStr,
-                    Schema.logicalModelColumn "two" Schema.TStr
-                  ],
-                Schema.logicalModelArguments =
+            (Schema.logicalModel "hello_world_function_with_dummy" query "hello_world_function")
+              { Schema.logicalModelArguments =
                   [ Schema.logicalModelColumn "dummy" Schema.TStr
                   ]
               }
+
+      Schema.trackCustomType source helloWorldReturnType testEnvironment
 
       Schema.trackLogicalModel source helloWorldLogicalModelWithDummyArgument testEnvironment
 
@@ -336,12 +349,9 @@ tests = do
 
           helloCommentLogicalModel :: Schema.LogicalModel
           helloCommentLogicalModel =
-            (Schema.logicalModel "hello_comment_function" spicyQuery)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "one" Schema.TStr,
-                    Schema.logicalModelColumn "two" Schema.TStr
-                  ]
-              }
+            (Schema.logicalModel "hello_comment_function" spicyQuery "hello_world_function")
+
+      Schema.trackCustomType source helloWorldReturnType testEnvironment
 
       Schema.trackLogicalModel source helloCommentLogicalModel testEnvironment
 
@@ -378,12 +388,9 @@ tests = do
 
           helloWorldPermLogicalModel :: Schema.LogicalModel
           helloWorldPermLogicalModel =
-            (Schema.logicalModel "hello_world_perms" query)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "one" Schema.TStr,
-                    Schema.logicalModelColumn "two" Schema.TStr
-                  ]
-              }
+            (Schema.logicalModel "hello_world_perms" query "hello_world_function")
+
+      Schema.trackCustomType source helloWorldReturnType testEnvironment
 
       Schema.trackLogicalModel source helloWorldPermLogicalModel testEnvironment
 
@@ -440,12 +447,9 @@ tests = do
 
           helloWorldPermLogicalModel :: Schema.LogicalModel
           helloWorldPermLogicalModel =
-            (Schema.logicalModel "hello_world_perms" query)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "one" Schema.TStr,
-                    Schema.logicalModelColumn "two" Schema.TStr
-                  ]
-              }
+            (Schema.logicalModel "hello_world_perms" query "hello_world_function")
+
+      Schema.trackCustomType source helloWorldReturnType testEnvironment
 
       Schema.trackLogicalModel source helloWorldPermLogicalModel testEnvironment
 
@@ -503,12 +507,9 @@ tests = do
 
           helloWorldPermLogicalModel :: Schema.LogicalModel
           helloWorldPermLogicalModel =
-            (Schema.logicalModel "hello_world_perms" query)
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelColumn "one" Schema.TStr,
-                    Schema.logicalModelColumn "two" Schema.TStr
-                  ]
-              }
+            (Schema.logicalModel "hello_world_perms" query "hello_world_function")
+
+      Schema.trackCustomType source helloWorldReturnType testEnvironment
 
       Schema.trackLogicalModel source helloWorldPermLogicalModel testEnvironment
 

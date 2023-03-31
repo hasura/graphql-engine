@@ -21,7 +21,7 @@ import Hasura.Backends.Postgres.Connection.Connect (withPostgresDB)
 import Hasura.Backends.Postgres.Instances.Types ()
 import Hasura.Backends.Postgres.SQL.Types (PGScalarType, pgScalarTypeToText)
 import Hasura.Base.Error
-import Hasura.CustomReturnType
+import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata (..))
 import Hasura.LogicalModel.Metadata
   ( InterpolatedItem (..),
     InterpolatedQuery (..),
@@ -38,10 +38,11 @@ validateLogicalModel ::
   (MonadIO m, MonadError QErr m) =>
   Env.Environment ->
   PG.PostgresConnConfiguration ->
+  CustomReturnTypeMetadata ('Postgres pgKind) ->
   LogicalModelMetadata ('Postgres pgKind) ->
   m ()
-validateLogicalModel env connConf model = do
-  preparedQuery <- logicalModelToPreparedStatement model
+validateLogicalModel env connConf customReturnType model = do
+  preparedQuery <- logicalModelToPreparedStatement customReturnType model
 
   -- We don't need to deallocate the prepared statement because 'withPostgresDB'
   -- opens a new connection, runs a statement, and then closes the connection.
@@ -139,9 +140,10 @@ renderIQ (InterpolatedQuery items) = foldMap printItem items
 logicalModelToPreparedStatement ::
   forall m pgKind.
   MonadError QErr m =>
+  CustomReturnTypeMetadata ('Postgres pgKind) ->
   LogicalModelMetadata ('Postgres pgKind) ->
   m Text
-logicalModelToPreparedStatement model = do
+logicalModelToPreparedStatement customReturnType model = do
   let name = getLogicalModelName $ _lmmRootFieldName model
   let (preparedIQ, argumentMapping) = renameIQ $ _lmmCode model
       logimoCode :: Text
@@ -162,7 +164,7 @@ logicalModelToPreparedStatement model = do
 
       returnedColumnNames :: Text
       returnedColumnNames =
-        commaSeparated $ InsOrd.keys (crtColumns (_lmmReturns model))
+        commaSeparated $ InsOrd.keys (_ctmFields customReturnType)
 
       wrapInCTE :: Text -> Text
       wrapInCTE query =

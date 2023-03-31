@@ -40,7 +40,7 @@ where
 
 import Data.Kind (Type)
 import Data.Text.Casing (GQLNameIdentifier)
-import Hasura.CustomReturnType (CustomReturnType)
+import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo)
 import Hasura.GraphQL.ApolloFederation (ApolloFederationParserFunction)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
@@ -306,7 +306,7 @@ class Backend b => BackendCustomTypeSelectSchema (b :: BackendType) where
   logicalModelArguments ::
     MonadBuildSourceSchema b r m n =>
     G.Name ->
-    CustomReturnType b ->
+    CustomReturnTypeInfo b ->
     SchemaT r m (InputFieldsParser n (IR.SelectArgsG b (UnpreparedValue b)))
 
   logicalModelSelectionSet ::

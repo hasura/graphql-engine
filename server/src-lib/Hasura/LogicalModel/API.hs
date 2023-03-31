@@ -25,7 +25,8 @@ import Data.Environment qualified as Env
 import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.Text.Extended (toTxt, (<<>))
 import Hasura.Base.Error
-import Hasura.CustomReturnType (CustomReturnType)
+import Hasura.CustomReturnType.API (getCustomTypes)
+import Hasura.CustomReturnType.Metadata (CustomReturnTypeName)
 import Hasura.EncJSON
 import Hasura.LogicalModel.Metadata (LogicalModelArgumentName, LogicalModelMetadata (..), lmmSelectPermissions, parseInterpolatedQuery)
 import Hasura.LogicalModel.Types (LogicalModelName, NullableScalarType)
@@ -51,7 +52,7 @@ data TrackLogicalModel (b :: BackendType) = TrackLogicalModel
     tlmCode :: Text,
     tlmArguments :: HashMap LogicalModelArgumentName (NullableScalarType b),
     tlmDescription :: Maybe Text,
-    tlmReturns :: CustomReturnType b
+    tlmReturns :: CustomReturnTypeName
   }
 
 instance (Backend b) => HasCodec (TrackLogicalModel b) where
@@ -94,6 +95,7 @@ deriving via
 logicalModelTrackToMetadata ::
   forall b m.
   ( BackendMetadata b,
+    MetadataM m,
     MonadIO m,
     MonadError QErr m
   ) =>
@@ -114,7 +116,13 @@ logicalModelTrackToMetadata env sourceConnConfig TrackLogicalModel {..} = do
             _lmmDescription = tlmDescription
           }
 
-  validateLogicalModel @b env sourceConnConfig logicalModelMetadata
+  metadata <- getMetadata
+
+  -- lookup custom return type in existing metadata
+  case metadata ^? getCustomTypes tlmSource . ix tlmReturns of
+    Just customReturnType ->
+      validateLogicalModel @b env sourceConnConfig customReturnType logicalModelMetadata
+    Nothing -> throw400 NotFound ("Custom return type " <> tlmReturns <<> " not found.")
 
   pure logicalModelMetadata
 
@@ -184,8 +192,7 @@ runTrackLogicalModel env trackLogicalModelRequest = do
   let sourceConnConfig = _smConfiguration sourceMetadata
 
   (metadata :: LogicalModelMetadata b) <- do
-    liftIO (runExceptT (logicalModelTrackToMetadata @b env sourceConnConfig trackLogicalModelRequest))
-      `onLeftM` throwError
+    logicalModelTrackToMetadata @b env sourceConnConfig trackLogicalModelRequest
 
   let fieldName = _lmmRootFieldName metadata
       metadataObj =

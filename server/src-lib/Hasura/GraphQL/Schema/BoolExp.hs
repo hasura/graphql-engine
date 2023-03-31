@@ -16,7 +16,7 @@ import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Base.Error (throw500)
-import Hasura.CustomReturnType (CustomReturnType)
+import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo (..))
 import Hasura.CustomReturnType.Common
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
@@ -177,11 +177,11 @@ customTypeBoolExp ::
     AggregationPredicatesSchema b
   ) =>
   G.Name ->
-  CustomReturnType b ->
+  CustomReturnTypeInfo b ->
   SchemaT r m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
 customTypeBoolExp name customReturnType =
   case toFieldInfo customReturnType of
-    Nothing -> throw500 $ "Error creating fields for custom type " <> tshow customReturnType
+    Nothing -> throw500 $ "Error creating fields for custom type " <> tshow (_ctiName customReturnType)
     Just fieldInfo -> do
       let gqlName = mkTableBoolExpTypeName (C.fromCustomName name)
 
