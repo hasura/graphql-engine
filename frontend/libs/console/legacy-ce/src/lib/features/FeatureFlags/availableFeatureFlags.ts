@@ -26,8 +26,8 @@ export const availableFeatureFlags: FeatureFlagDefinition[] = [
     title: 'Enable the revamped UI for BigQuery',
     description: 'Try out the new UI experience for BigQuery.',
     section: 'data',
-    status: 'experimental',
-    defaultValue: false,
+    status: 'beta',
+    defaultValue: true,
     discussionUrl: '',
   },
 ];
