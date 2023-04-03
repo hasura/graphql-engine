@@ -2,7 +2,9 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Hasura.RQL.Types.Function
+-- | types and helpers for user-defined-functions after they have been resolved
+-- in the schema cache
+module Hasura.Function.Cache
   ( DBFunctionsMetadata,
     FunctionOverloads (..),
     FunctionArgName (..),

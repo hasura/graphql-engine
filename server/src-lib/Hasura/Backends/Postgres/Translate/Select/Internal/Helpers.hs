@@ -42,12 +42,12 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
 import Hasura.Backends.Postgres.Translate.Types (CustomSQLCTEs (..))
 import Hasura.Backends.Postgres.Types.Function
+import Hasura.Function.Cache
 import Hasura.LogicalModel.IR (LogicalModel (..))
 import Hasura.LogicalModel.Metadata (LogicalModelName (..))
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Common (FieldName)
-import Hasura.RQL.Types.Function
 import Hasura.SQL.Backend
 import Hasura.SQL.Types (ToSQL (toSQL))
 

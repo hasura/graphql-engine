@@ -21,12 +21,12 @@ import Hasura.Backends.BigQuery.Meta
 import Hasura.Backends.BigQuery.Source
 import Hasura.Backends.BigQuery.Types
 import Hasura.Base.Error
+import Hasura.Function.Cache (FunctionOverloads (..))
 import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (BackendConfig)
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Function (FunctionOverloads (..))
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend

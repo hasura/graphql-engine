@@ -41,6 +41,7 @@ where
 import Data.Kind (Type)
 import Data.Text.Casing (GQLNameIdentifier)
 import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo)
+import Hasura.Function.Cache
 import Hasura.GraphQL.ApolloFederation (ApolloFederationParserFunction)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
@@ -54,7 +55,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column hiding (EnumValueInfo)
 import Hasura.RQL.Types.Column qualified as Column
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source

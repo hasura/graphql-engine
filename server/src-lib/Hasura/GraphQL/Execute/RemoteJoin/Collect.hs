@@ -14,6 +14,7 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.NonEmpty (NEHashMap)
 import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Data.Text qualified as T
+import Hasura.Function.Cache
 import Hasura.GraphQL.Execute.RemoteJoin.Types
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Name qualified as Name
@@ -22,7 +23,6 @@ import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax qualified as G

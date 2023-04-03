@@ -41,6 +41,7 @@ import Data.Text.Extended (dquote, dquoteList, (<<>))
 import Hasura.Base.Error
 import Hasura.CustomReturnType.API
 import Hasura.EncJSON
+import Hasura.Function.API
 import Hasura.Logging qualified as HL
 import Hasura.LogicalModel.API
 import Hasura.Metadata.Class

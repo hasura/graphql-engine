@@ -26,6 +26,7 @@ import Data.Text.Extended qualified as T (toTxt)
 import Hasura.Backends.BigQuery.Instances.Types ()
 import Hasura.Backends.BigQuery.Source (BigQuerySourceConfig (..))
 import Hasura.Backends.BigQuery.Types as BigQuery
+import Hasura.Function.Cache qualified as Functions
 import Hasura.LogicalModel.IR (LogicalModel (..))
 import Hasura.LogicalModel.Metadata (InterpolatedQuery)
 import Hasura.LogicalModel.Types (LogicalModelName (..))
@@ -33,7 +34,6 @@ import Hasura.Prelude
 import Hasura.RQL.IR qualified as Ir
 import Hasura.RQL.Types.Column qualified as Rql
 import Hasura.RQL.Types.Common qualified as Rql
-import Hasura.RQL.Types.Function qualified as Rql
 import Hasura.RQL.Types.Relationships.Local qualified as Rql
 import Hasura.SQL.Backend
 
@@ -257,9 +257,9 @@ fromSelectRows parentSelectFromEntity annSelectG = do
   selectFrom <-
     case from of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-      Ir.FromFunction nm (Rql.FunctionArgsExp [BigQuery.AEInput json] _) (Just columns)
+      Ir.FromFunction nm (Functions.FunctionArgsExp [BigQuery.AEInput json] _) (Just columns)
         | functionName nm == "unnest" -> fromUnnestedJSON json columns (map fst fields)
-      Ir.FromFunction functionName (Rql.FunctionArgsExp positionalArgs namedArgs) Nothing ->
+      Ir.FromFunction functionName (Functions.FunctionArgsExp positionalArgs namedArgs) Nothing ->
         fromFunction parentSelectFromEntity functionName positionalArgs namedArgs
       Ir.FromLogicalModel logicalModel -> fromLogicalModel logicalModel
       _ -> refute (pure (FromTypeUnsupported from))

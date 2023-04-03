@@ -20,6 +20,7 @@ module Hasura.RQL.IR.Generator
   )
 where
 
+import Hasura.Function.Cache
 import Hasura.Generator.Common
 import Hasura.Prelude hiding (bool, choice, maybe, nonEmpty)
 import Hasura.RQL.IR.BoolExp
@@ -29,7 +30,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hedgehog
 import Hedgehog.Gen

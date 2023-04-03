@@ -1,6 +1,6 @@
 -- |
 -- Description: Create/delete SQL functions to/from Hasura metadata.
-module Hasura.RQL.DDL.Schema.Function
+module Hasura.Function.API
   ( FunctionPermissionArgument (..),
     SetFunctionCustomization (..),
     TrackFunction (..),
@@ -28,10 +28,11 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.Function.Cache
+import Hasura.Function.Metadata (FunctionMetadata (..), fmConfiguration, fmPermissions)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Instances ()

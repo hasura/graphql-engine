@@ -77,12 +77,12 @@ import Database.PostgreSQL.LibPQ qualified as PQ
 import Hasura.Base.Error
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
+import Hasura.Function.Cache
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Function
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 import PostgreSQL.Binary.Decoding qualified as PD

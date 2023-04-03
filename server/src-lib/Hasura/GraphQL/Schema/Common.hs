@@ -65,6 +65,7 @@ import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Base.Error
+import Hasura.Function.Cache
 import Hasura.GraphQL.Namespace (NamespacedField)
 import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
 import Hasura.GraphQL.Schema.Node
@@ -78,7 +79,6 @@ import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source

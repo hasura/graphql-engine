@@ -59,13 +59,13 @@ import Data.Aeson.Types (parseEither)
 import Data.HashMap.Strict qualified as M
 import Data.Monoid
 import Data.Text.Extended
+import Hasura.Function.Cache
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.SQL.Backend
 import Hasura.Session

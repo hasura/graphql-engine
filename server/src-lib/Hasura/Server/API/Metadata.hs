@@ -22,6 +22,7 @@ import Hasura.App.State
 import Hasura.Base.Error
 import Hasura.CustomReturnType.API qualified as CustomReturnType
 import Hasura.EncJSON
+import Hasura.Function.API qualified as Functions
 import Hasura.Logging qualified as L
 import Hasura.LogicalModel.API qualified as LogicalModels
 import Hasura.Metadata.Class
@@ -122,12 +123,12 @@ data RQLMetadataV1
   | RMUpdateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
   | RMDeleteRemoteRelationship !(AnyBackend DeleteFromSourceRelationship)
   | -- Functions
-    RMTrackFunction !(AnyBackend TrackFunctionV2)
-  | RMUntrackFunction !(AnyBackend UnTrackFunction)
-  | RMSetFunctionCustomization (AnyBackend SetFunctionCustomization)
+    RMTrackFunction !(AnyBackend Functions.TrackFunctionV2)
+  | RMUntrackFunction !(AnyBackend Functions.UnTrackFunction)
+  | RMSetFunctionCustomization (AnyBackend Functions.SetFunctionCustomization)
   | -- Functions permissions
-    RMCreateFunctionPermission !(AnyBackend FunctionPermissionArgument)
-  | RMDropFunctionPermission !(AnyBackend FunctionPermissionArgument)
+    RMCreateFunctionPermission !(AnyBackend Functions.FunctionPermissionArgument)
+  | RMDropFunctionPermission !(AnyBackend Functions.FunctionPermissionArgument)
   | -- Computed fields
     RMAddComputedField !(AnyBackend AddComputedField)
   | RMDropComputedField !(AnyBackend DropComputedField)
@@ -665,7 +666,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMGetTableInfo q -> runGetTableInfo env q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
   RMUntrackTable q -> dispatchMetadataAndEventTrigger runUntrackTableQ q
-  RMSetFunctionCustomization q -> dispatchMetadata runSetFunctionCustomization q
+  RMSetFunctionCustomization q -> dispatchMetadata Functions.runSetFunctionCustomization q
   RMSetTableCustomization q -> dispatchMetadata runSetTableCustomization q
   RMSetApolloFederationConfig q -> dispatchMetadata runSetApolloFederationConfig q
   RMPgSetTableIsEnum q -> dispatchMetadata runSetExistingTableIsEnumQ q
@@ -687,10 +688,10 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMCreateRemoteRelationship q -> dispatchMetadata runCreateRemoteRelationship q
   RMUpdateRemoteRelationship q -> dispatchMetadata runUpdateRemoteRelationship q
   RMDeleteRemoteRelationship q -> dispatchMetadata runDeleteRemoteRelationship q
-  RMTrackFunction q -> dispatchMetadata runTrackFunctionV2 q
-  RMUntrackFunction q -> dispatchMetadata runUntrackFunc q
-  RMCreateFunctionPermission q -> dispatchMetadata runCreateFunctionPermission q
-  RMDropFunctionPermission q -> dispatchMetadata runDropFunctionPermission q
+  RMTrackFunction q -> dispatchMetadata Functions.runTrackFunctionV2 q
+  RMUntrackFunction q -> dispatchMetadata Functions.runUntrackFunc q
+  RMCreateFunctionPermission q -> dispatchMetadata Functions.runCreateFunctionPermission q
+  RMDropFunctionPermission q -> dispatchMetadata Functions.runDropFunctionPermission q
   RMAddComputedField q -> dispatchMetadata runAddComputedField q
   RMDropComputedField q -> dispatchMetadata runDropComputedField q
   RMTestConnectionTemplate q -> dispatchMetadata runTestConnectionTemplate q

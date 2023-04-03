@@ -22,6 +22,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types hiding (ConstraintName, FunctionName, TableName)
 import Hasura.Base.Error
+import Hasura.Function.Cache
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Rename
 import Hasura.RQL.DDL.Schema.Table
@@ -29,8 +30,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Function
-import Hasura.RQL.Types.Metadata hiding (fmFunction, tmComputedFields, tmTable)
+import Hasura.RQL.Types.Metadata hiding (tmComputedFields, tmTable)
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCacheTypes

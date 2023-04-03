@@ -8,17 +8,17 @@ import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Data.These (These (..))
 import Hasura.Base.Error
+import Hasura.Function.API
+import Hasura.Function.Cache
 import Hasura.Prelude
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.Relationship
 import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.Schema.Cache.Common
-import Hasura.RQL.DDL.Schema.Function
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object

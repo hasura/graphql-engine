@@ -14,13 +14,13 @@ import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Backends.Postgres.Types.BoolExp
 import Hasura.Backends.Postgres.Types.Function (onArgumentExp)
+import Hasura.Function.Cache
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.BoolExp.AggregationPredicates (AggregationPredicate (..), AggregationPredicateArguments (..), AggregationPredicatesImplementation (..))
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Table ()
 import Hasura.SQL.Backend

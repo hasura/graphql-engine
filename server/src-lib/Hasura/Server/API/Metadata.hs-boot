@@ -4,6 +4,7 @@ module Hasura.Server.API.Metadata
 where
 
 import Hasura.CustomReturnType.API qualified as CustomReturnType
+import Hasura.Function.API qualified as Functions
 import Hasura.LogicalModel.API qualified as LogicalModels
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
@@ -77,12 +78,12 @@ data RQLMetadataV1
   | RMUpdateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
   | RMDeleteRemoteRelationship !(AnyBackend DeleteFromSourceRelationship)
   | -- Functions
-    RMTrackFunction !(AnyBackend TrackFunctionV2)
-  | RMUntrackFunction !(AnyBackend UnTrackFunction)
-  | RMSetFunctionCustomization (AnyBackend SetFunctionCustomization)
+    RMTrackFunction !(AnyBackend Functions.TrackFunctionV2)
+  | RMUntrackFunction !(AnyBackend Functions.UnTrackFunction)
+  | RMSetFunctionCustomization (AnyBackend Functions.SetFunctionCustomization)
   | -- Functions permissions
-    RMCreateFunctionPermission !(AnyBackend FunctionPermissionArgument)
-  | RMDropFunctionPermission !(AnyBackend FunctionPermissionArgument)
+    RMCreateFunctionPermission !(AnyBackend Functions.FunctionPermissionArgument)
+  | RMDropFunctionPermission !(AnyBackend Functions.FunctionPermissionArgument)
   | -- Computed fields
     RMAddComputedField !(AnyBackend AddComputedField)
   | RMDropComputedField !(AnyBackend DropComputedField)

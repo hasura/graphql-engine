@@ -17,10 +17,10 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Types.ComputedField qualified as PG
 import Hasura.Backends.Postgres.Types.Function qualified as PG
 import Hasura.Base.Error
+import Hasura.Function.Cache
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (Comment (..))
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Function
 import Hasura.SQL.Backend
 import Hasura.Server.Utils
 import Language.GraphQL.Draft.Syntax qualified as G

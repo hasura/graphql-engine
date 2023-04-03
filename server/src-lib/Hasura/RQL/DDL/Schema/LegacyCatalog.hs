@@ -26,6 +26,8 @@ import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.SQL.Types as Postgres
 import Hasura.Base.Error
 import Hasura.Eventing.ScheduledTrigger
+import Hasura.Function.Cache
+import Hasura.Function.Metadata (FunctionMetadata (..))
 import Hasura.Prelude
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
@@ -37,7 +39,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection

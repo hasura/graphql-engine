@@ -19,6 +19,7 @@ import Hasura.App.State
 import Hasura.Backends.Postgres.DDL.RunSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.Function.API qualified as Functions
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
@@ -68,8 +69,8 @@ data RQLQueryV1
   | RQUntrackTable !(UntrackTable ('Postgres 'Vanilla))
   | RQSetTableIsEnum !(SetTableIsEnum ('Postgres 'Vanilla))
   | RQSetTableCustomization !(SetTableCustomization ('Postgres 'Vanilla))
-  | RQTrackFunction !(TrackFunction ('Postgres 'Vanilla))
-  | RQUntrackFunction !(UnTrackFunction ('Postgres 'Vanilla))
+  | RQTrackFunction !(Functions.TrackFunction ('Postgres 'Vanilla))
+  | RQUntrackFunction !(Functions.UnTrackFunction ('Postgres 'Vanilla))
   | RQCreateObjectRelationship !(CreateObjRel ('Postgres 'Vanilla))
   | RQCreateArrayRelationship !(CreateArrRel ('Postgres 'Vanilla))
   | RQDropRelationship !(DropRel ('Postgres 'Vanilla))
@@ -138,7 +139,7 @@ data RQLQueryV1
 data RQLQueryV2
   = RQV2TrackTable !(TrackTableV2 ('Postgres 'Vanilla))
   | RQV2SetTableCustomFields !SetTableCustomFields -- deprecated
-  | RQV2TrackFunction !(TrackFunctionV2 ('Postgres 'Vanilla))
+  | RQV2TrackFunction !(Functions.TrackFunctionV2 ('Postgres 'Vanilla))
   | RQV2ReplaceMetadata !ReplaceMetadataV2
 
 data RQLQuery
@@ -415,8 +416,8 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQUntrackTable q -> runUntrackTableQ q
       RQSetTableIsEnum q -> runSetExistingTableIsEnumQ q
       RQSetTableCustomization q -> runSetTableCustomization q
-      RQTrackFunction q -> runTrackFunc q
-      RQUntrackFunction q -> runUntrackFunc q
+      RQTrackFunction q -> Functions.runTrackFunc q
+      RQUntrackFunction q -> Functions.runUntrackFunc q
       RQCreateObjectRelationship q -> runCreateRelationship ObjRel $ unCreateObjRel q
       RQCreateArrayRelationship q -> runCreateRelationship ArrRel $ unCreateArrRel q
       RQDropRelationship q -> runDropRel q
@@ -481,7 +482,7 @@ runQueryM env rq = withPathK "args" $ case rq of
     runQueryV2M = \case
       RQV2TrackTable q -> runTrackTableV2Q q
       RQV2SetTableCustomFields q -> runSetTableCustomFieldsQV2 q
-      RQV2TrackFunction q -> runTrackFunctionV2 q
+      RQV2TrackFunction q -> Functions.runTrackFunctionV2 q
       RQV2ReplaceMetadata q -> runReplaceMetadataV2 q
 
 requiresAdmin :: RQLQuery -> Bool

@@ -97,11 +97,11 @@ import Data.Vector.Instances ()
 import Hasura.Base.Error
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
+import Hasura.Function.Cache (FunctionArgName)
 import Hasura.LogicalModel.Metadata (InterpolatedQuery, LogicalModelName)
 import Hasura.Metadata.DTO.Utils (boundedEnumCodec)
 import Hasura.Prelude hiding (state)
 import Hasura.RQL.IR.BoolExp
-import Hasura.RQL.Types.Function (FunctionArgName)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.Haskell.TH.Syntax hiding (location)
 import Text.ParserCombinators.ReadP (eof, readP_to_S)

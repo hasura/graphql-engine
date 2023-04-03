@@ -15,6 +15,7 @@ import Data.Monoid (First)
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.CustomReturnType.Cache (_ctiFields)
+import Hasura.Function.Cache
 import Hasura.LogicalModel.Cache (lmiPermissions, _lmiReturns)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal (permissionIsDefined)
@@ -24,7 +25,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local

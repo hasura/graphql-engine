@@ -153,6 +153,7 @@ import Data.Kind (Type)
 import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
+import Hasura.Function.Cache
 import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Options (StringifyNumbers)
 import Hasura.LogicalModel.IR (LogicalModel)
@@ -163,7 +164,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote

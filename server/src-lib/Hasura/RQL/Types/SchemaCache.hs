@@ -127,6 +127,7 @@ import Database.MSSQL.Transaction qualified as MSSQL
 import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection qualified as Postgres
 import Hasura.Base.Error
+import Hasura.Function.Cache
 import Hasura.GraphQL.Context (GQLContext, RoleContext)
 import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.Prelude
@@ -141,7 +142,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object

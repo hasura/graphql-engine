@@ -41,6 +41,9 @@ import Hasura.CustomReturnType.Cache (CustomReturnTypeCache, CustomReturnTypeInf
 import Hasura.CustomReturnType.Common (toFieldInfo)
 import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata (..))
 import Hasura.EncJSON
+import Hasura.Function.API
+import Hasura.Function.Cache
+import Hasura.Function.Metadata (FunctionMetadata (..))
 import Hasura.GraphQL.Schema (buildGQLContext)
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
@@ -61,7 +64,6 @@ import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.DDL.Schema.Cache.Dependencies
 import Hasura.RQL.DDL.Schema.Cache.Fields
 import Hasura.RQL.DDL.Schema.Cache.Permission
-import Hasura.RQL.DDL.Schema.Function
 import Hasura.RQL.DDL.Schema.Table
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
@@ -72,8 +74,7 @@ import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing.Backend
-import Hasura.RQL.Types.Function
-import Hasura.RQL.Types.Metadata hiding (fmFunction, tmTable)
+import Hasura.RQL.Types.Metadata hiding (tmTable)
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Network

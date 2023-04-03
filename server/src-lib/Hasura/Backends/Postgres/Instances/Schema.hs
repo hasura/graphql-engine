@@ -34,6 +34,7 @@ import Hasura.Backends.Postgres.Types.Update as PGIR
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.Base.ToErrorValue
+import Hasura.Function.Cache (FunctionInfo)
 import Hasura.GraphQL.ApolloFederation (ApolloFederationParserFunction)
 import Hasura.GraphQL.Schema.Backend
   ( BackendSchema,
@@ -79,7 +80,6 @@ import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column
-import Hasura.RQL.Types.Function (FunctionInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table (TableInfo (..), UpdPermInfo (..))

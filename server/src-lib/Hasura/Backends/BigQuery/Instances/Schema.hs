@@ -16,6 +16,7 @@ import Hasura.Backends.BigQuery.Parser.Scalars qualified as BQP
 import Hasura.Backends.BigQuery.Types qualified as BigQuery
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
+import Hasura.Function.Cache
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
@@ -43,7 +44,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table

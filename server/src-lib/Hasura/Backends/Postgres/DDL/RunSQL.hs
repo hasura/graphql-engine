@@ -39,6 +39,7 @@ import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName, TableName)
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.Function.Cache
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Diff qualified as Diff
@@ -46,10 +47,8 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata hiding
-  ( fmFunction,
-    tmComputedFields,
+  ( tmComputedFields,
     tmTable,
   )
 import Hasura.RQL.Types.Metadata.Backend

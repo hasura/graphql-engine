@@ -20,8 +20,8 @@ import Data.Aeson.Casing
 import Data.Aeson.Extended
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Types.Function
+import Hasura.Function.Cache
 import Hasura.Prelude
-import Hasura.RQL.Types.Function
 
 data ComputedFieldDefinition = ComputedFieldDefinition
   { _cfdFunction :: QualifiedFunction,

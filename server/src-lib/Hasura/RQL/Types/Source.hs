@@ -49,13 +49,13 @@ import Data.HashMap.Strict qualified as Map
 import Database.PG.Query qualified as PG
 import Hasura.Base.Error
 import Hasura.CustomReturnType.Cache (CustomReturnTypeCache)
+import Hasura.Function.Cache
 import Hasura.Logging qualified as L
 import Hasura.LogicalModel.Cache (LogicalModelCache)
 import Hasura.Prelude
 import Hasura.QueryTags.Types
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.SourceCustomization

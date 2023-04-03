@@ -18,7 +18,6 @@ module Hasura.RQL.Types.Metadata.Common
     Endpoints,
     LogicalModels,
     EventTriggers,
-    FunctionMetadata (..),
     Functions,
     GetCatalogState (..),
     InheritedRoles,
@@ -33,10 +32,6 @@ module Hasura.RQL.Types.Metadata.Common
     TableMetadata (..),
     Tables,
     backendSourceMetadataCodec,
-    fmComment,
-    fmConfiguration,
-    fmFunction,
-    fmPermissions,
     getSourceName,
     mkSourceMetadata,
     mkTableMeta,
@@ -84,6 +79,7 @@ import Data.Maybe (fromJust)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
 import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata (..), CustomReturnTypeName)
+import Hasura.Function.Metadata (FunctionMetadata (..))
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..), LogicalModelName)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
@@ -97,7 +93,6 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.Permission
@@ -341,60 +336,6 @@ instance (Backend b) => FromJSON (TableMetadata b) where
             rrKey,
             enableAFKey
           ]
-
-data FunctionMetadata b = FunctionMetadata
-  { _fmFunction :: FunctionName b,
-    _fmConfiguration :: FunctionConfig,
-    _fmPermissions :: [FunctionPermissionInfo],
-    _fmComment :: Maybe Text
-  }
-  deriving (Generic)
-
-deriving instance (Backend b) => Show (FunctionMetadata b)
-
-deriving instance (Backend b) => Eq (FunctionMetadata b)
-
-instance (Backend b) => ToJSON (FunctionMetadata b) where
-  toJSON = genericToJSON hasuraJSON
-
-$(makeLenses ''FunctionMetadata)
-
-instance (Backend b) => FromJSON (FunctionMetadata b) where
-  parseJSON = withObject "FunctionMetadata" $ \o ->
-    FunctionMetadata
-      <$> o
-        .: "function"
-      <*> o
-        .:? "configuration"
-        .!= emptyFunctionConfig
-      <*> o
-        .:? "permissions"
-        .!= []
-      <*> o
-        .:? "comment"
-
-instance (Backend b) => HasCodec (FunctionMetadata b) where
-  codec =
-    CommentCodec
-      ( T.unlines
-          [ "A custom SQL function to add to the GraphQL schema with configuration.",
-            "",
-            "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#args-syntax"
-          ]
-      )
-      $ AC.object (codecNamePrefix @b <> "FunctionMetadata")
-      $ FunctionMetadata
-        <$> requiredField "function" nameDoc
-          AC..= _fmFunction
-        <*> optionalFieldWithOmittedDefault "configuration" emptyFunctionConfig configDoc
-          AC..= _fmConfiguration
-        <*> optionalFieldWithOmittedDefault' "permissions" []
-          AC..= _fmPermissions
-        <*> optionalField' "comment"
-          AC..= _fmComment
-    where
-      nameDoc = "Name of the SQL function"
-      configDoc = "Configuration for the SQL function"
 
 type RemoteSchemaMetadata = RemoteSchemaMetadataG RemoteRelationshipDefinition
 

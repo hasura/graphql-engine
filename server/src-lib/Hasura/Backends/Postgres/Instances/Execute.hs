@@ -44,6 +44,7 @@ import Hasura.Backends.Postgres.Types.Function qualified as Postgres
 import Hasura.Backends.Postgres.Types.Update qualified as Postgres
 import Hasura.Base.Error (QErr)
 import Hasura.EncJSON (EncJSON, encJFromJValue)
+import Hasura.Function.Cache
 import Hasura.GraphQL.Execute.Backend
   ( BackendExecute (..),
     DBStepInfo (..),
@@ -89,7 +90,6 @@ import Hasura.RQL.Types.Common
     JsonAggSelect (..),
     SourceName,
   )
-import Hasura.RQL.Types.Function
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Session (UserInfo (..))

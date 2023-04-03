@@ -9,6 +9,7 @@ import Data.Aeson
 import Data.Environment qualified as Env
 import Hasura.Base.Error
 import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata)
+import Hasura.Function.Cache
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
@@ -21,7 +22,6 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Relationships.Local

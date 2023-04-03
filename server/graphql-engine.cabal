@@ -732,6 +732,11 @@ library
                      , Hasura.CustomReturnType.Types
 
                      , Hasura.EncJSON
+
+                     , Hasura.Function.API
+                     , Hasura.Function.Cache
+                     , Hasura.Function.Metadata
+
                      , Hasura.GraphQL.Execute.Query
                      , Hasura.GraphQL.Logging
                      , Hasura.GraphQL.Logging.QueryLog
@@ -807,7 +812,6 @@ library
                      , Hasura.RQL.Types.Eventing.Backend
                      , Hasura.RQL.Types.HealthCheck
                      , Hasura.RQL.Types.HealthCheckImplementation
-                     , Hasura.RQL.Types.Function
                      , Hasura.RQL.Types.GraphqlSchemaIntrospection
                      , Hasura.RQL.Types.Instances
                      , Hasura.RQL.Types.Metadata
@@ -883,7 +887,6 @@ library
                      , Hasura.RQL.DDL.Schema.Diff
                      , Hasura.RQL.DDL.Schema.LegacyCatalog
                      , Hasura.RQL.DDL.Schema.Enum
-                     , Hasura.RQL.DDL.Schema.Function
                      , Hasura.RQL.DDL.Schema.Rename
                      , Hasura.RQL.DDL.Schema.Table
                      , Hasura.RQL.DDL.Schema.Source

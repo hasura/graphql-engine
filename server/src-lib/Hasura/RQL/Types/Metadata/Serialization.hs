@@ -26,6 +26,8 @@ import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Text.Extended qualified as T
 import Data.Vector qualified as Vector
 import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata (..))
+import Hasura.Function.Cache (emptyFunctionConfig)
+import Hasura.Function.Metadata (FunctionMetadata (..))
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
@@ -54,7 +56,6 @@ import Hasura.RQL.Types.CustomTypes
   )
 import Hasura.RQL.Types.Endpoint (EndpointMetadata (..))
 import Hasura.RQL.Types.EventTrigger (EventTriggerConf (..))
-import Hasura.RQL.Types.Function (emptyFunctionConfig)
 import Hasura.RQL.Types.GraphqlSchemaIntrospection (SetGraphqlIntrospectionOptions)
 import Hasura.RQL.Types.Metadata.Common
   ( Actions,
@@ -63,7 +64,6 @@ import Hasura.RQL.Types.Metadata.Common
     ComputedFieldMetadata (..),
     CronTriggers,
     Endpoints,
-    FunctionMetadata (..),
     InheritedRoles,
     RemoteSchemaMetadata,
     RemoteSchemas,

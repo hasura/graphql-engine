@@ -20,6 +20,7 @@ import Data.Text.NonEmpty qualified as NT
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
+import Hasura.Function.Cache
 import Hasura.GraphQL.ApolloFederation
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Namespace
@@ -53,7 +54,6 @@ import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
