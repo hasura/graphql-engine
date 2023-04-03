@@ -51,7 +51,6 @@ newtype CacheRefT m a = CacheRefT {runCacheRefT :: (ServerConfigCtx, MVar Rebuil
       MonadTx,
       UserInfoM,
       MonadMetadataStorage,
-      MonadMetadataStorageQueryAPI,
       MonadResolveSource,
       ProvidesNetwork,
       MonadGetApiTimeLimit
@@ -112,7 +111,7 @@ suite ::
     MonadError QErr m,
     MonadBaseControl IO m,
     MonadResolveSource m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadEventLogCleanup m,
     ProvidesNetwork m,
     MonadGetApiTimeLimit m

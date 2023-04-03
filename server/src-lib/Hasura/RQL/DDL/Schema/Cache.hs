@@ -185,7 +185,6 @@ newtype CacheRWT m a
       MonadError e,
       UserInfoM,
       MonadMetadataStorage,
-      MonadMetadataStorageQueryAPI,
       Tracing.MonadTrace,
       MonadBase b,
       MonadBaseControl b,

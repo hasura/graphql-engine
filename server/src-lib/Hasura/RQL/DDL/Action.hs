@@ -261,7 +261,7 @@ runDropAction ::
   ( MonadError QErr m,
     CacheRWM m,
     MetadataM m,
-    MonadMetadataStorageQueryAPI m
+    MonadMetadataStorage m
   ) =>
   DropAction ->
   m EncJSON

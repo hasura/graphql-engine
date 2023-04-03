@@ -36,7 +36,7 @@ import System.Cron.Types (CronSchedule)
 populateInitialCronTriggerEvents ::
   ( MonadIO m,
     MonadError QErr m,
-    MonadMetadataStorageQueryAPI m
+    MonadMetadataStorage m
   ) =>
   CronSchedule ->
   TriggerName ->
@@ -54,7 +54,7 @@ runCreateCronTrigger ::
     CacheRWM m,
     MonadIO m,
     MetadataM m,
-    MonadMetadataStorageQueryAPI m
+    MonadMetadataStorage m
   ) =>
   CreateCronTrigger ->
   m EncJSON
@@ -128,7 +128,7 @@ updateCronTrigger ::
     CacheRWM m,
     MonadIO m,
     MetadataM m,
-    MonadMetadataStorageQueryAPI m
+    MonadMetadataStorage m
   ) =>
   CronTriggerMetadata ->
   m EncJSON
@@ -148,7 +148,7 @@ runDeleteCronTrigger ::
   ( MonadError QErr m,
     CacheRWM m,
     MetadataM m,
-    MonadMetadataStorageQueryAPI m
+    MonadMetadataStorage m
   ) =>
   ScheduledTriggerName ->
   m EncJSON
@@ -165,7 +165,7 @@ dropCronTriggerInMetadata name =
   MetadataModifier $ metaCronTriggers %~ OMap.delete name
 
 runCreateScheduledEvent ::
-  (MonadError QErr m, MonadMetadataStorageQueryAPI m) =>
+  (MonadError QErr m, MonadMetadataStorage m) =>
   CreateScheduledEvent ->
   m EncJSON
 runCreateScheduledEvent scheduledEvent = do
@@ -181,7 +181,7 @@ checkExists name = do
         "cron trigger with name: " <> triggerNameToTxt name <> " does not exist"
 
 runDeleteScheduledEvent ::
-  (MonadMetadataStorageQueryAPI m, MonadError QErr m) => DeleteScheduledEvent -> m EncJSON
+  (MonadMetadataStorage m, MonadError QErr m) => DeleteScheduledEvent -> m EncJSON
 runDeleteScheduledEvent DeleteScheduledEvent {..} = do
   liftEitherM $ dropEvent _dseEventId _dseType
   pure successMsg
@@ -189,7 +189,7 @@ runDeleteScheduledEvent DeleteScheduledEvent {..} = do
 runGetScheduledEvents ::
   ( MonadError QErr m,
     CacheRM m,
-    MonadMetadataStorageQueryAPI m
+    MonadMetadataStorage m
   ) =>
   GetScheduledEvents ->
   m EncJSON
@@ -202,7 +202,7 @@ runGetScheduledEvents gse = do
 runGetScheduledEventInvocations ::
   ( MonadError QErr m,
     CacheRM m,
-    MonadMetadataStorageQueryAPI m
+    MonadMetadataStorage m
   ) =>
   GetScheduledEventInvocations ->
   m EncJSON

@@ -122,7 +122,7 @@ runClearMetadata ::
   ( MonadIO m,
     CacheRWM m,
     MetadataM m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadBaseControl IO m,
     MonadReader r m,
     MonadError QErr m,
@@ -195,7 +195,7 @@ runReplaceMetadata ::
     MetadataM m,
     MonadIO m,
     MonadBaseControl IO m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadReader r m,
     MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
@@ -213,7 +213,7 @@ runReplaceMetadataV1 ::
     MetadataM m,
     MonadIO m,
     MonadBaseControl IO m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadReader r m,
     MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
@@ -231,7 +231,7 @@ runReplaceMetadataV2 ::
     MetadataM m,
     MonadIO m,
     MonadBaseControl IO m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadReader r m,
     MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
@@ -255,7 +255,7 @@ runReplaceMetadataV2' ::
     MetadataM m,
     MonadIO m,
     MonadBaseControl IO m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadReader r m,
     MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
@@ -760,12 +760,12 @@ purgeMetadataObj = \case
                 }
 
 runGetCatalogState ::
-  (MonadMetadataStorageQueryAPI m, MonadError QErr m) => GetCatalogState -> m EncJSON
+  (MonadMetadataStorage m, MonadError QErr m) => GetCatalogState -> m EncJSON
 runGetCatalogState _ =
   encJFromJValue <$> liftEitherM fetchCatalogState
 
 runSetCatalogState ::
-  (MonadMetadataStorageQueryAPI m, MonadError QErr m) => SetCatalogState -> m EncJSON
+  (MonadMetadataStorage m, MonadError QErr m) => SetCatalogState -> m EncJSON
 runSetCatalogState SetCatalogState {..} = do
   liftEitherM $ updateCatalogState _scsType _scsState
   pure successMsg

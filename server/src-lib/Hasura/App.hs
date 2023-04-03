@@ -804,8 +804,6 @@ instance MonadMetadataStorage AppM where
   clearActionData = runInSeparateTx . clearActionDataTx
   setProcessingActionLogsToPending = runInSeparateTx . setProcessingActionLogsToPendingTx
 
-instance MonadMetadataStorageQueryAPI AppM
-
 --------------------------------------------------------------------------------
 -- misc
 
@@ -891,7 +889,7 @@ runHGEServer ::
     WS.MonadWSLog m,
     MonadExecuteQuery m,
     HasResourceLimits m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadResolveSource m,
     MonadQueryTags m,
     MonadEventLogCleanup m,
@@ -983,7 +981,7 @@ mkHGEServer ::
     WS.MonadWSLog m,
     MonadExecuteQuery m,
     HasResourceLimits m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadResolveSource m,
     MonadQueryTags m,
     MonadEventLogCleanup m,

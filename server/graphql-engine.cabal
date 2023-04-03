@@ -490,6 +490,7 @@ library
                      , Control.Monad.Circular
                      , Control.Monad.Memoize
                      , Control.Monad.Stateless
+                     , Control.Monad.Trans.Extended
                      , Control.Monad.Trans.Managed
                      , Data.Aeson.Extended
                      , Data.Aeson.Kriti.Functions
