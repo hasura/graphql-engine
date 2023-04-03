@@ -29,9 +29,8 @@ Currently, the following features are supported with CockroachDB and Hasura:
 
 ## Queries
 
-Queries are fully supported except for queries containing `distinct_on` arguments, [see issue](https://github.com/cockroachdb/cockroach/issues/90763), but please note that GraphQL key
-ordering in JSON objects is not guaranteed. This is because CockroachDB implements the `JSONB` variant of the Postgres
-JSON types, which do not preserve key ordering.
+Queries are fully supported, but please note that GraphQL key ordering in JSON objects is not guaranteed.
+This is because CockroachDB implements the `JSONB` variant of the Postgres JSON types, which do not preserve key ordering.
 
 Please also note that SERIAL columns will produce numbers that overflow JavaScript numbers. These will need special
 treatment by either enabling the
