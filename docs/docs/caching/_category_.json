@@ -1,4 +1,5 @@
 {
-  "label": "Caching ☁️🏢",
-  "position": 70
+  "label": "Caching",
+  "position": 70,
+  "className": "cloud-and-enterprise-icon"
 }
