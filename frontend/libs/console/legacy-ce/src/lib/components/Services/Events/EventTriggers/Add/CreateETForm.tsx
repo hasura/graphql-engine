@@ -94,7 +94,6 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
       />
       <input
         type="text"
-        data-test="trigger-name"
         placeholder="trigger_name"
         required
         pattern="^[A-Za-z]+[A-Za-z0-9_\\-]*$"
@@ -108,8 +107,8 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
       <select
         className={`${inputStyles} pl-md w-72`}
         onChange={handleDatabaseChange}
-        data-test="select-source"
         value={source}
+        name="source"
       >
         <option value="">Select database</option>
         {dataSourcesList
@@ -125,9 +124,9 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
       <div className="flex">
         <select
           onChange={handleSchemaChange}
-          data-test="select-schema"
           className={`${inputStyles} w-72`}
           value={table.schema}
+          name="schema"
         >
           <option value="">Select schema</option>
           {Object.keys(databaseInfo)
@@ -140,10 +139,10 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
         </select>
         <select
           onChange={handleTableChange}
-          data-test="select-table"
           required
           className={`${inputStyles} w-72 ml-md`}
           value={table.name}
+          name="tableName"
         >
           <option value="">Select table</option>
           {filterSchemas &&

@@ -1,4 +1,4 @@
-const createTable = (tableName: string) => {
+export const createTable = (tableName: string) => {
   const postBody = {
     type: 'run_sql',
     args: {
@@ -14,7 +14,7 @@ const createTable = (tableName: string) => {
     }
   );
 };
-const deleteTable = (tableName: string) => {
+export const deleteTable = (tableName: string) => {
   const postBody = {
     type: 'run_sql',
     args: {

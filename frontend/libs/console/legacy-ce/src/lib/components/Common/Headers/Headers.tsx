@@ -83,8 +83,8 @@ const Headers: React.FC<HeadersListProps> = ({
                 inputVal={value}
                 id={`header-value-${i}`}
                 inputPlaceHolder={type === 'env' ? 'HEADER_FROM_ENV' : 'value'}
-                testId={`header-value-${i}`}
                 disabled={disabled}
+                testId={`header-value-${i}`}
               />
             </div>
             {i < headers.length - 1 ? (
