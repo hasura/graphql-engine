@@ -21,6 +21,7 @@ import Data.Kind (Type)
 import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Extended
 import Data.Typeable (Typeable)
+import Hasura.Backends.Postgres.Connection.Settings (ConnectionTemplate (..))
 import Hasura.Base.Error
 import Hasura.Base.ToErrorValue
 import Hasura.EncJSON (EncJSON)
@@ -310,8 +311,8 @@ class
   type ConnectionTemplateRequestContext b :: Type
   type ConnectionTemplateRequestContext b = () -- Uninmplemented value
 
-  resolveConnectionTemplate :: SourceConfig b -> ConnectionTemplateRequestContext b -> Either QErr EncJSON
-  resolveConnectionTemplate _ _ = Left (err400 (NotSupported) "connection template is not implemented")
+  resolveConnectionTemplate :: SourceConfig b -> ConnectionTemplateRequestContext b -> Maybe ConnectionTemplate -> Either QErr EncJSON
+  resolveConnectionTemplate _ _ _ = Left (err400 (NotSupported) "connection template is not implemented")
 
   -- | Information about the query execution that may be useful for debugging
   -- or reporting.

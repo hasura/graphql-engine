@@ -354,7 +354,7 @@ X-Hasura-Role: admin
 {
   "type": "pg_test_connection_template",
   "args": {
-    "source": "source_name",
+    "source_name": "source_name",
     "request_context": {
       "headers": {
         "header_name": "header_value"
@@ -366,7 +366,10 @@ X-Hasura-Role: admin
         "operation_type": "query",
         "operation_name": "op_name"
       }
-    }
+    },
+    "connection_template": {
+        "template": "{{ if $.request.session?[\"x-hasura-role\"] == \"user\" }} {{$.primary}} {{else}} {{$.connection_set.db_1}} {{ end }}"
+      }
   }
 }
 ```
@@ -381,6 +384,14 @@ Success Response:
   }
 }
 ```
+
+:::info Note
+
+`connection_template` is an optional argument which has precedence over the connection template present in the source. If
+`connection_template` is provided in the API, then the source's connection template will be ignored.
+
+:::
+
 
 ## Limitations
 

@@ -23,6 +23,7 @@ module Hasura.Backends.Postgres.Execute.Types
     runPgSourceWriteTx,
     applyConnectionTemplateResolverNonAdmin,
     pgResolveConnectionTemplate,
+    resolvePostgresConnectionTemplate,
   )
 where
 
@@ -33,7 +34,7 @@ import Data.CaseInsensitive qualified as CI
 import Data.HashMap.Internal.Strict qualified as Map
 import Database.PG.Query qualified as PG
 import Database.PG.Query.Connection qualified as PG
-import Hasura.Backends.Postgres.Connection.Settings (PostgresConnectionSetMemberName)
+import Hasura.Backends.Postgres.Connection.Settings (ConnectionTemplate (..), PostgresConnectionSetMemberName)
 import Hasura.Backends.Postgres.Execute.ConnectionTemplate
 import Hasura.Backends.Postgres.SQL.Error
 import Hasura.Base.Error
@@ -42,6 +43,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.ResizePool
 import Hasura.SQL.Types (ExtensionsSchema)
 import Hasura.Session
+import Kriti.Error qualified as Kriti
 import Network.HTTP.Types qualified as HTTP
 
 -- See Note [Existentially Quantified Types]
@@ -270,20 +272,48 @@ applyConnectionTemplateResolver connectionTemplateResolver sessionVariables requ
   for connectionTemplateResolver $ \resolver ->
     _runResolver resolver sessionVariables requestHeaders queryContext
 
-pgResolveConnectionTemplate :: (MonadError QErr m) => PGSourceConfig -> RequestContext -> m EncJSON
-pgResolveConnectionTemplate sourceConfig (RequestContext (RequestContextHeaders headersMap) sessionVariables queryContext) = do
-  let headers = map (\(hName, hVal) -> (CI.mk (txtToBs hName), txtToBs hVal)) $ Map.toList headersMap
+pgResolveConnectionTemplate :: (MonadError QErr m) => PGSourceConfig -> RequestContext -> Maybe ConnectionTemplate -> m EncJSON
+pgResolveConnectionTemplate sourceConfig (RequestContext (RequestContextHeaders headersMap) sessionVariables queryContext) connectionTemplateMaybe = do
   connectionTemplateResolver <-
-    case _pscConnectionTemplateConfig sourceConfig of
-      ConnTemplate_NotApplicable ->
-        throw400 NotSupported "Connection templating feature is enterprise edition only"
-      ConnTemplate_NotConfigured ->
-        throw400 TemplateResolutionFailed "Connection template not defined for the source"
-      ConnTemplate_Resolver resolver ->
-        pure resolver
+    case connectionTemplateMaybe of
+      Nothing ->
+        case _pscConnectionTemplateConfig sourceConfig of
+          ConnTemplate_NotApplicable -> connectionTemplateNotApplicableError
+          ConnTemplate_NotConfigured ->
+            throw400 TemplateResolutionFailed "Connection template not defined for the source"
+          ConnTemplate_Resolver resolver ->
+            pure resolver
+      Just connectionTemplate ->
+        case _pscConnectionTemplateConfig sourceConfig of
+          -- connection template is an enterprise edition only feature. `ConnTemplate_NotApplicable` error is thrown
+          -- when community edition engine is used to test the connection template
+          ConnTemplate_NotApplicable -> connectionTemplateNotApplicableError
+          _ -> pure $ ConnectionTemplateResolver $ \sessionVariables' reqHeaders queryContext' ->
+            resolvePostgresConnectionTemplate connectionTemplate (Map.keys (_pscConnectionSet sourceConfig)) sessionVariables' reqHeaders queryContext'
+  let headers = map (\(hName, hVal) -> (CI.mk (txtToBs hName), txtToBs hVal)) $ Map.toList headersMap
   case maybeRoleFromSessionVariables sessionVariables of
     Nothing -> throw400 InvalidParams "No `x-hasura-role` found in session variables. Please try again with non-admin 'x-hasura-role' in the session context."
     Just roleName ->
       when (roleName == adminRoleName) $ throw400 InvalidParams "Only requests made with a non-admin context can resolve the connection template. Please try again with non-admin 'x-hasura-role' in the session context."
   resolvedTemplate <- _runResolver connectionTemplateResolver sessionVariables headers queryContext
   pure . encJFromJValue $ J.object ["result" J..= resolvedTemplate]
+  where
+    connectionTemplateNotApplicableError = throw400 NotSupported "Connection templating feature is enterprise edition only"
+
+resolvePostgresConnectionTemplate ::
+  (MonadError QErr m) =>
+  ConnectionTemplate ->
+  [PostgresConnectionSetMemberName] ->
+  SessionVariables ->
+  [HTTP.Header] ->
+  Maybe QueryContext ->
+  m (PostgresResolvedConnectionTemplate)
+resolvePostgresConnectionTemplate (ConnectionTemplate _templateSrc connectionTemplate) connectionSetMembers sessionVariables reqHeaders queryContext = do
+  let requestContext = makeRequestContext queryContext reqHeaders sessionVariables
+      connectionTemplateCtx = makeConnectionTemplateContext requestContext connectionSetMembers
+
+  case runKritiEval connectionTemplateCtx connectionTemplate of
+    Left err ->
+      let serializedErr = Kriti.serialize err
+       in throw400WithDetail TemplateResolutionFailed ("Connection template evaluation failed: " <> Kriti._message serializedErr) (J.toJSON $ serializedErr)
+    Right val -> runAesonParser (J.parseJSON @PostgresResolvedConnectionTemplate) val
