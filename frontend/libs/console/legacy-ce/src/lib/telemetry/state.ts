@@ -7,13 +7,12 @@ export type NotificationsState = {
 };
 
 export type UserTypes = 'admin' | string;
-export type TelemetryNotificationsState = Record<UserTypes, NotificationsState>;
+export type ConsoleNotificationsState = Record<UserTypes, NotificationsState>;
 
 export type ConsoleState = {
   console_opts: Nullable<{
-    telemetryNotificationShown?: boolean;
     disablePreReleaseUpdateNotifications?: boolean;
-    console_notifications?: TelemetryNotificationsState;
+    console_notifications?: ConsoleNotificationsState;
     onboardingShown?: boolean;
   }>;
   hasura_uuid: string;

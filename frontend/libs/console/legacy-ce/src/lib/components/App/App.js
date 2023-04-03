@@ -6,11 +6,6 @@ import { hot } from 'react-hot-loader';
 import { ThemeProvider } from 'styled-components';
 import 'react-loading-skeleton/dist/skeleton.css';
 import ErrorBoundary from '../Error/ErrorBoundary';
-import {
-  telemetryNotificationShown,
-  setTelemetryNotificationShownInDB,
-} from '../../telemetry/Actions';
-import { showTelemetryNotification } from '../../telemetry/Notifications';
 import globals from '../../Globals';
 import styles from './App.module.scss';
 import { ToastsHub } from '../../new-components/Toasts';
@@ -28,7 +23,6 @@ const App = ({
   connectionFailed,
   dispatch,
   metadata,
-  telemetry,
 }) => {
   React.useEffect(() => {
     const className = document.getElementById('content').className;
@@ -46,23 +40,6 @@ const App = ({
       object: 'App',
     });
   }, []);
-  const telemetryShown = React.useRef(false);
-  // should be true only in the case of hasura cloud
-  const isContextCloud = globals.consoleType === 'cloud';
-
-  React.useEffect(() => {
-    if (
-      telemetry.console_opts &&
-      !telemetry.console_opts.telemetryNotificationShown &&
-      !telemetryShown.current &&
-      !isContextCloud
-    ) {
-      telemetryShown.current = true;
-      dispatch(showTelemetryNotification());
-      dispatch(telemetryNotificationShown());
-      dispatch(setTelemetryNotificationShownInDB());
-    }
-  }, [dispatch, telemetry, isContextCloud]);
 
   let connectionFailMsg = null;
   if (connectionFailed) {
@@ -123,7 +100,6 @@ const mapStateToProps = state => {
   return {
     ...state.progressBar,
     notifications: state.notifications,
-    telemetry: state.telemetry,
     metadata: state.metadata,
   };
 };
