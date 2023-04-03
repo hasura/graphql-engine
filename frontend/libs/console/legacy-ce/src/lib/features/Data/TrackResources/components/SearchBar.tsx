@@ -9,7 +9,6 @@ type SearchBarProps = {
 export const SearchBar = ({ onSearch }: SearchBarProps) => {
   const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const [value, setValue] = React.useState('');
-
   return (
     <div className="flex gap-2">
       <Input

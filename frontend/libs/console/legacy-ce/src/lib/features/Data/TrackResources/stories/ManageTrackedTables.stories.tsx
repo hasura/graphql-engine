@@ -11,23 +11,23 @@ import { ReactQueryDecorator } from '../../../../storybook/decorators/react-quer
 import { expect } from '@storybook/jest';
 import { dangerouslyDelay } from '../../../../storybook/utils/dangerouslyDelay';
 
-import { TrackTables } from '../TrackTables';
 import { handlers, resetMetadata } from './handlers.mock';
+import { ManageTrackedTables } from '../components/ManageTrackedTables';
 
 export default {
-  title: 'Data/Components/TrackTables',
-  component: TrackTables,
+  title: 'Data/Components/ManageTrackedTables',
+  component: ManageTrackedTables,
   decorators: [ReactQueryDecorator()],
   parameters: {
     msw: handlers(),
   },
-} as ComponentMeta<typeof TrackTables>;
+} as ComponentMeta<typeof ManageTrackedTables>;
 
-export const TrackedTables: ComponentStory<typeof TrackTables> = () => (
-  <TrackTables dataSourceName="chinook" />
-);
+export const UntrackedTables: ComponentStory<
+  typeof ManageTrackedTables
+> = () => <ManageTrackedTables dataSourceName="chinook" />;
 
-TrackedTables.play = async ({ canvasElement }) => {
+UntrackedTables.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
   // Reset initial metadata to make sure tests start from a clean slate everytime
   resetMetadata();
@@ -46,64 +46,8 @@ TrackedTables.play = async ({ canvasElement }) => {
   await expect(canvas.getByText('public.MediaType')).toBeInTheDocument();
 };
 
-export const Track: ComponentStory<typeof TrackTables> = () => (
-  <TrackTables dataSourceName="chinook" />
-);
-
-Track.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
-  // Reset initial metadata to make sure tests start from a clean slate everytime
-  resetMetadata();
-
-  // Wait until it finishes loading
-  await waitFor(() => canvas.findByTestId('track-tables'), {
-    timeout: 5000,
-  });
-
-  // Wait for the button to appear on the screen using findBy. Store it in a variable to click it afterwards.
-  const button = await canvas.findByTestId(`track-public.Invoice`);
-
-  // Wait an additional second, otherwise clicking does not fire the request
-  // Tried to figure out how to avoid using delay and favor waitFor and await findBy,
-  // but could not find a visual cue that indicates that clicking the button will work
-  // This might indicate that the button must wait for some asynchronous operation before it's ready
-  await dangerouslyDelay(1000);
-
-  // Track public.Invoice
-  userEvent.click(button);
-
-  // It should not be in the Untracked tab anymore
-  await waitForElementToBeRemoved(() => canvas.queryByText('public.Invoice'), {
-    timeout: 2000,
-  });
-};
-
-export const UntrackedTables: ComponentStory<typeof TrackTables> = () => (
-  <TrackTables dataSourceName="chinook" />
-);
-
-UntrackedTables.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
-  // Reset initial metadata to make sure tests start from a clean slate everytime
-  resetMetadata();
-
-  // Wait until it finishes loading
-  await waitFor(() => canvas.findByTestId('track-tables'), {
-    timeout: 5000,
-  });
-
-  await userEvent.click(await canvas.findByText('Tracked'));
-
-  // Verify it correctly displays tracked tables
-  await expect(canvas.getByText('public.Artist')).toBeInTheDocument();
-  await expect(canvas.getByText('public.Album')).toBeInTheDocument();
-  await expect(canvas.getByText('public.Employee')).toBeInTheDocument();
-  await expect(canvas.getByText('public.Customer')).toBeInTheDocument();
-  await expect(canvas.getByText('public.Genre')).toBeInTheDocument();
-};
-
-export const Untrack: ComponentStory<typeof TrackTables> = () => (
-  <TrackTables dataSourceName="chinook" />
+export const Untrack: ComponentStory<typeof ManageTrackedTables> = () => (
+  <ManageTrackedTables dataSourceName="chinook" />
 );
 
 Untrack.play = async ({ canvasElement }) => {
@@ -136,7 +80,63 @@ Untrack.play = async ({ canvasElement }) => {
   });
 };
 
-export const MassiveTableAmount = TrackedTables.bind({});
+export const Track: ComponentStory<typeof ManageTrackedTables> = () => (
+  <ManageTrackedTables dataSourceName="chinook" />
+);
+
+Track.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  // Reset initial metadata to make sure tests start from a clean slate everytime
+  resetMetadata();
+
+  // Wait until it finishes loading
+  await waitFor(() => canvas.findByTestId('track-tables'), {
+    timeout: 5000,
+  });
+
+  // Wait for the button to appear on the screen using findBy. Store it in a variable to click it afterwards.
+  const button = await canvas.findByTestId(`track-public.Invoice`);
+
+  // Wait an additional second, otherwise clicking does not fire the request
+  // Tried to figure out how to avoid using delay and favor waitFor and await findBy,
+  // but could not find a visual cue that indicates that clicking the button will work
+  // This might indicate that the button must wait for some asynchronous operation before it's ready
+  await dangerouslyDelay(1000);
+
+  // Track public.Invoice
+  userEvent.click(button);
+
+  // It should not be in the Untracked tab anymore
+  await waitForElementToBeRemoved(() => canvas.queryByText('public.Invoice'), {
+    timeout: 2000,
+  });
+};
+
+export const TrackedTables: ComponentStory<typeof ManageTrackedTables> = () => (
+  <ManageTrackedTables dataSourceName="chinook" />
+);
+
+TrackedTables.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  // Reset initial metadata to make sure tests start from a clean slate everytime
+  resetMetadata();
+
+  // Wait until it finishes loading
+  await waitFor(() => canvas.findByTestId('track-tables'), {
+    timeout: 5000,
+  });
+
+  await userEvent.click(await canvas.findByText('Tracked'));
+
+  // Verify it correctly displays tracked tables
+  await expect(canvas.getByText('public.Artist')).toBeInTheDocument();
+  await expect(canvas.getByText('public.Album')).toBeInTheDocument();
+  await expect(canvas.getByText('public.Employee')).toBeInTheDocument();
+  await expect(canvas.getByText('public.Customer')).toBeInTheDocument();
+  await expect(canvas.getByText('public.Genre')).toBeInTheDocument();
+};
+
+export const MassiveTableAmount = UntrackedTables.bind({});
 
 MassiveTableAmount.parameters = {
   msw: handlers(1000000),

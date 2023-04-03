@@ -20,10 +20,11 @@ interface TableListProps {
   dataSourceName: string;
   tables: TrackableTable[];
   mode: 'track' | 'untrack';
+  onTrackedTable?: () => void;
 }
 
 export const TableList = (props: TableListProps) => {
-  const { mode, dataSourceName, tables } = props;
+  const { mode, dataSourceName, tables, onTrackedTable } = props;
 
   const [pageNumber, setPageNumber] = useState(DEFAULT_PAGE_NUMBER);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -42,16 +43,17 @@ export const TableList = (props: TableListProps) => {
 
   const { untrackTables, trackTables, loading } = useTrackTable(dataSourceName);
 
-  const onClick = () => {
+  const onClick = async () => {
     const tables = filteredTables.filter(({ name }) =>
       checkedIds.includes(name)
     );
     if (mode === 'track') {
-      untrackTables(tables);
+      await untrackTables(tables);
     } else {
-      trackTables(tables);
+      await trackTables(tables);
     }
 
+    onTrackedTable?.();
     reset();
   };
 

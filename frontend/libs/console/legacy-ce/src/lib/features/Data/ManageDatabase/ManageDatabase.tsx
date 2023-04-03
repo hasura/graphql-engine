@@ -1,9 +1,7 @@
-import React from 'react';
-import { Tooltip } from '../../../new-components/Tooltip';
 import { Analytics, REDACT_EVERYTHING } from '../../Analytics';
 import { FaAngleRight, FaDatabase } from 'react-icons/fa';
-import { RiInformationFill } from 'react-icons/ri';
-import { TrackTables } from '../TrackTables/TrackTables';
+import { ManageTrackedTables } from '../TrackResources/components/ManageTrackedTables';
+import { ManageTrackedRelationshipsContainer } from '../TrackResources/components/ManageTrackedRelationshipsContainer';
 
 interface ManageDatabaseProps {
   dataSourceName: string;
@@ -37,25 +35,11 @@ export const ManageDatabase = (props: ManageDatabaseProps) => {
         </div>
         <div>
           <div className="px-md group relative">
-            <div className="flex mb-1 items-center">
-              <h4 className="inline-flex items-center font-semibold">
-                Track Tables
-              </h4>
-              <Tooltip
-                tooltipContentChildren="Expose the tables available in your database via the GraphQL API"
-                side="right"
-              >
-                <RiInformationFill />
-              </Tooltip>
-            </div>
-
-            <p className="text-muted">
-              Manage your database Tracking objects adds them to your GraphQL
-              API. All objects will be admin-only until permissions have been
-              set.
-            </p>
+            <ManageTrackedTables dataSourceName={props.dataSourceName} />
+            <ManageTrackedRelationshipsContainer
+              dataSourceName={props.dataSourceName}
+            />
           </div>
-          <TrackTables dataSourceName={props.dataSourceName} />
         </div>
       </div>
     </Analytics>
