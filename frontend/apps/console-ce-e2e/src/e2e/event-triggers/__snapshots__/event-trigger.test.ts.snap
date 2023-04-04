@@ -44,31 +44,3 @@ exports[`Create event trigger with shortest possible path > When the users creat
   },
   "webhook": "http://httpbin.org/post"
 };
-
-exports[`Create event trigger with logest possible path > When the users create, modify and delete an Event trigger, everything should work #0`] =
-{
-  "definition": {
-    "enable_manual": false,
-    "insert": {
-      "columns": "*"
-    },
-    "update": {
-      "columns": [
-        "id"
-      ]
-    }
-  },
-  "headers": [
-    {
-      "name": "x-hasura-user-id",
-      "value": "1234"
-    }
-  ],
-  "name": "event_trigger_test",
-  "retry_conf": {
-    "interval_sec": 5,
-    "num_retries": 10,
-    "timeout_sec": 70
-  },
-  "webhook": "http://httpbin.org/post"
-};

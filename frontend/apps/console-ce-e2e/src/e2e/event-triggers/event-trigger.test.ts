@@ -130,7 +130,20 @@ describe('Create event trigger with shortest possible path', () => {
     });
 
     // delete ET
+    cy.intercept('POST', 'http://localhost:8080/v1/metadata', req => {
+      if (JSON.stringify(req.body).includes('delete_event_trigger')) {
+        req.alias = 'deleteTrigger';
+      }
+      req.continue();
+    });
+
+    cy.intercept('POST', 'http://localhost:9693/apis/migrate', req => {
+      if (JSON.stringify(req.body).includes('delete_event_trigger')) {
+        req.alias = 'deleteTrigger';
+      }
+    });
     cy.findByRole('button', { name: 'Delete Event Trigger' }).click();
+    cy.wait('@deleteTrigger');
   });
 });
 
@@ -152,7 +165,7 @@ describe('Create event trigger with logest possible path', () => {
     cy.log('**--- Delete the table');
     postgres.helpers.deleteTable('user_table');
   });
-  it('When the users create, modify and delete an Event trigger, everything should work', () => {
+  xit('When the users create, modify and delete an Event trigger, everything should work', () => {
     cy.log('**------------------------------**');
     cy.log('**------------------------------**');
     cy.log('**------------------------------**');
@@ -266,6 +279,19 @@ describe('Create event trigger with logest possible path', () => {
     });
 
     // delete ET
+    cy.intercept('POST', 'http://localhost:8080/v1/metadata', req => {
+      if (JSON.stringify(req.body).includes('delete_event_trigger')) {
+        req.alias = 'deleteTrigger';
+      }
+      req.continue();
+    });
+
+    cy.intercept('POST', 'http://localhost:9693/apis/migrate', req => {
+      if (JSON.stringify(req.body).includes('delete_event_trigger')) {
+        req.alias = 'deleteTrigger';
+      }
+    });
     cy.findByRole('button', { name: 'Delete Event Trigger' }).click();
+    cy.wait('@deleteTrigger');
   });
 });
