@@ -76,6 +76,7 @@ export type InputFieldProps<T extends z.infer<Schema>> =
      * The input field classes
      */
     inputClassName?: string;
+    rightButton?: ReactElement;
   };
 
 export const InputField = <T extends z.infer<Schema>>({
@@ -162,6 +163,7 @@ export const InputField = <T extends z.infer<Schema>>({
         onClearButtonClick={onClearButtonClick}
         inputProps={regReturn}
         fieldProps={fieldProps}
+        rightButton={wrapperProps?.rightButton}
       />
     </FieldWrapper>
   );
