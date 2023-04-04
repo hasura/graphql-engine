@@ -50,7 +50,7 @@ newtype Managed a = Managed (forall r . (a -> IO r) -> IO r)
 With it, the above block of code can be rewritten as:
 
 ```haskell
-main = do
+main = runManaged do
   loggers    <- managed withLoggers
   pgPool     <- managed withPGPool
   mssqlPool  <- managed withMSSQLPool
