@@ -12,7 +12,7 @@ import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo)
+import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo (_crtiFields))
 import Hasura.CustomReturnType.Common (toFieldInfo)
 import Hasura.Function.Cache
 import Hasura.GraphQL.Parser.Class
@@ -73,7 +73,7 @@ customTypeOrderByExp ::
   CustomReturnTypeInfo b ->
   SchemaT r m (Parser 'Input n [IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)])
 customTypeOrderByExp name customReturnType =
-  case toFieldInfo customReturnType of
+  case toFieldInfo (_crtiFields customReturnType) of
     Nothing -> throw500 $ "Error creating fields for custom type " <> tshow name
     Just tableFields -> do
       let description =

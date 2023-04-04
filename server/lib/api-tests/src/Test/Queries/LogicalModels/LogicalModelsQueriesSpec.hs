@@ -76,7 +76,7 @@ tests = do
 
       helloWorldReturnType :: Schema.CustomType
       helloWorldReturnType =
-        (Schema.customType "hello_world_function")
+        (Schema.customType "hello_world_return_type")
           { Schema.customTypeColumns =
               [ Schema.logicalModelColumn "one" Schema.TStr,
                 Schema.logicalModelColumn "two" Schema.TStr
@@ -85,7 +85,7 @@ tests = do
 
       helloWorldLogicalModel :: Schema.LogicalModel
       helloWorldLogicalModel =
-        (Schema.logicalModel "hello_world_function" query "hello_world_function")
+        (Schema.logicalModel "hello_world_function" query "hello_world_return_type")
 
   describe "Testing Logical Models" $ do
     it "Explain works" $ \testEnvironment -> do
@@ -148,6 +148,7 @@ tests = do
               }
 
       Schema.trackCustomType sourceName descriptionsAndNullableReturnType testEnvironment
+
       Schema.trackLogicalModel sourceName descriptionsAndNullableLogicalModel testEnvironment
 
       let queryTypesIntrospection :: Value
@@ -308,7 +309,7 @@ tests = do
 
           helloWorldLogicalModelWithDummyArgument :: Schema.LogicalModel
           helloWorldLogicalModelWithDummyArgument =
-            (Schema.logicalModel "hello_world_function_with_dummy" query "hello_world_function")
+            (Schema.logicalModel "hello_world_function_with_dummy" query "hello_world_return_type")
               { Schema.logicalModelArguments =
                   [ Schema.logicalModelColumn "dummy" Schema.TStr
                   ]
@@ -349,7 +350,7 @@ tests = do
 
           helloCommentLogicalModel :: Schema.LogicalModel
           helloCommentLogicalModel =
-            (Schema.logicalModel "hello_comment_function" spicyQuery "hello_world_function")
+            (Schema.logicalModel "hello_comment_function" spicyQuery "hello_world_return_type")
 
       Schema.trackCustomType source helloWorldReturnType testEnvironment
 
@@ -384,11 +385,11 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
           backendType = BackendType.backendTypeString backendTypeMetadata
-          createPermRequestType = backendType <> "_create_logical_model_select_permission"
+          createPermRequestType = backendType <> "_create_custom_return_type_select_permission"
 
           helloWorldPermLogicalModel :: Schema.LogicalModel
           helloWorldPermLogicalModel =
-            (Schema.logicalModel "hello_world_perms" query "hello_world_function")
+            (Schema.logicalModel "hello_world_with_permissions" query "hello_world_return_type")
 
       Schema.trackCustomType source helloWorldReturnType testEnvironment
 
@@ -404,7 +405,7 @@ tests = do
                 - type: *createPermRequestType
                   args:
                     source: *source
-                    root_field_name: hello_world_perms
+                    name: hello_world_return_type
                     role: "test"
                     permission:
                       columns:
@@ -419,7 +420,7 @@ tests = do
       let expected =
             [yaml|
                 data:
-                  hello_world_perms:
+                  hello_world_with_permissions:
                     - one: "hello"
                     - one: "welcome"
               |]
@@ -431,7 +432,7 @@ tests = do
               [("X-Hasura-Role", "test")]
               [graphql|
               query {
-                hello_world_perms {
+                hello_world_with_permissions {
                   one
                 }
               }
@@ -443,11 +444,11 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
           backendType = BackendType.backendTypeString backendTypeMetadata
-          createPermRequestType = backendType <> "_create_logical_model_select_permission"
+          createPermRequestType = backendType <> "_create_custom_return_type_select_permission"
 
           helloWorldPermLogicalModel :: Schema.LogicalModel
           helloWorldPermLogicalModel =
-            (Schema.logicalModel "hello_world_perms" query "hello_world_function")
+            (Schema.logicalModel "hello_world_with_permissions" query "hello_world_return_type")
 
       Schema.trackCustomType source helloWorldReturnType testEnvironment
 
@@ -463,7 +464,7 @@ tests = do
                 - type: *createPermRequestType
                   args:
                     source: *source
-                    root_field_name: hello_world_perms
+                    name: hello_world_return_type
                     role: "test"
                     permission:
                       columns:
@@ -480,8 +481,8 @@ tests = do
                 errors:
                   - extensions:
                       code: validation-failed
-                      path: $.selectionSet.hello_world_perms.selectionSet.one
-                    message: "field 'one' not found in type: 'hello_world_perms'"
+                      path: $.selectionSet.hello_world_with_permissions.selectionSet.one
+                    message: "field 'one' not found in type: 'hello_world_return_type'"
             |]
 
           actual :: IO Value
@@ -491,7 +492,7 @@ tests = do
               [("X-Hasura-Role", "test")]
               [graphql|
               query {
-                hello_world_perms {
+                hello_world_with_permissions {
                   one
                 }
               }
@@ -503,11 +504,11 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
           backendType = BackendType.backendTypeString backendTypeMetadata
-          createPermRequestType = backendType <> "_create_logical_model_select_permission"
+          createPermRequestType = backendType <> "_create_custom_return_type_select_permission"
 
           helloWorldPermLogicalModel :: Schema.LogicalModel
           helloWorldPermLogicalModel =
-            (Schema.logicalModel "hello_world_perms" query "hello_world_function")
+            (Schema.logicalModel "hello_world_with_permissions" query "hello_world_return_type")
 
       Schema.trackCustomType source helloWorldReturnType testEnvironment
 
@@ -523,7 +524,7 @@ tests = do
                 - type: *createPermRequestType
                   args:
                     source: *source
-                    root_field_name: hello_world_perms
+                    name: hello_world_return_type
                     role: "test"
                     permission:
                       columns: "*"
@@ -539,7 +540,7 @@ tests = do
       let expected =
             [yaml|
                 data:
-                  hello_world_perms:
+                  hello_world_with_permissions:
                     - one: "welcome"
                       two: "friend"
               |]
@@ -551,7 +552,7 @@ tests = do
               [("X-Hasura-Role", "test")]
               [graphql|
               query {
-                hello_world_perms {
+                hello_world_with_permissions {
                   one
                   two
                 }

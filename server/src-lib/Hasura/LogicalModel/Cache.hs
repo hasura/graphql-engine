@@ -9,7 +9,6 @@ module Hasura.LogicalModel.Cache
     lmiCode,
     lmiReturns,
     lmiArguments,
-    lmiPermissions,
     lmiDescription,
   )
 where
@@ -33,7 +32,6 @@ data LogicalModelInfo (b :: BackendType) = LogicalModelInfo
     _lmiCode :: InterpolatedQuery LogicalModelArgumentName,
     _lmiReturns :: CustomReturnTypeInfo b,
     _lmiArguments :: HashMap LogicalModelArgumentName (NullableScalarType b),
-    _lmiPermissions :: RolePermInfoMap b,
     _lmiDescription :: Maybe Text
   }
   deriving stock (Generic)

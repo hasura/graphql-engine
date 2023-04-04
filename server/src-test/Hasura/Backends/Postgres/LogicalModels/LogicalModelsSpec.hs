@@ -81,7 +81,6 @@ spec = do
               _lmmCode = InterpolatedQuery mempty,
               _lmmReturns = CustomReturnTypeName (G.unsafeMkName "custom_return_type_name"),
               _lmmArguments = mempty,
-              _lmmSelectPermissions = mempty,
               _lmmDescription = mempty
             }
 

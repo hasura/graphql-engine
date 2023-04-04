@@ -87,9 +87,9 @@ module Hasura.RQL.Types.SchemaCache
     DependencyReason (..),
     SchemaDependency (..),
     mkParentDep,
-    mkLogicalModelParentDep,
+    mkCustomReturnTypeParentDep,
     mkColDep,
-    mkLogicalModelColDep,
+    mkCustomReturnTypeColDep,
     mkComputedFieldDep,
     getDependentObjs,
     getDependentObjsWith,
@@ -103,7 +103,7 @@ module Hasura.RQL.Types.SchemaCache
     showMetadataResourceVersion,
     initialResourceVersion,
     MetadataWithResourceVersion (..),
-    getLogicalModelBoolExpDeps,
+    getCustomReturnTypeBoolExpDeps,
     getBoolExpDeps,
     InlinedAllowlist,
     BoolExpM (..),
@@ -127,9 +127,9 @@ import Database.MSSQL.Transaction qualified as MSSQL
 import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection qualified as Postgres
 import Hasura.Base.Error
+import Hasura.CustomReturnType.Types (CustomReturnTypeName)
 import Hasura.Function.Cache
 import Hasura.GraphQL.Context (GQLContext, RoleContext)
-import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.IR.BoolExp
@@ -196,18 +196,18 @@ mkParentDep s tn =
 -- | When we depend on anything to do with logical models, we also declare that
 -- we depend on the logical model as a whole. This is the "parent" dependency
 -- in the dependency tree for a given logical model.
-mkLogicalModelParentDep ::
+mkCustomReturnTypeParentDep ::
   forall b.
   Backend b =>
   SourceName ->
-  LogicalModelName ->
+  CustomReturnTypeName ->
   SchemaDependency
-mkLogicalModelParentDep source logicalModelName = do
+mkCustomReturnTypeParentDep source logicalModelName = do
   let sourceObject :: SchemaObjId
       sourceObject =
         SOSourceObj source $
           AB.mkAnyBackend @b $
-            SOILogicalModel logicalModelName
+            SOICustomReturnType logicalModelName
 
   SchemaDependency sourceObject DRTable
 
@@ -226,23 +226,22 @@ mkColDep reason source tn col =
     . SOITableObj @b tn
     $ TOCol @b col
 
--- | Declare a dependency on a particular column of a logical model's return
--- type.
-mkLogicalModelColDep ::
+-- | Declare a dependency on a particular column of a custom return type
+mkCustomReturnTypeColDep ::
   forall b.
   (Backend b) =>
   DependencyReason ->
   SourceName ->
-  LogicalModelName ->
+  CustomReturnTypeName ->
   Column b ->
   SchemaDependency
-mkLogicalModelColDep reason source logicalModelName column = do
+mkCustomReturnTypeColDep reason source logicalModelName column = do
   let sourceObject :: SchemaObjId
       sourceObject =
         SOSourceObj source $
           AB.mkAnyBackend $
-            SOILogicalModelObj @b logicalModelName $
-              LMOCol @b column
+            SOICustomReturnTypeObj @b logicalModelName $
+              CRTOCol @b column
 
   SchemaDependency sourceObject reason
 
@@ -746,18 +745,18 @@ getRemoteDependencies schemaCache sourceName =
 -- can't relate tables and logical models yet, we can still declare permissions
 -- like, "you can only see this logical model if your user ID exists in this
 -- table".
-getLogicalModelBoolExpDeps ::
+getCustomReturnTypeBoolExpDeps ::
   forall b.
   (GetAggregationPredicatesDeps b) =>
   SourceName ->
-  LogicalModelName ->
+  CustomReturnTypeName ->
   AnnBoolExpPartialSQL b ->
   [SchemaDependency]
-getLogicalModelBoolExpDeps source logicalModelName = \case
-  BoolAnd exps -> concatMap (getLogicalModelBoolExpDeps source logicalModelName) exps
-  BoolOr exps -> concatMap (getLogicalModelBoolExpDeps source logicalModelName) exps
-  BoolNot e -> getLogicalModelBoolExpDeps source logicalModelName e
-  BoolField fld -> getLogicalModelColExpDeps source logicalModelName fld
+getCustomReturnTypeBoolExpDeps source logicalModelName = \case
+  BoolAnd exps -> concatMap (getCustomReturnTypeBoolExpDeps source logicalModelName) exps
+  BoolOr exps -> concatMap (getCustomReturnTypeBoolExpDeps source logicalModelName) exps
+  BoolNot e -> getCustomReturnTypeBoolExpDeps source logicalModelName e
+  BoolField fld -> getCustomReturnTypeColExpDeps source logicalModelName fld
   BoolExists (GExists refqt whereExp) -> do
     let table :: SchemaObjId
         table = SOSourceObj source $ AB.mkAnyBackend $ SOITable @b refqt
@@ -769,14 +768,14 @@ getLogicalModelBoolExpDeps source logicalModelName = \case
 -- as there's only one type of column: columns! As a result, we have no
 -- dependencies from relationships, computed fields, or aggregation predicates,
 -- as none of these things are supported.
-getLogicalModelColExpDeps ::
+getCustomReturnTypeColExpDeps ::
   forall b.
   (GetAggregationPredicatesDeps b) =>
   SourceName ->
-  LogicalModelName ->
+  CustomReturnTypeName ->
   AnnBoolExpFld b (PartialSQLExp b) ->
   [SchemaDependency]
-getLogicalModelColExpDeps source logicalModelName = \case
+getCustomReturnTypeColExpDeps source logicalModelName = \case
   AVRelationship _ _ -> []
   AVComputedField _ -> []
   AVAggregationPredicates _ -> []
@@ -790,9 +789,9 @@ getLogicalModelColExpDeps source logicalModelName = \case
         colDepReason = bool DRSessionVariable DROnType (any hasStaticExp opExps)
 
         colDep :: SchemaDependency
-        colDep = mkLogicalModelColDep @b colDepReason source logicalModelName columnName
+        colDep = mkCustomReturnTypeColDep @b colDepReason source logicalModelName columnName
 
-    colDep : getLogicalModelOpExpDeps source logicalModelName opExps
+    colDep : getCustomReturnTypeOpExpDeps source logicalModelName opExps
 
 -- | Discover the schema dependencies of an @AnnBoolExpPartialSQL@.
 getBoolExpDeps ::
@@ -883,17 +882,17 @@ getOpExpDeps opExps = do
 
 -- | What dependencies does this row permission for a logical model have? This
 -- is really a utility function for the tree of dependency traversals under
--- 'getLogicalModelBoolExpDeps', specifically focusing on boolean operators.
-getLogicalModelOpExpDeps ::
+-- 'getCustomReturnTypeBoolExpDeps', specifically focusing on boolean operators.
+getCustomReturnTypeOpExpDeps ::
   forall b.
   (Backend b) =>
   SourceName ->
-  LogicalModelName ->
+  CustomReturnTypeName ->
   [OpExpG b (PartialSQLExp b)] ->
   [SchemaDependency]
-getLogicalModelOpExpDeps source logicalModelName operatorExpressions = do
+getCustomReturnTypeOpExpDeps source logicalModelName operatorExpressions = do
   RootOrCurrentColumn _ column <- mapMaybe opExpDepCol operatorExpressions
-  pure (mkLogicalModelColDep @b DROnType source logicalModelName column)
+  pure (mkCustomReturnTypeColDep @b DROnType source logicalModelName column)
 
 -- | Asking for a table's fields info without explicit @'SourceName' argument.
 -- The source name is implicitly inferred from @'SourceM' via @'TableCoreInfoRM'.

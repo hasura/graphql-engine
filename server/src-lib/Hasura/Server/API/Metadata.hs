@@ -138,8 +138,6 @@ data RQLMetadataV1
     RMGetLogicalModel !(AnyBackend LogicalModels.GetLogicalModel)
   | RMTrackLogicalModel !(AnyBackend LogicalModels.TrackLogicalModel)
   | RMUntrackLogicalModel !(AnyBackend LogicalModels.UntrackLogicalModel)
-  | RMCreateSelectLogicalModelPermission !(AnyBackend (LogicalModels.CreateLogicalModelPermission SelPerm))
-  | RMDropSelectLogicalModelPermission !(AnyBackend LogicalModels.DropLogicalModelPermission)
   | -- Custom types
     RMGetCustomReturnType !(AnyBackend CustomReturnType.GetCustomReturnType)
   | RMTrackCustomReturnType !(AnyBackend CustomReturnType.TrackCustomReturnType)
@@ -504,8 +502,6 @@ queryModifiesMetadata = \case
       RMGetLogicalModel _ -> False
       RMTrackLogicalModel _ -> True
       RMUntrackLogicalModel _ -> True
-      RMCreateSelectLogicalModelPermission _ -> True
-      RMDropSelectLogicalModelPermission _ -> True
       RMGetCustomReturnType _ -> False
       RMTrackCustomReturnType _ -> True
       RMUntrackCustomReturnType _ -> True
@@ -698,8 +694,6 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMGetLogicalModel q -> dispatchMetadata LogicalModels.runGetLogicalModel q
   RMTrackLogicalModel q -> dispatchMetadata (LogicalModels.runTrackLogicalModel env) q
   RMUntrackLogicalModel q -> dispatchMetadata LogicalModels.runUntrackLogicalModel q
-  RMCreateSelectLogicalModelPermission q -> dispatchMetadata LogicalModels.runCreateSelectLogicalModelPermission q
-  RMDropSelectLogicalModelPermission q -> dispatchMetadata LogicalModels.runDropSelectLogicalModelPermission q
   RMGetCustomReturnType q -> dispatchMetadata CustomReturnType.runGetCustomReturnType q
   RMTrackCustomReturnType q -> dispatchMetadata CustomReturnType.runTrackCustomReturnType q
   RMUntrackCustomReturnType q -> dispatchMetadata CustomReturnType.runUntrackCustomReturnType q

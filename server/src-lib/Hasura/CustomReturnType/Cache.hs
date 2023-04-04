@@ -1,11 +1,17 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.CustomReturnType.Cache
   ( CustomReturnTypeInfo (..),
     CustomReturnTypeCache,
+    crtiName,
+    crtiPermissions,
+    crtiDescription,
+    crtiFields,
   )
 where
 
+import Control.Lens (makeLenses)
 import Data.Aeson (ToJSON (..), genericToJSON)
 import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Hasura.CustomReturnType.Types (CustomReturnTypeName)
@@ -19,12 +25,14 @@ type CustomReturnTypeCache b = HashMap CustomReturnTypeName (CustomReturnTypeInf
 
 -- | Description of a custom return type for use in metadata (before schema cache)
 data CustomReturnTypeInfo (b :: BackendType) = CustomReturnTypeInfo
-  { _ctiName :: CustomReturnTypeName,
-    _ctiFields :: InsOrd.InsOrdHashMap (Column b) (NullableScalarType b),
-    _ctiDescription :: Maybe Text,
-    _ctiPermissions :: RolePermInfoMap b
+  { _crtiName :: CustomReturnTypeName,
+    _crtiFields :: InsOrd.InsOrdHashMap (Column b) (NullableScalarType b),
+    _crtiDescription :: Maybe Text,
+    _crtiPermissions :: RolePermInfoMap b
   }
   deriving (Generic)
+
+makeLenses ''CustomReturnTypeInfo
 
 instance
   (Backend b, ToJSON (RolePermInfoMap b)) =>

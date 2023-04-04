@@ -20,6 +20,7 @@ import Data.Text.NonEmpty qualified as NT
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
+import Hasura.CustomReturnType.Cache (_crtiPermissions)
 import Hasura.Function.Cache
 import Hasura.GraphQL.ApolloFederation
 import Hasura.GraphQL.Context
@@ -45,7 +46,7 @@ import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Schema.RemoteRelationship
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename (MkTypename (..))
-import Hasura.LogicalModel.Cache (LogicalModelCache, _lmiPermissions)
+import Hasura.LogicalModel.Cache (LogicalModelCache, _lmiReturns)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.QueryTags.Types
@@ -121,8 +122,8 @@ buildGQLContext ServerConfigCtx {..} sources allRemoteSchemas allActions customT
             <> Set.fromList (bool mempty remoteSchemasRoles $ _sccRemoteSchemaPermsCtx == Options.EnableRemoteSchemaPermissions)
       allActionInfos = Map.elems allActions
       allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
-      allLogicalModelRoles = Set.fromList $ getLogicalModelRoles =<< Map.elems sources
-      allRoles = actionRoles <> allTableRoles <> allLogicalModelRoles
+      allCustomReturnTypeRoles = Set.fromList $ getCustomReturnTypeRoles =<< Map.elems sources
+      allRoles = actionRoles <> allTableRoles <> allCustomReturnTypeRoles
 
   contexts <-
     -- Buld role contexts in parallel. We'd prefer deterministic parallelism
@@ -707,7 +708,7 @@ buildLogicalModelFields sourceInfo logicalModels = runMaybeTmempty $ do
     -- more granularly on columns and then rows)
     guard $
       roleName == adminRoleName
-        || roleName `Map.member` _lmiPermissions logicalModel
+        || roleName `Map.member` _crtiPermissions (_lmiReturns logicalModel)
 
     lift (buildLogicalModelRootFields logicalModel)
   where

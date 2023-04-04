@@ -8,27 +8,21 @@ import Data.HashMap.Strict qualified as HM
 import Data.Monoid (Ap (Ap, getAp))
 import Hasura.CustomReturnType.Schema
 import Hasura.GraphQL.Schema.Backend
-  ( BackendCustomTypeSelectSchema (..),
+  ( BackendCustomReturnTypeSelectSchema (..),
     BackendSchema (columnParser),
     MonadBuildSchema,
   )
 import Hasura.GraphQL.Schema.Common
   ( SchemaT,
-    partialSQLExpToUnpreparedValue,
     retrieve,
-    scRole,
   )
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
-import Hasura.GraphQL.Schema.Select
-  ( logicalModelSelectionList,
-  )
 import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
 import Hasura.LogicalModel.IR (LogicalModel (..))
 import Hasura.LogicalModel.Metadata (InterpolatedQuery (..), LogicalModelArgumentName (getLogicalModelArgumentName))
 import Hasura.LogicalModel.Types (NullableScalarType (..), getLogicalModelName)
 import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp (gBoolExpTrue)
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Select (QueryDB (QDBMultipleRows))
 import Hasura.RQL.IR.Select qualified as IR
@@ -41,36 +35,27 @@ import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
   ( ResolvedSourceCustomization (_rscNamingConvention),
   )
-import Hasura.RQL.Types.Table (SelPermInfo (..), _permSel)
 import Hasura.SQL.AnyBackend (mkAnyBackend)
-import Hasura.Session (RoleName, adminRoleName)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
-
--- | find list of columns we're allowed to access for this role
-getSelPermInfoForLogicalModel ::
-  RoleName ->
-  LogicalModelInfo b ->
-  Maybe (SelPermInfo b)
-getSelPermInfoForLogicalModel role logicalModel =
-  HM.lookup role (_lmiPermissions logicalModel) >>= _permSel
 
 defaultBuildLogicalModelRootFields ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
-    BackendCustomTypeSelectSchema b
+    BackendCustomReturnTypeSelectSchema b
   ) =>
   LogicalModelInfo b ->
   SchemaT
     r
     m
     (Maybe (P.FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
-defaultBuildLogicalModelRootFields logicalModel@LogicalModelInfo {..} = runMaybeT $ do
+defaultBuildLogicalModelRootFields LogicalModelInfo {..} = runMaybeT $ do
   let fieldName = getLogicalModelName _lmiRootFieldName
-  logicalModelArgsParser <- logicalModelArgumentsSchema @b @r @m @n fieldName _lmiArguments
+
+  logicalModelArgsParser <-
+    logicalModelArgumentsSchema @b @r @m @n fieldName _lmiArguments
 
   sourceInfo :: SourceInfo b <- asks getter
-  roleName <- retrieve scRole
 
   let sourceName = _siName sourceInfo
       tCase = _rscNamingConvention $ _siCustomization sourceInfo
@@ -78,8 +63,12 @@ defaultBuildLogicalModelRootFields logicalModel@LogicalModelInfo {..} = runMaybe
 
   stringifyNumbers <- retrieve Options.soStringifyNumbers
 
-  selectionSetParser <- MaybeT $ logicalModelSelectionList @b @r @m @n (getLogicalModelName _lmiRootFieldName) logicalModel
-  customTypesArgsParser <- lift $ logicalModelArguments @b @r @m @n (getLogicalModelName _lmiRootFieldName) _lmiReturns
+  customReturnTypePermissions <-
+    MaybeT . fmap Just $
+      buildCustomReturnTypePermissions @b @r @m @n _lmiReturns
+
+  (selectionSetParser, customTypesArgsParser) <-
+    MaybeT $ buildCustomReturnTypeFields _lmiReturns
 
   let interpolatedQuery lmArgs =
         InterpolatedQuery $
@@ -94,18 +83,13 @@ defaultBuildLogicalModelRootFields logicalModel@LogicalModelInfo {..} = runMaybe
             )
             (getInterpolatedQuery _lmiCode)
 
-  let logicalModelPerm = case getSelPermInfoForLogicalModel roleName logicalModel of
-        Just selectPermissions ->
-          IR.TablePerm
-            { IR._tpFilter = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions,
-              IR._tpLimit = spiLimit selectPermissions
-            }
-        Nothing -> IR.TablePerm gBoolExpTrue Nothing
-
-  let customReturnTypeIR = buildCustomReturnType _lmiReturns
+  let sourceObj =
+        MO.MOSourceObjId
+          sourceName
+          (mkAnyBackend $ MO.SMOLogicalModel @b _lmiRootFieldName)
 
   pure $
-    P.setFieldParserOrigin (MO.MOSourceObjId sourceName (mkAnyBackend $ MO.SMOLogicalModel @b _lmiRootFieldName)) $
+    P.setFieldParserOrigin sourceObj $
       P.subselection
         fieldName
         description
@@ -114,7 +98,7 @@ defaultBuildLogicalModelRootFields logicalModel@LogicalModelInfo {..} = runMaybe
             <*> logicalModelArgsParser
         )
         selectionSetParser
-        <&> \((args, lmArgs), fields) ->
+        <&> \((crtArgs, lmArgs), fields) ->
           QDBMultipleRows $
             IR.AnnSelectG
               { IR._asnFields = fields,
@@ -124,13 +108,10 @@ defaultBuildLogicalModelRootFields logicalModel@LogicalModelInfo {..} = runMaybe
                       { lmRootFieldName = _lmiRootFieldName,
                         lmArgs,
                         lmInterpolatedQuery = interpolatedQuery lmArgs,
-                        lmReturnType = customReturnTypeIR
+                        lmReturnType = buildCustomReturnTypeIR _lmiReturns
                       },
-                IR._asnPerm =
-                  if roleName == adminRoleName
-                    then IR.TablePerm gBoolExpTrue Nothing
-                    else logicalModelPerm,
-                IR._asnArgs = args,
+                IR._asnPerm = customReturnTypePermissions,
+                IR._asnArgs = crtArgs,
                 IR._asnStrfyNum = stringifyNumbers,
                 IR._asnNamingConvention = Just tCase
               }

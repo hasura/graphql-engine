@@ -708,12 +708,12 @@ purgeMetadataObj = \case
       SMOFunctionPermission qf rn -> dropFunctionPermissionInMetadata @b source qf rn
       SMOCustomReturnType crt -> dropCustomReturnTypeInMetadata @b source crt
       SMOLogicalModel lm -> dropLogicalModelInMetadata @b source lm
-      SMOLogicalModelObj logicalModelName logicalModelMetadataObjId ->
+      SMOCustomReturnTypeObj customReturnTypeName customReturnTypeMetadataObjId ->
         MetadataModifier $
-          logicalModelMetadataSetter @b source logicalModelName
-            %~ case logicalModelMetadataObjId of
-              LMMOPerm roleName permType ->
-                dropLogicalModelPermissionInMetadata roleName permType
+          customReturnTypeMetadataSetter @b source customReturnTypeName
+            %~ case customReturnTypeMetadataObjId of
+              CRTMOPerm roleName permType ->
+                dropCustomReturnTypePermissionInMetadata roleName permType
       SMOTableObj qt tableObj ->
         MetadataModifier $
           tableMetadataSetter @b source qt %~ case tableObj of

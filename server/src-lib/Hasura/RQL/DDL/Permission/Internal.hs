@@ -10,7 +10,7 @@ module Hasura.RQL.DDL.Permission.Internal
     getDependentHeaders,
     annBoolExp,
     procBoolExp,
-    procLogicalModelBoolExp,
+    procCustomReturnTypeBoolExp,
   )
 where
 
@@ -23,7 +23,7 @@ import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.LogicalModel.Types (LogicalModelName)
+import Hasura.CustomReturnType.Types (CustomReturnTypeName)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -110,8 +110,8 @@ procBoolExp source tn fieldInfoMap be = do
 -- | Interpret a 'BoolExp' into an 'AnnBoolExp', collecting any dependencies as
 -- we go. At the moment, the only dependencies we're likely to encounter are
 -- independent dependencies on other tables. For example, "this user can only
--- select from this logical model if their ID is in the @allowed_users@ table".
-procLogicalModelBoolExp ::
+-- select from this custom return type if their ID is in the @allowed_users@ table".
+procCustomReturnTypeBoolExp ::
   forall b m.
   ( QErrM m,
     TableCoreInfoRM b m,
@@ -119,11 +119,11 @@ procLogicalModelBoolExp ::
     GetAggregationPredicatesDeps b
   ) =>
   SourceName ->
-  LogicalModelName ->
+  CustomReturnTypeName ->
   FieldInfoMap (FieldInfo b) ->
   BoolExp b ->
   m (AnnBoolExpPartialSQL b, Seq SchemaDependency)
-procLogicalModelBoolExp source lmn fieldInfoMap be = do
+procCustomReturnTypeBoolExp source lmn fieldInfoMap be = do
   let -- The parser for the "right hand side" of operations. We use @rhsParser@
       -- as the name here for ease of grepping, though it's maybe a bit vague.
       -- More specifically, if we think of an operation that combines a field
@@ -140,9 +140,9 @@ procLogicalModelBoolExp source lmn fieldInfoMap be = do
 
   let -- What dependencies do we have on the schema cache in order to process
       -- this boolean expression? This dependency system is explained more
-      -- thoroughly in the 'buildLogicalModelSelPermInfo' inline comments.
+      -- thoroughly in the 'buildCustomReturnTypeSelPermInfo' inline comments.
       deps :: [SchemaDependency]
-      deps = getLogicalModelBoolExpDeps source lmn abe
+      deps = getCustomReturnTypeBoolExpDeps source lmn abe
 
   return (abe, Seq.fromList deps)
 

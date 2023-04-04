@@ -4,7 +4,7 @@
 module Hasura.GraphQL.Schema.BoolExp
   ( AggregationPredicatesSchema (..),
     tableBoolExp,
-    customTypeBoolExp,
+    customReturnTypeBoolExp,
     mkBoolOperator,
     equalityOperators,
     comparisonOperators,
@@ -171,7 +171,7 @@ boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser = do
 -- >   ...
 -- > }
 -- | Boolean expression for custom return types
-customTypeBoolExp ::
+customReturnTypeBoolExp ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
     AggregationPredicatesSchema b
@@ -179,9 +179,9 @@ customTypeBoolExp ::
   G.Name ->
   CustomReturnTypeInfo b ->
   SchemaT r m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
-customTypeBoolExp name customReturnType =
-  case toFieldInfo customReturnType of
-    Nothing -> throw500 $ "Error creating fields for custom type " <> tshow (_ctiName customReturnType)
+customReturnTypeBoolExp name customReturnType =
+  case toFieldInfo (_crtiFields customReturnType) of
+    Nothing -> throw500 $ "Error creating fields for custom type " <> tshow (_crtiName customReturnType)
     Just fieldInfo -> do
       let gqlName = mkTableBoolExpTypeName (C.fromCustomName name)
 

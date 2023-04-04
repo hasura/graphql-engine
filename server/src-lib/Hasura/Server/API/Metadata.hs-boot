@@ -93,8 +93,6 @@ data RQLMetadataV1
     RMGetLogicalModel !(AnyBackend LogicalModels.GetLogicalModel)
   | RMTrackLogicalModel !(AnyBackend LogicalModels.TrackLogicalModel)
   | RMUntrackLogicalModel !(AnyBackend LogicalModels.UntrackLogicalModel)
-  | RMCreateSelectLogicalModelPermission !(AnyBackend (LogicalModels.CreateLogicalModelPermission SelPerm))
-  | RMDropSelectLogicalModelPermission !(AnyBackend LogicalModels.DropLogicalModelPermission)
   | -- Custom types
     RMGetCustomReturnType !(AnyBackend CustomReturnType.GetCustomReturnType)
   | RMTrackCustomReturnType !(AnyBackend CustomReturnType.TrackCustomReturnType)

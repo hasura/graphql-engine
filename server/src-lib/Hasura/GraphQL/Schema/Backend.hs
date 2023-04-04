@@ -26,7 +26,7 @@ module Hasura.GraphQL.Schema.Backend
   ( -- * Main Types
     BackendSchema (..),
     BackendTableSelectSchema (..),
-    BackendCustomTypeSelectSchema (..),
+    BackendCustomReturnTypeSelectSchema (..),
     BackendUpdateOperatorsSchema (..),
     MonadBuildSchema,
 
@@ -302,17 +302,17 @@ class Backend b => BackendTableSelectSchema (b :: BackendType) where
 
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
 
-class Backend b => BackendCustomTypeSelectSchema (b :: BackendType) where
-  logicalModelArguments ::
+class Backend b => BackendCustomReturnTypeSelectSchema (b :: BackendType) where
+  customReturnTypeArguments ::
     MonadBuildSourceSchema b r m n =>
     G.Name ->
     CustomReturnTypeInfo b ->
     SchemaT r m (InputFieldsParser n (IR.SelectArgsG b (UnpreparedValue b)))
 
-  logicalModelSelectionSet ::
+  customReturnTypeSelectionSet ::
     MonadBuildSourceSchema b r m n =>
     G.Name ->
-    LogicalModelInfo b ->
+    CustomReturnTypeInfo b ->
     SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 
 class Backend b => BackendUpdateOperatorsSchema (b :: BackendType) where

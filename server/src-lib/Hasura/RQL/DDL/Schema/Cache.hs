@@ -754,16 +754,23 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                 unless areLogicalModelsEnabled $
                   throw400 InvalidConfiguration "The Logical Models feature is disabled"
 
+                fieldInfoMap <- case toFieldInfo _crtmFields of
+                  Nothing -> pure mempty
+                  Just fields -> pure (mapFromL fieldInfoName fields)
+
+                customTypePermissions <-
+                  buildCustomReturnTypePermissions sourceName tableCoreInfos _crtmName fieldInfoMap _crtmSelectPermissions orderedRoles
+
                 pure
                   CustomReturnTypeInfo
-                    { _ctiName = _crtmName,
-                      _ctiFields = _crtmFields,
-                      _ctiPermissions = mempty,
-                      _ctiDescription = _crtmDescription
+                    { _crtiName = _crtmName,
+                      _crtiFields = _crtmFields,
+                      _crtiPermissions = customTypePermissions,
+                      _crtiDescription = _crtmDescription
                     }
 
       let customReturnTypesCache :: CustomReturnTypeCache b
-          customReturnTypesCache = mapFromL _ctiName (catMaybes customReturnTypeCacheMaybes)
+          customReturnTypesCache = mapFromL _crtiName (catMaybes customReturnTypeCacheMaybes)
 
       let mkLogicalModelMetadataObject :: LogicalModelMetadata b -> MetadataObject
           mkLogicalModelMetadataObject lmm =
@@ -789,20 +796,12 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                     (M.lookup _lmmReturns customReturnTypesCache)
                     (throw400 InvalidConfiguration ("The custom return type " <> toTxt _lmmReturns <> " could not be found"))
 
-                fieldInfoMap <- case toFieldInfo customReturnType of
-                  Nothing -> pure mempty
-                  Just fields -> pure (mapFromL fieldInfoName fields)
-
-                logicalModelPermissions <-
-                  buildLogicalModelPermissions sourceName tableCoreInfos _lmmRootFieldName fieldInfoMap _lmmSelectPermissions orderedRoles
-
                 pure
                   LogicalModelInfo
                     { _lmiRootFieldName = _lmmRootFieldName,
                       _lmiCode = _lmmCode,
                       _lmiReturns = customReturnType,
                       _lmiArguments = _lmmArguments,
-                      _lmiPermissions = logicalModelPermissions,
                       _lmiDescription = _lmmDescription
                     }
 

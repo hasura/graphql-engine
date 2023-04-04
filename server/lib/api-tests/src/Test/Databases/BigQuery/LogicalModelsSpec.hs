@@ -409,7 +409,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
           backendType = BackendType.backendTypeString backendTypeMetadata
-          createPermRequestType = backendType <> "_create_logical_model_select_permission"
+          createPermRequestType = backendType <> "_create_custom_return_type_select_permission"
 
           helloWorldPermLogicalModel :: Schema.LogicalModel
           helloWorldPermLogicalModel =
@@ -429,7 +429,7 @@ tests = do
                 - type: *createPermRequestType
                   args:
                     source: *source
-                    root_field_name: hello_world_perms
+                    name: hello_world_function
                     role: "test"
                     permission:
                       columns:
@@ -468,7 +468,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
           backendType = BackendType.backendTypeString backendTypeMetadata
-          createPermRequestType = backendType <> "_create_logical_model_select_permission"
+          createPermRequestType = backendType <> "_create_custom_return_type_select_permission"
 
           helloWorldPermLogicalModel :: Schema.LogicalModel
           helloWorldPermLogicalModel =
@@ -488,7 +488,7 @@ tests = do
                 - type: *createPermRequestType
                   args:
                     source: *source
-                    root_field_name: hello_world_perms
+                    name: hello_world_function
                     role: "test"
                     permission:
                       columns:
@@ -506,7 +506,7 @@ tests = do
                   - extensions:
                       code: validation-failed
                       path: $.selectionSet.hello_world_perms.selectionSet.one
-                    message: "field 'one' not found in type: 'hello_world_perms'"
+                    message: "field 'one' not found in type: 'hello_world_function'"
             |]
 
           actual :: IO Value
@@ -528,7 +528,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
           backendType = BackendType.backendTypeString backendTypeMetadata
-          createPermRequestType = backendType <> "_create_logical_model_select_permission"
+          createPermRequestType = backendType <> "_create_custom_return_type_select_permission"
 
           helloWorldPermLogicalModel :: Schema.LogicalModel
           helloWorldPermLogicalModel =
@@ -548,7 +548,7 @@ tests = do
                 - type: *createPermRequestType
                   args:
                     source: *source
-                    root_field_name: hello_world_perms
+                    name: hello_world_function
                     role: "test"
                     permission:
                       columns: "*"
