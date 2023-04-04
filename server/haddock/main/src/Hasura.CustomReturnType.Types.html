@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="local-6989586621690628153"><span id="local-6989586621690628154"></span></span><span class="hs-comment">-- | A name for a custom return type as it is recognized by the graphql schema.</span><span>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="local-6989586621690630427"><span id="local-6989586621690630428"></span></span><span class="hs-comment">-- | A name for a custom return type as it is recognized by the graphql schema.</span><span>
 </span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.CustomReturnType.Types</span><span>
 </span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.CustomReturnType.Types.html#CustomReturnTypeName"><span class="hs-identifier">CustomReturnTypeName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
@@ -12,15 +12,15 @@
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/template-haskell-2.18.0.0/src"><span class="hs-identifier">Language.Haskell.TH.Syntax</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/template-haskell-2.18.0.0/src"><span class="hs-identifier">Lift</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-13"></span><span>
 </span><span id="line-14"></span><span class="hs-comment">-- The name of a custom return type. This appears as a root field name in the graphql schema.</span><span>
-</span><span id="line-15"></span><span id="local-6989586621690628149"><span id="local-6989586621690628150"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="CustomReturnTypeName"><span class="annot"><a href="Hasura.CustomReturnType.Types.html#CustomReturnTypeName"><span class="hs-identifier hs-var">CustomReturnTypeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CustomReturnTypeName"><span class="annot"><a href="Hasura.CustomReturnType.Types.html#CustomReturnTypeName"><span class="hs-identifier hs-var">CustomReturnTypeName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getCustomReturnTypeName"><span class="annot"><span class="annottext">CustomReturnTypeName -&gt; Name
+</span><span id="line-15"></span><span id="local-6989586621690630423"><span id="local-6989586621690630424"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="CustomReturnTypeName"><span class="annot"><a href="Hasura.CustomReturnType.Types.html#CustomReturnTypeName"><span class="hs-identifier hs-var">CustomReturnTypeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CustomReturnTypeName"><span class="annot"><a href="Hasura.CustomReturnType.Types.html#CustomReturnTypeName"><span class="hs-identifier hs-var">CustomReturnTypeName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getCustomReturnTypeName"><span class="annot"><span class="annottext">CustomReturnTypeName -&gt; Name
 </span><a href="Hasura.CustomReturnType.Types.html#getCustomReturnTypeName"><span class="hs-identifier hs-var hs-var">getCustomReturnTypeName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-16"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690628140"><span id="local-6989586621690628145"><span class="annot"><span class="annottext">CustomReturnTypeName -&gt; CustomReturnTypeName -&gt; Bool
+</span><span id="line-16"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690630414"><span id="local-6989586621690630419"><span class="annot"><span class="annottext">CustomReturnTypeName -&gt; CustomReturnTypeName -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: CustomReturnTypeName -&gt; CustomReturnTypeName -&gt; Bool
 $c/= :: CustomReturnTypeName -&gt; CustomReturnTypeName -&gt; Bool
 == :: CustomReturnTypeName -&gt; CustomReturnTypeName -&gt; Bool
 $c== :: CustomReturnTypeName -&gt; CustomReturnTypeName -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690628107"><span id="local-6989586621690628111"><span id="local-6989586621690628115"><span id="local-6989586621690628119"><span id="local-6989586621690628123"><span id="local-6989586621690628127"><span id="local-6989586621690628132"><span class="annot"><span class="annottext">Eq CustomReturnTypeName
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690630381"><span id="local-6989586621690630385"><span id="local-6989586621690630389"><span id="local-6989586621690630393"><span id="local-6989586621690630397"><span id="local-6989586621690630401"><span id="local-6989586621690630406"><span class="annot"><span class="annottext">Eq CustomReturnTypeName
 CustomReturnTypeName -&gt; CustomReturnTypeName -&gt; Bool
 CustomReturnTypeName -&gt; CustomReturnTypeName -&gt; Ordering
 CustomReturnTypeName
@@ -53,7 +53,7 @@ $c&lt;= :: CustomReturnTypeName -&gt; CustomReturnTypeName -&gt; Bool
 $c&lt; :: CustomReturnTypeName -&gt; CustomReturnTypeName -&gt; Bool
 compare :: CustomReturnTypeName -&gt; CustomReturnTypeName -&gt; Ordering
 $ccompare :: CustomReturnTypeName -&gt; CustomReturnTypeName -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690628092"><span id="local-6989586621690628096"><span id="local-6989586621690628101"><span class="annot"><span class="annottext">Int -&gt; CustomReturnTypeName -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690630366"><span id="local-6989586621690630370"><span id="local-6989586621690630375"><span class="annot"><span class="annottext">Int -&gt; CustomReturnTypeName -&gt; ShowS
 [CustomReturnTypeName] -&gt; ShowS
 CustomReturnTypeName -&gt; String
 forall a.
@@ -64,7 +64,7 @@ show :: CustomReturnTypeName -&gt; String
 $cshow :: CustomReturnTypeName -&gt; String
 showsPrec :: Int -&gt; CustomReturnTypeName -&gt; ShowS
 $cshowsPrec :: Int -&gt; CustomReturnTypeName -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690628079"><span id="local-6989586621690628084"><span class="annot"><span class="annottext">Eq CustomReturnTypeName
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690630353"><span id="local-6989586621690630358"><span class="annot"><span class="annottext">Eq CustomReturnTypeName
 Int -&gt; CustomReturnTypeName -&gt; Int
 CustomReturnTypeName -&gt; Int
 forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -72,11 +72,11 @@ hash :: CustomReturnTypeName -&gt; Int
 $chash :: CustomReturnTypeName -&gt; Int
 hashWithSalt :: Int -&gt; CustomReturnTypeName -&gt; Int
 $chashWithSalt :: Int -&gt; CustomReturnTypeName -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690628073"><span class="annot"><span class="annottext">CustomReturnTypeName -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690630347"><span class="annot"><span class="annottext">CustomReturnTypeName -&gt; ()
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: CustomReturnTypeName -&gt; ()
 $crnf :: CustomReturnTypeName -&gt; ()
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690628053"><span id="local-6989586621690628057"><span id="local-6989586621690628061"><span id="local-6989586621690628066"><span class="annot"><span class="annottext">[CustomReturnTypeName] -&gt; Value
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690630327"><span id="local-6989586621690630331"><span id="local-6989586621690630335"><span id="local-6989586621690630340"><span class="annot"><span class="annottext">[CustomReturnTypeName] -&gt; Value
 [CustomReturnTypeName] -&gt; Encoding
 CustomReturnTypeName -&gt; Value
 CustomReturnTypeName -&gt; Encoding
@@ -94,7 +94,7 @@ toEncoding :: CustomReturnTypeName -&gt; Encoding
 $ctoEncoding :: CustomReturnTypeName -&gt; Encoding
 toJSON :: CustomReturnTypeName -&gt; Value
 $ctoJSON :: CustomReturnTypeName -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690628043"><span id="local-6989586621690628048"><span class="annot"><span class="annottext">Value -&gt; Parser [CustomReturnTypeName]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690630317"><span id="local-6989586621690630322"><span class="annot"><span class="annottext">Value -&gt; Parser [CustomReturnTypeName]
 Value -&gt; Parser CustomReturnTypeName
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -102,12 +102,12 @@ parseJSONList :: Value -&gt; Parser [CustomReturnTypeName]
 $cparseJSONList :: Value -&gt; Parser [CustomReturnTypeName]
 parseJSON :: Value -&gt; Parser CustomReturnTypeName
 $cparseJSON :: Value -&gt; Parser CustomReturnTypeName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690628038"><span class="annot"><span class="annottext">CustomReturnTypeName -&gt; Text
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690630312"><span class="annot"><span class="annottext">CustomReturnTypeName -&gt; Text
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: CustomReturnTypeName -&gt; Text
 $ctoTxt :: CustomReturnTypeName -&gt; Text
 </span><a href="Data.Text.Extended.html#C%3AToTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">)</span><span>
-</span><span id="line-17"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690628000"><span id="local-6989586621690628002"><span id="local-6989586621690628004"><span id="local-6989586621690628006"><span id="local-6989586621690628008"><span id="local-6989586621690628010"><span id="local-6989586621690628012"><span id="local-6989586621690628014"><span id="local-6989586621690628016"><span id="local-6989586621690628018"><span id="local-6989586621690628020"><span id="local-6989586621690628022"><span id="local-6989586621690628025"><span id="local-6989586621690628029"><span class="annot"><span class="annottext">Typeable CustomReturnTypeName
+</span><span id="line-17"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690630274"><span id="local-6989586621690630276"><span id="local-6989586621690630278"><span id="local-6989586621690630280"><span id="local-6989586621690630282"><span id="local-6989586621690630284"><span id="local-6989586621690630286"><span id="local-6989586621690630288"><span id="local-6989586621690630290"><span id="local-6989586621690630292"><span id="local-6989586621690630294"><span id="local-6989586621690630296"><span id="local-6989586621690630299"><span id="local-6989586621690630303"><span class="annot"><span class="annottext">Typeable CustomReturnTypeName
 CustomReturnTypeName -&gt; DataType
 CustomReturnTypeName -&gt; Constr
 (forall b. Data b =&gt; b -&gt; b)
@@ -266,7 +266,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep CustomReturnTypeName x -&gt; CustomReturnTypeName
 $cfrom :: forall x. CustomReturnTypeName -&gt; Rep CustomReturnTypeName x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690627986"><span id="local-6989586621690627993"><span class="annot"><span class="annottext">forall t.
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690630260"><span id="local-6989586621690630267"><span class="annot"><span class="annottext">forall t.
 (forall (m :: * -&gt; *). Quote m =&gt; t -&gt; m Exp)
 -&gt; (forall (m :: * -&gt; *). Quote m =&gt; t -&gt; Code m t) -&gt; Lift t
 forall (m :: * -&gt; *). Quote m =&gt; CustomReturnTypeName -&gt; m Exp
@@ -283,9 +283,9 @@ lift :: forall (m :: * -&gt; *). Quote m =&gt; CustomReturnTypeName -&gt; m Exp
 $clift :: forall (m :: * -&gt; *). Quote m =&gt; CustomReturnTypeName -&gt; m Exp
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/template-haskell-2.18.0.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Lift</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-18"></span><span>
-</span><span id="line-19"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690627977"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.CustomReturnType.Types.html#CustomReturnTypeName"><span class="hs-identifier hs-type">CustomReturnTypeName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-20"></span><span>  </span><span id="local-6989586621690627973"><span class="annot"><span class="annottext">codec :: JSONCodec CustomReturnTypeName
-</span><a href="#local-6989586621690627973"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
+</span><span id="line-19"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690630251"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.CustomReturnType.Types.html#CustomReturnTypeName"><span class="hs-identifier hs-type">CustomReturnTypeName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-20"></span><span>  </span><span id="local-6989586621690630247"><span class="annot"><span class="annottext">codec :: JSONCodec CustomReturnTypeName
+</span><a href="#local-6989586621690630247"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
 (oldOutput -&gt; newOutput)
 -&gt; (newInput -&gt; oldInput)
 -&gt; Codec context oldInput oldOutput
@@ -295,7 +295,7 @@ $clift :: forall (m :: * -&gt; *). Quote m =&gt; CustomReturnTypeName -&gt; m Ex
 </span><a href="Hasura.CustomReturnType.Types.html#getCustomReturnTypeName"><span class="hs-identifier hs-var">getCustomReturnTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">forall value. HasCodec value =&gt; JSONCodec value
 </span><span class="hs-identifier hs-var">codec</span></span><span>
 </span><span id="line-21"></span><span>
-</span><span id="line-22"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690627969"><span id="local-6989586621690627971"><span class="annot"><span class="hs-identifier hs-type">FromJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.CustomReturnType.Types.html#CustomReturnTypeName"><span class="hs-identifier hs-type">CustomReturnTypeName</span></a></span></span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690630243"><span id="local-6989586621690630245"><span class="annot"><span class="hs-identifier hs-type">FromJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.CustomReturnType.Types.html#CustomReturnTypeName"><span class="hs-identifier hs-type">CustomReturnTypeName</span></a></span></span></span><span>
 </span><span id="line-23"></span><span>
-</span><span id="line-24"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690627964"><span id="local-6989586621690627966"><span class="annot"><span class="hs-identifier hs-type">ToJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.CustomReturnType.Types.html#CustomReturnTypeName"><span class="hs-identifier hs-type">CustomReturnTypeName</span></a></span></span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690630238"><span id="local-6989586621690630240"><span class="annot"><span class="hs-identifier hs-type">ToJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.CustomReturnType.Types.html#CustomReturnTypeName"><span class="hs-identifier hs-type">CustomReturnTypeName</span></a></span></span></span><span>
 </span><span id="line-25"></span></pre></body></html>
