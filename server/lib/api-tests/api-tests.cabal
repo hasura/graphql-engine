@@ -102,6 +102,7 @@ library
     Test.API.Metadata.LogicalModels.TypeCheckingSpec
     Test.API.Metadata.LogicalModels.ValidationSpec
     Test.API.Metadata.SuggestRelationshipsSpec
+    Test.API.Metadata.TablesSpec
     Test.API.Metadata.TestConnectionTemplateSpec
     Test.API.Metadata.TransparentDefaultsSpec
     Test.API.Metadata.WarningsSpec

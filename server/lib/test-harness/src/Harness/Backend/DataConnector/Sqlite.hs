@@ -59,7 +59,7 @@ backendTypeMetadata =
         metrics: {}
         raw: {}
     |],
-      backendTypeString = "sqlite",
+      backendTypeString = "dataconnector",
       backendDisplayNameString = "Hasura SQLite (sqlite)",
       backendReleaseNameString = Nothing,
       backendServerUrl = Just "http://localhost:65007",

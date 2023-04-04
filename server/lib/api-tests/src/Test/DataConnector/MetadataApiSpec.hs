@@ -28,6 +28,7 @@ import Harness.Backend.DataConnector.Chinook.Reference qualified as Reference
 import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml.InterpolateYaml (interpolateYaml)
 import Harness.Test.BackendType (BackendTypeConfig (..))
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture (Fixture (..))
@@ -82,6 +83,9 @@ schemaInspectionTests = describe "Schema and Source Inspection" $ do
           sortYamlArray (J.Array a) = pure $ J.Array (Vector.fromList (sort (Vector.toList a)))
           sortYamlArray _ = fail "Should return Array"
 
+          backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          backendType = BackendType.backendTypeString backendTypeMetadata
+
       case BackendType.backendSourceName <$> getBackendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend not found for testEnvironment"
         Just sourceString -> do
@@ -101,10 +105,10 @@ schemaInspectionTests = describe "Schema and Source Inspection" $ do
             sortYamlArray
             ( GraphqlEngine.postMetadata
                 testEnvironment
-                [yaml|
-                type: get_source_tables
+                [interpolateYaml|
+                type: #{backendType}_get_source_tables
                 args:
-                  source: *sourceString
+                  source: #{sourceString}
               |]
             )
             [yaml|

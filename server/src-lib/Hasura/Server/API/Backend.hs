@@ -102,7 +102,8 @@ sourceCommands =
 
 tableCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
 tableCommands =
-  [ commandParser "track_table" $ RMTrackTable . mkAnyBackend @b,
+  [ commandParser "get_source_tables" $ RMGetSourceTables . mkAnyBackend @b,
+    commandParser "track_table" $ RMTrackTable . mkAnyBackend @b,
     commandParser "untrack_table" $ RMUntrackTable . mkAnyBackend @b
   ]
 

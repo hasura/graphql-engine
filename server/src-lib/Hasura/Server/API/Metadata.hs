@@ -56,6 +56,7 @@ import Hasura.RQL.DDL.Webhook.Transform.Validation
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
+import Hasura.RQL.Types.Backend (Backend)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
@@ -93,7 +94,7 @@ data RQLMetadataV1
   | RMUpdateSource !(AnyBackend UpdateSource)
   | RMListSourceKinds !ListSourceKinds
   | RMGetSourceKindCapabilities !GetSourceKindCapabilities
-  | RMGetSourceTables !GetSourceTables
+  | RMGetSourceTables !(AnyBackend GetSourceTables)
   | RMGetTableInfo !GetTableInfo
   | -- Tables
     RMTrackTable !(AnyBackend TrackTableV2)
@@ -283,7 +284,6 @@ instance FromJSON RQLMetadataV1 where
       "dc_delete_agent" -> RMDCDeleteAgent <$> args
       "list_source_kinds" -> RMListSourceKinds <$> args
       "get_source_kind_capabilities" -> RMGetSourceKindCapabilities <$> args
-      "get_source_tables" -> RMGetSourceTables <$> args
       "get_table_info" -> RMGetTableInfo <$> args
       "set_custom_types" -> RMSetCustomTypes <$> args
       "set_api_limits" -> RMSetApiLimits <$> args
@@ -658,7 +658,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMUpdateSource q -> dispatchMetadata runUpdateSource q
   RMListSourceKinds q -> runListSourceKinds q
   RMGetSourceKindCapabilities q -> runGetSourceKindCapabilities q
-  RMGetSourceTables q -> runGetSourceTables env q
+  RMGetSourceTables q -> dispatch (runGetSourceTables env) q
   RMGetTableInfo q -> runGetTableInfo env q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
   RMUntrackTable q -> dispatchMetadataAndEventTrigger runUntrackTableQ q
@@ -793,6 +793,12 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMGetFeatureFlag q -> runGetFeatureFlag q
   RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
   where
+    dispatch ::
+      (forall b. Backend b => i b -> a) ->
+      AnyBackend i ->
+      a
+    dispatch f x = dispatchAnyBackend @Backend x f
+
     dispatchMetadata ::
       (forall b. BackendMetadata b => i b -> a) ->
       AnyBackend i ->
