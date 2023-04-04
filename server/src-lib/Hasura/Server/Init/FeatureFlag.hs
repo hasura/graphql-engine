@@ -7,6 +7,7 @@ module Hasura.Server.Init.FeatureFlag
     checkFeatureFlag,
     Identifier (..),
     FeatureFlags (..),
+    HasFeatureFlagChecker (..),
     featureFlags,
     logicalModelInterface,
   )
@@ -56,6 +57,20 @@ featureFlags =
       [ ("test-flag", testFlag),
         ("native-query-interface", logicalModelInterface)
       ]
+
+--------------------------------------------------------------------------------
+
+class Monad m => HasFeatureFlagChecker m where
+  checkFlag :: FeatureFlag -> m Bool
+
+instance HasFeatureFlagChecker m => HasFeatureFlagChecker (ReaderT r m) where
+  checkFlag = lift . checkFlag
+
+instance HasFeatureFlagChecker m => HasFeatureFlagChecker (ExceptT e m) where
+  checkFlag = lift . checkFlag
+
+instance HasFeatureFlagChecker m => HasFeatureFlagChecker (StateT s m) where
+  checkFlag = lift . checkFlag
 
 --------------------------------------------------------------------------------
 

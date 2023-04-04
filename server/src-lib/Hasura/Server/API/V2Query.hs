@@ -13,7 +13,6 @@ import Control.Lens (preview, _Right)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Aeson.Types (Parser)
-import Data.Environment qualified as Env
 import Data.Text qualified as T
 import GHC.Generics.Extended (constrName)
 import Hasura.App.State
@@ -29,6 +28,7 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.DDL.Schema
+import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.DML.Count
 import Hasura.RQL.DML.Delete
 import Hasura.RQL.DML.Insert
@@ -41,6 +41,7 @@ import Hasura.RQL.DML.Types
     UpdateQuery,
   )
 import Hasura.RQL.DML.Update
+import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.SchemaCache (MetadataWithResourceVersion (MetadataWithResourceVersion))
 import Hasura.RQL.Types.SchemaCache.Build
@@ -107,6 +108,7 @@ runQuery ::
     MonadBaseControl IO m,
     MonadError QErr m,
     HasAppEnv m,
+    HasCacheStaticConfig m,
     Tracing.MonadTrace m,
     MonadMetadataStorage m,
     MonadResolveSource m,
@@ -119,17 +121,17 @@ runQuery ::
   RQLQuery ->
   m (EncJSON, RebuildableSchemaCache)
 runQuery appContext schemaCache rqlQuery = do
-  appEnv@AppEnv {..} <- askAppEnv
+  AppEnv {..} <- askAppEnv
   when ((appEnvEnableReadOnlyMode == ReadOnlyModeEnabled) && queryModifiesUserDB rqlQuery) $
     throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
-  let serverConfigCtx = buildServerConfigCtx appEnv appContext
+  let dynamicConfig = buildCacheDynamicConfig appContext
   MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
   ((result, updatedMetadata), updatedCache, invalidations) <-
-    runQueryM (acEnvironment appContext) rqlQuery
+    runQueryM (acSQLGenCtx appContext) rqlQuery
       -- We can use defaults here unconditionally, since there is no MD export function in V2Query
       & runMetadataT metadata (acMetadataDefaults appContext)
-      & runCacheRWT serverConfigCtx schemaCache
+      & runCacheRWT dynamicConfig schemaCache
   when (queryModifiesSchema rqlQuery) $ do
     case appEnvEnableMaintenanceMode of
       MaintenanceModeDisabled -> do
@@ -170,33 +172,32 @@ runQueryM ::
     MonadBaseControl IO m,
     UserInfoM m,
     CacheRWM m,
-    HasServerConfigCtx m,
     Tracing.MonadTrace m,
     MetadataM m,
     MonadQueryTags m
   ) =>
-  Env.Environment ->
+  SQLGenCtx ->
   RQLQuery ->
   m EncJSON
-runQueryM env rq = Tracing.newSpan (T.pack $ constrName rq) $ case rq of
-  RQInsert q -> runInsert q
-  RQSelect q -> runSelect q
-  RQUpdate q -> runUpdate q
-  RQDelete q -> runDelete q
+runQueryM sqlGen rq = Tracing.newSpan (T.pack $ constrName rq) $ case rq of
+  RQInsert q -> runInsert sqlGen q
+  RQSelect q -> runSelect sqlGen q
+  RQUpdate q -> runUpdate sqlGen q
+  RQDelete q -> runDelete sqlGen q
   RQCount q -> runCount q
-  RQRunSql q -> Postgres.runRunSQL @'Vanilla q
+  RQRunSql q -> Postgres.runRunSQL @'Vanilla sqlGen q
   RQMssqlRunSql q -> MSSQL.runSQL q
   RQMysqlRunSql q -> MySQL.runSQL q
-  RQCitusRunSql q -> Postgres.runRunSQL @'Citus q
-  RQCockroachRunSql q -> Postgres.runRunSQL @'Cockroach q
+  RQCitusRunSql q -> Postgres.runRunSQL @'Citus sqlGen q
+  RQCockroachRunSql q -> Postgres.runRunSQL @'Cockroach sqlGen q
   RQBigqueryRunSql q -> BigQuery.runSQL q
   RQDataConnectorRunSql t q -> DataConnector.runSQL t q
   RQBigqueryDatabaseInspection q -> BigQuery.runDatabaseInspection q
-  RQBulk l -> encJFromList <$> indexedMapM (runQueryM env) l
+  RQBulk l -> encJFromList <$> indexedMapM (runQueryM sqlGen) l
   RQConcurrentBulk l -> do
     when (queryModifiesSchema rq) $
       throw500 "Only read-only queries are allowed in a concurrent_bulk"
-    encJFromList <$> mapConcurrently (runQueryM env) l
+    encJFromList <$> mapConcurrently (runQueryM sqlGen) l
 
 queryModifiesUserDB :: RQLQuery -> Bool
 queryModifiesUserDB = \case

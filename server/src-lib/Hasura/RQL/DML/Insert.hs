@@ -29,7 +29,6 @@ import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
-import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 
@@ -243,19 +242,19 @@ runInsert ::
   ( QErrM m,
     UserInfoM m,
     CacheRM m,
-    HasServerConfigCtx m,
     MonadIO m,
     Tracing.MonadTrace m,
     MonadBaseControl IO m,
     MetadataM m
   ) =>
+  SQLGenCtx ->
   InsertQuery ->
   m EncJSON
-runInsert q = do
+runInsert sqlGen q = do
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (iqSource q)
   userInfo <- askUserInfo
   res <- convInsQ q
-  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
+  let strfyNum = stringifyNum sqlGen
   runTxWithCtx (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) LegacyRQLQuery $
     flip runReaderT emptyQueryTagsComment $
       execInsertQuery strfyNum Nothing userInfo res

@@ -23,6 +23,7 @@ import Hasura.Base.Error
 import Hasura.CustomReturnType.API qualified as CustomReturnType
 import Hasura.EncJSON
 import Hasura.Function.API qualified as Functions
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as L
 import Hasura.LogicalModel.API qualified as LogicalModels
 import Hasura.Metadata.Class
@@ -50,6 +51,7 @@ import Hasura.RQL.DDL.Relationship.Suggest
 import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema
+import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.DDL.Schema.Source
 import Hasura.RQL.DDL.SourceKinds
 import Hasura.RQL.DDL.Webhook.Transform.Validation
@@ -79,6 +81,7 @@ import Hasura.SQL.AnyBackend
 import Hasura.SQL.Backend
 import Hasura.Server.API.Backend
 import Hasura.Server.API.Instances ()
+import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker)
 import Hasura.Server.Logging (SchemaSyncLog (..), SchemaSyncThreadType (TTMetadataApi))
 import Hasura.Server.Types
 import Hasura.Server.Utils (APIVersion (..))
@@ -388,6 +391,8 @@ runMetadataQuery ::
     MonadError QErr m,
     MonadBaseControl IO m,
     HasAppEnv m,
+    HasCacheStaticConfig m,
+    HasFeatureFlagChecker m,
     Tracing.MonadTrace m,
     MonadMetadataStorage m,
     MonadResolveSource m,
@@ -401,7 +406,7 @@ runMetadataQuery ::
   RQLMetadata ->
   m (EncJSON, RebuildableSchemaCache)
 runMetadataQuery appContext schemaCache RQLMetadata {..} = do
-  appEnv@AppEnv {..} <- askAppEnv
+  AppEnv {..} <- askAppEnv
   let logger = _lsLogger appEnvLoggers
   MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
   let exportsMetadata = \case
@@ -427,13 +432,18 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
         if (exportsMetadata _rqlMetadata || queryModifiesMetadata _rqlMetadata)
           then emptyMetadataDefaults
           else acMetadataDefaults appContext
-      serverConfigCtx = buildServerConfigCtx appEnv appContext
+      dynamicConfig = buildCacheDynamicConfig appContext
   ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
-    runMetadataQueryM (acEnvironment appContext) currentResourceVersion _rqlMetadata
+    runMetadataQueryM
+      (acEnvironment appContext)
+      appEnvCheckFeatureFlag
+      (acRemoteSchemaPermsCtx appContext)
+      currentResourceVersion
+      _rqlMetadata
       -- TODO: remove this straight runReaderT that provides no actual new info
       & flip runReaderT logger
       & runMetadataT metadata metadataDefaults
-      & runCacheRWT serverConfigCtx schemaCache
+      & runCacheRWT dynamicConfig schemaCache
   -- set modified metadata in storage
   if queryModifiesMetadata _rqlMetadata
     then case (appEnvEnableMaintenanceMode, appEnvEnableReadOnlyMode) of
@@ -464,7 +474,7 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
         (_, modSchemaCache', _) <-
           Tracing.newSpan "setMetadataResourceVersionInSchemaCache" $
             setMetadataResourceVersionInSchemaCache newResourceVersion
-              & runCacheRWT serverConfigCtx modSchemaCache
+              & runCacheRWT dynamicConfig modSchemaCache
 
         pure (r, modSchemaCache')
       (MaintenanceModeEnabled (), ReadOnlyModeDisabled) ->
@@ -607,25 +617,27 @@ runMetadataQueryM ::
     UserInfoM m,
     MetadataM m,
     MonadMetadataStorage m,
-    HasServerConfigCtx m,
     MonadReader r m,
     Has (L.Logger L.Hasura) r,
     MonadError QErr m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
-    MonadGetApiTimeLimit m
+    MonadGetApiTimeLimit m,
+    HasFeatureFlagChecker m
   ) =>
   Env.Environment ->
+  CheckFeatureFlag ->
+  Options.RemoteSchemaPermissions ->
   MetadataResourceVersion ->
   RQLMetadataRequest ->
   m EncJSON
-runMetadataQueryM env currentResourceVersion =
+runMetadataQueryM env checkFeatureFlag remoteSchemaPerms currentResourceVersion =
   withPathK "args" . \case
     -- NOTE: This is a good place to install tracing, since it's involved in
     -- the recursive case via "bulk":
     RMV1 q ->
       Tracing.newSpan ("v1 " <> T.pack (constrName q)) $
-        runMetadataQueryV1M env currentResourceVersion q
+        runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersion q
     RMV2 q ->
       Tracing.newSpan ("v2 " <> T.pack (constrName q)) $
         runMetadataQueryV2M currentResourceVersion q
@@ -639,19 +651,21 @@ runMetadataQueryV1M ::
     UserInfoM m,
     MetadataM m,
     MonadMetadataStorage m,
-    HasServerConfigCtx m,
     MonadReader r m,
     Has (L.Logger L.Hasura) r,
     MonadError QErr m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
-    MonadGetApiTimeLimit m
+    MonadGetApiTimeLimit m,
+    HasFeatureFlagChecker m
   ) =>
   Env.Environment ->
+  CheckFeatureFlag ->
+  Options.RemoteSchemaPermissions ->
   MetadataResourceVersion ->
   RQLMetadataV1 ->
   m EncJSON
-runMetadataQueryV1M env currentResourceVersion = \case
+runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersion = \case
   RMAddSource q -> dispatchMetadata (runAddSource env) q
   RMDropSource q -> runDropSource q
   RMRenameSource q -> runRenameSource q
@@ -718,7 +732,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMRemoveRemoteSchema q -> runRemoveRemoteSchema q
   RMReloadRemoteSchema q -> runReloadRemoteSchema q
   RMIntrospectRemoteSchema q -> runIntrospectRemoteSchema q
-  RMAddRemoteSchemaPermissions q -> runAddRemoteSchemaPermissions q
+  RMAddRemoteSchemaPermissions q -> runAddRemoteSchemaPermissions remoteSchemaPerms q
   RMDropRemoteSchemaPermissions q -> runDropRemoteSchemaPermissions q
   RMCreateRemoteSchemaRemoteRelationship q -> runCreateRemoteSchemaRemoteRelationship q
   RMUpdateRemoteSchemaRemoteRelationship q -> runUpdateRemoteSchemaRemoteRelationship q
@@ -790,8 +804,8 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMSetQueryTagsConfig q -> runSetQueryTagsConfig q
   RMSetOpenTelemetryConfig q -> runSetOpenTelemetryConfig q
   RMSetOpenTelemetryStatus q -> runSetOpenTelemetryStatus q
-  RMGetFeatureFlag q -> runGetFeatureFlag q
-  RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
+  RMGetFeatureFlag q -> runGetFeatureFlag checkFeatureFlag q
+  RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env checkFeatureFlag remoteSchemaPerms currentResourceVersion) q
   where
     dispatch ::
       (forall b. Backend b => i b -> a) ->

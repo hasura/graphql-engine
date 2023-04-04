@@ -31,13 +31,13 @@ import Hasura.Logging
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
+import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata (emptyMetadataDefaults)
 import Hasura.RQL.Types.ResizePool
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.Server.Init
-import Hasura.Server.Init.FeatureFlag as FF
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Migrate
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
@@ -107,20 +107,22 @@ main = do
                 Options.EnableBigQueryStringNumericInput
             maintenanceMode = MaintenanceModeDisabled
             readOnlyMode = ReadOnlyModeDisabled
-            serverConfigCtx =
-              ServerConfigCtx
+            staticConfig =
+              CacheStaticConfig
+                maintenanceMode
+                EventingEnabled
+                readOnlyMode
+                (CheckFeatureFlag $ checkFeatureFlag mempty)
+            dynamicConfig =
+              CacheDynamicConfig
                 Options.InferFunctionPermissions
                 Options.DisableRemoteSchemaPermissions
                 sqlGenCtx
-                maintenanceMode
                 mempty
-                EventingEnabled
-                readOnlyMode
                 (_default defaultNamingConventionOption)
                 emptyMetadataDefaults
-                (CheckFeatureFlag $ FF.checkFeatureFlag mempty)
                 ApolloFederationDisabled
-            cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver
+            cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver staticConfig
 
         (_appInit, appEnv) <-
           lowerManagedT $
@@ -145,11 +147,11 @@ main = do
             snd
               <$> (liftEitherM . runExceptT . _pecRunTx pgContext (PGExecCtxInfo (Tx PG.ReadWrite Nothing) InternalRawQuery))
                 (migrateCatalog (Just sourceConfig) defaultPostgresExtensionsSchema maintenanceMode =<< liftIO getCurrentTime)
-          schemaCache <- runCacheBuild cacheBuildParams $ buildRebuildableSchemaCache logger envMap metadataWithVersion serverConfigCtx
+          schemaCache <- runCacheBuild cacheBuildParams $ buildRebuildableSchemaCache logger envMap metadataWithVersion dynamicConfig
           pure (_mwrvMetadata metadataWithVersion, schemaCache)
 
         cacheRef <- newMVar schemaCache
-        pure $ NT (run . flip MigrateSuite.runCacheRefT (serverConfigCtx, cacheRef) . fmap fst . runMetadataT metadata emptyMetadataDefaults)
+        pure $ NT (run . flip MigrateSuite.runCacheRefT (dynamicConfig, cacheRef) . fmap fst . runMetadataT metadata emptyMetadataDefaults)
 
   streamingSubscriptionSuite <- StreamingSubscriptionSuite.buildStreamingSubscriptionSuite
   eventTriggerLogCleanupSuite <- EventTriggerCleanupSuite.buildEventTriggerCleanupSuite

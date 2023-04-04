@@ -34,7 +34,6 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
-import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 
@@ -224,18 +223,18 @@ runUpdate ::
   ( QErrM m,
     UserInfoM m,
     CacheRM m,
-    HasServerConfigCtx m,
     MonadBaseControl IO m,
     MonadIO m,
     Tracing.MonadTrace m,
     MetadataM m
   ) =>
+  SQLGenCtx ->
   UpdateQuery ->
   m EncJSON
-runUpdate q = do
+runUpdate sqlGen q = do
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (uqSource q)
   userInfo <- askUserInfo
-  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
+  let strfyNum = stringifyNum sqlGen
   validateUpdateQuery q
     >>= runTxWithCtx (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) LegacyRQLQuery
       . flip runReaderT emptyQueryTagsComment

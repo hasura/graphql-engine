@@ -59,7 +59,7 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RemoteSchema.Metadata (RemoteSchemaName)
-import Hasura.Server.Types
+import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker)
 import Hasura.Services.Network
 import Hasura.Session
 import Hasura.Tracing (TraceT)
@@ -239,7 +239,8 @@ newtype MetadataT m a = MetadataT {unMetadataT :: StateT Metadata m a}
       Tracing.MonadTrace,
       MonadBase b,
       MonadBaseControl b,
-      ProvidesNetwork
+      ProvidesNetwork,
+      HasFeatureFlagChecker
     )
   deriving anyclass (MonadQueryTags)
 
@@ -249,9 +250,6 @@ instance (Monad m) => MetadataM (MetadataT m) where
 
 instance (UserInfoM m) => UserInfoM (MetadataT m) where
   askUserInfo = lift askUserInfo
-
-instance HasServerConfigCtx m => HasServerConfigCtx (MetadataT m) where
-  askServerConfigCtx = lift askServerConfigCtx
 
 -- | @runMetadataT@ puts a stateful metadata in scope. @MetadataDefaults@ is
 -- provided so that it can be considered from the --metadataDefaults arguments.

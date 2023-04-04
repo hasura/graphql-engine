@@ -22,6 +22,7 @@ import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..))
 import Hasura.RQL.DDL.Metadata (ClearMetadata (..), runClearMetadata)
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Cache.Common
+import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.DDL.Schema.LegacyCatalog (recreateSystemMetadata)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.SchemaCache
@@ -38,7 +39,7 @@ import Test.Hspec.Expectations.Lifted
 
 -- -- NOTE: downgrade test disabled for now (see #5273)
 
-newtype CacheRefT m a = CacheRefT {runCacheRefT :: (ServerConfigCtx, MVar RebuildableSchemaCache) -> m a}
+newtype CacheRefT m a = CacheRefT {runCacheRefT :: (CacheDynamicConfig, MVar RebuildableSchemaCache) -> m a}
   deriving
     ( Functor,
       Applicative,
@@ -47,18 +48,16 @@ newtype CacheRefT m a = CacheRefT {runCacheRefT :: (ServerConfigCtx, MVar Rebuil
       MonadError e,
       MonadBase b,
       MonadBaseControl b,
-      MonadReader (ServerConfigCtx, MVar RebuildableSchemaCache),
+      MonadReader (CacheDynamicConfig, MVar RebuildableSchemaCache),
       MonadTx,
+      HasCacheStaticConfig,
       UserInfoM,
       MonadMetadataStorage,
       MonadResolveSource,
       ProvidesNetwork,
       MonadGetApiTimeLimit
     )
-    via (ReaderT (ServerConfigCtx, MVar RebuildableSchemaCache) m)
-
-instance Monad m => HasServerConfigCtx (CacheRefT m) where
-  askServerConfigCtx = asks fst
+    via (ReaderT (CacheDynamicConfig, MVar RebuildableSchemaCache) m)
 
 instance MonadTrans CacheRefT where
   lift = CacheRefT . const
@@ -80,20 +79,21 @@ instance
     MonadBaseControl IO m,
     MonadError QErr m,
     MonadResolveSource m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    HasCacheStaticConfig m
   ) =>
   CacheRWM (CacheRefT m)
   where
   buildSchemaCacheWithOptions reason invalidations metadata = do
-    (serverConfigCtx, scVar) <- ask
+    (dynamicConfig, scVar) <- ask
     modifyMVar scVar \schemaCache -> do
-      ((), cache, _) <- runCacheRWT serverConfigCtx schemaCache (buildSchemaCacheWithOptions reason invalidations metadata)
+      ((), cache, _) <- runCacheRWT dynamicConfig schemaCache (buildSchemaCacheWithOptions reason invalidations metadata)
       pure (cache, ())
 
   setMetadataResourceVersionInSchemaCache resourceVersion = do
-    (serverConfigCtx, scVar) <- ask
+    (dynamicConfig, scVar) <- ask
     modifyMVar scVar \schemaCache -> do
-      ((), cache, _) <- runCacheRWT serverConfigCtx schemaCache (setMetadataResourceVersionInSchemaCache resourceVersion)
+      ((), cache, _) <- runCacheRWT dynamicConfig schemaCache (setMetadataResourceVersionInSchemaCache resourceVersion)
       pure (cache, ())
 
 instance Example (MetadataT (CacheRefT m) ()) where
@@ -114,7 +114,8 @@ suite ::
     MonadMetadataStorage m,
     MonadEventLogCleanup m,
     ProvidesNetwork m,
-    MonadGetApiTimeLimit m
+    MonadGetApiTimeLimit m,
+    HasCacheStaticConfig m
   ) =>
   PostgresConnConfiguration ->
   PGExecCtx ->
@@ -127,9 +128,9 @@ suite srcConfig pgExecCtx pgConnInfo = do
         liftIO $ putStrLn $ LBS.toString $ encode $ EngineLog t logLevel logType logDetail
 
       migrateCatalogAndBuildCache env time = do
-        serverConfigCtx <- askServerConfigCtx
+        dynamicConfig <- asks fst
         (migrationResult, metadataWithVersion) <- runTx' pgExecCtx $ migrateCatalog (Just srcConfig) (ExtensionsSchema "public") MaintenanceModeDisabled time
-        (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache logger env metadataWithVersion serverConfigCtx)
+        (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache logger env metadataWithVersion dynamicConfig)
 
       dropAndInit env time = lift do
         scVar <- asks snd

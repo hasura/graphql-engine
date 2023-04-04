@@ -161,7 +161,6 @@ import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.SQL.Tag (HasTag (backendTag), reify)
-import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing (TraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -651,7 +650,7 @@ instance (TableInfoRM b m) => TableInfoRM b (TraceT m) where
 
 newtype TableCacheRT b m a = TableCacheRT {runTableCacheRT :: TableCache b -> m a}
   deriving
-    (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, Postgres.MonadTx, UserInfoM, HasServerConfigCtx)
+    (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, Postgres.MonadTx, UserInfoM)
     via (ReaderT (TableCache b) m)
   deriving (MonadTrans) via (ReaderT (TableCache b))
 

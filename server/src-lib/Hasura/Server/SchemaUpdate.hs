@@ -27,6 +27,7 @@ import Hasura.Logging
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema (runCacheRWT)
+import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.DDL.Schema.Catalog
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
@@ -139,6 +140,7 @@ startSchemaSyncListenerThread logger pool instanceId interval metaVersionRef = d
 startSchemaSyncProcessorThread ::
   ( C.ForkableMonadIO m,
     HasAppEnv m,
+    HasCacheStaticConfig m,
     MonadMetadataStorage m,
     MonadResolveSource m,
     ProvidesNetwork m
@@ -244,6 +246,7 @@ processor ::
   forall m void impl.
   ( C.ForkableMonadIO m,
     HasAppEnv m,
+    HasCacheStaticConfig m,
     MonadMetadataStorage m,
     MonadResolveSource m,
     ProvidesNetwork m
@@ -263,6 +266,7 @@ refreshSchemaCache ::
   ( MonadIO m,
     MonadBaseControl IO m,
     HasAppEnv m,
+    HasCacheStaticConfig m,
     MonadMetadataStorage m,
     MonadResolveSource m,
     ProvidesNetwork m
@@ -277,15 +281,15 @@ refreshSchemaCache
   appStateRef
   threadType
   logTVar = do
-    appEnv@AppEnv {..} <- askAppEnv
+    AppEnv {..} <- askAppEnv
     let logger = _lsLogger appEnvLoggers
     respErr <- runExceptT $
       withSchemaCacheUpdate appStateRef logger (Just logTVar) $ do
         rebuildableCache <- liftIO $ fst <$> getRebuildableSchemaCacheWithVersion appStateRef
         appContext <- liftIO $ getAppContext appStateRef
-        let serverConfigCtx = buildServerConfigCtx appEnv appContext
+        let dynamicConfig = buildCacheDynamicConfig appContext
         (msg, cache, _) <-
-          runCacheRWT serverConfigCtx rebuildableCache $ do
+          runCacheRWT dynamicConfig rebuildableCache $ do
             schemaCache <- askSchemaCache
             let engineResourceVersion = scMetadataResourceVersion schemaCache
             unless (engineResourceVersion == resourceVersion) $ do

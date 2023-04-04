@@ -23,7 +23,6 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Permission
-import Hasura.Server.Types
 import Hasura.Session
 
 data AddRemoteSchemaPermission = AddRemoteSchemaPermission
@@ -51,14 +50,13 @@ $(J.deriveJSON hasuraJSON ''DropRemoteSchemaPermissions)
 runAddRemoteSchemaPermissions ::
   ( QErrM m,
     CacheRWM m,
-    HasServerConfigCtx m,
     MetadataM m
   ) =>
+  Options.RemoteSchemaPermissions ->
   AddRemoteSchemaPermission ->
   m EncJSON
-runAddRemoteSchemaPermissions q = do
+runAddRemoteSchemaPermissions remoteSchemaPermsCtx q = do
   metadata <- getMetadata
-  remoteSchemaPermsCtx <- _sccRemoteSchemaPermsCtx <$> askServerConfigCtx
   unless (remoteSchemaPermsCtx == Options.EnableRemoteSchemaPermissions) $ do
     throw400 ConstraintViolation $
       "remote schema permissions can only be added when "

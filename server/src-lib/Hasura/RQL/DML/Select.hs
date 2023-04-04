@@ -31,7 +31,6 @@ import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
-import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 
@@ -174,9 +173,9 @@ convOrderByElem sessVarBldr (flds, spi) = \case
 convSelectQ ::
   ( UserInfoM m,
     QErrM m,
-    TableInfoRM ('Postgres 'Vanilla) m,
-    HasServerConfigCtx m
+    TableInfoRM ('Postgres 'Vanilla) m
   ) =>
+  SQLGenCtx ->
   TableName ('Postgres 'Vanilla) ->
   FieldInfoMap (FieldInfo ('Postgres 'Vanilla)) -> -- Table information of current table
   SelPermInfo ('Postgres 'Vanilla) -> -- Additional select permission info
@@ -184,7 +183,7 @@ convSelectQ ::
   SessionVariableBuilder m ->
   ValueParser ('Postgres 'Vanilla) m S.SQLExp ->
   m (AnnSimpleSelect ('Postgres 'Vanilla))
-convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
+convSelectQ sqlGen table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
   -- Convert where clause
   wClause <- forM (sqWhere selQ) $ \boolExp ->
     withPathK "where" $
@@ -200,6 +199,7 @@ convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
       (ECRel relName mAlias relSelQ) -> do
         annRel <-
           convExtRel
+            sqlGen
             fieldInfoMap
             relName
             mAlias
@@ -230,8 +230,7 @@ convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
   let tabFrom = FromTable table
       tabPerm = TablePerm resolvedSelFltr mPermLimit
       tabArgs = SelectArgs wClause annOrdByM mQueryLimit (fromIntegral <$> mQueryOffset) Nothing
-
-  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
+      strfyNum = stringifyNum sqlGen
   pure $ AnnSelectG annFlds tabFrom tabPerm tabArgs strfyNum Nothing
   where
     mQueryOffset = sqOffset selQ
@@ -254,9 +253,9 @@ convExtSimple fieldInfoMap selPermInfo pgCol = do
 convExtRel ::
   ( UserInfoM m,
     QErrM m,
-    TableInfoRM ('Postgres 'Vanilla) m,
-    HasServerConfigCtx m
+    TableInfoRM ('Postgres 'Vanilla) m
   ) =>
+  SQLGenCtx ->
   FieldInfoMap (FieldInfo ('Postgres 'Vanilla)) ->
   RelName ->
   Maybe RelName ->
@@ -264,14 +263,14 @@ convExtRel ::
   SessionVariableBuilder m ->
   ValueParser ('Postgres 'Vanilla) m S.SQLExp ->
   m (Either (ObjectRelationSelect ('Postgres 'Vanilla)) (ArraySelect ('Postgres 'Vanilla)))
-convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
+convExtRel sqlGen fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
   -- Point to the name key
   relInfo <-
     withPathK "name" $
       askRelType fieldInfoMap relName pgWhenRelErr
   let (RelInfo _ relTy colMapping relTab _ _) = relInfo
   (relCIM, relSPI) <- fetchRelDet relName relTab
-  annSel <- convSelectQ relTab relCIM relSPI selQ sessVarBldr prepValBldr
+  annSel <- convSelectQ sqlGen relTab relCIM relSPI selQ sessVarBldr prepValBldr
   case relTy of
     ObjRel -> do
       when misused $ throw400 UnexpectedPayload objRelMisuseMsg
@@ -304,20 +303,20 @@ convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
 convSelectQuery ::
   ( UserInfoM m,
     QErrM m,
-    TableInfoRM ('Postgres 'Vanilla) m,
-    HasServerConfigCtx m
+    TableInfoRM ('Postgres 'Vanilla) m
   ) =>
+  SQLGenCtx ->
   SessionVariableBuilder m ->
   ValueParser ('Postgres 'Vanilla) m S.SQLExp ->
   SelectQuery ->
   m (AnnSimpleSelect ('Postgres 'Vanilla))
-convSelectQuery sessVarBldr prepArgBuilder (DMLQuery _ qt selQ) = do
+convSelectQuery sqlGen sessVarBldr prepArgBuilder (DMLQuery _ qt selQ) = do
   tabInfo <- withPathK "table" $ askTableInfoSource qt
   selPermInfo <- askSelPermInfo tabInfo
   let fieldInfo = _tciFieldInfoMap $ _tiCoreInfo tabInfo
   extSelQ <- resolveStar fieldInfo selPermInfo selQ
   validateHeaders $ spiRequiredHeaders selPermInfo
-  convSelectQ qt fieldInfo selPermInfo extSelQ sessVarBldr prepArgBuilder
+  convSelectQ sqlGen qt fieldInfo selPermInfo extSelQ sessVarBldr prepArgBuilder
 
 selectP2 :: JsonAggSelect -> (AnnSimpleSelect ('Postgres 'Vanilla), DS.Seq PG.PrepArg) -> PG.TxE QErr EncJSON
 selectP2 jsonAggSelect (sel, p) =
@@ -330,15 +329,16 @@ selectP2 jsonAggSelect (sel, p) =
           mkSQLSelect jsonAggSelect sel
 
 phaseOne ::
-  (QErrM m, UserInfoM m, CacheRM m, HasServerConfigCtx m) =>
+  (QErrM m, UserInfoM m, CacheRM m) =>
+  SQLGenCtx ->
   SelectQuery ->
   m (AnnSimpleSelect ('Postgres 'Vanilla), DS.Seq PG.PrepArg)
-phaseOne query = do
+phaseOne sqlGen query = do
   let sourceName = getSourceDMLQuery query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache sourceName
   flip runTableCacheRT tableCache $
     runDMLP1T $
-      convSelectQuery sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query
+      convSelectQuery sqlGen sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query
 
 phaseTwo :: (MonadTx m) => (AnnSimpleSelect ('Postgres 'Vanilla), DS.Seq PG.PrepArg) -> m EncJSON
 phaseTwo =
@@ -348,14 +348,14 @@ runSelect ::
   ( QErrM m,
     UserInfoM m,
     CacheRM m,
-    HasServerConfigCtx m,
     MonadIO m,
     MonadBaseControl IO m,
     Tracing.MonadTrace m,
     MetadataM m
   ) =>
+  SQLGenCtx ->
   SelectQuery ->
   m EncJSON
-runSelect q = do
+runSelect sqlGen q = do
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (getSourceDMLQuery q)
-  phaseOne q >>= runTxWithCtx (_pscExecCtx sourceConfig) (Tx PG.ReadOnly Nothing) LegacyRQLQuery . phaseTwo
+  phaseOne sqlGen q >>= runTxWithCtx (_pscExecCtx sourceConfig) (Tx PG.ReadOnly Nothing) LegacyRQLQuery . phaseTwo

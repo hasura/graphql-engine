@@ -205,7 +205,7 @@ createMissingSQLTriggers ::
     MonadBaseControl IO m,
     Backend ('Postgres pgKind)
   ) =>
-  ServerConfigCtx ->
+  SQLGenCtx ->
   PGSourceConfig ->
   TableName ('Postgres pgKind) ->
   ([(ColumnInfo ('Postgres pgKind))], Maybe (PrimaryKey ('Postgres pgKind) (ColumnInfo ('Postgres pgKind)))) ->
@@ -241,7 +241,7 @@ createMissingSQLTriggers serverConfigCtx sourceConfig table (allCols, _) trigger
 
 createTableEventTrigger ::
   (Backend ('Postgres pgKind), MonadIO m, MonadBaseControl IO m) =>
-  ServerConfigCtx ->
+  SQLGenCtx ->
   PGSourceConfig ->
   QualifiedTable ->
   [ColumnInfo ('Postgres pgKind)] ->
@@ -674,7 +674,7 @@ pgIdenTrigger op = QualifiedTriggerName . pgFmtIdentifier . unQualifiedTriggerNa
 -- | Define the pgSQL trigger functions on database events.
 mkTriggerFunctionQ ::
   forall pgKind m.
-  (Backend ('Postgres pgKind), MonadTx m, MonadReader ServerConfigCtx m) =>
+  (Backend ('Postgres pgKind), MonadTx m, MonadReader SQLGenCtx m) =>
   TriggerName ->
   QualifiedTable ->
   [ColumnInfo ('Postgres pgKind)] ->
@@ -682,7 +682,7 @@ mkTriggerFunctionQ ::
   SubscribeOpSpec ('Postgres pgKind) ->
   m QualifiedTriggerName
 mkTriggerFunctionQ triggerName (QualifiedObject schema table) allCols op (SubscribeOpSpec listenColumns deliveryColumns') = do
-  strfyNum <- stringifyNum . _sccSQLGenCtx <$> ask
+  strfyNum <- asks stringifyNum
   let dbQualifiedTriggerName = pgIdenTrigger op triggerName
   () <-
     liftTx $
@@ -795,7 +795,7 @@ checkIfFunctionExistsQ triggerName op = do
 
 mkTrigger ::
   forall pgKind m.
-  (Backend ('Postgres pgKind), MonadTx m, MonadReader ServerConfigCtx m) =>
+  (Backend ('Postgres pgKind), MonadTx m, MonadReader SQLGenCtx m) =>
   TriggerName ->
   QualifiedTable ->
   TriggerOnReplication ->
@@ -830,7 +830,7 @@ mkTrigger triggerName table triggerOnReplication allCols op subOpSpec = do
 
 mkAllTriggersQ ::
   forall pgKind m.
-  (Backend ('Postgres pgKind), MonadTx m, MonadReader ServerConfigCtx m) =>
+  (Backend ('Postgres pgKind), MonadTx m, MonadReader SQLGenCtx m) =>
   TriggerName ->
   QualifiedTable ->
   TriggerOnReplication ->

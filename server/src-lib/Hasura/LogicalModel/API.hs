@@ -37,8 +37,8 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
-import Hasura.Server.Init.FeatureFlag as FF
-import Hasura.Server.Types (HasServerConfigCtx (..), ServerConfigCtx (..))
+import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker (..))
+import Hasura.Server.Init.FeatureFlag qualified as FF
 
 -- | Default implementation of the 'track_logical_model' request payload.
 data TrackLogicalModel (b :: BackendType) = TrackLogicalModel
@@ -90,9 +90,9 @@ deriving via
 logicalModelTrackToMetadata ::
   forall b m.
   ( BackendMetadata b,
-    MetadataM m,
+    MonadError QErr m,
     MonadIO m,
-    MonadError QErr m
+    MetadataM m
   ) =>
   Env.Environment ->
   SourceConnConfiguration b ->
@@ -145,8 +145,7 @@ runGetLogicalModel ::
   forall b m.
   ( BackendMetadata b,
     MetadataM m,
-    HasServerConfigCtx m,
-    MonadIO m,
+    HasFeatureFlagChecker m,
     MonadError QErr m
   ) =>
   GetLogicalModel b ->
@@ -167,11 +166,11 @@ runGetLogicalModel q = do
 runTrackLogicalModel ::
   forall b m.
   ( BackendMetadata b,
+    MonadError QErr m,
+    MonadIO m,
     CacheRWM m,
     MetadataM m,
-    MonadError QErr m,
-    HasServerConfigCtx m,
-    MonadIO m
+    HasFeatureFlagChecker m
   ) =>
   Env.Environment ->
   TrackLogicalModel b ->
@@ -273,13 +272,9 @@ dropLogicalModelInMetadata source rootFieldName = do
       %~ OMap.delete rootFieldName
 
 -- | check feature flag is enabled before carrying out any actions
-throwIfFeatureDisabled :: (HasServerConfigCtx m, MonadIO m, MonadError QErr m) => m ()
+throwIfFeatureDisabled :: (HasFeatureFlagChecker m, MonadError QErr m) => m ()
 throwIfFeatureDisabled = do
-  configCtx <- askServerConfigCtx
-  let CheckFeatureFlag runCheckFeatureFlag = _sccCheckFeatureFlag configCtx
-
-  enableLogicalModels <- liftIO (runCheckFeatureFlag FF.logicalModelInterface)
-
+  enableLogicalModels <- checkFlag FF.logicalModelInterface
   unless enableLogicalModels (throw500 "LogicalModels is disabled!")
 
 -- | Check whether a logical model with the given root field name exists for

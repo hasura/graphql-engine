@@ -122,6 +122,7 @@ import Hasura.RQL.DDL.ApiLimit (MonadGetApiTimeLimit (..))
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..))
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
+import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.DDL.Schema.Catalog
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.Backend
@@ -500,21 +501,18 @@ initialiseAppContext ::
   AppInit ->
   m (AppStateRef Hasura)
 initialiseAppContext env serveOptions@ServeOptions {..} AppInit {..} = do
-  AppEnv {..} <- askAppEnv
+  appEnv@AppEnv {..} <- askAppEnv
   let Loggers _ logger pgLogger = appEnvLoggers
       sqlGenCtx = initSQLGenCtx soExperimentalFeatures soStringifyNum soDangerousBooleanCollapse
-      serverConfigCtx =
-        ServerConfigCtx
+      cacheStaticConfig = buildCacheStaticConfig appEnv
+      cacheDynamicConfig =
+        CacheDynamicConfig
           soInferFunctionPermissions
           soEnableRemoteSchemaPermissions
           sqlGenCtx
-          soEnableMaintenanceMode
           soExperimentalFeatures
-          soEventingMode
-          soReadOnlyMode
           soDefaultNamingConvention
           soMetadataDefaults
-          (CheckFeatureFlag $ checkFeatureFlag env)
           soApolloFederationStatus
 
   -- Create the schema cache
@@ -522,10 +520,11 @@ initialiseAppContext env serveOptions@ServeOptions {..} AppInit {..} = do
     buildFirstSchemaCache
       env
       logger
-      serverConfigCtx
       (mkPgSourceResolver pgLogger)
       mkMSSQLSourceResolver
       aiMetadataWithResourceVersion
+      cacheStaticConfig
+      cacheDynamicConfig
       appEnvManager
 
   -- Build the RebuildableAppContext.
@@ -589,26 +588,28 @@ buildFirstSchemaCache ::
   (MonadIO m) =>
   Env.Environment ->
   Logger Hasura ->
-  ServerConfigCtx ->
   SourceResolver ('Postgres 'Vanilla) ->
   SourceResolver ('MSSQL) ->
   MetadataWithResourceVersion ->
+  CacheStaticConfig ->
+  CacheDynamicConfig ->
   HTTP.Manager ->
   m RebuildableSchemaCache
 buildFirstSchemaCache
   env
   logger
-  serverConfigCtx
   pgSourceResolver
   mssqlSourceResolver
   metadataWithVersion
+  cacheStaticConfig
+  cacheDynamicConfig
   httpManager = do
-    let cacheBuildParams = CacheBuildParams httpManager pgSourceResolver mssqlSourceResolver
+    let cacheBuildParams = CacheBuildParams httpManager pgSourceResolver mssqlSourceResolver cacheStaticConfig
         buildReason = CatalogSync
     result <-
       runExceptT $
         runCacheBuild cacheBuildParams $
-          buildRebuildableSchemaCacheWithReason buildReason logger env metadataWithVersion serverConfigCtx
+          buildRebuildableSchemaCacheWithReason buildReason logger env metadataWithVersion cacheDynamicConfig
     result `onLeft` \err -> do
       -- TODO: we used to bundle the first schema cache build with the catalog
       -- migration, using the same error handler for both, meaning that an
@@ -664,6 +665,14 @@ runAppM c (AppM a) = ignoreTraceT $ runReaderT a c
 
 instance HasAppEnv AppM where
   askAppEnv = ask
+
+instance HasFeatureFlagChecker AppM where
+  checkFlag f = AppM do
+    CheckFeatureFlag runCheckFeatureFlag <- asks appEnvCheckFeatureFlag
+    liftIO $ runCheckFeatureFlag f
+
+instance HasCacheStaticConfig AppM where
+  askCacheStaticConfig = buildCacheStaticConfig <$> askAppEnv
 
 instance MonadTrace AppM where
   newTraceWith c p n (AppM a) = AppM $ newTraceWith c p n a
@@ -879,6 +888,8 @@ runHGEServer ::
     UserAuthentication m,
     HttpLog m,
     HasAppEnv m,
+    HasCacheStaticConfig m,
+    HasFeatureFlagChecker m,
     ConsoleRenderer m,
     MonadVersionAPIWithExtraData m,
     MonadMetadataApiAuthorization m,
@@ -971,6 +982,8 @@ mkHGEServer ::
     UserAuthentication m,
     HttpLog m,
     HasAppEnv m,
+    HasCacheStaticConfig m,
+    HasFeatureFlagChecker m,
     ConsoleRenderer m,
     MonadVersionAPIWithExtraData m,
     MonadMetadataApiAuthorization m,

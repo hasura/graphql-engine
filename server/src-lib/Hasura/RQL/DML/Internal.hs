@@ -55,7 +55,6 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
-import Hasura.Server.Types
 import Hasura.Session
 
 newtype DMLP1T m a = DMLP1T {unDMLP1T :: StateT (DS.Seq PG.PrepArg) m a}
@@ -69,8 +68,7 @@ newtype DMLP1T m a = DMLP1T {unDMLP1T :: StateT (DS.Seq PG.PrepArg) m a}
       TableCoreInfoRM b,
       TableInfoRM b,
       CacheRM,
-      UserInfoM,
-      HasServerConfigCtx
+      UserInfoM
     )
 
 runDMLP1T :: DMLP1T m a -> m (a, DS.Seq PG.PrepArg)

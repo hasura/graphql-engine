@@ -42,8 +42,8 @@ import Hasura.RQL.Types.Permission (PermDef (_pdRole), SelPerm)
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
-import Hasura.Server.Init.FeatureFlag as FF
-import Hasura.Server.Types (HasServerConfigCtx (..), ServerConfigCtx (..))
+import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker (..))
+import Hasura.Server.Init.FeatureFlag qualified as FF
 import Hasura.Session (RoleName)
 
 -- | Default implementation of the 'track_custom_return_type' request payload.
@@ -122,8 +122,7 @@ runGetCustomReturnType ::
   forall b m.
   ( BackendMetadata b,
     MetadataM m,
-    HasServerConfigCtx m,
-    MonadIO m,
+    HasFeatureFlagChecker m,
     MonadError QErr m
   ) =>
   GetCustomReturnType b ->
@@ -151,8 +150,7 @@ runTrackCustomReturnType ::
     CacheRWM m,
     MetadataM m,
     MonadError QErr m,
-    HasServerConfigCtx m,
-    MonadIO m
+    HasFeatureFlagChecker m
   ) =>
   TrackCustomReturnType b ->
   m EncJSON
@@ -273,7 +271,7 @@ instance
 
 runCreateSelectCustomReturnTypePermission ::
   forall b m.
-  (Backend b, CacheRWM m, MetadataM m, MonadError QErr m, MonadIO m, HasServerConfigCtx m) =>
+  (Backend b, CacheRWM m, MetadataM m, MonadError QErr m, HasFeatureFlagChecker m) =>
   CreateCustomReturnTypePermission SelPerm b ->
   m EncJSON
 runCreateSelectCustomReturnTypePermission CreateCustomReturnTypePermission {..} = do
@@ -312,7 +310,7 @@ instance FromJSON (DropCustomReturnTypePermission b) where
 
 runDropSelectCustomReturnTypePermission ::
   forall b m.
-  (Backend b, CacheRWM m, MetadataM m, MonadError QErr m, MonadIO m, HasServerConfigCtx m) =>
+  (Backend b, CacheRWM m, MetadataM m, MonadError QErr m, HasFeatureFlagChecker m) =>
   DropCustomReturnTypePermission b ->
   m EncJSON
 runDropSelectCustomReturnTypePermission DropCustomReturnTypePermission {..} = do
@@ -340,14 +338,10 @@ dropCustomReturnTypeInMetadata source name = do
       %~ OMap.delete name
 
 -- | check feature flag is enabled before carrying out any actions
-throwIfFeatureDisabled :: (HasServerConfigCtx m, MonadIO m, MonadError QErr m) => m ()
+throwIfFeatureDisabled :: (HasFeatureFlagChecker m, MonadError QErr m) => m ()
 throwIfFeatureDisabled = do
-  configCtx <- askServerConfigCtx
-  let CheckFeatureFlag runCheckFeatureFlag = _sccCheckFeatureFlag configCtx
-
-  enableCustomReturnTypes <- liftIO (runCheckFeatureFlag FF.logicalModelInterface)
-
-  unless enableCustomReturnTypes (throw500 "CustomReturnTypes is disabled!")
+  enableCustomReturnTypes <- checkFlag FF.logicalModelInterface
+  unless enableCustomReturnTypes $ throw500 "CustomReturnTypes is disabled!"
 
 -- | Check whether a custom return type with the given root field name exists for
 -- the given source.

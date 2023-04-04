@@ -19,7 +19,7 @@ import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table (PrimaryKey)
 import Hasura.SQL.Backend
-import Hasura.Server.Types (MaintenanceMode, ServerConfigCtx)
+import Hasura.Server.Types (MaintenanceMode)
 import Hasura.Session (UserInfo)
 import Hasura.Tracing qualified as Tracing
 
@@ -188,7 +188,7 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
   --   exist then it will create it.
   createMissingSQLTriggers ::
     (MonadIO m, MonadError QErr m, MonadBaseControl IO m, Backend b) =>
-    ServerConfigCtx ->
+    SQLGenCtx ->
     SourceConfig b ->
     TableName b ->
     ([ColumnInfo b], Maybe (PrimaryKey b (ColumnInfo b))) ->
@@ -199,7 +199,7 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
 
   createTableEventTrigger ::
     (MonadBaseControl IO m, MonadIO m, MonadError QErr m) =>
-    ServerConfigCtx ->
+    SQLGenCtx ->
     SourceConfig b ->
     TableName b ->
     [ColumnInfo b] ->

@@ -97,7 +97,11 @@ buildGQLContext ::
   ( MonadError QErr m,
     MonadIO m
   ) =>
-  ServerConfigCtx ->
+  Options.InferFunctionPermissions ->
+  Options.RemoteSchemaPermissions ->
+  HashSet ExperimentalFeature ->
+  SQLGenCtx ->
+  ApolloFederationStatus ->
   SourceCache ->
   HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject) ->
   ActionCache ->
@@ -114,66 +118,75 @@ buildGQLContext ::
         GQLContext
       )
     )
-buildGQLContext ServerConfigCtx {..} sources allRemoteSchemas allActions customTypes = do
-  let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
-      actionRoles =
-        Set.insert adminRoleName $
-          Set.fromList (allActionInfos ^.. folded . aiPermissions . to Map.keys . folded)
-            <> Set.fromList (bool mempty remoteSchemasRoles $ _sccRemoteSchemaPermsCtx == Options.EnableRemoteSchemaPermissions)
-      allActionInfos = Map.elems allActions
-      allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
-      allCustomReturnTypeRoles = Set.fromList $ getCustomReturnTypeRoles =<< Map.elems sources
-      allRoles = actionRoles <> allTableRoles <> allCustomReturnTypeRoles
+buildGQLContext
+  functionPermissions
+  remoteSchemaPermissions
+  experimentalFeatures
+  sqlGen
+  apolloFederationStatus
+  sources
+  allRemoteSchemas
+  allActions
+  customTypes = do
+    let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
+        actionRoles =
+          Set.insert adminRoleName $
+            Set.fromList (allActionInfos ^.. folded . aiPermissions . to Map.keys . folded)
+              <> Set.fromList (bool mempty remoteSchemasRoles $ remoteSchemaPermissions == Options.EnableRemoteSchemaPermissions)
+        allActionInfos = Map.elems allActions
+        allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
+        allCustomReturnTypeRoles = Set.fromList $ getCustomReturnTypeRoles =<< Map.elems sources
+        allRoles = actionRoles <> allTableRoles <> allCustomReturnTypeRoles
 
-  contexts <-
-    -- Buld role contexts in parallel. We'd prefer deterministic parallelism
-    -- but that isn't really acheivable (see mono #3829). NOTE: the admin role
-    -- will still be a bottleneck here, even on huge_schema which has many
-    -- roles.
-    fmap Map.fromList $
-      forConcurrentlyEIO 10 (Set.toList allRoles) $ \role -> do
-        (role,)
-          <$> concurrentlyEIO
-            ( buildRoleContext
-                (_sccSQLGenCtx, _sccFunctionPermsCtx)
-                sources
-                allRemoteSchemas
-                allActionInfos
-                customTypes
-                role
-                _sccRemoteSchemaPermsCtx
-                _sccExperimentalFeatures
-                _sccApolloFederationStatus
-            )
-            ( buildRelayRoleContext
-                (_sccSQLGenCtx, _sccFunctionPermsCtx)
-                sources
-                allActionInfos
-                customTypes
-                role
-                _sccExperimentalFeatures
-            )
-  let hasuraContexts = fst <$> contexts
-      relayContexts = snd <$> contexts
+    contexts <-
+      -- Buld role contexts in parallel. We'd prefer deterministic parallelism
+      -- but that isn't really acheivable (see mono #3829). NOTE: the admin role
+      -- will still be a bottleneck here, even on huge_schema which has many
+      -- roles.
+      fmap Map.fromList $
+        forConcurrentlyEIO 10 (Set.toList allRoles) $ \role -> do
+          (role,)
+            <$> concurrentlyEIO
+              ( buildRoleContext
+                  (sqlGen, functionPermissions)
+                  sources
+                  allRemoteSchemas
+                  allActionInfos
+                  customTypes
+                  role
+                  remoteSchemaPermissions
+                  experimentalFeatures
+                  apolloFederationStatus
+              )
+              ( buildRelayRoleContext
+                  (sqlGen, functionPermissions)
+                  sources
+                  allActionInfos
+                  customTypes
+                  role
+                  experimentalFeatures
+              )
+    let hasuraContexts = fst <$> contexts
+        relayContexts = snd <$> contexts
 
-  adminIntrospection <-
-    case Map.lookup adminRoleName hasuraContexts of
-      Just (_context, _errors, introspection) -> pure introspection
-      Nothing -> throw500 "buildGQLContext failed to build for the admin role"
-  (unauthenticated, unauthenticatedRemotesErrors) <- unauthenticatedContext allRemoteSchemas _sccRemoteSchemaPermsCtx
-  pure
-    ( ( adminIntrospection,
-        view _1 <$> hasuraContexts,
-        unauthenticated,
-        Set.unions $ unauthenticatedRemotesErrors : (view _2 <$> Map.elems hasuraContexts)
-      ),
-      ( relayContexts,
-        -- Currently, remote schemas are exposed through Relay, but ONLY through
-        -- the unauthenticated role.  This is probably an oversight.  See
-        -- hasura/graphql-engine-mono#3883.
-        unauthenticated
+    adminIntrospection <-
+      case Map.lookup adminRoleName hasuraContexts of
+        Just (_context, _errors, introspection) -> pure introspection
+        Nothing -> throw500 "buildGQLContext failed to build for the admin role"
+    (unauthenticated, unauthenticatedRemotesErrors) <- unauthenticatedContext allRemoteSchemas remoteSchemaPermissions
+    pure
+      ( ( adminIntrospection,
+          view _1 <$> hasuraContexts,
+          unauthenticated,
+          Set.unions $ unauthenticatedRemotesErrors : (view _2 <$> Map.elems hasuraContexts)
+        ),
+        ( relayContexts,
+          -- Currently, remote schemas are exposed through Relay, but ONLY through
+          -- the unauthenticated role.  This is probably an oversight.  See
+          -- hasura/graphql-engine-mono#3883.
+          unauthenticated
+        )
       )
-    )
 
 buildSchemaOptions ::
   (SQLGenCtx, Options.InferFunctionPermissions) ->

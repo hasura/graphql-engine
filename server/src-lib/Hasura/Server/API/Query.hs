@@ -38,6 +38,7 @@ import Hasura.RQL.DDL.Relationship.Rename
 import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema
+import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.DML.Count
 import Hasura.RQL.DML.Delete
 import Hasura.RQL.DML.Insert
@@ -180,6 +181,7 @@ runQuery ::
   ( MonadIO m,
     MonadError QErr m,
     HasAppEnv m,
+    HasCacheStaticConfig m,
     Tracing.MonadTrace m,
     MonadBaseControl IO m,
     MonadMetadataStorage m,
@@ -195,7 +197,7 @@ runQuery ::
   RQLQuery ->
   m (EncJSON, RebuildableSchemaCache)
 runQuery appContext sc query = do
-  appEnv@AppEnv {..} <- askAppEnv
+  AppEnv {..} <- askAppEnv
   let logger = _lsLogger appEnvLoggers
   when ((appEnvEnableReadOnlyMode == ReadOnlyModeEnabled) && queryModifiesUserDB query) $
     throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
@@ -207,15 +209,15 @@ runQuery appContext sc query = do
         if (exportsMetadata query)
           then emptyMetadataDefaults
           else acMetadataDefaults appContext
-      serverConfigCtx = buildServerConfigCtx appEnv appContext
+      dynamicConfig = buildCacheDynamicConfig appContext
 
   MetadataWithResourceVersion metadata currentResourceVersion <- liftEitherM fetchMetadata
   ((result, updatedMetadata), updatedCache, invalidations) <-
-    runQueryM (acEnvironment appContext) query
+    runQueryM (acEnvironment appContext) (acSQLGenCtx appContext) query
       -- TODO: remove this straight runReaderT that provides no actual new info
       & flip runReaderT logger
       & runMetadataT metadata metadataDefaults
-      & runCacheRWT serverConfigCtx sc
+      & runCacheRWT dynamicConfig sc
   when (queryModifiesSchemaCache query) $ do
     case appEnvEnableMaintenanceMode of
       MaintenanceModeDisabled -> do
@@ -391,7 +393,6 @@ runQueryM ::
     UserInfoM m,
     MonadBaseControl IO m,
     MonadIO m,
-    HasServerConfigCtx m,
     Tracing.MonadTrace m,
     MetadataM m,
     MonadMetadataStorage m,
@@ -404,9 +405,10 @@ runQueryM ::
     MonadGetApiTimeLimit m
   ) =>
   Env.Environment ->
+  SQLGenCtx ->
   RQLQuery ->
   m EncJSON
-runQueryM env rq = withPathK "args" $ case rq of
+runQueryM env sqlGen rq = withPathK "args" $ case rq of
   RQV1 q -> runQueryV1M q
   RQV2 q -> runQueryV2M q
   where
@@ -436,10 +438,10 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQSetPermissionComment q -> runSetPermComment q
       RQGetInconsistentMetadata q -> runGetInconsistentMetadata q
       RQDropInconsistentMetadata q -> runDropInconsistentMetadata q
-      RQInsert q -> runInsert q
-      RQSelect q -> runSelect q
-      RQUpdate q -> runUpdate q
-      RQDelete q -> runDelete q
+      RQInsert q -> runInsert sqlGen q
+      RQSelect q -> runSelect sqlGen q
+      RQUpdate q -> runUpdate sqlGen q
+      RQDelete q -> runDelete sqlGen q
       RQCount q -> runCount q
       RQAddRemoteSchema q -> runAddRemoteSchema env q
       RQUpdateRemoteSchema q -> runUpdateRemoteSchema env q
@@ -475,9 +477,9 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQCreateRestEndpoint q -> runCreateEndpoint q
       RQDropRestEndpoint q -> runDropEndpoint q
       RQDumpInternalState q -> runDumpInternalState q
-      RQRunSql q -> runRunSQL @'Vanilla q
+      RQRunSql q -> runRunSQL @'Vanilla sqlGen q
       RQSetCustomTypes q -> runSetCustomTypes q
-      RQBulk qs -> encJFromList <$> indexedMapM (runQueryM env) qs
+      RQBulk qs -> encJFromList <$> indexedMapM (runQueryM env sqlGen) qs
 
     runQueryV2M = \case
       RQV2TrackTable q -> runTrackTableV2Q q

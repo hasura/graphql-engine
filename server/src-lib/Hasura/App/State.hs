@@ -13,10 +13,11 @@ module Hasura.App.State
     -- * init functions
     buildRebuildableAppContext,
     rebuildRebuildableAppContext,
-    initSQLGenCtx,
 
-    -- * server config
-    buildServerConfigCtx,
+    -- * subsets
+    initSQLGenCtx,
+    buildCacheStaticConfig,
+    buildCacheDynamicConfig,
   )
 where
 
@@ -36,6 +37,7 @@ import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging qualified as L
 import Hasura.Prelude
+import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.SchemaCache (MetadataResourceVersion)
@@ -300,6 +302,9 @@ buildAppContextRule = proc (ServeOptions {..}, env, _keys) -> do
                 | otherwise -> InternalErrorsDisabled
       returnA -< responseInternalErrorsConfig
 
+--------------------------------------------------------------------------------
+-- subsets
+
 initSQLGenCtx :: HashSet ExperimentalFeature -> Options.StringifyNumbers -> Options.DangerouslyCollapseBooleans -> SQLGenCtx
 initSQLGenCtx experimentalFeatures stringifyNum dangerousBooleanCollapse =
   let optimizePermissionFilters
@@ -311,26 +316,23 @@ initSQLGenCtx experimentalFeatures stringifyNum dangerousBooleanCollapse =
         | otherwise = Options.DisableBigQueryStringNumericInput
    in SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters bigqueryStringNumericInput
 
---------------------------------------------------------------------------------
--- server config
+buildCacheStaticConfig :: AppEnv -> CacheStaticConfig
+buildCacheStaticConfig AppEnv {..} =
+  CacheStaticConfig
+    { _cscMaintenanceMode = appEnvEnableMaintenanceMode,
+      _cscEventingMode = appEnvEventingMode,
+      _cscReadOnlyMode = appEnvEnableReadOnlyMode,
+      _cscCheckFeatureFlag = appEnvCheckFeatureFlag
+    }
 
--- | We are trying to slowly get rid of 'HasServerConfigCtx' (and consequently
--- of 'ServercConfigtx') in favour of smaller / more specific ad-hoc
--- types. However, in the meantime, it is often required to builda
--- 'ServerConfigCtx' at the boundary between parts of the code that use it and
--- part of the code that use the new 'AppEnv' and 'AppContext'.
-buildServerConfigCtx :: AppEnv -> AppContext -> ServerConfigCtx
-buildServerConfigCtx AppEnv {..} AppContext {..} =
-  ServerConfigCtx
-    { _sccFunctionPermsCtx = acFunctionPermsCtx,
-      _sccRemoteSchemaPermsCtx = acRemoteSchemaPermsCtx,
-      _sccSQLGenCtx = acSQLGenCtx,
-      _sccMaintenanceMode = appEnvEnableMaintenanceMode,
-      _sccExperimentalFeatures = acExperimentalFeatures,
-      _sccEventingMode = appEnvEventingMode,
-      _sccReadOnlyMode = appEnvEnableReadOnlyMode,
-      _sccDefaultNamingConvention = acDefaultNamingConvention,
-      _sccMetadataDefaults = acMetadataDefaults,
-      _sccCheckFeatureFlag = appEnvCheckFeatureFlag,
-      _sccApolloFederationStatus = acApolloFederationStatus
+buildCacheDynamicConfig :: AppContext -> CacheDynamicConfig
+buildCacheDynamicConfig AppContext {..} =
+  CacheDynamicConfig
+    { _cdcFunctionPermsCtx = acFunctionPermsCtx,
+      _cdcRemoteSchemaPermsCtx = acRemoteSchemaPermsCtx,
+      _cdcSQLGenCtx = acSQLGenCtx,
+      _cdcExperimentalFeatures = acExperimentalFeatures,
+      _cdcDefaultNamingConvention = acDefaultNamingConvention,
+      _cdcMetadataDefaults = acMetadataDefaults,
+      _cdcApolloFederationStatus = acApolloFederationStatus
     }

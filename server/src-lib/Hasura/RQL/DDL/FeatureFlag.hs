@@ -9,7 +9,6 @@ where
 
 --------------------------------------------------------------------------------
 
---------------------------------------------------------------------------------
 import Data.Aeson (FromJSON, (.:), (.=))
 import Data.Aeson qualified as Aeson
 import Data.HashMap.Strict qualified as HashMap
@@ -31,13 +30,12 @@ instance FromJSON GetFeatureFlag where
 
 runGetFeatureFlag ::
   ( MonadError Error.QErr m,
-    Types.HasServerConfigCtx m,
     MonadIO m
   ) =>
+  Types.CheckFeatureFlag ->
   GetFeatureFlag ->
   m EncJSON
-runGetFeatureFlag GetFeatureFlag {..} = do
-  Types.CheckFeatureFlag getFeatureFlag <- Types._sccCheckFeatureFlag <$> Types.askServerConfigCtx
+runGetFeatureFlag (Types.CheckFeatureFlag getFeatureFlag) GetFeatureFlag {..} = do
   let flagM = HashMap.lookup gfgIdentifier $ FeatureFlag.getFeatureFlags $ FeatureFlag.featureFlags
   case flagM of
     Nothing -> Error.throw400 Error.NotFound $ "Feature Flag '" <> gfgIdentifier <> "' not found"

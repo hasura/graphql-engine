@@ -59,6 +59,7 @@ import Hasura.CustomReturnType.Types (CustomReturnTypeName)
 import Hasura.EncJSON
 import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
+import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
@@ -79,7 +80,6 @@ import Hasura.SQL.AnyBackend
 import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
-import Hasura.Server.Types
 import Hasura.Services
 import Hasura.Session
 import Network.HTTP.Client.Transformable qualified as HTTP
@@ -257,7 +257,8 @@ $(makeLenses ''BuildOutputs)
 data CacheBuildParams = CacheBuildParams
   { _cbpManager :: HTTP.Manager,
     _cbpPGSourceResolver :: SourceResolver ('Postgres 'Vanilla),
-    _cbpMSSQLSourceResolver :: SourceResolver 'MSSQL
+    _cbpMSSQLSourceResolver :: SourceResolver 'MSSQL,
+    _cbpStaticConfig :: CacheStaticConfig
   }
 
 -- | The monad in which @'RebuildableSchemaCache' is being run
@@ -272,6 +273,9 @@ newtype CacheBuild a = CacheBuild (ReaderT CacheBuildParams (ExceptT QErr IO) a)
       MonadBase IO,
       MonadBaseControl IO
     )
+
+instance HasCacheStaticConfig CacheBuild where
+  askCacheStaticConfig = asks _cbpStaticConfig
 
 instance ProvidesNetwork CacheBuild where
   askHTTPManager = asks _cbpManager
@@ -294,7 +298,8 @@ runCacheBuildM ::
   ( MonadIO m,
     MonadError QErr m,
     MonadResolveSource m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    HasCacheStaticConfig m
   ) =>
   CacheBuild a ->
   m a
@@ -304,12 +309,13 @@ runCacheBuildM m = do
       <$> askHTTPManager
       <*> getPGSourceResolver
       <*> getMSSQLSourceResolver
+      <*> askCacheStaticConfig
   runCacheBuild params m
 
 data RebuildableSchemaCache = RebuildableSchemaCache
   { lastBuiltSchemaCache :: SchemaCache,
     _rscInvalidationMap :: InvalidationKeys,
-    _rscRebuild :: Inc.Rule (ReaderT BuildReason CacheBuild) (MetadataWithResourceVersion, ServerConfigCtx, InvalidationKeys, Maybe StoredIntrospection) SchemaCache
+    _rscRebuild :: Inc.Rule (ReaderT BuildReason CacheBuild) (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection) SchemaCache
   }
 
 bindErrorA ::

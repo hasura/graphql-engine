@@ -68,6 +68,7 @@ import Hasura.QueryTags
 import Hasura.RQL.DDL.ApiLimit (MonadGetApiTimeLimit)
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup)
 import Hasura.RQL.DDL.Schema
+import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.Endpoint as EP
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
@@ -134,6 +135,8 @@ newtype Handler m a = Handler (ReaderT HandlerCtx (ExceptT QErr m) a)
       MonadError QErr,
       MonadTrace,
       HasAppEnv,
+      HasCacheStaticConfig,
+      HasFeatureFlagChecker,
       HasResourceLimits,
       MonadResolveSource,
       E.MonadGQLExecutionCheck,
@@ -423,6 +426,7 @@ v1QueryHandler ::
     MonadMetadataStorage m,
     MonadResolveSource m,
     HasAppEnv m,
+    HasCacheStaticConfig m,
     MonadQueryTags m,
     MonadEventLogCleanup m,
     ProvidesNetwork m,
@@ -457,6 +461,8 @@ v1MetadataHandler ::
     MonadMetadataApiAuthorization m,
     MonadEventLogCleanup m,
     HasAppEnv m,
+    HasCacheStaticConfig m,
+    HasFeatureFlagChecker m,
     ProvidesNetwork m,
     MonadGetApiTimeLimit m,
     UserInfoM m
@@ -486,6 +492,7 @@ v2QueryHandler ::
     MonadMetadataStorage m,
     MonadResolveSource m,
     HasAppEnv m,
+    HasCacheStaticConfig m,
     MonadQueryTags m,
     ProvidesNetwork m,
     UserInfoM m
@@ -713,6 +720,8 @@ mkWaiApp ::
     MonadVersionAPIWithExtraData m,
     HttpLog m,
     HasAppEnv m,
+    HasCacheStaticConfig m,
+    HasFeatureFlagChecker m,
     UserAuthentication m,
     MonadMetadataApiAuthorization m,
     E.MonadGQLExecutionCheck m,
@@ -759,6 +768,8 @@ httpApp ::
     MonadVersionAPIWithExtraData m,
     HttpLog m,
     HasAppEnv m,
+    HasCacheStaticConfig m,
+    HasFeatureFlagChecker m,
     UserAuthentication m,
     MonadMetadataApiAuthorization m,
     E.MonadGQLExecutionCheck m,
