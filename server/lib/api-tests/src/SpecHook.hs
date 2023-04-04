@@ -3,7 +3,8 @@ module SpecHook
     setupTestEnvironment,
     teardownTestEnvironment,
     setupGlobalConfig,
-    setupLogType,
+    setupLogger,
+    setupTestingMode,
   )
 where
 
@@ -14,7 +15,7 @@ import Data.IORef
 import Data.List qualified as List
 import Database.PostgreSQL.Simple.Options qualified as Options
 import Harness.Constants qualified as Constants
-import Harness.Exceptions (HasCallStack, bracket)
+import Harness.Exceptions
 import Harness.GraphqlEngine (startServerThread)
 import Harness.Logging
 import Harness.Services.Composed (mkTestServicesConfig)
@@ -84,10 +85,10 @@ teardownTestEnvironment :: GlobalTestEnvironment -> IO ()
 teardownTestEnvironment (GlobalTestEnvironment {server}) = stopServer server
 
 -- | allow setting log output type
-setupLogType :: IO FL.LogType
-setupLogType = do
+setupLogger :: IO (Logger, IO ())
+setupLogger = do
   env <- getEnvironment
-  fromMaybe
+  logType <- fromMaybe
     (pure $ FL.LogFileNoRotate "tests-hspec.log" 1024)
     do
       str <- lookup "HASURA_TEST_LOGTYPE" env
@@ -104,20 +105,23 @@ setupLogType = do
             (error $ "(HASURA_TEST_LOGTYPE) Directory " ++ dir ++ " does not exist!")
           pure $ FL.LogFileNoRotate logfile 1024
         _ -> Nothing
+  (logger', cleanupLogger) <- FL.newFastLogger logType
+  return (flLogger logger', cleanupLogger)
+
+setupTestingMode :: IO TestingMode
+setupTestingMode = do
+  environment <- getEnvironment
+  lookupTestingMode environment `onLeft` error
 
 hook :: HasCallStack => SpecWith GlobalTestEnvironment -> Spec
 hook specs = do
-  (testingMode, logType) <-
+  (testingMode, (logger, _cleanupLogger)) <-
     runIO $
       readIORef globalConfigRef `onNothingM` do
-        logType <- setupLogType
-        environment <- getEnvironment
-        testingMode <- lookupTestingMode environment `onLeft` error
-        setupGlobalConfig testingMode logType
-        pure (testingMode, logType)
-
-  (logger', _cleanup) <- runIO $ FL.newFastLogger logType
-  let logger = flLogger logger'
+        testingMode <- setupTestingMode
+        (logger, cleanupLogger) <- setupLogger
+        setupGlobalConfig testingMode (logger, cleanupLogger)
+        pure (testingMode, (logger, cleanupLogger))
 
   modifyConfig (addLoggingFormatter logger)
 
@@ -134,12 +138,12 @@ hook specs = do
     mapSpecForest (filterForestWithLabels shouldRunTest) (contextualizeLogger specs)
 
 {-# NOINLINE globalConfigRef #-}
-globalConfigRef :: IORef (Maybe (TestingMode, FL.LogType))
+globalConfigRef :: IORef (Maybe (TestingMode, (Logger, IO ())))
 globalConfigRef = unsafePerformIO $ newIORef Nothing
 
-setupGlobalConfig :: TestingMode -> FL.LogType -> IO ()
-setupGlobalConfig testingMode logType =
-  writeIORef globalConfigRef $ Just (testingMode, logType)
+setupGlobalConfig :: TestingMode -> (Logger, IO ()) -> IO ()
+setupGlobalConfig testingMode loggerCleanup =
+  writeIORef globalConfigRef $ Just (testingMode, loggerCleanup)
 
 envToPassthrough :: [String]
 envToPassthrough = [Constants.bigqueryServiceKeyVar]

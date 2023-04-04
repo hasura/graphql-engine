@@ -7,6 +7,7 @@ import Data.ByteString qualified as BS (ByteString, intercalate, writeFile)
 import Data.Char (toLower)
 import Database.PostgreSQL.Simple.Options qualified as Options
 import Harness.Exceptions
+import Harness.Logging
 import Harness.TestEnvironment qualified as TestEnvironment
 import Hasura.FeatureMatrix qualified as FeatureMatrix
 import Hasura.Prelude
@@ -105,9 +106,10 @@ runSuite uri hspecArgs = do
     queue <- newTQueueIO
     -- setup mode and logging
     postgresOptions <- Options.parseConnectionString uri `onLeft` error
+    (logger', cleanupLogger) <- FL.newFastLogger $ FL.LogCallback (atomically . writeTQueue queue) (pure ())
     SpecHook.setupGlobalConfig
       (TestEnvironment.TestNewPostgresVariant postgresOptions)
-      (FL.LogCallback (atomically . writeTQueue queue) (pure ()))
+      (flLogger logger', cleanupLogger)
     -- run the tests
     isSuccess <- catch
       (Hspec.hspec Spec.spec $> True)

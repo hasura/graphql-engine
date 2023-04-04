@@ -251,7 +251,7 @@ executable api-tests
     , lens-aeson
     , api-tests
     , base
-    , hspec
+    , hspec-core
 
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.
