@@ -45,7 +45,7 @@ async function poll<ReturnType>(
   let iterCount = 0;
   let result = await fn();
   while (fnCondition(result) && iterCount < maxPollNumber) {
-    await wait(ms);
+    await wait(waitMs);
     result = await fn();
     iterCount++;
   }
