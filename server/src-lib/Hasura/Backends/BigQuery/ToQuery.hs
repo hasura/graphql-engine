@@ -142,6 +142,7 @@ fromScalarType =
     StructScalarType -> "STRUCT"
     DecimalScalarType -> "DECIMAL"
     BigDecimalScalarType -> "BIGDECIMAL"
+    JsonScalarType -> "JSON"
 
 fromOp :: Op -> Printer
 fromOp =

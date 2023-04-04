@@ -155,6 +155,7 @@ data RestType
   | GEOGRAPHY
   | DECIMAL
   | BIGDECIMAL
+  | JSON
   | STRUCT -- (same as RECORD).
   deriving (Eq, Show)
 
@@ -179,6 +180,7 @@ instance FromJSON RestType where
       "DECIMAL" -> pure DECIMAL
       "BIGNUMERIC" -> pure BIGDECIMAL
       "BIGDECIMAL" -> pure BIGDECIMAL
+      "JSON" -> pure JSON
       "RECORD" -> pure STRUCT
       "STRUCT" -> pure STRUCT
       _ -> fail ("invalid type " ++ show s)

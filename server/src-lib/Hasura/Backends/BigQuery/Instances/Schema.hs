@@ -141,6 +141,7 @@ bqColumnParser columnType nullability = case columnType of
         BigQuery.BoolScalarType -> pure $ BigQuery.BoolValue <$> P.boolean
         BigQuery.DateScalarType -> pure $ BigQuery.DateValue . BigQuery.Date <$> stringBased _Date
         BigQuery.TimeScalarType -> pure $ BigQuery.TimeValue . BigQuery.Time <$> stringBased _Time
+        BigQuery.JsonScalarType -> pure $ BigQuery.JsonValue <$> P.json
         BigQuery.DatetimeScalarType -> pure $ BigQuery.DatetimeValue . BigQuery.Datetime <$> stringBased _Datetime
         BigQuery.GeographyScalarType ->
           pure $ BigQuery.GeographyValue . BigQuery.Geography <$> throughJSON _Geography

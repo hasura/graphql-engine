@@ -160,6 +160,7 @@ restTypeToScalarType =
     STRUCT -> StructScalarType
     BIGDECIMAL -> BigDecimalScalarType
     DECIMAL -> DecimalScalarType
+    JSON -> JsonScalarType
 
 -- Hierarchy: Project / Dataset / Table
 -- see <https://cloud.google.com/bigquery/docs/datasets-intro>

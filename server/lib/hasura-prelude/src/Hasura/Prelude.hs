@@ -32,6 +32,7 @@ module Hasura.Prelude
     bsToTxt,
     lbsToTxt,
     txtToBs,
+    txtToLbs,
     base64Decode,
     tshow,
 
@@ -278,6 +279,10 @@ lbsToTxt = bsToTxt . BL.toStrict
 -- | UTF8 encode a 'Text' to 'B.ByteString'.
 txtToBs :: Text -> B.ByteString
 txtToBs = TE.encodeUtf8
+
+-- | UTF8 encode a 'Text' to 'BL.ByteString'.
+txtToLbs :: Text -> BL.ByteString
+txtToLbs = BL.fromStrict . TE.encodeUtf8
 
 -- | Base64 decode a 'Text' to 'B.ByteString'.
 base64Decode :: Text -> BL.ByteString

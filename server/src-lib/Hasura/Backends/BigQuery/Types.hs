@@ -500,6 +500,7 @@ data Value
   | TimestampValue Timestamp
   | DateValue Date
   | TimeValue Time
+  | JsonValue J.Value
   | DatetimeValue Datetime
   deriving stock (Show, Eq, Ord, Generic, Data, Lift)
   deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
@@ -618,6 +619,7 @@ data ScalarType
   | GeographyScalarType
   | DecimalScalarType
   | BigDecimalScalarType
+  | JsonScalarType
   | StructScalarType
   deriving stock (Show, Eq, Ord, Bounded, Enum, Generic, Data, Lift)
   deriving anyclass (FromJSON, Hashable, NFData, ToJSON, ToJSONKey)
@@ -637,6 +639,7 @@ instance HasCodec ScalarType where
       GeographyScalarType -> "GEOGRAPHY"
       DecimalScalarType -> "DECIMAL"
       BigDecimalScalarType -> "BIGDECIMAL"
+      JsonScalarType -> "JSON"
       StructScalarType -> "STRUCT"
 
 instance ToTxt ScalarType where toTxt = tshow
@@ -838,6 +841,7 @@ parseScalarValue scalarType jValue = case scalarType of
   TimeScalarType -> TimeValue <$> parseJValue jValue
   DatetimeScalarType -> DatetimeValue <$> parseJValue jValue
   GeographyScalarType -> GeographyValue <$> parseJValue jValue
+  JsonScalarType -> pure (JsonValue jValue)
   _ -> Left (internalError (T.pack ("Unsupported scalar type: " <> show scalarType <> ": " <> show jValue)))
   -- TODO: These types:
   -- RecordScalarType -> RecordValue <$> parseJValue jValue
@@ -864,6 +868,7 @@ isComparableType = \case
   GeographyScalarType -> False
   DecimalScalarType -> True
   BigDecimalScalarType -> True
+  JsonScalarType -> False
   StructScalarType -> True
 isNumType =
   \case
@@ -879,6 +884,7 @@ isNumType =
     GeographyScalarType -> False
     DecimalScalarType -> True
     BigDecimalScalarType -> True
+    JsonScalarType -> False
     StructScalarType -> False
 
 getGQLTableName :: TableName -> Either QErr G.Name

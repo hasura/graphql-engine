@@ -113,6 +113,7 @@ recordSetToEncJSON cardinality DataLoader.RecordSet {rows} =
         DataLoader.GeographyOutputValue i -> encJFromJValue i
         DataLoader.BoolOutputValue i -> encJFromJValue i
         DataLoader.IntegerOutputValue i -> encJFromJValue i
+        DataLoader.JsonOutputValue i -> encJFromJValue i
         DataLoader.ArrayOutputValue vector ->
           encJFromList (toList (fmap encJFromOutputValue vector))
         -- Really, the case below shouldn't be happening. But if it
