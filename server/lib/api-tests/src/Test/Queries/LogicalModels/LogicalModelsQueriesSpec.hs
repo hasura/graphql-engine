@@ -122,7 +122,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
 
-          nullableQuery = "SELECT thing / 2 AS divided, null as something_nullable FROM stuff"
+          nullableQuery = "SELECT (thing / 2)::integer AS divided, null::text as something_nullable FROM stuff"
 
           descriptionsAndNullableReturnType :: Schema.CustomType
           descriptionsAndNullableReturnType =
@@ -131,7 +131,7 @@ tests = do
                   [ (Schema.logicalModelColumn "divided" Schema.TInt)
                       { Schema.logicalModelColumnDescription = Just "A divided thing"
                       },
-                    (Schema.logicalModelColumn "something_nullable" Schema.TInt)
+                    (Schema.logicalModelColumn "something_nullable" Schema.TStr)
                       { Schema.logicalModelColumnDescription = Just "Something nullable",
                         Schema.logicalModelColumnNullable = True
                       }
@@ -196,7 +196,7 @@ tests = do
                         "name": "something_nullable",
                         "type": {
                           "kind": "SCALAR",
-                          "name": "Int",
+                          "name": "String",
                           "ofType": null
                         }
                       }

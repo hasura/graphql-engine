@@ -86,7 +86,7 @@ spec = do
 
     it "Rejects undeclared variables" do
       let Right code = parseInterpolatedQuery "SELECT {{hey}}"
-      let actual :: Either QErr Text = runExcept $ logicalModelToPreparedStatement crtm lmm {_lmmCode = code}
+      let actual :: Either QErr Text = fmap snd $ runExcept $ logicalModelToPreparedStatement crtm lmm {_lmmCode = code}
 
       (first showQErr actual) `shouldSatisfy` isLeft
       let Left err = actual
@@ -95,16 +95,17 @@ spec = do
     it "Handles multiple occurences of variables " do
       let Right code = parseInterpolatedQuery "SELECT {{hey}}, {{hey}}"
       let actual :: Either QErr Text =
-            runExcept $
-              logicalModelToPreparedStatement
-                crtm
-                lmm
-                  { _lmmCode = code,
-                    _lmmArguments =
-                      HM.fromList
-                        [ (LogicalModelArgumentName "hey", NullableScalarType PGVarchar False Nothing)
-                        ]
-                  }
+            fmap snd $
+              runExcept $
+                logicalModelToPreparedStatement
+                  crtm
+                  lmm
+                    { _lmmCode = code,
+                      _lmmArguments =
+                        HM.fromList
+                          [ (LogicalModelArgumentName "hey", NullableScalarType PGVarchar False Nothing)
+                          ]
+                    }
 
       (first showQErr actual) `shouldSatisfy` isRight
       let Right rendered = actual
@@ -114,17 +115,18 @@ spec = do
     it "Handles multiple variables " do
       let Right code = parseInterpolatedQuery "SELECT {{hey}}, {{ho}}"
       let actual :: Either QErr Text =
-            runExcept $
-              logicalModelToPreparedStatement
-                crtm
-                lmm
-                  { _lmmCode = code,
-                    _lmmArguments =
-                      HM.fromList
-                        [ (LogicalModelArgumentName "hey", NullableScalarType PGVarchar False Nothing),
-                          (LogicalModelArgumentName "ho", NullableScalarType PGInteger False Nothing)
-                        ]
-                  }
+            fmap snd $
+              runExcept $
+                logicalModelToPreparedStatement
+                  crtm
+                  lmm
+                    { _lmmCode = code,
+                      _lmmArguments =
+                        HM.fromList
+                          [ (LogicalModelArgumentName "hey", NullableScalarType PGVarchar False Nothing),
+                            (LogicalModelArgumentName "ho", NullableScalarType PGInteger False Nothing)
+                          ]
+                    }
 
       (first showQErr actual) `shouldSatisfy` isRight
       let Right rendered = actual

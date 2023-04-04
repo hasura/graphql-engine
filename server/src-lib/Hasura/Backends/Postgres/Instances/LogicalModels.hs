@@ -6,6 +6,8 @@ module Hasura.Backends.Postgres.Instances.LogicalModels
 where
 
 import Data.Aeson (toJSON)
+import Data.Bifunctor
+import Data.ByteString qualified as BS
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrd
@@ -14,12 +16,15 @@ import Data.Map.Strict qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as Text
+import Data.Text.Encoding qualified as Text
 import Data.Text.Extended (commaSeparated, toTxt)
+import Data.Tuple (swap)
 import Database.PG.Query qualified as PG
+import Database.PostgreSQL.LibPQ qualified as PQ
 import Hasura.Backends.Postgres.Connection qualified as PG
 import Hasura.Backends.Postgres.Connection.Connect (withPostgresDB)
 import Hasura.Backends.Postgres.Instances.Types ()
-import Hasura.Backends.Postgres.SQL.Types (PGScalarType, pgScalarTypeToText)
+import Hasura.Backends.Postgres.SQL.Types (PGScalarType (..), pgScalarTypeToText)
 import Hasura.Base.Error
 import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata (..))
 import Hasura.LogicalModel.Metadata
@@ -36,38 +41,94 @@ import Hasura.SQL.Backend
 validateLogicalModel ::
   forall m pgKind.
   (MonadIO m, MonadError QErr m) =>
+  InsOrd.InsOrdHashMap PGScalarType PQ.Oid ->
   Env.Environment ->
   PG.PostgresConnConfiguration ->
   CustomReturnTypeMetadata ('Postgres pgKind) ->
   LogicalModelMetadata ('Postgres pgKind) ->
   m ()
-validateLogicalModel env connConf customReturnType model = do
-  preparedQuery <- logicalModelToPreparedStatement customReturnType model
-
-  -- We don't need to deallocate the prepared statement because 'withPostgresDB'
-  -- opens a new connection, runs a statement, and then closes the connection.
-  -- Since a prepared statement only lasts for the duration of the session, once
-  -- the session closes, the prepared statement is deallocated as well.
-  runRaw (PG.fromText $ preparedQuery)
+validateLogicalModel pgTypeOidMapping env connConf customReturnType model = do
+  (prepname, preparedQuery) <- logicalModelToPreparedStatement customReturnType model
+  description <- runCheck prepname (PG.fromText preparedQuery)
+  let returnColumns = bimap toTxt nstType <$> InsOrd.toList (_crtmFields customReturnType)
+  for_ (toList returnColumns) (matchTypes description)
   where
-    runRaw :: PG.Query -> m ()
-    runRaw stmt =
+    -- Run stuff against the database.
+    --
+    -- We don't need to deallocate the prepared statement because 'withPostgresDB'
+    -- opens a new connection, runs a statement, and then closes the connection.
+    -- Since a prepared statement only lasts for the duration of the session, once
+    -- the session closes, the prepared statement is deallocated as well.
+    runCheck :: BS.ByteString -> PG.Query -> m (PG.PreparedDescription PQ.Oid)
+    runCheck prepname stmt =
       liftEither
         =<< liftIO
           ( withPostgresDB
               env
               connConf
-              ( PG.rawQE
-                  ( \e ->
-                      (err400 ValidationFailed "Failed to validate query")
-                        { qeInternal = Just $ ExtraInternal $ toJSON e
-                        }
-                  )
-                  stmt
-                  []
-                  False
+              ( do
+                  -- prepare statement
+                  PG.rawQE @_ @()
+                    ( \e ->
+                        (err400 ValidationFailed "Failed to validate query")
+                          { qeInternal = Just $ ExtraInternal $ toJSON e
+                          }
+                    )
+                    stmt
+                    []
+                    False
+                  -- extract description
+                  PG.describePreparedStatement
+                    ( \e ->
+                        (err400 ValidationFailed "Failed to validate query")
+                          { qeInternal = Just $ ExtraInternal $ toJSON e
+                          }
+                    )
+                    prepname
               )
           )
+
+    -- Look for the type for a particular column in the prepared statement description
+    --   and compare them.
+    --   fail if not found, try to provide a good error message if you can.
+    matchTypes :: PG.PreparedDescription PQ.Oid -> (Text, PGScalarType) -> m ()
+    matchTypes description (name, expectedType) =
+      case lookup (Just (Text.encodeUtf8 name)) (PG.pd_fname_ftype description) of
+        Nothing ->
+          throwError
+            (err400 ValidationFailed "Failed to validate query")
+              { qeInternal =
+                  Just $
+                    ExtraInternal $
+                      toJSON @Text $
+                        "Column named '" <> toTxt name <> "' is not returned from the query."
+              }
+        Just actualOid
+          | Just expectedOid <- InsOrd.lookup expectedType pgTypeOidMapping,
+            expectedOid /= actualOid ->
+              throwError
+                (err400 ValidationFailed "Failed to validate query")
+                  { qeInternal =
+                      Just $
+                        ExtraInternal $
+                          toJSON @Text $
+                            Text.unwords $
+                              [ "Return column '" <> name <> "' has a type mismatch.",
+                                "The expected type is '" <> toTxt expectedType <> "',"
+                              ]
+                                <> case Map.lookup actualOid (invertPgTypeOidMap pgTypeOidMapping) of
+                                  Just t ->
+                                    ["but the actual type is '" <> toTxt t <> "'."]
+                                  Nothing ->
+                                    [ "and has the " <> tshow expectedOid <> ",",
+                                      "but the actual type has the " <> tshow actualOid <> "."
+                                    ]
+                  }
+        Just {} -> pure ()
+
+-- | Invert the type/oid mapping.
+invertPgTypeOidMap :: InsOrdHashMap PGScalarType PQ.Oid -> Map PQ.Oid PGScalarType
+invertPgTypeOidMap = Map.fromList . map swap . InsOrd.toList
 
 ---------------------------------------
 
@@ -121,8 +182,6 @@ renameIQ = runRenaming . fmap InterpolatedQuery . mapM renameII . getInterpolate
     -- Therefore we invert the map as part of renaming.
     inverseMap :: Ord b => Map a b -> Map b a
     inverseMap = Map.fromList . map swap . Map.toList
-      where
-        swap (a, b) = (b, a)
 
 -- | Pretty print an interpolated query with numbered parameters.
 renderIQ :: InterpolatedQuery Int -> Text
@@ -142,7 +201,7 @@ logicalModelToPreparedStatement ::
   MonadError QErr m =>
   CustomReturnTypeMetadata ('Postgres pgKind) ->
   LogicalModelMetadata ('Postgres pgKind) ->
-  m Text
+  m (BS.ByteString, Text)
 logicalModelToPreparedStatement customReturnType model = do
   let name = getLogicalModelName $ _lmmRootFieldName model
   let (preparedIQ, argumentMapping) = renameIQ $ _lmmCode model
@@ -186,4 +245,4 @@ logicalModelToPreparedStatement customReturnType model = do
       err400 ValidationFailed $
         "Undeclared arguments: " <> commaSeparated (map tshow $ Set.toList undeclaredArguments)
 
-  return preparedQuery
+  pure (Text.encodeUtf8 prepname, preparedQuery)

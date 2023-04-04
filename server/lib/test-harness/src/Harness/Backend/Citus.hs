@@ -168,7 +168,7 @@ createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk,
 scalarType :: HasCallStack => Schema.ScalarType -> Text
 scalarType = \case
   Schema.TInt -> "integer"
-  Schema.TStr -> "varchar"
+  Schema.TStr -> "text"
   Schema.TUTCTime -> "timestamp"
   Schema.TBool -> "boolean"
   Schema.TGeography -> "geography"

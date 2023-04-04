@@ -36,6 +36,7 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
+import Hasura.SQL.Tag
 import Hasura.Server.Init.FeatureFlag as FF
 import Hasura.Server.Types (HasServerConfigCtx (..), ServerConfigCtx (..))
 
@@ -179,7 +180,15 @@ runTrackLogicalModel env trackLogicalModelRequest = do
   throwIfFeatureDisabled
 
   sourceMetadata <-
-    maybe (throw400 NotFound $ "Source " <> sourceNameToText source <> " not found.") pure
+    maybe
+      ( throw400 NotFound $
+          "Source '"
+            <> sourceNameToText source
+            <> "' of kind "
+            <> toTxt (reify (backendTag @b))
+            <> " not found."
+      )
+      pure
       . preview (metaSources . ix source . toSourceMetadata @b)
       =<< getMetadata
   let sourceConnConfig = _smConfiguration sourceMetadata

@@ -100,7 +100,7 @@ dividedStuffReturnType =
 testAdminAccess :: SpecWith TestEnvironment
 testAdminAccess = do
   let query :: Text
-      query = "SELECT thing / {{denominator}} AS divided FROM stuff WHERE date = {{target_date}}"
+      query = "SELECT (thing / {{denominator}})::integer AS divided FROM stuff WHERE date = {{target_date}}"
 
   describe "Admin access" do
     let dividedStuffLogicalModel :: Schema.LogicalModel
@@ -171,7 +171,7 @@ testAdminAccess = do
               [ ("X-Hasura-Role", "not-admin")
               ]
               [yaml|
-                type: *getRequestType 
+                type: *getRequestType
                 args:
                   source: *sourceName
               |]
@@ -189,10 +189,10 @@ testAdminAccess = do
 testImplementation :: SpecWith TestEnvironment
 testImplementation = do
   let simpleQuery :: Text
-      simpleQuery = "SELECT thing / 2 AS divided FROM stuff"
+      simpleQuery = "SELECT (thing / 2)::integer AS divided FROM stuff"
 
-      query :: Text
-      query = "SELECT thing / {{denominator}} AS divided FROM stuff WHERE date = {{target_date}}"
+  let query :: Text
+      query = "SELECT (thing / {{denominator}})::integer AS divided FROM stuff WHERE date = {{target_date}}"
 
   describe "Implementation" $ do
     it "Adds a simple logical model of a function with no arguments and returns a 200" $ \testEnvironment -> do
@@ -260,7 +260,7 @@ testImplementation = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: *getRequestType 
+              type: *getRequestType
               args:
                 source: *sourceName
             |]
@@ -321,7 +321,7 @@ testImplementation = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: *getRequestType 
+              type: *getRequestType
               args:
                 source: *sourceName
             |]

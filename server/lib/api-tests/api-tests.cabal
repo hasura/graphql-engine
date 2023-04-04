@@ -87,6 +87,7 @@ library
     , uuid
     , vector
     , time
+    , QuickCheck
 
   exposed-modules:
     Spec
@@ -98,6 +99,7 @@ library
     Test.API.Metadata.CustomTypeSpec
     Test.API.Metadata.InconsistentSpec
     Test.API.Metadata.LogicalModelsSpec
+    Test.API.Metadata.LogicalModels.TypeCheckingSpec
     Test.API.Metadata.LogicalModels.ValidationSpec
     Test.API.Metadata.SuggestRelationshipsSpec
     Test.API.Metadata.TestConnectionTemplateSpec

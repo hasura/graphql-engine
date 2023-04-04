@@ -58,7 +58,7 @@ schema =
 tests :: SpecWith TestEnvironment
 tests = do
   let simpleQuery :: Text
-      simpleQuery = "SELECT thing / 2 AS divided FROM stuff"
+      simpleQuery = "SELECT (thing / 2)::integer AS divided FROM stuff"
 
       conflictingReturnType :: Schema.CustomType
       conflictingReturnType =
@@ -204,7 +204,7 @@ tests = do
           )
           [yaml|
               code: unexpected
-              error: *expectedError 
+              error: *expectedError
               path: $.args
           |]
 

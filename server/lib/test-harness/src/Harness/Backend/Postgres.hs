@@ -282,7 +282,7 @@ createUniqueIndexSql (SchemaName schemaName) tableName = \case
 scalarType :: HasCallStack => Schema.ScalarType -> Text
 scalarType = \case
   Schema.TInt -> "integer"
-  Schema.TStr -> "varchar"
+  Schema.TStr -> "text"
   Schema.TUTCTime -> "timestamp"
   Schema.TBool -> "boolean"
   Schema.TGeography -> "geography"

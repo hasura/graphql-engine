@@ -7,10 +7,14 @@
 module Hasura.Backends.Postgres.Instances.Metadata () where
 
 import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.Text.Extended
+import Database.PG.Query.PTI qualified as PTI
+import Database.PostgreSQL.LibPQ qualified as PQ
 import Hasura.Backends.Postgres.DDL qualified as Postgres
 import Hasura.Backends.Postgres.Instances.LogicalModels as Postgres (validateLogicalModel)
 import Hasura.Backends.Postgres.SQL.Types (QualifiedTable)
+import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
 import Hasura.Base.Error
 import Hasura.Prelude
@@ -34,6 +38,55 @@ class PostgresMetadata (pgKind :: PostgresKind) where
     QualifiedTable ->
     Either (ObjRelDef ('Postgres pgKind)) (ArrRelDef ('Postgres pgKind)) ->
     m ()
+
+  -- | A mapping from pg scalar types with clear oid equivalent to oid.
+  --
+  -- This is a insert order hash map so that when we invert it
+  -- duplicate oids will point to a more "general" type.
+  pgTypeOidMapping :: InsOrd.InsOrdHashMap Postgres.PGScalarType PQ.Oid
+  pgTypeOidMapping =
+    InsOrd.fromList $
+      [ (Postgres.PGSmallInt, PTI.int2),
+        (Postgres.PGSerial, PTI.int4),
+        (Postgres.PGInteger, PTI.int4),
+        (Postgres.PGBigSerial, PTI.int8),
+        (Postgres.PGBigInt, PTI.int8),
+        (Postgres.PGFloat, PTI.float4),
+        (Postgres.PGDouble, PTI.float8),
+        (Postgres.PGMoney, PTI.numeric),
+        (Postgres.PGNumeric, PTI.numeric),
+        (Postgres.PGBoolean, PTI.bool),
+        (Postgres.PGChar, PTI.bpchar),
+        (Postgres.PGVarchar, PTI.varchar),
+        (Postgres.PGText, PTI.text),
+        (Postgres.PGDate, PTI.date),
+        (Postgres.PGTimeStamp, PTI.timestamp),
+        (Postgres.PGTimeStampTZ, PTI.timestamptz),
+        (Postgres.PGTimeTZ, PTI.timetz),
+        (Postgres.PGJSON, PTI.json),
+        (Postgres.PGJSONB, PTI.jsonb),
+        (Postgres.PGUUID, PTI.uuid),
+        (Postgres.PGArray Postgres.PGSmallInt, PTI.int2_array),
+        (Postgres.PGArray Postgres.PGSerial, PTI.int4_array),
+        (Postgres.PGArray Postgres.PGInteger, PTI.int4_array),
+        (Postgres.PGArray Postgres.PGBigSerial, PTI.int8_array),
+        (Postgres.PGArray Postgres.PGBigInt, PTI.int8_array),
+        (Postgres.PGArray Postgres.PGFloat, PTI.float4_array),
+        (Postgres.PGArray Postgres.PGDouble, PTI.float8_array),
+        (Postgres.PGArray Postgres.PGMoney, PTI.numeric_array),
+        (Postgres.PGArray Postgres.PGNumeric, PTI.numeric_array),
+        (Postgres.PGArray Postgres.PGBoolean, PTI.bool_array),
+        (Postgres.PGArray Postgres.PGChar, PTI.char_array),
+        (Postgres.PGArray Postgres.PGVarchar, PTI.varchar_array),
+        (Postgres.PGArray Postgres.PGText, PTI.text_array),
+        (Postgres.PGArray Postgres.PGDate, PTI.date_array),
+        (Postgres.PGArray Postgres.PGTimeStamp, PTI.timestamp_array),
+        (Postgres.PGArray Postgres.PGTimeStampTZ, PTI.timestamptz_array),
+        (Postgres.PGArray Postgres.PGTimeTZ, PTI.timetz_array),
+        (Postgres.PGArray Postgres.PGJSON, PTI.json_array),
+        (Postgres.PGArray Postgres.PGJSON, PTI.jsonb_array),
+        (Postgres.PGArray Postgres.PGUUID, PTI.uuid_array)
+      ]
 
 instance PostgresMetadata 'Vanilla where
   validateRel _ _ _ = pure ()
@@ -112,6 +165,13 @@ instance PostgresMetadata 'Citus where
 
 instance PostgresMetadata 'Cockroach where
   validateRel _ _ _ = pure ()
+  pgTypeOidMapping =
+    InsOrd.fromList
+      [ (Postgres.PGInteger, PTI.int8),
+        (Postgres.PGSerial, PTI.int8),
+        (Postgres.PGJSON, PTI.jsonb)
+      ]
+      `InsOrd.union` pgTypeOidMapping @'Vanilla
 
 ----------------------------------------------------------------
 -- BackendMetadata instance
@@ -137,5 +197,5 @@ instance
   postDropSourceHook = Postgres.postDropSourceHook
   validateRelationship = validateRel @pgKind
   buildComputedFieldBooleanExp = Postgres.buildComputedFieldBooleanExp
-  validateLogicalModel = Postgres.validateLogicalModel
+  validateLogicalModel = Postgres.validateLogicalModel (pgTypeOidMapping @pgKind)
   supportsBeingRemoteRelationshipTarget _ = True
