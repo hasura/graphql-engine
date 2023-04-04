@@ -1,11 +1,10 @@
 module Hasura.Server.AppStateRef
   ( -- * AppState
-    AppStateRef (..),
-    AppState (..),
+    AppStateRef,
     initialiseAppStateRef,
     withSchemaCacheUpdate,
-    readAppContextRef,
-    getRebuildableSchemaCacheWithVersion,
+    withAppContextUpdate,
+    updateAppStateRef,
 
     -- * TLS AllowList reference
     TLSAllowListRef,
@@ -15,6 +14,8 @@ module Hasura.Server.AppStateRef
     -- * Utility
     getSchemaCache,
     getSchemaCacheWithVersion,
+    getRebuildableSchemaCacheWithVersion,
+    readAppContextRef,
     getAppContext,
     logInconsistentMetadata,
   )
@@ -204,3 +205,49 @@ updateMetadataVersionGauge :: MonadIO m => Gauge -> RebuildableSchemaCache -> m 
 updateMetadataVersionGauge metadataVersionGauge schemaCache = do
   let metadataVersion = scMetadataResourceVersion . lastBuiltSchemaCache $ schemaCache
   liftIO $ Gauge.set metadataVersionGauge $ getMetadataResourceVersion metadataVersion
+
+-- | Set the 'RebuildableAppContext' to the 'AppStateRef' produced by the given
+-- action.
+--
+-- An internal lock ensures that at most one update to the 'AppStateRef' may
+-- proceed at a time.
+withAppContextUpdate ::
+  (MonadIO m, MonadBaseControl IO m) =>
+  AppStateRef impl ->
+  m (a, RebuildableAppContext impl) ->
+  m a
+withAppContextUpdate (AppStateRef lock cacheRef _) action =
+  withMVarMasked lock $ \() -> do
+    (!res, !newCtx) <- action
+    liftIO $ do
+      -- update app ctx in IO reference
+      modifyIORef' cacheRef $ \appState -> appState {asAppCtx = newCtx}
+    return res
+
+-- | Set the 'AppStateRef', atomically, to the ('RebuildableSchemaCache',
+-- 'RebuildableAppContext') produced by the given action.
+--
+-- An internal lock ensures that at most one update to the 'AppStateRef' may
+-- proceed at a time.
+updateAppStateRef ::
+  (MonadIO m, MonadBaseControl IO m) =>
+  AppStateRef impl ->
+  L.Logger L.Hasura ->
+  RebuildableAppContext impl ->
+  RebuildableSchemaCache ->
+  m ()
+updateAppStateRef (AppStateRef lock cacheRef metadataVersionGauge) logger !newAppCtx !newSC =
+  withMVarMasked lock $ const do
+    liftIO do
+      -- update schemacache in IO reference
+      modifyIORef' cacheRef $ \appState ->
+        let !newVer = incSchemaCacheVer (snd $ asSchemaCache appState)
+         in appState {asSchemaCache = (newSC, newVer), asAppCtx = newAppCtx}
+
+      -- update metric with new metadata version
+      updateMetadataVersionGauge metadataVersionGauge newSC
+
+      let inconsistentObjectsList = scInconsistentObjs $ lastBuiltSchemaCache newSC
+          logInconsistentMetadata' = logInconsistentMetadata logger inconsistentObjectsList
+      -- log any inconsistent objects everytime this method is called
+      logInconsistentMetadata'
