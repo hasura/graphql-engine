@@ -20,6 +20,7 @@ import type {
   GetTableRowsProps,
   GetTablesListAsTreeProps,
   GetTrackableTablesProps,
+  GetVersionProps,
   // Property,
   IntrospectedTable,
   Operator,
@@ -27,6 +28,7 @@ import type {
   TableColumn,
   TableFkRelationships,
   TableRow,
+  Version,
   WhereClause,
 } from './types';
 
@@ -73,6 +75,9 @@ export const getDriver = (dataSource: Source) => {
 
 export type Database = {
   introspection?: {
+    getVersion?: (
+      props: GetVersionProps
+    ) => Promise<Version | Feature.NotImplemented>;
     getDriverInfo: () => Promise<DriverInfoResponse | Feature.NotImplemented>;
     getDatabaseConfiguration: (
       httpClient: AxiosInstance,
@@ -197,6 +202,15 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   },
   getNativeDrivers: async () => {
     return nativeDrivers;
+  },
+  getDatabaseVersion: async (
+    dataSourceName: string
+  ): Promise<string | Feature.NotImplemented> => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+    return (
+      database.introspection?.getVersion?.({ dataSourceName, httpClient }) ??
+      Feature.NotImplemented
+    );
   },
   connectDB: {
     getConfigSchema: async (driver: string) => {

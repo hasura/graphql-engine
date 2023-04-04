@@ -1,5 +1,5 @@
 import { Table } from '../../hasura-metadata-types';
-import { Database, GetDefaultQueryRootProps } from '..';
+import { Database, GetDefaultQueryRootProps, GetVersionProps } from '..';
 import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 import {
   getDatabaseConfiguration,
@@ -10,6 +10,7 @@ import {
   getSupportedOperators,
 } from './introspection';
 import { getTableRows } from './query';
+import { runSQL } from '../api';
 import { postgresCapabilities } from '../common/capabilities';
 
 export type PostgresTable = { name: string; schema: string };
@@ -17,6 +18,17 @@ export type PostgresTable = { name: string; schema: string };
 export const postgres: Database = {
   ...defaultDatabaseProps,
   introspection: {
+    getVersion: async ({ dataSourceName, httpClient }: GetVersionProps) => {
+      const result = await runSQL({
+        source: {
+          name: dataSourceName,
+          kind: 'postgres',
+        },
+        sql: `SELECT VERSION()`,
+        httpClient,
+      });
+      return result.result?.[1][0] ?? '';
+    },
     getDriverInfo: async () => ({
       name: 'postgres',
       displayName: 'Postgres',

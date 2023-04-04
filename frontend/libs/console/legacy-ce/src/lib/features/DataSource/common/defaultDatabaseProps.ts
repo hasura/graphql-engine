@@ -6,6 +6,7 @@ export const defaultDatabaseProps: Database = {
     getSupportedQueryTypes: async () => Feature.NotImplemented,
   },
   introspection: {
+    getVersion: async () => Feature.NotImplemented,
     getDriverInfo: async () => Feature.NotImplemented,
     getDatabaseConfiguration: async () => Feature.NotImplemented,
     getDriverCapabilities: async () => Feature.NotImplemented,

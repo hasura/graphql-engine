@@ -60437,7 +60437,7 @@ export type Unnamed_3_MutationVariables = Exact<{
   jobId: Scalars['uuid'];
   projectId: Scalars['uuid'];
   isLatencyDisplayed: Scalars['Boolean'];
-  datasDifferenceInMilliseconds: Scalars['Int'];
+  dateDifferenceInMilliseconds: Scalars['Int'];
 }>;
 
 export type Unnamed_3_Mutation = {

@@ -59,6 +59,8 @@ import {
   useVPCBannerVisibility,
 } from './utils';
 import { NeonDashboardLink } from '../DataSources/CreateDataSource/Neon/components/NeonDashboardLink';
+import { Collapsible } from '../../../../new-components/Collapsible';
+import { IconTooltip } from '../../../../new-components/Tooltip';
 
 const KNOW_MORE_PROJECT_REGION_UPDATE =
   'https://hasura.io/docs/latest/projects/regions/#changing-region-of-an-existing-project';
@@ -586,8 +588,22 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
           ) : null}
           <NeonDashboardLink className="mt-lg" />
 
-          <div className="mt-lg">
-            <ManageAgents />
+          <hr className="my-md" />
+          <div className="mt-4">
+            <Collapsible
+              triggerChildren={
+                <div className="flex font-bold items-center text-gray-600 text-lg">
+                  Data Connector Agents
+                  <IconTooltip
+                    message={
+                      'Data Connector Agents act as an intermediary abstraction between a data source and the Hasura GraphQL Engine.'
+                    }
+                  />
+                </div>
+              }
+            >
+              <ManageAgents />
+            </Collapsible>
           </div>
         </div>
       </Analytics>
