@@ -1,4 +1,4 @@
-This note is in [Hasura.GraphQL.Schema.Select](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Select.hs#L1303).
+This note is in [Hasura.GraphQL.Schema.Select](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Select.hs#L1299).
 
 # Permission filter deduplication
 
