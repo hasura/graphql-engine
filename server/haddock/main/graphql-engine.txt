@@ -27120,42 +27120,6 @@ module Hasura.Server.AppStateRef
 --   <a>SchemaCache</a>.</li>
 --   </ul>
 data AppStateRef impl
-AppStateRef :: MVar () -> IORef (AppState impl) -> Gauge -> AppStateRef impl
-
--- | The idea behind explicit locking here is to
---   
---   <ol>
---   <li>Allow maximum throughput for serving requests (<i>v1</i>graphql)
---   (as each request reads the current schemacache)</li>
---   <li>We don't want to process more than one request at any point of
---   time which would modify the schema cache as such queries are
---   expensive.</li>
---   </ol>
---   
---   Another option is to consider removing this lock in place of
---   `_scrCache :: MVar ...` if it's okay or in fact correct to block
---   during schema update in e.g. _wseGCtxMap. Vamshi says: It is
---   theoretically possible to have a situation (in between building new
---   schemacache and before writing it to the IORef) where we serve a
---   request with a stale schemacache but I guess it is an okay trade-off
---   to pay for a higher throughput (I remember doing a bunch of benchmarks
---   to test this hypothesis).
-[_scrLock] :: AppStateRef impl -> MVar ()
-[_scrCache] :: AppStateRef impl -> IORef (AppState impl)
-
--- | The gauge metric that tracks the current metadata version.
---   
---   Invariant: This gauge must be updated via
---   <a>updateMetadataVersionGauge</a> whenever the _scrCache IORef is
---   updated.
-[_scrMetadataVersionGauge] :: AppStateRef impl -> Gauge
-
--- | A mutable reference to '(RebuildableSchemaCache, SchemaCacheVer)' and
---   <a>RebuildableAppContext</a>
-data AppState impl
-AppState :: (RebuildableSchemaCache, SchemaCacheVer) -> RebuildableAppContext impl -> AppState impl
-[asSchemaCache] :: AppState impl -> (RebuildableSchemaCache, SchemaCacheVer)
-[asAppCtx] :: AppState impl -> RebuildableAppContext impl
 
 -- | Build a new <a>AppStateRef</a>.
 --   
@@ -27210,6 +27174,21 @@ getAppContext :: AppStateRef impl -> IO AppContext
 
 -- | Formats and logs a list of inconsistent metadata objects.
 logInconsistentMetadata :: Logger Hasura -> [InconsistentMetadata] -> IO ()
+
+-- | Set the <a>RebuildableAppContext</a> to the <a>AppStateRef</a>
+--   produced by the given action.
+--   
+--   An internal lock ensures that at most one update to the
+--   <a>AppStateRef</a> may proceed at a time.
+withAppContextUpdate :: (MonadIO m, MonadBaseControl IO m) => AppStateRef impl -> m (a, RebuildableAppContext impl) -> m a
+
+-- | Set the <a>AppStateRef</a>, atomically, to the
+--   (<a>RebuildableSchemaCache</a>, <a>RebuildableAppContext</a>) produced
+--   by the given action.
+--   
+--   An internal lock ensures that at most one update to the
+--   <a>AppStateRef</a> may proceed at a time.
+updateAppStateRef :: (MonadIO m, MonadBaseControl IO m) => AppStateRef impl -> Logger Hasura -> RebuildableAppContext impl -> RebuildableSchemaCache -> m ()
 
 
 -- | Send anonymized metrics to the telemetry server regarding usage of
