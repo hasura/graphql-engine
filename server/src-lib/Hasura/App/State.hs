@@ -321,18 +321,21 @@ buildCacheStaticConfig AppEnv {..} =
   CacheStaticConfig
     { _cscMaintenanceMode = appEnvEnableMaintenanceMode,
       _cscEventingMode = appEnvEventingMode,
-      _cscReadOnlyMode = appEnvEnableReadOnlyMode,
-      _cscCheckFeatureFlag = appEnvCheckFeatureFlag
+      _cscReadOnlyMode = appEnvEnableReadOnlyMode
     }
 
-buildCacheDynamicConfig :: AppContext -> CacheDynamicConfig
-buildCacheDynamicConfig AppContext {..} =
-  CacheDynamicConfig
-    { _cdcFunctionPermsCtx = acFunctionPermsCtx,
-      _cdcRemoteSchemaPermsCtx = acRemoteSchemaPermsCtx,
-      _cdcSQLGenCtx = acSQLGenCtx,
-      _cdcExperimentalFeatures = acExperimentalFeatures,
-      _cdcDefaultNamingConvention = acDefaultNamingConvention,
-      _cdcMetadataDefaults = acMetadataDefaults,
-      _cdcApolloFederationStatus = acApolloFederationStatus
-    }
+buildCacheDynamicConfig :: MonadIO m => AppEnv -> AppContext -> m CacheDynamicConfig
+buildCacheDynamicConfig AppEnv {..} AppContext {..} = do
+  let CheckFeatureFlag runCheckFlag = appEnvCheckFeatureFlag
+  logicalModelsEnabled <- liftIO $ runCheckFlag logicalModelInterface
+  pure
+    CacheDynamicConfig
+      { _cdcFunctionPermsCtx = acFunctionPermsCtx,
+        _cdcRemoteSchemaPermsCtx = acRemoteSchemaPermsCtx,
+        _cdcSQLGenCtx = acSQLGenCtx,
+        _cdcExperimentalFeatures = acExperimentalFeatures,
+        _cdcDefaultNamingConvention = acDefaultNamingConvention,
+        _cdcMetadataDefaults = acMetadataDefaults,
+        _cdcApolloFederationStatus = acApolloFederationStatus,
+        _cdcAreLogicalModelsEnabled = logicalModelsEnabled
+      }

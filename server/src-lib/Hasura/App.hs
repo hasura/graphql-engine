@@ -502,6 +502,8 @@ initialiseAppContext ::
   m (AppStateRef Hasura)
 initialiseAppContext env serveOptions@ServeOptions {..} AppInit {..} = do
   appEnv@AppEnv {..} <- askAppEnv
+  let CheckFeatureFlag runCheckFlag = appEnvCheckFeatureFlag
+  logicalModelsEnabled <- liftIO $ runCheckFlag logicalModelInterface
   let Loggers _ logger pgLogger = appEnvLoggers
       sqlGenCtx = initSQLGenCtx soExperimentalFeatures soStringifyNum soDangerousBooleanCollapse
       cacheStaticConfig = buildCacheStaticConfig appEnv
@@ -514,6 +516,7 @@ initialiseAppContext env serveOptions@ServeOptions {..} AppInit {..} = do
           soDefaultNamingConvention
           soMetadataDefaults
           soApolloFederationStatus
+          logicalModelsEnabled
 
   -- Create the schema cache
   rebuildableSchemaCache <-

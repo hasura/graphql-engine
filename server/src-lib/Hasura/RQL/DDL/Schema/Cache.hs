@@ -638,10 +638,8 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
         ArrowKleisli m arr,
         ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadError QErr m,
-        MonadIO m,
         BackendMetadata b,
-        GetAggregationPredicatesDeps b,
-        HasCacheStaticConfig m
+        GetAggregationPredicatesDeps b
       ) =>
       ( CacheDynamicConfig,
         HashMap SourceName (AB.AnyBackend PartiallyResolvedSource),
@@ -738,12 +736,6 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
 
       let functionCache = mapFromL _fiSQLName $ catMaybes functionCacheMaybes
 
-      areLogicalModelsEnabled <-
-        bindA
-          -< do
-            CheckFeatureFlag checkFeatureFlag <- _cscCheckFeatureFlag <$> askCacheStaticConfig
-            liftIO @m $ checkFeatureFlag FF.logicalModelInterface
-
       let mkCustomReturnTypeMetadataObject :: CustomReturnTypeMetadata b -> MetadataObject
           mkCustomReturnTypeMetadataObject crtm =
             ( MetadataObject
@@ -760,7 +752,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
             (OMap.elems customReturnTypes)
             \crtm@CustomReturnTypeMetadata {..} ->
               withRecordInconsistencyM (mkCustomReturnTypeMetadataObject crtm) $ do
-                unless areLogicalModelsEnabled $
+                unless (_cdcAreLogicalModelsEnabled dynamicConfig) $
                   throw400 InvalidConfiguration "The Logical Models feature is disabled"
 
                 fieldInfoMap <- case toFieldInfo _crtmFields of
@@ -797,7 +789,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
             (OMap.elems logicalModels)
             \lmm@LogicalModelMetadata {..} ->
               withRecordInconsistencyM (mkLogicalModelMetadataObject lmm) $ do
-                unless areLogicalModelsEnabled $
+                unless (_cdcAreLogicalModelsEnabled dynamicConfig) $
                   throw400 InvalidConfiguration "The Logical Models feature is disabled"
 
                 customReturnType <-

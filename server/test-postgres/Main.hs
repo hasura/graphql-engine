@@ -112,7 +112,6 @@ main = do
                 maintenanceMode
                 EventingEnabled
                 readOnlyMode
-                (CheckFeatureFlag $ checkFeatureFlag mempty)
             dynamicConfig =
               CacheDynamicConfig
                 Options.InferFunctionPermissions
@@ -122,6 +121,7 @@ main = do
                 (_default defaultNamingConventionOption)
                 emptyMetadataDefaults
                 ApolloFederationDisabled
+                False
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver staticConfig
 
         (_appInit, appEnv) <-

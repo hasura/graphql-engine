@@ -30,8 +30,7 @@ import Hasura.Server.Types
 data CacheStaticConfig = CacheStaticConfig
   { _cscMaintenanceMode :: MaintenanceMode (),
     _cscEventingMode :: EventingMode,
-    _cscReadOnlyMode :: ReadOnlyMode,
-    _cscCheckFeatureFlag :: CheckFeatureFlag
+    _cscReadOnlyMode :: ReadOnlyMode
   }
 
 class Monad m => HasCacheStaticConfig m where
@@ -65,6 +64,11 @@ data CacheDynamicConfig = CacheDynamicConfig
     _cdcExperimentalFeatures :: HashSet ExperimentalFeature,
     _cdcDefaultNamingConvention :: NamingCase,
     _cdcMetadataDefaults :: MetadataDefaults,
-    _cdcApolloFederationStatus :: ApolloFederationStatus
+    _cdcApolloFederationStatus :: ApolloFederationStatus,
+    -- | Logical models can be enabled or disabled on the fly via a feature
+    -- flag: we want to be able to properly rebuild the relevant parts of the
+    -- schema cache when this value changes, hence the need for it to be part of
+    -- the dynamic config.
+    _cdcAreLogicalModelsEnabled :: Bool
   }
   deriving (Eq)

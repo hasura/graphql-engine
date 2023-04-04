@@ -281,13 +281,13 @@ refreshSchemaCache
   appStateRef
   threadType
   logTVar = do
-    AppEnv {..} <- askAppEnv
+    appEnv@AppEnv {..} <- askAppEnv
     let logger = _lsLogger appEnvLoggers
     respErr <- runExceptT $
       withSchemaCacheUpdate appStateRef logger (Just logTVar) $ do
         rebuildableCache <- liftIO $ fst <$> getRebuildableSchemaCacheWithVersion appStateRef
         appContext <- liftIO $ getAppContext appStateRef
-        let dynamicConfig = buildCacheDynamicConfig appContext
+        dynamicConfig <- buildCacheDynamicConfig appEnv appContext
         (msg, cache, _) <-
           runCacheRWT dynamicConfig rebuildableCache $ do
             schemaCache <- askSchemaCache

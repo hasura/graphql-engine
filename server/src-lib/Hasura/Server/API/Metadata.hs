@@ -406,7 +406,7 @@ runMetadataQuery ::
   RQLMetadata ->
   m (EncJSON, RebuildableSchemaCache)
 runMetadataQuery appContext schemaCache RQLMetadata {..} = do
-  AppEnv {..} <- askAppEnv
+  appEnv@AppEnv {..} <- askAppEnv
   let logger = _lsLogger appEnvLoggers
   MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
   let exportsMetadata = \case
@@ -432,7 +432,7 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
         if (exportsMetadata _rqlMetadata || queryModifiesMetadata _rqlMetadata)
           then emptyMetadataDefaults
           else acMetadataDefaults appContext
-      dynamicConfig = buildCacheDynamicConfig appContext
+  dynamicConfig <- buildCacheDynamicConfig appEnv appContext
   ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
     runMetadataQueryM
       (acEnvironment appContext)
