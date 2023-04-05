@@ -8,8 +8,10 @@ import Data.Aeson qualified as J
 import Data.Aeson.Encoding qualified as JE
 import Data.Has (Has, modifier)
 import Data.HashMap.Strict qualified as HashMap
+import Data.Semigroup.Foldable (toNonEmpty)
 import Data.Text.Extended (toTxt)
 import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Backends.DataConnector.Adapter.Backend
 import Hasura.Backends.DataConnector.Adapter.Types
 import Hasura.Backends.DataConnector.Adapter.Types.Mutations
 import Hasura.Backends.DataConnector.Plan.Common
@@ -35,14 +37,27 @@ import Witch qualified
 --------------------------------------------------------------------------------
 
 newtype TableInsertSchemas = TableInsertSchemas
-  {unTableInsertSchemas :: HashMap API.TableName (HashMap API.FieldName API.InsertFieldSchema)}
+  {unTableInsertSchemas :: HashMap API.TableName TableInsertSchema}
   deriving stock (Eq, Show)
 
 instance Semigroup TableInsertSchemas where
-  (TableInsertSchemas l) <> (TableInsertSchemas r) = TableInsertSchemas $ HashMap.unionWith HashMap.union l r
+  (TableInsertSchemas l) <> (TableInsertSchemas r) = TableInsertSchemas $ HashMap.unionWith (<>) l r
 
 instance Monoid TableInsertSchemas where
   mempty = TableInsertSchemas mempty
+
+data TableInsertSchema = TableInsertSchema
+  { _tisPrimaryKey :: Maybe (NonEmpty API.ColumnName),
+    _tisFields :: HashMap API.FieldName API.InsertFieldSchema
+  }
+  deriving stock (Eq, Show)
+
+instance Semigroup TableInsertSchema where
+  l <> r =
+    TableInsertSchema
+      { _tisPrimaryKey = _tisPrimaryKey l,
+        _tisFields = HashMap.union (_tisFields l) (_tisFields r)
+      }
 
 recordTableInsertSchema ::
   ( Has TableInsertSchemas writerOutput,
@@ -50,10 +65,10 @@ recordTableInsertSchema ::
     MonadError QErr m
   ) =>
   API.TableName ->
-  HashMap API.FieldName API.InsertFieldSchema ->
+  TableInsertSchema ->
   CPS.WriterT writerOutput m ()
-recordTableInsertSchema tableName fieldSchemas =
-  let newTableSchema = TableInsertSchemas $ HashMap.singleton tableName fieldSchemas
+recordTableInsertSchema tableName tableInsertSchema =
+  let newTableSchema = TableInsertSchemas $ HashMap.singleton tableName tableInsertSchema
    in CPS.tell $ modifier (const newTableSchema) mempty
 
 --------------------------------------------------------------------------------
@@ -76,7 +91,10 @@ translateMutationDB sessionVariables = \case
   MDBInsert insert -> do
     (insertOperation, (tableRelationships, tableInsertSchemas)) <- CPS.runWriterT $ translateInsert sessionVariables insert
     let apiTableRelationships = uncurry API.TableRelationships <$> HashMap.toList (unTableRelationships tableRelationships)
-    let apiTableInsertSchema = uncurry API.TableInsertSchema <$> HashMap.toList (unTableInsertSchemas tableInsertSchemas)
+    let apiTableInsertSchema =
+          unTableInsertSchemas tableInsertSchemas
+            & HashMap.toList
+            & fmap (\(tableName, TableInsertSchema {..}) -> API.TableInsertSchema tableName _tisPrimaryKey _tisFields)
     pure $
       API.MutationRequest
         { _mrTableRelationships = apiTableRelationships,
@@ -109,8 +127,9 @@ translateInsert ::
   SessionVariables ->
   AnnotatedInsert 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   CPS.WriterT (TableRelationships, TableInsertSchemas) m API.InsertMutationOperation
-translateInsert sessionVariables AnnotatedInsert {..} = do
-  rows <- traverse (translateInsertRow sessionVariables tableName _aiTableColumns _aiPresetValues) _aiInsertObject
+translateInsert sessionVariables AnnotatedInsert {_aiData = AnnotatedInsertData {..}, ..} = do
+  captureTableInsertSchema tableName _aiTableColumns _aiPrimaryKey _aiExtraTableMetadata
+  rows <- lift $ traverse (translateInsertRow sessionVariables tableName _aiTableColumns _aiPresetValues) _aiInsertObject
   postInsertCheck <- translateBoolExpToExpression sessionVariables tableName insertCheckCondition
   returningFields <- translateMutationOutputToReturningFields sessionVariables tableName _aiOutput
   pure $
@@ -124,44 +143,59 @@ translateInsert sessionVariables AnnotatedInsert {..} = do
     tableName = Witch.from _aiTableName
     -- Update check condition must be used once upserts are supported
     (insertCheckCondition, _updateCheckCondition) = _aiCheckCondition
-    AnnotatedInsertData {..} = _aiData
 
-translateInsertRow ::
+captureTableInsertSchema ::
   ( Has TableInsertSchemas writerOutput,
     Monoid writerOutput,
     MonadError QErr m
   ) =>
+  API.TableName ->
+  [ColumnInfo 'DataConnector] ->
+  Maybe (NESeq ColumnName) ->
+  ExtraTableMetadata ->
+  CPS.WriterT writerOutput m ()
+captureTableInsertSchema tableName tableColumns primaryKey ExtraTableMetadata {..} = do
+  let fieldSchemas =
+        tableColumns
+          & fmap
+            ( \ColumnInfo {..} ->
+                let extraColumnMetadata = HashMap.lookup ciColumn _etmExtraColumnMetadata
+                    scalarType = columnTypeToScalarType ciType
+                    valueGenerated = extraColumnMetadata >>= _ecmValueGenerated
+                    fieldName = API.FieldName $ G.unName ciName
+                    columnInsertSchema = API.ColumnInsert $ API.ColumnInsertSchema (Witch.from ciColumn) (Witch.from scalarType) ciIsNullable valueGenerated
+                 in (fieldName, columnInsertSchema)
+            )
+          & HashMap.fromList
+  let primaryKey' = fmap Witch.from . toNonEmpty <$> primaryKey
+  recordTableInsertSchema tableName $ TableInsertSchema primaryKey' fieldSchemas
+
+translateInsertRow ::
+  MonadError QErr m =>
   SessionVariables ->
   API.TableName ->
   [ColumnInfo 'DataConnector] ->
   HashMap ColumnName (UnpreparedValue 'DataConnector) ->
   AnnotatedInsertRow 'DataConnector (UnpreparedValue 'DataConnector) ->
-  CPS.WriterT writerOutput m API.RowObject
+  m API.RowObject
 translateInsertRow sessionVariables tableName tableColumns defaultColumnValues insertRow = do
-  columnSchemasAndValues <- lift $ forM (HashMap.toList columnUnpreparedValues) $ \(columnName, columnValue) -> do
+  columnSchemasAndValues <- forM (HashMap.toList columnUnpreparedValues) $ \(columnName, columnValue) -> do
     fieldName <-
       case find (\ColumnInfo {..} -> ciColumn == columnName) tableColumns of
         Just ColumnInfo {..} -> pure . API.FieldName $ G.unName ciName
         Nothing -> throw500 $ "Can't find column " <> toTxt columnName <> " in table schema for " <> API.tableNameToText tableName
     preparedLiteral <- prepareLiteral sessionVariables columnValue
 
-    (scalarType, value) <-
+    value <-
       case preparedLiteral of
-        ValueLiteral scalarType value -> pure (scalarType, value)
+        ValueLiteral _scalarType value -> pure value
         ArrayLiteral _scalarType _values -> throw400 NotSupported "translateInsertRow: Array literals are not supported as column insert values"
 
-    let columnInsertSchema = API.ColumnInsertSchema (Witch.from columnName) (Witch.from scalarType)
-    pure (fieldName, columnInsertSchema, value)
-
-  let fieldSchemas =
-        columnSchemasAndValues
-          & fmap (\(fieldName, columnInsertSchema, _) -> (fieldName, API.ColumnInsert columnInsertSchema))
-          & HashMap.fromList
-  recordTableInsertSchema tableName fieldSchemas
+    pure (fieldName, value)
 
   let rowObject =
         columnSchemasAndValues
-          & fmap (\(fieldName, _, value) -> (fieldName, API.mkColumnInsertFieldValue value))
+          & fmap (second API.mkColumnInsertFieldValue)
           & HashMap.fromList
           & API.RowObject
 

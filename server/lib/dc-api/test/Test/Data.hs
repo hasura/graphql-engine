@@ -79,6 +79,12 @@ schemaTables = either error id . eitherDecodeStrict $ schemaBS
 numericColumns :: [API.ColumnName]
 numericColumns = schemaTables >>= (API._tiColumns >>> mapMaybe (\API.ColumnInfo {..} -> if _ciType == API.ScalarType "number" then Just _ciName else Nothing))
 
+edgeCasesSchemaBS :: ByteString
+edgeCasesSchemaBS = $(makeRelativeToProject "test/Test/Data/edge-cases-schema-tables.json" >>= embedFile)
+
+edgeCasesSchemaTables :: [API.TableInfo]
+edgeCasesSchemaTables = either error id . eitherDecodeStrict $ edgeCasesSchemaBS
+
 chinookXmlBS :: ByteString
 chinookXmlBS = $(makeRelativeToProject "test/Test/Data/Chinook.xml.gz" >>= embedFile)
 
@@ -423,6 +429,7 @@ data TestData = TestData
     -- = Utility functions
     _tdColumnName :: Text -> API.ColumnName,
     _tdColumnField :: API.TableName -> Text -> API.Field,
+    _tdMkDefaultTableInsertSchema :: API.TableName -> API.TableInsertSchema,
     _tdColumnInsertSchema :: API.TableName -> Text -> API.ColumnInsertSchema,
     _tdRowColumnOperatorValue :: API.TableName -> Text -> J.Value -> API.RowColumnOperatorValue,
     _tdQueryComparisonColumn :: Text -> API.ScalarType -> API.ComparisonColumn,
@@ -434,7 +441,7 @@ data TestData = TestData
 mkTestData :: API.SchemaResponse -> TestConfig -> TestData
 mkTestData schemaResponse testConfig =
   TestData
-    { _tdSchemaTables = formatTableInfo <$> schemaTables,
+    { _tdSchemaTables = formatTableInfo testConfig <$> schemaTables,
       _tdArtistsTableName = formatTableName testConfig artistsTableName,
       _tdArtistsRows = artistsRows,
       _tdArtistsRowsById = artistsRowsById,
@@ -484,6 +491,7 @@ mkTestData schemaResponse testConfig =
       _tdGenresTableRelationships = formatTableRelationships genresTableRelationships,
       _tdColumnName = formatColumnName testConfig . API.ColumnName,
       _tdColumnField = columnField schemaResponse testConfig,
+      _tdMkDefaultTableInsertSchema = mkDefaultTableInsertSchema schemaResponse testConfig schemaTables,
       _tdColumnInsertSchema = columnInsertSchema schemaResponse testConfig,
       _tdRowColumnOperatorValue = rowColumnOperatorValue schemaResponse testConfig,
       _tdFindColumnScalarType = \tableName name -> findColumnScalarType schemaResponse tableName (formatColumnName testConfig $ API.ColumnName name),
@@ -502,16 +510,6 @@ mkTestData schemaResponse testConfig =
       API.trSourceTable %~ formatTableName testConfig
         >>> API.trRelationships . traverse . API.rTargetTable %~ formatTableName testConfig
 
-    formatTableInfo :: API.TableInfo -> API.TableInfo
-    formatTableInfo =
-      API.tiName %~ formatTableName testConfig
-        >>> API.tiColumns . traverse . API.ciName %~ formatColumnName testConfig
-        >>> API.tiPrimaryKey . traverse %~ formatColumnName testConfig
-        >>> API.tiForeignKeys . API.unForeignKeys . traverse
-          %~ ( API.cForeignTable %~ formatTableName testConfig
-                 >>> API.cColumnMapping %~ (HashMap.toList >>> fmap (bimap (formatColumnName testConfig) (formatColumnName testConfig)) >>> HashMap.fromList)
-             )
-
 -- | Test data from the TestingEdgeCases dataset template
 data EdgeCasesTestData = EdgeCasesTestData
   { -- = NoPrimaryKey table
@@ -525,7 +523,7 @@ data EdgeCasesTestData = EdgeCasesTestData
     -- = Utility functions
     _ectdTableExists :: API.TableName -> Bool,
     _ectdColumnField :: API.TableName -> Text -> API.Field,
-    _ectdColumnInsertSchema :: API.TableName -> Text -> API.ColumnInsertSchema,
+    _ectdMkDefaultTableInsertSchema :: API.TableName -> API.TableInsertSchema,
     _ectdRowColumnOperatorValue :: API.TableName -> Text -> J.Value -> API.RowColumnOperatorValue,
     _ectdCurrentComparisonColumn :: Text -> API.ScalarType -> API.ComparisonColumn
   }
@@ -539,7 +537,7 @@ mkEdgeCasesTestData testConfig schemaResponse =
       _ectdFindColumnScalarType = \tableName name -> findColumnScalarType schemaResponse tableName (formatColumnName testConfig $ API.ColumnName name),
       _ectdTableExists = tableExists,
       _ectdColumnField = columnField schemaResponse testConfig,
-      _ectdColumnInsertSchema = columnInsertSchema schemaResponse testConfig,
+      _ectdMkDefaultTableInsertSchema = mkDefaultTableInsertSchema schemaResponse testConfig edgeCasesSchemaTables,
       _ectdRowColumnOperatorValue = rowColumnOperatorValue schemaResponse testConfig,
       _ectdCurrentComparisonColumn = API.ComparisonColumn API.CurrentTable . formatColumnName testConfig . API.ColumnName
     }
@@ -553,6 +551,16 @@ mkEdgeCasesTestData testConfig schemaResponse =
 
 formatTableName :: TestConfig -> API.TableName -> API.TableName
 formatTableName TestConfig {..} = applyTableNamePrefix _tcTableNamePrefix . API.TableName . fmap (applyNameCasing _tcTableNameCasing) . API.unTableName
+
+formatTableInfo :: TestConfig -> API.TableInfo -> API.TableInfo
+formatTableInfo testConfig =
+  API.tiName %~ formatTableName testConfig
+    >>> API.tiColumns . traverse . API.ciName %~ formatColumnName testConfig
+    >>> API.tiPrimaryKey . _Just . traverse %~ formatColumnName testConfig
+    >>> API.tiForeignKeys . API.unForeignKeys . traverse
+      %~ ( API.cForeignTable %~ formatTableName testConfig
+             >>> API.cColumnMapping %~ (HashMap.toList >>> fmap (bimap (formatColumnName testConfig) (formatColumnName testConfig)) >>> HashMap.fromList)
+         )
 
 applyTableNamePrefix :: [Text] -> API.TableName -> API.TableName
 applyTableNamePrefix prefix tableName@(API.TableName rawTableName) =
@@ -576,12 +584,38 @@ columnField schemaResponse testConfig tableName columnName =
     columnName' = formatColumnName testConfig $ API.ColumnName columnName
     scalarType = findColumnScalarType schemaResponse tableName columnName'
 
+mkDefaultTableInsertSchema :: API.SchemaResponse -> TestConfig -> [API.TableInfo] -> API.TableName -> API.TableInsertSchema
+mkDefaultTableInsertSchema schemaResponse testConfig expectedSchemaTables tableName =
+  API.TableInsertSchema
+    { _tisTable = tableName,
+      _tisPrimaryKey = fmap (formatColumnName testConfig) <$> API._tiPrimaryKey tableInfo,
+      _tisFields = mkFieldsMap insertFields
+    }
+  where
+    tableInfo =
+      expectedSchemaTables
+        & find (\API.TableInfo {..} -> formatTableName testConfig _tiName == tableName)
+        & fromMaybe (error $ "Can't find table " <> show tableName <> " in schema")
+    columnNames =
+      tableInfo
+        & API._tiColumns
+        & fmap API._ciName
+    insertFields =
+      columnNames
+        & fmap
+          ( \columnName ->
+              let formattedColumnName = formatColumnName testConfig columnName
+                  API.ColumnInfo {..} = findColumnInfo schemaResponse tableName formattedColumnName
+                  columnNameText = API.unColumnName columnName
+               in (columnNameText, API.ColumnInsert $ API.ColumnInsertSchema _ciName _ciType _ciNullable _ciValueGenerated)
+          )
+
 columnInsertSchema :: API.SchemaResponse -> TestConfig -> API.TableName -> Text -> API.ColumnInsertSchema
 columnInsertSchema schemaResponse testConfig tableName columnName =
-  API.ColumnInsertSchema columnName' scalarType
+  API.ColumnInsertSchema columnName' (API._ciType columnInfo) (API._ciNullable columnInfo) (API._ciValueGenerated columnInfo)
   where
     columnName' = formatColumnName testConfig $ API.ColumnName columnName
-    scalarType = findColumnScalarType schemaResponse tableName columnName'
+    columnInfo = findColumnInfo schemaResponse tableName columnName'
 
 rowColumnOperatorValue :: API.SchemaResponse -> TestConfig -> API.TableName -> Text -> J.Value -> API.RowColumnOperatorValue
 rowColumnOperatorValue schemaResponse testConfig tableName columnName value =
@@ -590,12 +624,16 @@ rowColumnOperatorValue schemaResponse testConfig tableName columnName value =
     columnName' = formatColumnName testConfig $ API.ColumnName columnName
     scalarType = findColumnScalarType schemaResponse tableName columnName'
 
-findColumnScalarType :: API.SchemaResponse -> API.TableName -> API.ColumnName -> API.ScalarType
-findColumnScalarType API.SchemaResponse {..} tableName columnName =
-  maybe (error $ "Can't find the scalar type of column " <> show columnName <> " in table " <> show tableName) API._ciType columnInfo
+findColumnInfo :: API.SchemaResponse -> API.TableName -> API.ColumnName -> API.ColumnInfo
+findColumnInfo API.SchemaResponse {..} tableName columnName =
+  fromMaybe (error $ "Can't find the scalar type of column " <> show columnName <> " in table " <> show tableName) columnInfo
   where
     tableInfo = find (\API.TableInfo {..} -> _tiName == tableName) _srTables
     columnInfo = find (\API.ColumnInfo {..} -> _ciName == columnName) =<< API._tiColumns <$> tableInfo
+
+findColumnScalarType :: API.SchemaResponse -> API.TableName -> API.ColumnName -> API.ScalarType
+findColumnScalarType schemaResponse tableName columnName =
+  API._ciType $ findColumnInfo schemaResponse tableName columnName
 
 emptyQuery :: API.Query
 emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing Nothing

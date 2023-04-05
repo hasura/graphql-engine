@@ -317,6 +317,7 @@ common lib-depends
                      , schema-parsers
                      , scientific
                      , semialign
+                     , semigroupoids
                      , servant
                      , servant-client
                      , servant-client-core

@@ -4,7 +4,7 @@ import Control.Arrow ((>>>))
 import Control.Lens (ix, (&), (.~), (?~), (^?), _Just)
 import Control.Monad (when)
 import Data.Aeson qualified as J
-import Data.Foldable (for_)
+import Data.Foldable (find, for_)
 import Data.Functor ((<&>))
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
@@ -12,6 +12,7 @@ import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Maybe (fromMaybe, listToMaybe, maybeToList)
 import Data.Scientific (Scientific)
+import Data.Text (Text)
 import Hasura.Backends.DataConnector.API
 import Test.AgentAPI (mutationExpectError, mutationGuarded, queryGuarded)
 import Test.AgentDatasets (chinookTemplate, usesDataset)
@@ -47,10 +48,10 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             ]
     let insertOperation = mkInsertOperation _tdArtistsTableName & imoRows .~ [row]
     let insertSchema =
-          TableInsertSchema _tdArtistsTableName $
-            Data.mkFieldsMap
-              [ ("artist_name", ColumnInsert (_tdColumnInsertSchema _tdArtistsTableName "Name"))
-              ]
+          mkTableInsertSchema _tdSchemaTables _tdArtistsTableName $
+            [ ("artist_id", ColumnInsert (_tdColumnInsertSchema _tdArtistsTableName "ArtistId")),
+              ("artist_name", ColumnInsert (_tdColumnInsertSchema _tdArtistsTableName "Name"))
+            ]
     let mutationRequest =
           Data.emptyMutationRequest
             & mrOperations .~ [InsertOperation insertOperation]
@@ -597,12 +598,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             mkInsertOperation _ectdNoPrimaryKeyTableName
               & imoRows .~ rows
               & imoReturningFields .~ returning
-      let insertSchema =
-            TableInsertSchema _ectdNoPrimaryKeyTableName $
-              HashMap.fromList
-                [ (FieldName "FirstName", ColumnInsert (_ectdColumnInsertSchema _ectdNoPrimaryKeyTableName "FirstName")),
-                  (FieldName "LastName", ColumnInsert (_ectdColumnInsertSchema _ectdNoPrimaryKeyTableName "LastName"))
-                ]
+      let insertSchema = _ectdMkDefaultTableInsertSchema _ectdNoPrimaryKeyTableName
       let mutationRequest =
             Data.emptyMutationRequest
               & mrOperations .~ [InsertOperation insertOperation]
@@ -639,11 +635,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             mkInsertOperation _ectdDefaultedPrimaryKeyTableName
               & imoRows .~ rows
               & imoReturningFields .~ returning
-      let insertSchema =
-            TableInsertSchema _ectdDefaultedPrimaryKeyTableName $
-              HashMap.fromList
-                [ (FieldName "Message", ColumnInsert (_ectdColumnInsertSchema _ectdDefaultedPrimaryKeyTableName "Message"))
-                ]
+      let insertSchema = _ectdMkDefaultTableInsertSchema _ectdDefaultedPrimaryKeyTableName
       let mutationRequest =
             Data.emptyMutationRequest
               & mrOperations .~ [InsertOperation insertOperation]
@@ -676,8 +668,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             mkInsertOperation _ectdAllColumnsDefaultableTableName
               & imoRows .~ rows
               & imoReturningFields .~ returning
-      let insertSchema =
-            TableInsertSchema _ectdAllColumnsDefaultableTableName $ HashMap.fromList []
+      let insertSchema = _ectdMkDefaultTableInsertSchema _ectdAllColumnsDefaultableTableName
       let mutationRequest =
             Data.emptyMutationRequest
               & mrOperations .~ [InsertOperation insertOperation]
@@ -696,6 +687,20 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
       response `mutationResponseShouldBe` MutationResponse [expectedResult]
   where
     edgeCaseTest = Test.edgeCaseTest edgeCasesTestData
+
+    mkTableInsertSchema :: [TableInfo] -> TableName -> [(Text, InsertFieldSchema)] -> TableInsertSchema
+    mkTableInsertSchema schemaTables tableName insertFields =
+      TableInsertSchema
+        { _tisTable = tableName,
+          _tisPrimaryKey = _tiPrimaryKey $ findTableInfo schemaTables tableName,
+          _tisFields = Data.mkFieldsMap insertFields
+        }
+
+    findTableInfo :: [TableInfo] -> TableName -> TableInfo
+    findTableInfo tables tableName =
+      tables
+        & find (\TableInfo {..} -> _tiName == tableName)
+        & fromMaybe (error $ "Can't find table " <> show tableName <> " in schema")
 
     mkInsertOperation :: TableName -> InsertMutationOperation
     mkInsertOperation tableName = InsertMutationOperation tableName [] Nothing mempty
@@ -731,32 +736,13 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
        in QueryRequest _tdEmployeesTableName [] query Nothing
 
     artistsInsertSchema :: TableInsertSchema
-    artistsInsertSchema =
-      TableInsertSchema _tdArtistsTableName $
-        HashMap.fromList
-          [ (FieldName "Name", ColumnInsert (_tdColumnInsertSchema _tdArtistsTableName "Name"))
-          ]
+    artistsInsertSchema = _tdMkDefaultTableInsertSchema _tdArtistsTableName
 
     albumsInsertSchema :: TableInsertSchema
-    albumsInsertSchema =
-      TableInsertSchema _tdAlbumsTableName $
-        HashMap.fromList
-          [ (FieldName "ArtistId", ColumnInsert (_tdColumnInsertSchema _tdAlbumsTableName "ArtistId")),
-            (FieldName "Title", ColumnInsert (_tdColumnInsertSchema _tdAlbumsTableName "Title"))
-          ]
+    albumsInsertSchema = _tdMkDefaultTableInsertSchema _tdAlbumsTableName
 
     employeesInsertSchema :: TableInsertSchema
-    employeesInsertSchema =
-      TableInsertSchema _tdEmployeesTableName $
-        HashMap.fromList
-          [ (FieldName "FirstName", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "FirstName")),
-            (FieldName "LastName", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "LastName")),
-            (FieldName "Title", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "Title")),
-            (FieldName "Email", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "Email")),
-            (FieldName "City", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "City")),
-            (FieldName "Country", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "Country")),
-            (FieldName "ReportsTo", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "ReportsTo"))
-          ]
+    employeesInsertSchema = _tdMkDefaultTableInsertSchema _tdEmployeesTableName
 
     artistsStartingId :: Integer
     artistsStartingId = 276

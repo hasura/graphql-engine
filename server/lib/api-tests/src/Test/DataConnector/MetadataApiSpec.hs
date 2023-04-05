@@ -174,6 +174,8 @@ schemaInspectionTests = describe "Schema and Source Inspection" $ do
                 type: *_stIntegerType
                 insertable: *supportsInserts
                 updatable: false
+                value_generated:
+                  type: auto_increment
               - name: *artistId
                 nullable: false
                 type: *_stIntegerType
@@ -198,6 +200,7 @@ schemaInspectionTests = describe "Schema and Source Inspection" $ do
                     *artistId: *artistId
             |]
                 & applyWhen (columnNullability == API.OnlyNullableColumns) (Lens.set (key "columns" . _Array . Lens.each . key "nullable") (J.Bool True))
+                & applyWhen (isNothing mutationsCapabilities) (Lens.set (key "columns" . _Array . Lens.each . _Object . Lens.at "value_generated") Nothing)
                 & Lens.over (atKey "primary_key") (maybe Nothing (\value -> bool Nothing (Just value) supportsPrimaryKeys))
                 & Lens.over (atKey "foreign_keys") (maybe Nothing (\value -> bool Nothing (Just value) supportsForeignKeys))
             )

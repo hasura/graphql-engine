@@ -14,7 +14,6 @@ import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as HashSet
 import Data.Map.Strict qualified as Map
-import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text.Extended (toTxt, (<<>), (<>>))
 import Hasura.Backends.DataConnector.API (capabilitiesCase, errorResponseSummary, schemaCase)
@@ -185,7 +184,7 @@ resolveDatabaseMetadata' ::
 resolveDatabaseMetadata' _ DC.SourceConfig {_scSchema = API.SchemaResponse {..}, ..} =
   let tables = HashMap.fromList $ do
         API.TableInfo {..} <- _srTables
-        let primaryKeyColumns = Seq.fromList $ coerce <$> _tiPrimaryKey
+        let primaryKeyColumns = fmap Witch.from . NESeq.fromList <$> _tiPrimaryKey
         let meta =
               RQL.T.T.DBTableMetadata
                 { _ptmiOid = OID 0, -- TODO: This is wrong and needs to be fixed. It is used for diffing tables and seeing what's new/deleted/altered, so reusing 0 for all tables is problematic.
@@ -200,7 +199,7 @@ resolveDatabaseMetadata' _ DC.SourceConfig {_scSchema = API.SchemaResponse {..},
                           rciDescription = fmap GQL.Description _ciDescription,
                           rciMutability = RQL.T.C.ColumnMutability _ciInsertable _ciUpdatable
                         },
-                  _ptmiPrimaryKey = RQL.T.T.PrimaryKey (RQL.T.T.Constraint (DC.ConstraintName "") (OID 0)) <$> NESeq.nonEmptySeq primaryKeyColumns,
+                  _ptmiPrimaryKey = RQL.T.T.PrimaryKey (RQL.T.T.Constraint (DC.ConstraintName "") (OID 0)) <$> primaryKeyColumns,
                   _ptmiUniqueConstraints = mempty,
                   _ptmiForeignKeys = buildForeignKeySet _tiForeignKeys,
                   _ptmiViewInfo =
@@ -209,7 +208,13 @@ resolveDatabaseMetadata' _ DC.SourceConfig {_scSchema = API.SchemaResponse {..},
                         else Just $ RQL.T.T.ViewInfo _tiInsertable _tiUpdatable _tiDeletable
                     ),
                   _ptmiDescription = fmap PGDescription _tiDescription,
-                  _ptmiExtraTableMetadata = ()
+                  _ptmiExtraTableMetadata =
+                    DC.ExtraTableMetadata
+                      { _etmExtraColumnMetadata =
+                          _tiColumns
+                            & fmap (\API.ColumnInfo {..} -> (Witch.from _ciName, DC.ExtraColumnMetadata _ciValueGenerated))
+                            & HashMap.fromList
+                      }
                 }
         pure (coerce _tiName, meta)
    in pure $

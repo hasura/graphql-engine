@@ -4,6 +4,7 @@ version: 1.0.0
 extra-source-files:
   test/Test/Data/Chinook.xml.gz
   test/Test/Data/schema-tables.json
+  test/Test/Data/edge-cases-schema-tables.json
 
 flag profiling
   description: Configures the project to be profiling-compatible

@@ -62,7 +62,7 @@ instance Backend 'DataConnector where
   type SQLExpression 'DataConnector = DC.Literal
   type ScalarSelectionArguments 'DataConnector = Void
   type BooleanOperators 'DataConnector = CustomBooleanOperator
-  type ExtraTableMetadata 'DataConnector = Unimplemented
+  type ExtraTableMetadata 'DataConnector = DC.ExtraTableMetadata
   type ComputedFieldDefinition 'DataConnector = Unimplemented
   type FunctionArgumentExp 'DataConnector = Const Unimplemented
   type ComputedFieldImplicitArguments 'DataConnector = Unimplemented

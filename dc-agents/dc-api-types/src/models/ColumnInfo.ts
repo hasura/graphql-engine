@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
+import type { ColumnValueGenerationStrategy } from './ColumnValueGenerationStrategy';
 import type { ScalarType } from './ScalarType';
 
 export type ColumnInfo = {
@@ -26,5 +27,6 @@ export type ColumnInfo = {
    * Whether or not the column can be updated
    */
   updatable?: boolean;
+  value_generated?: ColumnValueGenerationStrategy;
 };
 

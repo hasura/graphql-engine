@@ -187,11 +187,12 @@ tests = do
             & API.mrInsertSchema
               .~ [ API.TableInsertSchema
                      { API._tisTable = mkTableName "Album",
+                       API._tisPrimaryKey = Just $ API.ColumnName "AlbumId" :| [],
                        API._tisFields =
                          mkFieldsMap
-                           [ ("AlbumId", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "AlbumId") (API.ScalarType "number")),
-                             ("ArtistId", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "ArtistId") (API.ScalarType "number")),
-                             ("Title", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "Title") (API.ScalarType "string"))
+                           [ ("AlbumId", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "AlbumId") (API.ScalarType "number") False (Just API.AutoIncrement)),
+                             ("ArtistId", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "ArtistId") (API.ScalarType "number") False Nothing),
+                             ("Title", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "Title") (API.ScalarType "string") False Nothing)
                            ]
                      }
                  ]

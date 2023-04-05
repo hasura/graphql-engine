@@ -1058,6 +1058,69 @@
         ],
         "type": "string"
       },
+      "DefaultValueGenerationStrategy": {
+        "properties": {
+          "type": {
+            "enum": [
+              "default_value"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": "object"
+      },
+      "AutoIncrementGenerationStrategy": {
+        "properties": {
+          "type": {
+            "enum": [
+              "auto_increment"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": "object"
+      },
+      "UniqueIdentifierGenerationStrategy": {
+        "properties": {
+          "type": {
+            "enum": [
+              "unique_identifier"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": "object"
+      },
+      "ColumnValueGenerationStrategy": {
+        "discriminator": {
+          "mapping": {
+            "auto_increment": "AutoIncrementGenerationStrategy",
+            "default_value": "DefaultValueGenerationStrategy",
+            "unique_identifier": "UniqueIdentifierGenerationStrategy"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/DefaultValueGenerationStrategy"
+          },
+          {
+            "$ref": "#/components/schemas/AutoIncrementGenerationStrategy"
+          },
+          {
+            "$ref": "#/components/schemas/UniqueIdentifierGenerationStrategy"
+          }
+        ]
+      },
       "ColumnInfo": {
         "properties": {
           "description": {
@@ -1085,6 +1148,9 @@
             "default": false,
             "description": "Whether or not the column can be updated",
             "type": "boolean"
+          },
+          "value_generated": {
+            "$ref": "#/components/schemas/ColumnValueGenerationStrategy"
           }
         },
         "required": [
@@ -2202,16 +2268,24 @@
           "column_type": {
             "$ref": "#/components/schemas/ScalarType"
           },
+          "nullable": {
+            "description": "Is the column nullable",
+            "type": "boolean"
+          },
           "type": {
             "enum": [
               "column"
             ],
             "type": "string"
+          },
+          "value_generated": {
+            "$ref": "#/components/schemas/ColumnValueGenerationStrategy"
           }
         },
         "required": [
           "column",
           "column_type",
+          "nullable",
           "type"
         ],
         "type": "object"
@@ -2245,6 +2319,14 @@
             },
             "description": "The fields that will be found in the insert row data for the table and the schema for each field",
             "type": "object"
+          },
+          "primary_key": {
+            "description": "The names of the columns that make up the table's primary key",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true,
+            "type": "array"
           },
           "table": {
             "$ref": "#/components/schemas/TableName"

@@ -30,6 +30,8 @@ module Hasura.Backends.DataConnector.Adapter.Types
     ScalarType (..),
     mkScalarType,
     fromGQLType,
+    ExtraTableMetadata (..),
+    ExtraColumnMetadata (..),
   )
 where
 
@@ -392,6 +394,20 @@ mkScalarType API.Capabilities {..} apiType@(API.ScalarType name) =
 fromGQLType :: GQL.Name -> API.ScalarType
 fromGQLType typeName =
   API.ScalarType $ GQL.unName typeName
+
+--------------------------------------------------------------------------------
+
+-- | This type captures backend-specific "extra" information about tables
+-- and is used on types like 'DBTableMetadata'
+data ExtraTableMetadata = ExtraTableMetadata
+  {_etmExtraColumnMetadata :: HashMap ColumnName ExtraColumnMetadata}
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
+
+data ExtraColumnMetadata = ExtraColumnMetadata
+  {_ecmValueGenerated :: Maybe API.ColumnValueGenerationStrategy}
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 
 --------------------------------------------------------------------------------
 

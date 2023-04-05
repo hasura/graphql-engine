@@ -89,7 +89,7 @@ insertMultipleObjects ::
 insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput planVars stringifyNum tCase =
   bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
-    IR.AnnotatedInsertData insObjs table checkCondition columnInfos presetRow (BackendInsert conflictClause) = multiObjIns
+    IR.AnnotatedInsertData insObjs table checkCondition columnInfos _pk _extra presetRow (BackendInsert conflictClause) = multiObjIns
     allInsObjRels = concatMap IR.getInsertObjectRelationships insObjs
     allInsArrRels = concatMap IR.getInsertArrayRelationships insObjs
     anyRelsToInsert = not $ null allInsArrRels && null allInsObjRels
@@ -115,7 +115,7 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
 
     withRelsInsert = do
       insertRequests <- indexedForM insObjs \obj -> do
-        let singleObj = IR.AnnotatedInsertData (IR.Single obj) table checkCondition columnInfos presetRow (BackendInsert conflictClause)
+        let singleObj = IR.AnnotatedInsertData (IR.Single obj) table checkCondition columnInfos _pk _extra presetRow (BackendInsert conflictClause)
         insertObject singleObj additionalColumns userInfo planVars stringifyNum tCase
       let affectedRows = sum $ map fst insertRequests
           columnValues = mapMaybe snd insertRequests
@@ -170,7 +170,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase
 
     return (totAffRows, colValM)
   where
-    IR.AnnotatedInsertData (IR.Single annObj) table checkCond allColumns presetValues (BackendInsert onConflict) = singleObjIns
+    IR.AnnotatedInsertData (IR.Single annObj) table checkCond allColumns _pk _extra presetValues (BackendInsert onConflict) = singleObjIns
     columns = Map.fromList $ IR.getInsertColumns annObj
     objectRels = IR.getInsertObjectRelationships annObj
     arrayRels = IR.getInsertArrayRelationships annObj

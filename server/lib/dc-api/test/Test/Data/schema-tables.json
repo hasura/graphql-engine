@@ -11,7 +11,8 @@
         "nullable": false,
         "description": "Genre primary key identifier",
         "insertable": true,
-        "updatable": false
+        "updatable": false,
+        "value_generated": { "type": "auto_increment" }
       },
       {
         "name": "Name",
@@ -38,7 +39,8 @@
         "nullable": false,
         "description": "Media Type primary key identifier",
         "insertable": true,
-        "updatable": false
+        "updatable": false,
+        "value_generated": { "type": "auto_increment" }
       },
       {
         "name": "Name",
@@ -65,7 +67,8 @@
         "nullable": false,
         "description": "Artist primary key identifier",
         "insertable": true,
-        "updatable": false
+        "updatable": false,
+        "value_generated": { "type": "auto_increment" }
       },
       {
         "name": "Name",
@@ -100,7 +103,8 @@
         "nullable": false,
         "description": "Album primary key identifier",
         "insertable": true,
-        "updatable": false
+        "updatable": false,
+        "value_generated": { "type": "auto_increment" }
       },
       {
         "name": "Title",
@@ -155,7 +159,8 @@
         "nullable": false,
         "description": "The ID of the track",
         "insertable": true,
-        "updatable": false
+        "updatable": false,
+        "value_generated": { "type": "auto_increment" }
       },
       {
         "name": "Name",
@@ -246,7 +251,8 @@
         "nullable": false,
         "description": "Employee primary key identifier",
         "insertable": true,
-        "updatable": false
+        "updatable": false,
+        "value_generated": { "type": "auto_increment" }
       },
       {
         "name": "LastName",
@@ -385,7 +391,8 @@
         "nullable": false,
         "description": "Customer primary key identifier",
         "insertable": true,
-        "updatable": false
+        "updatable": false,
+        "value_generated": { "type": "auto_increment" }
       },
       {
         "name": "FirstName",
@@ -508,7 +515,8 @@
         "nullable": false,
         "description": "Invoice primary key identifier",
         "insertable": true,
-        "updatable": false
+        "updatable": false,
+        "value_generated": { "type": "auto_increment" }
       },
       {
         "name": "CustomerId",
@@ -605,7 +613,8 @@
         "nullable": false,
         "description": "Invoice Line primary key identifier",
         "insertable": true,
-        "updatable": false
+        "updatable": false,
+        "value_generated": { "type": "auto_increment" }
       },
       {
         "name": "InvoiceId",
@@ -656,7 +665,8 @@
         "nullable": false,
         "description": "Playlist primary key identifier",
         "insertable": true,
-        "updatable": false
+        "updatable": false,
+        "value_generated": { "type": "auto_increment" }
       },
       {
         "name": "Name",

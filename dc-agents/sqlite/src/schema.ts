@@ -1,4 +1,4 @@
-import { SchemaResponse, ColumnInfo, TableInfo, Constraint } from "@hasura/dc-api-types"
+import { SchemaResponse, ColumnInfo, TableInfo, Constraint, ColumnValueGenerationStrategy } from "@hasura/dc-api-types"
 import { ScalarTypeKey } from "./capabilities";
 import { Config } from "./config";
 import { defaultMode, SqlLogger, withConnection } from './db';
@@ -39,15 +39,17 @@ function determineScalarType(datatype: Datatype): ScalarTypeKey {
 }
 
 function getColumns(ast: any[], primaryKeys: string[]) : ColumnInfo[] {
-  return ast.map(c => {
-    const isPrimaryKey = primaryKeys.includes(c.name);
+  return ast.map(column => {
+    const isPrimaryKey = primaryKeys.includes(column.name);
+    const isAutoIncrement = column.definition.some((def: any) => def.type === "constraint" && def.autoIncrement === true);
 
     return {
-      name: c.name,
-      type: determineScalarType(c.datatype),
-      nullable: nullableCast(c.definition),
+      name: column.name,
+      type: determineScalarType(column.datatype),
+      nullable: nullableCast(column.definition),
       insertable: MUTATIONS,
       updatable: MUTATIONS && !isPrimaryKey,
+      ...(isAutoIncrement ? { value_generated: { type: "auto_increment" } } : {})
     };
   })
 }
