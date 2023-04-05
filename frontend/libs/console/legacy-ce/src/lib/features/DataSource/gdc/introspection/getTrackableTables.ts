@@ -8,7 +8,7 @@ export const getTrackableTables = async (props: GetTrackableTablesProps) => {
     const result = await runMetadataQuery<GDCTable[]>({
       httpClient,
       body: {
-        type: 'get_source_tables',
+        type: 'dataconnector_get_source_tables',
         args: {
           source: dataSourceName,
         },
