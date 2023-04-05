@@ -12,7 +12,7 @@ import { IntrospectionOptions } from './lib/components/Services/ApiExplorer/Secu
 import * as EndpointNamedExps from './lib/Endpoints';
 import * as ControlPlane from './lib/features/ControlPlane';
 
-export * from './lib/utils/console-dev-tools/ConsoleDevTools';
+export * from './lib/utils/console-dev-tools';
 const CommonScss = require('./lib/components/Common/Common.module.scss');
 const filterQueryScss = require('./lib/components/Common/FilterQuery/FilterQuery.module.scss');
 const tableScss = require('./lib/components/Common/TableCommon/Table.module.scss');
