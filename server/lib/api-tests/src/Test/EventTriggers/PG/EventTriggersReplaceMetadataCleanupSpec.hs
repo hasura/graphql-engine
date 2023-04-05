@@ -14,7 +14,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
 import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
-import Harness.Services.PostgresDb qualified as Postgres
+import Harness.Services.Database.Postgres qualified as Postgres
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.SetupAction (permitTeardownFail)
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)

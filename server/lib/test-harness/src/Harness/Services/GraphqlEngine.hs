@@ -10,13 +10,14 @@ module Harness.Services.GraphqlEngine
     emptyHgeConfig,
     hgePost,
     hgePostGraphql,
+    PostGraphql (..),
   )
 where
 
 import Control.Concurrent (forkIO)
 import Control.Concurrent.Async qualified as Async
 import Control.Monad.Managed
-import Data.Aeson
+import Data.Aeson qualified as A
 import Data.Attoparsec.ByteString as Atto
 import Data.ByteString qualified as BS
 import Data.Has
@@ -29,7 +30,9 @@ import Harness.Exceptions
 import Harness.Http qualified as Http
 import Harness.Logging
 import Harness.PassthroughEnvVars
-import Harness.Services.PostgresDb
+import Harness.Services.Database.Postgres
+import Harness.Test.CustomOptions
+import Harness.Yaml
 import Hasura.Prelude
 import Network.HTTP.Simple qualified as Http
 import Network.Socket qualified as Socket
@@ -66,33 +69,38 @@ emptyHgeConfig = HgeConfig []
 -- crashes. Ensuring that would require making Hge listen for heartbeats, or
 -- use a helper process that does.
 withHge ::
-  ( Has HgeBinPath env,
-    Has PostgresServerUrl env,
-    Has Logger env,
-    Has PassthroughEnvVars env
+  ( Has HgeBinPath testEnvironment,
+    Has PostgresServerUrl testEnvironment,
+    Has Logger testEnvironment,
+    Has PassthroughEnvVars testEnvironment
   ) =>
   HgeConfig ->
-  SpecWith (HgeServerInstance, env) ->
-  SpecWith env
+  SpecWith (PostGraphql, (ShouldReturnYamlF, (HgeServerInstance, testEnvironment))) ->
+  SpecWith testEnvironment
 withHge hgeConfig specs = do
-  flip aroundWith specs \action env -> runManaged do
-    let hgeBin = getter env
-        pgUrl = getter env
-        logger = getter @Logger env
-        passthroughEnvVars = getter env
-    server <- spawnServer logger pgUrl hgeBin hgeConfig passthroughEnvVars
-    liftIO $ action (server, env)
+  flip aroundWith specs \action testEnvironment -> runManaged do
+    server <- spawnServer testEnvironment hgeConfig
+    liftIO $
+      action
+        ( PostGraphql (hgePostGraphql (server, testEnvironment)),
+          (ShouldReturnYamlF (shouldReturnYamlFInternal defaultOptions), (server, testEnvironment))
+        )
 
 -- | spin up a Manager HGE instance and check it is healthy
 spawnServer ::
-  Logger ->
-  PostgresServerUrl ->
-  HgeBinPath ->
+  ( Has PostgresServerUrl testEnvironment,
+    Has Logger testEnvironment,
+    Has HgeBinPath testEnvironment,
+    Has PassthroughEnvVars testEnvironment
+  ) =>
+  testEnvironment ->
   HgeConfig ->
-  PassthroughEnvVars ->
   Managed HgeServerInstance
-spawnServer logger pgUrl (HgeBinPath hgeBinPath) (HgeConfig {hgeConfigEnvironmentVars}) (PassthroughEnvVars envVars) = do
-  freshDb <- mkFreshPostgresDb logger pgUrl
+spawnServer testEnv (HgeConfig {hgeConfigEnvironmentVars}) = do
+  let (HgeBinPath hgeBinPath) = getter testEnv
+      pgUrl = getter testEnv
+      (PassthroughEnvVars envVars) = getter testEnv
+  freshDb <- mkFreshPostgresDb testEnv
   let allEnv = hgeConfigEnvironmentVars <> envVars
       metadataDbUrl = mkFreshDbConnectionString pgUrl freshDb
   ((_, Just hgeStdOut, Just hgeStdErr, _), port) <-
@@ -100,7 +108,7 @@ spawnServer logger pgUrl (HgeBinPath hgeBinPath) (HgeConfig {hgeConfigEnvironmen
       ( bracket
           ( do
               port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
-              runLogger logger $ HgeInstanceStartMessage port
+              testLogMessage testEnv $ HgeInstanceStartMessage port
 
               process <-
                 createProcess
@@ -137,9 +145,10 @@ spawnServer logger pgUrl (HgeBinPath hgeBinPath) (HgeConfig {hgeConfigEnvironmen
               exitCode <- waitForProcess ph
               cleanupProcess process
               endTime <- getCurrentTime
-              runLogger logger $ HgeInstanceShutdownMessage port exitCode (diffUTCTime endTime startTime)
+              testLogMessage testEnv $ HgeInstanceShutdownMessage port exitCode (diffUTCTime endTime startTime)
           )
       )
+  let logger = getter @Logger testEnv
   hgeLogRelayThread logger hgeStdOut
   hgeStdErrRelayThread logger hgeStdErr
   liftIO do
@@ -156,9 +165,9 @@ data HgeInstanceStartMessage = HgeInstanceStartMessage {hiStartPort :: Int}
 
 instance LoggableMessage HgeInstanceStartMessage where
   fromLoggableMessage HgeInstanceStartMessage {..} =
-    object
-      [ ("type", String "HgeInstanceStartMessage"),
-        ("port", Number (fromIntegral hiStartPort))
+    A.object
+      [ ("type", A.String "HgeInstanceStartMessage"),
+        ("port", A.Number (fromIntegral hiStartPort))
       ]
 
 -- | Log message type used to indicate a HGE server instance failed the
@@ -168,9 +177,9 @@ data HgeInstanceFailedHealthcheckMessage = HgeInstanceFailedHealthcheckMessage
 
 instance LoggableMessage HgeInstanceFailedHealthcheckMessage where
   fromLoggableMessage HgeInstanceFailedHealthcheckMessage {..} =
-    object
-      [ ("type", String "HgeInstanceFailedHealthcheckMessage"),
-        ("failures", Array (fromList (map (String . tshow) hisfFailures)))
+    A.object
+      [ ("type", A.String "HgeInstanceFailedHealthcheckMessage"),
+        ("failures", A.Array (fromList (map (A.String . tshow) hisfFailures)))
       ]
 
 -- | Log message type used to indicate a HGE server instance has shutdown.
@@ -182,33 +191,33 @@ data HgeInstanceShutdownMessage = HgeInstanceShutdownMessage
 
 instance LoggableMessage HgeInstanceShutdownMessage where
   fromLoggableMessage HgeInstanceShutdownMessage {..} =
-    object
-      [ ("type", String "HgeInstanceShutdownMessage"),
-        ("port", Number (fromIntegral hiShutdownPort)),
-        ("duration", Number (realToFrac hiShutdownDuration)),
-        ("exit-code", String (tshow hiShutdownExitCode))
+    A.object
+      [ ("type", A.String "HgeInstanceShutdownMessage"),
+        ("port", A.Number (fromIntegral hiShutdownPort)),
+        ("duration", A.Number (realToFrac hiShutdownDuration)),
+        ("exit-code", A.String (tshow hiShutdownExitCode))
       ]
 
--- | Log message type used to indicate a single log-object output by a HGE
+-- | Log message type used to indicate a single log-A.object output by a HGE
 -- server instance (on StdOut).
-data HgeLogMessage = HgeLogMessage {hgeLogMessage :: Value}
+data HgeLogMessage = HgeLogMessage {hgeLogMessage :: A.Value}
 
 instance LoggableMessage HgeLogMessage where
   fromLoggableMessage HgeLogMessage {..} =
-    object
-      [ ("type", String "HgeLogMessage"),
+    A.object
+      [ ("type", A.String "HgeLogMessage"),
         ("message", hgeLogMessage)
       ]
 
 -- | Log message type used to indicate a chunk of log output text by a HGE
--- server instance which could not be parsed as a json object.
+-- server instance which could not be parsed as a json A.object.
 data HgeUnparsableLogMessage = HgeUnparsableLogMessage {hgeUnparsableLogMessage :: Text}
 
 instance LoggableMessage HgeUnparsableLogMessage where
   fromLoggableMessage HgeUnparsableLogMessage {..} =
-    object
-      [ ("type", String "HgeUnparsableLogMessage"),
-        ("message", String hgeUnparsableLogMessage)
+    A.object
+      [ ("type", A.String "HgeUnparsableLogMessage"),
+        ("message", A.String hgeUnparsableLogMessage)
       ]
 
 -- | Log message type used to indicate a single line output by a HGE server
@@ -217,9 +226,9 @@ data HgeStdErrLogMessage = HgeStdErrLogMessage {hgeStdErrLogMessage :: Text}
 
 instance LoggableMessage HgeStdErrLogMessage where
   fromLoggableMessage HgeStdErrLogMessage {..} =
-    object
-      [ ("type", String "HgeStdErrLogMessage"),
-        ("message", String hgeStdErrLogMessage)
+    A.object
+      [ ("type", A.String "HgeStdErrLogMessage"),
+        ("message", A.String hgeStdErrLogMessage)
       ]
 
 -- | A thread that reads from the engine's StdErr handle and makes one test-log
@@ -238,7 +247,7 @@ hgeStdErrRelayThread logger hgeOutput = do
   return ()
 
 -- | A thread that reads from the engine's StdOut handle and makes one test-log
--- message per json-object, on a best-effort basis.
+-- message per json-A.object, on a best-effort basis.
 hgeLogRelayThread :: Logger -> Handle -> Managed ()
 hgeLogRelayThread logger hgeOutput = do
   resultRef <- liftIO $ newIORef (Atto.parse logParser "")
@@ -257,7 +266,7 @@ hgeLogRelayThread logger hgeOutput = do
       )
   return ()
   where
-    processChunk :: IORef (Atto.Result Value) -> BS.ByteString -> IO ()
+    processChunk :: IORef (Atto.Result A.Value) -> BS.ByteString -> IO ()
     processChunk ref nextChunk = do
       result <- readIORef ref
       result' <- processDone result
@@ -272,7 +281,7 @@ hgeLogRelayThread logger hgeOutput = do
         Atto.Done {} ->
           runLogger logger $ HgeUnparsableLogMessage "Impossible: Done{}-case in 'processChunk'"
 
-    processDone :: Atto.Result Value -> IO (Atto.Result Value)
+    processDone :: Atto.Result A.Value -> IO (Atto.Result A.Value)
     processDone result =
       case result of
         Atto.Done rest parsed -> do
@@ -282,8 +291,8 @@ hgeLogRelayThread logger hgeOutput = do
             else processDone $ Atto.parse logParser rest
         _ -> return result
 
-    logParser :: Atto.Parser Value
-    logParser = json' <* (option () (void (string "\n")) <|> endOfInput)
+    logParser :: Atto.Parser A.Value
+    logParser = A.json' <* (option () (void (string "\n")) <|> endOfInput)
 
 hgePost ::
   ( Has HgeServerInstance env,
@@ -293,8 +302,8 @@ hgePost ::
   Int ->
   Text ->
   Http.RequestHeaders ->
-  Value ->
-  IO Value
+  A.Value ->
+  IO A.Value
 hgePost env statusCode path headers requestBody = do
   let hgeUrl = getHgeServerInstanceUrl $ getter env
   let fullUrl = T.unpack $ hgeUrl <> path
@@ -308,7 +317,11 @@ hgePostGraphql ::
     Has Logger env
   ) =>
   env ->
-  Value ->
-  IO Value
+  A.Value ->
+  IO A.Value
 hgePostGraphql env query = do
-  hgePost env 200 "/v1/graphql" [] (object ["query" .= query])
+  hgePost env 200 "/v1/graphql" [] (A.object ["query" A..= query])
+
+-- | Newtype-wrapper which enables late binding of 'postGraphql' on the test environment.
+-- This makes 'TestEnvironment'-based specs more readily compatible with componontised fixtures.
+newtype PostGraphql = PostGraphql {getPostGraphql :: A.Value -> IO A.Value}

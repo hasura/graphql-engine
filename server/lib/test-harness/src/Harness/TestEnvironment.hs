@@ -24,14 +24,20 @@ module Harness.TestEnvironment
     testLogMessage,
     testLogShow,
     testLogHarness,
+    getSchemaName,
+    getSchemaNameInternal,
   )
 where
 
 import Control.Concurrent.Async qualified as Async
+import Data.Aeson (Value)
 import Data.Has
+import Data.Text qualified as T
+import Harness.Constants qualified as Constants
 import Harness.GlobalTestEnvironment
 import Harness.Logging.Messages
 import Harness.Permissions.Types (Permission)
+import Harness.Schema.Name
 import Harness.Services.Composed qualified as Services
 import Harness.Test.BackendType
 import Harness.Test.CustomOptions qualified as Custom
@@ -55,7 +61,11 @@ data TestEnvironment = TestEnvironment
     -- | The permissions we'd like to use for testing.
     permissions :: TestingRole,
     -- | Custom fixture-specific options.
-    _options :: Custom.Options
+    _options :: Custom.Options,
+    -- Compatibility with the new, componentised fixtures:
+    _postgraphqlInternal :: TestEnvironment -> Value -> IO Value,
+    _shouldReturnYamlFInternal :: TestEnvironment -> (Value -> IO Value) -> IO Value -> Value -> IO (),
+    _getSchemaNameInternal :: TestEnvironment -> SchemaName
   }
 
 scalarTypeToText :: TestEnvironment -> ScalarType -> Text
@@ -178,7 +188,61 @@ testLogHarness testEnv = testLogMessage testEnv . logHarness
 
 -- Compatibility with the new, componentised fixtures:
 
-instance Has ShouldReturnYamlF TestEnvironment where
-  getter testEnvironment = ShouldReturnYamlF (shouldReturnYamlFInternal (_options testEnvironment))
+-- | This enables late binding of 'postGraphql' on the test environment.
+-- This makes 'TestEnvironment'-based specs more readily compatible with componontised fixtures.
+--
+-- This instance is somewhat subtle, in that the 'PostGraphql' function we return
+-- has to constructed using the *current* test environment. Otherwise we'll break
+-- the late binding and 'postGraphqlInternal' won't pick up updates to
+-- permissions or protocols.
+instance Has Services.PostGraphql TestEnvironment where
+  getter testEnv = Services.PostGraphql $ _postgraphqlInternal testEnv testEnv
+  modifier f testEnv =
+    testEnv
+      { _postgraphqlInternal =
+          const (Services.getPostGraphql $ f (getter testEnv))
+      }
 
-  modifier = error "not implementable: modifier @ShouldReturnYamlF @TestEnvironment"
+-- | This enables late binding of 'shouldReturnYaml' on the test environment.
+-- This makes 'TestEnvironment'-based specs more readily compatible with componontised fixtures.
+-- Same nuances hold for this as for 'PostGraphql'.
+instance Has ShouldReturnYamlF TestEnvironment where
+  getter testEnvironment = ShouldReturnYamlF (_shouldReturnYamlFInternal testEnvironment testEnvironment)
+  modifier f testEnvironment = testEnvironment {_shouldReturnYamlFInternal = const (getShouldReturnYamlF $ f (getter testEnvironment))}
+
+instance Has SchemaName TestEnvironment where
+  getter testEnv = _getSchemaNameInternal testEnv testEnv
+  modifier f testEnv = testEnv {_getSchemaNameInternal = const (f (getter testEnv))}
+
+-- | Given a `TestEnvironment`, returns a `SchemaName` to use in the test, used
+-- to separate out different test suites
+--
+-- This is used both in setup and teardown, and in individual tests
+--
+-- The `TestEnvironment` contains a `uniqueTestId` and `backendType`, from
+-- which we decide what the `SchemaName` should be.
+--
+-- The backendType is only required so we make changes for BigQuery for now,
+-- once we do this for all backends we'll just need the unique id.
+--
+-- For all other backends, we fall back to the Constants that were used before
+getSchemaName :: TestEnvironment -> SchemaName
+getSchemaName = getter
+
+-- | exposed for use when creating a TestEnvironment
+getSchemaNameInternal :: TestEnvironment -> SchemaName
+getSchemaNameInternal testEnv = getSchemaNameByTestIdAndBackendType (fmap backendType $ getBackendTypeConfig testEnv) (uniqueTestId testEnv)
+  where
+    getSchemaNameByTestIdAndBackendType :: Maybe BackendType -> UniqueTestId -> SchemaName
+    getSchemaNameByTestIdAndBackendType Nothing _ = SchemaName "hasura" -- the `Nothing` case is for tests with multiple schemas
+    getSchemaNameByTestIdAndBackendType (Just BigQuery) uniqueTestId =
+      SchemaName $
+        T.pack $
+          "hasura_test_"
+            <> show uniqueTestId
+    getSchemaNameByTestIdAndBackendType (Just Postgres) _ = SchemaName Constants.postgresDb
+    getSchemaNameByTestIdAndBackendType (Just SQLServer) _ = SchemaName $ T.pack Constants.sqlserverDb
+    getSchemaNameByTestIdAndBackendType (Just Citus) _ = SchemaName Constants.citusDb
+    getSchemaNameByTestIdAndBackendType (Just Cockroach) _ = SchemaName Constants.cockroachDb
+    getSchemaNameByTestIdAndBackendType (Just (DataConnector "sqlite")) _ = SchemaName "main"
+    getSchemaNameByTestIdAndBackendType (Just (DataConnector _)) _ = SchemaName $ T.pack Constants.dataConnectorDb

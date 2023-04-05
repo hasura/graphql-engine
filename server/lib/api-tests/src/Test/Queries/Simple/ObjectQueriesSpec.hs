@@ -9,12 +9,12 @@
 module Test.Queries.Simple.ObjectQueriesSpec (spec) where
 
 import Data.Aeson (Value)
+import Data.Has
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.DataConnector.Sqlite qualified as Sqlite
-import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Permissions (Permission (..), SelectPermissionDetails (..), selectPermission)
@@ -22,24 +22,28 @@ import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
+import Harness.Services.GraphqlEngine
+import Harness.Services.Schema
+import Harness.Services.Source.Postgres
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Protocol (withEachProtocol)
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
-import Harness.Yaml (shouldReturnYaml)
+import Harness.TestEnvironment (GlobalTestEnvironment)
+import Harness.Yaml
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith GlobalTestEnvironment
 spec = do
+  withHge emptyHgeConfig $
+    withPostgresSource "postgres-source" $
+      withSchemaName "test_schema" $
+        withPostgresSchema schema $
+          tests
+
   withEachProtocol $
     Fixture.run
       ( NE.fromList
-          [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
-              { Fixture.setupTeardown = \(testEnvironment, _) ->
-                  [ Postgres.setupTablesAction schema testEnvironment
-                  ]
-              },
-            (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
+          [ (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
               { Fixture.setupTeardown = \(testEnvironment, _) ->
                   [ Citus.setupTablesAction schema testEnvironment
                   ]
@@ -114,13 +118,17 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: SpecWith TestEnvironment
+tests ::
+  forall testEnvironment.
+  ( Has PostGraphql testEnvironment,
+    Has ShouldReturnYamlF testEnvironment,
+    Has Schema.SchemaName testEnvironment
+  ) =>
+  SpecWith testEnvironment
 tests = do
   describe "Fetch a list of objects" do
     it "Fetch a list of authors" \testEnvironment -> do
-      let schemaName :: Schema.SchemaName
-          schemaName = Schema.getSchemaName testEnvironment
-
+      let schemaName = getter @Schema.SchemaName testEnvironment
           actual :: IO Value
           actual =
             postGraphql
@@ -152,9 +160,7 @@ tests = do
       shouldReturnYaml testEnvironment actual expected
 
     it "Fails on unknown fields" \testEnvironment -> do
-      let schemaName :: Schema.SchemaName
-          schemaName = Schema.getSchemaName testEnvironment
-
+      let schemaName = getter @Schema.SchemaName testEnvironment
           actual :: IO Value
           actual =
             postGraphql

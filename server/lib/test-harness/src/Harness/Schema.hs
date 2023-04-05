@@ -23,7 +23,6 @@ module Harness.Schema
     untrackCustomType,
     untrackCustomTypeCommand,
     resolveTableSchema,
-    resolveReferenceSchema,
     trackTable,
     untrackTable,
     mkTableField,
@@ -32,7 +31,6 @@ module Harness.Schema
     untrackRelationships,
     mkObjectRelationshipName,
     mkArrayRelationshipName,
-    getSchemaName,
     trackFunction,
     untrackFunction,
     trackComputedField,
@@ -42,6 +40,8 @@ module Harness.Schema
     trackLogicalModel,
     untrackLogicalModel,
     module Harness.Schema.Table,
+    module Harness.Schema.Name,
+    getSchemaName,
   )
 where
 
@@ -57,9 +57,8 @@ import Harness.Schema.Name
 import Harness.Schema.Table
 import Harness.Test.BackendType (BackendTypeConfig)
 import Harness.Test.BackendType qualified as BackendType
-import Harness.TestEnvironment (TestEnvironment (..), getBackendTypeConfig)
+import Harness.TestEnvironment (TestEnvironment (..), getBackendTypeConfig, getSchemaName)
 import Hasura.Prelude
-import Safe (lastMay)
 
 -- | we assume we are using the default schema unless a table tells us
 -- otherwise
@@ -69,15 +68,6 @@ resolveTableSchema testEnv tbl =
   case resolveReferenceSchema (coerce $ tableQualifiers tbl) of
     Nothing -> getSchemaName testEnv
     Just schemaName -> schemaName
-
--- | when given a list of qualifiers, we assume that the schema is the last one
--- io Postgres, it'll be the only item
--- in BigQuery, it could be ['project','schema']
-resolveReferenceSchema :: [Text] -> Maybe SchemaName
-resolveReferenceSchema qualifiers =
-  case lastMay qualifiers of
-    Nothing -> Nothing
-    Just schemaName -> Just (SchemaName schemaName)
 
 -- | Native Backend track table
 --

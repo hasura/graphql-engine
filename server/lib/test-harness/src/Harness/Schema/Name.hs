@@ -1,17 +1,18 @@
 -- | This module defines `SchemaName`, for naming DB schemas/datasets used in
 -- tests
-module Harness.Schema.Name (SchemaName (..), getSchemaName) where
+module Harness.Schema.Name
+  ( SchemaName (..),
+    resolveReferenceSchema,
+  )
+where
 
 import Data.Aeson (ToJSON (..))
 import Data.String
 import Data.Text (Text)
 import Data.Text qualified as T
-import Harness.Constants qualified as Constants
 import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml
-import Harness.Test.BackendType (BackendType)
-import Harness.Test.BackendType qualified as BackendType
-import Harness.TestEnvironment
+import Safe (lastMay)
 import Prelude
 
 newtype SchemaName = SchemaName {unSchemaName :: Text}
@@ -29,32 +30,11 @@ instance ToGraphqlString SchemaName where
 instance ToYamlString SchemaName where
   showYml (SchemaName sn) = T.unpack sn
 
--- | Given a `TestEnvironment`, returns a `SchemaName` to use in the test, used
--- to separate out different test suites
---
--- This is used both in setup and teardown, and in individual tests
---
--- The `TestEnvironment` contains a `uniqueTestId` and `backendType`, from
--- which we decide what the `SchemaName` should be.
---
--- The backendType is only required so we make changes for BigQuery for now,
--- once we do this for all backends we'll just need the unique id.
---
--- For all other backends, we fall back to the Constants that were used before
-getSchemaName :: TestEnvironment -> SchemaName
-getSchemaName testEnv = getSchemaNameInternal (fmap BackendType.backendType $ getBackendTypeConfig testEnv) (uniqueTestId testEnv)
-
--- | exposed for use when creating a TestEnvironment
-getSchemaNameInternal :: Maybe BackendType -> UniqueTestId -> SchemaName
-getSchemaNameInternal Nothing _ = SchemaName "hasura" -- the `Nothing` case is for tests with multiple schemas
-getSchemaNameInternal (Just BackendType.BigQuery) uniqueTestId =
-  SchemaName $
-    T.pack $
-      "hasura_test_"
-        <> show uniqueTestId
-getSchemaNameInternal (Just BackendType.Postgres) _ = SchemaName Constants.postgresDb
-getSchemaNameInternal (Just BackendType.SQLServer) _ = SchemaName $ T.pack Constants.sqlserverDb
-getSchemaNameInternal (Just BackendType.Citus) _ = SchemaName Constants.citusDb
-getSchemaNameInternal (Just BackendType.Cockroach) _ = SchemaName Constants.cockroachDb
-getSchemaNameInternal (Just (BackendType.DataConnector "sqlite")) _ = SchemaName "main"
-getSchemaNameInternal (Just (BackendType.DataConnector _)) _ = SchemaName $ T.pack Constants.dataConnectorDb
+-- | when given a list of qualifiers, we assume that the schema is the last one
+-- io Postgres, it'll be the only item
+-- in BigQuery, it could be ['project','schema']
+resolveReferenceSchema :: [Text] -> Maybe SchemaName
+resolveReferenceSchema qualifiers =
+  case lastMay qualifiers of
+    Nothing -> Nothing
+    Just schemaName -> Just (SchemaName schemaName)

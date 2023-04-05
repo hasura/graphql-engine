@@ -141,11 +141,12 @@ createTable :: TestEnvironment -> Schema.Table -> IO ()
 createTable _ Schema.Table {tableUniqueIndexes = _ : _} = error "Not Implemented: SqlServer test harness support for unique indexes"
 createTable _ Schema.Table {tableConstraints = _ : _} = error "Not Implemented: SqlServer test harness support for constraints"
 createTable testEnvironment Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences} = do
+  let schemaName = Schema.getSchemaName testEnvironment
   run_ testEnvironment $
     T.unpack $
       T.unwords
         [ "CREATE TABLE",
-          T.pack Constants.sqlserverDb <> "." <> tableName,
+          Schema.unSchemaName schemaName <> "." <> tableName,
           "(",
           commaSeparated $
             (mkColumn <$> tableColumns)
@@ -213,11 +214,12 @@ insertTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
 insertTable testEnvironment Schema.Table {tableName, tableColumns, tableData}
   | null tableData = pure ()
   | otherwise = do
+      let schemaName = Schema.getSchemaName testEnvironment
       run_ testEnvironment $
         T.unpack $
           T.unwords
             [ "INSERT INTO",
-              T.pack Constants.sqlserverDb <> "." <> wrapIdentifier tableName,
+              Schema.unSchemaName schemaName <> "." <> wrapIdentifier tableName,
               "(",
               commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
               ")",
@@ -283,7 +285,8 @@ createDatabase testEnvironment = do
     testEnvironment
     [i|CREATE DATABASE #{dbName}|]
 
-  createSchema testEnvironment
+  let schemaName = Schema.getSchemaName testEnvironment
+  createSchema testEnvironment schemaName
 
 -- | We drop databases at the end of test runs so we don't need to do DB cleanup.
 dropDatabase :: TestEnvironment -> IO ()
@@ -297,9 +300,8 @@ dropDatabase testEnvironment = do
 
 -- Because the test harness sets the schema name we use for testing, we need
 -- to make sure it exists before we run the tests.
-createSchema :: TestEnvironment -> IO ()
-createSchema testEnvironment = do
-  let schemaName = Schema.getSchemaName testEnvironment
+createSchema :: TestEnvironment -> Schema.SchemaName -> IO ()
+createSchema testEnvironment schemaName = do
   run_
     testEnvironment
     [i|

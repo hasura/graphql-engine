@@ -14,7 +14,7 @@ import Harness.Quoter.Yaml.InterpolateYaml
 import Harness.Schema qualified as Schema
 import Harness.Services.GraphqlEngine (emptyHgeConfig, withHge)
 import Harness.Services.Metadata (export_metadata, replace_metadata)
-import Harness.Services.PostgresSource (withPostgresSource)
+import Harness.Services.Source.Postgres (withPostgresSource)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..), getBackendTypeConfig, scalarTypeToText)

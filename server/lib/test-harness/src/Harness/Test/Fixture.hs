@@ -38,7 +38,6 @@ where
 import Control.Concurrent.Async qualified as Async
 import Control.Monad.Managed (Managed, runManaged, with)
 import Data.Aeson (Value)
-import Data.Has (getter)
 import Data.List (subsequences)
 import Data.Set qualified as S
 import Data.Text qualified as T
@@ -48,7 +47,7 @@ import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.Exceptions
-import Harness.GraphqlEngine (postMetadata_)
+import Harness.GraphqlEngine (postGraphqlInternal, postMetadata_)
 import Harness.Logging
 import Harness.Permissions (Permission (..))
 import Harness.Permissions qualified as Permissions
@@ -65,8 +64,10 @@ import Harness.TestEnvironment
     TestingMode (..),
     TestingRole (..),
     UniqueTestId (..),
+    getSchemaNameInternal,
     logger,
   )
+import Harness.Yaml
 import Hasura.Prelude hiding (log)
 import Test.Hspec
   ( ActionWith,
@@ -127,12 +128,7 @@ hgeWithEnv env = do
   aroundAllWith
     ( \specs globalTestEnvironment -> runManaged $ do
         hgeServerInstance <-
-          spawnServer
-            (getter globalTestEnvironment)
-            (getter globalTestEnvironment)
-            (getter globalTestEnvironment)
-            hgeConfig
-            (getter globalTestEnvironment)
+          spawnServer globalTestEnvironment hgeConfig
         liftIO $ useHgeInTestEnvironment globalTestEnvironment hgeServerInstance >>= specs
     )
 
@@ -284,7 +280,10 @@ setupTestEnvironment name globalTestEnvironment options = do
             uniqueTestId = uniqueTestId,
             globalEnvironment = globalTestEnvironment,
             permissions = Admin,
-            _options = options
+            _options = options,
+            _postgraphqlInternal = postGraphqlInternal,
+            _shouldReturnYamlFInternal = \testEnv -> shouldReturnYamlFInternal (_options testEnv),
+            _getSchemaNameInternal = getSchemaNameInternal
           }
 
   -- create source databases
