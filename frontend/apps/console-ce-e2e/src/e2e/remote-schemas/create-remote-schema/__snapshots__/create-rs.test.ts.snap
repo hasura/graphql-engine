@@ -1,0 +1,74 @@
+exports[`Create RS with shortest possible path > When the users create, modify and delete a RS, everything should work #0`] =
+{
+  "comment": "",
+  "definition": {
+    "customization": {
+      "field_names": [
+        {
+          "mapping": {
+            "code": "country_code"
+          },
+          "parent_type": "Continent",
+          "prefix": "prefix_",
+          "suffix": "_suffix"
+        }
+      ],
+      "root_fields_namespace": "namespace_",
+      "type_names": {
+        "mapping": {
+          "Country": "country_name"
+        },
+        "prefix": "prefix_",
+        "suffix": "_suffix"
+      }
+    },
+    "forward_client_headers": true,
+    "headers": [
+      {
+        "name": "user_id",
+        "value": "1234"
+      }
+    ],
+    "timeout_seconds": 80,
+    "url": "https://countries.trevorblades.com/"
+  },
+  "name": "remote_schema_name"
+};
+
+exports[`Create RS with longest possible path > When the users create, modify and delete a RS, everything should work #0`] =
+{
+  "comment": "",
+  "definition": {
+    "customization": {
+      "field_names": [
+        {
+          "mapping": {},
+          "parent_type": "query_root",
+          "prefix": "prefix_query_root",
+          "suffix": "query_root_suffix"
+        },
+        {
+          "mapping": {},
+          "parent_type": "mutation_root",
+          "prefix": "prefix_mutation_root",
+          "suffix": "mutation_root_suffix"
+        }
+      ],
+      "root_fields_namespace": "namespace_",
+      "type_names": {
+        "mapping": {},
+        "prefix": "prefix_",
+        "suffix": "_suffix"
+      }
+    },
+    "headers": [
+      {
+        "name": "user_id",
+        "value": "1234"
+      }
+    ],
+    "timeout_seconds": 60,
+    "url": "https://countries.trevorblades.com/"
+  },
+  "name": "remote_schema_name"
+};

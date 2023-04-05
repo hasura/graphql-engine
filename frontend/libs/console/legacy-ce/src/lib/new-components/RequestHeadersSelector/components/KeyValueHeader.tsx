@@ -29,6 +29,7 @@ export const KeyValueHeader = (props: Props) => {
         placeholder="Key..."
         {...register(keyLabel)}
         aria-label={keyLabel}
+        data-test={`header-test${rowIndex}-key`}
       />
       <div className="flex rounded">
         {typeSelect ? (
@@ -44,6 +45,7 @@ export const KeyValueHeader = (props: Props) => {
         <input
           {...register(valueLabel)}
           aria-label={valueLabel}
+          data-test={`header-test${rowIndex}-value`}
           type="text"
           className={`flex-1 min-w-0 h-10 shadow-sm block w-full px-3 py-2 rounded-r ${borderStyle} ${ringStyle}`}
           placeholder="Value..."
@@ -54,6 +56,7 @@ export const KeyValueHeader = (props: Props) => {
               removeRow(rowIndex);
             }}
             className="cursor-pointer"
+            data-test={`delete-header-${rowIndex}`}
           />
         </div>
       </div>
