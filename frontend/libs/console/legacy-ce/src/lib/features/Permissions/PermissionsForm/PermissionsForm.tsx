@@ -71,12 +71,12 @@ const Component = (props: ComponentProps) => {
   });
 
   const onSubmit = async (formData: PermissionsSchema) => {
+    const newValues = getValues();
     try {
       await updatePermissions.submit(formData);
       handleClose();
     } catch (e) {
       reset();
-      const newValues = getValues();
       reset(newValues);
     }
   };

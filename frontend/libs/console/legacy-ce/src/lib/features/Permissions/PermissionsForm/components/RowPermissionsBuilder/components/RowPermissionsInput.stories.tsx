@@ -718,7 +718,7 @@ StringColumns.play = async ({ canvasElement, args }) => {
     ][0];
   expect(latestPermissions).toEqual({
     name: {
-      _eq: '1337',
+      _eq: 1337,
     },
   });
 };
@@ -768,7 +768,7 @@ NumberColumns.play = async ({ canvasElement, args }) => {
     ][0];
   expect(latestPermissions).toEqual({
     id: {
-      _eq: '12341337',
+      _eq: '"1234"1337',
     },
   });
 };
