@@ -29,7 +29,7 @@ export const ReadReplicas = ({
   >({
     name,
   });
-  const { watch, setValue } =
+  const { watch, setValue, trigger } =
     useFormContext<Record<string, ConnectionInfoSchema[]>>();
 
   const [mode, setMode] = useState<'idle' | 'add' | 'edit'>('idle');
@@ -141,9 +141,14 @@ export const ReadReplicas = ({
               </Collapsible>
             </div>
             <Button
-              onClick={() => {
-                setMode('idle');
-                setActiveRow(undefined);
+              onClick={async () => {
+                // validate the current open read replica state before closing.
+                const result = await trigger(`${name}.${activeRow}`);
+
+                if (result) {
+                  setMode('idle');
+                  setActiveRow(undefined);
+                }
               }}
               mode="primary"
               className="my-2"

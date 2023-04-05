@@ -1,5 +1,6 @@
 const colors = require('tailwindcss/colors');
 const plugin = require('tailwindcss/plugin');
+const { blackA, mauve, violet } = require('@radix-ui/colors');
 
 function dataStateVariant(state, { addVariant, e }) {
   addVariant(`data-state-${state}`, ({ modifySelectors, separator }) => {
@@ -202,6 +203,8 @@ module.exports = {
       animation: {
         collapsibleContentOpen: 'collapsibleContentOpen 300ms ease-out',
         collapsibleContentClose: 'collapsibleContentClose 300ms ease-out',
+        collapsibleContentOpenFast: 'collapsibleContentOpen 200ms ease-out',
+        collapsibleContentCloseFast: 'collapsibleContentClose 200ms ease-out',
         slideUpAndFade: 'slideUpAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         slideRightAndFade:
           'slideRightAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',

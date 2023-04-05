@@ -49,7 +49,7 @@ import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 
 -- | Typeclass representing the @UserInfo@ authorization and resolving effect
-class (Monad m) => UserAuthentication m where
+class Monad m => UserAuthentication m where
   resolveUserInfo ::
     Logger Hasura ->
     HTTP.Manager ->

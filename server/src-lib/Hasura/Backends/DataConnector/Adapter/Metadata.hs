@@ -115,7 +115,7 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
     getDataConnectorCapabilities options@DC.DataConnectorOptions {..} manager = runExceptT do
       capabilitiesU <-
         ignoreTraceT
-          . flip runAgentClientT (AgentClientContext logger _dcoUri manager Nothing)
+          . flip runAgentClientT (AgentClientContext logger _dcoUri manager Nothing Nothing)
           $ genericClient @API.Routes // API._capabilities
 
       let defaultAction = throw400 DataConnectorError "Unexpected data connector capabilities response - Unexpected Type"
@@ -152,7 +152,7 @@ resolveSourceConfig'
 
     schemaResponseU <-
       ignoreTraceT
-        . flip runAgentClientT (AgentClientContext logger _dcoUri manager (DC.sourceTimeoutMicroseconds <$> timeout))
+        . flip runAgentClientT (AgentClientContext logger _dcoUri manager (DC.sourceTimeoutMicroseconds <$> timeout) Nothing)
         $ (genericClient // API._schema) (toTxt sourceName) transformedConfig
 
     let defaultAction = throw400 DataConnectorError "Unexpected data connector schema response - Unexpected Type"

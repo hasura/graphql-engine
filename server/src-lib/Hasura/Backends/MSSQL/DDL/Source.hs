@@ -70,14 +70,14 @@ resolveDatabaseMetadata config = runExceptT do
   dbTablesMetadata <- mssqlRunReadOnly mssqlExecCtx $ loadDBMetadata
   pure $ DBObjectsIntrospection dbTablesMetadata mempty mempty
   where
-    MSSQLSourceConfig _connString mssqlExecCtx = config
+    MSSQLSourceConfig _connString mssqlExecCtx _numReadReplicas = config
 
 postDropSourceHook ::
   (MonadIO m, MonadBaseControl IO m) =>
   MSSQLSourceConfig ->
   TableEventTriggers 'MSSQL ->
   m ()
-postDropSourceHook (MSSQLSourceConfig _ mssqlExecCtx) tableTriggersMap = do
+postDropSourceHook (MSSQLSourceConfig _ mssqlExecCtx _) tableTriggersMap = do
   -- The SQL triggers for MSSQL source are created within the schema of the table,
   -- and is not associated with 'hdb_catalog' schema. Thus only deleting the
   -- 'hdb_catalog' schema is not sufficient, since it will still leave the SQL

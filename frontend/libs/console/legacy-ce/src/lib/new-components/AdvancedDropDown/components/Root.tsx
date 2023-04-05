@@ -1,5 +1,6 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import React from 'react';
+import { Nullable } from '../../../types';
 
 import * as StyleWrappers from './style-wrappers';
 
@@ -9,6 +10,7 @@ type RootProps = {
   align?: DropdownMenu.DropdownMenuContentProps['align'];
   side?: DropdownMenu.DropdownMenuContentProps['side'];
   arrow?: boolean;
+  container?: Nullable<HTMLElement>;
 };
 
 export const Root: React.FC<RootProps> = ({
@@ -18,10 +20,11 @@ export const Root: React.FC<RootProps> = ({
   align,
   side,
   arrow = true,
+  container,
 }) => (
   <DropdownMenu.Root defaultOpen={defaultOpen}>
     <DropdownMenu.Trigger>{trigger}</DropdownMenu.Trigger>
-    <DropdownMenu.Portal>
+    <DropdownMenu.Portal container={container}>
       <DropdownMenu.Content
         className="group/content"
         sideOffset={5}

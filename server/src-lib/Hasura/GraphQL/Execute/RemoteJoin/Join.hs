@@ -16,7 +16,9 @@ import Data.HashSet qualified as HS
 import Data.IntMap.Strict qualified as IntMap
 import Data.Text qualified as T
 import Data.Tuple (swap)
+import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Base.Error
+import Hasura.CredentialCache
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend qualified as EB
 import Hasura.GraphQL.Execute.Instances ()
@@ -65,6 +67,7 @@ processRemoteJoins ::
   ) =>
   RequestId ->
   L.Logger L.Hasura ->
+  Maybe (CredentialCache AgentLicenseKey) ->
   Env.Environment ->
   [HTTP.Header] ->
   UserInfo ->
@@ -72,7 +75,7 @@ processRemoteJoins ::
   Maybe RemoteJoins ->
   GQLReqUnparsed ->
   m EncJSON
-processRemoteJoins requestId logger env requestHeaders userInfo lhs maybeJoinTree gqlreq =
+processRemoteJoins requestId logger agentLicenseKey env requestHeaders userInfo lhs maybeJoinTree gqlreq =
   forRemoteJoins maybeJoinTree lhs \joinTree -> do
     lhsParsed <-
       JO.eitherDecode (encJToLBS lhs)
@@ -104,6 +107,7 @@ processRemoteJoins requestId logger env requestHeaders userInfo lhs maybeJoinTre
             _sjcRootFieldAlias
             userInfo
             logger
+            agentLicenseKey
             _sjcSourceConfig
             (fmap (statsToAnyBackend @b) (EB.dbsiAction _sjcStepInfo))
             (EB.dbsiPreparedQuery _sjcStepInfo)

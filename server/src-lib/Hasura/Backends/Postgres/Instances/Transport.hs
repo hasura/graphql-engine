@@ -16,6 +16,7 @@ import Data.ByteString qualified as B
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
+import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Execute.Subscription qualified as PGL
 import Hasura.Backends.Postgres.Execute.Types
@@ -23,6 +24,7 @@ import Hasura.Backends.Postgres.Instances.Execute qualified as EQ
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
 import Hasura.Base.Error
+import Hasura.CredentialCache
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.Subscription.Plan
@@ -69,13 +71,14 @@ runPGQuery ::
   RootFieldAlias ->
   UserInfo ->
   L.Logger L.Hasura ->
+  Maybe (CredentialCache AgentLicenseKey) ->
   SourceConfig ('Postgres pgKind) ->
   OnBaseMonad (PG.TxET QErr) (Maybe (AB.AnyBackend ExecutionStats), EncJSON) ->
   Maybe EQ.PreparedSql ->
   ResolvedConnectionTemplate ('Postgres pgKind) ->
   -- | Also return the time spent in the PG query; for telemetry.
   m (DiffTime, EncJSON)
-runPGQuery reqId query fieldName _userInfo logger sourceConfig tx genSql resolvedConnectionTemplate = do
+runPGQuery reqId query fieldName _userInfo logger _ sourceConfig tx genSql resolvedConnectionTemplate = do
   -- log the generated SQL and the graphql query
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId (resolvedConnectionTemplate <$ resolvedConnectionTemplate)
   withElapsedTime $
@@ -95,12 +98,13 @@ runPGMutation ::
   RootFieldAlias ->
   UserInfo ->
   L.Logger L.Hasura ->
+  Maybe (CredentialCache AgentLicenseKey) ->
   SourceConfig ('Postgres pgKind) ->
   OnBaseMonad (PG.TxET QErr) EncJSON ->
   Maybe EQ.PreparedSql ->
   ResolvedConnectionTemplate ('Postgres pgKind) ->
   m (DiffTime, EncJSON)
-runPGMutation reqId query fieldName userInfo logger sourceConfig tx _genSql resolvedConnectionTemplate = do
+runPGMutation reqId query fieldName userInfo logger _ sourceConfig tx _genSql resolvedConnectionTemplate = do
   -- log the graphql query
   logQueryLog logger $ mkQueryLog query fieldName Nothing reqId (resolvedConnectionTemplate <$ resolvedConnectionTemplate)
   withElapsedTime $
@@ -141,9 +145,10 @@ runPGQueryExplain ::
     MonadError QErr m,
     MonadTrace m
   ) =>
+  Maybe (CredentialCache AgentLicenseKey) ->
   DBStepInfo ('Postgres pgKind) ->
   m EncJSON
-runPGQueryExplain (DBStepInfo _ sourceConfig _ action resolvedConnectionTemplate) =
+runPGQueryExplain _ (DBStepInfo _ sourceConfig _ action resolvedConnectionTemplate) =
   runQueryTx (_pscExecCtx sourceConfig) (GraphQLQuery resolvedConnectionTemplate) $
     fmap arResult (runOnBaseMonad action)
 

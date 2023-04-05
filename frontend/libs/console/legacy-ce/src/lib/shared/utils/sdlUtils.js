@@ -389,7 +389,7 @@ export const toggleCacheDirective = operationString => {
     operationAst = sdlParse(operationString);
   } catch (e) {
     console.error(e);
-    return;
+    throw e;
   }
 
   const shouldAddCacheDirective = !operationAst.definitions.some(def => {

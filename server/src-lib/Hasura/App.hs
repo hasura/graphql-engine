@@ -127,6 +127,7 @@ import Hasura.RQL.DDL.Schema.Catalog
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.EECredentials
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Network
@@ -486,7 +487,8 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
           appEnvWebSocketConnectionInitTimeout = soWebSocketConnectionInitTimeout,
           appEnvGracefulShutdownTimeout = soGracefulShutdownTimeout,
           appEnvCheckFeatureFlag = CheckFeatureFlag $ checkFeatureFlag env,
-          appEnvSchemaPollInterval = soSchemaPollInterval
+          appEnvSchemaPollInterval = soSchemaPollInterval,
+          appEnvLicenseKeyCache = Nothing
         }
     )
 
@@ -737,8 +739,9 @@ instance MonadMetadataApiAuthorization AppM where
         throw400 AccessDenied accessDeniedErrMsg
 
 instance ConsoleRenderer AppM where
-  renderConsole path authMode enableTelemetry consoleAssetsDir consoleSentryDsn =
-    return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn
+  type ConsoleType AppM = CEConsoleType
+  renderConsole path authMode enableTelemetry consoleAssetsDir consoleSentryDsn consoleType =
+    return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn consoleType
 
 instance MonadVersionAPIWithExtraData AppM where
   -- we always default to CE as the `server_type` in this codebase
@@ -815,6 +818,10 @@ instance MonadMetadataStorage AppM where
   fetchActionResponse = runInSeparateTx . fetchActionResponseTx
   clearActionData = runInSeparateTx . clearActionDataTx
   setProcessingActionLogsToPending = runInSeparateTx . setProcessingActionLogsToPendingTx
+
+instance MonadEECredentialsStorage AppM where
+  getEEClientCredentials = runInSeparateTx getEEClientCredentialsTx
+  setEEClientCredentials a = runInSeparateTx $ setEEClientCredentialsTx a
 
 --------------------------------------------------------------------------------
 -- misc
@@ -917,11 +924,12 @@ runHGEServer ::
   UTCTime ->
   -- | A hook which can be called to indicate when the server is started succesfully
   Maybe (IO ()) ->
+  ConsoleType m ->
   EKG.Store EKG.EmptyMetrics ->
   ManagedT m ()
-runHGEServer setupHook appStateRef initTime startupStatusHook ekgStore = do
+runHGEServer setupHook appStateRef initTime startupStatusHook consoleType ekgStore = do
   AppEnv {..} <- lift askAppEnv
-  waiApplication <- mkHGEServer setupHook appStateRef ekgStore
+  waiApplication <- mkHGEServer setupHook appStateRef consoleType ekgStore
 
   let logger = _lsLogger appEnvLoggers
   -- `startupStatusHook`: add `Service started successfully` message to config_status
@@ -1007,9 +1015,10 @@ mkHGEServer ::
   ) =>
   (AppStateRef impl -> Spock.SpockT m ()) ->
   AppStateRef impl ->
+  ConsoleType m ->
   EKG.Store EKG.EmptyMetrics ->
   ManagedT m Application
-mkHGEServer setupHook appStateRef ekgStore = do
+mkHGEServer setupHook appStateRef consoleType ekgStore = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -1028,6 +1037,7 @@ mkHGEServer setupHook appStateRef ekgStore = do
         mkWaiApp
           setupHook
           appStateRef
+          consoleType
           ekgStore
           wsServerEnv
 
@@ -1392,8 +1402,15 @@ setCatalogStateTx stateTy stateValue =
 
 --- helper functions ---
 
-mkConsoleHTML :: Text -> AuthMode -> TelemetryStatus -> Maybe Text -> Maybe Text -> Either String Text
-mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn =
+mkConsoleHTML ::
+  Text ->
+  AuthMode ->
+  TelemetryStatus ->
+  Maybe Text ->
+  Maybe Text ->
+  CEConsoleType ->
+  Either String Text
+mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn ceConsoleType =
   renderHtmlTemplate consoleTmplt $
     -- variables required to render the template
     A.object
@@ -1404,6 +1421,7 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn =
         "consoleSentryDsn" A..= fromMaybe "" consoleSentryDsn,
         "assetsVersion" A..= consoleAssetsVersion,
         "serverVersion" A..= currentVersion,
+        "consoleType" A..= ceConsoleTypeIdentifier ceConsoleType, -- TODO(awjchen): This is a kludge that will be removed when the entitlement service is fully implemented.
         "consoleSentryDsn" A..= ("" :: Text)
       ]
   where
@@ -1449,4 +1467,5 @@ mkMSSQLSourceResolver env _name (MSSQLConnConfiguration connInfo _) = runExceptT
           }
   (connString, mssqlPool) <- createMSSQLPool iConnString connOptions env
   let mssqlExecCtx = mkMSSQLExecCtx mssqlPool NeverResizePool
-  pure $ MSSQLSourceConfig connString mssqlExecCtx
+      numReadReplicas = 0
+  pure $ MSSQLSourceConfig connString mssqlExecCtx numReadReplicas

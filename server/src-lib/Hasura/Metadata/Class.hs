@@ -2,6 +2,7 @@
 module Hasura.Metadata.Class
   ( SchemaSyncEventProcessResult (..),
     MonadMetadataStorage (..),
+    MonadEECredentialsStorage (..),
     createOneOffScheduledEvent,
     createCronEvents,
     dropFutureCronEvents,
@@ -21,6 +22,7 @@ import Hasura.Base.Error
 import Hasura.Eventing.ScheduledTrigger.Types
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.EECredentials
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Metadata
@@ -230,3 +232,25 @@ fetchCatalogState = getCatalogState
 -- | Update the state from metadata storage catalog
 updateCatalogState :: MonadMetadataStorage m => CatalogStateType -> Value -> m (Either QErr ())
 updateCatalogState = setCatalogState
+
+-- | Metadata database operations for EE credentials storage.
+--
+-- This class is only necessary because we haven't written an implementation
+-- for storing EE credentials in Cloud.
+class (Monad m) => MonadEECredentialsStorage m where
+  getEEClientCredentials :: m (Either QErr (Maybe EEClientCredentials))
+  setEEClientCredentials :: EEClientCredentials -> m (Either QErr ())
+
+instance (MonadEECredentialsStorage m, MonadTrans t, Monad (t m)) => MonadEECredentialsStorage (TransT t m) where
+  getEEClientCredentials = lift getEEClientCredentials
+  setEEClientCredentials a = lift $ setEEClientCredentials a
+
+deriving via (TransT (ReaderT r) m) instance (MonadEECredentialsStorage m) => MonadEECredentialsStorage (ReaderT r m)
+
+deriving via (TransT (StateT s) m) instance (MonadEECredentialsStorage m) => MonadEECredentialsStorage (StateT s m)
+
+deriving via (TransT (ExceptT e) m) instance (MonadEECredentialsStorage m) => MonadEECredentialsStorage (ExceptT e m)
+
+deriving via (TransT MetadataT m) instance (MonadEECredentialsStorage m) => MonadEECredentialsStorage (MetadataT m)
+
+deriving via (TransT ManagedT m) instance (MonadEECredentialsStorage m) => MonadEECredentialsStorage (ManagedT m)

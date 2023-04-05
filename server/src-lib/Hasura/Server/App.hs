@@ -3,6 +3,7 @@
 
 module Hasura.Server.App
   ( APIResp (JSONResp, RawResp),
+    CEConsoleType (..),
     ConsoleRenderer (..),
     MonadVersionAPIWithExtraData (..),
     Handler,
@@ -12,6 +13,7 @@ module Hasura.Server.App
     MonadMetadataApiAuthorization (..),
     AppContext (..),
     boolToText,
+    ceConsoleTypeIdentifier,
     configApiGetHandler,
     isAdminSecretSet,
     mkGetHandler,
@@ -39,6 +41,7 @@ import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as S
+import Data.Kind (Type)
 import Data.String (fromString)
 import Data.Text qualified as T
 import Data.Text.Conversions (convertText)
@@ -48,8 +51,10 @@ import Data.Text.Lazy.Encoding qualified as TL
 import GHC.Stats.Extended qualified as RTS
 import Hasura.App.State
 import Hasura.Backends.DataConnector.API (openApiSchema)
+import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Base.Error
+import Hasura.CredentialCache
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Execute.Subscription.State qualified as ES
@@ -119,7 +124,8 @@ data HandlerCtx = HandlerCtx
     hcUser :: UserInfo,
     hcReqHeaders :: [HTTP.Header],
     hcRequestId :: RequestId,
-    hcSourceIpAddress :: Wai.IpAddress
+    hcSourceIpAddress :: Wai.IpAddress,
+    hcLicenseKeyCache :: Maybe (CredentialCache AgentLicenseKey)
   }
 
 newtype Handler m a = Handler (ReaderT HandlerCtx (ExceptT QErr m) a)
@@ -333,7 +339,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
         pure
           ( userInfo,
             authHeaders,
-            HandlerCtx appContext schemaCache schemaCacheVer userInfo headers requestId ipAddress,
+            HandlerCtx appContext schemaCache schemaCacheVer userInfo headers requestId ipAddress appEnvLicenseKeyCache,
             shouldIncludeInternal (_uiRole userInfo) acResponseInternalErrorsConfig,
             extraUserInfo
           )
@@ -544,7 +550,7 @@ v1Alpha1GQHandler queryType query = do
   reqHeaders <- asks hcReqHeaders
   ipAddress <- asks hcSourceIpAddress
   requestId <- asks hcRequestId
-  GH.runGQBatched acEnvironment acSQLGenCtx schemaCache schemaCacheVer acEnableAllowlist appEnvEnableReadOnlyMode appEnvPrometheusMetrics (_lsLogger appEnvLoggers) requestId acResponseInternalErrorsConfig userInfo ipAddress reqHeaders queryType query
+  GH.runGQBatched acEnvironment acSQLGenCtx schemaCache schemaCacheVer acEnableAllowlist appEnvEnableReadOnlyMode appEnvPrometheusMetrics (_lsLogger appEnvLoggers) appEnvLicenseKeyCache requestId acResponseInternalErrorsConfig userInfo ipAddress reqHeaders queryType query
 
 v1GQHandler ::
   ( MonadIO m,
@@ -602,7 +608,8 @@ gqlExplainHandler query = do
   onlyAdmin
   schemaCache <- asks hcSchemaCache
   reqHeaders <- asks hcReqHeaders
-  res <- GE.explainGQLQuery (lastBuiltSchemaCache schemaCache) reqHeaders query
+  licenseKeyCache <- asks hcLicenseKeyCache
+  res <- GE.explainGQLQuery (lastBuiltSchemaCache schemaCache) licenseKeyCache reqHeaders query
   return $ HttpResponse res []
 
 v1Alpha1PGDumpHandler :: (MonadIO m, MonadError QErr m, MonadReader HandlerCtx m) => PGD.PGDumpReqBody -> m APIResp
@@ -653,10 +660,29 @@ consoleAssetsHandler logger loggingSettings dir path = do
     headers = ("Content-Type", mimeType) : encHeader
 
 class (Monad m) => ConsoleRenderer m where
-  renderConsole :: Text -> AuthMode -> TelemetryStatus -> Maybe Text -> Maybe Text -> m (Either String Text)
+  type ConsoleType m :: Type
+  renderConsole ::
+    Text ->
+    AuthMode ->
+    TelemetryStatus ->
+    Maybe Text ->
+    Maybe Text ->
+    ConsoleType m ->
+    m (Either String Text)
+
+-- TODO(awjchen): This is a kludge that will be removed when the entitlement service is fully implemented.
+data CEConsoleType
+  = OSSConsole
+  | ProLiteConsole
+
+ceConsoleTypeIdentifier :: CEConsoleType -> String
+ceConsoleTypeIdentifier = \case
+  OSSConsole -> "oss"
+  ProLiteConsole -> "pro-lite"
 
 instance ConsoleRenderer m => ConsoleRenderer (Tracing.TraceT m) where
-  renderConsole a b c d e = lift $ renderConsole a b c d e
+  type ConsoleType (Tracing.TraceT m) = ConsoleType m
+  renderConsole a b c d e f = lift $ renderConsole a b c d e f
 
 -- Type class to get any extra [Pair] for the version API
 class (Monad m) => MonadVersionAPIWithExtraData m where
@@ -741,17 +767,18 @@ mkWaiApp ::
   ) =>
   (AppStateRef impl -> Spock.SpockT m ()) ->
   AppStateRef impl ->
+  ConsoleType m ->
   EKG.Store EKG.EmptyMetrics ->
   WS.WSServerEnv impl ->
   m HasuraApp
-mkWaiApp setupHook appStateRef ekgStore wsServerEnv = do
+mkWaiApp setupHook appStateRef consoleType ekgStore wsServerEnv = do
   appEnv@AppEnv {..} <- askAppEnv
   spockApp <- liftWithStateless $ \lowerIO ->
     Spock.spockAsApp $
       Spock.spockT lowerIO $
-        httpApp setupHook appStateRef appEnv ekgStore
+        httpApp setupHook appStateRef appEnv consoleType ekgStore
 
-  let wsServerApp = WS.createWSServerApp (_lsEnabledLogTypes appEnvLoggingSettings) wsServerEnv appEnvWebSocketConnectionInitTimeout
+  let wsServerApp = WS.createWSServerApp (_lsEnabledLogTypes appEnvLoggingSettings) wsServerEnv appEnvWebSocketConnectionInitTimeout appEnvLicenseKeyCache
       stopWSServer = WS.stopWSServerApp wsServerEnv
 
   waiApp <- liftWithStateless $ \lowerIO ->
@@ -789,9 +816,10 @@ httpApp ::
   (AppStateRef impl -> Spock.SpockT m ()) ->
   AppStateRef impl ->
   AppEnv ->
+  ConsoleType m ->
   EKG.Store EKG.EmptyMetrics ->
   Spock.SpockT m ()
-httpApp setupHook appStateRef AppEnv {..} ekgStore = do
+httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore = do
   -- Additional spock action to run
   setupHook appStateRef
 
@@ -873,7 +901,7 @@ httpApp setupHook appStateRef AppEnv {..} ekgStore = do
               Spock.PATCH -> pure EP.PATCH
               other -> throw400 BadRequest $ "Method " <> tshow other <> " not supported."
             _ -> throw400 BadRequest $ "Nonstandard method not allowed for REST endpoints"
-        fmap JSONResp <$> runCustomEndpoint acEnvironment acSQLGenCtx schemaCache schemaCacheVer acEnableAllowlist appEnvEnableReadOnlyMode appEnvPrometheusMetrics (_lsLogger appEnvLoggers) requestId userInfo reqHeaders ipAddress req endpoints
+        fmap JSONResp <$> runCustomEndpoint acEnvironment acSQLGenCtx schemaCache schemaCacheVer acEnableAllowlist appEnvEnableReadOnlyMode appEnvPrometheusMetrics (_lsLogger appEnvLoggers) appEnvLicenseKeyCache requestId userInfo reqHeaders ipAddress req endpoints
 
   -- See Issue #291 for discussion around restified feature
   Spock.hookRouteAll ("api" <//> "rest" <//> Spock.wildcard) $ \wildcard -> do
@@ -1062,7 +1090,7 @@ httpApp setupHook appStateRef AppEnv {..} ekgStore = do
           AppContext {..} <- liftIO $ getAppContext appStateRef
           req <- Spock.request
           let headers = Wai.requestHeaders req
-          consoleHtml <- lift $ renderConsole path acAuthMode acEnableTelemetry appEnvConsoleAssetsDir appEnvConsoleSentryDsn
+          consoleHtml <- lift $ renderConsole path acAuthMode acEnableTelemetry appEnvConsoleAssetsDir appEnvConsoleSentryDsn consoleType
           either (raiseGenericApiError logger appEnvLoggingSettings headers . internalError . T.pack) Spock.html consoleHtml
 
     serveApiConsoleAssets = do

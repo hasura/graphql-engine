@@ -33,6 +33,7 @@ export const postgres: Database = {
       name: 'postgres',
       displayName: 'Postgres',
       release: 'GA',
+      native: true,
     }),
     getDatabaseConfiguration,
     getDriverCapabilities: async () => Promise.resolve(postgresCapabilities),

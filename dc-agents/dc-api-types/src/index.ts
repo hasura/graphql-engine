@@ -56,6 +56,7 @@ export type { GraphQLType } from './models/GraphQLType';
 export type { InsertCapabilities } from './models/InsertCapabilities';
 export type { InsertFieldSchema } from './models/InsertFieldSchema';
 export type { InsertMutationOperation } from './models/InsertMutationOperation';
+export type { Licensing } from './models/Licensing';
 export type { MetricsCapabilities } from './models/MetricsCapabilities';
 export type { MutationCapabilities } from './models/MutationCapabilities';
 export type { MutationOperation } from './models/MutationOperation';

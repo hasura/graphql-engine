@@ -62,6 +62,8 @@ newtype MetadataDbId = MetadataDbId {getMetadataDbId :: Text}
 mdDbIdToDbUid :: MetadataDbId -> DbUid
 mdDbIdToDbUid = DbUid . getMetadataDbId
 
+-- | A UUID for each running instance of graphql-engine, generated fresh each
+-- time graphql-engine starts up
 newtype InstanceId = InstanceId {getInstanceId :: Text}
   deriving (Show, Eq, ToJSON, FromJSON, PG.FromCol, PG.ToPrepArg)
 

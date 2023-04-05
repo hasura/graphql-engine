@@ -82,37 +82,42 @@ export const EditConnection = () => {
   if (!schema) return <>Could not find schema</>;
 
   return (
-    <Form onSubmit={submit} className="p-0 pl-sm">
-      <div className="max-w-5xl">
-        <InputField type="text" name="name" label="Database Display Name" />
-
-        <Select
-          options={[{ label: driver || '', value: driver }]}
-          name="driver"
-          label="Data Source Driver"
-          disabled
-        />
-
-        <div className="max-w-xl">
-          <Configuration name="configuration" />
-        </div>
-        <div className="mt-4">
-          <CustomizationForm />
-        </div>
-        <div className="mt-4">
-          <Button type="submit" mode="primary" isLoading={submitIsLoading}>
-            Edit Connection
-          </Button>
-        </div>
-
-        {!!Object(formState.errors)?.keys?.length && (
-          <div className="mt-6 max-w-xl">
-            <IndicatorCard status="negative">
-              Error submitting form, see error messages above
-            </IndicatorCard>
-          </div>
-        )}
+    <div>
+      <div className="text-xl text-gray-600 font-semibold p-4">
+        Edit {name} database connection
       </div>
-    </Form>
+      <Form onSubmit={submit} className="p-0 pl-sm">
+        <div className="max-w-5xl">
+          <InputField type="text" name="name" label="Database Display Name" />
+
+          <Select
+            options={[{ label: driver || '', value: driver }]}
+            name="driver"
+            label="Data Source Driver"
+            disabled
+          />
+
+          <div className="max-w-xl">
+            <Configuration name="configuration" />
+          </div>
+          <div className="mt-4">
+            <CustomizationForm />
+          </div>
+          <div className="mt-4">
+            <Button type="submit" mode="primary" isLoading={submitIsLoading}>
+              Edit Connection
+            </Button>
+          </div>
+
+          {!!Object(formState.errors)?.keys?.length && (
+            <div className="mt-6 max-w-xl">
+              <IndicatorCard status="negative">
+                Error submitting form, see error messages above
+              </IndicatorCard>
+            </div>
+          )}
+        </div>
+      </Form>
+    </div>
   );
 };

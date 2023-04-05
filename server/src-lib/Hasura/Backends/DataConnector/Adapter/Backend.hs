@@ -160,6 +160,8 @@ instance Backend 'DataConnector where
 instance HasSourceConfiguration 'DataConnector where
   type SourceConfig 'DataConnector = DC.SourceConfig
   type SourceConnConfiguration 'DataConnector = DC.ConnSourceConfig
+  sourceConfigNumReadReplicas = const 0 -- not supported
+  sourceConfigConnectonTemplateEnabled = const False -- not supported
 
 data CustomBooleanOperator a = CustomBooleanOperator
   { _cboName :: Text,

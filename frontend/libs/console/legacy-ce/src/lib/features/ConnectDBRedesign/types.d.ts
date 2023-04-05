@@ -7,6 +7,14 @@ export type DatabaseConnection = {
   };
 };
 
+/**
+ *
+ * This type is a list of the types we care about for db connect.
+ *
+ * This is not a 1-1 correspondence with window.__env/globals
+ *
+ */
+export type DbConnectConsoleType = 'oss' | 'pro' | 'pro-lite' | 'cloud';
 export type DatabaseKind =
   | 'postgres'
   | 'mssql'

@@ -8,7 +8,7 @@ export const DatabaseLogo: React.FC<{ title: string; image: string }> = ({
     <div className="flex flex-col mt-2 items-center">
       <img
         src={image}
-        className="h-[16px] w-[16px] mb-2"
+        className="h-[24px] w-[24px] mb-2 object-contain"
         alt={`${title} logo`}
       />
       <div className="text-black text-base">{title}</div>

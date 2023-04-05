@@ -73,7 +73,8 @@ capabilities =
             API._cMetrics = Just API.MetricsCapabilities {},
             API._cExplain = Just API.ExplainCapabilities {},
             API._cRaw = Just API.RawCapabilities {},
-            API._cDatasets = Just API.DatasetCapabilities {}
+            API._cDatasets = Just API.DatasetCapabilities {},
+            API._cLicensing = Nothing
           },
       _crConfigSchemaResponse =
         API.ConfigSchemaResponse

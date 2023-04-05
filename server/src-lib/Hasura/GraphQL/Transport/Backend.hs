@@ -5,7 +5,9 @@ where
 
 import Control.Monad.Trans.Control
 import Data.ByteString qualified as B
+import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Base.Error
+import Hasura.CredentialCache
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.Subscription.Plan
@@ -38,6 +40,7 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
     RootFieldAlias ->
     UserInfo ->
     L.Logger L.Hasura ->
+    Maybe (CredentialCache AgentLicenseKey) ->
     SourceConfig b ->
     OnBaseMonad (ExecutionMonad b) (Maybe (AnyBackend ExecutionStats), EncJSON) ->
     Maybe (PreparedQuery b) ->
@@ -56,6 +59,7 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
     RootFieldAlias ->
     UserInfo ->
     L.Logger L.Hasura ->
+    Maybe (CredentialCache AgentLicenseKey) ->
     SourceConfig b ->
     OnBaseMonad (ExecutionMonad b) EncJSON ->
     Maybe (PreparedQuery b) ->
@@ -86,5 +90,6 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
       MonadBaseControl IO m,
       MonadTrace m
     ) =>
+    Maybe (CredentialCache AgentLicenseKey) ->
     DBStepInfo b ->
     m EncJSON

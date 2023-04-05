@@ -82,7 +82,7 @@ import Text.Builder qualified as T
 -- Hasura.RQL.DDL.RemoteSchema.Permission.GraphQLType; it should perhaps be
 -- renamed, made internal to this module, or removed altogether?
 newtype GraphQLType = GraphQLType {unGraphQLType :: G.GType}
-  deriving (Show, Eq, Generic, NFData)
+  deriving (Show, Eq, Ord, Generic, NFData)
 
 instance HasCodec GraphQLType where
   codec = bimapCodec dec enc codec
@@ -148,7 +148,7 @@ data InputObjectTypeDefinition = InputObjectTypeDefinition
     _iotdDescription :: Maybe G.Description,
     _iotdFields :: NonEmpty InputObjectFieldDefinition
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData InputObjectTypeDefinition
 
@@ -172,7 +172,7 @@ data InputObjectFieldDefinition = InputObjectFieldDefinition
     _iofdType :: GraphQLType
     -- TODO: support default values
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData InputObjectFieldDefinition
 
@@ -254,7 +254,7 @@ data ScalarTypeDefinition = ScalarTypeDefinition
   { _stdName :: G.Name,
     _stdDescription :: Maybe G.Description
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData ScalarTypeDefinition
 
@@ -276,7 +276,7 @@ data EnumTypeDefinition = EnumTypeDefinition
     _etdDescription :: Maybe G.Description,
     _etdValues :: NonEmpty EnumValueDefinition
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData EnumTypeDefinition
 
@@ -299,7 +299,7 @@ data EnumValueDefinition = EnumValueDefinition
     _evdDescription :: Maybe G.Description,
     _evdIsDeprecated :: Maybe Bool
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData EnumValueDefinition
 
@@ -379,16 +379,18 @@ data AnnotatedInputType
   = NOCTScalar AnnotatedScalarType
   | NOCTEnum EnumTypeDefinition
   | NOCTInputObject InputObjectTypeDefinition
-  deriving (Eq, Generic)
+  deriving (Eq, Ord, Generic)
 
 data AnnotatedScalarType
   = ASTCustom ScalarTypeDefinition
   | ASTReusedScalar G.Name (AnyBackend ScalarWrapper)
-  deriving (Eq, Generic)
+  deriving (Eq, Ord, Generic)
 
 newtype ScalarWrapper b = ScalarWrapper {unwrapScalar :: (ScalarType b)}
 
 deriving instance (Backend b) => Eq (ScalarWrapper b)
+
+deriving instance (Backend b) => Ord (ScalarWrapper b)
 
 data AnnotatedOutputType
   = AOTObject AnnotatedObjectType

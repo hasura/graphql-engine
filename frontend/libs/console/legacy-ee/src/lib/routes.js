@@ -12,7 +12,9 @@ import {
   isMetadataStatusPage,
   prefetchSurveysData,
   prefetchOnboardingData,
+  prefetchEELicenseInfo,
   PageNotFound,
+  dataHeaders,
 } from '@hasura/console-legacy-ce';
 import {
   dataRouterUtils,
@@ -44,8 +46,13 @@ import {
   isMonitoringTabSupportedEnvironment,
   AllowListDetail,
   PrometheusSettings,
+  QueryResponseCaching,
   OpenTelemetryFeature,
+  MultipleAdminSecretsPage,
+  MultipleJWTSecretsPage,
+  SingleSignOnPage,
 } from '@hasura/console-legacy-ce';
+
 import AccessDeniedComponent from './components/AccessDenied/AccessDenied';
 import { restrictedPathsMetadata } from './utils/redirectUtils';
 import generatedCallbackConnector from './components/OAuthCallback/OAuthCallback';
@@ -251,6 +258,11 @@ const routes = store => {
       prefetchSurveysData();
       prefetchOnboardingData();
     }
+
+    if (globals.consoleType === 'pro-lite') {
+      prefetchEELicenseInfo(dataHeaders(store.getState));
+    }
+
     const onEnterHooks = [validateAccessToRoute];
     const { shouldLoadOpts, shouldLoadServer } = shouldLoadAsyncGlobals(store);
     if (shouldLoadOpts || shouldLoadServer) {
@@ -370,6 +382,19 @@ const routes = store => {
             <Route path="inherited-roles" component={InheritedRolesContainer} />
             <Route path="insecure-domain" component={InsecureDomains} />
             <Route path="prometheus-settings" component={PrometheusSettings} />
+            <Route
+              path="query-response-caching"
+              component={QueryResponseCaching}
+            />
+            <Route
+              path="multiple-admin-secrets"
+              component={MultipleAdminSecretsPage}
+            />
+            <Route
+              path="multiple-jwt-secrets"
+              component={MultipleJWTSecretsPage}
+            />
+            <Route path="single-sign-on" component={SingleSignOnPage} />
             <Route path="opentelemetry" component={OpenTelemetryFeature} />
             <Route path="feature-flags" component={FeatureFlags} />
           </Route>

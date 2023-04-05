@@ -27,7 +27,15 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
 import globals from '../../Globals';
 import 'react-toggle/style.css';
-import { Spinner } from '@hasura/console-legacy-ce';
+import {
+  Spinner,
+  EntepriseNavbarButton,
+  WithEELiteAccess,
+  InitializeTelemetry,
+  telemetryUserEventsTracker,
+  Analytics,
+} from '@hasura/console-legacy-ce';
+
 import {
   Badge,
   NotificationSection,
@@ -43,6 +51,7 @@ import {
   isCloudConsole,
   ControlPlane,
 } from '@hasura/console-legacy-ce';
+
 import { versionGT, FT_JWT_ANALYZER } from '../../helpers/versionUtils';
 import {
   loadServerVersion,
@@ -292,9 +301,8 @@ class Main extends React.Component {
    */
   isEnterpriseProject() {
     return (
-      (this.props?.project?.is_enterprise_user &&
-        this.props?.project?.plan_name !== 'cloud_free') ||
-      globals.consoleType === 'pro-lite'
+      this.props?.project?.is_enterprise_user &&
+      this.props?.project?.plan_name !== 'cloud_free'
     );
   }
 
@@ -523,25 +531,53 @@ class Main extends React.Component {
 
     const renderMetadataIcon = () => (
       <div className={itemContainerStyle}>
-        <Link
-          className={clsx(
-            linkStyle,
-            currentActiveBlock === 'settings' && activeLinkStyle
-          )}
-          to={getConsolidatedPath('/settings', '/settings', accessState)}
-        >
-          <span className="text-sm self-baseline">{getMetadataIcon()}</span>
-          <span className="uppercase text-left">Settings</span>
-        </Link>
+        <Analytics name="navbar-settings">
+          <Link
+            className={clsx(
+              linkStyle,
+              currentActiveBlock === 'settings' && activeLinkStyle
+            )}
+            to={getConsolidatedPath('/settings', '/settings', accessState)}
+          >
+            <span className="text-sm self-baseline">{getMetadataIcon()}</span>
+            <span className="uppercase text-left">Settings</span>
+          </Link>
+        </Analytics>
       </div>
     );
 
-    const getLogoSrc = () => {
-      if (this.isEnterpriseProject()) {
-        return EELogo;
-      }
+    const getLogo = () => {
+      return (
+        <WithEELiteAccess globals={globals}>
+          {({ access }) => {
+            const getLogoSrc = () => {
+              if (this.isEnterpriseProject()) {
+                return EELogo;
+              }
+              if (access === 'active') {
+                return EELogo;
+              }
+              return logo;
+            };
+            return <img className="w-24" src={getLogoSrc()} alt="HasuraLogo" />;
+          }}
+        </WithEELiteAccess>
+      );
+    };
 
-      return logo;
+    const renderTelemetrySetup = () => {
+      return (
+        <WithEELiteAccess globals={globals}>
+          {({ access }) => {
+            return (
+              <InitializeTelemetry
+                tracker={telemetryUserEventsTracker}
+                skip={access === 'forbidden'}
+              />
+            );
+          }}
+        </WithEELiteAccess>
+      );
     };
 
     return (
@@ -553,7 +589,7 @@ class Main extends React.Component {
                 <Link
                   to={accessState.hasGraphQLAccess ? '/' : '/access-denied'}
                 >
-                  <img className="w-24" src={getLogoSrc()} alt="" />
+                  {getLogo()}
                 </Link>
                 <Link
                   to={accessState.hasGraphQLAccess ? '/' : '/access-denied'}
@@ -642,6 +678,8 @@ class Main extends React.Component {
                 )}
               >
                 {getAdminSecretSection()}
+                <EntepriseNavbarButton className="flex items-center normal-case font-normal text-slate-900 mr-sm" />
+                {renderTelemetrySetup()}
                 {renderProjectInfo()}
                 {renderMetadataIcon()}
                 <div className={itemContainerStyle}>

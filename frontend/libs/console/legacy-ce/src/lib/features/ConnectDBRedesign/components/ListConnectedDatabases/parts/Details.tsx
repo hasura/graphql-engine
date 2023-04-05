@@ -23,7 +23,7 @@ export const DisplayDetails = ({
       <div className="flex justify-start">
         <div
           className={clsx(
-            'max-w-xs',
+            'max-w-2xl',
             isExpanded
               ? 'whitespace-pre-line'
               : 'overflow-hidden text-ellipsis whitespace-nowrap'

@@ -136,7 +136,7 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
               className={`flex items-center rounded bg-gray-200 border border-gray-300 py-sm px-sm mb-md`}
             >
               <FaExclamationCircle className="fill-current self-start h-md text-muted" />
-              <div className="ml-xs">
+              <div className="ml-xs max-w-2xl">
                 <strong>Dynamic Routing Precedence</strong>
                 <p>
                   {' '}

@@ -13,6 +13,8 @@ import Data.Aeson (object, toJSON, (.=))
 import Data.ByteString.Char8 qualified as B (pack)
 import Data.Text (pack)
 import Hasura.App.State
+import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
+import Hasura.CredentialCache
 import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Logging
 import Hasura.GraphQL.Transport.HTTP (MonadExecuteQuery)
@@ -62,9 +64,10 @@ createWSServerApp ::
   HashSet (L.EngineLogType L.Hasura) ->
   WSServerEnv impl ->
   WSConnectionInitTimeout ->
+  Maybe (CredentialCache AgentLicenseKey) ->
   -- | aka generalized 'WS.ServerApp'
   WS.HasuraServerApp m
-createWSServerApp enabledLogTypes serverEnv connInitTimeout = \ !ipAddress !pendingConn -> do
+createWSServerApp enabledLogTypes serverEnv connInitTimeout licenseKeyCache = \ !ipAddress !pendingConn -> do
   let getMetricsConfig = scMetricsConfig <$> getSchemaCache (_wseAppStateRef serverEnv)
   WS.createServerApp getMetricsConfig connInitTimeout (_wseServer serverEnv) prometheusMetrics handlers ipAddress pendingConn
   where
@@ -90,7 +93,7 @@ createWSServerApp enabledLogTypes serverEnv connInitTimeout = \ !ipAddress !pend
 
     onMessageHandler conn bs sp =
       mask_ $
-        onMessage enabledLogTypes getAuthMode serverEnv conn bs (wsActions sp)
+        onMessage enabledLogTypes getAuthMode serverEnv conn bs (wsActions sp) licenseKeyCache
 
     onCloseHandler conn = mask_ do
       liftIO $ EKG.Gauge.dec $ smWebsocketConnections serverMetrics

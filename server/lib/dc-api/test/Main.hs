@@ -5,15 +5,16 @@ module Main (main) where
 import Command (AgentConfig (..), AgentOptions (..), Command (..), SandwichArguments (..), TestOptions (..), parseCommandLine)
 import Control.Exception (bracket)
 import Data.Aeson.Text (encodeToLazyText)
+import Data.ByteString.Char8 qualified as Char8
 import Data.Foldable (for_)
 import Data.Maybe (isJust)
 import Data.Text.Lazy.IO qualified as Text
 import Hasura.Backends.DataConnector.API (openApiSchema)
 import Hasura.Backends.DataConnector.API qualified as API
 import Servant.Client ((//))
-import System.Environment (withArgs)
+import System.Environment qualified as Env
 import Test.AgentAPI (guardCapabilitiesResponse, guardSchemaResponse, mergeAgentConfig)
-import Test.AgentClient (AgentIOClient (..), introduceAgentClient, mkAgentClientConfig, mkAgentIOClient)
+import Test.AgentClient (AgentAuthKey (..), AgentIOClient (..), introduceAgentClient, mkAgentClientConfig, mkAgentIOClient)
 import Test.AgentDatasets (DatasetCloneInfo (..), chinookTemplate, createClone, deleteClone, testingEdgeCasesTemplate, usesDataset)
 import Test.AgentTestContext (AgentTestContext (..), introduceAgentTestContext)
 import Test.Data (EdgeCasesTestData, TestData, mkEdgeCasesTestData, mkTestData)
@@ -79,17 +80,21 @@ getTestingEdgeCasesSchema API.Capabilities {..} agentConfig agentIOClient@(Agent
             else pure Nothing
         else pure Nothing
 
+lookupAgentAuthKey :: IO (Maybe AgentAuthKey)
+lookupAgentAuthKey = fmap (AgentAuthKey . Char8.pack) <$> Env.lookupEnv "HASURA_GRAPHQL_EE_LICENSE_KEY"
+
 main :: IO ()
 main = do
   command <- parseCommandLine
+  agentAuthKey <- lookupAgentAuthKey
   case command of
-    Test TestOptions {..} (SandwichArguments arguments) -> withArgs arguments $ do
-      agentIOClient@(AgentIOClient agentClient) <- mkAgentIOClient _toSensitiveOutputHandling (_aoAgentBaseUrl _toAgentOptions)
+    Test TestOptions {..} (SandwichArguments arguments) -> Env.withArgs arguments $ do
+      agentIOClient@(AgentIOClient agentClient) <- mkAgentIOClient _toSensitiveOutputHandling agentAuthKey (_aoAgentBaseUrl _toAgentOptions)
       agentCapabilities <- (agentClient // API._capabilities) >>= guardCapabilitiesResponse
       chinookSchema <- getChinookSchema (API._crCapabilities agentCapabilities) (_aoAgentConfig _toAgentOptions) agentIOClient
       testingEdgeCasesSchema <- getTestingEdgeCasesSchema (API._crCapabilities agentCapabilities) (_aoAgentConfig _toAgentOptions) agentIOClient
 
-      agentClientConfig <- mkAgentClientConfig _toSensitiveOutputHandling (_aoAgentBaseUrl _toAgentOptions)
+      agentClientConfig <- mkAgentClientConfig _toSensitiveOutputHandling agentAuthKey (_aoAgentBaseUrl _toAgentOptions)
       let testData = mkTestData chinookSchema _toTestConfig
       let edgeCasesTestData = mkEdgeCasesTestData _toTestConfig <$> testingEdgeCasesSchema
       let testContext = AgentTestContext testSourceName agentCapabilities (_aoAgentConfig _toAgentOptions)

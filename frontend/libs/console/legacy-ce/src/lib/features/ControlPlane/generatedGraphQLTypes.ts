@@ -60496,6 +60496,27 @@ export type TriggerOneClickDeploymentMutation = {
   } | null;
 };
 
+export type RegisterEeTrialMutationVariables = Exact<{
+  metadataDbId: Scalars['uuid'];
+  first: Scalars['String'];
+  last: Scalars['String'];
+  email: Scalars['String'];
+  jobFunction: Scalars['String'];
+  organization: Scalars['String'];
+  phone: Scalars['String'];
+}>;
+
+export type RegisterEeTrialMutation = {
+  __typename?: 'mutation_root';
+  registerEETrial?: {
+    __typename?: 'RegisterEETrialResponse';
+    status?: string | null;
+    type?: string | null;
+    expiry_at?: any | null;
+    grace_at?: any | null;
+  } | null;
+};
+
 export type FetchAllSurveysDataQueryVariables = Exact<{
   currentTime: Scalars['timestamptz'];
 }>;

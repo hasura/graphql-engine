@@ -692,6 +692,7 @@ library
 
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
+                     , Hasura.CredentialCache
                      , Hasura.Logging
                      , Hasura.HTTP
                      , Hasura.PingSources
@@ -807,6 +808,7 @@ library
                      , Hasura.RQL.Types.Common
                      , Hasura.RQL.Types.ComputedField
                      , Hasura.RQL.Types.CustomTypes
+                     , Hasura.RQL.Types.EECredentials
                      , Hasura.RQL.Types.Endpoint
                      , Hasura.RQL.Types.Endpoint.Trie
                      , Hasura.RQL.Types.EventTrigger

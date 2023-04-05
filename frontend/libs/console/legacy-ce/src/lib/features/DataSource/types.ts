@@ -109,10 +109,13 @@ export type GetTablesListAsTreeProps = {
 
 export type ReleaseType = 'GA' | 'Beta' | 'Alpha' | 'disabled';
 
-export type DriverInfoResponse = {
+export type DriverInfo = {
   name: SupportedDrivers;
   displayName: string;
   release: ReleaseType;
+  native?: boolean;
+  available?: boolean;
+  enterprise?: boolean;
 };
 
 export type GetTableRowsProps = {

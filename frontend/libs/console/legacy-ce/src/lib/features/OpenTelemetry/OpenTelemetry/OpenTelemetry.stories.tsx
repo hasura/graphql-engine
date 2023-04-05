@@ -1,7 +1,7 @@
+import * as React from 'react';
 import type { ComponentPropsWithoutRef } from 'react';
 import type { ComponentStory, ComponentMeta } from '@storybook/react';
 
-import * as React from 'react';
 import { expect } from '@storybook/jest';
 import { useEffect, useState } from 'react';
 import { action } from '@storybook/addon-actions';
@@ -9,6 +9,7 @@ import { waitFor, within } from '@storybook/testing-library';
 
 import { defaultValues as defaultFormValues } from './components/Form/schema';
 import { OpenTelemetry } from './OpenTelemetry';
+import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 
 // --------------------------------------------------
 // NOT TESTED
@@ -20,6 +21,7 @@ import { OpenTelemetry } from './OpenTelemetry';
 export default {
   title: 'Features/OpenTelemetry/OpenTelemetry',
   component: OpenTelemetry,
+  decorators: [ReactQueryDecorator()],
 } as ComponentMeta<typeof OpenTelemetry>;
 
 // -------------------------------------------------------------------------------------------------
@@ -40,35 +42,58 @@ export const Disabled: ComponentStory<typeof OpenTelemetry> = args => {
 
 Disabled.storyName = '💠 Disabled';
 
+// -------------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------
+// DISABLED WITHOUT LICENSE STORY
+// #region
+// -------------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------
+
+// --------------------------------------------------
+// STORY DEFINITION
+// --------------------------------------------------
+export const DisabledWithoutLicense: ComponentStory<
+  typeof OpenTelemetry
+> = args => {
+  return <OpenTelemetry {...args} />;
+};
+
+DisabledWithoutLicense.storyName = '💠 Disabled without license';
+
 // --------------------------------------------------
 // PROPS
 // --------------------------------------------------
 // Explicitly defining the story' args allows leveraging TS protection over them since story.args is
 // a Partial<Props> and then developers cannot know that they break the story by changing the
 // component props
-const disabledArgs: ComponentPropsWithoutRef<typeof OpenTelemetry> = {
-  isFirstTimeSetup: true,
+const disabledWithLicenseArgs: ComponentPropsWithoutRef<typeof OpenTelemetry> =
+  {
+    isFirstTimeSetup: true,
 
-  setOpenTelemetry: (...args) => {
-    action('setOpenTelemetry')(...args);
+    setOpenTelemetry: (...args) => {
+      action('setOpenTelemetry')(...args);
 
-    // Fake the server loading
-    return new Promise(resolve => setTimeout(resolve, 1000));
-  },
+      // Fake the server loading
+      return new Promise(resolve => setTimeout(resolve, 1000));
+    },
 
-  skeletonMode: false,
-  metadataFormValues: {
-    enabled: false,
+    skeletonMode: false,
+    metadataFormValues: {
+      enabled: false,
 
-    headers: [],
-    endpoint: '',
-    batchSize: 512,
-    attributes: [],
-    dataType: ['traces'],
-    connectionType: 'http/protobuf',
-  },
-};
-Disabled.args = disabledArgs;
+      headers: [],
+      endpoint: '',
+      batchSize: 512,
+      attributes: [],
+      dataType: ['traces'],
+      connectionType: 'http/protobuf',
+    },
+
+    withoutLicense: true,
+  };
+DisabledWithoutLicense.args = disabledWithLicenseArgs;
 
 // #endregion
 

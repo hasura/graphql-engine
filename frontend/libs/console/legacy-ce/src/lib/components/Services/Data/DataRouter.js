@@ -1,41 +1,41 @@
-import React from 'react';
-import { Route, IndexRedirect } from 'react-router';
+import { IndexRedirect, Route } from 'react-router';
 
-import globals from '../../../Globals';
 import { SERVER_CONSOLE_MODE } from '../../../constants';
+import globals from '../../../Globals';
 
 import {
-  schemaConnector,
-  rawSQLConnector,
   addExistingTableViewConnector,
   addTableConnector,
+  ConnectedCreateDataSourcePage,
+  ConnectedDatabaseManagePage,
+  dataPageConnector,
+  FunctionPermissions,
+  functionWrapperConnector,
+  migrationsConnector,
+  ModifyCustomFunction,
   modifyViewConnector,
+  permissionsConnector,
+  permissionsSummaryConnector,
+  rawSQLConnector,
   relationshipsConnector,
   relationshipsViewConnector,
-  permissionsConnector,
-  dataPageConnector,
-  migrationsConnector,
-  functionWrapperConnector,
-  permissionsSummaryConnector,
-  ModifyCustomFunction,
-  FunctionPermissions,
-  ConnectedDatabaseManagePage,
-  ConnectedCreateDataSourcePage,
+  schemaConnector,
 } from '.';
-
+import { Connect } from '../../../features/ConnectDB';
+import { ConnectUIContainer } from '../../../features/ConnectDBRedesign';
+import { ConnectDatabaseRouteWrapper } from '../../../features/ConnectDBRedesign/ConnectDatabase.route';
+import { ManageDatabaseContainer } from '../../../features/Data';
+import { ManageTable } from '../../../features/Data/ManageTable';
+import { setDriver } from '../../../dataSources';
 import { exportMetadata } from '../../../metadata/actions';
+import { getSourcesFromMetadata } from '../../../metadata/selector';
+import { UPDATE_CURRENT_DATA_SOURCE } from './DataActions';
 import ConnectedDataSourceContainer from './DataSourceContainer';
 import ConnectDatabase from './DataSources/ConnectDatabase';
-import { setDriver } from '../../../dataSources';
-import { UPDATE_CURRENT_DATA_SOURCE } from './DataActions';
-import { getSourcesFromMetadata } from '../../../metadata/selector';
-import { ManageDatabaseContainer } from '../../../features/Data';
-import { Connect } from '../../../features/ConnectDB';
+import { TableBrowseRowsContainer } from './TableBrowseRows/TableBrowseRowsContainer';
+import { TableEditItemContainer } from './TableEditItem/TableEditItemContainer';
 import { TableInsertItemContainer } from './TableInsertItem/TableInsertItemContainer';
 import { ModifyTableContainer } from './TableModify/ModifyTableContainer';
-import { TableEditItemContainer } from './TableEditItem/TableEditItemContainer';
-import { TableBrowseRowsContainer } from './TableBrowseRows/TableBrowseRowsContainer';
-import { ManageTable } from '../../../features/Data/ManageTable';
 
 const makeDataRouter = (
   connect,
@@ -56,6 +56,9 @@ const makeDataRouter = (
 
       <Route path="v2">
         <Route path="manage">
+          <Route path="connect" component={ConnectDatabaseRouteWrapper} />
+          <Route path="database/add" component={ConnectUIContainer} />
+          <Route path="database/edit" component={ConnectUIContainer} />
           <Route path="table" component={ManageTable}>
             <IndexRedirect to="modify" />
             <Route path=":operation" component={ManageTable} />

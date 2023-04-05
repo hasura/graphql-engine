@@ -3,7 +3,7 @@ import { generateGraphQLCustomizationInfo } from '../../GraphQLCustomization/uti
 import { BigQueryConnectionSchema } from '../schema';
 import { cleanEmpty } from '../../ConnectPostgresWidget/utils/helpers';
 
-export const generatePostgresRequestPayload = ({
+export const generateBigQueryRequestPayload = ({
   driver,
   values,
 }: {

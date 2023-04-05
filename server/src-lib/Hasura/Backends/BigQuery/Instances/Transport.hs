@@ -5,7 +5,9 @@ module Hasura.Backends.BigQuery.Instances.Transport () where
 import Control.Monad.Trans.Control
 import Data.Aeson qualified as J
 import Hasura.Backends.BigQuery.Instances.Execute ()
+import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Base.Error
+import Hasura.CredentialCache
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Logging
@@ -49,13 +51,14 @@ runQuery ::
   RootFieldAlias ->
   UserInfo ->
   L.Logger L.Hasura ->
+  Maybe (CredentialCache AgentLicenseKey) ->
   SourceConfig 'BigQuery ->
   OnBaseMonad IdentityT (Maybe (AnyBackend ExecutionStats), EncJSON) ->
   Maybe Text ->
   ResolvedConnectionTemplate 'BigQuery ->
   -- | Also return the time spent in the PG query; for telemetry.
   m (DiffTime, EncJSON)
-runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql _ = do
+runQuery reqId query fieldName _userInfo logger _ _sourceConfig tx genSql _ = do
   -- log the generated SQL and the graphql query
   -- FIXME: fix logging by making logQueryLog expect something backend agnostic!
   logQueryLog logger $ mkQueryLog (QueryLogKindDatabase Nothing) query fieldName genSql reqId
@@ -71,9 +74,10 @@ runQueryExplain ::
     MonadError QErr m,
     MonadTrace m
   ) =>
+  Maybe (CredentialCache AgentLicenseKey) ->
   DBStepInfo 'BigQuery ->
   m EncJSON
-runQueryExplain (DBStepInfo _ _ _ action _) = fmap arResult (run action)
+runQueryExplain _ (DBStepInfo _ _ _ action _) = fmap arResult (run action)
 
 runMutation ::
   ( MonadError QErr m
@@ -83,6 +87,7 @@ runMutation ::
   RootFieldAlias ->
   UserInfo ->
   L.Logger L.Hasura ->
+  Maybe (CredentialCache AgentLicenseKey) ->
   SourceConfig 'BigQuery ->
   OnBaseMonad IdentityT EncJSON ->
   Maybe Text ->
@@ -90,7 +95,7 @@ runMutation ::
   -- | Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
   m (DiffTime, EncJSON)
-runMutation _reqId _query _fieldName _userInfo _logger _sourceConfig _tx _genSql _ =
+runMutation _reqId _query _fieldName _userInfo _logger _ _sourceConfig _tx _genSql _ =
   -- do
   throw500 "BigQuery does not support mutations!"
 

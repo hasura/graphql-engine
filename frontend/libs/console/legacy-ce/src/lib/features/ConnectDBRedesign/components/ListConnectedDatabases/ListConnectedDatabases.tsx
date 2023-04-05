@@ -14,7 +14,6 @@ import { useMetadata } from '../../../MetadataAPI';
 import _push from '../../../../components/Services/Data/push';
 import { useReloadSource } from '../../hooks/useReloadSource';
 import { useDropSource } from '../../hooks/useDropSource';
-import { getRoute } from '../../../../utils/getDataRoute';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import Skeleton from 'react-loading-skeleton';
 import { useInconsistentSources } from '../../hooks/useInconsistentSources';
@@ -129,12 +128,7 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
   const columns = ['database', 'driver', '', ''];
 
   const rowData = (databaseList ?? []).map((databaseItem, index) => [
-    <a
-      href={getRoute().database(databaseItem.dataSourceName)}
-      className="text-secondary"
-    >
-      {databaseItem.dataSourceName}
-    </a>,
+    <div>{databaseItem.dataSourceName}</div>,
     databaseItem.driver,
     isDatabaseVersionLoading || isInconsistentFetchCallLoading ? (
       <Skeleton />
@@ -178,7 +172,7 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
         onClick={() => {
           dispatch(
             _push(
-              `/data/v2/database/edit?database=${databaseItem.dataSourceName}`
+              `/data/v2/manage/database/edit?driver=${databaseItem.driver}&database=${databaseItem.dataSourceName}`
             )
           );
         }}

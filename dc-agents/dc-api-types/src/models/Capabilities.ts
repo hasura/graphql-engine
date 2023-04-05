@@ -6,6 +6,7 @@ import type { ComparisonCapabilities } from './ComparisonCapabilities';
 import type { DataSchemaCapabilities } from './DataSchemaCapabilities';
 import type { DatasetCapabilities } from './DatasetCapabilities';
 import type { ExplainCapabilities } from './ExplainCapabilities';
+import type { Licensing } from './Licensing';
 import type { MetricsCapabilities } from './MetricsCapabilities';
 import type { MutationCapabilities } from './MutationCapabilities';
 import type { QueryCapabilities } from './QueryCapabilities';
@@ -19,6 +20,7 @@ export type Capabilities = {
   data_schema?: DataSchemaCapabilities;
   datasets?: DatasetCapabilities;
   explain?: ExplainCapabilities;
+  licensing?: Licensing;
   metrics?: MetricsCapabilities;
   mutations?: MutationCapabilities;
   queries?: QueryCapabilities;

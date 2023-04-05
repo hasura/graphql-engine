@@ -27,7 +27,9 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Environment qualified as E
 import Data.HashSet qualified as Set
 import Database.PG.Query qualified as PG
+import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Base.Error
+import Hasura.CredentialCache
 import Hasura.Eventing.Common (LockedEventsCtx)
 import Hasura.Eventing.EventTrigger
 import Hasura.GraphQL.Execute.Subscription.Options
@@ -130,7 +132,8 @@ data AppEnv = AppEnv
     -- as this thread is initialised there before creating the `AppStateRef`. But eventually we need
     -- to do it for the Enterprise version.
     appEnvSchemaPollInterval :: OptionalInterval,
-    appEnvCheckFeatureFlag :: CheckFeatureFlag
+    appEnvCheckFeatureFlag :: CheckFeatureFlag,
+    appEnvLicenseKeyCache :: Maybe (CredentialCache AgentLicenseKey)
   }
 
 -- | Represents the Dynamic Hasura State, these field are mutable and can be changed

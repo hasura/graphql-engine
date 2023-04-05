@@ -68,6 +68,7 @@ import Harness.WebSockets (responseListener)
 import Hasura.App qualified as App
 import Hasura.Logging (Hasura)
 import Hasura.Prelude
+import Hasura.Server.App (CEConsoleType (OSSConsole))
 import Hasura.Server.Init (PostgresConnInfo (..), ServeOptions (..), unsafePort)
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
@@ -412,6 +413,7 @@ runApp serveOptions = do
           appCtx
           initTime
           Nothing
+          OSSConsole
           ekgStore
 
 -- | Used only for 'runApp' above.

@@ -42,8 +42,10 @@ import Data.Time.Clock qualified as TC
 import Data.Word (Word16)
 import GHC.AssertNF.CPP
 import Hasura.App.State
+import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
 import Hasura.Base.Error
+import Hasura.CredentialCache
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Execute.Action qualified as EA
@@ -417,13 +419,14 @@ onStart ::
     ProvidesNetwork m
   ) =>
   HashSet (L.EngineLogType L.Hasura) ->
+  Maybe (CredentialCache AgentLicenseKey) ->
   WSServerEnv impl ->
   WSConn ->
   ShouldCaptureQueryVariables ->
   StartMsg ->
   WS.WSActions WSConnData ->
   m ()
-onStart enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg opId q) onMessageActions = catchAndIgnore $ do
+onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables (StartMsg opId q) onMessageActions = catchAndIgnore $ do
   timerTot <- startTimer
   op <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
   let opName = _grOperationName q
@@ -532,12 +535,13 @@ onStart enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg opId q
                                 fieldName
                                 userInfo
                                 logger
+                                agentLicenseKey
                                 sourceConfig
                                 (fmap (statsToAnyBackend @b) tx)
                                 genSql
                                 resolvedConnectionTemplate
                         finalResponse <-
-                          RJ.processRemoteJoins requestId logger env reqHdrs userInfo resp remoteJoins q
+                          RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q
                         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
                       E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
                         logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
@@ -547,7 +551,7 @@ onStart enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg opId q
                         (time, (resp, _)) <- doQErr $ do
                           (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                           finalResponse <-
-                            RJ.processRemoteJoins requestId logger env reqHdrs userInfo resp remoteJoins q
+                            RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q
                           pure (time, (finalResponse, hdrs))
                         pure $ AnnotatedResponsePart time Telem.Empty resp []
                       E.ExecStepRaw json -> do
@@ -609,19 +613,20 @@ onStart enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg opId q
                                 fieldName
                                 userInfo
                                 logger
+                                agentLicenseKey
                                 sourceConfig
                                 (fmap EB.arResult tx)
                                 genSql
                                 resolvedConnectionTemplate
                         finalResponse <-
-                          RJ.processRemoteJoins requestId logger env reqHdrs userInfo resp remoteJoins q
+                          RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q
                         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
                       E.ExecStepAction actionExecPlan _ remoteJoins -> do
                         logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
                         (time, (resp, hdrs)) <- doQErr $ do
                           (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                           finalResponse <-
-                            RJ.processRemoteJoins requestId logger env reqHdrs userInfo resp remoteJoins q
+                            RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q
                           pure (time, (finalResponse, hdrs))
                         pure $ AnnotatedResponsePart time Telem.Empty resp $ fromMaybe [] hdrs
                       E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
@@ -786,6 +791,7 @@ onStart enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg opId q
           RJ.processRemoteJoins
             requestId
             logger
+            agentLicenseKey
             env
             reqHdrs
             userInfo
@@ -1026,8 +1032,9 @@ onMessage ::
   WSConn ->
   LBS.ByteString ->
   WS.WSActions WSConnData ->
+  Maybe (CredentialCache AgentLicenseKey) ->
   m ()
-onMessage enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions =
+onMessage enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions agentLicenseKey =
   Tracing.newTrace (_wseTraceSamplingPolicy serverEnv) "websocket" do
     case J.eitherDecode msgRaw of
       Left e -> do
@@ -1051,7 +1058,7 @@ onMessage enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions =
                 if _mcAnalyzeQueryVariables (scMetricsConfig schemaCache)
                   then CaptureQueryVariables
                   else DoNotCaptureQueryVariables
-          onStart enabledLogTypes serverEnv wsConn shouldCaptureVariables startMsg onMessageActions
+          onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables startMsg onMessageActions
         CMStop stopMsg -> onStop serverEnv wsConn stopMsg
         -- specfic to graphql-ws
         CMPing mPayload -> onPing wsConn mPayload

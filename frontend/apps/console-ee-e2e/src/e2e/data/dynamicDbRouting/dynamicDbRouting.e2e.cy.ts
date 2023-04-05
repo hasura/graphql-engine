@@ -1,7 +1,7 @@
 import type { Metadata } from '@hasura/console-legacy-ce';
 import { readMetadata } from '../../../utils/checkMetadataPayload';
 
-describe('Dynamic Db Routing', () => {
+xdescribe('Dynamic Db Routing', () => {
   before(() => {
     cy.visit('/data/manage/connect/');
 

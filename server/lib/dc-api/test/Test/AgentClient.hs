@@ -11,6 +11,7 @@ module Test.AgentClient
     getAgentClientConfig,
     AgentClientT,
     runAgentClientT,
+    AgentAuthKey (..),
   )
 where
 
@@ -55,20 +56,29 @@ newtype AgentIOClient = AgentIOClient (forall m. MonadIO m => Client m (NamedRou
 configHeader :: HeaderName
 configHeader = CI.mk "X-Hasura-DataConnector-Config"
 
-mkHttpClientManager :: MonadIO m => SensitiveOutputHandling -> m HttpClient.Manager
-mkHttpClientManager sensitiveOutputHandling =
-  let settings = HttpClient.defaultManagerSettings {HttpClient.managerModifyRequest = pure . addHeaderRedaction sensitiveOutputHandling}
+newtype AgentAuthKey = AgentAuthKey {getAgentAuthKey :: ByteString}
+
+eeLicenseKeyHeader :: HeaderName
+eeLicenseKeyHeader = CI.mk "X-Hasura-License"
+
+mkHttpClientManager :: MonadIO m => SensitiveOutputHandling -> Maybe AgentAuthKey -> m HttpClient.Manager
+mkHttpClientManager sensitiveOutputHandling agentAuthKey =
+  let modifyRequest = addHeaderRedaction sensitiveOutputHandling . maybe id addLicenseKeyHeader agentAuthKey
+      settings = HttpClient.defaultManagerSettings {HttpClient.managerModifyRequest = pure . modifyRequest}
    in liftIO $ HttpClient.newManager settings
+
+addLicenseKeyHeader :: AgentAuthKey -> HttpClient.Request -> HttpClient.Request
+addLicenseKeyHeader (AgentAuthKey eeKey) r = r {HttpClient.requestHeaders = (eeLicenseKeyHeader, eeKey) : HttpClient.requestHeaders r}
 
 addHeaderRedaction :: SensitiveOutputHandling -> HttpClient.Request -> HttpClient.Request
 addHeaderRedaction sensitiveOutputHandling request =
   case sensitiveOutputHandling of
     AllowSensitiveOutput -> request
-    DisallowSensitiveOutput -> request {HttpClient.redactHeaders = HttpClient.redactHeaders request <> Set.singleton configHeader}
+    DisallowSensitiveOutput -> request {HttpClient.redactHeaders = HttpClient.redactHeaders request <> Set.fromList [configHeader, eeLicenseKeyHeader]}
 
-mkAgentIOClient :: MonadIO m => SensitiveOutputHandling -> BaseUrl -> m AgentIOClient
-mkAgentIOClient sensitiveOutputHandling agentBaseUrl = do
-  manager <- mkHttpClientManager sensitiveOutputHandling
+mkAgentIOClient :: MonadIO m => SensitiveOutputHandling -> Maybe AgentAuthKey -> BaseUrl -> m AgentIOClient
+mkAgentIOClient sensitiveOutputHandling agentAuthKey agentBaseUrl = do
+  manager <- mkHttpClientManager sensitiveOutputHandling agentAuthKey
   let clientEnv = mkClientEnv manager agentBaseUrl
   pure $ AgentIOClient $ hoistClient (Proxy @(NamedRoutes API.Routes)) (\m -> liftIO (runClientM m clientEnv >>= either throwIO pure)) API.apiClient
 
@@ -80,9 +90,9 @@ data AgentClientConfig = AgentClientConfig
     _accSensitiveOutputHandling :: SensitiveOutputHandling
   }
 
-mkAgentClientConfig :: MonadIO m => SensitiveOutputHandling -> BaseUrl -> m AgentClientConfig
-mkAgentClientConfig sensitiveOutputHandling agentBaseUrl = do
-  manager <- mkHttpClientManager sensitiveOutputHandling
+mkAgentClientConfig :: MonadIO m => SensitiveOutputHandling -> Maybe AgentAuthKey -> BaseUrl -> m AgentClientConfig
+mkAgentClientConfig sensitiveOutputHandling agentAuthKey agentBaseUrl = do
+  manager <- mkHttpClientManager sensitiveOutputHandling agentAuthKey
   pure $ AgentClientConfig agentBaseUrl manager sensitiveOutputHandling
 
 -------------------------------------------------------------------------------

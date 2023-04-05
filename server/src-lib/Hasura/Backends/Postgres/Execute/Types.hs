@@ -24,6 +24,8 @@ module Hasura.Backends.Postgres.Execute.Types
     applyConnectionTemplateResolverNonAdmin,
     pgResolveConnectionTemplate,
     resolvePostgresConnectionTemplate,
+    sourceConfigNumReadReplicas,
+    sourceConfigConnectonTemplateEnabled,
   )
 where
 
@@ -32,6 +34,7 @@ import Control.Monad.Trans.Control (MonadBaseControl (..))
 import Data.Aeson.Extended qualified as J
 import Data.CaseInsensitive qualified as CI
 import Data.HashMap.Internal.Strict qualified as Map
+import Data.List.NonEmpty qualified as List.NonEmpty
 import Database.PG.Query qualified as PG
 import Database.PG.Query.Connection qualified as PG
 import Hasura.Backends.Postgres.Connection.Settings (ConnectionTemplate (..), PostgresConnectionSetMemberName)
@@ -195,8 +198,7 @@ connectionTemplateConfigResolver = \case
 
 -- | A hook to resolve connection template
 newtype ConnectionTemplateResolver = ConnectionTemplateResolver
-  { -- | Runs the connection template resolver. This will return Nothing if
-    -- there is no Connection template defined for the source.
+  { -- | Runs the connection template resolver.
     _runResolver ::
       forall m.
       (MonadError QErr m) =>
@@ -317,3 +319,14 @@ resolvePostgresConnectionTemplate (ConnectionTemplate _templateSrc connectionTem
       let serializedErr = Kriti.serialize err
        in throw400WithDetail TemplateResolutionFailed ("Connection template evaluation failed: " <> Kriti._message serializedErr) (J.toJSON $ serializedErr)
     Right val -> runAesonParser (J.parseJSON @PostgresResolvedConnectionTemplate) val
+
+sourceConfigNumReadReplicas :: PGSourceConfig -> Int
+sourceConfigNumReadReplicas =
+  maybe 0 List.NonEmpty.length . _pscReadReplicaConnInfos
+
+sourceConfigConnectonTemplateEnabled :: PGSourceConfig -> Bool
+sourceConfigConnectonTemplateEnabled pgSourceConfig =
+  case _pscConnectionTemplateConfig pgSourceConfig of
+    ConnTemplate_NotApplicable -> False
+    ConnTemplate_NotConfigured -> False
+    ConnTemplate_Resolver _ -> True

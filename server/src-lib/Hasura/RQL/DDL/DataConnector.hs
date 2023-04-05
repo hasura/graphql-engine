@@ -135,7 +135,7 @@ checkAgentAvailability url = do
   manager <- askHTTPManager
   logger <- asks getter
   res <- runExceptT $ do
-    capabilitiesU <- (ignoreTraceT . flip runAgentClientT (AgentClientContext logger url manager Nothing) $ genericClient @API.Routes // API._capabilities)
+    capabilitiesU <- (ignoreTraceT . flip runAgentClientT (AgentClientContext logger url manager Nothing Nothing) $ genericClient @API.Routes // API._capabilities)
     API.capabilitiesCase
       (Error.throw500 "Capabilities request failed unexpectedly")
       pure

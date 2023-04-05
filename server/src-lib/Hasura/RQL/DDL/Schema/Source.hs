@@ -485,7 +485,7 @@ querySourceSchema ::
   m API.SchemaResponse
 querySourceSchema logger manager timeout uri sourceName transformedConfig =
   Tracing.ignoreTraceT
-    . flip Agent.Client.runAgentClientT (Agent.Client.AgentClientContext logger uri manager (DC.Types.sourceTimeoutMicroseconds <$> timeout))
+    . flip Agent.Client.runAgentClientT (Agent.Client.AgentClientContext logger uri manager (DC.Types.sourceTimeoutMicroseconds <$> timeout) Nothing)
     $ schemaGuard =<< (Servant.Client.genericClient // API._schema) (Text.E.toTxt sourceName) transformedConfig
 
 schemaGuard :: MonadError QErr m => Union API.SchemaResponses -> m API.SchemaResponse

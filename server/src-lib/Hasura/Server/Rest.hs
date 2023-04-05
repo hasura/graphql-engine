@@ -14,7 +14,9 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Data.Text.Extended
 import Data.These (These (..))
+import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Base.Error
+import Hasura.CredentialCache
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Logging (MonadExecutionLog, MonadQueryLog)
@@ -118,6 +120,7 @@ runCustomEndpoint ::
   ReadOnlyMode ->
   PrometheusMetrics ->
   L.Logger L.Hasura ->
+  Maybe (CredentialCache AgentLicenseKey) ->
   RequestId ->
   UserInfo ->
   [HTTP.Header] ->
@@ -125,7 +128,7 @@ runCustomEndpoint ::
   RestRequest EndpointMethod ->
   EndpointTrie GQLQueryWithText ->
   m (HttpLogGraphQLInfo, HttpResponse EncJSON)
-runCustomEndpoint env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger requestId userInfo reqHeaders ipAddress RestRequest {..} endpoints = do
+runCustomEndpoint env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agentLicenseKey requestId userInfo reqHeaders ipAddress RestRequest {..} endpoints = do
   -- First match the path to an endpoint.
   case matchPath reqMethod (T.split (== '/') reqPath) endpoints of
     MatchFound (queryx :: EndpointMetadata GQLQueryWithText) matches ->
@@ -155,7 +158,7 @@ runCustomEndpoint env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics
               -- with the query string from the schema cache, and pass it
               -- through to the /v1/graphql endpoint.
               (httpLoggingMetadata, handlerResp) <- do
-                (gqlOperationLog, resp) <- GH.runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger requestId userInfo ipAddress reqHeaders E.QueryHasura (mkPassthroughRequest queryx resolvedVariables)
+                (gqlOperationLog, resp) <- GH.runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agentLicenseKey requestId userInfo ipAddress reqHeaders E.QueryHasura (mkPassthroughRequest queryx resolvedVariables)
                 let httpLoggingGQInfo = (CommonHttpLogMetadata RequestModeNonBatchable Nothing, (PQHSetSingleton (gqolParameterizedQueryHash gqlOperationLog)))
                 return (httpLoggingGQInfo, fst <$> resp)
               case sequence handlerResp of

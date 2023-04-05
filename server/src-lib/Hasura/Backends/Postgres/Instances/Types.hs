@@ -168,3 +168,5 @@ instance
   where
   type SourceConfig ('Postgres pgKind) = Postgres.PGSourceConfig
   type SourceConnConfiguration ('Postgres pgKind) = Postgres.PostgresConnConfiguration
+  sourceConfigNumReadReplicas = Postgres.sourceConfigNumReadReplicas
+  sourceConfigConnectonTemplateEnabled = Postgres.sourceConfigConnectonTemplateEnabled

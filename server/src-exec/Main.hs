@@ -27,6 +27,7 @@ import Hasura.GC qualified as GC
 import Hasura.Logging (Hasura, LogLevel (..), defaultEnabledEngineLogTypes)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema
+import Hasura.Server.App (CEConsoleType (OSSConsole))
 import Hasura.Server.Init
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Migrate (downgradeCatalog)
@@ -116,7 +117,7 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
         runAppM appEnv do
           appStateRef <- initialiseAppContext env serveOptions appInit
           lowerManagedT $
-            runHGEServer (const $ pure ()) appStateRef initTime Nothing ekgStore
+            runHGEServer (const $ pure ()) appStateRef initTime Nothing OSSConsole ekgStore
     HCExport -> do
       metadataConnection <- initMetadataConnectionInfo env metadataDbUrl rci
       res <- runTxWithMinimalPool metadataConnection fetchMetadataFromCatalog

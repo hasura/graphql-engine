@@ -69,10 +69,17 @@ export {
   addUserProperties,
   programmaticallyTraceError,
   REDACT_EVERYTHING,
+  InitializeTelemetry,
 } from './lib/features/Analytics';
 export { CloudOnboarding } from './lib/features/CloudOnboarding';
 export { prefetchSurveysData } from './lib/features/Surveys';
 export { prefetchOnboardingData } from './lib/features/CloudOnboarding/OnboardingWizard';
+export {
+  prefetchEELicenseInfo,
+  NavbarButton as EntepriseNavbarButton,
+  WithEELiteAccess,
+  useEELiteAccess,
+} from './lib/features/EETrial';
 export { default as PageNotFound } from './lib/components/Error/PageNotFound';
 export * from './lib/new-components/Button/';
 export * from './lib/new-components/Tooltip/';
@@ -130,6 +137,10 @@ export {
 export { ReactQueryProvider, reactQueryClient } from './lib/lib/reactQuery';
 
 export { PrometheusSettings } from './lib/features/Prometheus';
+export { QueryResponseCaching } from './lib/features/QueryResponseCaching';
+export { MultipleAdminSecretsPage } from './lib/features/EETrial';
+export { MultipleJWTSecretsPage } from './lib/features/EETrial';
+export { SingleSignOnPage } from './lib/features/EETrial';
 
 export { OpenTelemetryFeature } from './lib/features/OpenTelemetry';
 

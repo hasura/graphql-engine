@@ -3,6 +3,8 @@ import { RouteComponentProps } from 'react-router';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { rest, DelayMode } from 'msw';
 import { QueryClient, QueryClientProvider } from 'react-query';
+
+import { eeLicenseInfo } from '../../../features/EETrial/mocks/http';
 import Sidebar, { Metadata } from './Sidebar';
 import { HasuraMetadataV3 } from '../../../metadata/types';
 
@@ -153,7 +155,7 @@ export const MetadataOk: ComponentStory<typeof Sidebar> = args => {
 MetadataOk.storyName = '💠 Demo Metadata Ok';
 MetadataOk.args = generateArgs();
 MetadataOk.parameters = {
-  msw: mockHandlers({}),
+  msw: [...mockHandlers({}), eeLicenseInfo.active],
 };
 
 export const MetadataKo: ComponentStory<typeof Sidebar> = args => {
@@ -162,7 +164,7 @@ export const MetadataKo: ComponentStory<typeof Sidebar> = args => {
 MetadataKo.storyName = '💠 Demo Metadata Ko';
 MetadataKo.args = generateArgs(false);
 MetadataKo.parameters = {
-  msw: mockHandlers({}),
+  msw: [...mockHandlers({}), eeLicenseInfo.active],
 };
 
 export const LogoutActive: ComponentStory<typeof Sidebar> = args => {
@@ -171,7 +173,7 @@ export const LogoutActive: ComponentStory<typeof Sidebar> = args => {
 LogoutActive.storyName = '💠 Demo Pro Logout Active';
 LogoutActive.args = generateArgs();
 LogoutActive.parameters = {
-  msw: mockHandlers({}),
+  msw: [...mockHandlers({}), eeLicenseInfo.active],
   adminSecretSet: true,
 };
 
@@ -185,6 +187,19 @@ ProLiteLoading.parameters = {
   consoleType: 'pro-lite',
 };
 
+export const ProLitePrometheusWithoutLicense: ComponentStory<
+  typeof Sidebar
+> = args => {
+  return <Sidebar {...args} />;
+};
+ProLitePrometheusWithoutLicense.storyName =
+  '💠 Demo Pro Lite Prometheus Without License';
+ProLitePrometheusWithoutLicense.args = generateArgs();
+ProLitePrometheusWithoutLicense.parameters = {
+  msw: [...mockHandlers({ prometheusEnabled: true }), eeLicenseInfo.none],
+  consoleType: 'pro-lite',
+};
+
 export const ProLitePrometheusEnabled: ComponentStory<
   typeof Sidebar
 > = args => {
@@ -193,7 +208,7 @@ export const ProLitePrometheusEnabled: ComponentStory<
 ProLitePrometheusEnabled.storyName = '💠 Demo Pro Lite Prometheus Enabled';
 ProLitePrometheusEnabled.args = generateArgs();
 ProLitePrometheusEnabled.parameters = {
-  msw: mockHandlers({ prometheusEnabled: true }),
+  msw: [...mockHandlers({ prometheusEnabled: true }), eeLicenseInfo.active],
   consoleType: 'pro-lite',
 };
 
@@ -205,7 +220,7 @@ export const ProLitePrometheusDisabled: ComponentStory<
 ProLitePrometheusDisabled.storyName = '💠 Demo Pro Lite Prometheus Disabled';
 ProLitePrometheusDisabled.args = generateArgs();
 ProLitePrometheusDisabled.parameters = {
-  msw: mockHandlers({ prometheusEnabled: false }),
+  msw: [...mockHandlers({ prometheusEnabled: false }), eeLicenseInfo.active],
   consoleType: 'pro-lite',
 };
 
@@ -215,7 +230,20 @@ export const ProLiteError: ComponentStory<typeof Sidebar> = args => {
 ProLiteError.storyName = '💠 Demo Pro Lite Prometheus Error';
 ProLiteError.args = generateArgs();
 ProLiteError.parameters = {
-  msw: mockHandlers({ status: 500 }),
+  msw: [...mockHandlers({ status: 500 }), eeLicenseInfo.active],
+  consoleType: 'pro-lite',
+};
+
+export const ProLiteOpenTelemetryWithoutLicense: ComponentStory<
+  typeof Sidebar
+> = args => {
+  return <Sidebar {...args} />;
+};
+ProLiteOpenTelemetryWithoutLicense.storyName =
+  '💠 Demo Pro Lite OpenTelemetry Without License';
+ProLiteOpenTelemetryWithoutLicense.args = generateArgs();
+ProLiteOpenTelemetryWithoutLicense.parameters = {
+  msw: [...mockHandlers({ openTelemetryEnabled: false }), eeLicenseInfo.none],
   consoleType: 'pro-lite',
 };
 
@@ -228,7 +256,7 @@ ProLiteOpenTelemetryEnabled.storyName =
   '💠 Demo Pro Lite OpenTelemetry Enabled';
 ProLiteOpenTelemetryEnabled.args = generateArgs();
 ProLiteOpenTelemetryEnabled.parameters = {
-  msw: mockHandlers({ openTelemetryEnabled: true }),
+  msw: [...mockHandlers({ openTelemetryEnabled: true }), eeLicenseInfo.active],
   consoleType: 'pro-lite',
 };
 
@@ -241,6 +269,6 @@ ProLiteOpenTelemetryDisabled.storyName =
   '💠 Demo Pro Lite OpenTelemetry Disabled';
 ProLiteOpenTelemetryDisabled.args = generateArgs();
 ProLiteOpenTelemetryDisabled.parameters = {
-  msw: mockHandlers({ openTelemetryEnabled: false }),
+  msw: [...mockHandlers({ openTelemetryEnabled: false }), eeLicenseInfo.active],
   consoleType: 'pro-lite',
 };

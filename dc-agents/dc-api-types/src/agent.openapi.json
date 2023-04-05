@@ -507,6 +507,9 @@
           "explain": {
             "$ref": "#/components/schemas/ExplainCapabilities"
           },
+          "licensing": {
+            "$ref": "#/components/schemas/Licensing"
+          },
           "metrics": {
             "$ref": "#/components/schemas/MetricsCapabilities"
           },
@@ -703,6 +706,7 @@
       "ExplainCapabilities": {},
       "RawCapabilities": {},
       "DatasetCapabilities": {},
+      "Licensing": {},
       "ConfigSchemaResponse": {
         "nullable": false,
         "properties": {
