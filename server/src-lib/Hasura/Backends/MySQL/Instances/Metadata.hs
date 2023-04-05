@@ -3,6 +3,7 @@
 module Hasura.Backends.MySQL.Instances.Metadata () where
 
 import Hasura.Backends.MySQL.Connection qualified as MySQL
+import Hasura.Backends.MySQL.Schema.Introspection qualified as MySQL (listAllTables)
 import Hasura.Prelude
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (RETDoNothing))
 import Hasura.RQL.Types.Metadata.Backend
@@ -22,4 +23,5 @@ instance BackendMetadata 'MySQL where
   postDropSourceHook = MySQL.postDropSourceHook
   buildComputedFieldBooleanExp _ _ _ _ _ _ =
     error "buildComputedFieldBooleanExp: MySQL backend does not support this operation yet."
+  listAllTables = MySQL.listAllTables
   supportsBeingRemoteRelationshipTarget _ = False

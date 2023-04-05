@@ -7,6 +7,7 @@ import Control.Arrow.Extended
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Environment qualified as Env
+import Data.Has (Has)
 import Hasura.Base.Error
 import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata)
 import Hasura.Function.Cache
@@ -187,6 +188,15 @@ class
     (MonadIO m, MonadBaseControl IO m) =>
     SourceConfig b ->
     ExceptT QErr m (RecreateEventTriggers, SourceCatalogMigrationState)
+
+  -- | List all the tables on a given data source, including those not tracked
+  -- by Hasura. Primarily useful for user interfaces to allow untracked tables
+  -- to be tracked.
+  listAllTables ::
+    (CacheRM m, MonadBaseControl IO m, MetadataM m, MonadError QErr m, MonadIO m, MonadReader r m, Has (Logger Hasura) r, ProvidesNetwork m) =>
+    Env.Environment ->
+    SourceName ->
+    m [TableName b]
 
   validateLogicalModel ::
     (MonadIO m, MonadError QErr m) =>

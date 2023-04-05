@@ -76,6 +76,14 @@ schema =
       }
   ]
 
+untracked :: Schema.Table
+untracked =
+  (Schema.table "untracked")
+    { Schema.tableColumns =
+        [ Schema.column "anything" Schema.TStr
+        ]
+    }
+
 tests :: SpecWith TestEnvironment
 tests = do
   it "Returns the source tables" \testEnvironment -> do
@@ -101,6 +109,8 @@ tests = do
                 name: articles
               - dataset: #{schemaName}
                 name: authors
+              - dataset: #{schemaName}
+                name: untracked
             |]
           _ ->
             [interpolateYaml|
@@ -108,6 +118,18 @@ tests = do
                 name: articles
               - schema: #{schemaName}
                 name: authors
+              - schema: #{schemaName}
+                name: untracked
             |]
+
+    -- We now need a table that isn't tracked to make sure it's still returned
+    -- by the command.
+    case backendType of
+      "bigquery" -> BigQuery.createTable schemaName untracked
+      "pg" -> Postgres.createTable testEnvironment untracked
+      "citus" -> Citus.createTable testEnvironment untracked
+      "cockroach" -> Cockroach.createTable testEnvironment untracked
+      "mssql" -> Sqlserver.createTable testEnvironment untracked
+      b -> error ("Unknown backend: " <> b)
 
     shouldReturnYaml testEnvironment actual expected
