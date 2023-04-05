@@ -288,19 +288,28 @@ getFormattedTime tzM = do
 
 -- format = Format.iso8601DateFormat (Just "%H:%M:%S")
 
+-- | Creates a new 'LoggerCtx'.
+--
+-- The underlying 'LoggerSet' is bound to the 'ManagedT' context: when it exits,
+-- the log will be flushed and cleared regardless of whether it was exited
+-- properly or not ('ManagedT' uses 'bracket' underneath). This guarantees that
+-- the logs will always be flushed, even in case of error, avoiding a repeat of
+-- https://github.com/hasura/graphql-engine/issues/4772.
 mkLoggerCtx ::
   (MonadIO io, MonadBaseControl IO io) =>
   LoggerSettings ->
   Set.HashSet (EngineLogType impl) ->
   ManagedT io (LoggerCtx impl)
 mkLoggerCtx (LoggerSettings cacheTime tzM logLevel) enabledLogs = do
-  loggerSet <-
-    allocate
-      (liftIO $ FL.newStdoutLoggerSet FL.defaultBufSize)
-      (liftIO . FL.rmLoggerSet)
-  timeGetter <- liftIO $ bool (return $ getFormattedTime tzM) cachedTimeGetter cacheTime
-  return $ LoggerCtx loggerSet logLevel timeGetter enabledLogs
+  loggerSet <- allocate acquire release
+  timeGetter <- liftIO $ bool (pure $ getFormattedTime tzM) cachedTimeGetter cacheTime
+  pure $ LoggerCtx loggerSet logLevel timeGetter enabledLogs
   where
+    acquire = liftIO do
+      FL.newStdoutLoggerSet FL.defaultBufSize
+    release loggerSet = liftIO do
+      FL.flushLogStr loggerSet
+      FL.rmLoggerSet loggerSet
     cachedTimeGetter =
       Auto.mkAutoUpdate
         Auto.defaultUpdateSettings

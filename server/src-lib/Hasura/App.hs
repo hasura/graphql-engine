@@ -22,7 +22,6 @@ module Hasura.App
     -- * logging
     mkLoggers,
     mkPGLogger,
-    flushLogger,
 
     -- * basic connection info
     BasicConnectionInfo (..),
@@ -66,7 +65,6 @@ import Control.Monad.Catch
     MonadCatch,
     MonadMask,
     MonadThrow,
-    onException,
   )
 import Control.Monad.Morph (hoist)
 import Control.Monad.Stateless
@@ -166,7 +164,6 @@ import Network.Wai (Application)
 import Network.Wai.Handler.Warp qualified as Warp
 import Options.Applicative
 import Refined (unrefine)
-import System.Log.FastLogger qualified as FL
 import System.Metrics qualified as EKG
 import System.Metrics.Gauge qualified as EKG.Gauge
 import Text.Mustache.Compile qualified as M
@@ -229,13 +226,6 @@ mkLoggers enabledLogs logLevel = do
   let logger = mkLogger loggerCtx
       pgLogger = mkPGLogger logger
   pure $ Loggers loggerCtx logger pgLogger
-
--- | If an exception is thrown, and the process exits without the log buffer
--- being flushed, we will be missing some log lines (see:
--- https://github.com/hasura/graphql-engine/issues/4772). This function forces a
--- flush of the buffer.
-flushLogger :: MonadIO m => LoggerCtx impl -> m ()
-flushLogger = liftIO . FL.flushLogStr . _lcLoggerSet
 
 --------------------------------------------------------------------------------
 -- Basic connection info
@@ -380,7 +370,7 @@ data AppInit = AppInit
 -- processes and logging startup information. All of those are flagged with a
 -- comment marking them as a side-effect.
 initialiseAppEnv ::
-  (C.ForkableMonadIO m, MonadCatch m) =>
+  (C.ForkableMonadIO m) =>
   Env.Environment ->
   BasicConnectionInfo ->
   ServeOptions Hasura ->
@@ -390,7 +380,7 @@ initialiseAppEnv ::
   SamplingPolicy ->
   ManagedT m (AppInit, AppEnv)
 initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liveQueryHook serverMetrics prometheusMetrics traceSamplingPolicy = do
-  loggers@(Loggers loggerCtx logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
+  loggers@(Loggers _loggerCtx logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
 
   -- SIDE EFFECT: print a warning if no admin secret is set.
   when (null soAdminSecret) $
@@ -420,13 +410,12 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
   -- Migrate the catalog and fetch the metdata.
   metadataWithVersion <-
     lift $
-      flip onException (flushLogger loggerCtx) $
-        migrateCatalogAndFetchMetadata
-          logger
-          metadataDbPool
-          bciDefaultPostgres
-          soEnableMaintenanceMode
-          soExtensionsSchema
+      migrateCatalogAndFetchMetadata
+        logger
+        metadataDbPool
+        bciDefaultPostgres
+        soEnableMaintenanceMode
+        soExtensionsSchema
 
   -- Create the TLSAllowListRef and the HTTP Manager.
   let metadata = _mwrvMetadata metadataWithVersion
@@ -1033,13 +1022,12 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
 
   HasuraApp app actionSubState stopWsServer <-
     lift $
-      flip onException (flushLogger loggerCtx) $
-        mkWaiApp
-          setupHook
-          appStateRef
-          consoleType
-          ekgStore
-          wsServerEnv
+      mkWaiApp
+        setupHook
+        appStateRef
+        consoleType
+        ekgStore
+        wsServerEnv
 
   -- Log Warning if deprecated environment variables are used
   sources <- scSources <$> liftIO (getSchemaCache appStateRef)
