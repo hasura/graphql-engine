@@ -199,7 +199,7 @@ instance MonadReader r m => MonadReader r (CacheRWT m) where
   local f (CacheRWT m) = CacheRWT $ mapReaderT (local f) m
 
 instance (MonadEventLogCleanup m) => MonadEventLogCleanup (CacheRWT m) where
-  runLogCleaner conf = lift $ runLogCleaner conf
+  runLogCleaner sourceCache conf = lift $ runLogCleaner sourceCache conf
   generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
   updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
 

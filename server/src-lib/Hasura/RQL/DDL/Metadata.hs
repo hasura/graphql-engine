@@ -488,18 +488,16 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
                       warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
                       logger $ MetadataLog HL.LevelWarn message J.Null
                     Just sourceConfig -> do
-                      for_ droppedEventTriggers $
-                        \triggerName -> do
-                          -- TODO: The `tableName` parameter could be computed while building
-                          -- the triggers map and avoid the cache lookup.
-                          tableNameMaybe <- getTableNameFromTrigger @b oldSchemaCache source triggerName
-                          case tableNameMaybe of
-                            Nothing -> do
-                              let message = sqlTriggerError triggerName
-                              warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
-                              logger $ MetadataLog HL.LevelWarn message J.Null
-                            Just tableName ->
-                              dropTriggerAndArchiveEvents @b sourceConfig triggerName tableName
+                      for_ droppedEventTriggers \triggerName -> do
+                        -- TODO: The `tableName` parameter could be computed while building
+                        -- the triggers map and avoid the cache lookup.
+                        case getTableNameFromTrigger @b oldSchemaCache source triggerName of
+                          Nothing -> do
+                            let message = sqlTriggerError triggerName
+                            warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
+                            logger $ MetadataLog HL.LevelWarn message J.Null
+                          Just tableName ->
+                            dropTriggerAndArchiveEvents @b sourceConfig triggerName tableName
                       for_ (OMap.toList retainedNewTriggers) $ \(retainedNewTriggerName, retainedNewTriggerConf) ->
                         case OMap.lookup retainedNewTriggerName oldTriggersMap of
                           Nothing -> do
@@ -515,8 +513,7 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
                                     (bool Nothing (Just UPDATE) (isDroppedOp (tdUpdate oldTriggerOps) (tdUpdate newTriggerOps))),
                                     (bool Nothing (Just ET.DELETE) (isDroppedOp (tdDelete oldTriggerOps) (tdDelete newTriggerOps)))
                                   ]
-                            tableNameMaybe <- getTableNameFromTrigger @b oldSchemaCache source retainedNewTriggerName
-                            case tableNameMaybe of
+                            case getTableNameFromTrigger @b oldSchemaCache source retainedNewTriggerName of
                               Nothing -> do
                                 let message = sqlTriggerError retainedNewTriggerName
                                 warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message

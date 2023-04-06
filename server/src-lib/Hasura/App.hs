@@ -767,7 +767,7 @@ instance MonadQueryTags AppM where
   createQueryTags _attributes _qtSourceConfig = return $ emptyQueryTagsComment
 
 instance MonadEventLogCleanup AppM where
-  runLogCleaner _ = pure $ throw400 NotSupported "Event log cleanup feature is enterprise edition only"
+  runLogCleaner _ _ = pure $ throw400 NotSupported "Event log cleanup feature is enterprise edition only"
   generateCleanupSchedules _ _ _ = pure $ Right ()
   updateTriggerCleanupSchedules _ _ _ _ = pure $ Right ()
 
