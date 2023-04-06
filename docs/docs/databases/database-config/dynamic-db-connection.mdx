@@ -341,11 +341,37 @@ X-Hasura-Role: admin
 
 ## Testing connection template
 
-Hasura also provides a Metadata API
+Hasura offers a convenient way to test the connection template for a source through the Hasura Console, which simulates
+an actual GraphQL request without hitting the database. The Hasura Console internally uses the Metadata API
 ([pg_test_connection_template](/api-reference/metadata-api/table-view.mdx#metadata-pg-test-connection-template)) for
-testing the connection template for a source. It simulates an actual GraphQL request without hitting the database.
+this process. Alternatively, you can also test the connection template directly using the Metadata API.
 
-An example call to the `pg_test_connection_template` API is given below:
+<Tabs groupId="testing-connection-template" className="api-tabs">
+<TabItem value="console" label="Console">
+
+1. Navigate to the `Dynamic Routing` tab in the Edit Data Source page.
+2. Click on `Validate` button next to the connection template you want to test.
+
+<Thumbnail
+  src="/img/databases/postgres/dynamic-db-routing/validate-connection-template.png"
+  alt="Dynamic DB routing"
+  max-width="543px"
+/>
+
+3. Fill in the `Headers`, `Session Variables`, `Operation Type and Name` as needed for your test scenario.
+4. Click the `Validate` button and the result will be displayed.
+5. You can edit the connection template in the validate modal, the modified template will be updated in the previous
+   screen.
+
+<Thumbnail
+  src="/img/databases/postgres/dynamic-db-routing/validate-connection-template-modal.png"
+  alt="Dynamic DB routing"
+  max-width="543px"
+/>
+
+</TabItem>
+
+<TabItem value="api" label="API">
 
 Request:
 
@@ -390,11 +416,13 @@ Success Response:
 
 :::info Note
 
-`connection_template` is an optional argument which has precedence over the connection template present in the source. If
-`connection_template` is provided in the API, then the source's connection template will be ignored.
+`connection_template` is an optional argument which has precedence over the connection template present in the source.
+If `connection_template` is provided in the API, then the source's connection template will be ignored.
 
 :::
 
+</TabItem>
+</Tabs>
 
 ## Limitations
 
@@ -420,3 +448,4 @@ connection. Mutations routed to the members of the connection set will not trigg
 ### Migrations
 
 Hasura [CLI Migrations](/migrations-metadata-seeds/manage-migrations.mdx) cannot be applied on a connection set member.
+
