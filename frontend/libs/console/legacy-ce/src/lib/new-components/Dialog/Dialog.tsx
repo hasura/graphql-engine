@@ -12,6 +12,7 @@ export type FooterProps = {
   callToActionIcon?: ButtonProps['icon'];
   callToActionIconPosition?: ButtonProps['iconPosition'];
   callToDeny?: string;
+  callToActionType?: ButtonProps['type'];
   onSubmit?: () => void;
   onClose?: () => void;
   isLoading?: boolean;
@@ -29,6 +30,7 @@ const Footer: React.VFC<FooterProps> = ({
   callToActionIcon,
   callToActionIconPosition,
   callToDeny,
+  callToActionType = 'submit',
   onClose,
   onSubmit,
   isLoading = false,
@@ -68,7 +70,7 @@ const Footer: React.VFC<FooterProps> = ({
       <Button
         disabled={disabled}
         {...callToActionProps}
-        type="submit"
+        type={callToActionType}
         mode="primary"
         isLoading={isLoading}
         loadingText={callToActionLoadingText}
