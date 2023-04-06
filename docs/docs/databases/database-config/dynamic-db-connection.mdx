@@ -14,7 +14,7 @@ keywords:
   - routing
   - connections
   - pool
-sidebar_label: Dynamic DB connection routing
+sidebar_label: Dynamic Routing
 sidebar_position: 3
 sidebar_class_name: cloud-and-enterprise-icon
 ---
@@ -24,7 +24,7 @@ import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Dynamic Database Connection Routing
+# Dynamic Routing for Databases
 
 <div className="badge badge--primary heading-badge" style={{ marginBottom: `20px` }}>
   Available on: Cloud Professional, Cloud Enterprise, Self-hosted Enterprise
@@ -40,8 +40,7 @@ IDs.
 
 :::info Caution
 
-- Dynamic Database Connection Routing is available only for Postgres backends.
-- The routing is applicable only for non-admin GraphQL requests.
+- Dynamic Routing is available only for Postgres backends currently. Coming soon for other backends.
 
 :::
 
@@ -64,18 +63,23 @@ connection by using some operation context variable like an operation name or a 
 In a distributed database system like YugabyteDB or CockroachDB, sometimes, you may want to route the request to a
 specific node. You can achieve this in Hasura using a connection template.
 
-There are two configurable parameters in the source configuration useful for dynamic routing:
+## How it works
+
+When a request is executed, dynamic routing will use a connection template (in Kriti lang) to resolve a connection from a connection set.
+Note that only non-admin roles use the connection template. Admin role will always use the `primary` connection.
+
+There are two configurable parameters in the source configuration used for dynamic routing:
 
 1. [Connection set](#connection-set)
 2. [Connection template](#connection-template)
 
-## Connection set
+### Connection set
 
 You can define a set of connections that are available for routing. You can refer the members of this connection set in
 the [connection template](#connection-template) by their unique name using the variable
 `$.connection_set.<member's name>`.
 
-## Connection template
+### Connection template
 
 The logic for connection routing is defined as a [Kriti template](/api-reference/kriti-templating.mdx). This can resolve
 to the following:
@@ -226,7 +230,7 @@ Explanation:
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-To access Dynamic DB Routing, navigate to the `Dynamic DB Routing` tab in the Edit Data Source page.
+To access Dynamic Routing, navigate to the `Dynamic Routing` tab in the Edit Data Source page.
 
 Select the template you want to use from the list of available templates, or click on `Custom Template` to create your
 own template.
