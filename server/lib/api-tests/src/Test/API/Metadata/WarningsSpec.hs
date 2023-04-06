@@ -45,7 +45,8 @@ tests = do
           code: metadata-warnings
           error: failed due to metadata warnings
           internal:
-          - message: The event trigger with name "weird$name" may not work as expected, hasura suggests to use only alphanumeric, underscore and hyphens in an event trigger name
+          - code: illegal-event-trigger-name
+            message: The event trigger with name "weird$name" may not work as expected, hasura suggests to use only alphanumeric, underscore and hyphens in an event trigger name
             name: event_trigger weird$name in table hasura.table1 in source postgres
             type: event_trigger
           path: $.args
@@ -60,7 +61,8 @@ tests = do
           is_consistent: true
           inconsistent_objects: []
           warnings:
-          - message: The event trigger with name "weird$name" may not work as expected, hasura suggests to use only alphanumeric, underscore and hyphens in an event trigger name
+          - code: illegal-event-trigger-name
+            message: The event trigger with name "weird$name" may not work as expected, hasura suggests to use only alphanumeric, underscore and hyphens in an event trigger name
             name: event_trigger weird$name in table hasura.table1 in source postgres
             type: event_trigger
         |]

@@ -114,7 +114,7 @@ postDropSourceHookHelper oldSchemaCache sourceName sourceMetadataBackend = do
                 <> " Please consider cleaning the resources created by the graphql engine,"
                 <> " refer https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-footprints-manually"
         HL.unLogger logger $ MetadataLog HL.LevelWarn message J.Null
-        warn $ MetadataWarning (MOSource sourceName) message
+        warn $ MetadataWarning WCSourceCleanupFailed (MOSource sourceName) message
       Just sourceInfo -> runPostDropSourceHook defaultSource sourceInfo
 
 runClearMetadata ::
@@ -327,7 +327,7 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
               mkEventTriggerObjID tableName triggerName = MOSourceObjId source $ AB.mkAnyBackend $ SMOTableObj @b tableName $ MTOTrigger triggerName
               mkIllegalEventTriggerNameWarning (tableName, triggerName) =
                 -- TODO: capture the path as well
-                MetadataWarning (mkEventTriggerObjID tableName triggerName) $
+                MetadataWarning WCIllegalEventTriggerName (mkEventTriggerObjID tableName triggerName) $
                   "The event trigger with name "
                     <> dquote (triggerNameToTxt triggerName)
                     <> " may not work as expected, hasura suggests to use only alphanumeric, underscore and hyphens in an event trigger name"
@@ -485,7 +485,7 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
                               <> " Please refer https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-up-event-trigger-footprints-manually "
                               <> " to delete the sql triggers from the database manually."
                               <> " For more details, please refer https://hasura.io/docs/latest/graphql/core/event-triggers/index.html "
-                      warn $ MetadataWarning sourceObjID message
+                      warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
                       logger $ MetadataLog HL.LevelWarn message J.Null
                     Just sourceConfig -> do
                       for_ droppedEventTriggers $
@@ -496,7 +496,7 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
                           case tableNameMaybe of
                             Nothing -> do
                               let message = sqlTriggerError triggerName
-                              warn $ MetadataWarning sourceObjID message
+                              warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
                               logger $ MetadataLog HL.LevelWarn message J.Null
                             Just tableName ->
                               dropTriggerAndArchiveEvents @b sourceConfig triggerName tableName
@@ -504,7 +504,7 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
                         case OMap.lookup retainedNewTriggerName oldTriggersMap of
                           Nothing -> do
                             let message = sqlTriggerError retainedNewTriggerName
-                            warn $ MetadataWarning sourceObjID message
+                            warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
                             logger $ MetadataLog HL.LevelWarn message J.Null
                           Just oldTriggerConf -> do
                             let newTriggerOps = etcDefinition retainedNewTriggerConf
@@ -519,7 +519,7 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
                             case tableNameMaybe of
                               Nothing -> do
                                 let message = sqlTriggerError retainedNewTriggerName
-                                warn $ MetadataWarning sourceObjID message
+                                warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
                                 logger $ MetadataLog HL.LevelWarn message J.Null
                               Just tableName ->
                                 dropDanglingSQLTrigger @b sourceConfig retainedNewTriggerName tableName (HS.fromList $ catMaybes droppedOps)

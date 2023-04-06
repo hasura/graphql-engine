@@ -77,7 +77,8 @@ tests = describe "weird trigger names are allowed" do
             [yaml|
               message: success
               warnings:
-                - message: >-
+                - code: illegal-event-trigger-name
+                  message: >-
                     The event trigger with name "weird]name]" may not work as expected,
                     hasura suggests to use only alphanumeric, underscore and hyphens in
                     an event trigger name
