@@ -1,4 +1,4 @@
-This note is in [Hasura.RQL.DDL.Warnings](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Warnings.hs#L35).
+This note is in [Hasura.RQL.DDL.Warnings](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Warnings.hs#L36).
 
 # Warnings in metadata API
 
