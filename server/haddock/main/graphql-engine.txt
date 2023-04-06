@@ -23855,9 +23855,13 @@ data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
 
 -- | This typeclass have the implementation logic for the event trigger log
---   cleanup
+--   cleanup.
+--   
+--   TODO: this doesn't belong here in the DDL folder, but should be part
+--   of Hasura.Eventing. It could even be made a Service, since the whole
+--   point of it is to implement features differently between OSS and Pro.
 class Monad m => MonadEventLogCleanup m
-runLogCleaner :: MonadEventLogCleanup m => TriggerLogCleanupConfig -> m (Either QErr EncJSON)
+runLogCleaner :: MonadEventLogCleanup m => SourceCache -> TriggerLogCleanupConfig -> m (Either QErr EncJSON)
 generateCleanupSchedules :: MonadEventLogCleanup m => AnyBackend SourceInfo -> TriggerName -> AutoTriggerLogCleanupConfig -> m (Either QErr ())
 
 -- | <a>updateTriggerCleanupSchedules</a> is primarily used to update the
@@ -23880,7 +23884,6 @@ runCreateEventTriggerQuery :: forall b m r. (BackendMetadata b, BackendEventTrig
 runDeleteEventTriggerQuery :: forall b m. (BackendEventTrigger b, MonadError QErr m, CacheRWM m, MonadIO m, MetadataM m) => DeleteEventTriggerQuery b -> m EncJSON
 runRedeliverEvent :: forall b m. (BackendEventTrigger b, MonadIO m, CacheRM m, QErrM m, MetadataM m) => RedeliverEventQuery b -> m EncJSON
 runInvokeEventTrigger :: forall b m. (MonadIO m, QErrM m, CacheRM m, MetadataM m, MonadTrace m, UserInfoM m, BackendEventTrigger b) => InvokeEventTriggerQuery b -> m EncJSON
-getTabInfoFromSchemaCache :: (Backend b, QErrM m) => SchemaCache -> SourceName -> TriggerName -> m (Maybe (TableInfo b))
 newtype ResolveHeaderError
 ResolveHeaderError :: [Text] -> ResolveHeaderError
 [unResolveHeaderError] :: ResolveHeaderError -> [Text]
@@ -23891,8 +23894,8 @@ buildEventTriggerInfo :: forall b m. (Backend b, QErrM m) => Environment -> Sour
 getTriggersMap :: SourceMetadata b -> InsOrdHashMap TriggerName (EventTriggerConf b)
 getSourceTableAndTriggers :: SourceMetadata b -> [(TableName b, TriggerName)]
 getTriggerNames :: SourceMetadata b -> HashSet TriggerName
-getTableNameFromTrigger :: forall b m. (Backend b, QErrM m) => SchemaCache -> SourceName -> TriggerName -> m (Maybe (TableName b))
-runCleanupEventTriggerLog :: (MonadEventLogCleanup m, MonadError QErr m) => TriggerLogCleanupConfig -> m EncJSON
+getTableNameFromTrigger :: forall b. Backend b => SchemaCache -> SourceName -> TriggerName -> Maybe (TableName b)
+runCleanupEventTriggerLog :: (MonadEventLogCleanup m, MonadError QErr m, CacheRWM m) => TriggerLogCleanupConfig -> m EncJSON
 runEventTriggerResumeCleanup :: forall m. (MonadIO m, QErrM m, CacheRWM m, MetadataM m) => TriggerLogCleanupToggleConfig -> m EncJSON
 runEventTriggerPauseCleanup :: (MonadError QErr m, CacheRWM m, MonadIO m, MetadataM m) => TriggerLogCleanupToggleConfig -> m EncJSON
 
