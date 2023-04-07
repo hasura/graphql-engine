@@ -27288,6 +27288,7 @@ initialiseAppStateRef :: MonadIO m => TLSAllowListRef impl -> ServerMetrics -> R
 --   An internal lock ensures that at most one update to the
 --   <a>AppStateRef</a> may proceed at a time.
 withSchemaCacheUpdate :: (MonadIO m, MonadBaseControl IO m) => AppStateRef impl -> Logger Hasura -> Maybe (TVar Bool) -> m (a, RebuildableSchemaCache) -> m a
+withSchemaCacheReadUpdate :: (MonadIO m, MonadBaseControl IO m) => AppStateRef impl -> Logger Hasura -> Maybe (TVar Bool) -> (RebuildableSchemaCache -> m (a, RebuildableSchemaCache)) -> m a
 
 -- | Read the contents of the <a>AppStateRef</a> to get the latest
 --   <a>RebuildableAppContext</a>
