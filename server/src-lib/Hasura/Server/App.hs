@@ -83,7 +83,7 @@ import Hasura.Server.AppStateRef
     getAppContext,
     getSchemaCache,
     readSchemaCacheRef,
-    withSchemaCacheUpdate,
+    withSchemaCacheReadUpdate,
   )
 import Hasura.Server.Auth (AuthMode (..), UserAuthentication (..))
 import Hasura.Server.Compression
@@ -467,12 +467,12 @@ v1QueryHandler ::
 v1QueryHandler appStateRef query = do
   (liftEitherM . authorizeV1QueryApi query) =<< ask
   logger <- _lsLogger . appEnvLoggers <$> askAppEnv
-  res <- bool (fst <$> action) (withSchemaCacheUpdate appStateRef logger Nothing action) $ queryModifiesSchemaCache query
+  schemaCache <- asks hcSchemaCache
+  res <- bool (fst <$> action schemaCache) (withSchemaCacheReadUpdate appStateRef logger Nothing action) $ queryModifiesSchemaCache query
   return $ HttpResponse res []
   where
-    action = do
+    action schemaCache = do
       appContext <- asks hcAppContext
-      schemaCache <- asks hcSchemaCache
       runQuery
         appContext
         schemaCache
@@ -502,13 +502,9 @@ v1MetadataHandler appStateRef query = Tracing.newSpan "Metadata" $ do
   (liftEitherM . authorizeV1MetadataApi query) =<< ask
   logger <- _lsLogger . appEnvLoggers <$> askAppEnv
   appContext <- asks hcAppContext
-  schemaCache <- asks hcSchemaCache
   r <-
-    withSchemaCacheUpdate
-      appStateRef
-      logger
-      Nothing
-      $ runMetadataQuery
+    withSchemaCacheReadUpdate appStateRef logger Nothing $ \schemaCache ->
+      runMetadataQuery
         appContext
         schemaCache
         query
@@ -535,14 +531,14 @@ v2QueryHandler ::
 v2QueryHandler appStateRef query = Tracing.newSpan "v2 Query" $ do
   (liftEitherM . authorizeV2QueryApi query) =<< ask
   logger <- _lsLogger . appEnvLoggers <$> askAppEnv
+  schemaCache <- asks hcSchemaCache
   res <-
-    bool (fst <$> dbAction) (withSchemaCacheUpdate appStateRef logger Nothing dbAction) $
+    bool (fst <$> dbAction schemaCache) (withSchemaCacheReadUpdate appStateRef logger Nothing dbAction) $
       V2Q.queryModifiesSchema query
   return $ HttpResponse res []
   where
     -- Hit postgres
-    dbAction = do
-      schemaCache <- asks hcSchemaCache
+    dbAction schemaCache = do
       appContext <- asks hcAppContext
       V2Q.runQuery
         appContext

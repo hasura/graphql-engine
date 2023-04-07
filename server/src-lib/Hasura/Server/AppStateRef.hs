@@ -14,6 +14,7 @@ module Hasura.Server.AppStateRef
 
     -- * Utility
     logInconsistentMetadata,
+    withSchemaCacheReadUpdate,
   )
 where
 
@@ -130,6 +131,44 @@ withSchemaCacheUpdate (AppStateRef lock cacheRef metadataVersionGauge) logger mL
 -- | Read the contents of the 'AppStateRef' to get the latest 'RebuildableSchemaCache' and 'SchemaCacheVer'
 readSchemaCacheRef :: AppStateRef impl -> IO (RebuildableSchemaCache, SchemaCacheVer)
 readSchemaCacheRef scRef = readIORef <$> asSchemaCache $ _scrCache scRef
+
+withSchemaCacheReadUpdate ::
+  (MonadIO m, MonadBaseControl IO m) =>
+  (AppStateRef impl) ->
+  L.Logger L.Hasura ->
+  Maybe (STM.TVar Bool) ->
+  (RebuildableSchemaCache -> m (a, RebuildableSchemaCache)) ->
+  m a
+withSchemaCacheReadUpdate (AppStateRef lock cacheRef metadataVersionGauge) logger mLogCheckerTVar action =
+  withMVarMasked lock $ const do
+    (rebuildableSchemaCache, _) <- liftIO $ readIORef $ asSchemaCache cacheRef
+    (!res, !newSC) <- action rebuildableSchemaCache
+    liftIO $ do
+      let AppState asSchemaCache _ = cacheRef
+      -- update schemacache in IO reference
+      modifyIORef' asSchemaCache $ \appStateSchemaCache ->
+        let !newVer = incSchemaCacheVer (snd appStateSchemaCache)
+         in (newSC, newVer)
+
+      -- update metric with new metadata version
+      updateMetadataVersionGauge metadataVersionGauge newSC
+
+      let inconsistentObjectsList = scInconsistentObjs $ lastBuiltSchemaCache newSC
+          logInconsistentMetadata' = logInconsistentMetadata logger inconsistentObjectsList
+      -- log any inconsistent objects only once and not everytime this method is called
+      case mLogCheckerTVar of
+        Nothing -> do logInconsistentMetadata'
+        Just logCheckerTVar -> do
+          logCheck <- liftIO $ STM.readTVarIO logCheckerTVar
+          if null inconsistentObjectsList && logCheck
+            then do
+              STM.atomically $ STM.writeTVar logCheckerTVar False
+            else do
+              unless (logCheck || null inconsistentObjectsList) $ do
+                STM.atomically $ STM.writeTVar logCheckerTVar True
+                logInconsistentMetadata'
+
+    return res
 
 -- | Read the contents of the 'AppStateRef' to get the latest 'RebuildableAppContext'
 readAppContextRef :: AppStateRef impl -> IO (RebuildableAppContext impl)
