@@ -5,6 +5,7 @@ import {
   ConnectDBScreen,
   TemplateSummary,
   DialogContainer,
+  UseCaseScreen,
 } from './components';
 
 import { useWizardState } from './hooks';
@@ -87,6 +88,12 @@ export function Root() {
         </DialogContainer>
       );
     }
+    case 'use-case-onboarding':
+      return (
+        <DialogContainer header="">
+          <UseCaseScreen dismiss={dismiss} dispatch={dispatch} />
+        </DialogContainer>
+      );
     case 'hidden':
     default: {
       return null;

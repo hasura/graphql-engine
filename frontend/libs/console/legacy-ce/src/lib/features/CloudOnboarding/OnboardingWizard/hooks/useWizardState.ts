@@ -8,6 +8,7 @@ export type WizardState =
   | 'familiarity-survey'
   | 'landing-page'
   | 'template-summary'
+  | 'use-case-onboarding'
   | 'hidden';
 
 export function useWizardState() {
