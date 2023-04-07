@@ -13,7 +13,7 @@ services:
     environment:
       POSTGRES_PASSWORD: postgrespassword
   hasura:
-    image: hasura/graphql-engine:v2.21.0
+    image: hasura/graphql-engine:v2.22.0
     restart: always
     ports:
       - 8080:8080
@@ -39,7 +39,7 @@ services:
       HASURA_GRAPHQL_REDIS_URL: redis://redis:6379
       HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL: 'redis://redis:6379'
       HASURA_GRAPHQL_MAX_CACHE_SIZE: '200'
-      # Configures the connection to the Data Connector agent for MySQL by default
+      # Configures the connection to the Data Connector agent for Oracle by default
       # You can also omit this and manually configure the same thing via the 'Data' tab, then 'Add Agent'
       # in the Hasura console
       HASURA_GRAPHQL_METADATA_DEFAULTS: '{"backend_configs":{"dataconnector":{"oracle":{"uri":"http://data-connector-agent:8081/api/v1/oracle"}}}}'
@@ -47,7 +47,7 @@ services:
       data-connector-agent:
         condition: service_healthy
   data-connector-agent:
-    image: hasura/graphql-data-connector:v2.21.0
+    image: hasura/graphql-data-connector:v2.22.0
     restart: always
     ports:
       - 8081:8081
@@ -57,7 +57,7 @@ services:
       QUARKUS_OPENTELEMETRY_ENABLED: 'false'
       ## QUARKUS_OPENTELEMETRY_TRACER_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:8081/api/v1/oracle/health']
+      test: ["CMD", "curl", "-f", "http://localhost:8081/api/v1/oracle/health"]
       interval: 5s
       timeout: 10s
       retries: 5
