@@ -1250,7 +1250,6 @@ PostgresError :: Code
 PostgresMaxConnectionsError :: Code
 RemoteSchemaConflicts :: Code
 RemoteSchemaError :: Code
-TimeOut :: Code
 
 -- | Websockets
 StartFailed :: Code
@@ -1260,6 +1259,7 @@ ValidationFailed :: Code
 
 -- | Connection templates
 TemplateResolutionFailed :: Code
+TimeoutErrorCode :: Code
 data QErr
 QErr :: JSONPath -> Status -> Text -> Code -> Maybe QErrExtra -> QErr
 [qePath] :: QErr -> JSONPath
@@ -22450,7 +22450,7 @@ setCatalogState :: MonadMetadataStorage m => CatalogStateType -> Value -> m (Eit
 getMetadataDbUid :: MonadMetadataStorage m => m (Either QErr MetadataDbId)
 checkMetadataStorageHealth :: MonadMetadataStorage m => m (Either QErr ())
 getDeprivedCronTriggerStats :: MonadMetadataStorage m => [TriggerName] -> m (Either QErr [CronTriggerStats])
-getScheduledEventsForDelivery :: MonadMetadataStorage m => m (Either QErr ([CronEvent], [OneOffScheduledEvent]))
+getScheduledEventsForDelivery :: MonadMetadataStorage m => [TriggerName] -> m (Either QErr ([CronEvent], [OneOffScheduledEvent]))
 insertCronEvents :: MonadMetadataStorage m => [CronEventSeed] -> m (Either QErr ())
 insertOneOffScheduledEvent :: MonadMetadataStorage m => OneOffEvent -> m (Either QErr EventId)
 insertScheduledEventInvocation :: MonadMetadataStorage m => Invocation 'ScheduledType -> ScheduledEventType -> m (Either QErr ())
@@ -23834,22 +23834,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aE2fh. Lens' (CreateEventTriggerQuery b_aE2fh) TriggerOnReplication
-cteqCleanupConfig :: forall b_aE2fh. Lens' (CreateEventTriggerQuery b_aE2fh) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aE2fh. Lens' (CreateEventTriggerQuery b_aE2fh) (Maybe Text)
-cetqWebhook :: forall b_aE2fh. Lens' (CreateEventTriggerQuery b_aE2fh) (Maybe InputWebhook)
-cetqUpdate :: forall b_aE2fh. Lens' (CreateEventTriggerQuery b_aE2fh) (Maybe (SubscribeOpSpec b_aE2fh))
-cetqTable :: forall b_aE2fh. Lens' (CreateEventTriggerQuery b_aE2fh) (TableName b_aE2fh)
-cetqSource :: forall b_aE2fh. Lens' (CreateEventTriggerQuery b_aE2fh) SourceName
-cetqRetryConf :: forall b_aE2fh. Lens' (CreateEventTriggerQuery b_aE2fh) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aE2fh. Lens' (CreateEventTriggerQuery b_aE2fh) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aE2fh. Lens' (CreateEventTriggerQuery b_aE2fh) (Maybe RequestTransform)
-cetqReplace :: forall b_aE2fh. Lens' (CreateEventTriggerQuery b_aE2fh) Bool
-cetqName :: forall b_aE2fh. Lens' (CreateEventTriggerQuery b_aE2fh) TriggerName
-cetqInsert :: forall b_aE2fh. Lens' (CreateEventTriggerQuery b_aE2fh) (Maybe (SubscribeOpSpec b_aE2fh))
-cetqHeaders :: forall b_aE2fh. Lens' (CreateEventTriggerQuery b_aE2fh) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aE2fh. Lens' (CreateEventTriggerQuery b_aE2fh) (Maybe Bool)
-cetqDelete :: forall b_aE2fh. Lens' (CreateEventTriggerQuery b_aE2fh) (Maybe (SubscribeOpSpec b_aE2fh))
+cteqTriggerOnReplication :: forall b_aE2hX. Lens' (CreateEventTriggerQuery b_aE2hX) TriggerOnReplication
+cteqCleanupConfig :: forall b_aE2hX. Lens' (CreateEventTriggerQuery b_aE2hX) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aE2hX. Lens' (CreateEventTriggerQuery b_aE2hX) (Maybe Text)
+cetqWebhook :: forall b_aE2hX. Lens' (CreateEventTriggerQuery b_aE2hX) (Maybe InputWebhook)
+cetqUpdate :: forall b_aE2hX. Lens' (CreateEventTriggerQuery b_aE2hX) (Maybe (SubscribeOpSpec b_aE2hX))
+cetqTable :: forall b_aE2hX. Lens' (CreateEventTriggerQuery b_aE2hX) (TableName b_aE2hX)
+cetqSource :: forall b_aE2hX. Lens' (CreateEventTriggerQuery b_aE2hX) SourceName
+cetqRetryConf :: forall b_aE2hX. Lens' (CreateEventTriggerQuery b_aE2hX) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aE2hX. Lens' (CreateEventTriggerQuery b_aE2hX) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aE2hX. Lens' (CreateEventTriggerQuery b_aE2hX) (Maybe RequestTransform)
+cetqReplace :: forall b_aE2hX. Lens' (CreateEventTriggerQuery b_aE2hX) Bool
+cetqName :: forall b_aE2hX. Lens' (CreateEventTriggerQuery b_aE2hX) TriggerName
+cetqInsert :: forall b_aE2hX. Lens' (CreateEventTriggerQuery b_aE2hX) (Maybe (SubscribeOpSpec b_aE2hX))
+cetqHeaders :: forall b_aE2hX. Lens' (CreateEventTriggerQuery b_aE2hX) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aE2hX. Lens' (CreateEventTriggerQuery b_aE2hX) (Maybe Bool)
+cetqDelete :: forall b_aE2hX. Lens' (CreateEventTriggerQuery b_aE2hX) (Maybe (SubscribeOpSpec b_aE2hX))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
@@ -23995,7 +23995,7 @@ processScheduledTriggers :: (MonadIO m, MonadTrace m, MonadMetadataStorage m, Mo
 --   user can kind of see what's coming up, and obviously to give
 --   <a>processCronEvents</a> something to do.
 getDeprivedCronTriggerStatsTx :: [TriggerName] -> TxE QErr [CronTriggerStats]
-getScheduledEventsForDeliveryTx :: TxE QErr ([CronEvent], [OneOffScheduledEvent])
+getScheduledEventsForDeliveryTx :: [TriggerName] -> TxE QErr ([CronEvent], [OneOffScheduledEvent])
 insertInvocationTx :: Invocation 'ScheduledType -> ScheduledEventType -> TxE QErr ()
 setScheduledEventOpTx :: ScheduledEventId -> ScheduledEventOp -> ScheduledEventType -> TxE QErr ()
 unlockScheduledEventsTx :: ScheduledEventType -> [ScheduledEventId] -> TxE QErr Int
