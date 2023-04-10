@@ -291,6 +291,14 @@ body](deployment/graphql-engine-flags/reference.mdx#send-request-body-to-auth-ho
 
 :::
 
+## Webhook with the WebSocket protocol
+
+When executing a subscription (or query or mutation) over the WebSocket protocol, the authentication step is executed on
+`connection_init` when the websocket is connected to Hasura GraphQL Engine and is valid until the expiry as per the
+`expires` header set on the webhook response, when in webhook mode.
+
+Once authenticated, all operations are allowed without further check, until the authentication expires.
+
 ## Auth webhook samples
 
 We have put together a

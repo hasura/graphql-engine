@@ -691,6 +691,14 @@ tenants to be valid as well.
 In these cases, you **MUST** set the `audience` field to appropriate value. **Failing to do so is a major security
 vulnerability**.
 
+## JWT with the WebSocket protocol
+
+When executing a subscription (or query or mutation) over the WebSocket protocol, the authentication step is executed on
+`connection_init` when the websocket is connected to Hasura GraphQL Engine and is valid until the expiry of the JWT
+when in JWT mode.
+
+Once authenticated, all operations are allowed without further check, until the authentication expires.
+
 ## Popular providers and known issues
 
 ### Firebase
