@@ -50,7 +50,7 @@ export const availableFeatureFlags: FeatureFlagDefinition[] = [
     title: 'Enable the revamped UI for Connect database experience',
     description: 'Try out the new UI experience for connecting a database.',
     section: 'data',
-    status: 'alpha',
+    status: 'beta',
     defaultValue: true,
     discussionUrl: '',
   },
