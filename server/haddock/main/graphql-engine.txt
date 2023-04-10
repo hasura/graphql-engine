@@ -19471,9 +19471,10 @@ MetadataWithResourceVersion :: Metadata -> MetadataResourceVersion -> MetadataWi
 [_mwrvResourceVersion] :: MetadataWithResourceVersion -> MetadataResourceVersion
 mkParentDep :: forall b. Backend b => SourceName -> TableName b -> SchemaDependency
 
--- | When we depend on anything to do with logical models, we also declare
---   that we depend on the logical model as a whole. This is the "parent"
---   dependency in the dependency tree for a given logical model.
+-- | When we depend on anything to do with custom return types, we also
+--   declare that we depend on the custom return type as a whole. This is
+--   the "parent" dependency in the dependency tree for a given custom
+--   return type.
 mkCustomReturnTypeParentDep :: forall b. Backend b => SourceName -> CustomReturnTypeName -> SchemaDependency
 mkColDep :: forall b. Backend b => DependencyReason -> SourceName -> TableName b -> Column b -> SchemaDependency
 
@@ -19674,12 +19675,12 @@ getDependentObjsWith :: (DependencyReason -> Bool) -> SchemaCache -> SchemaObjId
 --   corresponding <a>SourceObjId</a>
 getRemoteDependencies :: SchemaCache -> SourceName -> [SchemaObjId]
 
--- | What schema dependencies does a given row permission for a logical
---   model have? This will almost certainly involve some number of
---   dependencies on logical models, but may also involve dependencies on
---   tables. Although we can't relate tables and logical models yet, we can
---   still declare permissions like, "you can only see this logical model
---   if your user ID exists in this table".
+-- | What schema dependencies does a given row permission for a custom
+--   return type have? This will almost certainly involve some number of
+--   dependencies on custom return types, but may also involve dependencies
+--   on tables. Although we can't relate tables and custom return types
+--   yet, we can still declare permissions like, "you can only see this
+--   custom return type if your user ID exists in this table".
 getCustomReturnTypeBoolExpDeps :: forall b. GetAggregationPredicatesDeps b => SourceName -> CustomReturnTypeName -> AnnBoolExpPartialSQL b -> [SchemaDependency]
 
 -- | Discover the schema dependencies of an <tt>AnnBoolExpPartialSQL</tt>.
@@ -23011,9 +23012,9 @@ type family PermInfo perm
 addPermissionToMetadata :: PermDef b a -> TableMetadata b -> TableMetadata b
 buildPermInfo :: (BackendMetadata b, QErrM m, TableCoreInfoRM b m, GetAggregationPredicatesDeps b) => SourceName -> TableName b -> FieldInfoMap (FieldInfo b) -> RoleName -> PermDefPermission b perm -> m (WithDeps (PermInfo perm b))
 
--- | Given the logical model's definition and the permissions as defined in
---   the logical model's metadata, try to construct the permission
---   definition.
+-- | Given the custom return type's definition and the permissions as
+--   defined in the custom return type's metadata, try to construct the
+--   permission definition.
 buildCustomReturnTypePermInfo :: (BackendMetadata b, QErrM m, TableCoreInfoRM b m, GetAggregationPredicatesDeps b) => SourceName -> CustomReturnTypeName -> FieldInfoMap (FieldInfo b) -> PermDefPermission b perm -> m (WithDeps (PermInfo perm b))
 runCreatePerm :: forall m b a. (UserInfoM m, CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b) => CreatePerm a b -> m EncJSON
 runDropPerm :: forall b m. (UserInfoM m, CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b) => PermType -> DropPerm b -> m EncJSON
@@ -23150,9 +23151,9 @@ UntrackCustomReturnType :: SourceName -> CustomReturnTypeName -> UntrackCustomRe
 -- | Handler for the <tt>untrack_custom_return_type</tt> endpoint.
 runUntrackCustomReturnType :: forall b m. (BackendMetadata b, MonadError QErr m, CacheRWM m, MetadataM m) => UntrackCustomReturnType b -> m EncJSON
 
--- | A permission for logical models is tied to a specific root field name
---   and source. This wrapper adds both of those things to the JSON object
---   that describes the permission.
+-- | A permission for custom return types is tied to a specific name and
+--   source. This wrapper adds both of those things to the JSON object that
+--   describes the permission.
 data CreateCustomReturnTypePermission a (b :: BackendType)
 CreateCustomReturnTypePermission :: SourceName -> CustomReturnTypeName -> PermDef b a -> CreateCustomReturnTypePermission a (b :: BackendType)
 [ccrtpSource] :: CreateCustomReturnTypePermission a (b :: BackendType) -> SourceName
@@ -23160,8 +23161,8 @@ CreateCustomReturnTypePermission :: SourceName -> CustomReturnTypeName -> PermDe
 [ccrtpInfo] :: CreateCustomReturnTypePermission a (b :: BackendType) -> PermDef b a
 runCreateSelectCustomReturnTypePermission :: forall b m. (Backend b, CacheRWM m, MetadataM m, MonadError QErr m, HasFeatureFlagChecker m) => CreateCustomReturnTypePermission SelPerm b -> m EncJSON
 
--- | To drop a permission, we need to know the source and root field name
---   of the logical model, as well as the role whose permission we want to
+-- | To drop a permission, we need to know the source and name of the
+--   custom return type, as well as the role whose permission we want to
 --   drop.
 data DropCustomReturnTypePermission (b :: BackendType)
 DropCustomReturnTypePermission :: SourceName -> CustomReturnTypeName -> RoleName -> DropCustomReturnTypePermission (b :: BackendType)

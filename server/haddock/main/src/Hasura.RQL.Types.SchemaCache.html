@@ -288,9 +288,9 @@ i b -&gt; AnyBackend i
 </span><a href="#local-6989586621690916826"><span class="hs-identifier hs-var">tn</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">DependencyReason
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#DRTable"><span class="hs-identifier hs-var">DRTable</span></a></span><span>
 </span><span id="line-194"></span><span>
-</span><span id="line-195"></span><span class="hs-comment">-- | When we depend on anything to do with logical models, we also declare that</span><span>
-</span><span id="line-196"></span><span class="hs-comment">-- we depend on the logical model as a whole. This is the &quot;parent&quot; dependency</span><span>
-</span><span id="line-197"></span><span class="hs-comment">-- in the dependency tree for a given logical model.</span><span>
+</span><span id="line-195"></span><span class="hs-comment">-- | When we depend on anything to do with custom return types, we also declare that</span><span>
+</span><span id="line-196"></span><span class="hs-comment">-- we depend on the custom return type as a whole. This is the &quot;parent&quot; dependency</span><span>
+</span><span id="line-197"></span><span class="hs-comment">-- in the dependency tree for a given custom return type.</span><span>
 </span><span id="line-198"></span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#mkCustomReturnTypeParentDep"><span class="hs-identifier hs-type">mkCustomReturnTypeParentDep</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-199"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690917797"><span class="annot"><a href="#local-6989586621690917797"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
 </span><span id="line-200"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690917797"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
@@ -302,7 +302,7 @@ Backend b =&gt;
 SourceName -&gt; CustomReturnTypeName -&gt; SchemaDependency
 </span><a href="Hasura.RQL.Types.SchemaCache.html#mkCustomReturnTypeParentDep"><span class="hs-identifier hs-var hs-var">mkCustomReturnTypeParentDep</span></a></span></span><span> </span><span id="local-6989586621690916817"><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621690916817"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621690916816"><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621690916816"><span class="hs-identifier hs-var">logicalModelName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621690916816"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-205"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="#local-6989586621690916815"><span class="hs-identifier hs-type">sourceObject</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaObjId"><span class="hs-identifier hs-type">SchemaObjId</span></a></span><span>
 </span><span id="line-206"></span><span>      </span><span id="local-6989586621690916815"><span class="annot"><span class="annottext">sourceObject :: SchemaObjId
 </span><a href="#local-6989586621690916815"><span class="hs-identifier hs-var hs-var">sourceObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
@@ -317,7 +317,7 @@ i b -&gt; AnyBackend i
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-209"></span><span>            </span><span class="annot"><span class="annottext">forall (b :: BackendType). CustomReturnTypeName -&gt; SourceObjId b
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOICustomReturnType"><span class="hs-identifier hs-var">SOICustomReturnType</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621690916816"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span>
+</span><a href="#local-6989586621690916816"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span><span>
 </span><span id="line-210"></span><span>
 </span><span id="line-211"></span><span>  </span><span class="annot"><span class="annottext">SchemaObjId -&gt; DependencyReason -&gt; SchemaDependency
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaDependency"><span class="hs-identifier hs-var">SchemaDependency</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaObjId
@@ -383,7 +383,7 @@ DependencyReason
 </span><a href="Hasura.RQL.Types.SchemaCache.html#mkCustomReturnTypeColDep"><span class="hs-identifier hs-var hs-var">mkCustomReturnTypeColDep</span></a></span></span><span> </span><span id="local-6989586621690916799"><span class="annot"><span class="annottext">DependencyReason
 </span><a href="#local-6989586621690916799"><span class="hs-identifier hs-var">reason</span></a></span></span><span> </span><span id="local-6989586621690916798"><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621690916798"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621690916797"><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621690916797"><span class="hs-identifier hs-var">logicalModelName</span></a></span></span><span> </span><span id="local-6989586621690916796"><span class="annot"><span class="annottext">Column b
+</span><a href="#local-6989586621690916797"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span></span><span> </span><span id="local-6989586621690916796"><span class="annot"><span class="annottext">Column b
 </span><a href="#local-6989586621690916796"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-238"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="#local-6989586621690916795"><span class="hs-identifier hs-type">sourceObject</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaObjId"><span class="hs-identifier hs-type">SchemaObjId</span></a></span><span>
 </span><span id="line-239"></span><span>      </span><span id="local-6989586621690916795"><span class="annot"><span class="annottext">sourceObject :: SchemaObjId
@@ -400,7 +400,7 @@ i b -&gt; AnyBackend i
 </span><span id="line-242"></span><span>            </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 CustomReturnTypeName -&gt; CustomReturnTypeObjId b -&gt; SourceObjId b
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOICustomReturnTypeObj"><span class="hs-identifier hs-var">SOICustomReturnTypeObj</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621690917783"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621690916797"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690916797"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-243"></span><span>              </span><span class="annot"><span class="annottext">forall (b :: BackendType). Column b -&gt; CustomReturnTypeObjId b
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#CRTOCol"><span class="hs-identifier hs-var">CRTOCol</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621690917783"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">Column b
@@ -2173,11 +2173,11 @@ SourceObjId b -&gt; SourceObjId b -&gt; Maybe Bool
 </span><span id="line-739"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SORole"><span class="hs-identifier hs-type">SORole</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
 </span><span id="line-740"></span><span>
-</span><span id="line-741"></span><span class="hs-comment">-- | What schema dependencies does a given row permission for a logical model</span><span>
+</span><span id="line-741"></span><span class="hs-comment">-- | What schema dependencies does a given row permission for a custom return type</span><span>
 </span><span id="line-742"></span><span class="hs-comment">-- have? This will almost certainly involve some number of dependencies on</span><span>
-</span><span id="line-743"></span><span class="hs-comment">-- logical models, but may also involve dependencies on tables. Although we</span><span>
-</span><span id="line-744"></span><span class="hs-comment">-- can't relate tables and logical models yet, we can still declare permissions</span><span>
-</span><span id="line-745"></span><span class="hs-comment">-- like, &quot;you can only see this logical model if your user ID exists in this</span><span>
+</span><span id="line-743"></span><span class="hs-comment">-- custom return types, but may also involve dependencies on tables. Although we</span><span>
+</span><span id="line-744"></span><span class="hs-comment">-- can't relate tables and custom return types yet, we can still declare permissions</span><span>
+</span><span id="line-745"></span><span class="hs-comment">-- like, &quot;you can only see this custom return type if your user ID exists in this</span><span>
 </span><span id="line-746"></span><span class="hs-comment">-- table&quot;.</span><span>
 </span><span id="line-747"></span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#getCustomReturnTypeBoolExpDeps"><span class="hs-identifier hs-type">getCustomReturnTypeBoolExpDeps</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-748"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690917091"><span class="annot"><a href="#local-6989586621690917091"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
@@ -2194,7 +2194,7 @@ SourceName
 -&gt; [SchemaDependency]
 </span><a href="Hasura.RQL.Types.SchemaCache.html#getCustomReturnTypeBoolExpDeps"><span class="hs-identifier hs-var hs-var">getCustomReturnTypeBoolExpDeps</span></a></span></span><span> </span><span id="local-6989586621690914930"><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621690914930"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621690914929"><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621690914929"><span class="hs-identifier hs-var">logicalModelName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><a href="#local-6989586621690914929"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-755"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#BoolAnd"><span class="hs-identifier hs-type">BoolAnd</span></a></span><span> </span><span id="local-6989586621690914927"><span class="annot"><span class="annottext">[AnnBoolExpPartialSQL b]
 </span><a href="#local-6989586621690914927"><span class="hs-identifier hs-var">exps</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">concatMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType).
@@ -2205,7 +2205,7 @@ SourceName
 -&gt; [SchemaDependency]
 </span><a href="Hasura.RQL.Types.SchemaCache.html#getCustomReturnTypeBoolExpDeps"><span class="hs-identifier hs-var">getCustomReturnTypeBoolExpDeps</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621690914930"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621690914929"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[AnnBoolExpPartialSQL b]
+</span><a href="#local-6989586621690914929"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[AnnBoolExpPartialSQL b]
 </span><a href="#local-6989586621690914927"><span class="hs-identifier hs-var">exps</span></a></span><span>
 </span><span id="line-756"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#BoolOr"><span class="hs-identifier hs-type">BoolOr</span></a></span><span> </span><span id="local-6989586621690914924"><span class="annot"><span class="annottext">[AnnBoolExpPartialSQL b]
 </span><a href="#local-6989586621690914924"><span class="hs-identifier hs-var">exps</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
@@ -2217,7 +2217,7 @@ SourceName
 -&gt; [SchemaDependency]
 </span><a href="Hasura.RQL.Types.SchemaCache.html#getCustomReturnTypeBoolExpDeps"><span class="hs-identifier hs-var">getCustomReturnTypeBoolExpDeps</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621690914930"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621690914929"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[AnnBoolExpPartialSQL b]
+</span><a href="#local-6989586621690914929"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[AnnBoolExpPartialSQL b]
 </span><a href="#local-6989586621690914924"><span class="hs-identifier hs-var">exps</span></a></span><span>
 </span><span id="line-757"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#BoolNot"><span class="hs-identifier hs-type">BoolNot</span></a></span><span> </span><span id="local-6989586621690914922"><span class="annot"><span class="annottext">AnnBoolExpPartialSQL b
 </span><a href="#local-6989586621690914922"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
@@ -2228,7 +2228,7 @@ SourceName
 -&gt; [SchemaDependency]
 </span><a href="Hasura.RQL.Types.SchemaCache.html#getCustomReturnTypeBoolExpDeps"><span class="hs-identifier hs-var">getCustomReturnTypeBoolExpDeps</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621690914930"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621690914929"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span> </span><span class="annot"><span class="annottext">AnnBoolExpPartialSQL b
+</span><a href="#local-6989586621690914929"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">AnnBoolExpPartialSQL b
 </span><a href="#local-6989586621690914922"><span class="hs-identifier hs-var">e</span></a></span><span>
 </span><span id="line-758"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#BoolField"><span class="hs-identifier hs-type">BoolField</span></a></span><span> </span><span id="local-6989586621690914920"><span class="annot"><span class="annottext">AnnBoolExpFld b (PartialSQLExp b)
 </span><a href="#local-6989586621690914920"><span class="hs-identifier hs-var">fld</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
@@ -2239,7 +2239,7 @@ SourceName
 -&gt; [SchemaDependency]
 </span><a href="Hasura.RQL.Types.SchemaCache.html#getCustomReturnTypeColExpDeps"><span class="hs-identifier hs-var">getCustomReturnTypeColExpDeps</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621690914930"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621690914929"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span> </span><span class="annot"><span class="annottext">AnnBoolExpFld b (PartialSQLExp b)
+</span><a href="#local-6989586621690914929"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">AnnBoolExpFld b (PartialSQLExp b)
 </span><a href="#local-6989586621690914920"><span class="hs-identifier hs-var">fld</span></a></span><span>
 </span><span id="line-759"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#BoolExists"><span class="hs-identifier hs-type">BoolExists</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#GExists"><span class="hs-identifier hs-type">GExists</span></a></span><span> </span><span id="local-6989586621690914916"><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621690914916"><span class="hs-identifier hs-var">refqt</span></a></span></span><span> </span><span id="local-6989586621690914915"><span class="annot"><span class="annottext">AnnBoolExpPartialSQL b
@@ -2271,7 +2271,7 @@ SourceName
 </span><a href="#local-6989586621690914915"><span class="hs-identifier hs-var">whereExp</span></a></span><span>
 </span><span id="line-764"></span><span>
 </span><span id="line-765"></span><span class="hs-comment">-- | What schema dependencies does this row permission for a particular column</span><span>
-</span><span id="line-766"></span><span class="hs-comment">-- within a logical model have? This is a fairly simple function at the moment</span><span>
+</span><span id="line-766"></span><span class="hs-comment">-- within a custom return type have? This is a fairly simple function at the moment</span><span>
 </span><span id="line-767"></span><span class="hs-comment">-- as there's only one type of column: columns! As a result, we have no</span><span>
 </span><span id="line-768"></span><span class="hs-comment">-- dependencies from relationships, computed fields, or aggregation predicates,</span><span>
 </span><span id="line-769"></span><span class="hs-comment">-- as none of these things are supported.</span><span>
@@ -2290,7 +2290,7 @@ SourceName
 -&gt; [SchemaDependency]
 </span><a href="Hasura.RQL.Types.SchemaCache.html#getCustomReturnTypeColExpDeps"><span class="hs-identifier hs-var hs-var">getCustomReturnTypeColExpDeps</span></a></span></span><span> </span><span id="local-6989586621690914906"><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621690914906"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621690914905"><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621690914905"><span class="hs-identifier hs-var">logicalModelName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><a href="#local-6989586621690914905"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-778"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AVRelationship"><span class="hs-identifier hs-type">AVRelationship</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo b
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp b (PartialSQLExp b)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
@@ -2333,7 +2333,7 @@ DependencyReason
 </span><a href="Hasura.RQL.Types.SchemaCache.html#mkCustomReturnTypeColDep"><span class="hs-identifier hs-var">mkCustomReturnTypeColDep</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621690917084"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">DependencyReason
 </span><a href="#local-6989586621690914896"><span class="hs-identifier hs-var">colDepReason</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621690914906"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621690914905"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span> </span><span class="annot"><span class="annottext">Column b
+</span><a href="#local-6989586621690914905"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">Column b
 </span><a href="#local-6989586621690914898"><span class="hs-identifier hs-var">columnName</span></a></span><span>
 </span><span id="line-792"></span><span>
 </span><span id="line-793"></span><span>    </span><span class="annot"><span class="annottext">SchemaDependency
@@ -2346,7 +2346,7 @@ SourceName
 -&gt; [SchemaDependency]
 </span><a href="Hasura.RQL.Types.SchemaCache.html#getCustomReturnTypeOpExpDeps"><span class="hs-identifier hs-var">getCustomReturnTypeOpExpDeps</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621690914906"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621690914905"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span> </span><span class="annot"><span class="annottext">[OpExpG b (PartialSQLExp b)]
+</span><a href="#local-6989586621690914905"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">[OpExpG b (PartialSQLExp b)]
 </span><a href="#local-6989586621690914899"><span class="hs-identifier hs-var">opExps</span></a></span><span>
 </span><span id="line-794"></span><span>
 </span><span id="line-795"></span><span class="hs-comment">-- | Discover the schema dependencies of an @AnnBoolExpPartialSQL@.</span><span>
@@ -2692,7 +2692,7 @@ DependencyReason
 </span><a href="#local-6989586621690914770"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">Column b
 </span><a href="#local-6989586621690914773"><span class="hs-identifier hs-var">col</span></a></span><span>
 </span><span id="line-881"></span><span>
-</span><span id="line-882"></span><span class="hs-comment">-- | What dependencies does this row permission for a logical model have? This</span><span>
+</span><span id="line-882"></span><span class="hs-comment">-- | What dependencies does this row permission for a custom return type have? This</span><span>
 </span><span id="line-883"></span><span class="hs-comment">-- is really a utility function for the tree of dependency traversals under</span><span>
 </span><span id="line-884"></span><span class="hs-comment">-- 'getCustomReturnTypeBoolExpDeps', specifically focusing on boolean operators.</span><span>
 </span><span id="line-885"></span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#getCustomReturnTypeOpExpDeps"><span class="hs-identifier hs-type">getCustomReturnTypeOpExpDeps</span></a></span><span> </span><span class="hs-glyph">::</span><span>
@@ -2710,7 +2710,7 @@ SourceName
 -&gt; [SchemaDependency]
 </span><a href="Hasura.RQL.Types.SchemaCache.html#getCustomReturnTypeOpExpDeps"><span class="hs-identifier hs-var hs-var">getCustomReturnTypeOpExpDeps</span></a></span></span><span> </span><span id="local-6989586621690914762"><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621690914762"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621690914761"><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621690914761"><span class="hs-identifier hs-var">logicalModelName</span></a></span></span><span> </span><span id="local-6989586621690914760"><span class="annot"><span class="annottext">[OpExpG b (PartialSQLExp b)]
+</span><a href="#local-6989586621690914761"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span></span><span> </span><span id="local-6989586621690914760"><span class="annot"><span class="annottext">[OpExpG b (PartialSQLExp b)]
 </span><a href="#local-6989586621690914760"><span class="hs-identifier hs-var">operatorExpressions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-893"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#RootOrCurrentColumn"><span class="hs-identifier hs-type">RootOrCurrentColumn</span></a></span><span> </span><span class="annot"><span class="annottext">RootOrCurrent
 </span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621690914759"><span class="annot"><span class="annottext">Column b
@@ -2732,7 +2732,7 @@ DependencyReason
 </span><a href="Hasura.RQL.Types.SchemaCache.html#mkCustomReturnTypeColDep"><span class="hs-identifier hs-var">mkCustomReturnTypeColDep</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621690917073"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">DependencyReason
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#DROnType"><span class="hs-identifier hs-var">DROnType</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621690914762"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621690914761"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span> </span><span class="annot"><span class="annottext">Column b
+</span><a href="#local-6989586621690914761"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">Column b
 </span><a href="#local-6989586621690914759"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-895"></span><span>
 </span><span id="line-896"></span><span class="hs-comment">-- | Asking for a table's fields info without explicit @'SourceName' argument.</span><span>
