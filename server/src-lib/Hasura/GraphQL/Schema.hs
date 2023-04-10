@@ -57,6 +57,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission
+import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization as SC
@@ -173,7 +174,7 @@ buildGQLContext
       case Map.lookup adminRoleName hasuraContexts of
         Just (_context, _errors, introspection) -> pure introspection
         Nothing -> throw500 "buildGQLContext failed to build for the admin role"
-    (unauthenticated, unauthenticatedRemotesErrors) <- unauthenticatedContext allRemoteSchemas remoteSchemaPermissions
+    (unauthenticated, unauthenticatedRemotesErrors) <- unauthenticatedContext (sqlGen, functionPermissions) sources allRemoteSchemas experimentalFeatures remoteSchemaPermissions
     pure
       ( ( adminIntrospection,
           view _1 <$> hasuraContexts,
@@ -246,6 +247,7 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
               sources
               (fst <$> remotes)
               remoteSchemaPermsCtx
+              IncludeRemoteSourceRelationship
           )
           role
   runMemoizeT $ do
@@ -391,13 +393,9 @@ buildRelayRoleContext options sources actions customTypes role expFeatures = do
       schemaContext =
         SchemaContext
           (RelaySchema $ nodeInterface sources)
-          ( remoteRelationshipField
-              schemaContext
-              schemaOptions
-              sources
-              mempty
-              Options.DisableRemoteSchemaPermissions
-          )
+          -- Remote relationships aren't currently supported in Relay, due to type conflicts, and
+          -- introspection issues such as https://github.com/hasura/graphql-engine/issues/5144.
+          ignoreRemoteRelationship
           role
   runMemoizeT do
     -- build all sources, and the node root
@@ -512,21 +510,32 @@ unauthenticatedContext ::
   ( MonadError QErr m,
     MonadIO m
   ) =>
+  (SQLGenCtx, Options.InferFunctionPermissions) ->
+  SourceCache ->
   HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject) ->
+  Set.HashSet ExperimentalFeature ->
   Options.RemoteSchemaPermissions ->
   m (GQLContext, HashSet InconsistentMetadata)
-unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
-  let fakeSchemaContext =
+unauthenticatedContext options sources allRemotes expFeatures remoteSchemaPermsCtx = do
+  let schemaOptions = buildSchemaOptions options expFeatures
+      fakeSchemaContext =
         SchemaContext
           HasuraSchema
-          ignoreRemoteRelationship
+          ( remoteRelationshipField
+              fakeSchemaContext
+              schemaOptions
+              sources
+              (fst <$> allRemotes)
+              remoteSchemaPermsCtx
+              -- A remote schema is available in an unauthenticated context when the
+              -- remote schema permissions are disabled but sources are by default
+              -- not accessible to the unauthenticated context. Therefore,
+              -- the remote source relationship building is skipped.
+              ExcludeRemoteSourceRelationship
+          )
           fakeRole
       -- chosen arbitrarily to be as improbable as possible
       fakeRole = mkRoleNameSafe [NT.nonEmptyTextQQ|MyNameIsOzymandiasKingOfKingsLookOnMyWorksYeMightyAndDespair|]
-      -- we delete all references to remote joins
-      alteredRemoteSchemas =
-        allRemotes <&> first \context ->
-          context {_rscRemoteRelationships = mempty}
 
   runMemoizeT do
     (queryFields, mutationFields, subscriptionFields, remoteErrors) <- case remoteSchemaPermsCtx of
@@ -537,7 +546,7 @@ unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
         -- Permissions are disabled, unauthenticated users have access to remote schemas.
         (remoteFields, remoteSchemaErrors) <-
           runRemoteSchema fakeSchemaContext $
-            buildAndValidateRemoteSchemas alteredRemoteSchemas [] [] fakeRole remoteSchemaPermsCtx
+            buildAndValidateRemoteSchemas allRemotes [] [] fakeRole remoteSchemaPermsCtx
         pure
           ( fmap (fmap RFRemote) <$> concatMap piQuery remoteFields,
             fmap (fmap RFRemote) <$> concat (mapMaybe piMutation remoteFields),
@@ -798,6 +807,12 @@ buildMutationFields mkRootFieldName scenario sourceInfo tables (takeExposedAs FE
     -- A function exposed as mutation must have a function permission
     -- configured for the role. See Note [Function Permissions]
     guard $
+      -- when function permissions are inferred, we don't expose the
+      -- mutation functions for non-admin roles. See Note [Function Permissions]
+
+      -- when function permissions are inferred, we don't expose the
+      -- mutation functions for non-admin roles. See Note [Function Permissions]
+
       -- when function permissions are inferred, we don't expose the
       -- mutation functions for non-admin roles. See Note [Function Permissions]
       roleName == adminRoleName || roleName `Map.member` _fiPermissions functionInfo
