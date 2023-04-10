@@ -234,8 +234,8 @@ buildPermInfo x1 x2 x3 roleName = \case
   UpdPerm' p -> buildUpdPermInfo x1 x2 x3 p
   DelPerm' p -> buildDelPermInfo x1 x2 x3 p
 
--- | Given the logical model's definition and the permissions as defined in the
--- logical model's metadata, try to construct the permission definition.
+-- | Given the custom return type's definition and the permissions as defined in the
+-- custom return type's metadata, try to construct the permission definition.
 buildCustomReturnTypePermInfo ::
   ( BackendMetadata b,
     QErrM m,

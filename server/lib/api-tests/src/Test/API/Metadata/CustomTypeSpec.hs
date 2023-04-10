@@ -99,8 +99,8 @@ testImplementation = do
               inconsistent_objects:
                 - definition: *customTypesMetadata
                   name: custom_type divided_stuff in source default
-                  reason: 'Inconsistent object: The Logical Models feature is disabled'
-                  type: custom_type 
+                  reason: 'Inconsistent object: The Custom Return Type feature is disabled'
+                  type: custom_type
               is_consistent: false
             |]
 
@@ -124,16 +124,16 @@ testImplementation = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: *getRequestType 
+              type: *getRequestType
               args:
                 source: *sourceName
             |]
         )
         [interpolateYaml|
-          - name: nice 
+          - name: nice
             description: hello
             fields:
-                - name: divided 
+                - name: divided
                   type: #{scalarTypeToText testEnvironment Schema.TInt}
                   nullable: false
                   description: "a divided thing"
@@ -154,7 +154,7 @@ testImplementation = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: *getRequestType 
+              type: *getRequestType
               args:
                 source: *sourceName
             |]

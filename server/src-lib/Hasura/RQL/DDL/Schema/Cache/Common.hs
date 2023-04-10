@@ -435,4 +435,4 @@ addTableContext :: (Backend b) => TableName b -> Text -> Text
 addTableContext tableName e = "in table " <> tableName <<> ": " <> e
 
 addCustomReturnTypeContext :: CustomReturnTypeName -> Text -> Text
-addCustomReturnTypeContext logicalModelName e = "in custom return type " <> logicalModelName <<> ": " <> e
+addCustomReturnTypeContext customReturnTypeName e = "in custom return type " <> customReturnTypeName <<> ": " <> e

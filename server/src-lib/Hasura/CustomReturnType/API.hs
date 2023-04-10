@@ -248,7 +248,7 @@ runUntrackCustomReturnType q = do
     source = utctSource q
     fieldName = utctName q
 
--- | A permission for logical models is tied to a specific root field name and
+-- | A permission for custom return types is tied to a specific name and
 -- source. This wrapper adds both of those things to the JSON object that
 -- describes the permission.
 data CreateCustomReturnTypePermission a (b :: BackendType) = CreateCustomReturnTypePermission
@@ -291,8 +291,8 @@ runCreateSelectCustomReturnTypePermission CreateCustomReturnTypePermission {..} 
 
   pure successMsg
 
--- | To drop a permission, we need to know the source and root field name of
--- the logical model, as well as the role whose permission we want to drop.
+-- | To drop a permission, we need to know the source and name of
+-- the custom return type, as well as the role whose permission we want to drop.
 data DropCustomReturnTypePermission (b :: BackendType) = DropCustomReturnTypePermission
   { dcrtpSource :: SourceName,
     dcrtpName :: CustomReturnTypeName,

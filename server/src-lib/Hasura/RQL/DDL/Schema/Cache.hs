@@ -753,7 +753,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
             \crtm@CustomReturnTypeMetadata {..} ->
               withRecordInconsistencyM (mkCustomReturnTypeMetadataObject crtm) $ do
                 unless (_cdcAreLogicalModelsEnabled dynamicConfig) $
-                  throw400 InvalidConfiguration "The Logical Models feature is disabled"
+                  throw400 InvalidConfiguration "The Custom Return Type feature is disabled"
 
                 fieldInfoMap <- case toFieldInfo _crtmFields of
                   Nothing -> pure mempty
