@@ -88,7 +88,7 @@ import Hasura.Server.AppStateRef
     getAppContext,
     getRebuildableSchemaCacheWithVersion,
     getSchemaCache,
-    withSchemaCacheUpdate,
+    withSchemaCacheReadUpdate,
   )
 import Hasura.Server.Auth (AuthMode (..), UserAuthentication (..))
 import Hasura.Server.Compression
@@ -439,17 +439,17 @@ v1QueryHandler ::
     MonadGetApiTimeLimit m,
     UserInfoM m
   ) =>
-  (m (EncJSON, RebuildableSchemaCache) -> m EncJSON) ->
+  ((RebuildableSchemaCache -> m (EncJSON, RebuildableSchemaCache)) -> m EncJSON) ->
   RQLQuery ->
   m (HttpResponse EncJSON)
 v1QueryHandler schemaCacheRefUpdater query = do
   (liftEitherM . authorizeV1QueryApi query) =<< ask
-  res <- bool (fst <$> action) (schemaCacheRefUpdater action) $ queryModifiesSchemaCache query
+  schemaCache <- asks hcSchemaCache
+  res <- bool (fst <$> action schemaCache) (schemaCacheRefUpdater action) $ queryModifiesSchemaCache query
   return $ HttpResponse res []
   where
-    action = do
+    action schemaCache = do
       appContext <- asks hcAppContext
-      schemaCache <- asks hcSchemaCache
       runQuery
         appContext
         schemaCache
@@ -473,15 +473,14 @@ v1MetadataHandler ::
     MonadGetApiTimeLimit m,
     UserInfoM m
   ) =>
-  (m (EncJSON, RebuildableSchemaCache) -> m EncJSON) ->
+  ((RebuildableSchemaCache -> m (EncJSON, RebuildableSchemaCache)) -> m EncJSON) ->
   RQLMetadata ->
   m (HttpResponse EncJSON)
 v1MetadataHandler schemaCacheRefUpdater query = Tracing.newSpan "Metadata" $ do
   (liftEitherM . authorizeV1MetadataApi query) =<< ask
   appContext <- asks hcAppContext
-  schemaCache <- asks hcSchemaCache
   r <-
-    schemaCacheRefUpdater $
+    schemaCacheRefUpdater $ \schemaCache ->
       runMetadataQuery
         appContext
         schemaCache
@@ -503,19 +502,19 @@ v2QueryHandler ::
     ProvidesNetwork m,
     UserInfoM m
   ) =>
-  (m (EncJSON, RebuildableSchemaCache) -> m EncJSON) ->
+  ((RebuildableSchemaCache -> m (EncJSON, RebuildableSchemaCache)) -> m EncJSON) ->
   V2Q.RQLQuery ->
   m (HttpResponse EncJSON)
 v2QueryHandler schemaCacheRefUpdater query = Tracing.newSpan "v2 Query" $ do
+  schemaCache <- asks hcSchemaCache
   (liftEitherM . authorizeV2QueryApi query) =<< ask
   res <-
-    bool (fst <$> dbAction) (schemaCacheRefUpdater dbAction) $
+    bool (fst <$> dbAction schemaCache) (schemaCacheRefUpdater dbAction) $
       V2Q.queryModifiesSchema query
   return $ HttpResponse res []
   where
     -- Hit postgres
-    dbAction = do
-      schemaCache <- asks hcSchemaCache
+    dbAction schemaCache = do
       appContext <- asks hcAppContext
       V2Q.runQuery
         appContext
@@ -923,7 +922,7 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore = do
 
   -- Note: we create a schema cache updater function, to restrict the access
   -- to 'AppStateRef' inside the request handlers
-  let schemaCacheUpdater = withSchemaCacheUpdate appStateRef logger Nothing
+  let schemaCacheUpdater = withSchemaCacheReadUpdate appStateRef logger Nothing
 
   Spock.post "v1/graphql/explain" $ do
     onlyWhenApiEnabled isMetadataEnabled appStateRef gqlExplainAction

@@ -18,6 +18,7 @@ module Hasura.Server.AppStateRef
     readAppContextRef,
     getAppContext,
     logInconsistentMetadata,
+    withSchemaCacheReadUpdate,
   )
 where
 
@@ -134,6 +135,42 @@ withSchemaCacheUpdate (AppStateRef lock cacheRef metadataVersionGauge) logger mL
                 STM.atomically $ STM.writeTVar logCheckerTVar True
                 logInconsistentMetadata'
 
+    pure res
+
+withSchemaCacheReadUpdate ::
+  (MonadIO m, MonadBaseControl IO m) =>
+  (AppStateRef impl) ->
+  L.Logger L.Hasura ->
+  Maybe (STM.TVar Bool) ->
+  (RebuildableSchemaCache -> m (a, RebuildableSchemaCache)) ->
+  m a
+withSchemaCacheReadUpdate (AppStateRef lock cacheRef metadataVersionGauge) logger mLogCheckerTVar action =
+  withMVarMasked lock $ const do
+    (rebuildableSchemaCache, _) <- asSchemaCache <$> liftIO (readIORef cacheRef)
+    (!res, !newSC) <- action rebuildableSchemaCache
+    liftIO do
+      -- update schemacache in IO reference
+      modifyIORef' cacheRef $ \appState ->
+        let !newVer = incSchemaCacheVer (snd $ asSchemaCache appState)
+         in appState {asSchemaCache = (newSC, newVer)}
+
+      -- update metric with new metadata version
+      updateMetadataVersionGauge metadataVersionGauge newSC
+
+      let inconsistentObjectsList = scInconsistentObjs $ lastBuiltSchemaCache newSC
+          logInconsistentMetadata' = logInconsistentMetadata logger inconsistentObjectsList
+      -- log any inconsistent objects only once and not everytime this method is called
+      case mLogCheckerTVar of
+        Nothing -> logInconsistentMetadata'
+        Just logCheckerTVar -> do
+          logCheck <- STM.readTVarIO logCheckerTVar
+          if null inconsistentObjectsList && logCheck
+            then do
+              STM.atomically $ STM.writeTVar logCheckerTVar False
+            else do
+              unless (logCheck || null inconsistentObjectsList) $ do
+                STM.atomically $ STM.writeTVar logCheckerTVar True
+                logInconsistentMetadata'
     pure res
 
 -- | Read the contents of the 'AppStateRef' to get the latest 'RebuildableAppContext'
