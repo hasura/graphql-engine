@@ -112,7 +112,6 @@ data Code
   | PostgresMaxConnectionsError
   | RemoteSchemaConflicts
   | RemoteSchemaError
-  | TimeOut
   | -- | Websockets
     StartFailed
   | Unexpected
@@ -120,6 +119,7 @@ data Code
   | ValidationFailed
   | -- | Connection templates
     TemplateResolutionFailed
+  | TimeoutErrorCode
   deriving (Show, Eq)
 
 instance ToJSON Code where
@@ -167,7 +167,7 @@ instance ToJSON Code where
     UnexpectedPayload -> "unexpected-payload"
     ValidationFailed -> "validation-failed"
     TemplateResolutionFailed -> "template-resolution-failed"
-    TimeOut -> "time-out"
+    TimeoutErrorCode -> "timeout"
 
 data QErr = QErr
   { qePath :: JSONPath,

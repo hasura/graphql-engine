@@ -788,7 +788,7 @@ instance MonadMetadataStorage AppM where
   checkMetadataStorageHealth = runInSeparateTx $ checkDbConnection
 
   getDeprivedCronTriggerStats = runInSeparateTx . getDeprivedCronTriggerStatsTx
-  getScheduledEventsForDelivery = runInSeparateTx getScheduledEventsForDeliveryTx
+  getScheduledEventsForDelivery = runInSeparateTx . getScheduledEventsForDeliveryTx
   insertCronEvents = runInSeparateTx . insertCronEventsTx
   insertOneOffScheduledEvent = runInSeparateTx . insertOneOffScheduledEventTx
   insertScheduledEventInvocation a b = runInSeparateTx $ insertInvocationTx a b

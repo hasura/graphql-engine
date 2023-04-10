@@ -248,11 +248,10 @@ processCronEvents ::
   HTTP.Manager ->
   ScheduledTriggerMetrics ->
   [CronEvent] ->
-  IO SchemaCache ->
+  HashMap TriggerName CronTriggerInfo ->
   TVar (Set.Set CronEventId) ->
   m ()
-processCronEvents logger httpMgr scheduledTriggerMetrics cronEvents getSC lockedCronEvents = do
-  cronTriggersInfo <- scCronTriggers <$> liftIO getSC
+processCronEvents logger httpMgr scheduledTriggerMetrics cronEvents cronTriggersInfo lockedCronEvents = do
   -- save the locked cron events that have been fetched from the
   -- database, the events stored here will be unlocked in case a
   -- graceful shutdown is initiated in midst of processing these events
@@ -293,7 +292,7 @@ processCronEvents logger httpMgr scheduledTriggerMetrics cronEvents getSC locked
         case eventProcessedMaybe of
           Nothing -> do
             let eventTimeoutMessage = "Cron Scheduled event " <> id' <<> " of cron trigger " <> name <<> " timed out while processing."
-                eventTimeoutError = err500 TimeOut eventTimeoutMessage
+                eventTimeoutError = err500 TimeoutErrorCode eventTimeoutMessage
             logInternalError eventTimeoutError
             runExceptT (processError id' retryCtx [] Cron (mkErrorObject eventTimeoutMessage) (HOther $ T.unpack eventTimeoutMessage) scheduledTriggerMetrics)
               >>= (`onLeft` logInternalError)
@@ -368,7 +367,7 @@ processOneOffScheduledEvents
             timeout (fromInteger (diffTimeToMicroSeconds (min upperBoundScheduledEventTimeout eventTimeout))) processScheduledEventAction
               `onNothingM` ( do
                                let eventTimeoutMessage = "One-off Scheduled event " <> _ooseId <<> " timed out while processing."
-                                   eventTimeoutError = err500 TimeOut eventTimeoutMessage
+                                   eventTimeoutError = err500 TimeoutErrorCode eventTimeoutMessage
                                lift $ logInternalError eventTimeoutError
                                processError _ooseId retryCtx [] OneOff (mkErrorObject eventTimeoutMessage) (HOther $ T.unpack eventTimeoutMessage) scheduledTriggerMetrics
                            )
@@ -412,12 +411,13 @@ processScheduledTriggers getEnvHook logger statsLogger httpMgr scheduledTriggerM
   return $
     Forever () $
       const do
+        cronTriggersInfo <- scCronTriggers <$> liftIO getSC
         env <- liftIO getEnvHook
-        getScheduledEventsForDelivery >>= \case
+        getScheduledEventsForDelivery (Map.keys cronTriggersInfo) >>= \case
           Left e -> logInternalError e
           Right (cronEvents, oneOffEvents) -> do
             logFetchedScheduledEventsStats statsLogger (CronEventsCount $ length cronEvents) (OneOffScheduledEventsCount $ length oneOffEvents)
-            processCronEvents logger httpMgr scheduledTriggerMetrics cronEvents getSC leCronEvents
+            processCronEvents logger httpMgr scheduledTriggerMetrics cronEvents cronTriggersInfo leCronEvents
             processOneOffScheduledEvents env logger httpMgr scheduledTriggerMetrics oneOffEvents leOneOffEvents
         -- NOTE: cron events are scheduled at times with minute resolution (as on
         -- unix), while one-off events can be set for arbitrary times. The sleep
@@ -674,8 +674,8 @@ getDeprivedCronTriggerStatsTx cronTriggerNames =
 --  - if we decide to fetch cron events less frequently we should wake up that
 --    thread at second 0 of every minute, and then pass hasura's now time into
 --    the query (since the DB may disagree about the time)
-getScheduledEventsForDeliveryTx :: PG.TxE QErr ([CronEvent], [OneOffScheduledEvent])
-getScheduledEventsForDeliveryTx =
+getScheduledEventsForDeliveryTx :: [TriggerName] -> PG.TxE QErr ([CronEvent], [OneOffScheduledEvent])
+getScheduledEventsForDeliveryTx cronTriggerNames =
   (,) <$> getCronEventsForDelivery <*> getOneOffEventsForDelivery
   where
     getCronEventsForDelivery :: PG.TxE QErr [CronEvent]
@@ -694,14 +694,14 @@ getScheduledEventsForDeliveryTx =
                                    (t.next_retry_at is NULL and t.scheduled_time <= now()) or
                                    (t.next_retry_at is not NULL and t.next_retry_at <= now())
                                   )
-                                )
+                                ) AND trigger_name = ANY($1)
                           FOR UPDATE SKIP LOCKED
                           )
             RETURNING *
           )
         SELECT row_to_json(t.*) FROM cte AS t
       |]
-          ()
+          (Identity $ PGTextArray $ triggerNameToTxt <$> cronTriggerNames)
           True
 
     getOneOffEventsForDelivery :: PG.TxE QErr [OneOffScheduledEvent]

@@ -117,7 +117,7 @@ class Monad m => MonadMetadataStorage m where
   -- existing code for scheduled and cron triggers. We can get to this after the
   -- multi-source work is done. See Note [Todo: Common interface for eventing sub-system]
   getDeprivedCronTriggerStats :: [TriggerName] -> m (Either QErr [CronTriggerStats])
-  getScheduledEventsForDelivery :: m (Either QErr ([CronEvent], [OneOffScheduledEvent]))
+  getScheduledEventsForDelivery :: [TriggerName] -> m (Either QErr ([CronEvent], [OneOffScheduledEvent]))
   insertCronEvents :: [CronEventSeed] -> m (Either QErr ())
   insertOneOffScheduledEvent :: OneOffEvent -> m (Either QErr EventId)
   insertScheduledEventInvocation :: Invocation 'ScheduledType -> ScheduledEventType -> m (Either QErr ())
@@ -158,7 +158,7 @@ instance (MonadMetadataStorage m, MonadTrans t, Monad (t m)) => MonadMetadataSto
   checkMetadataStorageHealth = lift checkMetadataStorageHealth
 
   getDeprivedCronTriggerStats = lift . getDeprivedCronTriggerStats
-  getScheduledEventsForDelivery = lift getScheduledEventsForDelivery
+  getScheduledEventsForDelivery = lift . getScheduledEventsForDelivery
   insertCronEvents = lift . insertCronEvents
   insertOneOffScheduledEvent = lift . insertOneOffScheduledEvent
   insertScheduledEventInvocation a b = lift $ insertScheduledEventInvocation a b
