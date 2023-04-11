@@ -324,6 +324,7 @@ common lib-depends
                      , servant-openapi3
                      , some
                      , split
+                     , string-interpolate
                      , template-haskell
                      , text
                      , text-builder >= 0.6
@@ -544,6 +545,7 @@ library
                      , Hasura.Backends.BigQuery.Name
                      , Hasura.Backends.BigQuery.Parser.Scalars
                      , Hasura.Backends.BigQuery.Plan
+                     , Hasura.Backends.BigQuery.Schema.Introspection
                      , Hasura.Backends.BigQuery.Source
                      , Hasura.Backends.BigQuery.ToQuery
                      , Hasura.Backends.BigQuery.Types
@@ -578,6 +580,7 @@ library
                      , Hasura.Backends.MSSQL.Meta
                      , Hasura.Backends.MSSQL.Plan
                      , Hasura.Backends.MSSQL.Schema.IfMatched
+                     , Hasura.Backends.MSSQL.Schema.Introspection
                      , Hasura.Backends.MSSQL.SQL.Value
                      , Hasura.Backends.MSSQL.SQL.Error
                      , Hasura.Backends.MSSQL.ToQuery
@@ -667,6 +670,7 @@ library
                      , Hasura.Backends.MySQL.Instances.SchemaCache
                      , Hasura.Backends.MySQL.Instances.Execute
                      , Hasura.Backends.MySQL.Instances.Transport
+                     , Hasura.Backends.MySQL.Schema.Introspection
                      , Hasura.Backends.MySQL.SQL
                      , Hasura.Backends.MySQL.ToQuery
                      , Hasura.Backends.MySQL.Instances.API

@@ -29,7 +29,7 @@ where
 
 --------------------------------------------------------------------------------
 
-import Control.Lens (at, (.~), (^.), (^?))
+import Control.Lens (at, (.~), (^.))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Extended
@@ -83,7 +83,6 @@ import Network.HTTP.Client qualified as HTTP
 import Servant.API (Union)
 import Servant.Client (BaseUrl, (//))
 import Servant.Client.Generic qualified as Servant.Client
-import Type.Reflection (eqTypeRep, typeRep, (:~~:) (HRefl))
 
 --------------------------------------------------------------------------------
 -- Add source
@@ -356,54 +355,21 @@ instance FromJSON (GetSourceTables b) where
 -- this is only supported for Data Connectors.
 runGetSourceTables ::
   forall b m r.
-  ( Backend b,
+  ( BackendMetadata b,
     CacheRM m,
-    Has (L.Logger L.Hasura) r,
-    MonadReader r m,
     MonadError Error.QErr m,
     Metadata.MetadataM m,
     MonadIO m,
     MonadBaseControl IO m,
+    MonadReader r m,
+    Has (L.Logger L.Hasura) r,
     ProvidesNetwork m
   ) =>
   Env.Environment ->
   GetSourceTables b ->
   m EncJSON
 runGetSourceTables env GetSourceTables {..} = do
-  metadata <- Metadata.getMetadata
-
-  -- An unfortunate bit of type-hackery for now. Because GDCs have to make a
-  -- runtime request for their schema information (whereas native sources find
-  -- it in the metadata), we have to special-case GDCs. Eventually, we might
-  -- want to make this entirely backend-specific and implement it separately
-  -- for each backend, but it's probably not worth it while there's only one
-  -- exception.
-  case eqTypeRep (typeRep @b) (typeRep @'DataConnector) of
-    Just HRefl -> do
-      let sources = fmap Metadata.unBackendSourceMetadata $ Metadata._metaSources metadata
-          bmap = Metadata._metaBackendConfigs metadata
-
-      abSourceMetadata <- lookupSourceMetadata _gstSourceName sources
-
-      AnyBackend.dispatchAnyBackend @RQL.Types.Backend abSourceMetadata $ \Metadata.SourceMetadata {_smKind, _smConfiguration} -> do
-        case _smKind of
-          Backend.DataConnectorKind dcName -> do
-            logger :: L.Logger L.Hasura <- asks getter
-            manager <- askHTTPManager
-            let timeout = DC.Types.timeout _smConfiguration
-
-            DC.Types.DataConnectorOptions {..} <- lookupDataConnectorOptions dcName bmap
-            configSchemaResponse <- getConfigSchemaResponse dcName
-            transformedConfig <- transformConnSourceConfig dcName _gstSourceName configSchemaResponse _smConfiguration [("$session", J.object []), ("$env", J.toJSON env)] env
-            schemaResponse <- querySourceSchema logger manager timeout _dcoUri _gstSourceName transformedConfig
-
-            pure $ EncJSON.encJFromJValue (fmap API._tiName $ API._srTables schemaResponse)
-          backend -> Error.throw500 ("Invalid command: " <> backend <<> " is not a data connector source.")
-    Nothing -> do
-      let maybeTables :: Maybe (Tables b)
-          maybeTables = metadata ^? metaSources . ix _gstSourceName . toSourceMetadata . smTables @b
-
-      pure $ EncJSON.encJFromJValue (foldMap InsOrdHashMap.keys maybeTables)
+  fmap EncJSON.encJFromJValue (listAllTables @b env _gstSourceName)
 
 --------------------------------------------------------------------------------
 

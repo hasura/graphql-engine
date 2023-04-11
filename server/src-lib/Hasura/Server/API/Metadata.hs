@@ -58,7 +58,6 @@ import Hasura.RQL.DDL.Webhook.Transform.Validation
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
-import Hasura.RQL.Types.Backend (Backend)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
@@ -672,7 +671,7 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
   RMUpdateSource q -> dispatchMetadata runUpdateSource q
   RMListSourceKinds q -> runListSourceKinds q
   RMGetSourceKindCapabilities q -> runGetSourceKindCapabilities q
-  RMGetSourceTables q -> dispatch (runGetSourceTables env) q
+  RMGetSourceTables q -> dispatchMetadata (runGetSourceTables env) q
   RMGetTableInfo q -> runGetTableInfo env q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
   RMUntrackTable q -> dispatchMetadataAndEventTrigger runUntrackTableQ q
@@ -807,12 +806,6 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
   RMGetFeatureFlag q -> runGetFeatureFlag checkFeatureFlag q
   RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env checkFeatureFlag remoteSchemaPerms currentResourceVersion) q
   where
-    dispatch ::
-      (forall b. Backend b => i b -> a) ->
-      AnyBackend i ->
-      a
-    dispatch f x = dispatchAnyBackend @Backend x f
-
     dispatchMetadata ::
       (forall b. BackendMetadata b => i b -> a) ->
       AnyBackend i ->
