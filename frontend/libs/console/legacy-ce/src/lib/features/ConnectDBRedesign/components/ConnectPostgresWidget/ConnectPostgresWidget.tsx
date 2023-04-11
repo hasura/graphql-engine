@@ -50,8 +50,8 @@ export const ConnectPostgresWidget = (props: ConnectPostgresWidgetProps) => {
       onError: err => {
         hasuraToast({
           type: 'error',
-          title: `Error while ${isEditMode ? 'updating' : 'adding'} database`,
-          children: JSON.stringify(err),
+          title: err.name,
+          children: err.message,
         });
       },
     });

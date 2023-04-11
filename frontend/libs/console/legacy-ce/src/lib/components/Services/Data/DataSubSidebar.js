@@ -91,7 +91,6 @@ const DataSubSidebar = props => {
     availableFeatureFlagIds.enabledNewUIForBigQuery
   );
 
-  console.log({ isBigQueryEnabled, isLoading });
   const onDatabaseChange = newSourceName => {
     if (newSourceName === currentDataSource) {
       dispatch(_push(`/data/${newSourceName}/`));
