@@ -219,3 +219,92 @@ tests = do
               actual = getNextResponse query
 
           shouldReturnYaml testEnvironment actual expected
+
+      it "multiplexes" $ \(mkSubscription, testEnvironment) -> do
+        let backendTypeMetadata :: Fixture.BackendTypeConfig
+            backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+
+            sourceName :: String
+            sourceName = BackendType.backendSourceName backendTypeMetadata
+
+            backendPrefix :: String
+            backendPrefix = BackendType.backendTypeString backendTypeMetadata
+
+            shouldBe :: IO Value -> Value -> IO ()
+            shouldBe = shouldReturnYaml testEnvironment
+
+            customReturnType :: Schema.CustomType
+            customReturnType =
+              (Schema.customType "crt")
+                { Schema.customTypeColumns =
+                    [ Schema.logicalModelColumn "id" Schema.TInt,
+                      Schema.logicalModelColumn "title" Schema.TStr,
+                      Schema.logicalModelColumn "content" Schema.TStr,
+                      Schema.logicalModelColumn "date" Schema.TUTCTime
+                    ]
+                }
+
+            query :: Text
+            query = [PG.sql| select * from article where title like {{pattern}} |]
+
+            logicalModel :: Schema.LogicalModel
+            logicalModel =
+              (Schema.logicalModel "filtered_article" query "crt")
+                { Schema.logicalModelArguments =
+                    [Schema.logicalModelColumn "pattern" Schema.TStr]
+                }
+
+        Schema.trackCustomType sourceName customReturnType testEnvironment
+        Schema.trackLogicalModel sourceName logicalModel testEnvironment
+
+        one <- mkSubscription [graphql| subscription { filtered_article(args: { pattern: "%logical%" }) { id, title } } |] []
+        two <- mkSubscription [graphql| subscription { filtered_article(args: { pattern: "%model%" }) { id, title } } |] []
+
+        getNextResponse one
+          `shouldBe` [yaml|
+            data:
+              filtered_article: []
+          |]
+
+        getNextResponse two
+          `shouldBe` [yaml|
+            data:
+              filtered_article: []
+          |]
+
+        _ <-
+          GraphqlEngine.postV2Query
+            200
+            testEnvironment
+            [interpolateYaml|
+              type: #{backendPrefix}_run_sql
+              args:
+                cascade: false
+                read_only: false
+                source: #{sourceName}
+                sql: |
+                  insert into article (id, title, content, date) values
+                    (1, 'I like the logical song', '', now()),
+                    (2, 'I like model trains', '', now()),
+                    (3, 'I love me some logical models', '', now())
+            |]
+
+        getNextResponse one
+          `shouldBe` [yaml|
+            data:
+              filtered_article:
+              - id: 1
+                title: I like the logical song
+              - id: 3
+                title: I love me some logical models
+          |]
+
+        getNextResponse two
+          `shouldBe` [yaml|
+            data:
+              filtered_article:
+              - id: 2
+                title: I like model trains
+              - id: 3
+                title: I love me some logical models
+          |]
