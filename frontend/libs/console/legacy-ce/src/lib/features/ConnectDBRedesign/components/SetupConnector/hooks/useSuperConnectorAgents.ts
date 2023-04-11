@@ -11,6 +11,7 @@ export const agentPaths: Record<KnownSuperConnectorDrivers, string> = {
   snowflake: '/api/v1/snowflake',
   athena: '/api/v1/athena',
   mysqlgdc: '/api/v1/mysql',
+  mariadb: '/api/v1/mariadb',
 };
 
 function ensure<T>(

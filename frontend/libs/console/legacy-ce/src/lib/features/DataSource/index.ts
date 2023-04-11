@@ -171,7 +171,12 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   driver: {
     getAllSourceKinds: async (): Promise<DriverInfo[]> => {
       const serverSupportedDrivers = await getAllSourceKinds({ httpClient });
-      const knownEnterpriseDrivers = ['athena', 'snowflake', 'mysqlgdc'];
+      const knownEnterpriseDrivers = [
+        'athena',
+        'snowflake',
+        'mysqlgdc',
+        'mariadb',
+      ];
       const allSupportedDrivers = serverSupportedDrivers
         // NOTE: AlloyDB is added here and not returned by the server because it's not a new data source (it's Postgres)
         .concat([

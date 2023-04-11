@@ -8,6 +8,7 @@ import snowflakeLogo from './snowflake.webp';
 import defaultDbLogo from './default.svg';
 import mysqlLogo from './mysql.webp';
 import sqliteLogo from './sqlite.webp';
+import mariadbLogo from './mariadb.webp';
 
 const dbLogos: Record<string, string> = {
   pg: postgresLogo,
@@ -22,6 +23,7 @@ const dbLogos: Record<string, string> = {
   default: defaultDbLogo,
   mysqlgdc: mysqlLogo,
   sqlite: sqliteLogo,
+  mariadb: mariadbLogo,
 };
 
 export default dbLogos;

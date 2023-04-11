@@ -33,6 +33,13 @@ const SuperConnectorDrivers: readonly DriverInfo[] = [
     release: 'Beta',
     enterprise: true,
   },
+  {
+    name: 'mariadb',
+    displayName: 'MariaDB',
+    native: false,
+    release: 'Beta',
+    enterprise: true,
+  },
 ] as const;
 
 // this is a wrapper around useAvailableDrivers
