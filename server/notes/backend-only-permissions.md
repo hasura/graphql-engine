@@ -2,8 +2,8 @@ This note is in [Hasura.RQL.DDL.Permission](https://github.com/hasura/graphql-en
 It is referenced at:
   - line 86 of [Hasura.GraphQL.Schema.Mutation](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Mutation.hs#L86)
   - line 139 of [Hasura.GraphQL.Schema.Mutation](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Mutation.hs#L139)
-  - line 395 of [Hasura.GraphQL.Schema.Mutation](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Mutation.hs#L395)
-  - line 436 of [Hasura.GraphQL.Schema.Mutation](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Mutation.hs#L436)
+  - line 396 of [Hasura.GraphQL.Schema.Mutation](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Mutation.hs#L396)
+  - line 437 of [Hasura.GraphQL.Schema.Mutation](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Mutation.hs#L437)
   - line 265 of [Hasura.RQL.Types.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/Permission.hs#L265)
   - line 411 of [Hasura.RQL.Types.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/Permission.hs#L411)
   - line 446 of [Hasura.RQL.Types.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/Permission.hs#L446)
