@@ -249,6 +249,12 @@ transformObjectSelect ::
   Collector (AnnObjectSelectG b Void (UnpreparedValue b))
 transformObjectSelect = traverseOf aosFields transformAnnFields
 
+transformNestedObjectSelect ::
+  Backend b =>
+  AnnNestedObjectSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
+  Collector (AnnNestedObjectSelectG b Void (UnpreparedValue b))
+transformNestedObjectSelect = traverseOf anosFields transformAnnFields
+
 transformGraphQLField ::
   GraphQLField (RemoteRelationshipField UnpreparedValue) var ->
   Collector (GraphQLField Void var)
@@ -325,6 +331,8 @@ transformAnnFields fields = do
             remoteAnnPlaceholder,
             Just $ createRemoteJoin (Map.intersection joinColumnAliases _rrsLHSJoinFields) _rrsRelationship
           )
+      AFNestedObject nestedObj ->
+        (,Nothing) . AFNestedObject <$> transformNestedObjectSelect nestedObj
 
   let transformedFields = (fmap . fmap) fst annotatedFields
       remoteJoins =

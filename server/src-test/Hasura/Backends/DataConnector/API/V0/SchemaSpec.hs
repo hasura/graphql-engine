@@ -16,9 +16,11 @@ import Test.Hspec
 spec :: Spec
 spec = do
   describe "SchemaResponse" $ do
-    testToFromJSONToSchema (SchemaResponse []) [aesonQQ|{"tables": []}|]
+    testToFromJSONToSchema (SchemaResponse [] Nothing) [aesonQQ|{"tables": []}|]
     jsonOpenApiProperties genSchemaResponse
 
 genSchemaResponse :: (MonadGen m, GenBase m ~ Identity) => m SchemaResponse
 genSchemaResponse =
-  SchemaResponse <$> Gen.list defaultRange genTableInfo
+  SchemaResponse <$> Gen.list defaultRange genTableInfo <*> pure Nothing
+
+-- TODO: fix generator to add GraphQLTypes

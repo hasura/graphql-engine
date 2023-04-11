@@ -826,7 +826,8 @@ schema =
               API._tiUpdatable = True,
               API._tiDeletable = True
             }
-        ]
+        ],
+      _srObjectTypes = Nothing
     }
 
 -- | Stock 'MockConfig' for a Chinook Agent.

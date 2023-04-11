@@ -318,7 +318,7 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
             _trdType
             _siName
             _siConfiguration
-            remoteTableInfo
+            (tableInfoName remoteTableInfo)
             annotatedFieldMapping
 
       pure $

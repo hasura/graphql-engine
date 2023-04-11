@@ -211,6 +211,7 @@ tableFieldsInput tableInfo = do
     mkFieldParser = \case
       FIComputedField _ -> pure Nothing
       FIRemoteRelationship _ -> pure Nothing
+      FINestedObject _ -> pure Nothing -- TODO(dmoverton)
       FIColumn columnInfo -> do
         if (_cmIsInsertable $ ciMutability columnInfo)
           then mkColumnParser columnInfo

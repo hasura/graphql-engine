@@ -24,10 +24,15 @@ module Hasura.Backends.DataConnector.API.V0.Query
     FieldValue,
     mkColumnFieldValue,
     mkRelationshipFieldValue,
+    mkNestedObjFieldValue,
+    mkNestedArrayFieldValue,
     deserializeAsColumnFieldValue,
     deserializeAsRelationshipFieldValue,
+    deserializeAsNestedObjFieldValue,
+    deserializeAsNestedArrayFieldValue,
     _ColumnFieldValue,
     _RelationshipFieldValue,
+    _NestedObjFieldValue,
   )
 where
 
@@ -158,6 +163,7 @@ relationshipFieldObjectCodec =
 data Field
   = ColumnField API.V0.ColumnName API.V0.ScalarType
   | RelField RelationshipField
+  | NestedObjField API.V0.ColumnName Query
   deriving stock (Eq, Ord, Show, Generic)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Field
 
@@ -169,15 +175,25 @@ instance HasCodec Field where
     where
       columnCodec =
         (,)
-          <$> requiredField' "column" .= fst
-          <*> requiredField' "column_type" .= snd
+          <$> requiredField' "column"
+            .= fst
+          <*> requiredField' "column_type"
+            .= snd
+      nestedObjCodec =
+        (,)
+          <$> requiredField' "column"
+            .= fst
+          <*> requiredField' "query"
+            .= snd
       enc = \case
         ColumnField columnName scalarType -> ("column", mapToEncoder (columnName, scalarType) columnCodec)
         RelField relField -> ("relationship", mapToEncoder relField relationshipFieldObjectCodec)
+        NestedObjField columnName nestedObjQuery -> ("object", mapToEncoder (columnName, nestedObjQuery) nestedObjCodec)
       dec =
         HashMap.fromList
           [ ("column", ("ColumnField", mapToDecoder (uncurry ColumnField) columnCodec)),
-            ("relationship", ("RelationshipField", mapToDecoder RelField relationshipFieldObjectCodec))
+            ("relationship", ("RelationshipField", mapToDecoder RelField relationshipFieldObjectCodec)),
+            ("object", ("NestedObjectField", mapToDecoder (uncurry NestedObjField) nestedObjCodec))
           ]
 
 -- | The resolved query response provided by the 'POST /query'
@@ -235,7 +251,8 @@ instance Ord FieldValue where
 instance Show FieldValue where
   showsPrec d fieldValue =
     case deserializeFieldValueByGuessing fieldValue of
-      Left columnFieldValue -> showParen (d > appPrec) $ showString "ColumnFieldValue " . showsPrec appPrec1 columnFieldValue
+      Left (Left columnFieldValue) -> showParen (d > appPrec) $ showString "ColumnFieldValue " . showsPrec appPrec1 columnFieldValue
+      Left (Right nestedObjFieldValue) -> showParen (d > appPrec) $ showString "NestedObjFieldValue " . showsPrec appPrec1 nestedObjFieldValue
       Right queryResponse -> showParen (d > appPrec) $ showString "RelationshipFieldValue " . showsPrec appPrec1 queryResponse
 
 mkColumnFieldValue :: J.Value -> FieldValue
@@ -243,6 +260,12 @@ mkColumnFieldValue = FieldValue
 
 mkRelationshipFieldValue :: QueryResponse -> FieldValue
 mkRelationshipFieldValue = FieldValue . J.toJSON
+
+mkNestedObjFieldValue :: HashMap FieldName FieldValue -> FieldValue
+mkNestedObjFieldValue = FieldValue . J.toJSON
+
+mkNestedArrayFieldValue :: [FieldValue] -> FieldValue
+mkNestedArrayFieldValue = FieldValue . J.toJSON
 
 deserializeAsColumnFieldValue :: FieldValue -> J.Value
 deserializeAsColumnFieldValue (FieldValue value) = value
@@ -253,9 +276,26 @@ deserializeAsRelationshipFieldValue (FieldValue value) =
     J.Error s -> Left $ T.pack s
     J.Success queryResponse -> Right queryResponse
 
-deserializeFieldValueByGuessing :: FieldValue -> Either J.Value QueryResponse
+deserializeAsNestedObjFieldValue :: FieldValue -> Either Text (HashMap FieldName FieldValue)
+deserializeAsNestedObjFieldValue (FieldValue value) =
+  case J.fromJSON value of
+    J.Error s -> Left $ T.pack s
+    J.Success obj -> Right obj
+
+deserializeAsNestedArrayFieldValue :: FieldValue -> Either Text [FieldValue]
+deserializeAsNestedArrayFieldValue (FieldValue value) =
+  case J.fromJSON value of
+    J.Error s -> Left $ T.pack s
+    J.Success obj -> Right obj
+
+deserializeFieldValueByGuessing :: FieldValue -> (Either (Either (Either Value (HashMap FieldName FieldValue)) [FieldValue]) QueryResponse)
 deserializeFieldValueByGuessing fieldValue =
-  left (const $ deserializeAsColumnFieldValue fieldValue) $ deserializeAsRelationshipFieldValue fieldValue
+  left
+    ( const $
+        left (const $ left (const $ deserializeAsColumnFieldValue fieldValue) $ deserializeAsNestedObjFieldValue fieldValue) $
+          deserializeAsNestedArrayFieldValue fieldValue
+    )
+    $ deserializeAsRelationshipFieldValue fieldValue
 
 -- | Even though we could just describe a FieldValue as "any JSON value", we're explicitly
 -- describing it in terms of either a 'QueryResponse' or "any JSON value", in order to
@@ -287,6 +327,12 @@ _ColumnFieldValue = lens deserializeAsColumnFieldValue (const mkColumnFieldValue
 
 _RelationshipFieldValue :: Prism' FieldValue QueryResponse
 _RelationshipFieldValue = prism' mkRelationshipFieldValue (either (const Nothing) Just . deserializeAsRelationshipFieldValue)
+
+_NestedObjFieldValue :: Prism' FieldValue (HashMap FieldName FieldValue)
+_NestedObjFieldValue = prism' mkNestedObjFieldValue (either (const Nothing) Just . deserializeAsNestedObjFieldValue)
+
+_NestedArrayFieldValue :: Prism' FieldValue [FieldValue]
+_NestedArrayFieldValue = prism' mkNestedArrayFieldValue (either (const Nothing) Just . deserializeAsNestedArrayFieldValue)
 
 $(makeLenses ''QueryRequest)
 $(makeLenses ''Query)

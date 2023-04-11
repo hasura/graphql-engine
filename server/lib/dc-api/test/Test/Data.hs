@@ -77,7 +77,16 @@ schemaTables :: [API.TableInfo]
 schemaTables = either error id . eitherDecodeStrict $ schemaBS
 
 numericColumns :: [API.ColumnName]
-numericColumns = schemaTables >>= (API._tiColumns >>> mapMaybe (\API.ColumnInfo {..} -> if _ciType == API.ScalarType "number" then Just _ciName else Nothing))
+numericColumns =
+  schemaTables
+    >>= ( API._tiColumns
+            >>> mapMaybe
+              ( \API.ColumnInfo {..} ->
+                  if _ciType == API.ScalarType "number"
+                    then Just _ciName
+                    else Nothing
+              )
+        )
 
 edgeCasesSchemaBS :: ByteString
 edgeCasesSchemaBS = $(makeRelativeToProject "test/Test/Data/edge-cases-schema-tables.json" >>= embedFile)

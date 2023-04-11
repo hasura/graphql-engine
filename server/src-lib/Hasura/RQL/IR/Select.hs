@@ -36,6 +36,8 @@ module Hasura.RQL.IR.Select
     AnnFieldG (..),
     AnnFields,
     AnnFieldsG,
+    AnnNestedObjectSelectG (..),
+    AnnNestedObjectSelect,
     AnnObjectSelect,
     AnnObjectSelectG (..),
     AnnRelationSelectG (..),
@@ -96,6 +98,9 @@ module Hasura.RQL.IR.Select
     aarRelationshipName,
     aarColumnMapping,
     aarAnnSelect,
+    anosSupportsNestedObjects,
+    anosColumn,
+    anosFields,
     aosFields,
     aosTableFrom,
     aosTableFilter,
@@ -648,6 +653,9 @@ data AnnFieldG (b :: BackendType) (r :: Type) v
     AFRemote (RemoteRelationshipSelect b r)
   | AFNodeId (XRelay b) SourceName (TableName b) (PrimaryKeyColumns b)
   | AFExpression Text
+  | -- | Nested object.
+    AFNestedObject (AnnNestedObjectSelectG b r v)
+  -- TODO (dmoverton): add AFNestedArray
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance
@@ -656,7 +664,8 @@ deriving stock instance
     Eq (ArraySelectG b r v),
     Eq (ComputedFieldSelect b r v),
     Eq (ObjectRelationSelectG b r v),
-    Eq (RemoteRelationshipSelect b r)
+    Eq (RemoteRelationshipSelect b r),
+    Eq (AnnNestedObjectSelectG b r v)
   ) =>
   Eq (AnnFieldG b r v)
 
@@ -666,7 +675,8 @@ deriving stock instance
     Show (ArraySelectG b r v),
     Show (ComputedFieldSelect b r v),
     Show (ObjectRelationSelectG b r v),
-    Show (RemoteRelationshipSelect b r)
+    Show (RemoteRelationshipSelect b r),
+    Show (AnnNestedObjectSelectG b r v)
   ) =>
   Show (AnnFieldG b r v)
 
@@ -679,6 +689,7 @@ instance Backend b => Bifoldable (AnnFieldG b) where
     AFRemote r -> foldMap f r
     AFNodeId {} -> mempty
     AFExpression {} -> mempty
+    AFNestedObject no -> bifoldMap f g no
 
 type AnnField b = AnnFieldG b Void (SQLExpression b)
 
@@ -1059,6 +1070,33 @@ deriving stock instance
   ) =>
   Show (RemoteSourceSelect r vf tgt)
 
+-- Nested objects
+
+data AnnNestedObjectSelectG (b :: BackendType) (r :: Type) v = AnnNestedObjectSelectG
+  { _anosSupportsNestedObjects :: XNestedObjects b,
+    _anosColumn :: Column b,
+    _anosFields :: AnnFieldsG b r v
+  }
+  deriving stock (Functor, Foldable, Traversable)
+
+deriving stock instance
+  ( Backend b,
+    Eq (AnnFieldsG b r v)
+  ) =>
+  Eq (AnnNestedObjectSelectG b r v)
+
+deriving stock instance
+  ( Backend b,
+    Show (AnnFieldsG b r v)
+  ) =>
+  Show (AnnNestedObjectSelectG b r v)
+
+instance Backend b => Bifoldable (AnnNestedObjectSelectG b) where
+  bifoldMap f g AnnNestedObjectSelectG {..} =
+    foldMap (foldMap $ bifoldMap f g) _anosFields
+
+type AnnNestedObjectSelect b r = AnnNestedObjectSelectG b r (SQLExpression b)
+
 -- Permissions
 
 data TablePermG (b :: BackendType) v = TablePerm
@@ -1121,6 +1159,7 @@ data CountDistinct
 
 $(makeLenses ''AnnSelectG)
 $(makeLenses ''AnnObjectSelectG)
+$(makeLenses ''AnnNestedObjectSelectG)
 $(makeLenses ''AnnRelationSelectG)
 $(makeLenses ''ConnectionSelect)
 $(makeLenses ''SelectArgsG)

@@ -132,7 +132,8 @@ resolveSource sourceConfig =
                             _ptmiForeignKeys = mempty,
                             _ptmiViewInfo = Just $ ViewInfo False False False,
                             _ptmiDescription = Nothing,
-                            _ptmiExtraTableMetadata = ()
+                            _ptmiExtraTableMetadata = (),
+                            _ptmiCustomObjectTypes = mempty
                           }
                       )
                       | (index, RestTable {tableReference, schema}) <-

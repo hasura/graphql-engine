@@ -161,6 +161,7 @@ boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser = do
 
         -- Using remote relationship fields in boolean expressions is not supported.
         FIRemoteRelationship _ -> empty
+        FINestedObject _ -> empty -- TODO(dmoverton)
 
 -- |
 -- > input type_bool_exp {

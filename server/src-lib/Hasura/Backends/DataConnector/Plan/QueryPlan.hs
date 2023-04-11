@@ -326,6 +326,9 @@ translateAnnField sessionVariables sourceTableName = \case
     -- and add them back to the response JSON when we reshape what the agent returns
     -- to us
     pure Nothing
+  AFNestedObject nestedObj ->
+    Just . API.NestedObjField (Witch.from $ _anosColumn nestedObj)
+      <$> translateNestedObjectSelect sessionVariables sourceTableName nestedObj
 
 translateArrayRelationSelect ::
   ( Has TableRelationships writerOutput,
@@ -432,6 +435,28 @@ translateSingleColumnAggregateFunction :: MonadError QErr m => Text -> m API.Sin
 translateSingleColumnAggregateFunction functionName =
   fmap API.SingleColumnAggregateFunction (G.mkName functionName)
     `onNothing` throw500 ("translateSingleColumnAggregateFunction: Invalid aggregate function encountered: " <> functionName)
+
+translateNestedObjectSelect ::
+  ( Has TableRelationships writerOutput,
+    Monoid writerOutput,
+    MonadError QErr m
+  ) =>
+  SessionVariables ->
+  API.TableName ->
+  AnnNestedObjectSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
+  CPS.WriterT writerOutput m API.Query
+translateNestedObjectSelect sessionVariables tableName selectG = do
+  FieldsAndAggregates {..} <- translateAnnFieldsWithNoAggregates sessionVariables noPrefix tableName $ _anosFields selectG
+  pure
+    API.Query
+      { _qFields = mapFieldNameHashMap <$> _faaFields,
+        _qAggregates = Nothing,
+        _qAggregatesLimit = Nothing,
+        _qLimit = Nothing,
+        _qOffset = Nothing,
+        _qWhere = Nothing,
+        _qOrderBy = Nothing
+      }
 
 --------------------------------------------------------------------------------
 
@@ -564,6 +589,12 @@ reshapeField field responseFieldValue =
     AFArrayRelation (ASAggregate aggregateArrayRelationField) ->
       reshapeAnnRelationSelect reshapeTableAggregateFields aggregateArrayRelationField =<< responseFieldValue
     AFExpression txt -> pure $ JE.text txt
+    AFNestedObject nestedObj -> do
+      nestedObjectFieldValue <- API.deserializeAsNestedObjFieldValue <$> responseFieldValue
+      case nestedObjectFieldValue of
+        Left err -> throw500 $ "Expected object in field returned by Data Connector agent: " <> err -- TODO(dmoverton): Add pathing information for error clarity
+        Right nestedResponse ->
+          reshapeAnnFields noPrefix (_anosFields nestedObj) nestedResponse
 
 reshapeAnnRelationSelect ::
   MonadError QErr m =>

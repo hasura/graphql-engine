@@ -13,6 +13,7 @@ module Hasura.RQL.Types.Table
     FieldInfoMap,
     ForeignKey (..),
     ForeignKeyMetadata (..),
+    GraphQLType (..),
     InsPermInfo (..),
     PrimaryKey (..),
     RolePermInfo (..),
@@ -26,6 +27,9 @@ module Hasura.RQL.Types.Table
     TableCoreInfoG (..),
     TableCustomRootFields (..),
     TableInfo (..),
+    TableObjectType (..),
+    TableObjectFieldDefinition (..),
+    TableObjectFieldType (..),
     UniqueConstraint (..),
     UpdPermInfo (..),
     ViewInfo (..),
@@ -49,7 +53,9 @@ module Hasura.RQL.Types.Table
     getFieldInfoM,
     getRels,
     getRemoteFieldInfoName,
+    isListType,
     isMutable,
+    isNullableType,
     mkAdminRolePermInfo,
     permDel,
     permIns,
@@ -68,6 +74,7 @@ module Hasura.RQL.Types.Table
     tciCustomConfig,
     tciDescription,
     tciApolloFederationConfig,
+    tciCustomObjectTypes,
     tciEnumValues,
     tciExtraTableMetadata,
     tciFieldInfoMap,
@@ -104,6 +111,7 @@ import Autodocodec
 import Autodocodec qualified as AC
 import Autodocodec.Extended (graphQLFieldNameCodec)
 import Control.Lens hiding ((.=))
+import Data.Aeson qualified as J
 import Data.Aeson.Casing
 import Data.Aeson.Extended
 import Data.Aeson.TH
@@ -136,7 +144,43 @@ import Hasura.SQL.AnyBackend (runBackend)
 import Hasura.SQL.Backend
 import Hasura.Server.Utils (englishList)
 import Hasura.Session
+import Language.GraphQL.Draft.Parser qualified as GParse
+import Language.GraphQL.Draft.Printer qualified as GPrint
 import Language.GraphQL.Draft.Syntax qualified as G
+import Text.Builder qualified as T
+
+-- | A wrapper around 'G.GType' which allows us to define custom JSON
+-- instances.
+--
+-- TODO: this name is ambiguous, and conflicts with
+-- Hasura.RQL.DDL.RemoteSchema.Permission.GraphQLType; it should perhaps be
+-- renamed, made internal to this module, or removed altogether?
+newtype GraphQLType = GraphQLType {unGraphQLType :: G.GType}
+  deriving (Show, Eq, Ord, Generic, NFData)
+
+instance HasCodec GraphQLType where
+  codec = AC.bimapCodec dec enc codec
+    where
+      dec t = case GParse.parseGraphQLType t of
+        Left _ -> Left $ "not a valid GraphQL type: " <> T.unpack t
+        Right a -> Right $ GraphQLType a
+      enc = T.run . GPrint.graphQLType . unGraphQLType
+
+instance J.ToJSON GraphQLType where
+  toJSON = J.toJSON . T.run . GPrint.graphQLType . unGraphQLType
+
+instance J.FromJSON GraphQLType where
+  parseJSON =
+    J.withText "GraphQLType" $ \t ->
+      case GParse.parseGraphQLType t of
+        Left _ -> fail $ "not a valid GraphQL type: " <> T.unpack t
+        Right a -> return $ GraphQLType a
+
+isListType :: GraphQLType -> Bool
+isListType = coerce G.isListType
+
+isNullableType :: GraphQLType -> Bool
+isNullableType = coerce G.isNullable
 
 data CustomRootField = CustomRootField
   { _crfName :: Maybe G.Name,
@@ -300,6 +344,7 @@ getAllCustomRootFields TableCustomRootFields {..} =
 
 data FieldInfo (b :: BackendType)
   = FIColumn (ColumnInfo b)
+  | FINestedObject (NestedObjectInfo b)
   | FIRelationship (RelInfo b)
   | FIComputedField (ComputedFieldInfo b)
   | FIRemoteRelationship (RemoteFieldInfo (DBJoinField b))
@@ -322,6 +367,7 @@ type FieldInfoMap = M.HashMap FieldName
 fieldInfoName :: forall b. Backend b => FieldInfo b -> FieldName
 fieldInfoName = \case
   FIColumn info -> fromCol @b $ ciColumn info
+  FINestedObject info -> fromCol @b $ _noiColumn info
   FIRelationship info -> fromRel $ riName info
   FIComputedField info -> fromComputedField $ _cfiName info
   FIRemoteRelationship info -> fromRemoteRelationship $ getRemoteFieldInfoName info
@@ -329,6 +375,7 @@ fieldInfoName = \case
 fieldInfoGraphQLName :: FieldInfo b -> Maybe G.Name
 fieldInfoGraphQLName = \case
   FIColumn info -> Just $ ciName info
+  FINestedObject info -> Just $ _noiName info
   FIRelationship info -> G.mkName $ relNameToTxt $ riName info
   FIComputedField info -> G.mkName $ computedFieldNameToText $ _cfiName info
   FIRemoteRelationship info -> G.mkName $ relNameToTxt $ getRemoteFieldInfoName info
@@ -344,6 +391,7 @@ getRemoteFieldInfoName RemoteFieldInfo {_rfiRHS} = case _rfiRHS of
 fieldInfoGraphQLNames :: FieldInfo b -> [G.Name]
 fieldInfoGraphQLNames info = case info of
   FIColumn _ -> maybeToList $ fieldInfoGraphQLName info
+  FINestedObject _ -> maybeToList $ fieldInfoGraphQLName info
   FIRelationship relationshipInfo -> fold do
     name <- fieldInfoGraphQLName info
     pure $ case riType relationshipInfo of
@@ -913,6 +961,63 @@ instance Backend b => ToJSON (ForeignKey b) where
 instance Backend b => FromJSON (ForeignKey b) where
   parseJSON = genericParseJSON hasuraJSON
 
+data TableObjectType (b :: BackendType) = TableObjectType
+  { _totName :: G.Name,
+    _totDescription :: Maybe G.Description,
+    _totFields :: NonEmpty (TableObjectFieldDefinition b)
+  }
+  deriving stock (Generic)
+
+deriving stock instance Backend b => Eq (TableObjectType b)
+
+deriving stock instance Backend b => Show (TableObjectType b)
+
+instance Backend b => NFData (TableObjectType b)
+
+instance Backend b => ToJSON (TableObjectType b) where
+  toJSON = genericToJSON hasuraJSON
+
+instance Backend b => FromJSON (TableObjectType b) where
+  parseJSON = genericParseJSON hasuraJSON
+
+data TableObjectFieldDefinition (b :: BackendType) = TableObjectFieldDefinition
+  { _tofdColumn :: Column b,
+    _tofdName :: G.Name,
+    _tofdDescription :: Maybe G.Description,
+    _tofdGType :: GraphQLType,
+    _tofdFieldType :: TableObjectFieldType b
+  }
+  deriving stock (Generic)
+
+deriving stock instance Backend b => Eq (TableObjectFieldDefinition b)
+
+deriving stock instance Backend b => Show (TableObjectFieldDefinition b)
+
+instance Backend b => NFData (TableObjectFieldDefinition b)
+
+instance Backend b => ToJSON (TableObjectFieldDefinition b) where
+  toJSON = genericToJSON hasuraJSON
+
+instance Backend b => FromJSON (TableObjectFieldDefinition b) where
+  parseJSON = genericParseJSON hasuraJSON
+
+data TableObjectFieldType (b :: BackendType)
+  = TOFTScalar G.Name (ScalarType b)
+  | TOFTObject G.Name
+  deriving stock (Generic)
+
+deriving stock instance Backend b => Eq (TableObjectFieldType b)
+
+deriving stock instance Backend b => Show (TableObjectFieldType b)
+
+instance Backend b => NFData (TableObjectFieldType b)
+
+instance Backend b => ToJSON (TableObjectFieldType b) where
+  toJSON = genericToJSON hasuraJSON
+
+instance Backend b => FromJSON (TableObjectFieldType b) where
+  parseJSON = genericParseJSON hasuraJSON
+
 -- | The @field@ and @primaryKeyColumn@ type parameters vary as the schema cache is built and more
 -- information is accumulated. See also 'TableCoreInfo'.
 data TableCoreInfoG (b :: BackendType) field primaryKeyColumn = TableCoreInfo
@@ -927,7 +1032,8 @@ data TableCoreInfoG (b :: BackendType) field primaryKeyColumn = TableCoreInfo
     _tciEnumValues :: Maybe EnumValues,
     _tciCustomConfig :: TableConfig b,
     _tciExtraTableMetadata :: ExtraTableMetadata b,
-    _tciApolloFederationConfig :: Maybe ApolloFederationConfig
+    _tciApolloFederationConfig :: Maybe ApolloFederationConfig,
+    _tciCustomObjectTypes :: HashMap G.Name (TableObjectType b)
   }
   deriving (Generic)
 
@@ -1044,7 +1150,8 @@ data DBTableMetadata (b :: BackendType) = DBTableMetadata
     _ptmiForeignKeys :: HashSet (ForeignKeyMetadata b),
     _ptmiViewInfo :: Maybe ViewInfo,
     _ptmiDescription :: Maybe Postgres.PGDescription,
-    _ptmiExtraTableMetadata :: ExtraTableMetadata b
+    _ptmiExtraTableMetadata :: ExtraTableMetadata b,
+    _ptmiCustomObjectTypes :: Maybe (HashMap G.Name (TableObjectType b))
   }
   deriving (Generic)
 
@@ -1099,6 +1206,7 @@ askColInfo m c msg = do
       askFieldInfo m (fromCol @backend c)
   case fieldInfo of
     (FIColumn colInfo) -> pure colInfo
+    (FINestedObject _) -> throwErr "nested object"
     (FIRelationship _) -> throwErr "relationship"
     (FIComputedField _) -> throwErr "computed field"
     (FIRemoteRelationship _) -> throwErr "remote relationship"
@@ -1124,6 +1232,7 @@ askComputedFieldInfo fields computedField = do
         fromComputedField computedField
   case fieldInfo of
     (FIColumn _) -> throwErr "column"
+    (FINestedObject _) -> throwErr "nested object"
     (FIRelationship _) -> throwErr "relationship"
     (FIRemoteRelationship _) -> throwErr "remote relationship"
     (FIComputedField cci) -> pure cci

@@ -180,6 +180,7 @@ orderByExpInternal gqlName description tableFields memoizeKey = do
                     aggregationOrderBy
             ReturnsOthers -> empty
         FIRemoteRelationship _ -> empty
+        FINestedObject _ -> empty -- TODO(dmoverton)
 
 -- | Corresponds to an object type for an order by.
 --

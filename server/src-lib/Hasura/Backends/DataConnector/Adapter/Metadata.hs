@@ -35,6 +35,7 @@ import Hasura.RQL.IR.BoolExp (OpExpG (..), PartialSQLExp (..), RootOrCurrent (..
 import Hasura.RQL.Types.Backend (Backend)
 import Hasura.RQL.Types.Column qualified as RQL.T.C
 import Hasura.RQL.Types.Common (OID (..), SourceName)
+import Hasura.RQL.Types.CustomTypes (GraphQLType (..))
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (RETDoNothing))
 import Hasura.RQL.Types.Metadata (BackendConfigWrapper, SourceMetadata (..))
 import Hasura.RQL.Types.Metadata qualified as Metadata
@@ -55,6 +56,7 @@ import Hasura.Services.Network
 import Hasura.Session (SessionVariable, mkSessionVariable)
 import Hasura.Tracing (ignoreTraceT)
 import Hasura.Tracing qualified as Tracing
+import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax qualified as GQL
 import Network.HTTP.Client qualified as HTTP
 import Servant.API (Union)
@@ -81,6 +83,7 @@ instance BackendMetadata 'DataConnector where
   postDropSourceHook _sourceConfig _tableTriggerMap = pure ()
   buildComputedFieldBooleanExp _ _ _ _ _ _ =
     error "buildComputedFieldBooleanExp: not implemented for the Data Connector backend."
+  columnInfoToFieldInfo = columnInfoToFieldInfo'
   listAllTables = listAllTables'
   supportsBeingRemoteRelationshipTarget = supportsBeingRemoteRelationshipTarget'
 
@@ -192,7 +195,10 @@ resolveDatabaseMetadata' ::
   DC.SourceConfig ->
   m (Either QErr (DBObjectsIntrospection 'DataConnector))
 resolveDatabaseMetadata' _ DC.SourceConfig {_scSchema = API.SchemaResponse {..}, ..} =
-  let tables = HashMap.fromList $ do
+  let typeNames = maybe mempty (HashSet.fromList . toList . fmap API._otdName) _srObjectTypes
+      customObjectTypes =
+        maybe mempty (HashMap.fromList . mapMaybe (toTableObjectType _scCapabilities typeNames) . toList) _srObjectTypes
+      tables = HashMap.fromList $ do
         API.TableInfo {..} <- _srTables
         let primaryKeyColumns = fmap Witch.from . NESeq.fromList <$> _tiPrimaryKey
         let meta =
@@ -224,7 +230,8 @@ resolveDatabaseMetadata' _ DC.SourceConfig {_scSchema = API.SchemaResponse {..},
                           _tiColumns
                             & fmap (\API.ColumnInfo {..} -> (Witch.from _ciName, DC.ExtraColumnMetadata _ciValueGenerated))
                             & HashMap.fromList
-                      }
+                      },
+                  _ptmiCustomObjectTypes = Just customObjectTypes
                 }
         pure (coerce _tiName, meta)
    in pure $
@@ -234,6 +241,25 @@ resolveDatabaseMetadata' _ DC.SourceConfig {_scSchema = API.SchemaResponse {..},
               _rsFunctions = mempty,
               _rsScalars = mempty
             }
+
+toTableObjectType :: API.Capabilities -> HashSet G.Name -> API.ObjectTypeDefinition -> Maybe (G.Name, RQL.T.T.TableObjectType 'DataConnector)
+toTableObjectType capabilities typeNames API.ObjectTypeDefinition {..} =
+  (_otdName,) . RQL.T.T.TableObjectType _otdName (G.Description <$> _otdDescription) <$> traverse toTableObjectFieldDefinition _otdColumns
+  where
+    toTableObjectFieldDefinition API.ColumnInfo {..} = do
+      fieldTypeName <- G.mkName $ API.getScalarType _ciType
+      fieldName <- G.mkName $ API.unColumnName _ciName
+      pure $
+        RQL.T.T.TableObjectFieldDefinition
+          { _tofdColumn = Witch.from _ciName,
+            _tofdName = fieldName,
+            _tofdDescription = G.Description <$> _ciDescription,
+            _tofdGType = GraphQLType $ G.TypeNamed (G.Nullability _ciNullable) fieldTypeName,
+            _tofdFieldType =
+              if HashSet.member fieldTypeName typeNames
+                then RQL.T.T.TOFTObject fieldTypeName
+                else RQL.T.T.TOFTScalar fieldTypeName $ DC.mkScalarType capabilities _ciType
+          }
 
 -- | Construct a 'HashSet' 'RQL.T.T.ForeignKeyMetadata'
 -- 'DataConnector' to build the foreign key constraints in the table
@@ -389,6 +415,30 @@ mkTypedSessionVar columnType =
 
 errorAction :: MonadError QErr m => API.ErrorResponse -> m a
 errorAction e = throw400WithDetail DataConnectorError (errorResponseSummary e) (_crDetails e)
+
+-- | This function assumes that if a type name is present in the custom object types for the table then it
+-- refers to a nested object of that type.
+-- Otherwise it is a normal (scalar) column.
+columnInfoToFieldInfo' :: HashMap G.Name (RQL.T.T.TableObjectType 'DataConnector) -> RQL.T.C.ColumnInfo 'DataConnector -> RQL.T.T.FieldInfo 'DataConnector
+columnInfoToFieldInfo' gqlTypes columnInfo@RQL.T.C.ColumnInfo {..} =
+  maybe (RQL.T.T.FIColumn columnInfo) RQL.T.T.FINestedObject getNestedObjectInfo
+  where
+    getNestedObjectInfo =
+      case ciType of
+        RQL.T.C.ColumnScalar (DC.ScalarType scalarTypeName _) -> do
+          gqlName <- GQL.mkName scalarTypeName
+          guard $ HashMap.member gqlName gqlTypes
+          pure $
+            RQL.T.C.NestedObjectInfo
+              { RQL.T.C._noiSupportsNestedObjects = (),
+                RQL.T.C._noiColumn = ciColumn,
+                RQL.T.C._noiName = ciName,
+                RQL.T.C._noiType = gqlName,
+                RQL.T.C._noiIsNullable = ciIsNullable,
+                RQL.T.C._noiDescription = ciDescription,
+                RQL.T.C._noiMutability = ciMutability
+              }
+        RQL.T.C.ColumnEnumReference {} -> Nothing
 
 supportsBeingRemoteRelationshipTarget' :: DC.SourceConfig -> Bool
 supportsBeingRemoteRelationshipTarget' DC.SourceConfig {..} =

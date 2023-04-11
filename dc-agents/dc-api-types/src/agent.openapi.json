@@ -1035,6 +1035,13 @@
       },
       "SchemaResponse": {
         "properties": {
+          "objectTypes": {
+            "description": "Object type definitions referenced in this schema",
+            "items": {
+              "$ref": "#/components/schemas/ObjectTypeDefinition"
+            },
+            "type": "array"
+          },
           "tables": {
             "description": "Available tables",
             "items": {
@@ -1241,6 +1248,30 @@
         ],
         "type": "object"
       },
+      "ObjectTypeDefinition": {
+        "properties": {
+          "columns": {
+            "description": "The columns of the type",
+            "items": {
+              "$ref": "#/components/schemas/ColumnInfo"
+            },
+            "type": "array"
+          },
+          "description": {
+            "description": "The description of the type",
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "columns"
+        ],
+        "type": "object"
+      },
       "QueryResponse": {
         "properties": {
           "aggregates": {
@@ -1413,6 +1444,28 @@
         },
         "type": "object"
       },
+      "NestedObjectField": {
+        "properties": {
+          "column": {
+            "type": "string"
+          },
+          "query": {
+            "$ref": "#/components/schemas/Query"
+          },
+          "type": {
+            "enum": [
+              "object"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "column",
+          "query",
+          "type"
+        ],
+        "type": "object"
+      },
       "RelationshipField": {
         "properties": {
           "query": {
@@ -1462,11 +1515,15 @@
         "discriminator": {
           "mapping": {
             "column": "ColumnField",
+            "object": "NestedObjectField",
             "relationship": "RelationshipField"
           },
           "propertyName": "type"
         },
         "oneOf": [
+          {
+            "$ref": "#/components/schemas/NestedObjectField"
+          },
           {
             "$ref": "#/components/schemas/RelationshipField"
           },

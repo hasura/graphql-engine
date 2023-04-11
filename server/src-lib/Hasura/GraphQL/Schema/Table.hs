@@ -229,6 +229,8 @@ tableSelectFields tableInfo = do
     canBeSelected _ Nothing _ = pure False
     canBeSelected _ (Just permissions) (FIColumn columnInfo) =
       pure $! Map.member (ciColumn columnInfo) (spiCols permissions)
+    canBeSelected _ (Just permissions) (FINestedObject NestedObjectInfo {..}) =
+      pure $! Map.member _noiColumn (spiCols permissions)
     canBeSelected role _ (FIRelationship relationshipInfo) = do
       tableInfo' <- askTableInfo $ riRTable relationshipInfo
       pure $! isJust $ tableSelectPermissions @b role tableInfo'

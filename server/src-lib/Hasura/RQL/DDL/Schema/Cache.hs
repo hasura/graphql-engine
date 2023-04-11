@@ -666,7 +666,8 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
         interpretWriter
           -< for (tablesRawInfo `alignTableMap` nonColumnsByTable) \(tableRawInfo, nonColumnInput) -> do
             let columns = _tciFieldInfoMap tableRawInfo
-            allFields :: FieldInfoMap (FieldInfo b) <- addNonColumnFields allSources sourceName tablesRawInfo columns remoteSchemaMap dbFunctions nonColumnInput
+                customObjectTypes = _tciCustomObjectTypes tableRawInfo
+            allFields :: FieldInfoMap (FieldInfo b) <- addNonColumnFields allSources sourceName customObjectTypes tablesRawInfo columns remoteSchemaMap dbFunctions nonColumnInput
             pure $ tableRawInfo {_tciFieldInfoMap = allFields}
 
       -- permissions

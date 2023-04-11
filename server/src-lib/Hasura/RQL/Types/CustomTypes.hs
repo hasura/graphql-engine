@@ -45,7 +45,7 @@ module Hasura.RQL.Types.CustomTypes
   )
 where
 
-import Autodocodec (HasCodec (codec), bimapCodec, dimapCodec, optionalField', optionalFieldWith', optionalFieldWithDefault', optionalFieldWithOmittedDefault', requiredField', requiredFieldWith')
+import Autodocodec (HasCodec (codec), dimapCodec, optionalField', optionalFieldWith', optionalFieldWithDefault', optionalFieldWithOmittedDefault', requiredField', requiredFieldWith')
 import Autodocodec qualified as AC
 import Autodocodec.Extended (graphQLEnumValueCodec, graphQLFieldDescriptionCodec, graphQLFieldNameCodec, typeableName)
 import Control.Lens.TH (makeLenses)
@@ -54,7 +54,6 @@ import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
-import Data.Text qualified as T
 import Data.Text.Extended (ToTxt (..))
 import Data.Typeable (Typeable)
 import Hasura.Backends.Postgres.Instances.Types ()
@@ -67,46 +66,10 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend
 import Hasura.SQL.Backend
-import Language.GraphQL.Draft.Parser qualified as GParse
-import Language.GraphQL.Draft.Printer qualified as GPrint
 import Language.GraphQL.Draft.Syntax qualified as G
-import Text.Builder qualified as T
 
 --------------------------------------------------------------------------------
 -- Metadata
-
--- | A wrapper around 'G.GType' which allows us to define custom JSON
--- instances.
---
--- TODO: this name is ambiguous, and conflicts with
--- Hasura.RQL.DDL.RemoteSchema.Permission.GraphQLType; it should perhaps be
--- renamed, made internal to this module, or removed altogether?
-newtype GraphQLType = GraphQLType {unGraphQLType :: G.GType}
-  deriving (Show, Eq, Ord, Generic, NFData)
-
-instance HasCodec GraphQLType where
-  codec = bimapCodec dec enc codec
-    where
-      dec t = case GParse.parseGraphQLType t of
-        Left _ -> Left $ "not a valid GraphQL type: " <> T.unpack t
-        Right a -> Right $ GraphQLType a
-      enc = T.run . GPrint.graphQLType . unGraphQLType
-
-instance J.ToJSON GraphQLType where
-  toJSON = J.toJSON . T.run . GPrint.graphQLType . unGraphQLType
-
-instance J.FromJSON GraphQLType where
-  parseJSON =
-    J.withText "GraphQLType" $ \t ->
-      case GParse.parseGraphQLType t of
-        Left _ -> fail $ "not a valid GraphQL type: " <> T.unpack t
-        Right a -> return $ GraphQLType a
-
-isListType :: GraphQLType -> Bool
-isListType = coerce G.isListType
-
-isNullableType :: GraphQLType -> Bool
-isNullableType = coerce G.isNullable
 
 isInBuiltScalar :: Text -> Bool
 isInBuiltScalar s
@@ -418,7 +381,7 @@ data AnnotatedTypeRelationship = AnnotatedTypeRelationship
     _atrSource :: SourceName,
     _atrSourceConfig :: SourceConfig ('Postgres 'Vanilla),
     -- TODO: see comment in 'TypeRelationship'
-    _atrTableInfo :: TableInfo ('Postgres 'Vanilla),
+    _atrTableName :: TableName ('Postgres 'Vanilla),
     _atrFieldMapping :: HashMap ObjectFieldName (ColumnInfo ('Postgres 'Vanilla))
   }
   deriving (Generic)

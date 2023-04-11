@@ -23,6 +23,7 @@ module Hasura.GraphQL.Schema.Common
     ConnectionSelectExp,
     AnnotatedActionField,
     AnnotatedActionFields,
+    AnnotatedNestedObjectSelect,
     EdgeFields,
     Scenario (..),
     SelectArgs,
@@ -310,6 +311,8 @@ type EdgeFields b = IR.EdgeFields b (IR.RemoteRelationshipField IR.UnpreparedVal
 type AnnotatedActionFields = IR.ActionFieldsG (IR.RemoteRelationshipField IR.UnpreparedValue)
 
 type AnnotatedActionField = IR.ActionFieldG (IR.RemoteRelationshipField IR.UnpreparedValue)
+
+type AnnotatedNestedObjectSelect b = IR.AnnNestedObjectSelectG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)
 
 -------------------------------------------------------------------------------
 

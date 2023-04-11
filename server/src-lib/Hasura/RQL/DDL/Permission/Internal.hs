@@ -178,6 +178,8 @@ annColExp rhsParser rootFieldInfoMap colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
     FIColumn pgi -> AVColumn pgi <$> parseBoolExpOperations (_berpValueParser rhsParser) rootFieldInfoMap colInfoMap (ColumnReferenceColumn pgi) colVal
+    FINestedObject {} ->
+      throw400 NotSupported "nested object not supported"
     FIRelationship relInfo -> do
       relBoolExp <- decodeValue colVal
       relFieldInfoMap <- askFieldInfoMapSource $ riRTable relInfo

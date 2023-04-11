@@ -49,7 +49,7 @@ import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo (..))
 import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Parser.Internal.Parser qualified as P
+import Hasura.GraphQL.Parser.Internal.Parser qualified as IP
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
@@ -75,6 +75,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission qualified as Permission
 import Hasura.RQL.Types.Relationships.Local
@@ -460,7 +461,7 @@ defaultTableSelectionSet tableInfo = runMaybeT do
             <&> parsedSelectionsToFields IR.AFExpression
   where
     selectionSetObjectWithDirective name description parsers implementsInterfaces directives =
-      P.setParserDirectives directives $
+      IP.setParserDirectives directives $
         P.selectionSetObject name description parsers implementsInterfaces
 
 -- | List of table fields object.
@@ -1276,6 +1277,8 @@ fieldSelection table tableInfo = \case
       pure $!
         P.selection fieldName (ciDescription columnInfo) pathArg field
           <&> IR.mkAnnColumnField (ciColumn columnInfo) (ciType columnInfo) caseBoolExpUnpreparedValue
+  FINestedObject nestedObjectInfo ->
+    pure . fmap IR.AFNestedObject <$> nestedObjectFieldParser tableInfo nestedObjectInfo
   FIRelationship relationshipInfo ->
     concat . maybeToList <$> relationshipField table relationshipInfo
   FIComputedField computedFieldInfo ->
@@ -1295,6 +1298,58 @@ fieldSelection table tableInfo = \case
         relationshipFields <- fromMaybe [] <$> remoteRelationshipField remoteFieldInfo
         let lhsFields = _rfiLHS remoteFieldInfo
         pure $ map (fmap (IR.AFRemote . IR.RemoteRelationshipSelect lhsFields)) relationshipFields
+  where
+    nestedObjectFieldParser :: TableInfo b -> NestedObjectInfo b -> SchemaT r m (FieldParser n (AnnotatedNestedObjectSelect b))
+    nestedObjectFieldParser TableInfo {..} NestedObjectInfo {..} = do
+      let customObjectTypes = _tciCustomObjectTypes _tiCoreInfo
+      case Map.lookup _noiType customObjectTypes of
+        Just objectType -> do
+          parser <- nestedObjectParser _noiSupportsNestedObjects customObjectTypes objectType _noiColumn _noiIsNullable
+          pure $ P.subselection_ _noiName _noiDescription parser
+        _ -> throw500 $ "fieldSelection: object type " <> _noiType <<> " not found"
+
+nestedObjectParser ::
+  forall b r m n.
+  MonadBuildSchema b r m n =>
+  XNestedObjects b ->
+  HashMap G.Name (TableObjectType b) ->
+  TableObjectType b ->
+  Column b ->
+  Bool ->
+  SchemaT r m (P.Parser 'Output n (AnnotatedNestedObjectSelect b))
+nestedObjectParser supportsNestedObjects objectTypes objectType column isNullable = do
+  allFieldParsers <- for (toList $ _totFields objectType) outputFieldParser
+  pure $
+    outputParserModifier isNullable $
+      P.selectionSet (_totName objectType) (_totDescription objectType) allFieldParsers
+        <&> IR.AnnNestedObjectSelectG supportsNestedObjects column . parsedSelectionsToFields IR.AFExpression
+  where
+    outputParserModifier True = P.nullableParser
+    outputParserModifier False = P.nonNullableParser
+
+    outputFieldParser ::
+      TableObjectFieldDefinition b ->
+      SchemaT r m (IP.FieldParser MetadataObjId n (IR.AnnFieldG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)))
+    outputFieldParser (TableObjectFieldDefinition column' name description (GraphQLType gType) objectFieldType) =
+      P.memoizeOn 'nestedObjectParser (_totName objectType, name) do
+        case objectFieldType of
+          TOFTScalar fieldTypeName scalarType ->
+            wrapScalar scalarType $ customScalarParser fieldTypeName
+          TOFTObject objectName -> do
+            objectType' <- Map.lookup objectName objectTypes `onNothing` throw500 ("Custom type " <> objectName <<> " not found")
+            parser <- fmap (IR.AFNestedObject @b) <$> nestedObjectParser supportsNestedObjects objectTypes objectType' column' (G.isNullable gType)
+            pure $ P.subselection_ name description parser
+      where
+        wrapScalar scalarType parser =
+          pure $
+            P.wrapFieldParser gType (P.selection_ name description parser)
+              $> IR.mkAnnColumnField column' (ColumnScalar scalarType) Nothing Nothing
+        customScalarParser fieldTypeName =
+          let schemaType = P.TNamed P.NonNullable $ P.Definition fieldTypeName Nothing Nothing [] P.TIScalar
+           in P.Parser
+                { pType = schemaType,
+                  pParser = P.valueToJSON (P.toGraphQLType schemaType)
+                }
 
 {- Note [Permission filter deduplication]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1471,7 +1526,7 @@ relationshipField table ri = runMaybeT do
         _ -> pure Nullable
       pure $
         pure $
-          case nullable of { Nullable -> id; NotNullable -> P.nonNullableField } $
+          case nullable of { Nullable -> id; NotNullable -> IP.nonNullableField } $
             P.subselection_ relFieldName desc selectionSetParser
               <&> \fields ->
                 IR.AFObjectRelation $

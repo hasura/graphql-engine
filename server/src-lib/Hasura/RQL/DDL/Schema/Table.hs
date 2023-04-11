@@ -518,7 +518,8 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
               _tciCustomConfig = config,
               _tciDescription = description,
               _tciExtraTableMetadata = _ptmiExtraTableMetadata metadataTable,
-              _tciApolloFederationConfig = apolloFedConfig
+              _tciApolloFederationConfig = apolloFedConfig,
+              _tciCustomObjectTypes = fromMaybe mempty $ _ptmiCustomObjectTypes metadataTable
             }
 
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column

@@ -161,6 +161,13 @@ class
     Show (XRelay b),
     Eq (XStreamingSubscription b),
     Show (XStreamingSubscription b),
+    Eq (XNestedObjects b),
+    Ord (XNestedObjects b),
+    Show (XNestedObjects b),
+    NFData (XNestedObjects b),
+    Hashable (XNestedObjects b),
+    ToJSON (XNestedObjects b),
+    ToTxt (XNestedObjects b),
     -- Intermediate Representations
     Traversable (BooleanOperators b),
     Traversable (UpdateVariant b),
@@ -301,6 +308,9 @@ class
   type XNestedInserts b :: Type
 
   type XStreamingSubscription b :: Type
+
+  type XNestedObjects b :: Type
+  type XNestedObjects b = XDisable
 
   -- The result of dynamic connection template resolution
   type ResolvedConnectionTemplate b :: Type

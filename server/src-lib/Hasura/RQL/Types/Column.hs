@@ -16,6 +16,7 @@ module Hasura.RQL.Types.Column
     ColumnValue (..),
     ColumnMutability (..),
     ColumnInfo (..),
+    NestedObjectInfo (..),
     RawColumnInfo (..),
     PrimaryKeyColumns,
     getColInfos,
@@ -246,6 +247,31 @@ instance Backend b => NFData (ColumnInfo b)
 instance Backend b => Hashable (ColumnInfo b)
 
 instance Backend b => ToJSON (ColumnInfo b) where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
+
+data NestedObjectInfo b = NestedObjectInfo
+  { _noiSupportsNestedObjects :: XNestedObjects b,
+    _noiColumn :: Column b,
+    _noiName :: G.Name,
+    _noiType :: G.Name,
+    _noiIsNullable :: Bool,
+    _noiDescription :: Maybe G.Description,
+    _noiMutability :: ColumnMutability
+  }
+  deriving (Generic)
+
+deriving instance (Backend b) => Eq (NestedObjectInfo b)
+
+deriving instance (Backend b) => Ord (NestedObjectInfo b)
+
+deriving instance (Backend b) => Show (NestedObjectInfo b)
+
+instance (Backend b) => NFData (NestedObjectInfo b)
+
+instance (Backend b) => Hashable (NestedObjectInfo b)
+
+instance (Backend b) => ToJSON (NestedObjectInfo b) where
   toJSON = genericToJSON hasuraJSON
   toEncoding = genericToEncoding hasuraJSON
 
