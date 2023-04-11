@@ -1,50 +1,40 @@
 import { ValidateJavascriptBundleOutputExecutorSchema } from './schema';
 import { globSync } from 'glob';
 import { ExecutorContext } from '@nrwl/devkit';
-import * as fs from 'fs';
+import * as fs from 'node:fs';
+import {
+  createForbiddenFileName,
+  createForbiddenString,
+  createForbiddenEnv,
+  CheckerFunction,
+} from './validators';
 
-type CheckerFunction = (
-  fileContent: string,
-  fileName: string
-) =>
-  | { ok: true; fileName: string }
-  | { ok: false; errors: string[]; fileName: string };
+const legacyNamesThatWeCantUseReason =
+  'This file name cannot be used anymore given it was used prior to 2.18 and cli will load this instead of the correct assets.';
 
-const createForbiddenString =
-  (patern: string): CheckerFunction =>
-  (fileContent, fileName) => {
-    if (fileContent.includes(patern)) {
-      return {
-        ok: false,
-        errors: [`"${patern}" should not be found in the bundle.`],
-        fileName,
-      };
-    }
-    return { ok: true, fileName };
-  };
-
-const createForbiddenEnv = (envVariableName: string): CheckerFunction => {
-  const envValue = process.env[envVariableName];
-  return (fileContent, fileName) => {
-    if (!envValue) {
-      return { ok: true, fileName };
-    }
-    if (fileContent.includes(envValue)) {
-      return {
-        ok: false,
-        errors: [
-          `process.env.${envVariableName} value should not be found in the bundle.`,
-        ],
-        fileName,
-      };
-    }
-    return { ok: true, fileName };
-  };
-};
-
-const checks = [
+const checks: CheckerFunction[] = [
   createForbiddenString('NX_CLOUD_ACCESS_TOKEN'),
   createForbiddenEnv('NX_CLOUD_ACCESS_TOKEN'),
+  createForbiddenFileName({
+    forbiddenName: /vendor\..*\.js\.map/,
+    extraReason:
+      "Due to limitation on sentry, we don't want to ship vendor source maps.",
+  }),
+  createForbiddenFileName({
+    forbiddenName: 'main.css',
+    extraReason: legacyNamesThatWeCantUseReason,
+  }),
+  createForbiddenFileName({
+    forbiddenName: 'main.js',
+    extraReason: legacyNamesThatWeCantUseReason,
+  }),
+  createForbiddenFileName({
+    forbiddenName: 'assetLoader.js',
+  }),
+  createForbiddenFileName({
+    forbiddenName: 'vendor.js',
+    extraReason: legacyNamesThatWeCantUseReason,
+  }),
 ];
 
 export default async function runExecutor(
@@ -59,8 +49,9 @@ export default async function runExecutor(
     context.workspace?.projects?.[projectName]?.targets?.build?.options
       ?.outputPath ?? `dist/apps/${projectName}`;
 
-  const allFilesWeShouldLookAt = globSync('**/*.{js,css,map,txt,json}', {
+  const allFilesWeShouldLookAt = globSync('**/*', {
     cwd: distTarget,
+    nodir: true,
   });
 
   const results = allFilesWeShouldLookAt
@@ -69,7 +60,10 @@ export default async function runExecutor(
       fileContent: fs.readFileSync(distTarget + '/' + it, 'utf8'),
     }))
     .map(({ fileName, fileContent }) =>
-      checks.map(check => check(fileContent, fileName))
+      checks.map(check => ({
+        ...check({ fileContent, fileName, distTarget }),
+        fileName,
+      }))
     )
     .flat();
 
