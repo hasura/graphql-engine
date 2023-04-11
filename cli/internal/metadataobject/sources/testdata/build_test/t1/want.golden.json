@@ -37,33 +37,23 @@
     },
     "timeout": 5
    },
-   "logical_models": [
+   "custom_return_types": [
     {
-     "arguments": {
-      "unused": {
-       "description": "An integer argument that we completely ignore",
-       "nullable": true,
+     "name": "quiz_answer",
+     "fields": {
+      "added_by_user_id": {
+       "nullable": false,
        "type": "integer"
+      },
+      "answer": {
+       "nullable": false,
+       "type": "text"
+      },
+      "question": {
+       "nullable": false,
+       "type": "text"
       }
      },
-     "code": "select question, answer, added_by_user_id from questions",
-     "returns": {
-      "columns": {
-       "added_by_user_id": {
-        "nullable": false,
-        "type": "integer"
-       },
-       "answer": {
-        "nullable": false,
-        "type": "text"
-       },
-       "question": {
-        "nullable": false,
-        "type": "text"
-       }
-      }
-     },
-     "root_field_name": "quiz_answers",
      "select_permissions": [
       {
        "permission": {
@@ -89,6 +79,20 @@
        "role": "user"
       }
      ]
+    }
+   ],
+   "logical_models": [
+    {
+     "arguments": {
+      "unused": {
+       "description": "An integer argument that we completely ignore",
+       "nullable": true,
+       "type": "integer"
+      }
+     },
+     "code": "select question, answer, added_by_user_id from questions",
+     "returns": "quiz_answer",
+     "root_field_name": "quiz_answers"
     }
    ],
    "tables": [
