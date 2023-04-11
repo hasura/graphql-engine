@@ -21,6 +21,8 @@ module Hasura.Server.Auth
     JWKSet (..),
     processJwt,
     UserAuthentication (..),
+    mkJwtCtx,
+    updateJwkFromUrl,
 
     -- * Exposed for testing
     getUserInfoWithExpTime_,
@@ -138,7 +140,7 @@ setupAuthMode adminSecretHashSet mWebHook mJwtSecrets mUnAuthRole logger httpMan
   case (not (Set.null adminSecretHashSet), mWebHook, not (null mJwtSecrets)) of
     (True, Nothing, False) -> return $ AMAdminSecret adminSecretHashSet mUnAuthRole
     (True, Nothing, True) -> do
-      jwtCtxs <- traverse mkJwtCtx (L.nub mJwtSecrets)
+      jwtCtxs <- traverse (\jSecret -> mkJwtCtx jSecret logger httpManager) (L.nub mJwtSecrets)
       pure $ AMAdminSecretAndJWT adminSecretHashSet jwtCtxs mUnAuthRole
     -- Nothing below this case uses unauth role. Throw a fatal error if we would otherwise ignore
     -- that parameter, lest users misunderstand their auth configuration:
@@ -164,22 +166,22 @@ setupAuthMode adminSecretHashSet mWebHook mJwtSecrets mUnAuthRole logger httpMan
       " requires --admin-secret (HASURA_GRAPHQL_ADMIN_SECRET) or "
         <> " --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
 
-    mkJwtCtx :: (MonadIO m, MonadBaseControl IO m, MonadError Text m) => JWTConfig -> m JWTCtx
-    mkJwtCtx JWTConfig {..} = do
-      (jwkUri, jwkKeyConfig) <- case jcKeyOrUrl of
-        Left jwk -> do
-          jwkRef <- liftIO $ newIORef (JWKSet [jwk], Nothing)
-          return (Nothing, jwkRef)
-        -- in case JWT url is provided, an empty JWKSet is initialised,
-        -- which will be populated by the 'updateJWKCtx' poller thread
-        Right uri -> do
-          -- fetch JWK initially and throw error if it fails
-          void $ withJwkError $ fetchJwk logger httpManager uri
-          jwkRef <- liftIO $ newIORef (JWKSet [], Nothing)
-          return (Just uri, jwkRef)
-      let jwtHeader = fromMaybe JHAuthorization jcHeader
-      return $ JWTCtx jwkUri jwkKeyConfig jcAudience jcIssuer jcClaims jcAllowedSkew jwtHeader
-
+mkJwtCtx :: (MonadIO m, MonadBaseControl IO m, MonadError Text m) => JWTConfig -> Logger Hasura -> HTTP.Manager -> m JWTCtx
+mkJwtCtx JWTConfig {..} logger httpManager = do
+  (jwkUri, jwkKeyConfig) <- case jcKeyOrUrl of
+    Left jwk -> do
+      jwkRef <- liftIO $ newIORef (JWKSet [jwk], Nothing)
+      return (Nothing, jwkRef)
+    -- in case JWT url is provided, an empty JWKSet is initialised,
+    -- which will be populated by the 'updateJWKCtx' poller thread
+    Right uri -> do
+      -- fetch JWK initially and throw error if it fails
+      void $ withJwkError $ fetchJwk logger httpManager uri
+      jwkRef <- liftIO $ newIORef (JWKSet [], Nothing)
+      return (Just uri, jwkRef)
+  let jwtHeader = fromMaybe JHAuthorization jcHeader
+  return $ JWTCtx jwkUri jwkKeyConfig jcAudience jcIssuer jcClaims jcAllowedSkew jwtHeader
+  where
     withJwkError a = do
       res <- runExceptT a
       onLeft res \case
@@ -200,23 +202,25 @@ updateJwkCtx ::
   m ()
 updateJwkCtx authMode httpManager logger = do
   case authMode of
-    AMAdminSecretAndJWT _ jwtCtxs _ -> traverse_ updateJwkFromUrl jwtCtxs
+    AMAdminSecretAndJWT _ jwtCtxs _ -> for_ jwtCtxs updateJwkFromUrl_
     _ -> pure ()
   where
-    updateJwkFromUrl :: JWTCtx -> m ()
-    updateJwkFromUrl (JWTCtx url ref _ _ _ _ _) =
-      for_ url \uri -> do
-        (jwkSet, jwkExpiry) <- liftIO $ readIORef ref
-        case jwkSet of
-          -- get the JWKs initially if the JWKSet is empty
-          JWKSet [] -> fetchAndUpdateJWKs logger httpManager uri ref
-          -- if the JWKSet is not empty, get the new JWK based on the
-          -- expiry time
-          _ -> do
-            currentTime <- liftIO getCurrentTime
-            for_ jwkExpiry \expiryTime ->
-              when (currentTime >= expiryTime) $
-                fetchAndUpdateJWKs logger httpManager uri ref
+    updateJwkFromUrl_ jwtCtx = updateJwkFromUrl jwtCtx httpManager logger
+
+updateJwkFromUrl :: forall m. (MonadIO m, MonadBaseControl IO m) => JWTCtx -> HTTP.Manager -> Logger Hasura -> m ()
+updateJwkFromUrl (JWTCtx url ref _ _ _ _ _) httpManager logger =
+  for_ url \uri -> do
+    (jwkSet, jwkExpiry) <- liftIO $ readIORef ref
+    case jwkSet of
+      -- get the JWKs initially if the JWKSet is empty
+      JWKSet [] -> fetchAndUpdateJWKs logger httpManager uri ref
+      -- if the JWKSet is not empty, get the new JWK based on the
+      -- expiry time
+      _ -> do
+        currentTime <- liftIO getCurrentTime
+        for_ jwkExpiry \expiryTime ->
+          when (currentTime >= expiryTime) $
+            fetchAndUpdateJWKs logger httpManager uri ref
 
 -- | Authenticate the request using the headers and the configured 'AuthMode'.
 getUserInfoWithExpTime ::
@@ -246,7 +250,7 @@ getUserInfoWithExpTime_ ::
   ( [JWTCtx] ->
     [HTTP.Header] ->
     Maybe RoleName ->
-    m (UserInfo, Maybe UTCTime, [HTTP.Header])
+    m (UserInfo, Maybe UTCTime, [HTTP.Header], Maybe JWTCtx)
   ) ->
   logger ->
   mgr ->
@@ -277,7 +281,8 @@ getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHead
   AMAdminSecretAndHook adminSecretHashSet hook ->
     checkingSecretIfSent adminSecretHashSet $ userInfoFromAuthHook_ logger manager hook rawHeaders reqs
   AMAdminSecretAndJWT adminSecretHashSet jwtSecrets unAuthRole ->
-    checkingSecretIfSent adminSecretHashSet $ processJwt_ jwtSecrets rawHeaders unAuthRole
+    checkingSecretIfSent adminSecretHashSet $
+      processJwt_ jwtSecrets rawHeaders unAuthRole <&> (\(a, b, c, _) -> (a, b, c))
   where
     -- CAREFUL!:
     mkUserInfoFallbackAdminRole adminSecretState =

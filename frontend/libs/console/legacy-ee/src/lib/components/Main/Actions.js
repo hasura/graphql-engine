@@ -29,7 +29,7 @@ import {
   CLIENT_NAME_HEADER,
   CLIENT_NAME_HEADER_VALUE,
 } from '../../constants';
-import { mainReducer } from '@hasura/console-legacy-ce';
+import { mainReducer, isCloudConsole } from '@hasura/console-legacy-ce';
 import { getKeyFromLS, initLS } from '../Login/localStorage';
 import { parseQueryParams } from '../Login/utils';
 import upsertToLS, { removeHeaderFromLS } from '../../utils/upsertToLS';
@@ -37,7 +37,6 @@ import { constructRedirectUrl } from '../../utils/utils';
 import { retrieveByRefreshToken } from '../OAuthCallback/Actions';
 import { decodeToken } from '../../utils/computeAccess';
 import extendedGlobals from '../../Globals';
-import { isCloudConsole } from '@hasura/console-legacy-ce';
 
 const UPDATE_HASURA_DOT_COM_ACCESS = 'Main/UPDATE_HASURA_DOT_COM_ACCESS';
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
@@ -297,6 +296,12 @@ const getHeaders = (header, token, defaultValue = null) => {
         [`x-hasura-${globals.adminSecretLabel}`]: adminSecret,
       };
       return headers;
+    case 'ssoToken':
+      headers = {
+        ...CONSTANT_HEADERS,
+        [globals.ssoLabel]: token,
+      };
+      return headers;
     default:
       return null;
   }
@@ -337,6 +342,7 @@ const validateLogin = isInitialLoad => (dispatch, getState) => {
         type: SET_METADATA,
         data: { ...data, loading: false },
       });
+      return true;
     },
     error => {
       dispatch({ type: LOGIN_IN_PROGRESS, data: false });
@@ -347,9 +353,7 @@ const validateLogin = isInitialLoad => (dispatch, getState) => {
           error
         )}`
       );
-      if (error.code !== 'access-denied') {
-        alert(JSON.stringify(error));
-      }
+      return false;
     }
   );
 };
@@ -404,11 +408,17 @@ const clearCollaboratorSignInState = () => {
         const patIndex = headers.findIndex(
           element => element.key === globals.patLabel
         );
+        const ssoIndex = headers.findIndex(
+          element => element.key === globals.ssoLabel
+        );
         if (headerIndex !== -1) {
           dispatcherChains.push(dispatch(removeRequestHeader(headerIndex)));
         }
         if (patIndex !== -1) {
           dispatcherChains.push(dispatch(removeRequestHeader(patIndex)));
+        }
+        if (ssoIndex !== -1) {
+          dispatcherChains.push(dispatch(removeRequestHeader(ssoIndex)));
         }
       }
       dispatcherChains.push(
@@ -425,6 +435,7 @@ const clearCollaboratorSignInState = () => {
         .then(() => {
           removeHeaderFromLS(globals.collabLabel);
           removeHeaderFromLS(globals.patLabel);
+          removeHeaderFromLS(globals.ssoLabel);
           clearPATState();
           clearAdminSecretState();
           initLS();
@@ -440,7 +451,7 @@ const clearCollaboratorSignInState = () => {
 };
 
 const idTokenReceived =
-  (data, shouldRedirect = true) =>
+  (idp, data, shouldRedirect = true) =>
   (dispatch, getState) => {
     // set localstorage
     const { id_token: idToken } = data;
@@ -460,7 +471,7 @@ const idTokenReceived =
         // This variable should be used to determine whether to redirect the user in the case of fresh OAuthCallback flow
         // Clear the interval before invoking the function again
         clearInterval(pollId);
-        dispatch(retrieveByRefreshToken(data.refresh_token))
+        dispatch(retrieveByRefreshToken(idp, data.refresh_token))
           .then(resp => {
             dispatch(idTokenReceived(resp, false));
           })
@@ -558,6 +569,133 @@ const idTokenReceived =
         // dispatch(validateLogin(false));
       }
     });
+  };
+
+// the sso access token is received from OAuth or SAML Idp of the EE customer
+// because it doesn't have permission to request resources from lux
+// we only store the token into graphiql headers and the local storage
+const ssoIdTokenReceived =
+  (idp, data, shouldRedirect = true) =>
+  async (dispatch, getState) => {
+    const {
+      access_token: accessToken,
+      expires_in: expiresIn,
+      refresh_token: refreshToken,
+      id_token: idToken,
+    } = data;
+
+    // prefer jwt id_token
+    const token = idToken || accessToken;
+    const bearerToken = `IDToken ${token}`;
+    const updatedDataHeaders = getHeaders('ssoToken', bearerToken);
+
+    /* Remove admin-secret if applicable and add new data headers into the LS */
+    /* Implement some sort of a timeout which refetches the token
+     * from refresh token
+     * */
+    if (expiresIn > 0) {
+      const timeDiff = getTimeDifference(expiresIn);
+      const expiryDate = getExpiryDate(timeDiff);
+      console.info('Token will be refreshed at', expiryDate);
+      const pollId = handleSystemSuspendWakeUp(dispatch, expiryDate);
+
+      const onFailure = () => {
+        const { routing } = getState();
+        const { locationBeforeTransitions } = routing;
+        const { pathname, search } = locationBeforeTransitions;
+        const redirectUrl = constructRedirectUrl(pathname, search);
+        if (redirectUrl) {
+          dispatch(
+            push({
+              pathname: '/login',
+              search: `?redirect_url=${window.encodeURIComponent(redirectUrl)}`,
+            })
+          );
+          return;
+        }
+        dispatch(push(`${globals.urlPrefix}/login`));
+      };
+
+      setTimeout(() => {
+        // This variable should be used to determine whether to redirect the user in the case of fresh OAuthCallback flow
+        // Clear the interval before invoking the function again
+        clearInterval(pollId);
+
+        if (!refreshToken) {
+          return onFailure();
+        }
+
+        dispatch(retrieveByRefreshToken(idp, refreshToken))
+          .then(resp => {
+            dispatch(idTokenReceived(resp, false));
+          })
+          .catch(err => {
+            console.error(err);
+          });
+      }, timeDiff);
+    } else {
+      console.error('Unexpected error');
+      dispatch(push('/'));
+    }
+
+    const currentHeaders = getState().apiexplorer.displayedApi.request.headers;
+    let authHeaderIndex = 1;
+    if (currentHeaders) {
+      const index = currentHeaders.findIndex(f => f.key === globals.ssoLabel);
+      if (index !== -1) {
+        authHeaderIndex = index;
+      }
+    }
+
+    await Promise.all([
+      dispatch({ type: UPDATE_DATA_HEADERS, data: updatedDataHeaders }),
+      ...(globals.isAdminSecretSet
+        ? [
+            dispatch(
+              changeRequestHeader(
+                authHeaderIndex,
+                'key',
+                globals.ssoLabel,
+                true
+              )
+            ),
+            dispatch(
+              changeRequestHeader(authHeaderIndex, 'value', bearerToken, true)
+            ),
+          ]
+        : []),
+    ]);
+
+    /* Flush to the local storage */
+    if (globals.isAdminSecretSet) {
+      upsertToLS(globals.ssoLabel, bearerToken);
+    } else {
+      // Set the client name header if doesn't exist
+      upsertToLS(CLIENT_NAME_HEADER, CLIENT_NAME_HEADER_VALUE);
+      // Remove sso token header if exists
+      removeHeaderFromLS(globals.ssoLabel);
+    }
+
+    // fetch server config to check if the current token has admin role
+    const isAdmin = await dispatch(validateLogin(false)).catch(() => false);
+
+    if (!isAdmin) {
+      return dispatch(clearCollaboratorSignInState());
+    }
+
+    let redirectFromLS = '';
+    if (shouldRedirect) {
+      try {
+        redirectFromLS = getKeyFromLS('redirectUrl');
+      } catch (e) {
+        redirectFromLS = '';
+      }
+      if (redirectFromLS) {
+        dispatch(push(`${globals.urlPrefix}${redirectFromLS}`));
+      } else {
+        dispatch(push(globals.urlPrefix));
+      }
+    }
   };
 
 const loginClicked = () => (dispatch, getState) => {
@@ -950,4 +1088,5 @@ export {
   getHeaders,
   refetchMetadata,
   setApiLimits,
+  ssoIdTokenReceived,
 };

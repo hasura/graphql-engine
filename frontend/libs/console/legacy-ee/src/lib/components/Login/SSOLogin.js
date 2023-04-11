@@ -1,4 +1,5 @@
 import React from 'react';
+import { isClientSet } from './utils';
 
 export const SSOLogin = ({
   hasuraEELogo,
@@ -14,14 +15,16 @@ export const SSOLogin = ({
           <img className="flex w-36 mx-auto" src={hasuraEELogo} alt="" />
         </div>
         <div className="w-full max-w-md space-y-md bg-white border border-gray-300 p-md rounded shadow mb-lg">
-          <button
-            type="button"
-            onClick={doSSOLogin}
-            className="w-full inline-flex space-x-1.5 items-center justify-center font-semibold bg-gradient-to-t border rounded shadow-sm focus:outline-none focus:bg-gradient-to-t focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400 disabled:opacity-60 h-btn px-sm from-primary to-primary-light border-primary-dark hover:border-primary-darker focus:from-primary focus:to-primary disabled:border-primary-dark"
-          >
-            <img className="flex w-4 mr-1.5" src={ssoIcon} alt="" />
-            Sign In with Single Sign-On
-          </button>
+          {isClientSet() && (
+            <button
+              type="button"
+              onClick={doSSOLogin}
+              className="w-full inline-flex space-x-1.5 items-center justify-center font-semibold bg-gradient-to-t border rounded shadow-sm focus:outline-none focus:bg-gradient-to-t focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400 disabled:opacity-60 h-btn px-sm from-primary to-primary-light border-primary-dark hover:border-primary-darker focus:from-primary focus:to-primary disabled:border-primary-dark"
+            >
+              <img className="flex w-4 mr-1.5" src={ssoIcon} alt="" />
+              Hasura Single Sign-On
+            </button>
+          )}
           <div>
             <button
               type="button"

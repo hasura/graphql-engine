@@ -3,6 +3,7 @@ import { getLSItem, setLSItem, LS_KEYS } from '@hasura/console-legacy-ce';
 const getCurrentDate = () => new Date().toISOString();
 
 const initialState = {
+  client_id: '',
   code_verifier: '',
   created_at: getCurrentDate(),
   state: '',
