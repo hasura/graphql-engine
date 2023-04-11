@@ -30,6 +30,7 @@ import { getProjectId, isCloudConsole } from '../../../../utils/cloudConsole';
 import globals from '../../../../Globals';
 import { useUpdateProjectRegion } from '../../hooks/useUpdateProjectRegion';
 import { useAppDispatch } from '../../../../storeHooks';
+import { exportMetadata } from '../../../../metadata/actions';
 
 const LatencyBadge = ({
   latencies,
@@ -98,7 +99,11 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
   const dispatch = useAppDispatch();
   const [activeRow, setActiveRow] = useState<number>();
   const { reloadSource, isLoading: isSourceReloading } = useReloadSource();
-  const { dropSource, isLoading: isSourceRemovalInProgress } = useDropSource();
+  const { dropSource, isLoading: isSourceRemovalInProgress } = useDropSource({
+    onSuccess: () => {
+      dispatch(exportMetadata());
+    },
+  });
   const {
     data: inconsistentSources,
     isLoading: isInconsistentFetchCallLoading,
@@ -184,7 +189,10 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
         mode="destructive"
         size="sm"
         onClick={() => {
-          dropSource(databaseItem.driver, databaseItem.dataSourceName);
+          dropSource({
+            driver: databaseItem.driver,
+            dataSourceName: databaseItem.dataSourceName,
+          });
         }}
         isLoading={isSourceRemovalInProgress && isCurrentRow(index)}
         loadingText="Deleting"
@@ -193,15 +201,6 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
       </Button>
     </div>,
   ]);
-
-  // console.log(
-  //   'loading: ',
-  //   databaseCheckLoading,
-  //   'result: ',
-  //   latencies,
-  //   'any error: ',
-  //   error
-  // );
 
   const openUpdateProjectRegionPage = (_rowId?: string) => {
     if (!_rowId) {

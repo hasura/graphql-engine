@@ -21,7 +21,7 @@ export type TMigration<
   };
 };
 
-type MetadataMigrationOptions<
+export type MetadataMigrationOptions<
   // So, I want some validation on this change from others. The type being used as the return from the metadata query was "RunSQLResponse".
   // This type was not correct for dc_add_agent, and the closer I looked the return seems variable based on the query type.
   // I checked every reference to useMetadataMigration and it did not appear there was anywhere in the code using the onSuccess arguments, so this change seems safe.

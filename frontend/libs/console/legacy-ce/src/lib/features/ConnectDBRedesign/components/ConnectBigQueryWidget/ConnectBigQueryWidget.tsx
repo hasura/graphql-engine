@@ -39,8 +39,8 @@ export const ConnectBigQueryWidget = (props: ConnectBigQueryWidgetProps) => {
       onError: err => {
         hasuraToast({
           type: 'error',
-          title: 'Error while adding database',
-          children: JSON.stringify(err),
+          title: err.name,
+          children: err.message,
         });
       },
     });

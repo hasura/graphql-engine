@@ -15,7 +15,14 @@ export const useManageDatabaseConnection = ({
   onError?: (err: Error) => void;
 }) => {
   const queryClient = useQueryClient();
-  const { mutate, ...rest } = useMetadataMigration();
+  const { mutate, ...rest } = useMetadataMigration({
+    errorTransform: err => {
+      return {
+        name: (err as any)?.internal?.[0]?.reason ?? 'Failed to add database',
+        message: (err as any)?.internal?.[0]?.message ?? JSON.stringify(err),
+      };
+    },
+  });
   const push = usePushRoute();
   const dispatch = useAppDispatch();
 
@@ -30,10 +37,11 @@ export const useManageDatabaseConnection = ({
         dispatch(exportMetadata());
       },
       onError: (err: Error) => {
+        console.log('~', err);
         onError?.(err);
       },
     }),
-    [onError, onSuccess, queryClient]
+    [dispatch, onError, onSuccess, push, queryClient]
   );
 
   const createConnection = useCallback(

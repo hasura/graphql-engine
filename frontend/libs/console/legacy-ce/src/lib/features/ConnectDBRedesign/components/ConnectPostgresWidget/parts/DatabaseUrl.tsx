@@ -11,7 +11,7 @@ export const DatabaseUrl = ({
 }) => {
   const options = [
     { value: 'databaseUrl', label: 'Database URL' },
-    { value: 'envVar', label: 'Enviromnent variable' },
+    { value: 'envVar', label: 'Environment variable' },
     { value: 'connectionParams', label: 'Connection Parameters' },
   ].filter(option => !hideOptions.includes(option.value));
 
