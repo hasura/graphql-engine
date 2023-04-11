@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Modal from 'react-bootstrap/lib/Modal';
+import { Dialog } from '../../../../../new-components/Dialog';
 import AceEditor from 'react-ace';
 import { connect } from 'react-redux';
 //TODO: check
@@ -99,7 +99,7 @@ class InvokeManualTrigger extends React.PureComponent {
       }
       return (
         <div className="flex">
-          <div className={`pl-0 w-1/2`}>
+          <div className={`pl-0 w-1/2 mr-sm`}>
             <div> Request </div>
             <AceEditor
               mode="json"
@@ -155,22 +155,21 @@ class InvokeManualTrigger extends React.PureComponent {
         </div>
       </div>
     );
+
+    if (!isModalOpen) return null;
+
     return (
       <div key={identifier}>
-        <Modal
-          show={isModalOpen}
-          style={{
-            minHeight: '100px',
-          }}
-          onHide={this.onModalClose}
-          dialogClassName="w-3/4"
+        <Dialog
+          onClose={this.onModalClose}
           id="invokeEventTrigger"
+          title={`Invoking ${name}`}
+          className="min-h-[100px]"
+          size="xxxl"
+          hasBackdrop
         >
-          <Modal.Header closeButton>
-            <Modal.Title>Invoking {name}</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>{getEventData()}</Modal.Body>
-        </Modal>
+          <div className="p-md ">{getEventData()}</div>
+        </Dialog>
       </div>
     );
   }

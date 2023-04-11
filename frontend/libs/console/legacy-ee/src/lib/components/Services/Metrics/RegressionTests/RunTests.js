@@ -1,7 +1,6 @@
-import React, { useState, Fragment } from 'react';
-import BootstrapModal from 'react-bootstrap/lib/Modal';
+import { useState, Fragment } from 'react';
 // import { useMutation } from '@apollo/react-hooks';
-import { Button } from '@hasura/console-legacy-ce';
+import { Button, Dialog } from '@hasura/console-legacy-ce';
 
 import { BrowseRunTests } from './BrowseRunTests';
 import { BrowseRunTestsPreview } from './BrowseTestRunPreview';
@@ -165,37 +164,34 @@ const RunTests = props => {
           Run tests on CLI
         </Button>
       </div>
-      <BootstrapModal
-        id="operationInspect"
-        onHide={onHide}
-        show={showModal}
-        size="modal-lg"
-        className={styles.modalWrapper}
-      >
-        <BootstrapModal.Header className={styles.modalHeader} closeButton>
-          <BootstrapModal.Title className={styles.title}>
-            Run tests from CLI
-          </BootstrapModal.Title>
-        </BootstrapModal.Header>
-        <BootstrapModal.Body
-          className={`${styles.modalContainer} ${styles.padding20}`}
+      {showModal && (
+        <Dialog
+          id="operationInspect"
+          onClose={onHide}
+          hasBackdrop
+          size="xxl"
+          title="Run tests from CLI"
         >
-          <div>
-            You can run tests from the CLI also. See{' '}
-            <a
-              href="https://docs.pro.hasura.io/cli/regression-tests/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              docs
-            </a>{' '}
-            for more info.
+          <div className={`p-sm ${styles.modalWrapper}`}>
+            <div className={styles.modalContainer}>
+              <div>
+                You can run tests from the CLI also. See <br />
+                <a
+                  href="https://docs.pro.hasura.io/cli/regression-tests/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  docs
+                </a>{' '}
+                for more info.
+              </div>
+              <code>
+                {`hasura pro regression-tests run --testsuite-id ${testSuiteId} --project-id ${currentProjectId}`}
+              </code>
+            </div>
           </div>
-          <code>
-            {`hasura pro regression-tests run --testsuite-id ${testSuiteId} --project-id ${currentProjectId}`}
-          </code>
-        </BootstrapModal.Body>
-      </BootstrapModal>
+        </Dialog>
+      )}
       {testRunId ? (
         <BrowseRunTests
           testSuiteId={testSuiteId}

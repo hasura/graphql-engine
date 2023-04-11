@@ -164,7 +164,7 @@ const ViewRows = props => {
       Header: '',
       accessor: 'tableRowActionButtons',
       id: 'tableRowActionButtons',
-      width: 182,
+      width: 'auto',
     });
 
     _gridHeadings.push({

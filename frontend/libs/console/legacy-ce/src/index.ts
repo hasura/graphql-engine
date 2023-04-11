@@ -84,6 +84,7 @@ export { default as PageNotFound } from './lib/components/Error/PageNotFound';
 export * from './lib/new-components/Button/';
 export * from './lib/new-components/Tooltip/';
 export * from './lib/new-components/Badge/';
+export * from './lib/new-components/Dialog';
 export { default as dataHeaders } from './lib/components/Services/Data/Common/Headers';
 export { handleMigrationErrors } from './lib/components/Services/Data/TableModify/ModifyActions';
 export { loadMigrationStatus } from './lib/components/Main/Actions';
