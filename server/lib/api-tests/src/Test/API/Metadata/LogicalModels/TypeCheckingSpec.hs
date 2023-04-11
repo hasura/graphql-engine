@@ -16,7 +16,6 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
 import Harness.Yaml (shouldAtLeastBe, shouldReturnYaml)
 import Hasura.Prelude
-import Hasura.SQL.Backend (PostgresKind (..))
 import Test.Hspec (SpecWith, describe, it)
 import Test.QuickCheck
 
@@ -40,7 +39,7 @@ spec = do
               }
           ]
       )
-      (tests @'Vanilla)
+      (tests postgresDifferences)
     Fixture.run
       ( NE.fromList
           [ (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
@@ -50,7 +49,7 @@ spec = do
               }
           ]
       )
-      (tests @'Cockroach)
+      (tests cockroachDifferences)
 
 -- ** Setup and teardown
 
@@ -111,8 +110,8 @@ types =
 
 -- ** Tests
 
-tests :: forall pgKind. GetDiffs pgKind => SpecWith TestEnvironment
-tests = do
+tests :: BackendDifferences -> SpecWith TestEnvironment
+tests BackendDifferences {..} = do
   describe "Validation succeeds tracking a logical model" do
     it "for all supported types" $
       \testEnvironment -> do
@@ -139,44 +138,46 @@ tests = do
         |]
 
   describe "Validation fails tracking a logical model" do
-    it "when there's a type mismatch" $ \testEnvironment -> withMaxSuccess (maxSuccesses @pgKind) $ \(TypeForQuickCheck {..} :: TypeForQuickCheck pgKind) -> do
-      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
-          sourceName = BackendType.backendSourceName backendTypeMetadata
+    it "when there's a type mismatch" $ \testEnvironment ->
+      withMaxSuccess maxSuccesses $
+        forAll (generator isDifferentTypeThan) $ \DifferentTypes {..} -> do
+          let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+              sourceName = BackendType.backendSourceName backendTypeMetadata
 
-      let wrongQuery :: Text
-          wrongQuery = "SELECT " <> tableType <> " AS " <> customtypeType <> " FROM stuff_" <> tableType
+          let wrongQuery :: Text
+              wrongQuery = "SELECT " <> tableType <> " AS " <> customtypeType <> " FROM stuff_" <> tableType
 
-      let logicalModel :: Schema.LogicalModel
-          logicalModel =
-            (Schema.logicalModel ("typed_model_" <> customtypeType) wrongQuery ("stuff_type_" <> customtypeType))
+          let logicalModel :: Schema.LogicalModel
+              logicalModel =
+                (Schema.logicalModel ("typed_model_" <> customtypeType) wrongQuery ("stuff_type_" <> customtypeType))
 
-      -- Possible cleanup after last test that may have tracked this custom type
-      _ <- Schema.untrackLogicalModel sourceName logicalModel testEnvironment `catch` \(_ :: SomeException) -> pure ()
-      _ <- Schema.untrackCustomType sourceName (mkCustomType customtypeType) testEnvironment `catch` \(_ :: SomeException) -> pure ()
-      Schema.trackCustomType sourceName (mkCustomType customtypeType) testEnvironment
+          -- Possible cleanup after last test that may have tracked this custom type
+          _ <- Schema.untrackLogicalModel sourceName logicalModel testEnvironment `catch` \(_ :: SomeException) -> pure ()
+          _ <- Schema.untrackCustomType sourceName (mkCustomType customtypeType) testEnvironment `catch` \(_ :: SomeException) -> pure ()
+          Schema.trackCustomType sourceName (mkCustomType customtypeType) testEnvironment
 
-      let message :: Text
-          message =
-            "Return column '"
-              <> customtypeType
-              <> "' has a type mismatch. The expected type is '"
-              <> customTypeNameMapping @pgKind customtypeType
-              <> "', but the actual type is '"
-              <> tableTypeNameMapping @pgKind tableType
-              <> "'."
-          expected =
-            [yaml|
+          let message :: Text
+              message =
+                "Return column '"
+                  <> customtypeType
+                  <> "' has a type mismatch. The expected type is '"
+                  <> customTypeNameMapping customtypeType
+                  <> "', but the actual type is '"
+                  <> tableTypeNameMapping tableType
+                  <> "'."
+              expected =
+                [yaml|
                     code: validation-failed
                     error: Failed to validate query
                     internal: *message
                 |]
 
-      actual <-
-        GraphqlEngine.postMetadataWithStatus
-          400
-          testEnvironment
-          (Schema.trackLogicalModelCommand sourceName backendTypeMetadata logicalModel)
-      actual `shouldAtLeastBe` expected
+          actual <-
+            GraphqlEngine.postMetadataWithStatus
+              400
+              testEnvironment
+              (Schema.trackLogicalModelCommand sourceName backendTypeMetadata logicalModel)
+          actual `shouldAtLeastBe` expected
 
 -- ** Utils
 
@@ -187,12 +188,68 @@ mkCustomType typ =
         [Schema.logicalModelColumn typ (customType typ)]
     }
 
+-- | Match a column from a table type and the custom type.
+data DifferentTypes = DifferentTypes {tableType :: Text, customtypeType :: Text}
+  deriving (Show)
+
+-- | Differences between different backends required for testing.
+data BackendDifferences = BackendDifferences
+  { maxSuccesses :: Int,
+    isDifferentTypeThan :: Text -> Text -> Bool,
+    customTypeNameMapping :: Text -> Text,
+    tableTypeNameMapping :: Text -> Text
+  }
+
+-- | Generator a pair of columns with a type mismatch.
+--   One from the table, and another from the custom type.
+generator :: (Text -> Text -> Bool) -> Gen DifferentTypes
+generator isDifferentTypeThan =
+  uncurry DifferentTypes
+    <$> suchThat ((,) <$> elements types <*> elements types) (uncurry isDifferentTypeThan)
+
+-- | Postgres parameters.
+postgresDifferences :: BackendDifferences
+postgresDifferences =
+  BackendDifferences
+    { maxSuccesses = 100,
+      isDifferentTypeThan = isDifferentTypeThanPg,
+      customTypeNameMapping = tableTypeNameMapping postgresDifferences,
+      tableTypeNameMapping = \case
+        "bool" -> "boolean"
+        "char" -> "bpchar"
+        "int2" -> "smallint"
+        "int8" -> "bigint"
+        t -> t
+    }
+
 isDifferentTypeThanPg :: Text -> Text -> Bool
 isDifferentTypeThanPg a b
   | a == b = False
   | ["int2", "smallint"] == sort [a, b] = False
   | ["bigint", "int8"] == sort [a, b] = False
   | otherwise = True
+
+-- | Cockroach parameters.
+cockroachDifferences :: BackendDifferences
+cockroachDifferences =
+  BackendDifferences
+    { maxSuccesses = 30,
+      isDifferentTypeThan = isDifferentTypeThanRoach,
+      customTypeNameMapping = \case
+        "bool" -> "boolean"
+        "char" -> "bpchar"
+        "int2" -> "smallint"
+        "int8" -> "bigint"
+        t -> t,
+      tableTypeNameMapping = \case
+        "bool" -> "boolean"
+        "char" -> "bpchar"
+        "int2" -> "smallint"
+        "integer" -> "bigint"
+        "int8" -> "bigint"
+        "json" -> "jsonb"
+        t -> t
+    }
 
 isDifferentTypeThanRoach :: Text -> Text -> Bool
 isDifferentTypeThanRoach a b
@@ -203,49 +260,3 @@ isDifferentTypeThanRoach a b
   | sort ["bigint", "integer"] == sort [a, b] = False
   | sort ["json", "jsonb"] == sort [a, b] = False
   | otherwise = True
-
-data TypeForQuickCheck pgKind = TypeForQuickCheck {tableType :: Text, customtypeType :: Text}
-  deriving (Show)
-
-instance GetDiffs pgKind => Arbitrary (TypeForQuickCheck pgKind) where
-  shrink = const []
-  arbitrary =
-    uncurry TypeForQuickCheck
-      <$> suchThat ((,) <$> elements types <*> elements types) (uncurry (isDifferentTypeThan @pgKind))
-
-class GetDiffs (pgKind :: PostgresKind) where
-  maxSuccesses :: Int
-  maxSuccesses = 100
-  isDifferentTypeThan :: Text -> Text -> Bool
-  isDifferentTypeThan = isDifferentTypeThanPg
-  customTypeNameMapping :: Text -> Text
-  customTypeNameMapping = tableTypeNameMapping @pgKind
-  tableTypeNameMapping :: Text -> Text
-  tableTypeNameMapping = \case
-    "bool" -> "boolean"
-    "char" -> "bpchar"
-    "int2" -> "smallint"
-    "int8" -> "bigint"
-    t -> t
-
-instance GetDiffs 'Vanilla
-
-instance GetDiffs 'Citus
-
-instance GetDiffs 'Cockroach where
-  maxSuccesses = 30
-  isDifferentTypeThan = isDifferentTypeThanRoach
-  customTypeNameMapping = \case
-    "bool" -> "boolean"
-    "char" -> "bpchar"
-    "int2" -> "smallint"
-    "int8" -> "bigint"
-    t -> t
-  tableTypeNameMapping = \case
-    "bool" -> "boolean"
-    "char" -> "bpchar"
-    "int2" -> "smallint"
-    "integer" -> "bigint"
-    "int8" -> "bigint"
-    "json" -> "jsonb"
-    t -> t
