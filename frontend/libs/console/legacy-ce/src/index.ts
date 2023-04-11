@@ -12,7 +12,7 @@ import { IntrospectionOptions } from './lib/components/Services/ApiExplorer/Secu
 import * as EndpointNamedExps from './lib/Endpoints';
 import * as ControlPlane from './lib/features/ControlPlane';
 
-export * from './lib/utils/console-dev-tools/ConsoleDevTools';
+export * from './lib/utils/console-dev-tools';
 const CommonScss = require('./lib/components/Common/Common.module.scss');
 const filterQueryScss = require('./lib/components/Common/FilterQuery/FilterQuery.module.scss');
 const tableScss = require('./lib/components/Common/TableCommon/Table.module.scss');
@@ -76,6 +76,7 @@ export { default as PageNotFound } from './lib/components/Error/PageNotFound';
 export * from './lib/new-components/Button/';
 export * from './lib/new-components/Tooltip/';
 export * from './lib/new-components/Badge/';
+export * from './lib/new-components/Dialog';
 export { default as dataHeaders } from './lib/components/Services/Data/Common/Headers';
 export { handleMigrationErrors } from './lib/components/Services/Data/TableModify/ModifyActions';
 export { loadMigrationStatus } from './lib/components/Main/Actions';
