@@ -20651,8 +20651,8 @@ selectTable :: (BackendTableSelectSchema b, MonadBuildSourceSchema b r m n) => T
 selectTableAggregate :: (BackendTableSelectSchema b, MonadBuildSourceSchema b r m n) => TableInfo b -> Name -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (AggSelectExp b)))
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
 class Backend b => BackendCustomReturnTypeSelectSchema (b :: BackendType)
-customReturnTypeArguments :: (BackendCustomReturnTypeSelectSchema b, MonadBuildSourceSchema b r m n) => Name -> CustomReturnTypeInfo b -> SchemaT r m (InputFieldsParser n (SelectArgsG b (UnpreparedValue b)))
-customReturnTypeSelectionSet :: (BackendCustomReturnTypeSelectSchema b, MonadBuildSourceSchema b r m n) => Name -> CustomReturnTypeInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
+customReturnTypeArguments :: (BackendCustomReturnTypeSelectSchema b, MonadBuildSourceSchema b r m n) => CustomReturnTypeInfo b -> SchemaT r m (InputFieldsParser n (SelectArgsG b (UnpreparedValue b)))
+customReturnTypeSelectionSet :: (BackendCustomReturnTypeSelectSchema b, MonadBuildSourceSchema b r m n) => CustomReturnTypeInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 class Backend b => BackendUpdateOperatorsSchema (b :: BackendType) where {
     
     -- | Intermediate Representation of the set of update operators that act
@@ -20802,7 +20802,7 @@ module Hasura.GraphQL.Schema.OrderBy
 --     obj-rel: &lt;remote-table&gt;_order_by
 --   }
 --   </pre>
-customTypeOrderByExp :: forall b r m n. MonadBuildSchema b r m n => Name -> CustomReturnTypeInfo b -> SchemaT r m (Parser 'Input n [AnnotatedOrderByItemG b (UnpreparedValue b)])
+customReturnTypeOrderByExp :: forall b r m n. MonadBuildSchema b r m n => CustomReturnTypeInfo b -> SchemaT r m (Parser 'Input n [AnnotatedOrderByItemG b (UnpreparedValue b)])
 
 -- | Corresponds to an object type for an order by.
 --   
@@ -20843,7 +20843,7 @@ aggregationPredicatesParser :: forall r m n. (AggregationPredicatesSchema b, Mon
 --   </pre>
 --   
 --   | Boolean expression for custom return types
-customReturnTypeBoolExp :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b) => Name -> CustomReturnTypeInfo b -> SchemaT r m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
+customReturnTypeBoolExp :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b) => CustomReturnTypeInfo b -> SchemaT r m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
 
 -- | <pre>
 --   input type_bool_exp {
@@ -20953,8 +20953,8 @@ defaultTableSelectionSet :: forall b r m n. (AggregationPredicatesSchema b, Back
 -- | List of table fields object. Just a <tt><a>nonNullableObjectList</a>
 --   wrapper over </tt><a>tableSelectionSet</a>. &gt; table_name: [table!]!
 tableSelectionList :: (MonadBuildSchema b r m n, BackendTableSelectSchema b) => TableInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
-defaultCustomReturnTypeSelectionSet :: forall b r m n. MonadBuildSchema b r m n => Name -> CustomReturnTypeInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
-customReturnTypeSelectionList :: (MonadBuildSchema b r m n, BackendCustomReturnTypeSelectSchema b) => Name -> CustomReturnTypeInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
+defaultCustomReturnTypeSelectionSet :: forall b r m n. MonadBuildSchema b r m n => CustomReturnTypeInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
+customReturnTypeSelectionList :: (MonadBuildSchema b r m n, BackendCustomReturnTypeSelectSchema b) => CustomReturnTypeInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 
 -- | Connection fields of a table
 --   
@@ -21043,7 +21043,7 @@ tableConnectionArgs :: forall b r m n. (MonadBuildSchema b r m n, AggregationPre
 --   }
 --   </pre>
 tableAggregationFields :: forall b r m n. MonadBuildSchema b r m n => TableInfo b -> SchemaT r m (Parser 'Output n (AggregateFields b))
-defaultCustomReturnTypeArgs :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b) => Name -> CustomReturnTypeInfo b -> SchemaT r m (InputFieldsParser n (SelectArgs b))
+defaultCustomReturnTypeArgs :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b) => CustomReturnTypeInfo b -> SchemaT r m (InputFieldsParser n (SelectArgs b))
 tablePermissionsInfo :: Backend b => SelPermInfo b -> TablePerms b
 
 
@@ -23941,22 +23941,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aEt23. Lens' (CreateEventTriggerQuery b_aEt23) TriggerOnReplication
-cteqCleanupConfig :: forall b_aEt23. Lens' (CreateEventTriggerQuery b_aEt23) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aEt23. Lens' (CreateEventTriggerQuery b_aEt23) (Maybe Text)
-cetqWebhook :: forall b_aEt23. Lens' (CreateEventTriggerQuery b_aEt23) (Maybe InputWebhook)
-cetqUpdate :: forall b_aEt23. Lens' (CreateEventTriggerQuery b_aEt23) (Maybe (SubscribeOpSpec b_aEt23))
-cetqTable :: forall b_aEt23. Lens' (CreateEventTriggerQuery b_aEt23) (TableName b_aEt23)
-cetqSource :: forall b_aEt23. Lens' (CreateEventTriggerQuery b_aEt23) SourceName
-cetqRetryConf :: forall b_aEt23. Lens' (CreateEventTriggerQuery b_aEt23) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aEt23. Lens' (CreateEventTriggerQuery b_aEt23) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aEt23. Lens' (CreateEventTriggerQuery b_aEt23) (Maybe RequestTransform)
-cetqReplace :: forall b_aEt23. Lens' (CreateEventTriggerQuery b_aEt23) Bool
-cetqName :: forall b_aEt23. Lens' (CreateEventTriggerQuery b_aEt23) TriggerName
-cetqInsert :: forall b_aEt23. Lens' (CreateEventTriggerQuery b_aEt23) (Maybe (SubscribeOpSpec b_aEt23))
-cetqHeaders :: forall b_aEt23. Lens' (CreateEventTriggerQuery b_aEt23) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aEt23. Lens' (CreateEventTriggerQuery b_aEt23) (Maybe Bool)
-cetqDelete :: forall b_aEt23. Lens' (CreateEventTriggerQuery b_aEt23) (Maybe (SubscribeOpSpec b_aEt23))
+cteqTriggerOnReplication :: forall b_aEt4d. Lens' (CreateEventTriggerQuery b_aEt4d) TriggerOnReplication
+cteqCleanupConfig :: forall b_aEt4d. Lens' (CreateEventTriggerQuery b_aEt4d) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aEt4d. Lens' (CreateEventTriggerQuery b_aEt4d) (Maybe Text)
+cetqWebhook :: forall b_aEt4d. Lens' (CreateEventTriggerQuery b_aEt4d) (Maybe InputWebhook)
+cetqUpdate :: forall b_aEt4d. Lens' (CreateEventTriggerQuery b_aEt4d) (Maybe (SubscribeOpSpec b_aEt4d))
+cetqTable :: forall b_aEt4d. Lens' (CreateEventTriggerQuery b_aEt4d) (TableName b_aEt4d)
+cetqSource :: forall b_aEt4d. Lens' (CreateEventTriggerQuery b_aEt4d) SourceName
+cetqRetryConf :: forall b_aEt4d. Lens' (CreateEventTriggerQuery b_aEt4d) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aEt4d. Lens' (CreateEventTriggerQuery b_aEt4d) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aEt4d. Lens' (CreateEventTriggerQuery b_aEt4d) (Maybe RequestTransform)
+cetqReplace :: forall b_aEt4d. Lens' (CreateEventTriggerQuery b_aEt4d) Bool
+cetqName :: forall b_aEt4d. Lens' (CreateEventTriggerQuery b_aEt4d) TriggerName
+cetqInsert :: forall b_aEt4d. Lens' (CreateEventTriggerQuery b_aEt4d) (Maybe (SubscribeOpSpec b_aEt4d))
+cetqHeaders :: forall b_aEt4d. Lens' (CreateEventTriggerQuery b_aEt4d) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aEt4d. Lens' (CreateEventTriggerQuery b_aEt4d) (Maybe Bool)
+cetqDelete :: forall b_aEt4d. Lens' (CreateEventTriggerQuery b_aEt4d) (Maybe (SubscribeOpSpec b_aEt4d))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
