@@ -114,11 +114,11 @@ createWSServerEnv appStateRef = do
   let getCorsPolicy = acCorsPolicy <$> getAppContext appStateRef
       logger = _lsLogger appEnvLoggers
 
-  AppContext {acEnableAllowlist, acAuthMode} <- liftIO $ getAppContext appStateRef
+  AppContext {acEnableAllowlist, acAuthMode, acSQLGenCtx, acExperimentalFeatures, acDefaultNamingConvention} <- liftIO $ getAppContext appStateRef
   allowlist <- liftIO $ scAllowlist <$> getSchemaCache appStateRef
   corsPolicy <- liftIO getCorsPolicy
 
-  wsServer <- liftIO $ STM.atomically $ WS.createWSServer acAuthMode acEnableAllowlist allowlist corsPolicy logger
+  wsServer <- liftIO $ STM.atomically $ WS.createWSServer acAuthMode acEnableAllowlist allowlist corsPolicy acSQLGenCtx acExperimentalFeatures acDefaultNamingConvention logger
 
   pure $
     WSServerEnv
