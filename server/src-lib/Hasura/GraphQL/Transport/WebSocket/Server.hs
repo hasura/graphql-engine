@@ -49,6 +49,7 @@ import Data.Aeson.TH qualified as J
 import Data.ByteString.Char8 qualified as B
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
+import Data.HashSet qualified as Set
 import Data.SerializableBlob qualified as SB
 import Data.String
 import Data.Text qualified as T
@@ -58,11 +59,12 @@ import Data.Word (Word16)
 import GHC.AssertNF.CPP
 import GHC.Int (Int64)
 import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHash)
+import Hasura.GraphQL.Schema.NamingCase (NamingCase (..), hasNamingConventionChanged)
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.GraphQL.Transport.WebSocket.Protocol
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.Types.Common (MetricsConfig (..))
+import Hasura.RQL.Types.Common (MetricsConfig (..), SQLGenCtx (..))
 import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.Auth (AuthMode, compareAuthMode)
 import Hasura.Server.Cors (CorsPolicy)
@@ -70,6 +72,7 @@ import Hasura.Server.Init.Config (AllowListStatus (..), WSConnectionInitTimeout 
 import Hasura.Server.Prometheus
   ( PrometheusMetrics (..),
   )
+import Hasura.Server.Types (ExperimentalFeature (..))
 import ListT qualified
 import Network.Wai.Extended (IpAddress)
 import Network.Wai.Handler.Warp qualified as Warp
@@ -249,13 +252,16 @@ data SecuritySensitiveUserConfig = SecuritySensitiveUserConfig
   { ssucAuthMode :: AuthMode,
     ssucEnableAllowlist :: AllowListStatus,
     ssucAllowlist :: InlinedAllowlist,
-    ssucCorsPolicy :: CorsPolicy
+    ssucCorsPolicy :: CorsPolicy,
+    ssucSQLGenCtx :: SQLGenCtx,
+    ssucExperimentalFeatures :: Set.HashSet ExperimentalFeature,
+    ssucDefaultNamingCase :: NamingCase
   }
 
-createWSServer :: AuthMode -> AllowListStatus -> InlinedAllowlist -> CorsPolicy -> L.Logger L.Hasura -> STM.STM (WSServer a)
-createWSServer authMode enableAllowlist allowlist corsPolicy logger = do
+createWSServer :: AuthMode -> AllowListStatus -> InlinedAllowlist -> CorsPolicy -> SQLGenCtx -> Set.HashSet ExperimentalFeature -> NamingCase -> L.Logger L.Hasura -> STM.STM (WSServer a)
+createWSServer authMode enableAllowlist allowlist corsPolicy sqlGenCtx experimentalFeatured defaultNamingCase logger = do
   connMap <- STMMap.new
-  userConfRef <- STM.newTVar $ SecuritySensitiveUserConfig authMode enableAllowlist allowlist corsPolicy
+  userConfRef <- STM.newTVar $ SecuritySensitiveUserConfig authMode enableAllowlist allowlist corsPolicy sqlGenCtx experimentalFeatured defaultNamingCase
   serverStatus <- STM.newTVar (AcceptingConns connMap)
   return $ WSServer logger userConfRef serverStatus
 
@@ -339,20 +345,24 @@ data WSHandlers m a = WSHandlers
 
 -- | The background thread responsible for closing all websocket connections
 -- when security sensitive user configuration changes. It checks for changes in
--- the auth mode, allowlist and cors config, and invalidates/closes all
+-- the auth mode, allowlist, cors config, stringify num, dangerous boolean collapse,
+-- stringify big query numeric, experimental features and invalidates/closes all
 -- connections if there are any changes.
-websocketConnectionReaper :: IO (AuthMode, AllowListStatus, CorsPolicy) -> IO SchemaCache -> WSServer a -> IO Void
+websocketConnectionReaper :: IO (AuthMode, AllowListStatus, CorsPolicy, SQLGenCtx, Set.HashSet ExperimentalFeature, NamingCase) -> IO SchemaCache -> WSServer a -> IO Void
 websocketConnectionReaper getLatestConfig getSchemaCache (WSServer (L.Logger writeLog) userConfRef serverStatus) =
   forever $ do
-    (currAuthMode, currEnableAllowlist, currCorsPolicy) <- getLatestConfig
+    (currAuthMode, currEnableAllowlist, currCorsPolicy, currSqlGenCtx, currExperimentalFeatures, currDefaultNamingCase) <- getLatestConfig
     currAllowlist <- scAllowlist <$> getSchemaCache
-    SecuritySensitiveUserConfig prevAuthMode prevEnableAllowlist prevAllowlist prevCorsPolicy <- readTVarIO userConfRef
+    SecuritySensitiveUserConfig prevAuthMode prevEnableAllowlist prevAllowlist prevCorsPolicy prevSqlGenCtx prevExperimentalFeatures prevDefaultNamingCase <- readTVarIO userConfRef
     -- check and close all connections if required
     checkAndReapConnections
       (currAuthMode, prevAuthMode)
       (currCorsPolicy, prevCorsPolicy)
       (currEnableAllowlist, prevEnableAllowlist)
       (currAllowlist, prevAllowlist)
+      (currSqlGenCtx, prevSqlGenCtx)
+      (currExperimentalFeatures, prevExperimentalFeatures)
+      (currDefaultNamingCase, prevDefaultNamingCase)
     sleep $ seconds 1
   where
     closeAllConnectionsWithReason ::
@@ -375,43 +385,97 @@ websocketConnectionReaper getLatestConfig getSchemaCache (WSServer (L.Logger wri
     -- if AuthMode changed -> close
     -- if AllowlistEnabled -> enabled from disabled -> close
     -- if AllowlistEnabled -> allowlist collection changed -> close
-    checkAndReapConnections (currAuthMode, prevAuthMode) (currCorsPolicy, prevCorsPolicy) (currEnableAllowlist, prevEnableAllowlist) (currAllowlist, prevAllowlist) = do
-      hasAuthModeChanged <- not <$> compareAuthMode currAuthMode prevAuthMode
-      let hasCorsPolicyChanged = currCorsPolicy /= prevCorsPolicy
-          hasAllowlistEnabled = prevEnableAllowlist == AllowListDisabled && currEnableAllowlist == AllowListEnabled
-          hasAllowlistUpdated =
-            (prevEnableAllowlist == AllowListEnabled && currEnableAllowlist == AllowListEnabled) && (currAllowlist /= prevAllowlist)
-      if
-          -- if CORS policy has changed, close all connections
-          | hasCorsPolicyChanged ->
-              closeAllConnectionsWithReason
-                "closing all websocket connections as the cors policy changed"
-                "cors policy changed"
-                (\conf -> conf {ssucCorsPolicy = currCorsPolicy})
-          -- if any auth config has changed, close all connections
-          | hasAuthModeChanged ->
-              closeAllConnectionsWithReason
-                "closing all websocket connections as the auth mode changed"
-                "auth mode changed"
-                (\conf -> conf {ssucAuthMode = currAuthMode})
-          -- In case of allowlist, we need to check if the allowlist has changed.
-          -- If the allowlist is disabled, we keep all the connections
-          -- as is.
-          -- If the allowlist is enabled from a disabled state, we need to close all the
-          -- connections.
-          | hasAllowlistEnabled ->
-              closeAllConnectionsWithReason
-                "closing all websocket connections as allow list is enabled"
-                "allow list enabled"
-                (\conf -> conf {ssucEnableAllowlist = currEnableAllowlist})
-          -- If the allowlist is already enabled and there are any changes made to the
-          -- allowlist, we need to close all the connections.
-          | hasAllowlistUpdated ->
-              closeAllConnectionsWithReason
-                "closing all websocket connections as the allow list has been updated"
-                "allow list updated"
-                (\conf -> conf {ssucAllowlist = currAllowlist})
-          | otherwise -> pure ()
+    -- if HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES  changed -> close
+    -- if HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE changed -> close
+    -- if 'bigquery_string_numeric_input', 'hide_aggregation_predicates', 'hide_stream_fields' values added/remove from experimental features -> close
+    -- if naming convention changes -> close
+    checkAndReapConnections
+      (currAuthMode, prevAuthMode)
+      (currCorsPolicy, prevCorsPolicy)
+      (currEnableAllowlist, prevEnableAllowlist)
+      (currAllowlist, prevAllowlist)
+      (currSqlGenCtx, prevSqlGenCtx)
+      (currExperimentalFeatures, prevExperimentalFeatures)
+      (currDefaultNamingCase, prevDefaultNamingCase) = do
+        hasAuthModeChanged <- not <$> compareAuthMode currAuthMode prevAuthMode
+        let hasCorsPolicyChanged = currCorsPolicy /= prevCorsPolicy
+            hasAllowlistEnabled = prevEnableAllowlist == AllowListDisabled && currEnableAllowlist == AllowListEnabled
+            hasAllowlistUpdated =
+              (prevEnableAllowlist == AllowListEnabled && currEnableAllowlist == AllowListEnabled) && (currAllowlist /= prevAllowlist)
+            hasStringifyNumChanged = stringifyNum currSqlGenCtx /= stringifyNum prevSqlGenCtx
+            hasDangerousBooleanCollapseChanged = dangerousBooleanCollapse currSqlGenCtx /= dangerousBooleanCollapse prevSqlGenCtx
+            -- The bigqueryStringNumericInput of SQLGenCtx is built from the experimentalFeature, hence no need to check for this field
+            -- in experimentalFeatures again.
+            hasBigqueryStringNumericInputChanged = bigqueryStringNumericInput currSqlGenCtx /= bigqueryStringNumericInput prevSqlGenCtx
+            hasHideAggregationPredicatesChanged = (EFHideAggregationPredicates `elem` currExperimentalFeatures) && (EFHideAggregationPredicates `elem` prevExperimentalFeatures)
+            hasHideStreamFieldsChanged = (EFHideStreamFields `elem` currExperimentalFeatures) && (EFHideStreamFields `elem` prevExperimentalFeatures)
+            hasDefaultNamingCaseChanged = hasNamingConventionChanged (prevExperimentalFeatures, prevDefaultNamingCase) (currExperimentalFeatures, currDefaultNamingCase)
+        if
+            -- if CORS policy has changed, close all connections
+            | hasCorsPolicyChanged ->
+                closeAllConnectionsWithReason
+                  "closing all websocket connections as the cors policy changed"
+                  "cors policy changed"
+                  (\conf -> conf {ssucCorsPolicy = currCorsPolicy})
+            -- if any auth config has changed, close all connections
+            | hasAuthModeChanged ->
+                closeAllConnectionsWithReason
+                  "closing all websocket connections as the auth mode changed"
+                  "auth mode changed"
+                  (\conf -> conf {ssucAuthMode = currAuthMode})
+            -- In case of allowlist, we need to check if the allowlist has changed.
+            -- If the allowlist is disabled, we keep all the connections as is.
+            -- If the allowlist is enabled from a disabled state, we need to close all the
+            -- connections.
+            | hasAllowlistEnabled ->
+                closeAllConnectionsWithReason
+                  "closing all websocket connections as allow list is enabled"
+                  "allow list enabled"
+                  (\conf -> conf {ssucEnableAllowlist = currEnableAllowlist})
+            -- If the allowlist is already enabled and there are any changes made to the
+            -- allowlist, we need to close all the connections.
+            | hasAllowlistUpdated ->
+                closeAllConnectionsWithReason
+                  "closing all websocket connections as the allow list has been updated"
+                  "allow list updated"
+                  (\conf -> conf {ssucAllowlist = currAllowlist})
+            -- if HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES has changed, close all connections
+            | hasStringifyNumChanged ->
+                closeAllConnectionsWithReason
+                  "closing all websocket connections as the HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES setting changed"
+                  "HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES env var changed"
+                  (\conf -> conf {ssucSQLGenCtx = currSqlGenCtx})
+            -- if HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE has changed, close all connections
+            | hasDangerousBooleanCollapseChanged ->
+                closeAllConnectionsWithReason
+                  "closing all websocket connections as the HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE setting changed"
+                  "HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE env var changed"
+                  (\conf -> conf {ssucSQLGenCtx = currSqlGenCtx})
+            -- if 'bigquery_string_numeric_input' option added/removed from experimental features, close all connections
+            | hasBigqueryStringNumericInputChanged ->
+                closeAllConnectionsWithReason
+                  "closing all websocket connections as the 'bigquery_string_numeric_input' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES"
+                  "'bigquery_string_numeric_input' removed/added in HASURA_GRAPHQL_EXPERIMENTAL_FEATURES env var"
+                  (\conf -> conf {ssucSQLGenCtx = currSqlGenCtx})
+            -- if 'hide_aggregation_predicates' option added/removed from experimental features, close all connections
+            | hasHideAggregationPredicatesChanged ->
+                closeAllConnectionsWithReason
+                  "closing all websocket connections as the 'hide-aggregation-predicates' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES"
+                  "'hide-aggregation-predicates' removed/added in HASURA_GRAPHQL_EXPERIMENTAL_FEATURES env var"
+                  (\conf -> conf {ssucExperimentalFeatures = currExperimentalFeatures})
+            -- if 'hide_stream_fields' option added/removed from experimental features, close all connections
+            | hasHideStreamFieldsChanged ->
+                closeAllConnectionsWithReason
+                  "closing all websocket connections as the 'hide-stream-fields' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES"
+                  "'hide-stream-fields' removed/added in HASURA_GRAPHQL_EXPERIMENTAL_FEATURES env var"
+                  (\conf -> conf {ssucExperimentalFeatures = currExperimentalFeatures})
+            -- if naming convention has been changed, close all connections
+            | hasDefaultNamingCaseChanged ->
+                closeAllConnectionsWithReason
+                  "closing all websocket connections as the 'naming_convention' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES and the HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION has changed"
+                  "naming convention has been changed"
+                  (\conf -> conf {ssucExperimentalFeatures = currExperimentalFeatures, ssucDefaultNamingCase = currDefaultNamingCase})
+            | otherwise -> pure ()
 
 createServerApp ::
   (MonadIO m, MC.MonadBaseControl IO m, LA.Forall (LA.Pure m), MonadWSLog m) =>

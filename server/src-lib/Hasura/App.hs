@@ -1135,7 +1135,7 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
 
     getLatestConfigForWSServer =
       fmap
-        (\appCtx -> (acAuthMode appCtx, acEnableAllowlist appCtx, acCorsPolicy appCtx))
+        (\appCtx -> (acAuthMode appCtx, acEnableAllowlist appCtx, acCorsPolicy appCtx, acSQLGenCtx appCtx, acExperimentalFeatures appCtx, acDefaultNamingConvention appCtx))
         (getAppContext appStateRef)
     getSchemaCache' = getSchemaCache appStateRef
 
