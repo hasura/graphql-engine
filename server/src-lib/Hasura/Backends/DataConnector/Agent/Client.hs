@@ -83,4 +83,6 @@ throwClientError' :: (MonadIO m, MonadTrace m, MonadError QErr m) => ClientError
 throwClientError' err = do
   AgentClientContext {..} <- askClientContext
   logClientError _accLogger err
-  throw500 $ "Error in Data Connector backend: " <> Hasura.HTTP.serializeServantClientErrorMessage err
+  case err of
+    FailureResponse _ r | responseStatusCode r == HTTP.status401 -> throw401 "EE License Key Required."
+    _ -> throw500 $ "Error in Data Connector backend: " <> Hasura.HTTP.serializeServantClientErrorMessage err
