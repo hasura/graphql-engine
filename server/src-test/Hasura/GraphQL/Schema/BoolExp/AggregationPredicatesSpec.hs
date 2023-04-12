@@ -26,7 +26,7 @@ import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (GBoolExp (..), OpExpG (AEQ))
 import Hasura.RQL.IR.BoolExp.AggregationPredicates
-import Hasura.RQL.IR.Value (UnpreparedValue (UVParameter))
+import Hasura.RQL.IR.Value (Provenance (Unknown), UnpreparedValue (UVParameter))
 import Hasura.RQL.Types.Column (ColumnType (ColumnScalar), ColumnValue (..))
 import Hasura.RQL.Types.Common (InsertOrder (..), RelName (..), RelType (..), SourceName (..))
 import Hasura.RQL.Types.Relationships.Local (RelInfo (..))
@@ -212,7 +212,7 @@ spec = do
                             [ AEQ
                                 True
                                 ( UVParameter
-                                    Nothing
+                                    Unknown
                                     ColumnValue
                                       { cvType = ColumnScalar PGInteger,
                                         cvValue = PGValInteger 42

@@ -20,13 +20,13 @@ import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
 import Hasura.LogicalModel.IR (LogicalModel (..))
-import Hasura.LogicalModel.Metadata (InterpolatedQuery (..), LogicalModelArgumentName (getLogicalModelArgumentName))
+import Hasura.LogicalModel.Metadata (InterpolatedQuery (..), LogicalModelArgumentName (..))
 import Hasura.LogicalModel.Types (NullableScalarType (..), getLogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Select (QueryDB (QDBMultipleRows))
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.IR.Value (UnpreparedValue (UVParameter), openValueOrigin)
+import Hasura.RQL.IR.Value (Provenance (FromInternal), UnpreparedValue (UVParameter), openValueOrigin)
 import Hasura.RQL.Types.Column qualified as Column
 import Hasura.RQL.Types.Metadata.Object qualified as MO
 import Hasura.RQL.Types.Source
@@ -73,8 +73,8 @@ defaultBuildLogicalModelRootFields LogicalModelInfo {..} = runMaybeT $ do
   let interpolatedQuery lmArgs =
         InterpolatedQuery $
           (fmap . fmap)
-            ( \var -> case HM.lookup var lmArgs of
-                Just arg -> UVParameter Nothing arg
+            ( \var@(LogicalModelArgumentName name) -> case HM.lookup var lmArgs of
+                Just arg -> UVParameter (FromInternal name) arg
                 Nothing ->
                   -- the `logicalModelArgsParser` will already have checked
                   -- we have all the args the query needs so this _should

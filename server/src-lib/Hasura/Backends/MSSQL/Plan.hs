@@ -226,26 +226,26 @@ prepareValueSubscription globalVariables =
           ("missing session variable: " <>> sessionVariableToText text)
       modify' (\s -> s {sessionVariables = text `Set.insert` sessionVariables s})
       pure $ resultVarExp (sessionDot $ toTxt text)
-    UVParameter mVariableInfo columnValue ->
-      case fmap GraphQL.getName mVariableInfo of
-        Nothing -> do
-          currentIndex <- toInteger . length <$> gets positionalArguments
-          modify'
-            ( \s ->
-                s
-                  { positionalArguments = positionalArguments s <> [columnValue]
-                  }
-            )
-          pure (resultVarExp (syntheticIx currentIndex))
-        Just name -> do
-          modify
-            ( \s ->
-                s
-                  { namedArguments =
-                      HM.insert name columnValue (namedArguments s)
-                  }
-            )
-          pure $ resultVarExp (queryDot $ G.unName name)
+    UVParameter (FromGraphQL variableInfo) columnValue -> do
+      let name = GraphQL.getName variableInfo
+
+      modify
+        ( \s ->
+            s
+              { namedArguments =
+                  HM.insert name columnValue (namedArguments s)
+              }
+        )
+      pure $ resultVarExp (queryDot $ G.unName name)
+    UVParameter _ columnValue -> do
+      currentIndex <- toInteger . length <$> gets positionalArguments
+      modify'
+        ( \s ->
+            s
+              { positionalArguments = positionalArguments s <> [columnValue]
+              }
+        )
+      pure (resultVarExp (syntheticIx currentIndex))
   where
     resultVarExp :: JsonPath -> Expression
     resultVarExp =

@@ -593,7 +593,7 @@ pgDBRemoteRelationshipPlan _env userInfo sourceName sourceConfig lhs lhsSchema a
 
     rowsArgument :: UnpreparedValue ('Postgres pgKind)
     rowsArgument =
-      UVParameter Nothing $
+      UVParameter Unknown $
         ColumnValue (ColumnScalar Postgres.PGJSONB) $
           Postgres.PGValJSONB $
             PG.JSONB $

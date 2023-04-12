@@ -841,7 +841,7 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
     mkListParameter :: ColumnType ('Postgres pgKind) -> [ColumnValue ('Postgres pgKind)] -> IR.UnpreparedValue ('Postgres pgKind)
     mkListParameter columnType columnValues = do
       let scalarType = unsafePGColumnToBackend columnType
-      IR.UVParameter Nothing $
+      IR.UVParameter IR.Unknown $
         ColumnValue
           (ColumnScalar $ Postgres.PGArray scalarType)
           (Postgres.PGValArray $ cvValue <$> columnValues)
