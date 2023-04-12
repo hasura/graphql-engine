@@ -708,10 +708,10 @@ configApiGetHandler ::
   AppStateRef impl ->
   Spock.SpockCtxT () m ()
 configApiGetHandler appStateRef = do
-  AppEnv {..} <- lift askAppEnv
-  AppContext {..} <- liftIO $ getAppContext appStateRef
   Spock.get "v1alpha1/config" $
-    onlyWhenApiEnabled isConfigEnabled appStateRef $
+    onlyWhenApiEnabled isConfigEnabled appStateRef $ do
+      AppEnv {..} <- lift askAppEnv
+      AppContext {..} <- liftIO $ getAppContext appStateRef
       mkSpockAction appStateRef encodeQErr id $
         mkGetHandler $ do
           onlyAdmin
