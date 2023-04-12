@@ -6,6 +6,7 @@ import { generateQueryKeys } from '../../DatabaseRelationships/utils/queryClient
 import { useMetadataMigration } from '../../MetadataAPI';
 import { DatabaseConnection } from '../types';
 import { usePushRoute } from './usePushRoute';
+import { transformErrorResponse } from '../utils';
 
 export const useManageDatabaseConnection = ({
   onSuccess,
@@ -16,12 +17,7 @@ export const useManageDatabaseConnection = ({
 }) => {
   const queryClient = useQueryClient();
   const { mutate, ...rest } = useMetadataMigration({
-    errorTransform: err => {
-      return {
-        name: (err as any)?.internal?.[0]?.reason ?? 'Failed to add database',
-        message: (err as any)?.internal?.[0]?.message ?? JSON.stringify(err),
-      };
-    },
+    errorTransform: transformErrorResponse,
   });
   const push = usePushRoute();
   const dispatch = useAppDispatch();

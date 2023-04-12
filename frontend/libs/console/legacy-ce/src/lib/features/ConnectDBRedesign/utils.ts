@@ -11,3 +11,17 @@ export const getDriverNameFromUrlParams = (): string | undefined => {
 
   return driver ?? undefined;
 };
+
+export const transformErrorResponse = (error: unknown) => {
+  const err = error as Record<string, any>;
+
+  let message = '';
+
+  if ('internal' in err) message = JSON.stringify(err?.internal, null, '\t');
+  else message = err.error;
+
+  return {
+    name: `Error code: ${err.code}`,
+    message,
+  };
+};
