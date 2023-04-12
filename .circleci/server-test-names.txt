@@ -17,7 +17,7 @@
 # no-auth
 # admin-secret
 # admin-secret-unauthorized-role
-read-only-db
+# read-only-db
 jwt-rs512
 jwt-ed25519
 jwt-stringified
