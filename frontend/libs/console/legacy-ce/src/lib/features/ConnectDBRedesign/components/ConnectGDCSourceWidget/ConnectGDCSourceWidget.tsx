@@ -19,6 +19,7 @@ import { hasuraToast } from '../../../../new-components/Toasts';
 import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
 import { capitaliseFirstLetter } from '../../../../components/Common/ConfigureTransformation/utils';
 import { Collapsible } from '../../../../new-components/Collapsible';
+import { DisplayToastErrorMessage } from '../Common/DisplayToastErrorMessage';
 
 interface ConnectGDCSourceWidgetProps {
   driver: string;
@@ -73,8 +74,8 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
       onError: err => {
         hasuraToast({
           type: 'error',
-          title: 'An error occurred while adding database',
-          children: JSON.stringify(err),
+          title: err.name,
+          children: <DisplayToastErrorMessage message={err.message} />,
         });
       },
     });

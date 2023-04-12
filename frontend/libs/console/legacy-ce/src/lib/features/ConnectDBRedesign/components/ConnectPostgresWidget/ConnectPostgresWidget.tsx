@@ -18,6 +18,7 @@ import { useEffect, useState } from 'react';
 import { LimitedFeatureWrapper } from '../LimitedFeatureWrapper/LimitedFeatureWrapper';
 import { DynamicDBRouting } from './parts/DynamicDBRouting';
 import { Tabs } from '../../../../new-components/Tabs';
+import { DisplayToastErrorMessage } from '../Common/DisplayToastErrorMessage';
 
 interface ConnectPostgresWidgetProps {
   dataSourceName?: string;
@@ -51,7 +52,7 @@ export const ConnectPostgresWidget = (props: ConnectPostgresWidgetProps) => {
         hasuraToast({
           type: 'error',
           title: err.name,
-          children: err.message,
+          children: <DisplayToastErrorMessage message={err.message} />,
         });
       },
     });

@@ -5,7 +5,7 @@ import { ConnectionInfoSchema } from '../schema';
 export const ConnectionString = ({ name }: { name: string }) => {
   const options = [
     { value: 'databaseUrl', label: 'Database URL' },
-    { value: 'envVar', label: 'Enviromnent variable' },
+    { value: 'envVar', label: 'Environment variable' },
   ];
 
   const { watch } = useFormContext<Record<string, ConnectionInfoSchema>>();
