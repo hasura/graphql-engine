@@ -9,7 +9,6 @@ where
 import Data.HashMap.Strict qualified as HM
 import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo (..))
 import Hasura.CustomReturnType.IR (CustomReturnType (..))
-import Hasura.CustomReturnType.Types (CustomReturnTypeName (..))
 import Hasura.GraphQL.Schema.Backend
   ( BackendCustomReturnTypeSelectSchema (..),
     MonadBuildSchema,
@@ -94,8 +93,7 @@ buildCustomReturnTypeFields ::
         )
     )
 buildCustomReturnTypeFields customReturnType = runMaybeT $ do
-  let fieldName = getCustomReturnTypeName (_crtiName customReturnType)
-  selectionSetParser <- MaybeT $ customReturnTypeSelectionList @b @r @m @n fieldName customReturnType
-  customTypesArgsParser <- lift $ customReturnTypeArguments @b @r @m @n fieldName customReturnType
+  selectionSetParser <- MaybeT $ customReturnTypeSelectionList @b @r @m @n customReturnType
+  customTypesArgsParser <- lift $ customReturnTypeArguments @b @r @m @n customReturnType
 
   pure (selectionSetParser, customTypesArgsParser)

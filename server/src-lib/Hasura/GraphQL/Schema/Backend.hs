@@ -305,13 +305,11 @@ type ComparisonExp b = OpExpG b (UnpreparedValue b)
 class Backend b => BackendCustomReturnTypeSelectSchema (b :: BackendType) where
   customReturnTypeArguments ::
     MonadBuildSourceSchema b r m n =>
-    G.Name ->
     CustomReturnTypeInfo b ->
     SchemaT r m (InputFieldsParser n (IR.SelectArgsG b (UnpreparedValue b)))
 
   customReturnTypeSelectionSet ::
     MonadBuildSourceSchema b r m n =>
-    G.Name ->
     CustomReturnTypeInfo b ->
     SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 
