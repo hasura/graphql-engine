@@ -3,7 +3,6 @@ import http.server
 import inspect
 import os
 import pytest
-import re
 import socket
 import sqlalchemy
 import sys
@@ -51,13 +50,6 @@ def pytest_addoption(parser):
     )
     parser.addoption(
         "--hge-jwt-conf", metavar="HGE_JWT_CONF", help="The JWT conf", required=False
-    )
-
-    parser.addoption(
-        "--test-ws-init-cookie",
-        metavar="read|noread",
-        required=False,
-        help="Run testcases for testing cookie sending over websockets"
     )
 
     parser.addoption(

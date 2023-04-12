@@ -32,9 +32,9 @@ jwt-cookie
 jwt-cookie-unauthorized-role
 # cors-domains
 # auth-webhook-cookie
-ws-init-cookie-read-cors-enabled
-ws-init-cookie-noread
-ws-init-cookie-read-cors-disabled
+# ws-init-cookie-read-cors-enabled
+# ws-init-cookie-noread
+# ws-init-cookie-read-cors-disabled
 # ws-graphql-api-disabled
 # ws-metadata-api-disabled
 # remote-schema-permissions
