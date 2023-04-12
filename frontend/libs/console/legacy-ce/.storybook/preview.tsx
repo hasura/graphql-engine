@@ -12,6 +12,7 @@ import '../src/lib/theme/tailwind.css';
 import { store } from '../src/lib/store';
 import '../src/lib/components/Common/Common.module.scss';
 import { ToastsHub } from '../src/lib/new-components/Toasts';
+import { AlertProvider } from '../src/lib/new-components/Alert/AlertProvider';
 
 const channel = addons.getChannel();
 initialize();
@@ -74,10 +75,14 @@ export const decorators = [
   Story => {
     document.body.classList.add('hasura-tailwind-on');
     return (
-      <div>
-        <ToastsHub />
-        <div className={'bg-legacybg'}>{Story()}</div>
-      </div>
+      <AlertProvider>
+        <div>
+          <ToastsHub />
+          <div className={'bg-legacybg'}>
+            <Story />
+          </div>
+        </div>
+      </AlertProvider>
     );
   },
 ];

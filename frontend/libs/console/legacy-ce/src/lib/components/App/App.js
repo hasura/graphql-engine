@@ -9,6 +9,7 @@ import ErrorBoundary from '../Error/ErrorBoundary';
 import globals from '../../Globals';
 import styles from './App.module.scss';
 import { ToastsHub } from '../../new-components/Toasts';
+import { AlertProvider } from '../../new-components/Alert/AlertProvider';
 
 import { theme } from '../UIKit/theme';
 import { trackCustomEvent } from '../../features/Analytics';
@@ -60,19 +61,21 @@ const App = ({
     <GlobalContext.Provider value={globals}>
       <ThemeProvider theme={theme}>
         <ErrorBoundary metadata={metadata} dispatch={dispatch}>
-          <div>
-            {connectionFailMsg}
-            {ongoingRequest && (
-              <ProgressBar
-                percent={percent}
-                autoIncrement={true} // eslint-disable-line react/jsx-boolean-value
-                intervalTime={intervalTime}
-                spinner={false}
-              />
-            )}
-            <div>{children}</div>
-            <ToastsHub />
-          </div>
+          <AlertProvider>
+            <div>
+              {connectionFailMsg}
+              {ongoingRequest && (
+                <ProgressBar
+                  percent={percent}
+                  autoIncrement={true} // eslint-disable-line react/jsx-boolean-value
+                  intervalTime={intervalTime}
+                  spinner={false}
+                />
+              )}
+              <div>{children}</div>
+              <ToastsHub />
+            </div>
+          </AlertProvider>
         </ErrorBoundary>
       </ThemeProvider>
     </GlobalContext.Provider>

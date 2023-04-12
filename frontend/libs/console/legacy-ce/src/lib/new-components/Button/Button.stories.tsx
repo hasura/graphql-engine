@@ -55,6 +55,9 @@ export const VariantMode: ComponentStory<typeof Button> = () => (
     <Button mode="destructive" onClick={action('onClick')}>
       <span>Destructive</span>
     </Button>
+    <Button mode="success" onClick={action('onClick')}>
+      <span>Success</span>
+    </Button>
   </>
 );
 VariantMode.storyName = '🎭 Variant - Mode';
@@ -144,6 +147,14 @@ export const StateLoading: ComponentStory<typeof Button> = () => (
       >
         <span>Loading</span>
       </Button>
+      <Button
+        isLoading
+        loadingText="Loading..."
+        mode="success"
+        onClick={action('onClick')}
+      >
+        <span>Loading</span>
+      </Button>
     </div>
     <div className="flex gap-2">
       <Button
@@ -216,6 +227,9 @@ export const StateDisabled: ComponentStory<typeof Button> = () => (
         <span>Disabled</span>
       </Button>
       <Button disabled mode="destructive" onClick={action('onClick')}>
+        <span>Disabled</span>
+      </Button>
+      <Button disabled mode="success" onClick={action('onClick')}>
         <span>Disabled</span>
       </Button>
     </div>
