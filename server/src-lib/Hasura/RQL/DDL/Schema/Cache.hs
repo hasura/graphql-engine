@@ -530,7 +530,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
       Inc.dependOn -< Inc.selectKeyD sourceName invalidationKeys
       (|
         withRecordInconsistency
-          ( liftEitherA <<< bindA -< resolveSourceConfig @b logger sourceName sourceConfig backendKind backendInfo env httpMgr
+          ( bindErrorA -< ExceptT $ resolveSourceConfig @b logger sourceName sourceConfig backendKind backendInfo env httpMgr
           )
         |) metadataObj
 
@@ -563,8 +563,8 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
             _ ->
               (|
                 withRecordInconsistency
-                  ( liftEitherA <<< bindA
-                      -< do
+                  ( bindErrorA
+                      -< ExceptT do
                         resSource <- resolveDatabaseMetadata _bcasmSourceMetadata sourceConfig
                         for_ resSource $ liftIO . unLogger logger
                         pure $ (sourceConfig,) <$> resSource

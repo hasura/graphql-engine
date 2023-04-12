@@ -117,7 +117,7 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
       Inc.dependOn -< Inc.selectMaybeD (Inc.ConstS dataConnectorName) invalidationKeys
       (|
         withRecordInconsistency
-          ( liftEitherA <<< bindA -< getDataConnectorCapabilities dataConnectorOptions httpMgr
+          ( bindErrorA -< ExceptT $ getDataConnectorCapabilities dataConnectorOptions httpMgr
           )
         |) metadataObj
 

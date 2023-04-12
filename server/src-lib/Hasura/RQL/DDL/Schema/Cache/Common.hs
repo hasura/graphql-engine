@@ -25,7 +25,6 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     TablePermissionInputs (..),
     addTableContext,
     addCustomReturnTypeContext,
-    bindErrorA,
     boActions,
     boCustomTypes,
     boBackendCache,
@@ -317,12 +316,6 @@ data RebuildableSchemaCache = RebuildableSchemaCache
     _rscInvalidationMap :: InvalidationKeys,
     _rscRebuild :: Inc.Rule (ReaderT BuildReason CacheBuild) (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection) SchemaCache
   }
-
-bindErrorA ::
-  (ArrowChoice arr, ArrowKleisli m arr, ArrowError e arr, MonadError e m) =>
-  arr (m a) a
-bindErrorA = liftEitherA <<< arrM \m -> (Right <$> m) `catchError` (pure . Left)
-{-# INLINE bindErrorA #-}
 
 withRecordDependencies ::
   (ArrowWriter (Seq (Either im MetadataDependency)) arr) =>

@@ -19,6 +19,7 @@ module Control.Arrow.Extended
     onNothingA,
     ArrowKleisli (..),
     bindA,
+    bindErrorA,
   )
 where
 
@@ -26,6 +27,7 @@ import Control.Arrow
 import Control.Arrow.Trans
 import Control.Category
 import Control.Monad
+import Control.Monad.Trans.Except (ExceptT, runExceptT)
 import Data.Foldable
 import Prelude hiding (id, (.))
 
@@ -202,6 +204,12 @@ instance (ArrowKleisli m arr) => ArrowKleisli m (ReaderA r arr) where
 instance (ArrowKleisli m arr) => ArrowKleisli m (WriterA w arr) where
   arrM = liftA . arrM
   {-# INLINE arrM #-}
+
+bindErrorA ::
+  (ArrowChoice arr, ArrowKleisli m arr, ArrowError e arr) =>
+  arr (ExceptT e m a) a
+bindErrorA = liftEitherA <<< bindA <<< arr runExceptT
+{-# INLINE bindErrorA #-}
 
 {- Note [Weird control operator types]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
