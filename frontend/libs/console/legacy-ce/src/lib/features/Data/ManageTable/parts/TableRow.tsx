@@ -3,10 +3,12 @@ import { MetadataTable } from '../../../hasura-metadata-types';
 import { Button } from '../../../../new-components/Button';
 import { CardedTable } from '../../../../new-components/CardedTable';
 import React from 'react';
-import { FaTable } from 'react-icons/fa';
 import { FiSettings } from 'react-icons/fi';
-import { useTrackTable } from '../hooks/useTrackTable';
-import { TrackableTable } from '../types';
+import { useTrackTables } from '../../hooks/useTrackTables';
+import { TrackableTable } from '../../TrackResources/types';
+import { hasuraToast } from '../../../../new-components/Toasts';
+import { APIError } from '../../../../hooks/error';
+import { TableDisplayName } from '../components/TableDisplayName';
 
 interface TableRowProps {
   dataSourceName: string;
@@ -19,22 +21,57 @@ interface TableRowProps {
 export const TableRow = React.memo(
   ({ checked, dataSourceName, table, reset, onChange }: TableRowProps) => {
     const [showCustomModal, setShowCustomModal] = React.useState(false);
-    const { trackTable, untrackTable, loading } = useTrackTable(dataSourceName);
+    const { trackTables, untrackTables, isLoading } = useTrackTables({
+      dataSourceName,
+    });
 
     const track = (customConfiguration?: MetadataTable['configuration']) => {
       const t = { ...table };
       if (customConfiguration) {
         t.configuration = customConfiguration;
       }
-      trackTable(t).then(() => {
-        reset();
-        setShowCustomModal(false);
+
+      trackTables({
+        tablesToBeTracked: [t],
+        onSuccess: () => {
+          hasuraToast({
+            type: 'success',
+            title: 'Success!',
+            message: 'Object tracked successfully.',
+          });
+          reset();
+          setShowCustomModal(false);
+        },
+        onError: err => {
+          console.log('!!!', err);
+          hasuraToast({
+            type: 'error',
+            title: 'Unable to perform operation',
+            message: (err as APIError).message,
+          });
+        },
       });
     };
 
     const untrack = () => {
-      untrackTable(table).then(() => {
-        reset();
+      untrackTables({
+        tablesToBeTracked: [table],
+        onSuccess: () => {
+          hasuraToast({
+            type: 'success',
+            title: 'Success!',
+            message: 'Object untracked successfully.',
+          });
+          reset();
+        },
+        onError: err => {
+          console.log('log!!');
+          hasuraToast({
+            type: 'error',
+            title: 'Unable to perform operation',
+            message: (err as APIError).message,
+          });
+        },
       });
     };
 
@@ -52,8 +89,7 @@ export const TableRow = React.memo(
           />
         </td>
         <CardedTable.TableBodyCell>
-          <FaTable className="text-sm text-muted mr-xs" />
-          {table.name}
+          <TableDisplayName table={table.table} />
         </CardedTable.TableBodyCell>
         <CardedTable.TableBodyCell>{table.type}</CardedTable.TableBodyCell>
         <CardedTable.TableBodyCell>
@@ -62,7 +98,8 @@ export const TableRow = React.memo(
               data-testid={`untrack-${table.name}`}
               size="sm"
               onClick={untrack}
-              isLoading={loading}
+              isLoading={isLoading}
+              loadingText="Please wait"
             >
               Untrack
             </Button>
@@ -72,12 +109,13 @@ export const TableRow = React.memo(
                 data-testid={`track-${table.name}`}
                 size="sm"
                 onClick={() => track()}
-                isLoading={loading}
+                isLoading={isLoading}
+                loadingText="Please wait"
               >
                 Track
               </Button>
               {/* Hiding this customize button while loading as it looks odd to have two buttons in "loading mode" */}
-              {!loading && (
+              {!isLoading && (
                 <Button
                   size="sm"
                   className="ml-2"
@@ -99,7 +137,7 @@ export const TableRow = React.memo(
                 callToAction="Customize & Track"
                 callToDeny="Cancel"
                 callToActionLoadingText="Saving..."
-                isLoading={loading}
+                isLoading={isLoading}
                 show={showCustomModal}
               />
             </div>

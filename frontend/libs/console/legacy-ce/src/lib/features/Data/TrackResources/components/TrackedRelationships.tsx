@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '../../../../new-components/Button';
 import { CardedTable } from '../../../../new-components/CardedTable';
-import { useCheckRows } from '../hooks/useCheckRows';
 import {
   DEFAULT_PAGE_NUMBER,
   DEFAULT_PAGE_SIZE,
@@ -32,6 +31,7 @@ import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { MetadataDataSource } from '../../../../metadata/types';
 import Skeleton from 'react-loading-skeleton';
 import { getSuggestedRelationshipsCacheQuery } from '../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useSuggestedRelationships';
+import { useCheckRows } from '../../../DatabaseRelationships/hooks/useCheckRows';
 
 const getQueryFunction = (relationship: Relationship) => {
   if (relationship.type === 'localRelationship') {

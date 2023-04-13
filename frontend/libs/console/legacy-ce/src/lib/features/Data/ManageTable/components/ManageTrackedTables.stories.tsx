@@ -12,7 +12,7 @@ import { expect } from '@storybook/jest';
 import { dangerouslyDelay } from '../../../../storybook/utils/dangerouslyDelay';
 
 import { handlers, resetMetadata } from './handlers.mock';
-import { ManageTrackedTables } from '../components/ManageTrackedTables';
+import { ManageTrackedTables } from '../../ManageTable/components/ManageTrackedTables';
 
 export default {
   title: 'Data/Components/ManageTrackedTables',
@@ -38,17 +38,19 @@ UntrackedTables.play = async ({ canvasElement }) => {
   });
 
   // Verify it correctly displays untracked tables by default
-  await expect(canvas.getByText('public.Invoice')).toBeInTheDocument();
-  await expect(canvas.getByText('public.InvoiceLine')).toBeInTheDocument();
-  await expect(canvas.getByText('public.Track')).toBeInTheDocument();
-  await expect(canvas.getByText('public.Playlist')).toBeInTheDocument();
-  await expect(canvas.getByText('public.PlaylistTrack')).toBeInTheDocument();
-  await expect(canvas.getByText('public.MediaType')).toBeInTheDocument();
+  await expect(canvas.getByText('public / Invoice')).toBeInTheDocument();
+  await expect(canvas.getByText('public / InvoiceLine')).toBeInTheDocument();
+  await expect(canvas.getByText('public / Track')).toBeInTheDocument();
+  await expect(canvas.getByText('public / Playlist')).toBeInTheDocument();
+  await expect(canvas.getByText('public / PlaylistTrack')).toBeInTheDocument();
+  await expect(canvas.getByText('public / MediaType')).toBeInTheDocument();
 };
 
 export const Untrack: ComponentStory<typeof ManageTrackedTables> = () => (
   <ManageTrackedTables dataSourceName="chinook" />
 );
+
+Untrack.storyName = 'Test - Untrack a table 🧪';
 
 Untrack.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
@@ -75,7 +77,7 @@ Untrack.play = async ({ canvasElement }) => {
   userEvent.click(button);
 
   // It should not be in the Tracked tab anymore
-  await waitForElementToBeRemoved(() => canvas.queryByText('public.Artist'), {
+  await waitForElementToBeRemoved(() => canvas.queryByText('public / Artist'), {
     timeout: 2000,
   });
 };
@@ -83,6 +85,8 @@ Untrack.play = async ({ canvasElement }) => {
 export const Track: ComponentStory<typeof ManageTrackedTables> = () => (
   <ManageTrackedTables dataSourceName="chinook" />
 );
+
+Track.storyName = 'Test - Track a table 🧪';
 
 Track.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
@@ -107,14 +111,19 @@ Track.play = async ({ canvasElement }) => {
   userEvent.click(button);
 
   // It should not be in the Untracked tab anymore
-  await waitForElementToBeRemoved(() => canvas.queryByText('public.Invoice'), {
-    timeout: 2000,
-  });
+  await waitForElementToBeRemoved(
+    () => canvas.queryByText('public / Invoice'),
+    {
+      timeout: 2000,
+    }
+  );
 };
 
 export const TrackedTables: ComponentStory<typeof ManageTrackedTables> = () => (
   <ManageTrackedTables dataSourceName="chinook" />
 );
+
+TrackedTables.storyName = 'Test - Track all tables 🧪';
 
 TrackedTables.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
@@ -129,11 +138,11 @@ TrackedTables.play = async ({ canvasElement }) => {
   await userEvent.click(await canvas.findByText('Tracked'));
 
   // Verify it correctly displays tracked tables
-  await expect(canvas.getByText('public.Artist')).toBeInTheDocument();
-  await expect(canvas.getByText('public.Album')).toBeInTheDocument();
-  await expect(canvas.getByText('public.Employee')).toBeInTheDocument();
-  await expect(canvas.getByText('public.Customer')).toBeInTheDocument();
-  await expect(canvas.getByText('public.Genre')).toBeInTheDocument();
+  await expect(canvas.queryByText('public / Artist')).toBeInTheDocument();
+  await expect(canvas.queryByText('public / Album')).toBeInTheDocument();
+  await expect(canvas.queryByText('public / Employee')).toBeInTheDocument();
+  await expect(canvas.queryByText('public / Customer')).toBeInTheDocument();
+  await expect(canvas.queryByText('public / Genre')).toBeInTheDocument();
 };
 
 export const MassiveTableAmount = UntrackedTables.bind({});

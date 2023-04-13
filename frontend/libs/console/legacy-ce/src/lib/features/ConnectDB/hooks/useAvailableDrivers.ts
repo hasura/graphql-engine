@@ -27,5 +27,6 @@ export const useAvailableDrivers = ({
         firstSuccess.current = false;
       }
     },
+    refetchOnWindowFocus: false,
   });
 };

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FaAngleLeft, FaAngleRight } from 'react-icons/fa';
-import { useTrackTable } from '../..';
+// import { useTrackTable } from '../..';
 import { Badge } from '../../../../new-components/Badge';
 import { Button } from '../../../../new-components/Button';
 import { CardedTable } from '../../../../new-components/CardedTable';
@@ -9,12 +9,15 @@ import {
   DEFAULT_PAGE_NUMBER,
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGE_SIZES,
-} from '../constants';
+} from '../../TrackResources/constants';
 import { useCheckRows } from '../hooks/useCheckRows';
 import { TrackableTable } from '../types';
 import { paginate, search } from '../utils';
 import { SearchBar } from './SearchBar';
 import { TableRow } from './TableRow';
+import { useTrackTables } from '../../hooks/useTrackTables';
+import { hasuraToast } from '../../../../new-components/Toasts';
+import { APIError } from '../../../../hooks/error';
 
 interface TableListProps {
   dataSourceName: string;
@@ -41,16 +44,50 @@ export const TableList = (props: TableListProps) => {
     checkboxRef.current.indeterminate = inputStatus === 'indeterminate';
   }, [inputStatus]);
 
-  const { untrackTables, trackTables, loading } = useTrackTable(dataSourceName);
+  const { trackTables, untrackTables, isLoading } = useTrackTables({
+    dataSourceName,
+  });
 
   const onClick = async () => {
     const tables = filteredTables.filter(({ name }) =>
       checkedIds.includes(name)
     );
     if (mode === 'track') {
-      await untrackTables(tables);
+      untrackTables({
+        tablesToBeTracked: tables,
+        onSuccess: () => {
+          hasuraToast({
+            type: 'success',
+            title: 'Successfully untracked',
+            message: `${tables.length} objects untracked`,
+          });
+        },
+        onError: err => {
+          hasuraToast({
+            type: 'error',
+            title: 'Unable to perform operation',
+            message: (err as APIError).message,
+          });
+        },
+      });
     } else {
-      await trackTables(tables);
+      trackTables({
+        tablesToBeTracked: tables,
+        onSuccess: () => {
+          hasuraToast({
+            type: 'success',
+            title: 'Successfully tracked',
+            message: `${tables.length} objects tracked`,
+          });
+        },
+        onError: err => {
+          hasuraToast({
+            type: 'error',
+            title: 'Unable to perform operation',
+            message: (err as APIError).message,
+          });
+        },
+      });
     }
 
     onTrackedTable?.();
@@ -75,7 +112,7 @@ export const TableList = (props: TableListProps) => {
             mode="primary"
             disabled={!checkedIds.length}
             onClick={onClick}
-            isLoading={loading}
+            isLoading={isLoading}
             loadingText="Please Wait"
           >
             {`${mode === 'track' ? 'Untrack' : 'Track'} Selected (${

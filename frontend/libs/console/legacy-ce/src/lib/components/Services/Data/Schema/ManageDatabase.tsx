@@ -14,7 +14,6 @@ import { browserHistory } from 'react-router';
 import produce from 'immer';
 import { ManageAgents } from '../../../../features/ManageAgents';
 import { Button } from '../../../../new-components/Button';
-import { useMetadataSource } from '../../../../features/MetadataAPI';
 import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import { nativeDrivers } from '../../../../features/DataSource';
 import { getProjectId } from '../../../../utils/cloudConsole';
@@ -67,6 +66,11 @@ import {
 import { Collapsible } from '../../../../new-components/Collapsible';
 import { IconTooltip } from '../../../../new-components/Tooltip';
 import { ListConnectedDatabases } from '../../../../features/ConnectDBRedesign';
+import {
+  MetadataSelectors,
+  useMetadata,
+} from '../../../../features/hasura-metadata-api';
+import { PostgresConfiguration } from '../../../../features/hasura-metadata-types';
 
 const KNOW_MORE_PROJECT_REGION_UPDATE =
   'https://hasura.io/docs/latest/projects/regions/#changing-region-of-an-existing-project';
@@ -98,7 +102,9 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
   const [removing, setRemoving] = useState(false);
   const [showUrl, setShowUrl] = useState(false);
   const [dbVersion, setDbVersion] = useState('');
-  const { data: sourceInfo } = useMetadataSource(dataSource?.name);
+  const { data: sourceInfo } = useMetadata(m =>
+    MetadataSelectors.findSource(dataSource?.name)(m)
+  );
 
   const fetchDBVersion = () => {
     const query = services[dataSource.driver].getDatabaseVersionSql ?? '';
@@ -142,12 +148,12 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
     inconsistentObjects
   );
 
-  const isTotalMaxConnectionSet =
-    !!sourceInfo?.configuration?.connection_info?.pool_settings
-      ?.total_max_connections;
-  const isMaxConnectionSet =
-    !!sourceInfo?.configuration?.connection_info?.pool_settings
-      ?.max_connections;
+  const isTotalMaxConnectionSet = !!(
+    sourceInfo?.configuration as PostgresConfiguration
+  )?.connection_info?.pool_settings?.total_max_connections;
+  const isMaxConnectionSet = !!(
+    sourceInfo?.configuration as PostgresConfiguration
+  )?.connection_info?.pool_settings?.max_connections;
   const showMaxConnectionWarning =
     isCloudConsole(globals) && !isTotalMaxConnectionSet && isMaxConnectionSet;
 

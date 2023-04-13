@@ -1,6 +1,6 @@
 import { Analytics, REDACT_EVERYTHING } from '../../Analytics';
 import { FaAngleRight, FaDatabase } from 'react-icons/fa';
-import { ManageTrackedTables } from '../TrackResources/components/ManageTrackedTables';
+import { ManageTrackedTables } from '../ManageTable/components/ManageTrackedTables';
 import { ManageTrackedRelationshipsContainer } from '../TrackResources/components/ManageTrackedRelationshipsContainer';
 
 interface ManageDatabaseProps {

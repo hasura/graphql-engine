@@ -291,9 +291,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     );
 
     if (!dataSource) {
-      throw Error(
-        'DataSource.introspectTables data source not found in metadata'
-      );
+      throw Error(`${dataSourceName} not found in metadata`);
     }
 
     const kind = getDriver(dataSource);

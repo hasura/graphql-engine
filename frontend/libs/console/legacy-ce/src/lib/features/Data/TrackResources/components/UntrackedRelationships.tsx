@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '../../../../new-components/Button';
 import { CardedTable } from '../../../../new-components/CardedTable';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-import { useCheckRows } from '../hooks/useCheckRows';
 import { DEFAULT_PAGE_SIZES } from '../constants';
 import { FaAngleLeft, FaAngleRight, FaMagic } from 'react-icons/fa';
 import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '../constants';
@@ -20,6 +19,7 @@ import { hasuraToast } from '../../../../new-components/Toasts';
 import Skeleton from 'react-loading-skeleton';
 import { useQueryClient } from 'react-query';
 import { getTrackedRelationshipsCacheKey } from './hooks/useTrackedRelationships';
+import { useCheckRows } from '../../../DatabaseRelationships/hooks/useCheckRows';
 
 interface UntrackedRelationshipsProps {
   dataSourceName: string;

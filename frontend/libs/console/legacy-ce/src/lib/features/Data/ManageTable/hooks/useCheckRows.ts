@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import produce from 'immer';
+import { TrackableTable } from '../types';
 
-export const useCheckRows = (data: { id: string }[]) => {
+export const useCheckRows = (data: TrackableTable[]) => {
   const [checkedIds, setCheckedIds] = useState<string[]>([]);
 
   // Derived statuses

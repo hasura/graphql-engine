@@ -18,6 +18,7 @@ export type TMigration<
     type: allowedMetadataTypes;
     args: ArgsType;
     resource_version?: number;
+    source?: string;
   };
 };
 

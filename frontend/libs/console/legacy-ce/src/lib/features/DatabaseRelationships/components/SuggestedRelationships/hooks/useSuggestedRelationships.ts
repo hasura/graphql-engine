@@ -252,7 +252,7 @@ export const useSuggestedRelationships = ({
     if (dataSourcePrefix) {
       refetchSuggestedRelationships();
     }
-  }, [dataSourcePrefix]);
+  }, [dataSourcePrefix, refetchSuggestedRelationships]);
 
   const suggestedRelationships = data?.relationships || [];
 
