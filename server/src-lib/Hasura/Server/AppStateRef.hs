@@ -11,6 +11,11 @@ module Hasura.Server.AppStateRef
     createTLSAllowListRef,
     readTLSAllowList,
 
+    -- * Metrics config reference
+    MetricsConfigRef,
+    createMetricsConfigRef,
+    readMetricsConfig,
+
     -- * Utility
     getSchemaCache,
     getSchemaCacheWithVersion,
@@ -30,6 +35,7 @@ import Hasura.App.State
 import Hasura.Logging qualified as L
 import Hasura.Prelude hiding (get, put)
 import Hasura.RQL.DDL.Schema
+import Hasura.RQL.Types.Common (MetricsConfig)
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.SchemaCache
@@ -82,19 +88,23 @@ data AppState impl = AppState
 -- newly minted 'SchemaCacheRef'.
 initialiseAppStateRef ::
   MonadIO m =>
-  TLSAllowListRef impl ->
+  TLSAllowListRef ->
+  Maybe MetricsConfigRef ->
   ServerMetrics ->
   RebuildableSchemaCache ->
   RebuildableAppContext impl ->
   m (AppStateRef impl)
-initialiseAppStateRef (TLSAllowListRef tlsAllowListRef) serverMetrics rebuildableSchemaCache rebuildableAppCtx = liftIO $ do
+initialiseAppStateRef (TLSAllowListRef tlsAllowListRef) metricsConfigRefM serverMetrics rebuildableSchemaCache rebuildableAppCtx = liftIO do
   cacheLock <- newMVar ()
   let appState = AppState (rebuildableSchemaCache, initSchemaCacheVer) rebuildableAppCtx
   cacheCell <- newIORef appState
   let metadataVersionGauge = smSchemaCacheMetadataResourceVersion serverMetrics
   updateMetadataVersionGauge metadataVersionGauge rebuildableSchemaCache
-  liftIO $ writeIORef tlsAllowListRef (Right cacheCell)
-  pure $ AppStateRef cacheLock cacheCell metadataVersionGauge
+  let ref = AppStateRef cacheLock cacheCell metadataVersionGauge
+  liftIO $ writeIORef tlsAllowListRef (scTlsAllowlist <$> getSchemaCache ref)
+  for_ metricsConfigRefM \(MetricsConfigRef metricsConfigRef) ->
+    liftIO $ writeIORef metricsConfigRef (scMetricsConfig <$> getSchemaCache ref)
+  pure ref
 
 -- | Set the 'AppStateRef' to the 'RebuildableSchemaCache' produced by the
 -- given action.
@@ -195,22 +205,40 @@ getRebuildableSchemaCacheWithVersion scRef = asSchemaCache <$> readIORef (_scrCa
 -- that would refer to the list in the schema cache. Now, instead, we only
 -- create one Manager, which uses a 'TLSAllowListRef' to dynamically access the
 -- Allow List.
-newtype TLSAllowListRef impl
-  = TLSAllowListRef
-      ( IORef (Either [TlsAllow] (IORef (AppState impl)))
-      )
+newtype TLSAllowListRef = TLSAllowListRef (IORef (IO [TlsAllow]))
 
 -- | Creates a new 'TLSAllowListRef' that points to the given list.
-createTLSAllowListRef :: [TlsAllow] -> IO (TLSAllowListRef impl)
-createTLSAllowListRef = fmap TLSAllowListRef . newIORef . Left
+createTLSAllowListRef :: [TlsAllow] -> IO TLSAllowListRef
+createTLSAllowListRef = fmap TLSAllowListRef . newIORef . pure
 
 -- | Reads the TLS AllowList by attempting to read from the schema cache, and
 -- defaulting to the list given when the ref was created.
-readTLSAllowList :: TLSAllowListRef impl -> IO [TlsAllow]
-readTLSAllowList (TLSAllowListRef ref) =
-  readIORef ref >>= \case
-    Right scRef -> scTlsAllowlist . lastBuiltSchemaCache . fst . asSchemaCache <$> readIORef scRef
-    Left list -> pure list
+readTLSAllowList :: TLSAllowListRef -> IO [TlsAllow]
+readTLSAllowList (TLSAllowListRef ref) = join $ readIORef ref
+
+--------------------------------------------------------------------------------
+-- Metrics config
+
+-- | Reference to the metadata's 'MetricsConfig'.
+--
+-- Similarly to the 'TLSAllowListRef', this exists to break a
+-- chicken-and-egg problem in the initialisation of the engine: the
+-- implementation of several behaviour classes requires access to said
+-- config, but those classes are implemented on the app monad, that
+-- doesn't have access to the schema cache. This small type allows the
+-- app monad to have access to the config, even before we build the
+-- first schema cache.
+newtype MetricsConfigRef
+  = MetricsConfigRef (IORef (IO MetricsConfig))
+
+-- | Creates a new 'MetricsConfigRef' that points to the given config.
+createMetricsConfigRef :: MetricsConfig -> IO (MetricsConfigRef)
+createMetricsConfigRef = fmap MetricsConfigRef . newIORef . pure
+
+-- | Reads the TLS AllowList by attempting to read from the schema cache, and
+-- defaulting to the list given when the ref was created.
+readMetricsConfig :: MetricsConfigRef -> IO MetricsConfig
+readMetricsConfig (MetricsConfigRef ref) = join $ readIORef ref
 
 --------------------------------------------------------------------------------
 -- Utility functions

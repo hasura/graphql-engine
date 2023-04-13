@@ -357,7 +357,7 @@ resolvePostgresConnInfo env dbUrlConf (fromMaybe 1 -> retries) = do
 -- such pieces of information that are required throughout the initialisation,
 -- but that aren't needed in the rest of the application.
 data AppInit = AppInit
-  { aiTLSAllowListRef :: TLSAllowListRef Hasura,
+  { aiTLSAllowListRef :: TLSAllowListRef,
     aiMetadataWithResourceVersion :: MetadataWithResourceVersion
   }
 
@@ -527,7 +527,7 @@ initialiseAppContext env serveOptions@ServeOptions {..} AppInit {..} = do
   !rebuildableAppCtx <- onLeft rebuildableAppCtxE $ \e -> throwErrExit InvalidEnvironmentVariableOptionsError $ T.unpack $ qeError e
 
   -- Initialise the 'AppStateRef' from 'RebuildableSchemaCacheRef' and 'RebuildableAppContext'.
-  initialiseAppStateRef aiTLSAllowListRef appEnvServerMetrics rebuildableSchemaCache rebuildableAppCtx
+  initialiseAppStateRef aiTLSAllowListRef Nothing appEnvServerMetrics rebuildableSchemaCache rebuildableAppCtx
 
 -- | Runs catalogue migration, and returns the metadata that was fetched.
 --
