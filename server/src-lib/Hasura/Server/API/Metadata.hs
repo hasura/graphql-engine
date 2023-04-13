@@ -234,6 +234,9 @@ data RQLMetadataV1
     RMGetFeatureFlag !GetFeatureFlag
   | -- Bulk metadata queries
     RMBulk [RQLMetadataRequest]
+  | -- Bulk metadata queries, but don't stop if something fails - return all
+    -- successes and failures as separate items
+    RMBulkKeepGoing [RQLMetadataRequest]
   deriving (Generic)
 
 -- NOTE! If you add a new request type here that is read-only, make sure to
@@ -312,6 +315,7 @@ instance FromJSON RQLMetadataV1 where
       "set_opentelemetry_status" -> RMSetOpenTelemetryStatus <$> args
       "get_feature_flag" -> RMGetFeatureFlag <$> args
       "bulk" -> RMBulk <$> args
+      "bulk_keep_going" -> RMBulkKeepGoing <$> args
       -- Backend prefixed metadata actions:
       _ -> do
         -- 1) Parse the backend source kind and metadata command:
@@ -517,6 +521,7 @@ queryModifiesMetadata = \case
       RMCreateSelectCustomReturnTypePermission _ -> True
       RMDropSelectCustomReturnTypePermission _ -> True
       RMBulk qs -> any queryModifiesMetadata qs
+      RMBulkKeepGoing qs -> any queryModifiesMetadata qs
       -- We used to assume that the fallthrough was True,
       -- but it is better to be explicit here to warn when new constructors are added.
       RMAddSource _ -> True
@@ -805,6 +810,13 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
   RMSetOpenTelemetryStatus q -> runSetOpenTelemetryStatus q
   RMGetFeatureFlag q -> runGetFeatureFlag checkFeatureFlag q
   RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env checkFeatureFlag remoteSchemaPerms currentResourceVersion) q
+  RMBulkKeepGoing commands -> do
+    results <-
+      commands & indexedMapM \command ->
+        runMetadataQueryM env checkFeatureFlag remoteSchemaPerms currentResourceVersion command
+          `catchError` \qerr -> pure (encJFromJValue qerr)
+
+    pure (encJFromList results)
   where
     dispatchMetadata ::
       (forall b. BackendMetadata b => i b -> a) ->

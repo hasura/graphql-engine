@@ -186,6 +186,9 @@ data RQLMetadataV1
     RMGetFeatureFlag !GetFeatureFlag
   | -- Bulk metadata queries
     RMBulk [RQLMetadataRequest]
+  | -- Bulk metadata queries, but don't stop if something fails - return all
+    -- successes and failures as separate items
+    RMBulkKeepGoing [RQLMetadataRequest]
 
 data RQLMetadataV2
   = RMV2ReplaceMetadata !ReplaceMetadataV2
