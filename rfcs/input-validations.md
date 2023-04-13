@@ -7,13 +7,12 @@ For the first version, we will consider only `insert` mutations for tables.
 
 ## Validation for `insert` mutations
 
-We will consider the following 2 options:
-
-### `validate_input` as a new permission type in `Insert` permissions.
+A new field called `validate_input` has been introduced in the insert permission definition to configure the validation.
+Find a sample configuration below.
 
 ```yaml
 type: pg_create_insert_permission
-args: 
+args:
   table: article,
   source: default,
   role: user,
@@ -25,23 +24,22 @@ args:
     columns: ["name","author_id"]
     validate_input:
       type: http
-      function: http://www.somedomain.com/validateArticle
+      definition:
+        handler: http://www.somedomain.com/validateArticle
 ```
 
-#### Pros
+The `type` determines the interface for the input validation, which initially only supports `http` webhook handler.
+However, we may expand support for multiple interfaces such as a Postgres function or a remote schema field.
+The `definition` field provides necessary context for communicating and submitting the data for input validation.
 
-1. Explicit validation permission which makes the execution clear i.e. validation will happen first and then the rest of the execution
+### Alternative approach
 
-#### Cons
-
-1. Cannot combine with other `check` permissions
-
-
-### `validate_input` as a new expression in the `check` clause of `Insert` 
+The `validate_input` as a new expression in the `check` clause of `Insert` permission and can be clubbed with other check permissions.
+Find a sample configuration below.
 
 ```yaml
 type: pg_create_insert_permission
-args: 
+args:
   table: article,
   source: default,
   role: user,
@@ -50,37 +48,25 @@ args:
       author_id: "X-HASURA-USER-ID"
       _validate_input:
          type: http
-         function: http://www.somedomain.com/validateArticle
+         definition:
+           handler: http://www.somedomain.com/validateArticle
     set
       id: "X-HASURA-USER-ID"
     columns: ["name","author_id"]
 ```
-
-#### Pros
-
-1. Can be combined with other check permissions
-
-#### Cons
-
-1. Mental model is slightly more involved since execution is not explicit.
-
-## Definition
-
-`validate_input` or `_validate_input` (used interchangeably unless explicitly differentiated) is an object with 2 fields: `type` and `function`.
-
-For simplicity, let's say `type` can only take the value `http` and `function` will expect a HTTP URL.
-
-The spec of the `function` is TBD.
-
+The `check` expressions use boolean syntax and support both `AND` and `OR` operations. However, combining validation
+logic with the check expressions can make it difficult for users to understand and maintain. Users mental model may not
+be clear when working with input validation. It is easy to comprehend that validation always happens first when it is
+isolated from the `check`.
 
 ## Behaviour
 
 When an insert mutation comes in with a role, the following steps are performed:
 
 1. First "collect" all the tables that the mutation targets (because there could be more than one table involved via nested inserts)
-1. If there is a `validate_input` permission on a table, then any arguments targeting that table are sent to the `function`. This is done for all tables.
-1. If all functions return success (HTTP status 200), then the request proceeds. A transaction with the database will only be started after the validation is over.
-1. If any function returns error (HTTP status 4xx), then the request aborts. An `error` message from the function can also be forwarded to the client.
+1. If there is a `validate_input` permission on a table, then any arguments targeting that table are sent to the `handler`. This is done for all tables.
+1. If all handlers return success (HTTP status 200), then the request proceeds. A transaction with the database will only be started after the validation is over.
+1. If any handler returns error (HTTP status 4xx), then the request aborts. An `error` message from the handler can also be forwarded to the client.
 
 ## Examples
 
@@ -99,8 +85,8 @@ mutation insertUser($email:String, $name: String) {
 }
 ```
 
-The arguments used in `users` model i.e. `$email` and `$name` are sent to the `validate_input` function of `users` insert permission. 
-The function can check the `email` value. If the function returns success, then the mutation proceeds else the error from the function is forwarded.
+The arguments used in `users` model i.e. `$email` and `$name` are sent to the `validate_input` handler of `users` insert permission.
+The handler can check the `email` value. If the handler returns success, then the mutation proceeds else the error from the handler is forwarded.
 
 2. [Multiple models] Check if `article` length is less than 1000 when inserting an `author` with their `articles`.
 
@@ -118,13 +104,13 @@ mutation insertAuthorWithArticles($name: String, $email:String, $articles_conten
 
 ```
 
-The arguments used in `author` model i.e. `$name`, `$email` and `$articles_content` (relationship arguments are also considered part of model arguments)  are sent to the `validate_input` function of `author` model.
+The arguments used in `author` model i.e. `$name`, `$email` and `$articles_content` (relationship arguments are also considered part of model arguments)  are sent to the `validate_input` handler of `author` model.
 
-The arguments used in `article` model i.e. `$articles_content` is sent to the `validate_input` function of `article` model.
+The arguments used in `article` model i.e. `$articles_content` is sent to the `validate_input` handler of `article` model.
 
-If both functions return success, then the mutation proceeds else the error(s) from the function(s) is forwarded.
+If both handlers return success, then the mutation proceeds else the error(s) from the handler(s) is forwarded.
 
 ## Enhancements
 
-1. Consider `_validate_input` at a column-level. The `function` spec would differ for this.
-2. We can also consider `warning` semantics for `validate_input` function where the validation is success but with warnings.
+1. Consider `validate_input` at a column-level. The `definition` spec would differ for this.
+2. We can also consider `warning` semantics for `validate_input` handler where the validation is success but with warnings.
