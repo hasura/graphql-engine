@@ -259,7 +259,7 @@ instance
   buildComputedFieldInfo = Postgres.buildComputedFieldInfo
   fetchAndValidateEnumValues = Postgres.fetchAndValidateEnumValues
   resolveSourceConfig = Postgres.resolveSourceConfig
-  resolveDatabaseMetadata = Postgres.resolveDatabaseMetadata
+  resolveDatabaseMetadata _ = Postgres.resolveDatabaseMetadata
   parseBoolExpOperations = Postgres.parseBoolExpOperations
   buildFunctionInfo = Postgres.buildFunctionInfo
   updateColumnInEventTrigger = Postgres.updateColumnInEventTrigger
@@ -270,7 +270,7 @@ instance
   validateLogicalModel = Postgres.validateLogicalModel (pgTypeOidMapping @pgKind)
   supportsBeingRemoteRelationshipTarget _ = True
 
-  listAllTables _ sourceName = do
+  listAllTables sourceName = do
     sourceConfig <- askSourceConfig @('Postgres pgKind) sourceName
 
     results <-

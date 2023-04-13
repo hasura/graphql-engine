@@ -22,14 +22,14 @@ import Hasura.SQL.Backend qualified as Backend
 
 -- | List all tables, tracked or untracked, on a given BigQuery source. All
 -- given datasets' tables will be included.
-listAllTables :: (CacheRM m, MetadataM m, MonadError QErr m, MonadIO m) => env -> SourceName -> m [TableName]
-listAllTables _ sourceName = do
+listAllTables :: (CacheRM m, MetadataM m, MonadError QErr m, MonadIO m) => SourceName -> m [TableName]
+listAllTables sourceName = do
   sourceConfig <- askSourceConfig @'Backend.BigQuery sourceName
 
   let queryPerDataset :: BigQueryDataset -> LT.Text
       queryPerDataset (BigQueryDataset dataset) =
         [i|
-          select table_name, table_schema 
+          select table_name, table_schema
           FROM #{dataset}.INFORMATION_SCHEMA.TABLES
         |]
 

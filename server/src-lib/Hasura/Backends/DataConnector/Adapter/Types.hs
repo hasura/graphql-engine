@@ -11,9 +11,9 @@ module Hasura.Backends.DataConnector.Adapter.Types
     scDataConnectorName,
     scEndpoint,
     scManager,
-    scSchema,
     scTemplate,
     scTimeoutMicroseconds,
+    scEnvironment,
     DataConnectorName,
     unDataConnectorName,
     mkDataConnectorName,
@@ -44,6 +44,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as J
 import Data.Aeson.Types (parseEither, toJSONKeyText)
 import Data.Data (Typeable)
+import Data.Environment (Environment)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as Text
@@ -156,21 +157,21 @@ data SourceConfig = SourceConfig
     _scConfig :: API.Config,
     _scTemplate :: Maybe Text, -- TODO: Use Parsed Kriti Template, specify template language
     _scCapabilities :: API.Capabilities,
-    _scSchema :: API.SchemaResponse,
     _scManager :: HTTP.Manager,
     _scTimeoutMicroseconds :: Maybe Int,
-    _scDataConnectorName :: DataConnectorName
+    _scDataConnectorName :: DataConnectorName,
+    _scEnvironment :: Environment
   }
 
 instance Eq SourceConfig where
-  SourceConfig ep1 capabilities1 config1 template1 schema1 _ timeout1 dcName1 == SourceConfig ep2 capabilities2 config2 template2 schema2 _ timeout2 dcName2 =
+  SourceConfig ep1 capabilities1 config1 template1 _ timeout1 dcName1 env1 == SourceConfig ep2 capabilities2 config2 template2 _ timeout2 dcName2 env2 =
     ep1 == ep2
       && capabilities1 == capabilities2
       && config1 == config2
       && template1 == template2
-      && schema1 == schema2
       && timeout1 == timeout2
       && dcName1 == dcName2
+      && env1 == env2
 
 instance Show SourceConfig where
   show _ = "SourceConfig"

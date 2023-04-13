@@ -7,6 +7,7 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
+import Harness.Backend.DataConnector.Sqlite qualified as Sqlite
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -52,6 +53,11 @@ spec = do
                   Fixture.defaultOptions
                     { Fixture.stringifyNumbers = True
                     }
+            },
+          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Sqlite.setupTablesAction schema testEnvironment
+                ]
             }
         ]
     )
@@ -112,6 +118,12 @@ tests = do
               - dataset: #{schemaName}
                 name: untracked
             |]
+          "sqlite" ->
+            [interpolateYaml|
+              - [#{schemaName}, articles]
+              - [#{schemaName}, authors]
+              - [#{schemaName}, untracked]
+            |]
           _ ->
             [interpolateYaml|
               - schema: #{schemaName}
@@ -130,6 +142,7 @@ tests = do
       "citus" -> Citus.createTable testEnvironment untracked
       "cockroach" -> Cockroach.createTable testEnvironment untracked
       "mssql" -> Sqlserver.createTable testEnvironment untracked
+      "sqlite" -> Sqlite.createTable (BackendType.backendSourceName backendTypeMetadata) testEnvironment untracked
       b -> error ("Unknown backend: " <> b)
 
     shouldReturnYaml testEnvironment actual expected

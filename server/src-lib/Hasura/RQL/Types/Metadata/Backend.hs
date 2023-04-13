@@ -95,7 +95,6 @@ class
   -- creates a connection pool (and other related parameters) in the process
   resolveSourceConfig ::
     (MonadIO m, MonadBaseControl IO m, MonadResolveSource m) =>
-    Logger Hasura ->
     SourceName ->
     SourceConnConfiguration b ->
     BackendSourceKind b ->
@@ -107,6 +106,7 @@ class
   -- | Function that introspects a database for tables, columns, functions etc.
   resolveDatabaseMetadata ::
     (MonadIO m, MonadBaseControl IO m, MonadResolveSource m) =>
+    Logger Hasura ->
     SourceMetadata b ->
     SourceConfig b ->
     m (Either QErr (DBObjectsIntrospection b))
@@ -195,7 +195,6 @@ class
   -- to be tracked.
   listAllTables ::
     (CacheRM m, MonadBaseControl IO m, MetadataM m, MonadError QErr m, MonadIO m, MonadReader r m, Has (Logger Hasura) r, ProvidesNetwork m) =>
-    Env.Environment ->
     SourceName ->
     m [TableName b]
 

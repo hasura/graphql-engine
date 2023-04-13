@@ -9,5 +9,5 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Common (SourceName)
 
 -- | List all tables, tracked or untracked, on a given data source.
-listAllTables :: MonadError QErr m => env -> SourceName -> m [TableName]
-listAllTables _ _ = throw500 "listAllTables: not implemented for MySQL backend"
+listAllTables :: MonadError QErr m => SourceName -> m [TableName]
+listAllTables _ = throw500 "listAllTables: not implemented for MySQL backend"

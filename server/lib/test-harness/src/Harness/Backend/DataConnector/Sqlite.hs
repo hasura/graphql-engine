@@ -195,7 +195,6 @@ teardown (reverse -> tables) (testEnvironment, _) = do
 runSql :: TestEnvironment -> String -> String -> IO ()
 runSql testEnvironment source sql = do
   Schema.runSQL source sql testEnvironment
-  GraphqlEngine.reloadMetadata testEnvironment
 
 -- | Serialize Table into a SQLite statement, as needed, and execute it on the SQLite backend
 createTable :: String -> TestEnvironment -> Schema.Table -> IO ()

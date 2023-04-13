@@ -21,8 +21,8 @@ import Hasura.RQL.Types.SchemaCache (CacheRM, askSourceConfig)
 import Hasura.SQL.Backend (BackendType (MSSQL))
 
 -- | List all tables, tracked or untracked, on a given data source.
-listAllTables :: (CacheRM m, MetadataM m, MonadBaseControl IO m, MonadError QErr m, MonadIO m) => env -> SourceName -> m [TableName]
-listAllTables _ sourceName = do
+listAllTables :: (CacheRM m, MetadataM m, MonadBaseControl IO m, MonadError QErr m, MonadIO m) => SourceName -> m [TableName]
+listAllTables sourceName = do
   sourceConfig <- askSourceConfig @'MSSQL sourceName
 
   let listAllTablesSql :: ODBC.Query

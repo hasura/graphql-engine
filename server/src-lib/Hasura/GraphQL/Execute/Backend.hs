@@ -15,7 +15,6 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.Ordered qualified as JO
-import Data.Environment as Env
 import Data.Kind (Type)
 import Data.Text.Extended
 import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
@@ -68,7 +67,6 @@ class
       MonadReader QueryTagsComment m
     ) =>
     UserInfo ->
-    Env.Environment ->
     SourceName ->
     SourceConfig b ->
     QueryDB b Void (UnpreparedValue b) ->
@@ -82,7 +80,6 @@ class
       MonadReader QueryTagsComment m
     ) =>
     UserInfo ->
-    Env.Environment ->
     Options.StringifyNumbers ->
     SourceName ->
     SourceConfig b ->
@@ -144,7 +141,6 @@ class
     ( MonadError QErr m,
       MonadQueryTags m
     ) =>
-    Env.Environment ->
     UserInfo ->
     SourceName ->
     SourceConfig b ->

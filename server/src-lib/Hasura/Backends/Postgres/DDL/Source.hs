@@ -75,7 +75,6 @@ instance ToMetadataFetchQuery 'Cockroach where
 
 resolveSourceConfig ::
   (MonadIO m, MonadResolveSource m) =>
-  Logger Hasura ->
   SourceName ->
   PostgresConnConfiguration ->
   BackendSourceKind ('Postgres pgKind) ->
@@ -83,7 +82,7 @@ resolveSourceConfig ::
   Env.Environment ->
   manager ->
   m (Either QErr (SourceConfig ('Postgres pgKind)))
-resolveSourceConfig _logger name config _backendKind _backendConfig env _manager = runExceptT do
+resolveSourceConfig name config _backendKind _backendConfig env _manager = runExceptT do
   sourceResolver <- getPGSourceResolver
   liftEitherM $ liftIO $ sourceResolver env name config
 

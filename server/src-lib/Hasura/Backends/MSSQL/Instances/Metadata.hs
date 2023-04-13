@@ -18,7 +18,7 @@ instance BackendMetadata 'MSSQL where
   buildComputedFieldInfo = MSSQL.buildComputedFieldInfo
   fetchAndValidateEnumValues = MSSQL.fetchAndValidateEnumValues
   resolveSourceConfig = MSSQL.resolveSourceConfig
-  resolveDatabaseMetadata _ = MSSQL.resolveDatabaseMetadata
+  resolveDatabaseMetadata _ _ = MSSQL.resolveDatabaseMetadata
   parseBoolExpOperations = MSSQL.parseBoolExpOperations
   buildFunctionInfo = MSSQL.buildFunctionInfo
   updateColumnInEventTrigger = MSSQL.updateColumnInEventTrigger

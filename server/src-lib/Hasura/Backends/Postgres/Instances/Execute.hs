@@ -15,7 +15,6 @@ where
 
 import Control.Monad.Trans.Control qualified as MT
 import Data.Aeson qualified as J
-import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.IntMap qualified as IntMap
@@ -131,14 +130,13 @@ pgDBQueryPlan ::
     MonadReader QueryTagsComment m
   ) =>
   UserInfo ->
-  Env.Environment ->
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
   QueryDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   [HTTP.Header] ->
   Maybe G.Name ->
   m (DBStepInfo ('Postgres pgKind))
-pgDBQueryPlan userInfo _env sourceName sourceConfig qrf reqHeaders operationName = do
+pgDBQueryPlan userInfo sourceName sourceConfig qrf reqHeaders operationName = do
   (preparedQuery, PlanningSt {_psPrepped = planVals}) <-
     flip runStateT initPlanningSt $ traverse (prepareWithPlan userInfo) qrf
 
@@ -314,7 +312,6 @@ pgDBMutationPlan ::
     MonadReader QueryTagsComment m
   ) =>
   UserInfo ->
-  Env.Environment ->
   Options.StringifyNumbers ->
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
@@ -322,7 +319,7 @@ pgDBMutationPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   m (DBStepInfo ('Postgres pgKind))
-pgDBMutationPlan userInfo _environment stringifyNum sourceName sourceConfig mrf reqHeaders operationName = do
+pgDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf reqHeaders operationName = do
   resolvedConnectionTemplate <-
     let connectionTemplateResolver =
           connectionTemplateConfigResolver (_pscConnectionTemplateConfig sourceConfig)
@@ -562,7 +559,6 @@ pgDBRemoteRelationshipPlan ::
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
   ) =>
-  Env.Environment ->
   UserInfo ->
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
@@ -580,13 +576,13 @@ pgDBRemoteRelationshipPlan ::
   Maybe G.Name ->
   Options.StringifyNumbers ->
   m (DBStepInfo ('Postgres pgKind))
-pgDBRemoteRelationshipPlan _env userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship reqHeaders operationName stringifyNumbers = do
+pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship reqHeaders operationName stringifyNumbers = do
   -- NOTE: 'QueryTags' currently cannot support remote relationship queries.
   --
   -- In the future if we want to add support we'll need to add a new type of
   -- metadata (e.g. 'ParameterizedQueryHash' doesn't make sense here) and find
   -- a root field name that makes sense to attach to it.
-  flip runReaderT emptyQueryTagsComment $ pgDBQueryPlan userInfo Env.emptyEnvironment sourceName sourceConfig rootSelection reqHeaders operationName
+  flip runReaderT emptyQueryTagsComment $ pgDBQueryPlan userInfo sourceName sourceConfig rootSelection reqHeaders operationName
   where
     coerceToColumn = Postgres.unsafePGCol . getFieldNameTxt
     joinColumnMapping = mapKeys coerceToColumn lhsSchema
