@@ -26493,6 +26493,7 @@ instance Hasura.Server.Init.Env.FromEnv Data.Text.Internal.Text
 instance Hasura.Server.Init.Env.FromEnv a => Hasura.Server.Init.Env.FromEnv (GHC.Maybe.Maybe a)
 instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Auth.WebHook.AuthHookType
 instance Hasura.Server.Init.Env.FromEnv GHC.Types.Int
+instance Hasura.Server.Init.Env.FromEnv GHC.Num.Integer.Integer
 instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Auth.AdminSecretHash
 instance Hasura.Server.Init.Env.FromEnv Hasura.Session.RoleName
 instance Hasura.Server.Init.Env.FromEnv GHC.Types.Bool
