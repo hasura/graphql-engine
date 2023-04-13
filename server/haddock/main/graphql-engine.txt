@@ -27385,7 +27385,7 @@ data AppStateRef impl
 --   
 --   This function also updates the <a>TLSAllowListRef</a> to make it point
 --   to the newly minted <tt>SchemaCacheRef</tt>.
-initialiseAppStateRef :: MonadIO m => TLSAllowListRef impl -> ServerMetrics -> RebuildableSchemaCache -> RebuildableAppContext impl -> m (AppStateRef impl)
+initialiseAppStateRef :: MonadIO m => TLSAllowListRef -> Maybe MetricsConfigRef -> ServerMetrics -> RebuildableSchemaCache -> RebuildableAppContext impl -> m (AppStateRef impl)
 
 -- | Set the <a>AppStateRef</a> to the <a>RebuildableSchemaCache</a>
 --   produced by the given action.
@@ -27414,14 +27414,32 @@ getRebuildableSchemaCacheWithVersion :: AppStateRef impl -> IO (RebuildableSchem
 --   to then create the *real* Manager that would refer to the list in the
 --   schema cache. Now, instead, we only create one Manager, which uses a
 --   <a>TLSAllowListRef</a> to dynamically access the Allow List.
-data TLSAllowListRef impl
+data TLSAllowListRef
 
 -- | Creates a new <a>TLSAllowListRef</a> that points to the given list.
-createTLSAllowListRef :: [TlsAllow] -> IO (TLSAllowListRef impl)
+createTLSAllowListRef :: [TlsAllow] -> IO TLSAllowListRef
 
 -- | Reads the TLS AllowList by attempting to read from the schema cache,
 --   and defaulting to the list given when the ref was created.
-readTLSAllowList :: TLSAllowListRef impl -> IO [TlsAllow]
+readTLSAllowList :: TLSAllowListRef -> IO [TlsAllow]
+
+-- | Reference to the metadata's <a>MetricsConfig</a>.
+--   
+--   Similarly to the <a>TLSAllowListRef</a>, this exists to break a
+--   chicken-and-egg problem in the initialisation of the engine: the
+--   implementation of several behaviour classes requires access to said
+--   config, but those classes are implemented on the app monad, that
+--   doesn't have access to the schema cache. This small type allows the
+--   app monad to have access to the config, even before we build the first
+--   schema cache.
+data MetricsConfigRef
+
+-- | Creates a new <a>MetricsConfigRef</a> that points to the given config.
+createMetricsConfigRef :: MetricsConfig -> IO MetricsConfigRef
+
+-- | Reads the TLS AllowList by attempting to read from the schema cache,
+--   and defaulting to the list given when the ref was created.
+readMetricsConfig :: MetricsConfigRef -> IO MetricsConfig
 
 -- | Read the latest <a>SchemaCache</a> from the <a>AppStateRef</a>.
 getSchemaCache :: AppStateRef impl -> IO SchemaCache
