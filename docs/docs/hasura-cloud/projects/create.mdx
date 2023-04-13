@@ -11,12 +11,11 @@ sidebar_label: Create Projects
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Create Projects
 
-<div className="badge badge--primary heading-badge">
-  Available on: Cloud Free, Cloud Standard, Cloud Professional, Cloud Enterprise
-</div>
+<ProductBadge free standard pro ee />
 
 ## Introduction
 
@@ -31,11 +30,7 @@ This opens a form on the right where you can create your new project.
 
 Choose a pricing plan and select a region for your project.
 
-<Thumbnail
-  src="/img/projects/create-project.png"
-  alt="Create new project in Hasura Console"
-  width="900px"
-/>
+<Thumbnail src="/img/projects/create-project.png" alt="Create new project in Hasura Console" width="900px" />
 
 Once you have completed the project setup, click `Create Project`.
 

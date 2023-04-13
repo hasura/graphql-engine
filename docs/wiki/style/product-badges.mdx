@@ -1,0 +1,42 @@
+---
+title: Product Badges
+description: How to add badges to your product pages
+keywords:
+  - hasura
+  - style
+  - product badges
+slug: product-badges
+---
+
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# Product Badges
+
+For any feature that isn't available across all products, you can add a badge to the product page to highlight the
+feature. The badge looks like this:
+
+<ProductBadge ce free />
+
+The badge accepts a series of props - as boolean - that correspond to the products that the feature is available on. The
+order of the props doesn't matter, but the props themselves are:
+
+| Prop       | Product                  |
+| ---------- | ------------------------ |
+| `ce`       | Community Edition        |
+| `free`     | Cloud Free               |
+| `standard` | Cloud Standard           |
+| `pro`      | Cloud Professional       |
+| `ee`       | Cloud Enterprise Edition |
+| `self`     | Self-Hosted EE           |
+
+To create the example referenced above, you would start by importing the component near the markdown file's frontmatter:
+
+```jsx
+import ProductBadge from '@site/src/components/ProductBadge';
+```
+
+Then, add the component to the file immediately after the page's title (`<h1 />`):
+
+```jsx
+<ProductBadge ce free />
+```

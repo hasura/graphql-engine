@@ -23,12 +23,11 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Dynamic Routing for Databases
 
-<div className="badge badge--primary heading-badge" style={{ marginBottom: `20px` }}>
-  Available on: Cloud Professional, Cloud Enterprise, Self-hosted Enterprise
-</div>
+<ProductBadge pro ee self />
 
 ## Introduction
 
@@ -65,8 +64,9 @@ specific node. You can achieve this in Hasura using a connection template.
 
 ## How it works
 
-When a request is executed, dynamic routing will use a connection template (in Kriti lang) to resolve a connection from a connection set.
-Note that only non-admin roles use the connection template. The admin role will always use the `primary` connection.
+When a request is executed, dynamic routing will use a connection template (in Kriti lang) to resolve a connection from
+a connection set. Note that only non-admin roles use the connection template. The admin role will always use the
+`primary` connection.
 
 There are two configurable parameters in the source configuration useful for dynamic routing:
 
@@ -448,4 +448,3 @@ connection. Mutations routed to the members of the connection set will not trigg
 ### Migrations
 
 Hasura [CLI Migrations](/migrations-metadata-seeds/manage-migrations.mdx) cannot be applied on a connection set member.
-

@@ -11,19 +11,19 @@ sidebar_label: Webhook
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Authentication Using a Webhook
 
 You can configure the Hasura Engine to use webhook mode in order to authenticate incoming requests.
 
 This process of using webhook mode for authentication with Hasura requires specifying a URL - which Hasura calls with
-the original request headers - that then returns a body containing the user
-information in session variables.
+the original request headers - that then returns a body containing the user information in session variables.
 
-<Thumbnail src='/img/auth/auth-webhook-overview.png' alt='Authentication using webhooks' width='1000px' />
+<Thumbnail src="/img/auth/auth-webhook-overview.png" alt="Authentication using webhooks" width="1000px" />
 
-The webhook service will use your request headers to determine the auth status of the user and return the user
-role and any other information as session variables in the response body.
+The webhook service will use your request headers to determine the auth status of the user and return the user role and
+any other information as session variables in the response body.
 
 :::info Prerequisite
 
@@ -131,10 +131,10 @@ To allow the GraphQL request to go through, your webhook must return a `200` sta
 session variables beginning with `X-Hasura-*` in the body of your response. These will be available to your permission
 rules in Hasura Engine.
 
-You will, at least, need to set the `X-Hasura-Role` session variable to let the Hasura Engine know which role to use
-for this request. Unlike JWT auth mode, you do not have to pass `X-Hasura-Allowed-Roles` or
-`X-Hasura-Default-Role` session variables. This is because the webhook is called for each request, allowing the auth
-service to easily switch the user role if needed.
+You will, at least, need to set the `X-Hasura-Role` session variable to let the Hasura Engine know which role to use for
+this request. Unlike JWT auth mode, you do not have to pass `X-Hasura-Allowed-Roles` or `X-Hasura-Default-Role` session
+variables. This is because the webhook is called for each request, allowing the auth service to easily switch the user
+role if needed.
 
 ```http
 HTTP/1.1 200 OK
@@ -154,11 +154,10 @@ All values should be `String`. They will be converted to the right type automati
 
 :::
 
-
 :::info Set-Cookie headers
 
-If `Set-Cookie` HTTP headers are set by the auth webhook, they are forwarded by Hasura Engine as response headers
-for both GET/POST request methods.
+If `Set-Cookie` HTTP headers are set by the auth webhook, they are forwarded by Hasura Engine as response headers for
+both GET/POST request methods.
 
 :::
 
@@ -240,12 +239,10 @@ auth-webhook is made after the time specified in those fields and a new websocke
 
 ## Caching webhook session variables
 
-<div className="badge badge--primary heading-badge">
-  Available on: Cloud Standard, Cloud Professional, Cloud Enterprise, Self-hosted Enterprise
-</div>
+<ProductBadge standard pro ee self />
 
-Webhook session variables can be cached in order to improve performance of the request. For caching, you need to
-return either:
+Webhook session variables can be cached in order to improve performance of the request. For caching, you need to return
+either:
 
 - a `Cache-Control` variable, modeled on the
   [Cache-Control HTTP Header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control), to specify a
@@ -282,12 +279,13 @@ Content-Type: application/json
 :::tip Tip
 
 The cache key is based on the following parameters:
+
 - Client headers
 - Graphql request
 
 This means that the cache key will change if the graphql request changes. If you want to cache auth token based on
-client headers only, you can [omit the auth-hook request
-body](deployment/graphql-engine-flags/reference.mdx#send-request-body-to-auth-hook).
+client headers only, you can
+[omit the auth-hook request body](deployment/graphql-engine-flags/reference.mdx#send-request-body-to-auth-hook).
 
 :::
 
@@ -321,4 +319,3 @@ Once deployed, you can use any of the following endpoints as your auth webhook i
 If you are using `Firebase`, you will need to set the associated environment variables.
 
 :::
-

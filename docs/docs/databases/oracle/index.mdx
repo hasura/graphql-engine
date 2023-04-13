@@ -8,23 +8,25 @@ keywords:
 slug: index
 ---
 
+import ProductBadge from '@site/src/components/ProductBadge';
+
 # Oracle
 
 <div className="badge-container">
-  <div className="badge badge--primary heading-badge">Available on: Hasura Cloud, Enterprise (Self-hosted)</div>
+  <ProductBadge free standard pro ee self />
   <div className="badge badge-gray heading-badge">Alpha</div>
 </div>
 
 ## Introduction
 
-Hasura enables you to connect to Oracle databases to automatically build a GraphQL API based on your database
-schema.
+Hasura enables you to connect to Oracle databases to automatically build a GraphQL API based on your database schema.
 
-At present, our Oracle integration is available in Hasura Cloud and Docker environments, where you can run
-Hasura GraphQL Engine and connect the Oracle GraphQL Data Connector to it. For more information on GraphQL Data
-Connectors check out [our blog post on the topic](https://hasura.io/blog/hasura-graphql-data-connectors/).
+At present, our Oracle integration is available in Hasura Cloud and Docker environments, where you can run Hasura
+GraphQL Engine and connect the Oracle GraphQL Data Connector to it. For more information on GraphQL Data Connectors
+check out [our blog post on the topic](https://hasura.io/blog/hasura-graphql-data-connectors/).
 
 To get started with Oracle:
+
 - In Hasura Cloud, check out our [Getting Started with Oracle in Hasura Cloud](/databases/oracle/cloud.mdx) guide
 - In a Docker environment, check out our [Getting Started with Docker](/databases/oracle/docker.mdx) guide
 
@@ -40,9 +42,9 @@ To get started with Oracle:
 Hasura currently supports queries, mutations (INSERT, UPDATE, DELETE), table relationships, remote relationships and
 permissions on Oracle.
 
-Note that Hasura doesn't yet support the ability to modify the database schema for Oracle, so the database you
-connect to should already contain tables and data. You should also ideally have access to it outside of Hasura to
-modify the schema.
+Note that Hasura doesn't yet support the ability to modify the database schema for Oracle, so the database you connect
+to should already contain tables and data. You should also ideally have access to it outside of Hasura to modify the
+schema.
 
 :::
 

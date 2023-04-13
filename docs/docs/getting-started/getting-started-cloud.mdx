@@ -13,12 +13,11 @@ sidebar_class_name: cloud-icon
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Quickstart with Hasura Cloud
 
-<div className="badge badge--primary heading-badge">
-  Available on: Cloud Free, Cloud Standard, Cloud Professional, Cloud Enterprise
-</div>
+<ProductBadge free standard pro ee />
 
 ## Introduction
 
@@ -36,13 +35,17 @@ On creating a new account, Hasura Cloud automatically creates an initial project
 
 Click `Launch Console` to open the Hasura Console in your browser.
 
-<Thumbnail src="/img/getting-started/cloud-initial-project-launch-console.png" alt="Connect new or existing database" width="556px" />
+<Thumbnail
+  src="/img/getting-started/cloud-initial-project-launch-console.png"
+  alt="Connect new or existing database"
+  width="556px"
+/>
 
 If you already have an account, you can create a new project by clicking the `New Project` link on the
 [Projects](https://cloud.hasura.io/projects) page.
 
-Regardless of tier, you have the choice of either Amazon Web Services (AWS) or
-Google Cloud Platform (GCP) as hosting providers.
+Regardless of tier, you have the choice of either Amazon Web Services (AWS) or Google Cloud Platform (GCP) as hosting
+providers.
 
 <Thumbnail
   src="/img/getting-started/getting-started-cloud-aws-and-gcp-emphasis.png"
@@ -73,10 +76,10 @@ Click on `Connect Neon Database` to create and connect a new Postgres database t
 
 <Thumbnail src="/img/cloud-dbs/neon/connect_neon_database.png" alt="Connect Neon database" width="700px" />
 
-
 ### Option 3.2: Connect an existing database
 
 If you chose `Connect existing database`:
+
 - Give the database a name, say `default`
 - Choose the database type from the list of [supported databases](/databases/overview.mdx#supported-databases)
 - Enter your database connection details
@@ -84,8 +87,8 @@ If you chose `Connect existing database`:
 
 <Thumbnail src="/img/getting-started/connect-db-cloud.png" alt="Enter URL for existing database" width="700px" />
 
-Check out [this section](databases/quickstart.mdx#cloud-projects-create-allow-nat-ip) for other steps
-required to ensure connectivity to your database from Hasura Cloud if needed.
+Check out [this section](databases/quickstart.mdx#cloud-projects-create-allow-nat-ip) for other steps required to ensure
+connectivity to your database from Hasura Cloud if needed.
 
 ## Step 4: Try out Hasura
 

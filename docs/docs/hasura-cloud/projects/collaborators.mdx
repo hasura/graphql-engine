@@ -13,12 +13,11 @@ sidebar_position: 3
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Project Collaborators
 
-<div className="badge badge--primary heading-badge">
-  Available on: Cloud Free, Cloud Standard, Cloud Professional, Cloud Enterprise
-</div>
+<ProductBadge free standard pro ee />
 
 ## Introduction
 
@@ -40,7 +39,8 @@ Collaborators can have different levels of access in the Hasura Console.
 - **User** has limited privileges:
   - The `Execute GraphQL` permission allows running queries, mutations and subscriptions from the `GraphiQL` tab of the
     Console.
-  - The `View Metrics` permission allows inspecting operation data and metrics from the `PRO` tab of the Console. This access is not available on the Hasura Cloud Free plan.
+  - The `View Metrics` permission allows inspecting operation data and metrics from the `PRO` tab of the Console. This
+    access is not available on the Hasura Cloud Free plan.
   - Collaborators can also be invited to take billing responsibility for a project; see the
     [billing owner](/hasura-cloud/account-management/billing/billing-owner.mdx) page for more information.
 

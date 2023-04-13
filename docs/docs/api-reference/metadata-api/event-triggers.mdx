@@ -10,6 +10,8 @@ keywords:
   - event trigger
 ---
 
+import ProductBadge from '@site/src/components/ProductBadge';
+
 # Metadata API Reference: Event Triggers
 
 ## Introduction
@@ -79,7 +81,7 @@ X-Hasura-Role: admin
 ### Args syntax {#metadata-pg-create-event-trigger-syntax}
 
 | Key                    | Required | Schema                                                                                                                                 | Description                                                                                                            |
-|------------------------|----------|----------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| ---------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | name                   | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername)                                                                              | Name of the Event Trigger                                                                                              |
 | table                  | true     | [QualifiedTable](/api-reference/syntax-defs.mdx#qualifiedtable)                                                                        | Object with table name and schema                                                                                      |
 | source                 | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                                                                                | Name of the source database of the table (default: `default`)                                                          |
@@ -347,9 +349,7 @@ X-Hasura-Role: admin
 
 ## cleanup_event_trigger_logs {#metadata-cleanup-event-trigger-logs}
 
-<div className="badge badge--primary heading-badge">
-  Available on: Cloud Free, Cloud Standard, Cloud Professional, Cloud Enterprise, Self-hosted Enterprise
-</div>
+<ProductBadge free standard pro ee self />
 
 `cleanup_event_trigger_logs` is used to manually delete the event logs for a given Event Trigger.
 
@@ -383,7 +383,7 @@ X-Hasura-Role: admin
 
 ## resume_event_trigger_cleanups {#metadata-resume-event-trigger-cleanups}
 
-<div className="badge badge--primary heading-badge">Available on: Cloud Enterprise, Self-hosted Enterprise</div>
+<ProductBadge ee self />
 
 `resume_event_trigger_cleanups` is used to resume the paused log cleaner for Event Triggers.
 
@@ -413,7 +413,7 @@ X-Hasura-Role: admin
 
 ## pause_event_trigger_cleanups {#metadata-pause-event-trigger-cleanups}
 
-<div className="badge badge--primary heading-badge">Available on: Cloud Enterprise, Self-hosted Enterprise</div>
+<ProductBadge ee self />
 
 - `pause_event_trigger_cleanups` is used to pause the log cleaner for event triggers which already have a cleaner
   installed.

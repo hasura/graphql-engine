@@ -13,11 +13,12 @@ sidebar_position: 1
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import LatestRelease from '@site/src/components/LatestRelease';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Getting Started with Hasura and MySQL in Docker
 
 <div className="badge-container">
-  <div className="badge badge--primary heading-badge">Available on: Enterprise (Self-hosted)</div>
+  <ProductBadge self />
   <div className="badge badge-gray heading-badge">Alpha</div>
 </div>
 
@@ -40,9 +41,9 @@ MySQL GraphQL Data Connector.
 
 Hasura currently supports queries, mutations (INSERT, UPDATE, DELETE), table relationships, remote relationships and permissions on MySQL.
 
-Note that Hasura doesn't yet support the ability to modify the database schema for MySQL, so the database you
-connect to should already contain tables and data. You should also ideally have access to it outside of Hasura to
-modify the schema.
+Note that Hasura doesn't yet support the ability to modify the database schema for MySQL, so the database you connect to
+should already contain tables and data. You should also ideally have access to it outside of Hasura to modify the
+schema.
 
 :::
 
@@ -81,7 +82,6 @@ the Hasura Console are not publicly accessible.
 #### Edit the Docker Compose file to include the license key and admin secret environment variables
 
 ```yaml {5-6}
-
 ---
 graphql-engine:
   image: hasura/graphql-engine:v2.12.0
@@ -170,7 +170,6 @@ HASURA_GRAPHQL_METADATA_DATABASE_URL HASURA_GRAPHQL_REDIS_URL HASURA_GRAPHQL_RAT
 For example:
 
 ```yaml {5-7}
-
 ---
 graphql-engine:
   image: hasura/graphql-engine:v2.12.0
