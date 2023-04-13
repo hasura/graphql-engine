@@ -47,6 +47,28 @@
       }
     }
   }
+  .theme-doc-sidebar-item-category.beta-cat {
+    .menu__list-item-collapsible {
+      .menu__link {
+        position: relative;
+        &:after {
+          content: "Beta";
+          font-size: 0.7rem;
+          font-weight: normal;
+          margin-left: 5px;
+          color: white;
+          padding: 2px 5px;
+          border-radius: 5px;
+          min-height: unset;
+          width: unset;
+          height: unset;
+          background: none;
+          background-color: var(--ifm-color-gray-600);
+          transform: none;
+        }
+      }
+    }
+  }
 }
 
 // Menu badge style for beta docs
