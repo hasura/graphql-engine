@@ -48,9 +48,9 @@
 </span><span id="line-48"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html"><span class="hs-identifier">Hasura.GraphQL.Schema.NamingCase</span></a></span><span>
 </span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Hasura.Incremental</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Inc</span></span><span>
 </span><span id="line-50"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span>
-</span><span id="line-51"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Cache.html"><span class="hs-identifier">Hasura.LogicalModel.Cache</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Cache.html#LogicalModelCache"><span class="hs-identifier">LogicalModelCache</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Cache.html#LogicalModelInfo"><span class="hs-identifier">LogicalModelInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-52"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html"><span class="hs-identifier">Hasura.LogicalModel.Metadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html#LogicalModelMetadata"><span class="hs-identifier">LogicalModelMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-53"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.Class.html"><span class="hs-identifier">Hasura.Metadata.Class</span></a></span><span>
+</span><span id="line-51"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.Class.html"><span class="hs-identifier">Hasura.Metadata.Class</span></a></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Cache.html"><span class="hs-identifier">Hasura.NativeQuery.Cache</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Cache.html#NativeQueryCache"><span class="hs-identifier">NativeQueryCache</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Cache.html#NativeQueryInfo"><span class="hs-identifier">NativeQueryInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html"><span class="hs-identifier">Hasura.NativeQuery.Metadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryMetadata"><span class="hs-identifier">NativeQueryMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-54"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-55"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.QueryTags.html"><span class="hs-identifier">Hasura.QueryTags</span></a></span><span>
 </span><span id="line-56"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Action.html"><span class="hs-identifier">Hasura.RQL.DDL.Action</span></a></span><span>
@@ -2503,8 +2503,8 @@ arr
 </span><a href="#local-6989586621691148899"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621691148898"><span class="annot"><span class="annottext">BackendSourceKind b
 </span><a href="#local-6989586621691148898"><span class="hs-identifier hs-var">_backendKind</span></a></span></span><span> </span><span id="local-6989586621691148897"><span class="annot"><span class="annottext">Tables b
 </span><a href="#local-6989586621691148897"><span class="hs-identifier hs-var">tables</span></a></span></span><span> </span><span id="local-6989586621691148896"><span class="annot"><span class="annottext">Functions b
-</span><a href="#local-6989586621691148896"><span class="hs-identifier hs-var">functions</span></a></span></span><span> </span><span id="local-6989586621691148895"><span class="annot"><span class="annottext">LogicalModels b
-</span><a href="#local-6989586621691148895"><span class="hs-identifier hs-var">logicalModels</span></a></span></span><span> </span><span id="local-6989586621691148894"><span class="annot"><span class="annottext">CustomReturnTypes b
+</span><a href="#local-6989586621691148896"><span class="hs-identifier hs-var">functions</span></a></span></span><span> </span><span id="local-6989586621691148895"><span class="annot"><span class="annottext">NativeQueries b
+</span><a href="#local-6989586621691148895"><span class="hs-identifier hs-var">nativeQueries</span></a></span></span><span> </span><span id="local-6989586621691148894"><span class="annot"><span class="annottext">CustomReturnTypes b
 </span><a href="#local-6989586621691148894"><span class="hs-identifier hs-var">customReturnTypes</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConnConfiguration b
 </span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621691148893"><span class="annot"><span class="annottext">Maybe QueryTagsConfig
 </span><a href="#local-6989586621691148893"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span></span><span> </span><span id="local-6989586621691148892"><span class="annot"><span class="annottext">SourceCustomization
@@ -2950,7 +2950,7 @@ MetadataObject -&gt; ExceptT QErr m a -&gt; m (Maybe a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-756"></span><span>                </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CacheDynamicConfig -&gt; Bool
-</span><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#_cdcAreLogicalModelsEnabled"><span class="hs-identifier hs-var">_cdcAreLogicalModelsEnabled</span></a></span><span> </span><span class="annot"><span class="annottext">CacheDynamicConfig
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#_cdcAreNativeQueriesEnabled"><span class="hs-identifier hs-var">_cdcAreNativeQueriesEnabled</span></a></span><span> </span><span class="annot"><span class="annottext">CacheDynamicConfig
 </span><a href="#local-6989586621691148910"><span class="hs-identifier hs-var">dynamicConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-757"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
@@ -3024,8 +3024,8 @@ CustomReturnTypeInfo b -&gt; CustomReturnTypeName
 </span><span class="hs-identifier hs-var">catMaybes</span></span><span> </span><span class="annot"><span class="annottext">[Maybe (CustomReturnTypeInfo b)]
 </span><a href="#local-6989586621691148801"><span class="hs-identifier hs-var">customReturnTypeCacheMaybes</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-776"></span><span>
-</span><span id="line-777"></span><span>      </span><span id="local-6989586621691148777"><span class="annot"><span class="annottext">[Maybe (LogicalModelInfo b)]
-</span><a href="#local-6989586621691148777"><span class="hs-identifier hs-var">logicalModelCacheMaybes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-777"></span><span>      </span><span id="local-6989586621691148777"><span class="annot"><span class="annottext">[Maybe (NativeQueryInfo b)]
+</span><a href="#local-6989586621691148777"><span class="hs-identifier hs-var">nativeQueryCacheMaybes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-778"></span><span>        </span><span class="annot"><span class="annottext">forall w (arr :: * -&gt; * -&gt; *) a.
 ArrowWriter w arr =&gt;
 arr (Writer w a) a
@@ -3035,31 +3035,29 @@ arr (Writer w a) a
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for</span></a></span><span>
 </span><span id="line-780"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">OMap.elems</span></span><span> </span><span class="annot"><span class="annottext">LogicalModels b
-</span><a href="#local-6989586621691148895"><span class="hs-identifier hs-var">logicalModels</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-781"></span><span>            </span><span class="hs-glyph">\</span><span id="local-6989586621691148776"><span class="annot"><span class="annottext">lmm :: LogicalModelMetadata b
-</span><a href="#local-6989586621691148776"><span class="hs-identifier hs-var">lmm</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html#LogicalModelMetadata"><span class="hs-identifier hs-type">LogicalModelMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691148770"><span id="local-6989586621691148771"><span id="local-6989586621691148772"><span id="local-6989586621691148773"><span id="local-6989586621691148774"><span class="annot"><span class="annottext">Maybe Text
-HashMap LogicalModelArgumentName (NullableScalarType b)
+</span><span class="hs-identifier hs-var">OMap.elems</span></span><span> </span><span class="annot"><span class="annottext">NativeQueries b
+</span><a href="#local-6989586621691148895"><span class="hs-identifier hs-var">nativeQueries</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-781"></span><span>            </span><span class="hs-glyph">\</span><span id="local-6989586621691148776"><span class="annot"><span class="annottext">nqm :: NativeQueryMetadata b
+</span><a href="#local-6989586621691148776"><span class="hs-identifier hs-var">nqm</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryMetadata"><span class="hs-identifier hs-type">NativeQueryMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691148770"><span id="local-6989586621691148771"><span id="local-6989586621691148772"><span id="local-6989586621691148773"><span id="local-6989586621691148774"><span class="annot"><span class="annottext">Maybe Text
+HashMap NativeQueryArgumentName (NullableScalarType b)
 CustomReturnTypeName
-LogicalModelName
-InterpolatedQuery LogicalModelArgumentName
-_lmmDescription :: forall (b :: BackendType). LogicalModelMetadata b -&gt; Maybe Text
-_lmmArguments :: forall (b :: BackendType).
-LogicalModelMetadata b
--&gt; HashMap LogicalModelArgumentName (NullableScalarType b)
-_lmmReturns :: forall (b :: BackendType).
-LogicalModelMetadata b -&gt; CustomReturnTypeName
-_lmmCode :: forall (b :: BackendType).
-LogicalModelMetadata b
--&gt; InterpolatedQuery LogicalModelArgumentName
-_lmmRootFieldName :: forall (b :: BackendType).
-LogicalModelMetadata b -&gt; LogicalModelName
-_lmmDescription :: Maybe Text
-_lmmArguments :: HashMap LogicalModelArgumentName (NullableScalarType b)
-_lmmReturns :: CustomReturnTypeName
-_lmmCode :: InterpolatedQuery LogicalModelArgumentName
-_lmmRootFieldName :: LogicalModelName
-</span><a href="Hasura.LogicalModel.Metadata.html#_lmmDescription"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+NativeQueryName
+InterpolatedQuery NativeQueryArgumentName
+_nqmDescription :: forall (b :: BackendType). NativeQueryMetadata b -&gt; Maybe Text
+_nqmArguments :: forall (b :: BackendType).
+NativeQueryMetadata b
+-&gt; HashMap NativeQueryArgumentName (NullableScalarType b)
+_nqmReturns :: forall (b :: BackendType).
+NativeQueryMetadata b -&gt; CustomReturnTypeName
+_nqmCode :: forall (b :: BackendType).
+NativeQueryMetadata b -&gt; InterpolatedQuery NativeQueryArgumentName
+_nqmRootFieldName :: forall (b :: BackendType). NativeQueryMetadata b -&gt; NativeQueryName
+_nqmDescription :: Maybe Text
+_nqmArguments :: HashMap NativeQueryArgumentName (NullableScalarType b)
+_nqmReturns :: CustomReturnTypeName
+_nqmCode :: InterpolatedQuery NativeQueryArgumentName
+_nqmRootFieldName :: NativeQueryName
+</span><a href="Hasura.NativeQuery.Metadata.html#_nqmDescription"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-782"></span><span>              </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="#local-6989586621691148764"><span class="hs-identifier hs-type">metadataObject</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-type">MetadataObject</span></a></span><span>
 </span><span id="line-783"></span><span>                  </span><span id="local-6989586621691148764"><span class="annot"><span class="annottext">metadataObject :: MetadataObject
 </span><a href="#local-6989586621691148764"><span class="hs-identifier hs-var hs-var">metadataObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
@@ -3074,14 +3072,13 @@ HasTag b =&gt;
 i b -&gt; AnyBackend i
 </span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-787"></span><span>                            </span><span class="annot"><span class="annottext">forall (b :: BackendType).
-LogicalModelName -&gt; SourceMetadataObjId b
-</span><a href="Hasura.RQL.Types.Metadata.Object.html#SMOLogicalModel"><span class="hs-identifier hs-var">SMOLogicalModel</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691150954"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
-</span><a href="#local-6989586621691148774"><span class="hs-identifier hs-var">_lmmRootFieldName</span></a></span><span>
+</span><span id="line-787"></span><span>                            </span><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryName -&gt; SourceMetadataObjId b
+</span><a href="Hasura.RQL.Types.Metadata.Object.html#SMONativeQuery"><span class="hs-identifier hs-var">SMONativeQuery</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691150954"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueryName
+</span><a href="#local-6989586621691148774"><span class="hs-identifier hs-var">_nqmRootFieldName</span></a></span><span>
 </span><span id="line-788"></span><span>                      </span><span class="hs-special">)</span><span>
 </span><span id="line-789"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">LogicalModelMetadata b
-</span><a href="#local-6989586621691148776"><span class="hs-identifier hs-var">lmm</span></a></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">NativeQueryMetadata b
+</span><a href="#local-6989586621691148776"><span class="hs-identifier hs-var">nqm</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-790"></span><span>
 </span><span id="line-791"></span><span>                  </span><span class="annot"><a href="#local-6989586621691148762"><span class="hs-identifier hs-type">schemaObjId</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaObjId"><span class="hs-identifier hs-type">SchemaObjId</span></a></span><span>
 </span><span id="line-792"></span><span>                  </span><span id="local-6989586621691148762"><span class="annot"><span class="annottext">schemaObjId :: SchemaObjId
@@ -3095,9 +3092,9 @@ HasTag b =&gt;
 i b -&gt; AnyBackend i
 </span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-795"></span><span>                        </span><span class="annot"><span class="annottext">forall (b :: BackendType). LogicalModelName -&gt; SourceObjId b
-</span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOILogicalModel"><span class="hs-identifier hs-var">SOILogicalModel</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691150954"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
-</span><a href="#local-6989586621691148774"><span class="hs-identifier hs-var">_lmmRootFieldName</span></a></span><span>
+</span><span id="line-795"></span><span>                        </span><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryName -&gt; SourceObjId b
+</span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOINativeQuery"><span class="hs-identifier hs-var">SOINativeQuery</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691150954"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueryName
+</span><a href="#local-6989586621691148774"><span class="hs-identifier hs-var">_nqmRootFieldName</span></a></span><span>
 </span><span id="line-796"></span><span>
 </span><span id="line-797"></span><span>                  </span><span class="annot"><a href="#local-6989586621691148760"><span class="hs-keyword hs-type">dependency</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaDependency"><span class="hs-identifier hs-type">SchemaDependency</span></a></span><span>
 </span><span id="line-798"></span><span>                  </span><span id="local-6989586621691148760"><span class="annot"><span class="annottext">dependency :: SchemaDependency
@@ -3116,7 +3113,7 @@ i b -&gt; AnyBackend i
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-803"></span><span>                              </span><span class="annot"><span class="annottext">forall (b :: BackendType). CustomReturnTypeName -&gt; SourceObjId b
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOICustomReturnType"><span class="hs-identifier hs-var">SOICustomReturnType</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691150954"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621691148772"><span class="hs-identifier hs-var">_lmmReturns</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621691148772"><span class="hs-identifier hs-var">_nqmReturns</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-804"></span><span>                        </span><span class="annot"><span class="annottext">sdReason :: DependencyReason
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#sdReason"><span class="hs-identifier hs-var">sdReason</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DependencyReason
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#DRCustomReturnType"><span class="hs-identifier hs-var">DRCustomReturnType</span></a></span><span>
@@ -3130,13 +3127,13 @@ MetadataObject -&gt; ExceptT QErr m a -&gt; m (Maybe a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-808"></span><span>                </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CacheDynamicConfig -&gt; Bool
-</span><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#_cdcAreLogicalModelsEnabled"><span class="hs-identifier hs-var">_cdcAreLogicalModelsEnabled</span></a></span><span> </span><span class="annot"><span class="annottext">CacheDynamicConfig
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#_cdcAreNativeQueriesEnabled"><span class="hs-identifier hs-var">_cdcAreNativeQueriesEnabled</span></a></span><span> </span><span class="annot"><span class="annottext">CacheDynamicConfig
 </span><a href="#local-6989586621691148910"><span class="hs-identifier hs-var">dynamicConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-809"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#InvalidConfiguration"><span class="hs-identifier hs-var">InvalidConfiguration</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;The Logical Models feature is disabled&quot;</span></span><span>
+</span><span class="hs-string">&quot;The Native Queries feature is disabled&quot;</span></span><span>
 </span><span id="line-810"></span><span>
 </span><span id="line-811"></span><span>                </span><span id="local-6989586621691148754"><span class="annot"><span class="annottext">CustomReturnTypeInfo b
 </span><a href="#local-6989586621691148754"><span class="hs-identifier hs-var">customReturnType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
@@ -3144,7 +3141,7 @@ MetadataObject -&gt; ExceptT QErr m a -&gt; m (Maybe a)
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onNothing</span></a></span><span>
 </span><span id="line-813"></span><span>                    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">M.lookup</span></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621691148772"><span class="hs-identifier hs-var">_lmmReturns</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeCache b
+</span><a href="#local-6989586621691148772"><span class="hs-identifier hs-var">_nqmReturns</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeCache b
 </span><a href="#local-6989586621691148778"><span class="hs-identifier hs-var">customReturnTypesCache</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-814"></span><span>                    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
@@ -3152,7 +3149,7 @@ MetadataObject -&gt; ExceptT QErr m a -&gt; m (Maybe a)
 </span><span class="hs-string">&quot;The custom return type &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621691148772"><span class="hs-identifier hs-var">_lmmReturns</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621691148772"><span class="hs-identifier hs-var">_nqmReturns</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; could not be found&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-815"></span><span>
@@ -3169,38 +3166,38 @@ MetadataObject -&gt; SchemaObjId -&gt; Seq SchemaDependency -&gt; m ()
 </span><span id="line-818"></span><span>
 </span><span id="line-819"></span><span>                </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span>
-</span><span id="line-820"></span><span>                  </span><span class="annot"><a href="Hasura.LogicalModel.Cache.html#LogicalModelInfo"><span class="hs-identifier hs-type">LogicalModelInfo</span></a></span><span>
-</span><span id="line-821"></span><span>                    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_lmiRootFieldName :: LogicalModelName
-</span><a href="Hasura.LogicalModel.Cache.html#_lmiRootFieldName"><span class="hs-identifier hs-var">_lmiRootFieldName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogicalModelName
-</span><a href="#local-6989586621691148774"><span class="hs-identifier hs-var">_lmmRootFieldName</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-822"></span><span>                      </span><span class="annot"><span class="annottext">_lmiCode :: InterpolatedQuery LogicalModelArgumentName
-</span><a href="Hasura.LogicalModel.Cache.html#_lmiCode"><span class="hs-identifier hs-var">_lmiCode</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InterpolatedQuery LogicalModelArgumentName
-</span><a href="#local-6989586621691148773"><span class="hs-identifier hs-var">_lmmCode</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-823"></span><span>                      </span><span class="annot"><span class="annottext">_lmiReturns :: CustomReturnTypeInfo b
-</span><a href="Hasura.LogicalModel.Cache.html#_lmiReturns"><span class="hs-identifier hs-var">_lmiReturns</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeInfo b
+</span><span id="line-820"></span><span>                  </span><span class="annot"><a href="Hasura.NativeQuery.Cache.html#NativeQueryInfo"><span class="hs-identifier hs-type">NativeQueryInfo</span></a></span><span>
+</span><span id="line-821"></span><span>                    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_nqiRootFieldName :: NativeQueryName
+</span><a href="Hasura.NativeQuery.Cache.html#_nqiRootFieldName"><span class="hs-identifier hs-var">_nqiRootFieldName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NativeQueryName
+</span><a href="#local-6989586621691148774"><span class="hs-identifier hs-var">_nqmRootFieldName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-822"></span><span>                      </span><span class="annot"><span class="annottext">_nqiCode :: InterpolatedQuery NativeQueryArgumentName
+</span><a href="Hasura.NativeQuery.Cache.html#_nqiCode"><span class="hs-identifier hs-var">_nqiCode</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InterpolatedQuery NativeQueryArgumentName
+</span><a href="#local-6989586621691148773"><span class="hs-identifier hs-var">_nqmCode</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-823"></span><span>                      </span><span class="annot"><span class="annottext">_nqiReturns :: CustomReturnTypeInfo b
+</span><a href="Hasura.NativeQuery.Cache.html#_nqiReturns"><span class="hs-identifier hs-var">_nqiReturns</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeInfo b
 </span><a href="#local-6989586621691148754"><span class="hs-identifier hs-var">customReturnType</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-824"></span><span>                      </span><span class="annot"><span class="annottext">_lmiArguments :: HashMap LogicalModelArgumentName (NullableScalarType b)
-</span><a href="Hasura.LogicalModel.Cache.html#_lmiArguments"><span class="hs-identifier hs-var">_lmiArguments</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap LogicalModelArgumentName (NullableScalarType b)
-</span><a href="#local-6989586621691148771"><span class="hs-identifier hs-var">_lmmArguments</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-825"></span><span>                      </span><span class="annot"><span class="annottext">_lmiDescription :: Maybe Text
-</span><a href="Hasura.LogicalModel.Cache.html#_lmiDescription"><span class="hs-identifier hs-var">_lmiDescription</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621691148770"><span class="hs-identifier hs-var">_lmmDescription</span></a></span><span>
+</span><span id="line-824"></span><span>                      </span><span class="annot"><span class="annottext">_nqiArguments :: HashMap NativeQueryArgumentName (NullableScalarType b)
+</span><a href="Hasura.NativeQuery.Cache.html#_nqiArguments"><span class="hs-identifier hs-var">_nqiArguments</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap NativeQueryArgumentName (NullableScalarType b)
+</span><a href="#local-6989586621691148771"><span class="hs-identifier hs-var">_nqmArguments</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-825"></span><span>                      </span><span class="annot"><span class="annottext">_nqiDescription :: Maybe Text
+</span><a href="Hasura.NativeQuery.Cache.html#_nqiDescription"><span class="hs-identifier hs-var">_nqiDescription</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621691148770"><span class="hs-identifier hs-var">_nqmDescription</span></a></span><span>
 </span><span id="line-826"></span><span>                    </span><span class="hs-special">}</span><span>
 </span><span id="line-827"></span><span>
-</span><span id="line-828"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="#local-6989586621691148747"><span class="hs-identifier hs-type">logicalModelCache</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Cache.html#LogicalModelCache"><span class="hs-identifier hs-type">LogicalModelCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691150954"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-829"></span><span>          </span><span id="local-6989586621691148747"><span class="annot"><span class="annottext">logicalModelCache :: LogicalModelCache b
-</span><a href="#local-6989586621691148747"><span class="hs-identifier hs-var hs-var">logicalModelCache</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k a. Hashable k =&gt; (a -&gt; k) -&gt; [a] -&gt; HashMap k a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">mapFromL</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). LogicalModelInfo b -&gt; LogicalModelName
-</span><a href="Hasura.LogicalModel.Cache.html#_lmiRootFieldName"><span class="hs-identifier hs-var">_lmiRootFieldName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
-</span><span class="hs-identifier hs-var">catMaybes</span></span><span> </span><span class="annot"><span class="annottext">[Maybe (LogicalModelInfo b)]
-</span><a href="#local-6989586621691148777"><span class="hs-identifier hs-var">logicalModelCacheMaybes</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-828"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="#local-6989586621691148747"><span class="hs-identifier hs-type">nativeQueryCache</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Cache.html#NativeQueryCache"><span class="hs-identifier hs-type">NativeQueryCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691150954"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-829"></span><span>          </span><span id="local-6989586621691148747"><span class="annot"><span class="annottext">nativeQueryCache :: NativeQueryCache b
+</span><a href="#local-6989586621691148747"><span class="hs-identifier hs-var hs-var">nativeQueryCache</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k a. Hashable k =&gt; (a -&gt; k) -&gt; [a] -&gt; HashMap k a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">mapFromL</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryInfo b -&gt; NativeQueryName
+</span><a href="Hasura.NativeQuery.Cache.html#_nqiRootFieldName"><span class="hs-identifier hs-var">_nqiRootFieldName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
+</span><span class="hs-identifier hs-var">catMaybes</span></span><span> </span><span class="annot"><span class="annottext">[Maybe (NativeQueryInfo b)]
+</span><a href="#local-6989586621691148777"><span class="hs-identifier hs-var">nativeQueryCacheMaybes</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-830"></span><span>
 </span><span id="line-831"></span><span>      </span><span class="annot"><span class="annottext">forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">returnA</span></a></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 SourceName
 -&gt; TableCache b
 -&gt; FunctionCache b
--&gt; LogicalModelCache b
+-&gt; NativeQueryCache b
 -&gt; CustomReturnTypeCache b
 -&gt; SourceConfig b
 -&gt; Maybe QueryTagsConfig
@@ -3209,8 +3206,8 @@ SourceName
 </span><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-var">SourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621691148899"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (TableName b) (TableInfo b)
 </span><a href="#local-6989586621691148857"><span class="hs-identifier hs-var">tableCache</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (FunctionName b) (FunctionInfo b)
-</span><a href="#local-6989586621691148807"><span class="hs-identifier hs-var">functionCache</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelCache b
-</span><a href="#local-6989586621691148747"><span class="hs-identifier hs-var">logicalModelCache</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeCache b
+</span><a href="#local-6989586621691148807"><span class="hs-identifier hs-var">functionCache</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueryCache b
+</span><a href="#local-6989586621691148747"><span class="hs-identifier hs-var">nativeQueryCache</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeCache b
 </span><a href="#local-6989586621691148778"><span class="hs-identifier hs-var">customReturnTypesCache</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig b
 </span><a href="#local-6989586621691148907"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QueryTagsConfig
 </span><a href="#local-6989586621691148893"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span><span> </span><span class="annot"><span class="annottext">ResolvedSourceCustomization
@@ -3347,8 +3344,8 @@ AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">BackendSourceKind b
 </span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621691148485"><span class="annot"><span class="annottext">Tables b
 </span><a href="#local-6989586621691148485"><span class="hs-identifier hs-var">tables</span></a></span></span><span> </span><span id="local-6989586621691148484"><span class="annot"><span class="annottext">Functions b
-</span><a href="#local-6989586621691148484"><span class="hs-identifier hs-var">_functions</span></a></span></span><span> </span><span id="local-6989586621691148483"><span class="annot"><span class="annottext">LogicalModels b
-</span><a href="#local-6989586621691148483"><span class="hs-identifier hs-var">_logicalModels</span></a></span></span><span> </span><span id="local-6989586621691148482"><span class="annot"><span class="annottext">CustomReturnTypes b
+</span><a href="#local-6989586621691148484"><span class="hs-identifier hs-var">_functions</span></a></span></span><span> </span><span id="local-6989586621691148483"><span class="annot"><span class="annottext">NativeQueries b
+</span><a href="#local-6989586621691148483"><span class="hs-identifier hs-var">_nativeQueries</span></a></span></span><span> </span><span id="local-6989586621691148482"><span class="annot"><span class="annottext">CustomReturnTypes b
 </span><a href="#local-6989586621691148482"><span class="hs-identifier hs-var">_customReturnTypes</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConnConfiguration b
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe QueryTagsConfig
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceCustomization

@@ -1357,11 +1357,11 @@ appEnvPort :: AppEnv -&gt; Port
 </span><a href="#local-6989586621691200735"><span class="hs-identifier hs-var">runCheckFlag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CheckFeatureFlag
 </span><a href="#local-6989586621691200738"><span class="hs-identifier hs-var">appEnvCheckFeatureFlag</span></a></span><span>
 </span><span id="line-497"></span><span>  </span><span id="local-6989586621691200734"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621691200734"><span class="hs-identifier hs-var">logicalModelsEnabled</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><a href="#local-6989586621691200734"><span class="hs-identifier hs-var">nativeQueriesEnabled</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">FeatureFlag -&gt; IO Bool
 </span><a href="#local-6989586621691200735"><span class="hs-identifier hs-var">runCheckFlag</span></a></span><span> </span><span class="annot"><span class="annottext">FeatureFlag
-</span><a href="Hasura.Server.Init.FeatureFlag.html#logicalModelInterface"><span class="hs-identifier hs-var">logicalModelInterface</span></a></span><span>
+</span><a href="Hasura.Server.Init.FeatureFlag.html#nativeQueryInterface"><span class="hs-identifier hs-var">nativeQueryInterface</span></a></span><span>
 </span><span id="line-498"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Hasura.App.State.html#Loggers"><span class="hs-identifier hs-type">Loggers</span></a></span><span> </span><span class="annot"><span class="annottext">LoggerCtx Hasura
 </span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621691200732"><span class="annot"><span class="annottext">Logger Hasura
 </span><a href="#local-6989586621691200732"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621691200731"><span class="annot"><span class="annottext">PGLogger
@@ -1405,7 +1405,7 @@ appEnvPort :: AppEnv -&gt; Port
 </span><span id="line-509"></span><span>          </span><span class="annot"><span class="annottext">ApolloFederationStatus
 </span><a href="#local-6989586621691200769"><span class="hs-identifier hs-var">soApolloFederationStatus</span></a></span><span>
 </span><span id="line-510"></span><span>          </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621691200734"><span class="hs-identifier hs-var">logicalModelsEnabled</span></a></span><span>
+</span><a href="#local-6989586621691200734"><span class="hs-identifier hs-var">nativeQueriesEnabled</span></a></span><span>
 </span><span id="line-511"></span><span>
 </span><span id="line-512"></span><span>  </span><span class="hs-comment">-- Create the schema cache</span><span>
 </span><span id="line-513"></span><span>  </span><span id="local-6989586621691200724"><span class="annot"><span class="annottext">RebuildableSchemaCache
@@ -3948,7 +3948,7 @@ AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 </span><a href="#local-6989586621691199134"><span class="hs-identifier hs-var">backendSourceInfo</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621691199091"><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span id="local-6989586621691199089"><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621691199089"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span class="annot"><span class="annottext">TableCache b
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">FunctionCache b
-</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">LogicalModelCache b
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">NativeQueryCache b
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeCache b
 </span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621691199088"><span class="annot"><span class="annottext">SourceConfig b
 </span><a href="#local-6989586621691199088"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe QueryTagsConfig

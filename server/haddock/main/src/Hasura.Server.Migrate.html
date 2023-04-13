@@ -318,7 +318,7 @@ SourceName
 -&gt; BackendSourceKind b
 -&gt; Tables b
 -&gt; Functions b
--&gt; LogicalModels b
+-&gt; NativeQueries b
 -&gt; CustomReturnTypes b
 -&gt; SourceConnConfiguration b
 -&gt; Maybe QueryTagsConfig
@@ -842,7 +842,7 @@ SourceName
 -&gt; BackendSourceKind b
 -&gt; Tables b
 -&gt; Functions b
--&gt; LogicalModels b
+-&gt; NativeQueries b
 -&gt; CustomReturnTypes b
 -&gt; SourceConnConfiguration b
 -&gt; Maybe QueryTagsConfig
@@ -1025,7 +1025,7 @@ Maybe (HealthCheckConfig ('Postgres 'Vanilla))
 CustomReturnTypes ('Postgres 'Vanilla)
 Tables ('Postgres 'Vanilla)
 Functions ('Postgres 'Vanilla)
-LogicalModels ('Postgres 'Vanilla)
+NativeQueries ('Postgres 'Vanilla)
 BackendSourceKind ('Postgres 'Vanilla)
 SourceConnConfiguration ('Postgres 'Vanilla)
 SourceName
@@ -1038,7 +1038,7 @@ SourceMetadata b -&gt; Maybe QueryTagsConfig
 _smConfiguration :: forall (b :: BackendType).
 SourceMetadata b -&gt; SourceConnConfiguration b
 _smCustomReturnTypes :: forall (b :: BackendType). SourceMetadata b -&gt; CustomReturnTypes b
-_smLogicalModels :: forall (b :: BackendType). SourceMetadata b -&gt; LogicalModels b
+_smNativeQueries :: forall (b :: BackendType). SourceMetadata b -&gt; NativeQueries b
 _smFunctions :: forall (b :: BackendType). SourceMetadata b -&gt; Functions b
 _smTables :: forall (b :: BackendType). SourceMetadata b -&gt; Tables b
 _smKind :: forall (b :: BackendType). SourceMetadata b -&gt; BackendSourceKind b
@@ -1048,7 +1048,7 @@ _smCustomization :: SourceCustomization
 _smQueryTags :: Maybe QueryTagsConfig
 _smConfiguration :: SourceConnConfiguration ('Postgres 'Vanilla)
 _smCustomReturnTypes :: CustomReturnTypes ('Postgres 'Vanilla)
-_smLogicalModels :: LogicalModels ('Postgres 'Vanilla)
+_smNativeQueries :: NativeQueries ('Postgres 'Vanilla)
 _smFunctions :: Functions ('Postgres 'Vanilla)
 _smTables :: Tables ('Postgres 'Vanilla)
 _smKind :: BackendSourceKind ('Postgres 'Vanilla)

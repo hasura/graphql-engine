@@ -43,8 +43,8 @@
 </span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html"><span class="hs-identifier">Hasura.EncJSON</span></a></span><span>
 </span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Function.API.html"><span class="hs-identifier">Hasura.Function.API</span></a></span><span>
 </span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HL</span></span><span>
-</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.API.html"><span class="hs-identifier">Hasura.LogicalModel.API</span></a></span><span>
-</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.Class.html"><span class="hs-identifier">Hasura.Metadata.Class</span></a></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.Class.html"><span class="hs-identifier">Hasura.Metadata.Class</span></a></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.API.html"><span class="hs-identifier">Hasura.NativeQuery.API</span></a></span><span>
 </span><span id="line-48"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">first</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Action.html"><span class="hs-identifier">Hasura.RQL.DDL.Action</span></a></span><span>
 </span><span id="line-50"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.ApiLimit.html"><span class="hs-identifier">Hasura.RQL.DDL.ApiLimit</span></a></span><span>
@@ -256,7 +256,7 @@ SourceName
 -&gt; BackendSourceKind b
 -&gt; Tables b
 -&gt; Functions b
--&gt; LogicalModels b
+-&gt; NativeQueries b
 -&gt; CustomReturnTypes b
 -&gt; SourceConnConfiguration b
 -&gt; Maybe QueryTagsConfig
@@ -2236,12 +2236,12 @@ SourceName -&gt; CustomReturnTypeName -&gt; MetadataModifier
 </span><a href="Hasura.CustomReturnType.API.html#dropCustomReturnTypeInMetadata"><span class="hs-identifier hs-var">dropCustomReturnTypeInMetadata</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691169549"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621691168052"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
 </span><a href="#local-6989586621691168040"><span class="hs-identifier hs-var">crt</span></a></span><span>
-</span><span id="line-707"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#SMOLogicalModel"><span class="hs-identifier hs-type">SMOLogicalModel</span></a></span><span> </span><span id="local-6989586621691168037"><span class="annot"><span class="annottext">LogicalModelName
+</span><span id="line-707"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#SMONativeQuery"><span class="hs-identifier hs-type">SMONativeQuery</span></a></span><span> </span><span id="local-6989586621691168037"><span class="annot"><span class="annottext">NativeQueryName
 </span><a href="#local-6989586621691168037"><span class="hs-identifier hs-var">lm</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 BackendMetadata b =&gt;
-SourceName -&gt; LogicalModelName -&gt; MetadataModifier
-</span><a href="Hasura.LogicalModel.API.html#dropLogicalModelInMetadata"><span class="hs-identifier hs-var">dropLogicalModelInMetadata</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691169549"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621691168052"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
+SourceName -&gt; NativeQueryName -&gt; MetadataModifier
+</span><a href="Hasura.NativeQuery.API.html#dropNativeQueryInMetadata"><span class="hs-identifier hs-var">dropNativeQueryInMetadata</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691169549"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621691168052"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueryName
 </span><a href="#local-6989586621691168037"><span class="hs-identifier hs-var">lm</span></a></span><span>
 </span><span id="line-708"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#SMOCustomReturnTypeObj"><span class="hs-identifier hs-type">SMOCustomReturnTypeObj</span></a></span><span> </span><span id="local-6989586621691168034"><span class="annot"><span class="annottext">CustomReturnTypeName
 </span><a href="#local-6989586621691168034"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span></span><span> </span><span id="local-6989586621691168033"><span class="annot"><span class="annottext">CustomReturnTypeMetadataObjId

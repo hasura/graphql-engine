@@ -750,7 +750,7 @@ _trdName :: TypeRelationshipDefinition -&gt; RelationshipName
 CustomReturnTypeCache ('Postgres 'Vanilla)
 TableCache ('Postgres 'Vanilla)
 FunctionCache ('Postgres 'Vanilla)
-LogicalModelCache ('Postgres 'Vanilla)
+NativeQueryCache ('Postgres 'Vanilla)
 SourceConfig ('Postgres 'Vanilla)
 SourceName
 ResolvedSourceCustomization
@@ -759,7 +759,7 @@ SourceInfo b -&gt; ResolvedSourceCustomization
 _siQueryTagsConfig :: forall (b :: BackendType). SourceInfo b -&gt; Maybe QueryTagsConfig
 _siConfiguration :: forall (b :: BackendType). SourceInfo b -&gt; SourceConfig b
 _siCustomReturnTypes :: forall (b :: BackendType). SourceInfo b -&gt; CustomReturnTypeCache b
-_siLogicalModels :: forall (b :: BackendType). SourceInfo b -&gt; LogicalModelCache b
+_siNativeQueries :: forall (b :: BackendType). SourceInfo b -&gt; NativeQueryCache b
 _siFunctions :: forall (b :: BackendType). SourceInfo b -&gt; FunctionCache b
 _siTables :: forall (b :: BackendType). SourceInfo b -&gt; TableCache b
 _siName :: forall (b :: BackendType). SourceInfo b -&gt; SourceName
@@ -767,7 +767,7 @@ _siCustomization :: ResolvedSourceCustomization
 _siQueryTagsConfig :: Maybe QueryTagsConfig
 _siConfiguration :: SourceConfig ('Postgres 'Vanilla)
 _siCustomReturnTypes :: CustomReturnTypeCache ('Postgres 'Vanilla)
-_siLogicalModels :: LogicalModelCache ('Postgres 'Vanilla)
+_siNativeQueries :: NativeQueryCache ('Postgres 'Vanilla)
 _siFunctions :: FunctionCache ('Postgres 'Vanilla)
 _siTables :: TableCache ('Postgres 'Vanilla)
 _siName :: SourceName

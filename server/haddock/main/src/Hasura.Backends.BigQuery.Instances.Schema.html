@@ -34,8 +34,8 @@
 </span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Select.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Select</span></a></span><span>
 </span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Table.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Table</span></a></span><span>
 </span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Typename.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Typename</span></a></span><span>
-</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Schema.html"><span class="hs-identifier">Hasura.LogicalModel.Schema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Schema.html#defaultBuildLogicalModelRootFields"><span class="hs-identifier">defaultBuildLogicalModelRootFields</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Name.html"><span class="hs-identifier">Hasura.Name</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Name</span></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Name.html"><span class="hs-identifier">Hasura.Name</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Name</span></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Schema.html"><span class="hs-identifier">Hasura.NativeQuery.Schema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Schema.html#defaultBuildNativeQueryRootFields"><span class="hs-identifier">defaultBuildNativeQueryRootFields</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp</span></a></span><span>
 </span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html"><span class="hs-identifier">Hasura.RQL.IR.Select</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">IR</span></span><span>
@@ -280,9 +280,9 @@ MkRootFieldName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-67"></span><span>  </span><span id="local-6989586621691052445"><span class="annot"><span class="annottext">buildLogicalModelRootFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-67"></span><span>  </span><span id="local-6989586621691052445"><span class="annot"><span class="annottext">buildNativeQueryRootFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'BigQuery r m n =&gt;
-LogicalModelInfo 'BigQuery
+NativeQueryInfo 'BigQuery
 -&gt; SchemaT
      r
      m
@@ -293,10 +293,10 @@ LogicalModelInfo 'BigQuery
               'BigQuery
               (RemoteRelationshipField UnpreparedValue)
               (UnpreparedValue 'BigQuery))))
-</span><a href="Hasura.GraphQL.Schema.Backend.html#buildLogicalModelRootFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildLogicalModelRootFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><a href="Hasura.GraphQL.Schema.Backend.html#buildNativeQueryRootFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildNativeQueryRootFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 (MonadBuildSchema b r m n,
  BackendCustomReturnTypeSelectSchema b) =&gt;
-LogicalModelInfo b
+NativeQueryInfo b
 -&gt; SchemaT
      r
      m
@@ -305,7 +305,7 @@ LogicalModelInfo b
            n
            (QueryDB
               b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
-</span><a href="Hasura.LogicalModel.Schema.html#defaultBuildLogicalModelRootFields"><span class="hs-identifier hs-var">defaultBuildLogicalModelRootFields</span></a></span><span>
+</span><a href="Hasura.NativeQuery.Schema.html#defaultBuildNativeQueryRootFields"><span class="hs-identifier hs-var">defaultBuildNativeQueryRootFields</span></a></span><span>
 </span><span id="line-68"></span><span>
 </span><span id="line-69"></span><span>  </span><span class="hs-comment">-- backend extensions</span><span>
 </span><span id="line-70"></span><span>  </span><span id="local-6989586621691052443"><span class="annot"><span class="annottext">relayExtension :: Maybe (XRelay 'BigQuery)

@@ -1094,11 +1094,11 @@ acAuthMode :: AppContext -&gt; AuthMode
 </span><a href="#local-6989586621691174810"><span class="hs-identifier hs-var">runCheckFlag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CheckFeatureFlag
 </span><a href="#local-6989586621691174832"><span class="hs-identifier hs-var">appEnvCheckFeatureFlag</span></a></span><span>
 </span><span id="line-333"></span><span>  </span><span id="local-6989586621691174809"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621691174809"><span class="hs-identifier hs-var">logicalModelsEnabled</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><a href="#local-6989586621691174809"><span class="hs-identifier hs-var">nativeQueriesEnabled</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">FeatureFlag -&gt; IO Bool
 </span><a href="#local-6989586621691174810"><span class="hs-identifier hs-var">runCheckFlag</span></a></span><span> </span><span class="annot"><span class="annottext">FeatureFlag
-</span><a href="Hasura.Server.Init.FeatureFlag.html#logicalModelInterface"><span class="hs-identifier hs-var">logicalModelInterface</span></a></span><span>
+</span><a href="Hasura.Server.Init.FeatureFlag.html#nativeQueryInterface"><span class="hs-identifier hs-var">nativeQueryInterface</span></a></span><span>
 </span><span id="line-334"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span>
 </span><span id="line-335"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#CacheDynamicConfig"><span class="hs-identifier hs-type">CacheDynamicConfig</span></a></span><span>
@@ -1123,8 +1123,8 @@ acAuthMode :: AppContext -&gt; AuthMode
 </span><span id="line-342"></span><span>        </span><span class="annot"><span class="annottext">_cdcApolloFederationStatus :: ApolloFederationStatus
 </span><a href="#local-6989586621691174800"><span class="hs-identifier hs-var">_cdcApolloFederationStatus</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ApolloFederationStatus
 </span><a href="#local-6989586621691174812"><span class="hs-identifier hs-var">acApolloFederationStatus</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-343"></span><span>        </span><span class="annot"><span class="annottext">_cdcAreLogicalModelsEnabled :: Bool
-</span><a href="#local-6989586621691174799"><span class="hs-identifier hs-var">_cdcAreLogicalModelsEnabled</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621691174809"><span class="hs-identifier hs-var">logicalModelsEnabled</span></a></span><span>
+</span><span id="line-343"></span><span>        </span><span class="annot"><span class="annottext">_cdcAreNativeQueriesEnabled :: Bool
+</span><a href="#local-6989586621691174799"><span class="hs-identifier hs-var">_cdcAreNativeQueriesEnabled</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621691174809"><span class="hs-identifier hs-var">nativeQueriesEnabled</span></a></span><span>
 </span><span id="line-344"></span><span>      </span><span class="hs-special">}</span><span>
 </span><span id="line-345"></span></pre></body></html>

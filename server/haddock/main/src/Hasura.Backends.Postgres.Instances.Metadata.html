@@ -18,7 +18,7 @@
 </span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Database.PostgreSQL.LibPQ</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PQ</span></span><span>
 </span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.html"><span class="hs-identifier">Hasura.Backends.Postgres.DDL</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Postgres</span></span><span>
 </span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Types.html"><span class="hs-identifier">Hasura.Backends.Postgres.Execute.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Types.html#runPgSourceReadTx"><span class="hs-identifier">runPgSourceReadTx</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.LogicalModels.html"><span class="hs-identifier">Hasura.Backends.Postgres.Instances.LogicalModels</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Postgres</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.LogicalModels.html#validateLogicalModel"><span class="hs-identifier">validateLogicalModel</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.NativeQueries.html"><span class="hs-identifier">Hasura.Backends.Postgres.Instances.NativeQueries</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Postgres</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.NativeQueries.html#validateNativeQuery"><span class="hs-identifier">validateNativeQuery</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedObject"><span class="hs-identifier">QualifiedObject</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedTable"><span class="hs-identifier">QualifiedTable</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Postgres</span></span><span>
 </span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html"><span class="hs-identifier">Hasura.Backends.Postgres.Types.CitusExtraTableMetadata</span></a></span><span>
@@ -757,22 +757,22 @@ BoolExpResolver ('Postgres pgKind) m v
 -&gt; Value
 -&gt; m (AnnComputedFieldBoolExp ('Postgres pgKind) v)
 </span><a href="Hasura.Backends.Postgres.DDL.BoolExp.html#buildComputedFieldBooleanExp"><span class="hs-identifier hs-var">Postgres.buildComputedFieldBooleanExp</span></a></span><span>
-</span><span id="line-270"></span><span>  </span><span id="local-6989586621691096391"><span class="annot"><span class="annottext">validateLogicalModel :: forall (m :: * -&gt; *).
+</span><span id="line-270"></span><span>  </span><span id="local-6989586621691096391"><span class="annot"><span class="annottext">validateNativeQuery :: forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m) =&gt;
 Environment
 -&gt; SourceConnConfiguration ('Postgres pgKind)
 -&gt; CustomReturnTypeMetadata ('Postgres pgKind)
--&gt; LogicalModelMetadata ('Postgres pgKind)
+-&gt; NativeQueryMetadata ('Postgres pgKind)
 -&gt; m ()
-</span><a href="Hasura.RQL.Types.Metadata.Backend.html#validateLogicalModel"><span class="hs-identifier hs-var hs-var hs-var hs-var">validateLogicalModel</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (pgKind :: PostgresKind).
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#validateNativeQuery"><span class="hs-identifier hs-var hs-var hs-var hs-var">validateNativeQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 (MonadIO m, MonadError QErr m) =&gt;
 InsOrdHashMap PGScalarType Oid
 -&gt; Environment
 -&gt; PostgresConnConfiguration
 -&gt; CustomReturnTypeMetadata ('Postgres pgKind)
--&gt; LogicalModelMetadata ('Postgres pgKind)
+-&gt; NativeQueryMetadata ('Postgres pgKind)
 -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.Instances.LogicalModels.html#validateLogicalModel"><span class="hs-identifier hs-var">Postgres.validateLogicalModel</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind).
+</span><a href="Hasura.Backends.Postgres.Instances.NativeQueries.html#validateNativeQuery"><span class="hs-identifier hs-var">Postgres.validateNativeQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind).
 PostgresMetadata pgKind =&gt;
 InsOrdHashMap PGScalarType Oid
 </span><a href="Hasura.Backends.Postgres.Instances.Metadata.html#pgTypeOidMapping"><span class="hs-identifier hs-var">pgTypeOidMapping</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691096912"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span>

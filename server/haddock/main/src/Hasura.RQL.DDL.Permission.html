@@ -1172,8 +1172,8 @@ _tciName :: TableName b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; the subscription_root_fields when \&quot;allow_aggregations\&quot; is set to true&quot;</span></span><span>
 </span><span id="line-420"></span><span>
-</span><span id="line-421"></span><span class="hs-comment">-- | Given the logical model's definition and the permissions as defined in the</span><span>
-</span><span id="line-422"></span><span class="hs-comment">-- logical model's metadata, try to construct the @SELECT@ permission</span><span>
+</span><span id="line-421"></span><span class="hs-comment">-- | Given the native query's definition and the permissions as defined in the</span><span>
+</span><span id="line-422"></span><span class="hs-comment">-- native query's metadata, try to construct the @SELECT@ permission</span><span>
 </span><span id="line-423"></span><span class="hs-comment">-- definition.</span><span>
 </span><span id="line-424"></span><span class="annot"><a href="Hasura.RQL.DDL.Permission.html#buildCustomReturnTypeSelPermInfo"><span class="hs-identifier hs-type">buildCustomReturnTypeSelPermInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-425"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621691087942"><span class="annot"><a href="#local-6989586621691087942"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621691087943"><span class="annot"><a href="#local-6989586621691087943"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
@@ -1317,7 +1317,7 @@ DependencyReason
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Column b]
 </span><a href="#local-6989586621691087071"><span class="hs-identifier hs-var">columns</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-475"></span><span>
-</span><span id="line-476"></span><span>      </span><span class="hs-comment">-- Logical models don't have computed fields.</span><span>
+</span><span id="line-476"></span><span>      </span><span class="hs-comment">-- Native queries don't have computed fields.</span><span>
 </span><span id="line-477"></span><span>      </span><span class="annot"><a href="#local-6989586621691087057"><span class="hs-identifier hs-type">spiComputedFields</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldName"><span class="hs-identifier hs-type">ComputedFieldName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnColumnCaseBoolExpPartialSQL"><span class="hs-identifier hs-type">AnnColumnCaseBoolExpPartialSQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691087942"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-478"></span><span>      </span><span id="local-6989586621691087057"><span class="annot"><span class="annottext">spiComputedFields :: HashMap
   ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
@@ -1340,7 +1340,7 @@ SelPerm b -&gt; AllowedRootFields SubscriptionRootFieldType
 </span><a href="Hasura.RQL.Types.Permission.html#spAllowedSubscriptionRootFields"><span class="hs-identifier hs-var">spAllowedSubscriptionRootFields</span></a></span><span> </span><span class="annot"><span class="annottext">SelPerm b
 </span><a href="#local-6989586621691087072"><span class="hs-identifier hs-var">sp</span></a></span><span>
 </span><span id="line-487"></span><span>
-</span><span id="line-488"></span><span>      </span><span class="hs-comment">-- We don't currently allow for aggregations over logical models.</span><span>
+</span><span id="line-488"></span><span>      </span><span class="hs-comment">-- We don't currently allow for aggregations over native queries.</span><span>
 </span><span id="line-489"></span><span>      </span><span class="annot"><a href="#local-6989586621691087054"><span class="hs-identifier hs-type">spiAllowAgg</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span>
 </span><span id="line-490"></span><span>      </span><span id="local-6989586621691087054"><span class="annot"><span class="annottext">spiAllowAgg :: Bool
 </span><a href="#local-6989586621691087054"><span class="hs-identifier hs-var hs-var">spiAllowAgg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SelPerm b -&gt; Bool

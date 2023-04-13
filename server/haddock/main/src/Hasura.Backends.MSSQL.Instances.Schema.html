@@ -35,8 +35,8 @@
 </span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
 </span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Select.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Select</span></a></span><span>
 </span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Update.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Update</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">SU</span></span><span>
-</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Schema.html"><span class="hs-identifier">Hasura.LogicalModel.Schema</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">LogicalModels</span></span><span>
-</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Name.html"><span class="hs-identifier">Hasura.Name</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Name</span></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Name.html"><span class="hs-identifier">Hasura.Name</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Name</span></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Schema.html"><span class="hs-identifier">Hasura.NativeQuery.Schema</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NativeQueries</span></span><span>
 </span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.html"><span class="hs-identifier">Hasura.RQL.IR</span></a></span><span>
 </span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html"><span class="hs-identifier">Hasura.RQL.IR.Select</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">IR</span></span><span>
@@ -251,9 +251,9 @@ Scenario
            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 </span><a href="Hasura.GraphQL.Schema.Build.html#buildSingleBatchTableUpdateMutationFields"><span class="hs-identifier hs-var">GSB.buildSingleBatchTableUpdateMutationFields</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">id</span></a></span><span>
-</span><span id="line-63"></span><span>  </span><span id="local-6989586621691067807"><span class="annot"><span class="annottext">buildLogicalModelRootFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-63"></span><span>  </span><span id="local-6989586621691067807"><span class="annot"><span class="annottext">buildNativeQueryRootFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MSSQL r m n =&gt;
-LogicalModelInfo 'MSSQL
+NativeQueryInfo 'MSSQL
 -&gt; SchemaT
      r
      m
@@ -264,10 +264,10 @@ LogicalModelInfo 'MSSQL
               'MSSQL
               (RemoteRelationshipField UnpreparedValue)
               (UnpreparedValue 'MSSQL))))
-</span><a href="Hasura.GraphQL.Schema.Backend.html#buildLogicalModelRootFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildLogicalModelRootFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><a href="Hasura.GraphQL.Schema.Backend.html#buildNativeQueryRootFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildNativeQueryRootFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 (MonadBuildSchema b r m n,
  BackendCustomReturnTypeSelectSchema b) =&gt;
-LogicalModelInfo b
+NativeQueryInfo b
 -&gt; SchemaT
      r
      m
@@ -276,7 +276,7 @@ LogicalModelInfo b
            n
            (QueryDB
               b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
-</span><a href="Hasura.LogicalModel.Schema.html#defaultBuildLogicalModelRootFields"><span class="hs-identifier hs-var">LogicalModels.defaultBuildLogicalModelRootFields</span></a></span><span>
+</span><a href="Hasura.NativeQuery.Schema.html#defaultBuildNativeQueryRootFields"><span class="hs-identifier hs-var">NativeQueries.defaultBuildNativeQueryRootFields</span></a></span><span>
 </span><span id="line-64"></span><span>
 </span><span id="line-65"></span><span>  </span><span id="local-6989586621691067797"><span class="annot"><span class="annottext">buildFunctionQueryFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MSSQL r m n =&gt;

@@ -298,7 +298,7 @@ SourceName
 </span><span id="line-127"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="hs-comment">-- The parser for the &quot;right hand side&quot; of operations. We use @rhsParser@</span><span>
 </span><span id="line-128"></span><span>      </span><span class="hs-comment">-- as the name here for ease of grepping, though it's maybe a bit vague.</span><span>
 </span><span id="line-129"></span><span>      </span><span class="hs-comment">-- More specifically, if we think of an operation that combines a field</span><span>
-</span><span id="line-130"></span><span>      </span><span class="hs-comment">-- (such as those in tables or logical models) on the /left/ with a value</span><span>
+</span><span id="line-130"></span><span>      </span><span class="hs-comment">-- (such as those in tables or native queries) on the /left/ with a value</span><span>
 </span><span id="line-131"></span><span>      </span><span class="hs-comment">-- or session variable on the /right/, this is a parser for the latter.</span><span>
 </span><span id="line-132"></span><span>      </span><span class="annot"><a href="#local-6989586621691086258"><span class="hs-identifier hs-type">rhsParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BoolExp.html#BoolExpRHSParser"><span class="hs-identifier hs-type">BoolExpRHSParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691086548"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691086549"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#PartialSQLExp"><span class="hs-identifier hs-type">PartialSQLExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691086548"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-133"></span><span>      </span><span id="local-6989586621691086258"><span class="annot"><span class="annottext">rhsParser :: BoolExpRHSParser b m (PartialSQLExp b)
@@ -310,7 +310,7 @@ CollectableType (ColumnType b) -&gt; Value -&gt; m (PartialSQLExp b)
 </span><a href="Hasura.RQL.Types.Metadata.Backend.html#parseCollectableType"><span class="hs-identifier hs-var">parseCollectableType</span></a></span><span> </span><span class="annot"><span class="annottext">forall (backend :: BackendType). PartialSQLExp backend
 </span><a href="Hasura.RQL.IR.BoolExp.html#PSESession"><span class="hs-identifier hs-var">PSESession</span></a></span><span>
 </span><span id="line-134"></span><span>
-</span><span id="line-135"></span><span>  </span><span class="hs-comment">-- In Logical Models, there are no relationships (unlike tables, where one</span><span>
+</span><span id="line-135"></span><span>  </span><span class="hs-comment">-- In Native Queries, there are no relationships (unlike tables, where one</span><span>
 </span><span id="line-136"></span><span>  </span><span class="hs-comment">-- table can reference another). This means that our root fieldInfoMap is</span><span>
 </span><span id="line-137"></span><span>  </span><span class="hs-comment">-- always going to be the same as our current fieldInfoMap, so we just pass</span><span>
 </span><span id="line-138"></span><span>  </span><span class="hs-comment">-- the same one in twice.</span><span>

@@ -42,7 +42,7 @@
 </span><span id="line-42"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#parsedSelectionsToFields"><span class="hs-identifier">parsedSelectionsToFields</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-43"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#partialSQLExpToUnpreparedValue"><span class="hs-identifier">partialSQLExpToUnpreparedValue</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-44"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#requiredFieldParser"><span class="hs-identifier">requiredFieldParser</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-45"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#takeValidLogicalModels"><span class="hs-identifier">takeValidLogicalModels</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#takeValidNativeQueries"><span class="hs-identifier">takeValidNativeQueries</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-46"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#takeValidFunctions"><span class="hs-identifier">takeValidFunctions</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-47"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#takeValidTables"><span class="hs-identifier">takeValidTables</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-48"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#textToName"><span class="hs-identifier">textToName</span></a></span><span class="hs-special">,</span><span>
@@ -75,7 +75,7 @@
 </span><span id="line-75"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Options</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Options</span></span><span>
 </span><span id="line-76"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
 </span><span id="line-77"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Typename.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Typename</span></a></span><span>
-</span><span id="line-78"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Cache.html"><span class="hs-identifier">Hasura.LogicalModel.Cache</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Cache.html#LogicalModelCache"><span class="hs-identifier">LogicalModelCache</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-78"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Cache.html"><span class="hs-identifier">Hasura.NativeQuery.Cache</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Cache.html#NativeQueryCache"><span class="hs-identifier">NativeQueryCache</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-79"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-80"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.html"><span class="hs-identifier">Hasura.RQL.IR</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">IR</span></span><span>
 </span><span id="line-81"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp</span></a></span><span>
@@ -600,7 +600,7 @@ TableName b -&gt; m (TableInfo b)
 CustomReturnTypeCache b
 TableCache b
 FunctionCache b
-LogicalModelCache b
+NativeQueryCache b
 SourceConfig b
 SourceName
 ResolvedSourceCustomization
@@ -608,14 +608,14 @@ _siCustomization :: forall (b :: BackendType).
 SourceInfo b -&gt; ResolvedSourceCustomization
 _siQueryTagsConfig :: forall (b :: BackendType). SourceInfo b -&gt; Maybe QueryTagsConfig
 _siConfiguration :: forall (b :: BackendType). SourceInfo b -&gt; SourceConfig b
-_siLogicalModels :: forall (b :: BackendType). SourceInfo b -&gt; LogicalModelCache b
+_siNativeQueries :: forall (b :: BackendType). SourceInfo b -&gt; NativeQueryCache b
 _siFunctions :: forall (b :: BackendType). SourceInfo b -&gt; FunctionCache b
 _siName :: forall (b :: BackendType). SourceInfo b -&gt; SourceName
 _siCustomization :: ResolvedSourceCustomization
 _siQueryTagsConfig :: Maybe QueryTagsConfig
 _siConfiguration :: SourceConfig b
 _siCustomReturnTypes :: CustomReturnTypeCache b
-_siLogicalModels :: LogicalModelCache b
+_siNativeQueries :: NativeQueryCache b
 _siFunctions :: FunctionCache b
 _siTables :: TableCache b
 _siName :: SourceName
@@ -929,11 +929,10 @@ TableCoreInfoG b field primaryKeyColumn -&gt; TableConfig b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). FunctionInfo b -&gt; SystemDefined
 </span><a href="Hasura.Function.Cache.html#_fiSystemDefined"><span class="hs-identifier hs-var">_fiSystemDefined</span></a></span><span>
 </span><span id="line-442"></span><span>
-</span><span id="line-443"></span><span class="hs-comment">-- | Currently we do no validation on logical models in schema. Should we?</span><span>
-</span><span id="line-444"></span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#takeValidLogicalModels"><span class="hs-identifier hs-type">takeValidLogicalModels</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621691029057"><span class="annot"><a href="#local-6989586621691029057"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Cache.html#LogicalModelCache"><span class="hs-identifier hs-type">LogicalModelCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691029057"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Cache.html#LogicalModelCache"><span class="hs-identifier hs-type">LogicalModelCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691029057"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-445"></span><span id="takeValidLogicalModels"><span class="annot"><span class="annottext">takeValidLogicalModels :: forall (b :: BackendType).
-LogicalModelCache b -&gt; LogicalModelCache b
-</span><a href="Hasura.GraphQL.Schema.Common.html#takeValidLogicalModels"><span class="hs-identifier hs-var hs-var">takeValidLogicalModels</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; a
+</span><span id="line-443"></span><span class="hs-comment">-- | Currently we do no validation on native queries in schema. Should we?</span><span>
+</span><span id="line-444"></span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#takeValidNativeQueries"><span class="hs-identifier hs-type">takeValidNativeQueries</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621691029057"><span class="annot"><a href="#local-6989586621691029057"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Cache.html#NativeQueryCache"><span class="hs-identifier hs-type">NativeQueryCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691029057"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Cache.html#NativeQueryCache"><span class="hs-identifier hs-type">NativeQueryCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691029057"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-445"></span><span id="takeValidNativeQueries"><span class="annot"><span class="annottext">takeValidNativeQueries :: forall (b :: BackendType). NativeQueryCache b -&gt; NativeQueryCache b
+</span><a href="Hasura.GraphQL.Schema.Common.html#takeValidNativeQueries"><span class="hs-identifier hs-var hs-var">takeValidNativeQueries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">id</span></a></span><span>
 </span><span id="line-446"></span><span>
 </span><span id="line-447"></span><span class="hs-comment">-- root field builder helpers</span><span>
