@@ -23,9 +23,9 @@ export const DisplayDetails = ({
       <div className="flex justify-start">
         <div
           className={clsx(
-            'max-w-2xl',
+            'max-w-md',
             isExpanded
-              ? 'whitespace-pre-line'
+              ? 'whitespace-pre-line max-w-xl'
               : 'overflow-hidden text-ellipsis whitespace-nowrap'
           )}
           title={version}
