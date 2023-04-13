@@ -180,8 +180,8 @@ pruneDanglingDependents cache =
                 CRTOCol column ->
                   unless (InsOrd.member column (_crtiFields customReturnType)) do
                     Left ("Could not find column " <> column <<> " in custom return type " <>> customReturnTypeName)
-            SOILogicalModel logicalModelName -> do
-              void $ resolveLogicalModel sourceInfo logicalModelName
+            SOINativeQuery nativeQueryName -> do
+              void $ resolveNativeQuery sourceInfo nativeQueryName
             SOITableObj tableName tableObjectId -> do
               tableInfo <- resolveTable sourceInfo tableName
               case tableObjectId of
@@ -228,9 +228,9 @@ pruneDanglingDependents cache =
       M.lookup tableName (_siTables sourceInfo)
         `onNothing` Left ("table " <> tableName <<> " is not tracked")
 
-    resolveLogicalModel sourceInfo logicalModelName =
-      M.lookup logicalModelName (_siLogicalModels sourceInfo)
-        `onNothing` Left ("logical model " <> logicalModelName <<> " is not tracked")
+    resolveNativeQuery sourceInfo nativeQueryName =
+      M.lookup nativeQueryName (_siNativeQueries sourceInfo)
+        `onNothing` Left ("native query " <> nativeQueryName <<> " is not tracked")
 
     resolveCustomReturnType sourceInfo customReturnTypeName =
       M.lookup customReturnTypeName (_siCustomReturnTypes sourceInfo)
@@ -303,7 +303,7 @@ deleteMetadataObject = \case
       SMOFunction name -> siFunctions %~ M.delete name
       SMOFunctionPermission functionName role ->
         siFunctions . ix functionName . fiPermissions %~ M.delete role
-      SMOLogicalModel name -> siLogicalModels %~ M.delete name
+      SMONativeQuery name -> siNativeQueries %~ M.delete name
       SMOCustomReturnType name -> siCustomReturnTypes %~ M.delete name
       SMOCustomReturnTypeObj customReturnTypeName customReturnTypeObjectId ->
         siCustomReturnTypes . ix customReturnTypeName %~ case customReturnTypeObjectId of

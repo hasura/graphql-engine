@@ -13,10 +13,10 @@ module Harness.Schema
     BackendScalarValueType (..),
     ManualRelationship (..),
     SchemaName (..),
-    LogicalModel (..),
-    LogicalModelColumn (..),
-    trackLogicalModelCommand,
-    untrackLogicalModelCommand,
+    NativeQuery (..),
+    NativeQueryColumn (..),
+    trackNativeQueryCommand,
+    untrackNativeQueryCommand,
     CustomType (..),
     trackCustomType,
     trackCustomTypeCommand,
@@ -37,8 +37,8 @@ module Harness.Schema
     untrackComputedField,
     runSQL,
     addSource,
-    trackLogicalModel,
-    untrackLogicalModel,
+    trackNativeQuery,
+    untrackNativeQuery,
     module Harness.Schema.Table,
     module Harness.Schema.Name,
     getSchemaName,
@@ -422,67 +422,67 @@ addSource sourceName sourceConfig testEnvironment = do
         configuration: #{ sourceConfig }
       |]
 
-trackLogicalModelCommand :: String -> BackendTypeConfig -> LogicalModel -> Value
-trackLogicalModelCommand sourceName backendTypeConfig (LogicalModel {logicalModelName, logicalModelArguments, logicalModelQuery, logicalModelReturnType}) =
+trackNativeQueryCommand :: String -> BackendTypeConfig -> NativeQuery -> Value
+trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryName, nativeQueryArguments, nativeQueryQuery, nativeQueryReturnType}) =
   -- arguments are a map from name to type details
   let argsToJson =
         Aeson.object
           . fmap
-            ( \LogicalModelColumn {..} ->
-                let key = K.fromText logicalModelColumnName
-                    descriptionPair = case logicalModelColumnDescription of
+            ( \NativeQueryColumn {..} ->
+                let key = K.fromText nativeQueryColumnName
+                    descriptionPair = case nativeQueryColumnDescription of
                       Just desc -> [(K.fromText "description", Aeson.String desc)]
                       Nothing -> []
 
                     value =
                       Aeson.object $
-                        [ (K.fromText "type", Aeson.String ((BackendType.backendScalarType backendTypeConfig) logicalModelColumnType)),
-                          (K.fromText "nullable", Aeson.Bool logicalModelColumnNullable)
+                        [ (K.fromText "type", Aeson.String ((BackendType.backendScalarType backendTypeConfig) nativeQueryColumnType)),
+                          (K.fromText "nullable", Aeson.Bool nativeQueryColumnNullable)
                         ]
                           <> descriptionPair
                  in (key, value)
             )
 
-      arguments = argsToJson logicalModelArguments
+      arguments = argsToJson nativeQueryArguments
 
       backendType = BackendType.backendTypeString backendTypeConfig
 
-      requestType = backendType <> "_track_logical_model"
+      requestType = backendType <> "_track_native_query"
    in [yaml|
         type: *requestType
         args:
           type: query
           source: *sourceName
-          root_field_name: *logicalModelName 
-          code: *logicalModelQuery
+          root_field_name: *nativeQueryName 
+          code: *nativeQueryQuery
           arguments: *arguments
-          returns: *logicalModelReturnType
+          returns: *nativeQueryReturnType
       |]
 
-trackLogicalModel :: HasCallStack => String -> LogicalModel -> TestEnvironment -> IO ()
-trackLogicalModel sourceName logMod testEnvironment = do
+trackNativeQuery :: HasCallStack => String -> NativeQuery -> TestEnvironment -> IO ()
+trackNativeQuery sourceName logMod testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
 
-  let command = trackLogicalModelCommand sourceName backendTypeMetadata logMod
+  let command = trackNativeQueryCommand sourceName backendTypeMetadata logMod
 
   GraphqlEngine.postMetadata_ testEnvironment command
 
-untrackLogicalModelCommand :: String -> BackendTypeConfig -> LogicalModel -> Value
-untrackLogicalModelCommand source backendTypeMetadata LogicalModel {logicalModelName} =
+untrackNativeQueryCommand :: String -> BackendTypeConfig -> NativeQuery -> Value
+untrackNativeQueryCommand source backendTypeMetadata NativeQuery {nativeQueryName} =
   let backendType = BackendType.backendTypeString backendTypeMetadata
-      requestType = backendType <> "_untrack_logical_model"
+      requestType = backendType <> "_untrack_native_query"
    in [yaml|
       type: *requestType
       args:
         source: *source
-        root_field_name: *logicalModelName 
+        root_field_name: *nativeQueryName 
     |]
 
-untrackLogicalModel :: HasCallStack => String -> LogicalModel -> TestEnvironment -> IO ()
-untrackLogicalModel source logMod testEnvironment = do
+untrackNativeQuery :: HasCallStack => String -> NativeQuery -> TestEnvironment -> IO ()
+untrackNativeQuery source logMod testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
 
-  let command = untrackLogicalModelCommand source backendTypeMetadata logMod
+  let command = untrackNativeQueryCommand source backendTypeMetadata logMod
 
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -495,14 +495,14 @@ trackCustomTypeCommand sourceName backendTypeConfig (CustomType {customTypeDescr
         Aeson.Array
           . V.fromList
           . fmap
-            ( \LogicalModelColumn {..} ->
-                let descriptionPair = case logicalModelColumnDescription of
+            ( \NativeQueryColumn {..} ->
+                let descriptionPair = case nativeQueryColumnDescription of
                       Just desc -> [(K.fromText "description", Aeson.String desc)]
                       Nothing -> []
                  in Aeson.object $
-                      [ (K.fromText "name", Aeson.String logicalModelColumnName),
-                        (K.fromText "type", Aeson.String ((BackendType.backendScalarType backendTypeConfig) logicalModelColumnType)),
-                        (K.fromText "nullable", Aeson.Bool logicalModelColumnNullable)
+                      [ (K.fromText "name", Aeson.String nativeQueryColumnName),
+                        (K.fromText "type", Aeson.String ((BackendType.backendScalarType backendTypeConfig) nativeQueryColumnType)),
+                        (K.fromText "nullable", Aeson.Bool nativeQueryColumnNullable)
                       ]
                         <> descriptionPair
             )

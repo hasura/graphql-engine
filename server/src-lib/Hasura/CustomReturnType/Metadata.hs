@@ -20,8 +20,8 @@ import Data.Aeson qualified as Aeson
 import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec)
 import Hasura.CustomReturnType.Types
-import Hasura.LogicalModel.Types (NullableScalarType (..), nullableScalarTypeMapCodec)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
+import Hasura.NativeQuery.Types (NullableScalarType (..), nullableScalarTypeMapCodec)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Common (SourceName, ToAesonPairs (toAesonPairs), defaultSource)
@@ -76,7 +76,7 @@ deriving stock instance (Backend b) => Eq (CustomReturnTypeMetadata b)
 
 deriving stock instance (Backend b) => Show (CustomReturnTypeMetadata b)
 
--- | A wrapper to tie something to a particular logical model. Specifically, it
+-- | A wrapper to tie something to a particular native query. Specifically, it
 -- assumes the underlying '_wlmInfo' is represented as an object, and adds two
 -- keys to that object: @source@ and @root_field_name@.
 data WithCustomReturnType a = WithCustomReturnType

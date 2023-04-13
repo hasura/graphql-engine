@@ -2,21 +2,21 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
--- | Metadata representation of a logical model in the metadata,
+-- | Metadata representation of a native query in the metadata,
 --   as well as a parser and prettyprinter for the query code.
-module Hasura.LogicalModel.Metadata
-  ( LogicalModelName (..),
-    LogicalModelMetadata (..),
-    lmmArguments,
-    lmmCode,
-    lmmDescription,
-    lmmReturns,
-    lmmRootFieldName,
-    LogicalModelArgumentName (..),
+module Hasura.NativeQuery.Metadata
+  ( NativeQueryName (..),
+    NativeQueryMetadata (..),
+    nqmArguments,
+    nqmCode,
+    nqmDescription,
+    nqmReturns,
+    nqmRootFieldName,
+    NativeQueryArgumentName (..),
     InterpolatedItem (..),
     InterpolatedQuery (..),
     parseInterpolatedQuery,
-    module Hasura.LogicalModel.Types,
+    module Hasura.NativeQuery.Types,
   )
 where
 
@@ -27,8 +27,8 @@ import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Bifunctor (first)
 import Data.Text qualified as T
 import Hasura.CustomReturnType.Metadata (CustomReturnTypeName)
-import Hasura.LogicalModel.Types (LogicalModelName (..), NullableScalarType)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
+import Hasura.NativeQuery.Types (NativeQueryName (..), NullableScalarType)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend
 import Hasura.SQL.Backend
@@ -52,9 +52,9 @@ data InterpolatedItem variable
 
 -- | Converting an interpolated query back to text.
 --   Should roundtrip with the 'parseInterpolatedQuery'.
-ppInterpolatedItem :: InterpolatedItem LogicalModelArgumentName -> Text
+ppInterpolatedItem :: InterpolatedItem NativeQueryArgumentName -> Text
 ppInterpolatedItem (IIText t) = t
-ppInterpolatedItem (IIVariable v) = "{{" <> getLogicalModelArgumentName v <> "}}"
+ppInterpolatedItem (IIVariable v) = "{{" <> getNativeQueryArgumentName v <> "}}"
 
 deriving instance (Hashable variable) => Hashable (InterpolatedItem variable)
 
@@ -62,7 +62,7 @@ deriving instance (NFData variable) => NFData (InterpolatedItem variable)
 
 ---------------------------------------
 
--- | A list of logical model components representing a single logical model,
+-- | A list of native query components representing a single native query,
 --   separating the variables from the text.
 newtype InterpolatedQuery variable = InterpolatedQuery
   { getInterpolatedQuery :: [InterpolatedItem variable]
@@ -74,12 +74,12 @@ deriving newtype instance (Hashable variable) => Hashable (InterpolatedQuery var
 
 deriving newtype instance (NFData variable) => NFData (InterpolatedQuery variable)
 
-ppInterpolatedQuery :: InterpolatedQuery LogicalModelArgumentName -> Text
+ppInterpolatedQuery :: InterpolatedQuery NativeQueryArgumentName -> Text
 ppInterpolatedQuery (InterpolatedQuery parts) = foldMap ppInterpolatedItem parts
 
 -- | We store the interpolated query as the user text and parse it back
 --   when converting back to Haskell code.
-instance v ~ LogicalModelArgumentName => HasCodec (InterpolatedQuery v) where
+instance v ~ NativeQueryArgumentName => HasCodec (InterpolatedQuery v) where
   codec =
     CommentCodec
       ("An interpolated query expressed in native code (SQL)")
@@ -89,85 +89,85 @@ instance v ~ LogicalModelArgumentName => HasCodec (InterpolatedQuery v) where
         textCodec
 
 deriving via
-  (Autodocodec (InterpolatedQuery LogicalModelArgumentName))
+  (Autodocodec (InterpolatedQuery NativeQueryArgumentName))
   instance
-    v ~ LogicalModelArgumentName =>
+    v ~ NativeQueryArgumentName =>
     ToJSON (InterpolatedQuery v)
 
 ---------------------------------------
 
-newtype LogicalModelArgumentName = LogicalModelArgumentName
-  { getLogicalModelArgumentName :: Text
+newtype NativeQueryArgumentName = NativeQueryArgumentName
+  { getNativeQueryArgumentName :: Text
   }
   deriving newtype (Eq, Ord, Show, Hashable)
   deriving stock (Generic)
 
-instance HasCodec LogicalModelArgumentName where
-  codec = dimapCodec LogicalModelArgumentName getLogicalModelArgumentName codec
+instance HasCodec NativeQueryArgumentName where
+  codec = dimapCodec NativeQueryArgumentName getNativeQueryArgumentName codec
 
-deriving newtype instance ToJSON LogicalModelArgumentName
+deriving newtype instance ToJSON NativeQueryArgumentName
 
-deriving newtype instance FromJSON LogicalModelArgumentName
+deriving newtype instance FromJSON NativeQueryArgumentName
 
-deriving newtype instance ToJSONKey LogicalModelArgumentName
+deriving newtype instance ToJSONKey NativeQueryArgumentName
 
-deriving newtype instance FromJSONKey LogicalModelArgumentName
+deriving newtype instance FromJSONKey NativeQueryArgumentName
 
-instance NFData LogicalModelArgumentName
+instance NFData NativeQueryArgumentName
 
 ---------------------------------------
 
--- | The representation of logical models within the metadata structure.
-data LogicalModelMetadata (b :: BackendType) = LogicalModelMetadata
-  { _lmmRootFieldName :: LogicalModelName,
-    _lmmCode :: InterpolatedQuery LogicalModelArgumentName,
-    _lmmReturns :: CustomReturnTypeName,
-    _lmmArguments :: HashMap LogicalModelArgumentName (NullableScalarType b),
-    _lmmDescription :: Maybe Text
+-- | The representation of native queries within the metadata structure.
+data NativeQueryMetadata (b :: BackendType) = NativeQueryMetadata
+  { _nqmRootFieldName :: NativeQueryName,
+    _nqmCode :: InterpolatedQuery NativeQueryArgumentName,
+    _nqmReturns :: CustomReturnTypeName,
+    _nqmArguments :: HashMap NativeQueryArgumentName (NullableScalarType b),
+    _nqmDescription :: Maybe Text
   }
   deriving (Generic)
 
-deriving instance Backend b => Eq (LogicalModelMetadata b)
+deriving instance Backend b => Eq (NativeQueryMetadata b)
 
-deriving instance Backend b => Show (LogicalModelMetadata b)
+deriving instance Backend b => Show (NativeQueryMetadata b)
 
-instance (Backend b) => HasCodec (LogicalModelMetadata b) where
+instance (Backend b) => HasCodec (NativeQueryMetadata b) where
   codec =
     CommentCodec
-      ("A logical model as represented in metadata.")
-      $ AC.object (codecNamePrefix @b <> "LogicalModelMetadata")
-      $ LogicalModelMetadata
+      ("A native query as represented in metadata.")
+      $ AC.object (codecNamePrefix @b <> "NativeQueryMetadata")
+      $ NativeQueryMetadata
         <$> requiredField "root_field_name" fieldNameDoc
-          AC..= _lmmRootFieldName
+          AC..= _nqmRootFieldName
         <*> requiredField "code" sqlDoc
-          AC..= _lmmCode
+          AC..= _nqmCode
         <*> requiredField "returns" returnsDoc
-          AC..= _lmmReturns
+          AC..= _nqmReturns
         <*> optionalFieldWithDefault "arguments" mempty argumentDoc
-          AC..= _lmmArguments
+          AC..= _nqmArguments
         <*> optionalField "description" descriptionDoc
-          AC..= _lmmDescription
+          AC..= _nqmDescription
     where
-      fieldNameDoc = "Root field name for the logical model"
+      fieldNameDoc = "Root field name for the native query"
       sqlDoc = "Native code expression (SQL) to run"
       argumentDoc = "Free variables in the expression and their types"
       returnsDoc = "Return type (table) of the expression"
-      descriptionDoc = "A description of the logical model which appears in the graphql schema"
+      descriptionDoc = "A description of the native query which appears in the graphql schema"
 
 deriving via
-  (Autodocodec (LogicalModelMetadata b))
+  (Autodocodec (NativeQueryMetadata b))
   instance
-    (Backend b) => (FromJSON (LogicalModelMetadata b))
+    (Backend b) => (FromJSON (NativeQueryMetadata b))
 
 deriving via
-  (Autodocodec (LogicalModelMetadata b))
+  (Autodocodec (NativeQueryMetadata b))
   instance
-    (Backend b) => (ToJSON (LogicalModelMetadata b))
+    (Backend b) => (ToJSON (NativeQueryMetadata b))
 
 -- | extract all of the `{{ variable }}` inside our query string
 parseInterpolatedQuery ::
   Text ->
-  Either Text (InterpolatedQuery LogicalModelArgumentName)
+  Either Text (InterpolatedQuery NativeQueryArgumentName)
 parseInterpolatedQuery =
   fmap
     ( InterpolatedQuery
@@ -185,7 +185,7 @@ parseInterpolatedQuery =
       (a : rest) -> a : mergeAdjacent rest
       [] -> []
 
-    consumeString :: String -> Either Text [InterpolatedItem LogicalModelArgumentName]
+    consumeString :: String -> Either Text [InterpolatedItem NativeQueryArgumentName]
     consumeString str =
       let (beforeCurly, fromCurly) = break (== '{') str
        in case fromCurly of
@@ -195,12 +195,12 @@ parseInterpolatedQuery =
               (IIText (T.pack (beforeCurly <> "{")) :) <$> consumeString other
             _other -> pure [IIText (T.pack beforeCurly)]
 
-    consumeVar :: String -> Either Text [InterpolatedItem LogicalModelArgumentName]
+    consumeVar :: String -> Either Text [InterpolatedItem NativeQueryArgumentName]
     consumeVar str =
       let (beforeCloseCurly, fromClosedCurly) = break (== '}') str
        in case fromClosedCurly of
             ('}' : '}' : rest) ->
-              (IIVariable (LogicalModelArgumentName $ T.pack beforeCloseCurly) :) <$> consumeString rest
+              (IIVariable (NativeQueryArgumentName $ T.pack beforeCloseCurly) :) <$> consumeString rest
             _ -> Left "Found '{{' without a matching closing '}}'"
 
-makeLenses ''LogicalModelMetadata
+makeLenses ''NativeQueryMetadata

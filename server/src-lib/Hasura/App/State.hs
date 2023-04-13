@@ -330,7 +330,7 @@ buildCacheStaticConfig AppEnv {..} =
 buildCacheDynamicConfig :: MonadIO m => AppEnv -> AppContext -> m CacheDynamicConfig
 buildCacheDynamicConfig AppEnv {..} AppContext {..} = do
   let CheckFeatureFlag runCheckFlag = appEnvCheckFeatureFlag
-  logicalModelsEnabled <- liftIO $ runCheckFlag logicalModelInterface
+  nativeQueriesEnabled <- liftIO $ runCheckFlag nativeQueryInterface
   pure
     CacheDynamicConfig
       { _cdcFunctionPermsCtx = acFunctionPermsCtx,
@@ -340,5 +340,5 @@ buildCacheDynamicConfig AppEnv {..} AppContext {..} = do
         _cdcDefaultNamingConvention = acDefaultNamingConvention,
         _cdcMetadataDefaults = acMetadataDefaults,
         _cdcApolloFederationStatus = acApolloFederationStatus,
-        _cdcAreLogicalModelsEnabled = logicalModelsEnabled
+        _cdcAreNativeQueriesEnabled = nativeQueriesEnabled
       }

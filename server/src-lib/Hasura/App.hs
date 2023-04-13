@@ -494,7 +494,7 @@ initialiseAppContext ::
 initialiseAppContext env serveOptions@ServeOptions {..} AppInit {..} = do
   appEnv@AppEnv {..} <- askAppEnv
   let CheckFeatureFlag runCheckFlag = appEnvCheckFeatureFlag
-  logicalModelsEnabled <- liftIO $ runCheckFlag logicalModelInterface
+  nativeQueriesEnabled <- liftIO $ runCheckFlag nativeQueryInterface
   let Loggers _ logger pgLogger = appEnvLoggers
       sqlGenCtx = initSQLGenCtx soExperimentalFeatures soStringifyNum soDangerousBooleanCollapse
       cacheStaticConfig = buildCacheStaticConfig appEnv
@@ -507,7 +507,7 @@ initialiseAppContext env serveOptions@ServeOptions {..} AppInit {..} = do
           soDefaultNamingConvention
           soMetadataDefaults
           soApolloFederationStatus
-          logicalModelsEnabled
+          nativeQueriesEnabled
 
   -- Create the schema cache
   rebuildableSchemaCache <-

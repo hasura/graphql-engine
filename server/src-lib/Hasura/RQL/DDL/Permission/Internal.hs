@@ -127,12 +127,12 @@ procCustomReturnTypeBoolExp source lmn fieldInfoMap be = do
   let -- The parser for the "right hand side" of operations. We use @rhsParser@
       -- as the name here for ease of grepping, though it's maybe a bit vague.
       -- More specifically, if we think of an operation that combines a field
-      -- (such as those in tables or logical models) on the /left/ with a value
+      -- (such as those in tables or native queries) on the /left/ with a value
       -- or session variable on the /right/, this is a parser for the latter.
       rhsParser :: BoolExpRHSParser b m (PartialSQLExp b)
       rhsParser = BoolExpRHSParser parseCollectableType PSESession
 
-  -- In Logical Models, there are no relationships (unlike tables, where one
+  -- In Native Queries, there are no relationships (unlike tables, where one
   -- table can reference another). This means that our root fieldInfoMap is
   -- always going to be the same as our current fieldInfoMap, so we just pass
   -- the same one in twice.

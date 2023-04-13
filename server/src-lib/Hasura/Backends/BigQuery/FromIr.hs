@@ -27,9 +27,9 @@ import Hasura.Backends.BigQuery.Instances.Types ()
 import Hasura.Backends.BigQuery.Source (BigQuerySourceConfig (..))
 import Hasura.Backends.BigQuery.Types as BigQuery
 import Hasura.Function.Cache qualified as Functions
-import Hasura.LogicalModel.IR (LogicalModel (..))
-import Hasura.LogicalModel.Metadata (InterpolatedQuery)
-import Hasura.LogicalModel.Types (LogicalModelName (..))
+import Hasura.NativeQuery.IR (NativeQuery (..))
+import Hasura.NativeQuery.Metadata (InterpolatedQuery)
+import Hasura.NativeQuery.Types (NativeQueryName (..))
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as Ir
 import Hasura.RQL.Types.Column qualified as Rql
@@ -120,10 +120,10 @@ newtype FromIr a = FromIr
   }
   deriving (Functor, Applicative, Monad, MonadValidate (NonEmpty Error))
 
--- | Collected from using a logical model in a query.
+-- | Collected from using a native query in a query.
 --   Each entry here because a CTE to be prepended to the query.
 newtype FromIrWriter = FromIrWriter
-  { fromIrWriterLogicalModels :: Map LogicalModelName (InterpolatedQuery Expression)
+  { fromIrWriterNativeQueries :: Map NativeQueryName (InterpolatedQuery Expression)
   }
   deriving newtype (Semigroup, Monoid)
 
@@ -261,7 +261,7 @@ fromSelectRows parentSelectFromEntity annSelectG = do
         | functionName nm == "unnest" -> fromUnnestedJSON json columns (map fst fields)
       Ir.FromFunction functionName (Functions.FunctionArgsExp positionalArgs namedArgs) Nothing ->
         fromFunction parentSelectFromEntity functionName positionalArgs namedArgs
-      Ir.FromLogicalModel logicalModel -> fromLogicalModel logicalModel
+      Ir.FromNativeQuery nativeQuery -> fromNativeQuery nativeQuery
       _ -> refute (pure (FromTypeUnsupported from))
   Args
     { argsOrderBy,
@@ -801,10 +801,10 @@ fromAnnBoolExp ::
   ReaderT EntityAlias FromIr Expression
 fromAnnBoolExp = traverse fromAnnBoolExpFld >=> fromGBoolExp
 
-fromLogicalModel :: LogicalModel 'BigQuery Expression -> FromIr From
-fromLogicalModel LogicalModel {..} = FromIr do
-  tell (FromIrWriter (M.singleton lmRootFieldName lmInterpolatedQuery))
-  pure (FromLogicalModel lmRootFieldName)
+fromNativeQuery :: NativeQuery 'BigQuery Expression -> FromIr From
+fromNativeQuery NativeQuery {..} = FromIr do
+  tell (FromIrWriter (M.singleton nqRootFieldName nqInterpolatedQuery))
+  pure (FromNativeQuery nqRootFieldName)
 
 fromAnnBoolExpFld ::
   Ir.AnnBoolExpFld 'BigQuery Expression -> ReaderT EntityAlias FromIr Expression
@@ -1886,7 +1886,7 @@ fromAlias (FromQualifiedTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromSelect Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromSelectJson Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromFunction Aliased {aliasedAlias}) = EntityAlias aliasedAlias
-fromAlias (FromLogicalModel (LogicalModelName logicalModelName)) = EntityAlias (T.toTxt logicalModelName)
+fromAlias (FromNativeQuery (NativeQueryName nativeQueryName)) = EntityAlias (T.toTxt nativeQueryName)
 
 fieldTextNames :: Ir.AnnFieldsG 'BigQuery Void Expression -> [Text]
 fieldTextNames = fmap (\(Rql.FieldName name, _) -> name)

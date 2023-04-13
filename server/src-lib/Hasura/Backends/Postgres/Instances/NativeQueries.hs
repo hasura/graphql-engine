@@ -1,7 +1,7 @@
--- | Validate logical models against postgres-like flavors.
-module Hasura.Backends.Postgres.Instances.LogicalModels
-  ( validateLogicalModel,
-    logicalModelToPreparedStatement,
+-- | Validate native queries against postgres-like flavors.
+module Hasura.Backends.Postgres.Instances.NativeQueries
+  ( validateNativeQuery,
+    nativeQueryToPreparedStatement,
   )
 where
 
@@ -27,28 +27,28 @@ import Hasura.Backends.Postgres.Instances.Types ()
 import Hasura.Backends.Postgres.SQL.Types (PGScalarType (..), pgScalarTypeToText)
 import Hasura.Base.Error
 import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata (..))
-import Hasura.LogicalModel.Metadata
+import Hasura.NativeQuery.Metadata
   ( InterpolatedItem (..),
     InterpolatedQuery (..),
-    LogicalModelArgumentName,
-    LogicalModelMetadata (..),
+    NativeQueryArgumentName,
+    NativeQueryMetadata (..),
   )
-import Hasura.LogicalModel.Types (NullableScalarType (nstType), getLogicalModelName)
+import Hasura.NativeQuery.Types (NullableScalarType (nstType), getNativeQueryName)
 import Hasura.Prelude
 import Hasura.SQL.Backend
 
--- | Prepare a logical model query against a postgres-like database to validate it.
-validateLogicalModel ::
+-- | Prepare a native query query against a postgres-like database to validate it.
+validateNativeQuery ::
   forall m pgKind.
   (MonadIO m, MonadError QErr m) =>
   InsOrd.InsOrdHashMap PGScalarType PQ.Oid ->
   Env.Environment ->
   PG.PostgresConnConfiguration ->
   CustomReturnTypeMetadata ('Postgres pgKind) ->
-  LogicalModelMetadata ('Postgres pgKind) ->
+  NativeQueryMetadata ('Postgres pgKind) ->
   m ()
-validateLogicalModel pgTypeOidMapping env connConf customReturnType model = do
-  (prepname, preparedQuery) <- logicalModelToPreparedStatement customReturnType model
+validateNativeQuery pgTypeOidMapping env connConf customReturnType model = do
+  (prepname, preparedQuery) <- nativeQueryToPreparedStatement customReturnType model
   description <- runCheck prepname (PG.fromText preparedQuery)
   let returnColumns = bimap toTxt nstType <$> InsOrd.toList (_crtmFields customReturnType)
   for_ (toList returnColumns) (matchTypes description)
@@ -135,20 +135,20 @@ invertPgTypeOidMap = Map.fromList . map swap . InsOrd.toList
 -- | The environment and fresh-name generator used by 'renameIQ'.
 data RenamingState = RenamingState
   { rsNextFree :: Int,
-    rsBoundVars :: Map LogicalModelArgumentName Int
+    rsBoundVars :: Map NativeQueryArgumentName Int
   }
 
--- | 'Rename' an 'InterpolatedQuery' expression with 'LogicalModelArgumentName' variables
+-- | 'Rename' an 'InterpolatedQuery' expression with 'NativeQueryArgumentName' variables
 -- into one which uses ordinal arguments instead of named arguments, suitable
 -- for a prepared query.
 renameIQ ::
-  InterpolatedQuery LogicalModelArgumentName ->
+  InterpolatedQuery NativeQueryArgumentName ->
   ( InterpolatedQuery Int,
-    Map Int LogicalModelArgumentName
+    Map Int NativeQueryArgumentName
   )
 renameIQ = runRenaming . fmap InterpolatedQuery . mapM renameII . getInterpolatedQuery
   where
-    runRenaming :: forall a. State RenamingState a -> (a, Map Int LogicalModelArgumentName)
+    runRenaming :: forall a. State RenamingState a -> (a, Map Int NativeQueryArgumentName)
     runRenaming action =
       let (res, st) = runState action (RenamingState 1 mempty)
        in (res, inverseMap $ rsBoundVars st)
@@ -163,7 +163,7 @@ renameIQ = runRenaming . fmap InterpolatedQuery . mapM renameII . getInterpolate
     -- variables and reusing the previously assigned indices when encountering a
     -- previously treated variable accordingly.
     renameII ::
-      InterpolatedItem LogicalModelArgumentName ->
+      InterpolatedItem NativeQueryArgumentName ->
       State RenamingState (InterpolatedItem Int)
     renameII = traverse \v -> do
       env <- gets rsBoundVars
@@ -193,29 +193,29 @@ renderIQ (InterpolatedQuery items) = foldMap printItem items
 
 -----------------------------------------
 
--- | Convert a logical model to a prepared statement to be validate.
+-- | Convert a native query to a prepared statement to be validate.
 --
--- Used by 'validateLogicalModel'. Exported for testing.
-logicalModelToPreparedStatement ::
+-- Used by 'validateNativeQuery'. Exported for testing.
+nativeQueryToPreparedStatement ::
   forall m pgKind.
   MonadError QErr m =>
   CustomReturnTypeMetadata ('Postgres pgKind) ->
-  LogicalModelMetadata ('Postgres pgKind) ->
+  NativeQueryMetadata ('Postgres pgKind) ->
   m (BS.ByteString, Text)
-logicalModelToPreparedStatement customReturnType model = do
-  let name = getLogicalModelName $ _lmmRootFieldName model
-  let (preparedIQ, argumentMapping) = renameIQ $ _lmmCode model
+nativeQueryToPreparedStatement customReturnType model = do
+  let name = getNativeQueryName $ _nqmRootFieldName model
+  let (preparedIQ, argumentMapping) = renameIQ $ _nqmCode model
       logimoCode :: Text
       logimoCode = renderIQ preparedIQ
       prepname = "_logimo_vali_" <> toTxt name
 
-      occurringArguments, declaredArguments, undeclaredArguments :: Set LogicalModelArgumentName
+      occurringArguments, declaredArguments, undeclaredArguments :: Set NativeQueryArgumentName
       occurringArguments = Set.fromList (Map.elems argumentMapping)
-      declaredArguments = Set.fromList $ HashMap.keys (_lmmArguments model)
+      declaredArguments = Set.fromList $ HashMap.keys (_nqmArguments model)
       undeclaredArguments = occurringArguments `Set.difference` declaredArguments
 
       argumentTypes :: Map Int PGScalarType
-      argumentTypes = nstType <$> Map.fromList (HashMap.toList $ _lmmArguments model) `Map.compose` argumentMapping
+      argumentTypes = nstType <$> Map.fromList (HashMap.toList $ _nqmArguments model) `Map.compose` argumentMapping
 
       argumentSignature
         | argumentTypes /= mempty = "(" <> commaSeparated (pgScalarTypeToText <$> Map.elems argumentTypes) <> ")"

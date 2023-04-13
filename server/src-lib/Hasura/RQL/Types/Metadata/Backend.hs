@@ -14,7 +14,7 @@ import Hasura.Function.Cache
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
-import Hasura.LogicalModel.Metadata (LogicalModelMetadata)
+import Hasura.NativeQuery.Metadata (NativeQueryMetadata)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -198,15 +198,15 @@ class
     SourceName ->
     m [TableName b]
 
-  validateLogicalModel ::
+  validateNativeQuery ::
     (MonadIO m, MonadError QErr m) =>
     Env.Environment ->
     SourceConnConfiguration b ->
     CustomReturnTypeMetadata b ->
-    LogicalModelMetadata b ->
+    NativeQueryMetadata b ->
     m ()
-  validateLogicalModel _ _ _ _ =
-    throw500 "validateLogicalModel: not implemented for this backend."
+  validateNativeQuery _ _ _ _ =
+    throw500 "validateNativeQuery: not implemented for this backend."
 
   -- | How to convert a column to a field.
   -- For backends that don't support nested objects or arrays the default implementation

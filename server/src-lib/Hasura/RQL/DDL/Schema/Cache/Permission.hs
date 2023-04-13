@@ -281,7 +281,7 @@ buildTablePermissions source tableCache tableFields tablePermissions orderedRole
           definition = toJSON $ WithTable @b source table permDef
        in MetadataObject objectId definition
 
--- | Create the permission map for a logical model based on the select
+-- | Create the permission map for a native query based on the select
 -- permissions given in metadata. Compare with 'buildTablePermissions'.
 buildCustomReturnTypePermissions ::
   forall b m.

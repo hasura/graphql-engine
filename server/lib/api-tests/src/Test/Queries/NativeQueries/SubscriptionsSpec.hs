@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
--- | Test subscriptions over logical models
-module Test.Queries.LogicalModels.SubscriptionsSpec (spec) where
+-- | Test subscriptions over native queries
+module Test.Queries.NativeQueries.SubscriptionsSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
@@ -26,12 +26,12 @@ import Test.Hspec (SpecWith, describe, it, shouldContain)
 
 -- ** Preamble
 
-featureFlagForLogicalModels :: String
-featureFlagForLogicalModels = "HASURA_FF_LOGICAL_MODEL_INTERFACE"
+featureFlagForNativeQueries :: String
+featureFlagForNativeQueries = "HASURA_FF_NATIVE_QUERY_INTERFACE"
 
 spec :: SpecWith GlobalTestEnvironment
 spec =
-  Fixture.hgeWithEnv [(featureFlagForLogicalModels, "True")] $
+  Fixture.hgeWithEnv [(featureFlagForNativeQueries, "True")] $
     Fixture.run
       ( NE.fromList
           [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
@@ -79,7 +79,7 @@ schema =
 tests :: SpecWith TestEnvironment
 tests = do
   withSubscriptions do
-    describe "A subscription on a logical model" do
+    describe "A subscription on a native query" do
       it "is updated on database changes" $ \(mkSubscription, testEnvironment) -> do
         let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
             sourceName = BackendType.backendSourceName backendTypeMetadata
@@ -99,23 +99,23 @@ tests = do
             articleWithExcerptReturnType =
               (Schema.customType "article_with_excerpt")
                 { Schema.customTypeColumns =
-                    [ Schema.logicalModelColumn "id" Schema.TInt,
-                      Schema.logicalModelColumn "title" Schema.TStr,
-                      Schema.logicalModelColumn "excerpt" Schema.TStr,
-                      Schema.logicalModelColumn "date" Schema.TUTCTime
+                    [ Schema.nativeQueryColumn "id" Schema.TInt,
+                      Schema.nativeQueryColumn "title" Schema.TStr,
+                      Schema.nativeQueryColumn "excerpt" Schema.TStr,
+                      Schema.nativeQueryColumn "date" Schema.TUTCTime
                     ]
                 }
 
-            articleWithExcerptLogicalModel :: Schema.LogicalModel
-            articleWithExcerptLogicalModel =
-              (Schema.logicalModel "article_with_excerpt" spicyQuery "article_with_excerpt")
-                { Schema.logicalModelArguments =
-                    [Schema.logicalModelColumn "length" Schema.TInt]
+            articleWithExcerptNativeQuery :: Schema.NativeQuery
+            articleWithExcerptNativeQuery =
+              (Schema.nativeQuery "article_with_excerpt" spicyQuery "article_with_excerpt")
+                { Schema.nativeQueryArguments =
+                    [Schema.nativeQueryColumn "length" Schema.TInt]
                 }
 
         Schema.trackCustomType sourceName articleWithExcerptReturnType testEnvironment
 
-        Schema.trackLogicalModel sourceName articleWithExcerptLogicalModel testEnvironment
+        Schema.trackNativeQuery sourceName articleWithExcerptNativeQuery testEnvironment
 
         query <-
           mkSubscription
@@ -237,27 +237,27 @@ tests = do
             customReturnType =
               (Schema.customType "crt")
                 { Schema.customTypeColumns =
-                    [ Schema.logicalModelColumn "id" Schema.TInt,
-                      Schema.logicalModelColumn "title" Schema.TStr,
-                      Schema.logicalModelColumn "content" Schema.TStr,
-                      Schema.logicalModelColumn "date" Schema.TUTCTime
+                    [ Schema.nativeQueryColumn "id" Schema.TInt,
+                      Schema.nativeQueryColumn "title" Schema.TStr,
+                      Schema.nativeQueryColumn "content" Schema.TStr,
+                      Schema.nativeQueryColumn "date" Schema.TUTCTime
                     ]
                 }
 
             query :: Text
             query = [PG.sql| select * from article where title like {{pattern}} |]
 
-            logicalModel :: Schema.LogicalModel
-            logicalModel =
-              (Schema.logicalModel "filtered_article" query "crt")
-                { Schema.logicalModelArguments =
-                    [Schema.logicalModelColumn "pattern" Schema.TStr]
+            nativeQuery :: Schema.NativeQuery
+            nativeQuery =
+              (Schema.nativeQuery "filtered_article" query "crt")
+                { Schema.nativeQueryArguments =
+                    [Schema.nativeQueryColumn "pattern" Schema.TStr]
                 }
 
         Schema.trackCustomType sourceName customReturnType testEnvironment
-        Schema.trackLogicalModel sourceName logicalModel testEnvironment
+        Schema.trackNativeQuery sourceName nativeQuery testEnvironment
 
-        one <- mkSubscription [graphql| subscription { filtered_article(args: { pattern: "%logical%" }) { id, title } } |] []
+        one <- mkSubscription [graphql| subscription { filtered_article(args: { pattern: "%native%" }) { id, title } } |] []
         two <- mkSubscription [graphql| subscription { filtered_article(args: { pattern: "%model%" }) { id, title } } |] []
 
         getNextResponse one
@@ -284,9 +284,9 @@ tests = do
                 source: #{sourceName}
                 sql: |
                   insert into article (id, title, content, date) values
-                    (1, 'I like the logical song', '', now()),
+                    (1, 'I like the native song', '', now()),
                     (2, 'I like model trains', '', now()),
-                    (3, 'I love me some logical models', '', now())
+                    (3, 'I love me some native queries', '', now())
             |]
 
         getNextResponse one
@@ -294,9 +294,9 @@ tests = do
             data:
               filtered_article:
               - id: 1
-                title: I like the logical song
+                title: I like the native song
               - id: 3
-                title: I love me some logical models
+                title: I love me some native queries
           |]
 
         getNextResponse two
@@ -305,6 +305,4 @@ tests = do
               filtered_article:
               - id: 2
                 title: I like model trains
-              - id: 3
-                title: I love me some logical models
           |]

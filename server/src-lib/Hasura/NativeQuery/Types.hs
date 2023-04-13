@@ -1,6 +1,6 @@
--- | A name for a logical model as it is recognized by the graphql schema.
-module Hasura.LogicalModel.Types
-  ( LogicalModelName (..),
+-- | A name for a native query as it is recognized by the graphql schema.
+module Hasura.NativeQuery.Types
+  ( NativeQueryName (..),
     NullableScalarType (..),
     nullableScalarTypeMapCodec,
   )
@@ -17,17 +17,17 @@ import Hasura.RQL.Types.Backend (Backend (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.Haskell.TH.Syntax (Lift)
 
--- The name of a logical model. This appears as a root field name in the graphql schema.
-newtype LogicalModelName = LogicalModelName {getLogicalModelName :: G.Name}
+-- The name of a native query. This appears as a root field name in the graphql schema.
+newtype NativeQueryName = NativeQueryName {getNativeQueryName :: G.Name}
   deriving newtype (Eq, Ord, Show, Hashable, NFData, ToJSON, FromJSON, ToTxt)
   deriving stock (Data, Generic, Lift)
 
-instance HasCodec LogicalModelName where
-  codec = dimapCodec LogicalModelName getLogicalModelName codec
+instance HasCodec NativeQueryName where
+  codec = dimapCodec NativeQueryName getNativeQueryName codec
 
-instance FromJSONKey LogicalModelName
+instance FromJSONKey NativeQueryName
 
-instance ToJSONKey LogicalModelName
+instance ToJSONKey NativeQueryName
 
 -- | A ScalarType that can be nullable with an optional description
 data NullableScalarType b = NullableScalarType

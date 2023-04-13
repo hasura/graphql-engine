@@ -46,8 +46,8 @@ import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Schema.RemoteRelationship
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename (MkTypename (..))
-import Hasura.LogicalModel.Cache (LogicalModelCache, _lmiReturns)
 import Hasura.Name qualified as Name
+import Hasura.NativeQuery.Cache (NativeQueryCache, _nqiReturns)
 import Hasura.Prelude
 import Hasura.QueryTags.Types
 import Hasura.RQL.IR
@@ -348,15 +348,15 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
           [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))], -- subscription fields
           [(G.Name, Parser 'Output P.Parse (ApolloFederationParserFunction P.Parse))] -- apollo federation tables
         )
-    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo _ tables functions logicalModels _customReturnTypes _ _ sourceCustomization) =
+    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo _ tables functions nativeQueries _customReturnTypes _ _ sourceCustomization) =
       runSourceSchema schemaContext schemaOptions sourceInfo do
         let validFunctions = takeValidFunctions functions
-            validLogicalModels = takeValidLogicalModels logicalModels
+            validNativeQueries = takeValidNativeQueries nativeQueries
             validTables = takeValidTables tables
             mkRootFieldName = _rscRootFields sourceCustomization
             makeTypename = SC._rscTypeNames sourceCustomization
         (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields, apolloFedTableParsers) <-
-          buildQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions validLogicalModels
+          buildQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions validNativeQueries
         (,,,,apolloFedTableParsers)
           <$> customizeFields
             sourceCustomization
@@ -470,7 +470,7 @@ buildRelayRoleContext options sources actions customTypes role expFeatures = do
           [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))],
           [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))]
         )
-    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo _ tables functions _logicalModels _customReturnTypes _ _ sourceCustomization) = do
+    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo _ tables functions _nativeQueries _customReturnTypes _ _ sourceCustomization) = do
       runSourceSchema schemaContext schemaOptions sourceInfo do
         let validFunctions = takeValidFunctions functions
             validTables = takeValidTables tables
@@ -667,7 +667,7 @@ buildQueryAndSubscriptionFields ::
   SourceInfo b ->
   TableCache b ->
   FunctionCache b ->
-  LogicalModelCache b ->
+  NativeQueryCache b ->
   SchemaT
     r
     m
@@ -675,7 +675,7 @@ buildQueryAndSubscriptionFields ::
       [P.FieldParser n (SubscriptionRootField UnpreparedValue)],
       [(G.Name, Parser 'Output n (ApolloFederationParserFunction n))]
     )
-buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs FEAQuery -> functions) logicalModels = do
+buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs FEAQuery -> functions) nativeQueries = do
   roleName <- retrieve scRole
   functionPermsCtx <- retrieve Options.soInferFunctionPermissions
   functionSelectExpParsers <-
@@ -687,8 +687,8 @@ buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs
             || functionPermsCtx == Options.InferFunctionPermissions
         let targetTableName = _fiReturnType functionInfo
         lift $ mkRFs $ buildFunctionQueryFields mkRootFieldName functionName functionInfo targetTableName
-  logicalModelRootFields <-
-    buildLogicalModelFields sourceInfo logicalModels
+  nativeQueryRootFields <-
+    buildNativeQueryFields sourceInfo nativeQueries
 
   (tableQueryFields, tableSubscriptionFields, apolloFedTableParsers) <-
     unzip3 . catMaybes
@@ -700,8 +700,8 @@ buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs
       tableSubscriptionRootFields = fmap mkRF $ concat tableSubscriptionFields
 
   pure
-    ( tableQueryRootFields <> functionSelectExpParsers <> logicalModelRootFields,
-      tableSubscriptionRootFields <> functionSelectExpParsers <> logicalModelRootFields,
+    ( tableQueryRootFields <> functionSelectExpParsers <> nativeQueryRootFields,
+      tableSubscriptionRootFields <> functionSelectExpParsers <> nativeQueryRootFields,
       catMaybes apolloFedTableParsers
     )
   where
@@ -714,25 +714,25 @@ buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs
 runMaybeTmempty :: (Monad m, Monoid a) => MaybeT m a -> m a
 runMaybeTmempty = (`onNothingM` (pure mempty)) . runMaybeT
 
-buildLogicalModelFields ::
+buildNativeQueryFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   SourceInfo b ->
-  LogicalModelCache b ->
+  NativeQueryCache b ->
   SchemaT r m [P.FieldParser n (QueryRootField UnpreparedValue)]
-buildLogicalModelFields sourceInfo logicalModels = runMaybeTmempty $ do
+buildNativeQueryFields sourceInfo nativeQueries = runMaybeTmempty $ do
   roleName <- retrieve scRole
 
-  map mkRF . catMaybes <$> for (Map.elems logicalModels) \logicalModel -> do
-    -- only include this logical model in the schema
+  map mkRF . catMaybes <$> for (Map.elems nativeQueries) \nativeQuery -> do
+    -- only include this native query in the schema
     -- if the current role is admin, or we have a select permission
     -- for this role (this is the broad strokes check. later, we'll filter
     -- more granularly on columns and then rows)
     guard $
       roleName == adminRoleName
-        || roleName `Map.member` _crtiPermissions (_lmiReturns logicalModel)
+        || roleName `Map.member` _crtiPermissions (_nqiReturns nativeQuery)
 
-    lift (buildLogicalModelRootFields logicalModel)
+    lift (buildNativeQueryRootFields nativeQuery)
   where
     mkRF ::
       FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)) ->

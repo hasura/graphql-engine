@@ -418,8 +418,8 @@ validateAllowedRootFields sourceName tableName roleName SelPerm {..} = do
           "The \"select_aggregate\" root field can only be enabled in the query_root_fields or "
             <> " the subscription_root_fields when \"allow_aggregations\" is set to true"
 
--- | Given the logical model's definition and the permissions as defined in the
--- logical model's metadata, try to construct the @SELECT@ permission
+-- | Given the native query's definition and the permissions as defined in the
+-- native query's metadata, try to construct the @SELECT@ permission
 -- definition.
 buildCustomReturnTypeSelPermInfo ::
   forall b m.
@@ -473,7 +473,7 @@ buildCustomReturnTypeSelPermInfo source customReturnTypeName fieldInfoMap sp = w
       spiCols :: HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))
       spiCols = HM.fromList (map (,Nothing) columns)
 
-      -- Logical models don't have computed fields.
+      -- Native queries don't have computed fields.
       spiComputedFields :: HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
       spiComputedFields = mempty
 
@@ -485,7 +485,7 @@ buildCustomReturnTypeSelPermInfo source customReturnTypeName fieldInfoMap sp = w
       spiAllowedSubscriptionRootFields :: AllowedRootFields SubscriptionRootFieldType
       spiAllowedSubscriptionRootFields = spAllowedSubscriptionRootFields sp
 
-      -- We don't currently allow for aggregations over logical models.
+      -- We don't currently allow for aggregations over native queries.
       spiAllowAgg :: Bool
       spiAllowAgg = spAllowAggregations sp
 

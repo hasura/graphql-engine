@@ -65,10 +65,10 @@ data CacheDynamicConfig = CacheDynamicConfig
     _cdcDefaultNamingConvention :: NamingCase,
     _cdcMetadataDefaults :: MetadataDefaults,
     _cdcApolloFederationStatus :: ApolloFederationStatus,
-    -- | Logical models can be enabled or disabled on the fly via a feature
+    -- | Native queries can be enabled or disabled on the fly via a feature
     -- flag: we want to be able to properly rebuild the relevant parts of the
     -- schema cache when this value changes, hence the need for it to be part of
     -- the dynamic config.
-    _cdcAreLogicalModelsEnabled :: Bool
+    _cdcAreNativeQueriesEnabled :: Bool
   }
   deriving (Eq)

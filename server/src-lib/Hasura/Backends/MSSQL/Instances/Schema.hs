@@ -35,8 +35,8 @@ import Hasura.GraphQL.Schema.Parser
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Update qualified as SU
-import Hasura.LogicalModel.Schema qualified as LogicalModels
 import Hasura.Name qualified as Name
+import Hasura.NativeQuery.Schema qualified as NativeQueries
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Select qualified as IR
@@ -60,7 +60,7 @@ instance BackendSchema 'MSSQL where
   buildTableInsertMutationFields = GSB.buildTableInsertMutationFields backendInsertParser
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
   buildTableUpdateMutationFields = GSB.buildSingleBatchTableUpdateMutationFields id
-  buildLogicalModelRootFields = LogicalModels.defaultBuildLogicalModelRootFields
+  buildNativeQueryRootFields = NativeQueries.defaultBuildNativeQueryRootFields
 
   buildFunctionQueryFields _ _ _ _ = pure []
   buildFunctionRelayQueryFields _ _ _ _ _ = pure []

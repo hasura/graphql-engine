@@ -18,7 +18,7 @@ import Database.PG.Query.Transaction qualified as Query
 import Database.PostgreSQL.LibPQ qualified as PQ
 import Hasura.Backends.Postgres.DDL qualified as Postgres
 import Hasura.Backends.Postgres.Execute.Types (runPgSourceReadTx)
-import Hasura.Backends.Postgres.Instances.LogicalModels as Postgres (validateLogicalModel)
+import Hasura.Backends.Postgres.Instances.NativeQueries as Postgres (validateNativeQuery)
 import Hasura.Backends.Postgres.SQL.Types (QualifiedObject (..), QualifiedTable)
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
@@ -267,7 +267,7 @@ instance
   postDropSourceHook = Postgres.postDropSourceHook
   validateRelationship = validateRel @pgKind
   buildComputedFieldBooleanExp = Postgres.buildComputedFieldBooleanExp
-  validateLogicalModel = Postgres.validateLogicalModel (pgTypeOidMapping @pgKind)
+  validateNativeQuery = Postgres.validateNativeQuery (pgTypeOidMapping @pgKind)
   supportsBeingRemoteRelationshipTarget _ = True
 
   listAllTables sourceName = do

@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Access to the SQL
-module Test.Databases.BigQuery.LogicalModelsSpec (spec) where
+module Test.Databases.BigQuery.NativeQueriesSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
@@ -24,12 +24,12 @@ import Test.Hspec (SpecWith, describe, it)
 
 -- ** Preamble
 
-featureFlagForLogicalModels :: String
-featureFlagForLogicalModels = "HASURA_FF_LOGICAL_MODEL_INTERFACE"
+featureFlagForNativeQueries :: String
+featureFlagForNativeQueries = "HASURA_FF_NATIVE_QUERY_INTERFACE"
 
 spec :: SpecWith GlobalTestEnvironment
 spec =
-  Fixture.hgeWithEnv [(featureFlagForLogicalModels, "True")] $
+  Fixture.hgeWithEnv [(featureFlagForNativeQueries, "True")] $
     Fixture.runClean -- re-run fixture setup on every test
       ( NE.fromList
           [ (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
@@ -75,16 +75,16 @@ tests = do
   let query :: Text
       query = "SELECT * FROM UNNEST([STRUCT('hello' as one, 'world' as two), ('welcome', 'friend')])"
 
-      helloWorldLogicalModel :: Schema.LogicalModel
-      helloWorldLogicalModel =
-        (Schema.logicalModel "hello_world_function" query "hello_world_function")
+      helloWorldNativeQuery :: Schema.NativeQuery
+      helloWorldNativeQuery =
+        (Schema.nativeQuery "hello_world_function" query "hello_world_function")
 
       helloWorldReturnType :: Schema.CustomType
       helloWorldReturnType =
         (Schema.customType "hello_world_function")
           { Schema.customTypeColumns =
-              [ Schema.logicalModelColumn "one" Schema.TStr,
-                Schema.logicalModelColumn "two" Schema.TStr
+              [ Schema.nativeQueryColumn "one" Schema.TStr,
+                Schema.nativeQueryColumn "two" Schema.TStr
               ]
           }
 
@@ -92,14 +92,14 @@ tests = do
       articleWithExcerptReturnType =
         (Schema.customType "article_with_excerpt")
           { Schema.customTypeColumns =
-              [ Schema.logicalModelColumn "id" Schema.TInt,
-                Schema.logicalModelColumn "title" Schema.TStr,
-                Schema.logicalModelColumn "excerpt" Schema.TStr,
-                Schema.logicalModelColumn "date" Schema.TUTCTime
+              [ Schema.nativeQueryColumn "id" Schema.TInt,
+                Schema.nativeQueryColumn "title" Schema.TStr,
+                Schema.nativeQueryColumn "excerpt" Schema.TStr,
+                Schema.nativeQueryColumn "date" Schema.TUTCTime
               ]
           }
 
-  describe "Testing Logical Models" $ do
+  describe "Testing Native Queries" $ do
     it "Descriptions and nullability appear in the schema" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
@@ -110,27 +110,27 @@ tests = do
           descriptionsAndNullableReturnType =
             (Schema.customType "divided_stuff")
               { Schema.customTypeColumns =
-                  [ (Schema.logicalModelColumn "divided" Schema.TInt)
-                      { Schema.logicalModelColumnDescription = Just "A divided thing"
+                  [ (Schema.nativeQueryColumn "divided" Schema.TInt)
+                      { Schema.nativeQueryColumnDescription = Just "A divided thing"
                       },
-                    (Schema.logicalModelColumn "something_nullable" Schema.TInt)
-                      { Schema.logicalModelColumnDescription = Just "Something nullable",
-                        Schema.logicalModelColumnNullable = True
+                    (Schema.nativeQueryColumn "something_nullable" Schema.TInt)
+                      { Schema.nativeQueryColumnDescription = Just "Something nullable",
+                        Schema.nativeQueryColumnNullable = True
                       }
                   ],
                 Schema.customTypeDescription = Just "Return type description"
               }
 
-          descriptionsAndNullableLogicalModel :: Schema.LogicalModel
-          descriptionsAndNullableLogicalModel =
-            (Schema.logicalModel "divided_stuff" nullableQuery "divided_stuff")
-              { Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "unused" Schema.TInt
+          descriptionsAndNullableNativeQuery :: Schema.NativeQuery
+          descriptionsAndNullableNativeQuery =
+            (Schema.nativeQuery "divided_stuff" nullableQuery "divided_stuff")
+              { Schema.nativeQueryArguments =
+                  [ Schema.nativeQueryColumn "unused" Schema.TInt
                   ]
               }
 
       Schema.trackCustomType sourceName descriptionsAndNullableReturnType testEnvironment
-      Schema.trackLogicalModel sourceName descriptionsAndNullableLogicalModel testEnvironment
+      Schema.trackNativeQuery sourceName descriptionsAndNullableNativeQuery testEnvironment
 
       let queryTypesIntrospection :: Value
           queryTypesIntrospection =
@@ -197,7 +197,7 @@ tests = do
           source = BackendType.backendSourceName backendTypeMetadata
 
       Schema.trackCustomType source helloWorldReturnType testEnvironment
-      Schema.trackLogicalModel source helloWorldLogicalModel testEnvironment
+      Schema.trackNativeQuery source helloWorldNativeQuery testEnvironment
 
       let expected =
             [yaml|
@@ -230,7 +230,7 @@ tests = do
 
       Schema.trackCustomType source helloWorldReturnType testEnvironment
 
-      Schema.trackLogicalModel source helloWorldLogicalModel testEnvironment
+      Schema.trackNativeQuery source helloWorldNativeQuery testEnvironment
 
       let expected =
             [yaml|
@@ -262,13 +262,13 @@ tests = do
           queryWithDuplicates :: Text
           queryWithDuplicates = "SELECT * FROM UNNEST([STRUCT('hello' as one, 'world' as two), ('hello', 'friend')])"
 
-          helloWorldLogicalModelWithDuplicates :: Schema.LogicalModel
-          helloWorldLogicalModelWithDuplicates =
-            (Schema.logicalModel "hello_world_function" queryWithDuplicates "hello_world_function")
+          helloWorldNativeQueryWithDuplicates :: Schema.NativeQuery
+          helloWorldNativeQueryWithDuplicates =
+            (Schema.nativeQuery "hello_world_function" queryWithDuplicates "hello_world_function")
 
       Schema.trackCustomType source helloWorldReturnType testEnvironment
 
-      Schema.trackLogicalModel source helloWorldLogicalModelWithDuplicates testEnvironment
+      Schema.trackNativeQuery source helloWorldNativeQueryWithDuplicates testEnvironment
 
       let expected =
             [yaml|
@@ -302,7 +302,7 @@ tests = do
 
       Schema.trackCustomType sourceName helloWorldReturnType testEnvironment
 
-      Schema.trackLogicalModel sourceName helloWorldLogicalModel testEnvironment
+      Schema.trackNativeQuery sourceName helloWorldNativeQuery testEnvironment
 
       let expected =
             [yaml|
@@ -331,17 +331,17 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-          helloWorldLogicalModelWithDummyArgument :: Schema.LogicalModel
-          helloWorldLogicalModelWithDummyArgument =
-            (Schema.logicalModel "hello_world_function_with_dummy" query "hello_world_function")
-              { Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "dummy" Schema.TStr
+          helloWorldNativeQueryWithDummyArgument :: Schema.NativeQuery
+          helloWorldNativeQueryWithDummyArgument =
+            (Schema.nativeQuery "hello_world_function_with_dummy" query "hello_world_function")
+              { Schema.nativeQueryArguments =
+                  [ Schema.nativeQueryColumn "dummy" Schema.TStr
                   ]
               }
 
       Schema.trackCustomType source helloWorldReturnType testEnvironment
 
-      Schema.trackLogicalModel source helloWorldLogicalModelWithDummyArgument testEnvironment
+      Schema.trackNativeQuery source helloWorldNativeQueryWithDummyArgument testEnvironment
 
       let expected =
             [yaml|
@@ -372,13 +372,13 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-          helloCommentLogicalModel :: Schema.LogicalModel
-          helloCommentLogicalModel =
-            (Schema.logicalModel "hello_comment_function" spicyQuery "hello_world_function")
+          helloCommentNativeQuery :: Schema.NativeQuery
+          helloCommentNativeQuery =
+            (Schema.nativeQuery "hello_comment_function" spicyQuery "hello_world_function")
 
       Schema.trackCustomType source helloWorldReturnType testEnvironment
 
-      Schema.trackLogicalModel source helloCommentLogicalModel testEnvironment
+      Schema.trackNativeQuery source helloCommentNativeQuery testEnvironment
 
       let expected =
             [yaml|
@@ -411,13 +411,13 @@ tests = do
           backendType = BackendType.backendTypeString backendTypeMetadata
           createPermRequestType = backendType <> "_create_custom_return_type_select_permission"
 
-          helloWorldPermLogicalModel :: Schema.LogicalModel
-          helloWorldPermLogicalModel =
-            (Schema.logicalModel "hello_world_perms" query "hello_world_function")
+          helloWorldPermNativeQuery :: Schema.NativeQuery
+          helloWorldPermNativeQuery =
+            (Schema.nativeQuery "hello_world_perms" query "hello_world_function")
 
       Schema.trackCustomType source helloWorldReturnType testEnvironment
 
-      Schema.trackLogicalModel source helloWorldPermLogicalModel testEnvironment
+      Schema.trackNativeQuery source helloWorldPermNativeQuery testEnvironment
 
       shouldReturnYaml
         testEnvironment
@@ -470,13 +470,13 @@ tests = do
           backendType = BackendType.backendTypeString backendTypeMetadata
           createPermRequestType = backendType <> "_create_custom_return_type_select_permission"
 
-          helloWorldPermLogicalModel :: Schema.LogicalModel
-          helloWorldPermLogicalModel =
-            (Schema.logicalModel "hello_world_perms" query "hello_world_function")
+          helloWorldPermNativeQuery :: Schema.NativeQuery
+          helloWorldPermNativeQuery =
+            (Schema.nativeQuery "hello_world_perms" query "hello_world_function")
 
       Schema.trackCustomType source helloWorldReturnType testEnvironment
 
-      Schema.trackLogicalModel source helloWorldPermLogicalModel testEnvironment
+      Schema.trackNativeQuery source helloWorldPermNativeQuery testEnvironment
 
       shouldReturnYaml
         testEnvironment
@@ -530,13 +530,13 @@ tests = do
           backendType = BackendType.backendTypeString backendTypeMetadata
           createPermRequestType = backendType <> "_create_custom_return_type_select_permission"
 
-          helloWorldPermLogicalModel :: Schema.LogicalModel
-          helloWorldPermLogicalModel =
-            (Schema.logicalModel "hello_world_perms" query "hello_world_function")
+          helloWorldPermNativeQuery :: Schema.NativeQuery
+          helloWorldPermNativeQuery =
+            (Schema.nativeQuery "hello_world_perms" query "hello_world_function")
 
       Schema.trackCustomType source helloWorldReturnType testEnvironment
 
-      Schema.trackLogicalModel source helloWorldPermLogicalModel testEnvironment
+      Schema.trackNativeQuery source helloWorldPermNativeQuery testEnvironment
 
       shouldReturnYaml
         testEnvironment
@@ -600,7 +600,7 @@ tests = do
             from #{unSchemaName schemaName}.article
         |]
 
-  describe "Testing Logical Models" $ do
+  describe "Testing Native Queries" $ do
     it "Runs a simple query that takes one parameter and uses it multiple times" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
@@ -608,17 +608,17 @@ tests = do
           schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
 
-          articleWithExcerptLogicalModel :: Schema.LogicalModel
-          articleWithExcerptLogicalModel =
-            (Schema.logicalModel "article_with_excerpt" (articleQuery schemaName) "article_with_excerpt")
-              { Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "length" Schema.TInt
+          articleWithExcerptNativeQuery :: Schema.NativeQuery
+          articleWithExcerptNativeQuery =
+            (Schema.nativeQuery "article_with_excerpt" (articleQuery schemaName) "article_with_excerpt")
+              { Schema.nativeQueryArguments =
+                  [ Schema.nativeQueryColumn "length" Schema.TInt
                   ]
               }
 
       Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
 
-      Schema.trackLogicalModel source articleWithExcerptLogicalModel testEnvironment
+      Schema.trackNativeQuery source articleWithExcerptNativeQuery testEnvironment
 
       let actual :: IO Value
           actual =
@@ -654,24 +654,24 @@ tests = do
           schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
 
-          mkArticleWithExcerptLogicalModel :: Text -> Schema.LogicalModel
-          mkArticleWithExcerptLogicalModel name =
-            (Schema.logicalModel name (articleQuery schemaName) "article_with_excerpt")
-              { Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "length" Schema.TInt
+          mkArticleWithExcerptNativeQuery :: Text -> Schema.NativeQuery
+          mkArticleWithExcerptNativeQuery name =
+            (Schema.nativeQuery name (articleQuery schemaName) "article_with_excerpt")
+              { Schema.nativeQueryArguments =
+                  [ Schema.nativeQueryColumn "length" Schema.TInt
                   ]
               }
 
       Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
 
-      Schema.trackLogicalModel
+      Schema.trackNativeQuery
         source
-        (mkArticleWithExcerptLogicalModel "article_with_excerpt_1")
+        (mkArticleWithExcerptNativeQuery "article_with_excerpt_1")
         testEnvironment
 
-      Schema.trackLogicalModel
+      Schema.trackNativeQuery
         source
-        (mkArticleWithExcerptLogicalModel "article_with_excerpt_2")
+        (mkArticleWithExcerptNativeQuery "article_with_excerpt_2")
         testEnvironment
 
       let actual :: IO Value
@@ -707,17 +707,17 @@ tests = do
           schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
 
-          articleWithExcerptLogicalModel :: Schema.LogicalModel
-          articleWithExcerptLogicalModel =
-            (Schema.logicalModel "article_with_excerpt" (articleQuery schemaName) "article_with_excerpt")
-              { Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "length" Schema.TInt
+          articleWithExcerptNativeQuery :: Schema.NativeQuery
+          articleWithExcerptNativeQuery =
+            (Schema.nativeQuery "article_with_excerpt" (articleQuery schemaName) "article_with_excerpt")
+              { Schema.nativeQueryArguments =
+                  [ Schema.nativeQueryColumn "length" Schema.TInt
                   ]
               }
 
       Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
 
-      Schema.trackLogicalModel source articleWithExcerptLogicalModel testEnvironment
+      Schema.trackNativeQuery source articleWithExcerptNativeQuery testEnvironment
 
       let actual :: IO Value
           actual =
@@ -752,17 +752,17 @@ tests = do
           schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
 
-          articleWithExcerptLogicalModel :: Schema.LogicalModel
-          articleWithExcerptLogicalModel =
-            (Schema.logicalModel "article_with_excerpt" (articleQuery schemaName) "article_with_excerpt")
-              { Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "length" Schema.TInt
+          articleWithExcerptNativeQuery :: Schema.NativeQuery
+          articleWithExcerptNativeQuery =
+            (Schema.nativeQuery "article_with_excerpt" (articleQuery schemaName) "article_with_excerpt")
+              { Schema.nativeQueryArguments =
+                  [ Schema.nativeQueryColumn "length" Schema.TInt
                   ]
               }
 
       Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
 
-      Schema.trackLogicalModel source articleWithExcerptLogicalModel testEnvironment
+      Schema.trackNativeQuery source articleWithExcerptNativeQuery testEnvironment
 
       let variables =
             [yaml|

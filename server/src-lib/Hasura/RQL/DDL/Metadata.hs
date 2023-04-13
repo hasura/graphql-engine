@@ -43,8 +43,8 @@ import Hasura.CustomReturnType.API
 import Hasura.EncJSON
 import Hasura.Function.API
 import Hasura.Logging qualified as HL
-import Hasura.LogicalModel.API
 import Hasura.Metadata.Class
+import Hasura.NativeQuery.API
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ApiLimit
@@ -704,7 +704,7 @@ purgeMetadataObj = \case
       SMOFunction qf -> dropFunctionInMetadata @b source qf
       SMOFunctionPermission qf rn -> dropFunctionPermissionInMetadata @b source qf rn
       SMOCustomReturnType crt -> dropCustomReturnTypeInMetadata @b source crt
-      SMOLogicalModel lm -> dropLogicalModelInMetadata @b source lm
+      SMONativeQuery lm -> dropNativeQueryInMetadata @b source lm
       SMOCustomReturnTypeObj customReturnTypeName customReturnTypeMetadataObjId ->
         MetadataModifier $
           customReturnTypeMetadataSetter @b source customReturnTypeName

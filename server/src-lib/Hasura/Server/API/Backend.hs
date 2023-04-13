@@ -22,7 +22,7 @@ module Hasura.Server.API.Backend
     tablePermissionsCommands,
     computedFieldCommands,
     connectionTemplateCommands,
-    logicalModelsCommands,
+    nativeQueriesCommands,
     customReturnTypesCommands,
   )
 where
@@ -169,11 +169,11 @@ connectionTemplateCommands =
   [ commandParser "test_connection_template" $ RMTestConnectionTemplate . mkAnyBackend @b
   ]
 
-logicalModelsCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-logicalModelsCommands =
-  [ commandParser "get_logical_model" $ RMGetLogicalModel . mkAnyBackend @b,
-    commandParser "track_logical_model" $ RMTrackLogicalModel . mkAnyBackend @b,
-    commandParser "untrack_logical_model" $ RMUntrackLogicalModel . mkAnyBackend @b
+nativeQueriesCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+nativeQueriesCommands =
+  [ commandParser "get_native_query" $ RMGetNativeQuery . mkAnyBackend @b,
+    commandParser "track_native_query" $ RMTrackNativeQuery . mkAnyBackend @b,
+    commandParser "untrack_native_query" $ RMUntrackNativeQuery . mkAnyBackend @b
   ]
 
 customReturnTypesCommands :: forall (b :: BackendType). Backend b => [CommandParser b]

@@ -26,4 +26,4 @@ instance BackendMetadata 'BigQuery where
     throw400 UnexpectedPayload "Computed fields are not supported in boolean expressions"
   supportsBeingRemoteRelationshipTarget _ = True
   listAllTables = BigQuery.listAllTables
-  validateLogicalModel _ _ _ _ = pure ()
+  validateNativeQuery _ _ _ _ = pure ()

@@ -7,7 +7,7 @@ where
 
 import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Hasura.CustomReturnType.Types (CustomReturnTypeName)
-import Hasura.LogicalModel.Types (NullableScalarType (..))
+import Hasura.NativeQuery.Types (NullableScalarType (..))
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.SQL.Backend (BackendType)

@@ -161,7 +161,7 @@ import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Function.Cache
 import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Options (StringifyNumbers)
-import Hasura.LogicalModel.IR (LogicalModel)
+import Hasura.NativeQuery.IR (NativeQuery)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy
@@ -387,7 +387,7 @@ data SelectFromG (b :: BackendType) v
       (FunctionArgsExp b v)
       -- a definition list
       (Maybe [(Column b, ScalarType b)])
-  | FromLogicalModel (LogicalModel b v)
+  | FromNativeQuery (NativeQuery b v)
   deriving stock (Generic)
 
 deriving stock instance (Backend b) => Functor (SelectFromG b)
@@ -400,7 +400,7 @@ deriving stock instance
   ( Backend b,
     Eq v,
     Eq (FunctionArgumentExp b v),
-    Eq (LogicalModel b v)
+    Eq (NativeQuery b v)
   ) =>
   Eq (SelectFromG b v)
 
@@ -408,7 +408,7 @@ deriving stock instance
   ( Backend b,
     Show v,
     Show (FunctionArgumentExp b v),
-    Show (LogicalModel b v)
+    Show (NativeQuery b v)
   ) =>
   Show (SelectFromG b v)
 
@@ -416,7 +416,7 @@ instance
   ( Backend b,
     Hashable v,
     Hashable (FunctionArgumentExp b v),
-    Hashable (LogicalModel b v)
+    Hashable (NativeQuery b v)
   ) =>
   Hashable (SelectFromG b v)
 

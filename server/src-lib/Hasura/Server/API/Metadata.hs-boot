@@ -5,7 +5,7 @@ where
 
 import Hasura.CustomReturnType.API qualified as CustomReturnType
 import Hasura.Function.API qualified as Functions
-import Hasura.LogicalModel.API qualified as LogicalModels
+import Hasura.NativeQuery.API qualified as NativeQueries
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.ConnectionTemplate
@@ -89,10 +89,10 @@ data RQLMetadataV1
   | RMDropComputedField !(AnyBackend DropComputedField)
   | -- Connection template
     RMTestConnectionTemplate !(AnyBackend TestConnectionTemplate)
-  | -- Logical Models
-    RMGetLogicalModel !(AnyBackend LogicalModels.GetLogicalModel)
-  | RMTrackLogicalModel !(AnyBackend LogicalModels.TrackLogicalModel)
-  | RMUntrackLogicalModel !(AnyBackend LogicalModels.UntrackLogicalModel)
+  | -- Native Queries
+    RMGetNativeQuery !(AnyBackend NativeQueries.GetNativeQuery)
+  | RMTrackNativeQuery !(AnyBackend NativeQueries.TrackNativeQuery)
+  | RMUntrackNativeQuery !(AnyBackend NativeQueries.UntrackNativeQuery)
   | -- Custom types
     RMGetCustomReturnType !(AnyBackend CustomReturnType.GetCustomReturnType)
   | RMTrackCustomReturnType !(AnyBackend CustomReturnType.TrackCustomReturnType)

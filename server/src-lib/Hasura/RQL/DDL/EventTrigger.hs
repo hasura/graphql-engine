@@ -674,7 +674,7 @@ toggleEventTriggerCleanupAction conf cleanupSwitch = do
       case tlcs of
         TriggerAllSource -> do
           ifor_ (scSources schemaCache) $ \sourceName backendSourceInfo -> do
-            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo _ tableCache _ _logicalModelCache _customReturnTypeCache _ _ _ :: SourceInfo b) -> do
+            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo _ tableCache _ _nativeQueryCache _customReturnTypeCache _ _ _ :: SourceInfo b) -> do
               traverseTableHelper tableCache cleanupSwitch sourceName
         TriggerSource sourceNameLst -> do
           forM_ sourceNameLst $ \sourceName -> do
@@ -682,7 +682,7 @@ toggleEventTriggerCleanupAction conf cleanupSwitch = do
               HM.lookup sourceName (scSources schemaCache)
                 `onNothing` throw400 NotExists ("source with name " <> sourceNameToText sourceName <> " does not exists")
 
-            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo _ tableCache _ _logicalModelCache _customReturnTypeCache _ _ _ :: SourceInfo b) -> do
+            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo _ tableCache _ _nativeQueryCache _customReturnTypeCache _ _ _ :: SourceInfo b) -> do
               traverseTableHelper tableCache cleanupSwitch sourceName
     TriggerQualifier qualifierLst -> do
       forM_ qualifierLst $ \qualifier -> do

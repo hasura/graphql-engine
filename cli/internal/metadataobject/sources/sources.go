@@ -31,7 +31,7 @@ type SourceWithNormalFields struct {
 	Customization     yaml.Node `yaml:"customization,omitempty"`
 	HealthCheck       yaml.Node `yaml:"health_check,omitempty"`
 	CustomReturnTypes yaml.Node `yaml:"custom_return_types,omitempty"`
-	LogicalModels     yaml.Node `yaml:"logical_models,omitempty"`
+	NativeQueries     yaml.Node `yaml:"native_queries,omitempty"`
 }
 type Source struct {
 	SourceWithNormalFields `yaml:",inline"`

@@ -32,8 +32,8 @@ import Data.Text.Lazy.Builder qualified as LT
 import Data.Tuple
 import Data.Vector qualified as V
 import Hasura.Backends.BigQuery.Types
-import Hasura.LogicalModel.Metadata (InterpolatedItem (..), InterpolatedQuery (..))
-import Hasura.LogicalModel.Types (LogicalModelName (..))
+import Hasura.NativeQuery.Metadata (InterpolatedItem (..), InterpolatedQuery (..))
+import Hasura.NativeQuery.Types (NativeQueryName (..))
 import Hasura.Prelude hiding (second)
 
 --------------------------------------------------------------------------------
@@ -559,8 +559,8 @@ fromFrom =
             )
             selectFromFunction
         )
-    FromLogicalModel (LogicalModelName logicalModelName) ->
-      fromNameText (T.toTxt logicalModelName)
+    FromNativeQuery (NativeQueryName nativeQueryName) ->
+      fromNameText (T.toTxt nativeQueryName)
 
 fromTableName :: TableName -> Printer
 fromTableName TableName {tableName, tableNameSchema} =

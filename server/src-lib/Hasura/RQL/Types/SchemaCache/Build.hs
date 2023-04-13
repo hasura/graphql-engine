@@ -341,7 +341,7 @@ getInconsistentQueryCollections rs qcs lqToMetadataObj restEndpoints allowLst =
         lqs = _cdQueries . _ccDefinition $ cc
 
     inAllowList :: [NormalizedQuery] -> (ListedQuery) -> Bool
-    inAllowList logicalModelList (ListedQuery {..}) = any (\lmCode -> unNormalizedQuery lmCode == (unGQLQuery . getGQLQuery) _lqQuery) logicalModelList
+    inAllowList nativeQueryList (ListedQuery {..}) = any (\nqCode -> unNormalizedQuery nqCode == (unGQLQuery . getGQLQuery) _lqQuery) nativeQueryList
 
     inRESTEndpoints :: EndpointTrie GQLQueryWithText -> (ListedQuery) -> [Text]
     inRESTEndpoints edTrie lq = map fst $ filter (queryIsFaulty) allQueries

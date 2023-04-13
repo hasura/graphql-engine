@@ -1,4 +1,4 @@
-module Test.API.Metadata.LogicalModels.ValidationSpec where
+module Test.API.Metadata.NativeQueries.ValidationSpec where
 
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
@@ -14,12 +14,12 @@ import Harness.Yaml (shouldAtLeastBe, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
-featureFlagForLogicalModels :: String
-featureFlagForLogicalModels = "HASURA_FF_LOGICAL_MODEL_INTERFACE"
+featureFlagForNativeQueries :: String
+featureFlagForNativeQueries = "HASURA_FF_NATIVE_QUERY_INTERFACE"
 
 spec :: SpecWith GlobalTestEnvironment
 spec = do
-  Fixture.hgeWithEnv [(featureFlagForLogicalModels, "True")] do
+  Fixture.hgeWithEnv [(featureFlagForNativeQueries, "True")] do
     Fixture.runClean
       ( NE.fromList
           [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
@@ -64,8 +64,8 @@ tests = do
       conflictingReturnType =
         (Schema.customType "conflicting")
           { Schema.customTypeColumns =
-              [ Schema.logicalModelColumn "thing" Schema.TInt,
-                Schema.logicalModelColumn "date" Schema.TUTCTime
+              [ Schema.nativeQueryColumn "thing" Schema.TInt,
+                Schema.nativeQueryColumn "date" Schema.TUTCTime
               ]
           }
 
@@ -73,27 +73,27 @@ tests = do
       dividedReturnType =
         (Schema.customType "divided_stuff")
           { Schema.customTypeColumns =
-              [ Schema.logicalModelColumn "divided" Schema.TInt
+              [ Schema.nativeQueryColumn "divided" Schema.TInt
               ]
           }
 
-  describe "Validation fails on untrack a logical model" do
-    it "when a logical model does not exist" $
+  describe "Validation fails on untrack a native query" do
+    it "when a native query does not exist" $
       \testEnvironment -> do
         let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
             sourceName = BackendType.backendSourceName backendTypeMetadata
 
-            nonExistentLogicalModel :: Schema.LogicalModel
-            nonExistentLogicalModel = Schema.logicalModel "some_logical_model" "" ""
+            nonExistentNativeQuery :: Schema.NativeQuery
+            nonExistentNativeQuery = Schema.nativeQuery "some_native_query" "" ""
 
-            expectedError = "Logical model \"some_logical_model\" not found in source \"" <> sourceName <> "\"."
+            expectedError = "Native query \"some_native_query\" not found in source \"" <> sourceName <> "\"."
 
         shouldReturnYaml
           testEnvironment
           ( GraphqlEngine.postMetadataWithStatus
               400
               testEnvironment
-              (Schema.untrackLogicalModelCommand sourceName backendTypeMetadata nonExistentLogicalModel)
+              (Schema.untrackNativeQueryCommand sourceName backendTypeMetadata nonExistentNativeQuery)
           )
           [yaml|
           code: not-found
@@ -101,7 +101,7 @@ tests = do
           path: "$.args"
         |]
 
-  describe "Validation fails on track a logical model" do
+  describe "Validation fails on track a native query" do
     it "when the query has a syntax error" $
       \testEnvironment -> do
         let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -117,12 +117,12 @@ tests = do
                   path: "$.args"
               |]
 
-            syntaxErrorLogicalModel :: Schema.LogicalModel
-            syntaxErrorLogicalModel =
-              (Schema.logicalModel "divided_stuff" spicyQuery "divided_stuff")
-                { Schema.logicalModelArguments =
-                    [ Schema.logicalModelColumn "denominator" Schema.TInt,
-                      Schema.logicalModelColumn "target_date" Schema.TUTCTime
+            syntaxErrorNativeQuery :: Schema.NativeQuery
+            syntaxErrorNativeQuery =
+              (Schema.nativeQuery "divided_stuff" spicyQuery "divided_stuff")
+                { Schema.nativeQueryArguments =
+                    [ Schema.nativeQueryColumn "denominator" Schema.TInt,
+                      Schema.nativeQueryColumn "target_date" Schema.TUTCTime
                     ]
                 }
 
@@ -132,7 +132,7 @@ tests = do
           GraphqlEngine.postMetadataWithStatus
             400
             testEnvironment
-            (Schema.trackLogicalModelCommand sourceName backendTypeMetadata syntaxErrorLogicalModel)
+            (Schema.trackNativeQueryCommand sourceName backendTypeMetadata syntaxErrorNativeQuery)
 
         actual `shouldAtLeastBe` expected
 
@@ -144,12 +144,12 @@ tests = do
         let spicyQuery :: Text
             spicyQuery = "SELECT thing / {{denominator}} AS divided FROM does_not_exist WHERE date = {{target_date}}"
 
-            brokenLogicalModel :: Schema.LogicalModel
-            brokenLogicalModel =
-              (Schema.logicalModel "divided_stuff" spicyQuery "divided_stuff")
-                { Schema.logicalModelArguments =
-                    [ Schema.logicalModelColumn "denominator" Schema.TInt,
-                      Schema.logicalModelColumn "target_date" Schema.TUTCTime
+            brokenNativeQuery :: Schema.NativeQuery
+            brokenNativeQuery =
+              (Schema.nativeQuery "divided_stuff" spicyQuery "divided_stuff")
+                { Schema.nativeQueryArguments =
+                    [ Schema.nativeQueryColumn "denominator" Schema.TInt,
+                      Schema.nativeQueryColumn "target_date" Schema.TUTCTime
                     ]
                 }
 
@@ -169,11 +169,11 @@ tests = do
           GraphqlEngine.postMetadataWithStatus
             400
             testEnvironment
-            (Schema.trackLogicalModelCommand sourceName backendTypeMetadata brokenLogicalModel)
+            (Schema.trackNativeQueryCommand sourceName backendTypeMetadata brokenNativeQuery)
 
         actual `shouldAtLeastBe` expected
 
-    it "when the logical model has the same name as an already tracked table" $
+    it "when the native query has the same name as an already tracked table" $
       \testEnv -> do
         let spicyQuery :: Text
             spicyQuery = "select * from stuff"
@@ -182,16 +182,16 @@ tests = do
             sourceName = BackendType.backendSourceName backendTypeMetadata
             schemaName = Schema.getSchemaName testEnv
 
-            conflictingLogicalModel :: Schema.LogicalModel
-            conflictingLogicalModel =
-              (Schema.logicalModel (Schema.unSchemaName schemaName <> "_stuff") spicyQuery "conflicting")
-                { Schema.logicalModelArguments =
-                    [ Schema.logicalModelColumn "denominator" Schema.TInt,
-                      Schema.logicalModelColumn "target_date" Schema.TUTCTime
+            conflictingNativeQuery :: Schema.NativeQuery
+            conflictingNativeQuery =
+              (Schema.nativeQuery (Schema.unSchemaName schemaName <> "_stuff") spicyQuery "conflicting")
+                { Schema.nativeQueryArguments =
+                    [ Schema.nativeQueryColumn "denominator" Schema.TInt,
+                      Schema.nativeQueryColumn "target_date" Schema.TUTCTime
                     ]
                 }
 
-            expectedError = "Encountered conflicting definitions in the selection set for 'subscription_root' for field 'hasura_stuff' defined in [table hasura.stuff in source " <> sourceName <> ", logical_model hasura_stuff in source " <> sourceName <> "]. Fields must not be defined more than once across all sources."
+            expectedError = "Encountered conflicting definitions in the selection set for 'subscription_root' for field 'hasura_stuff' defined in [table hasura.stuff in source " <> sourceName <> ", native_query hasura_stuff in source " <> sourceName <> "]. Fields must not be defined more than once across all sources."
 
         Schema.trackCustomType sourceName conflictingReturnType testEnv
 
@@ -200,7 +200,7 @@ tests = do
           ( GraphqlEngine.postMetadataWithStatus
               500
               testEnv
-              (Schema.trackLogicalModelCommand sourceName backendTypeMetadata conflictingLogicalModel)
+              (Schema.trackNativeQueryCommand sourceName backendTypeMetadata conflictingNativeQuery)
           )
           [yaml|
               code: unexpected
@@ -208,7 +208,7 @@ tests = do
               path: $.args
           |]
 
-    it "when the logical model has the same name as an already tracked logical model" $
+    it "when the native query has the same name as an already tracked native query" $
       \testEnv -> do
         let spicyQuery :: Text
             spicyQuery = "select * from stuff"
@@ -217,12 +217,12 @@ tests = do
             source = BackendType.backendSourceName backendTypeMetadata
             schemaName = Schema.getSchemaName testEnv
 
-            conflictingLogicalModel :: Schema.LogicalModel
-            conflictingLogicalModel =
-              (Schema.logicalModel (Schema.unSchemaName schemaName <> "_stuff_exist") spicyQuery "conflicting")
-                { Schema.logicalModelArguments =
-                    [ Schema.logicalModelColumn "denominator" Schema.TInt,
-                      Schema.logicalModelColumn "target_date" Schema.TUTCTime
+            conflictingNativeQuery :: Schema.NativeQuery
+            conflictingNativeQuery =
+              (Schema.nativeQuery (Schema.unSchemaName schemaName <> "_stuff_exist") spicyQuery "conflicting")
+                { Schema.nativeQueryArguments =
+                    [ Schema.nativeQueryColumn "denominator" Schema.TInt,
+                      Schema.nativeQueryColumn "target_date" Schema.TUTCTime
                     ]
                 }
 
@@ -232,7 +232,7 @@ tests = do
           testEnv
           ( GraphqlEngine.postMetadata
               testEnv
-              (Schema.trackLogicalModelCommand source backendTypeMetadata conflictingLogicalModel)
+              (Schema.trackNativeQueryCommand source backendTypeMetadata conflictingNativeQuery)
           )
           [yaml|
               message: success
@@ -243,11 +243,11 @@ tests = do
           ( GraphqlEngine.postMetadataWithStatus
               400
               testEnv
-              (Schema.trackLogicalModelCommand source backendTypeMetadata conflictingLogicalModel)
+              (Schema.trackNativeQueryCommand source backendTypeMetadata conflictingNativeQuery)
           )
           [yaml|
               code: already-tracked
-              error: Logical model 'hasura_stuff_exist' is already tracked.
+              error: Native query 'hasura_stuff_exist' is already tracked.
               path: $.args
           |]
 
@@ -258,11 +258,11 @@ tests = do
 
             query = "SELECT 10 / {{denominator}} AS divided"
 
-            brokenTypesLogicalModel :: Schema.LogicalModel
-            brokenTypesLogicalModel =
-              (Schema.logicalModel "divided_falling" query "divided_stuff")
-                { Schema.logicalModelArguments =
-                    [ Schema.logicalModelColumn "denominator" Schema.TStr
+            brokenTypesNativeQuery :: Schema.NativeQuery
+            brokenTypesNativeQuery =
+              (Schema.nativeQuery "divided_falling" query "divided_stuff")
+                { Schema.nativeQueryArguments =
+                    [ Schema.nativeQueryColumn "denominator" Schema.TStr
                     ]
                 }
 
@@ -278,7 +278,7 @@ tests = do
           GraphqlEngine.postMetadataWithStatus
             400
             testEnvironment
-            (Schema.trackLogicalModelCommand sourceName backendTypeMetadata brokenTypesLogicalModel)
+            (Schema.trackNativeQueryCommand sourceName backendTypeMetadata brokenTypesNativeQuery)
 
         actual `shouldAtLeastBe` expected
 
@@ -302,15 +302,15 @@ tests = do
             brokenColumnsReturn =
               (Schema.customType "failing")
                 { Schema.customTypeColumns =
-                    [ Schema.logicalModelColumn "text" Schema.TStr
+                    [ Schema.nativeQueryColumn "text" Schema.TStr
                     ]
                 }
 
-            brokenColumnsLogicalModel :: Schema.LogicalModel
-            brokenColumnsLogicalModel =
-              (Schema.logicalModel "text_failing" query "failing")
-                { Schema.logicalModelArguments =
-                    [ Schema.logicalModelColumn "text" Schema.TStr
+            brokenColumnsNativeQuery :: Schema.NativeQuery
+            brokenColumnsNativeQuery =
+              (Schema.nativeQuery "text_failing" query "failing")
+                { Schema.nativeQueryArguments =
+                    [ Schema.nativeQueryColumn "text" Schema.TStr
                     ]
                 }
 
@@ -320,7 +320,7 @@ tests = do
           GraphqlEngine.postMetadataWithStatus
             400
             testEnvironment
-            (Schema.trackLogicalModelCommand sourceName backendTypeMetadata brokenColumnsLogicalModel)
+            (Schema.trackNativeQueryCommand sourceName backendTypeMetadata brokenColumnsNativeQuery)
 
         actual `shouldAtLeastBe` expected
 
@@ -331,9 +331,9 @@ tests = do
 
             query = "SELECT 10 / {{denominator}} AS divided"
 
-            missingArgsLogicalModel :: Schema.LogicalModel
-            missingArgsLogicalModel =
-              (Schema.logicalModel "divided_falling" query "divided_stuff")
+            missingArgsNativeQuery :: Schema.NativeQuery
+            missingArgsNativeQuery =
+              (Schema.nativeQuery "divided_falling" query "divided_stuff")
 
         Schema.trackCustomType sourceName dividedReturnType testEnvironment
 
@@ -342,7 +342,7 @@ tests = do
           ( GraphqlEngine.postMetadataWithStatus
               400
               testEnvironment
-              (Schema.trackLogicalModelCommand sourceName backendTypeMetadata missingArgsLogicalModel)
+              (Schema.trackNativeQueryCommand sourceName backendTypeMetadata missingArgsNativeQuery)
           )
           [yaml|
              code: validation-failed
@@ -351,24 +351,24 @@ tests = do
           |]
 
   describe "Validation succeeds" do
-    it "when tracking then untracking then re-tracking a logical model" $
+    it "when tracking then untracking then re-tracking a native query" $
       \testEnvironment -> do
         let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
             sourceName = BackendType.backendSourceName backendTypeMetadata
 
-            dividedStuffLogicalModel :: Schema.LogicalModel
-            dividedStuffLogicalModel =
-              (Schema.logicalModel "divided_stuff2" simpleQuery "divided_stuff")
-                { Schema.logicalModelArguments =
-                    [ Schema.logicalModelColumn "denominator" Schema.TInt,
-                      Schema.logicalModelColumn "target_date" Schema.TUTCTime
+            dividedStuffNativeQuery :: Schema.NativeQuery
+            dividedStuffNativeQuery =
+              (Schema.nativeQuery "divided_stuff2" simpleQuery "divided_stuff")
+                { Schema.nativeQueryArguments =
+                    [ Schema.nativeQueryColumn "denominator" Schema.TInt,
+                      Schema.nativeQueryColumn "target_date" Schema.TUTCTime
                     ]
                 }
 
         Schema.trackCustomType sourceName dividedReturnType testEnvironment
 
-        Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
+        Schema.trackNativeQuery sourceName dividedStuffNativeQuery testEnvironment
 
-        Schema.untrackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
+        Schema.untrackNativeQuery sourceName dividedStuffNativeQuery testEnvironment
 
-        Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
+        Schema.trackNativeQuery sourceName dividedStuffNativeQuery testEnvironment

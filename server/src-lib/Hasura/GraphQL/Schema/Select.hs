@@ -67,8 +67,8 @@ import Hasura.GraphQL.Schema.Parser
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename
-import Hasura.LogicalModel.Types (NullableScalarType (..))
 import Hasura.Name qualified as Name
+import Hasura.NativeQuery.Types (NullableScalarType (..))
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp

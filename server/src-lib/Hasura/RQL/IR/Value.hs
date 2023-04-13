@@ -22,7 +22,7 @@ data Provenance
     Unknown
   | -- | A GraphQL variable (e.g. a query parameter)
     FromGraphQL VariableInfo
-  | -- | An internal source (e.g. a logical model argument)
+  | -- | An internal source (e.g. a native query argument)
     FromInternal Text
   deriving stock (Eq, Show)
 

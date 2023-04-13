@@ -98,8 +98,8 @@ import Hasura.Base.Error
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
 import Hasura.Function.Cache (FunctionArgName)
-import Hasura.LogicalModel.Metadata (InterpolatedQuery, LogicalModelName)
 import Hasura.Metadata.DTO.Utils (boundedEnumCodec)
+import Hasura.NativeQuery.Metadata (InterpolatedQuery, NativeQueryName)
 import Hasura.Prelude hiding (state)
 import Hasura.RQL.IR.BoolExp
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -344,7 +344,7 @@ data From
   | FromSelect (Aliased Select)
   | FromSelectJson (Aliased SelectJson)
   | FromFunction (Aliased SelectFromFunction)
-  | FromLogicalModel LogicalModelName
+  | FromNativeQuery NativeQueryName
   deriving stock (Eq, Show, Generic, Data, Lift, Ord)
   deriving anyclass (Hashable, NFData)
 

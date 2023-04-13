@@ -23,7 +23,7 @@ module Hasura.RQL.Types.Metadata
     emptyMetadataDefaults,
     functionMetadataSetter,
     customReturnTypeMetadataSetter,
-    logicalModelMetadataSetter,
+    nativeQueryMetadataSetter,
     metaActions,
     metaAllowlist,
     metaApiLimits,
@@ -59,8 +59,8 @@ import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata, CustomReturnT
 import Hasura.Function.Cache
 import Hasura.Function.Metadata (FunctionMetadata (..))
 import Hasura.Incremental qualified as Inc
-import Hasura.LogicalModel.Metadata (LogicalModelMetadata, LogicalModelName)
 import Hasura.Metadata.DTO.MetadataV3 (MetadataV3 (..))
+import Hasura.NativeQuery.Metadata (NativeQueryMetadata, NativeQueryName)
 import Hasura.Prelude
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
@@ -289,15 +289,15 @@ customReturnTypeMetadataSetter ::
 customReturnTypeMetadataSetter source name =
   metaSources . ix source . toSourceMetadata . smCustomReturnTypes . ix name
 
--- | A lens setter for the metadata of a logical model as identified by the
+-- | A lens setter for the metadata of a native query as identified by the
 -- source name and root field name.
-logicalModelMetadataSetter ::
+nativeQueryMetadataSetter ::
   (Backend b) =>
   SourceName ->
-  LogicalModelName ->
-  ASetter' Metadata (LogicalModelMetadata b)
-logicalModelMetadataSetter source logicalModelName =
-  metaSources . ix source . toSourceMetadata . smLogicalModels . ix logicalModelName
+  NativeQueryName ->
+  ASetter' Metadata (NativeQueryMetadata b)
+nativeQueryMetadataSetter source nativeQueryName =
+  metaSources . ix source . toSourceMetadata . smNativeQueries . ix nativeQueryName
 
 -- | A simple monad class which enables fetching and setting @'Metadata'
 -- in the state.

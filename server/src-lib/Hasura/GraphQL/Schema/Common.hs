@@ -42,7 +42,7 @@ module Hasura.GraphQL.Schema.Common
     parsedSelectionsToFields,
     partialSQLExpToUnpreparedValue,
     requiredFieldParser,
-    takeValidLogicalModels,
+    takeValidNativeQueries,
     takeValidFunctions,
     takeValidTables,
     textToName,
@@ -75,7 +75,7 @@ import Hasura.GraphQL.Schema.Options (SchemaOptions)
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Typename
-import Hasura.LogicalModel.Cache (LogicalModelCache)
+import Hasura.NativeQuery.Cache (NativeQueryCache)
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp
@@ -440,9 +440,9 @@ takeValidFunctions = Map.filter functionFilter
   where
     functionFilter = not . isSystemDefined . _fiSystemDefined
 
--- | Currently we do no validation on logical models in schema. Should we?
-takeValidLogicalModels :: forall b. LogicalModelCache b -> LogicalModelCache b
-takeValidLogicalModels = id
+-- | Currently we do no validation on native queries in schema. Should we?
+takeValidNativeQueries :: forall b. NativeQueryCache b -> NativeQueryCache b
+takeValidNativeQueries = id
 
 -- root field builder helpers
 

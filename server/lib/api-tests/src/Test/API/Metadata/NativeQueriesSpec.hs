@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
--- | Tests of the Logical Models feature.
-module Test.API.Metadata.LogicalModelsSpec (spec) where
+-- | Tests of the Native Queries feature.
+module Test.API.Metadata.NativeQueriesSpec (spec) where
 
 import Control.Lens
 import Data.Aeson qualified as A
@@ -29,11 +29,11 @@ import Test.Hspec (SpecWith, describe, it)
 
 -- ** Preamble
 
--- We currently don't need the table to exist in order to set up a logical model
+-- We currently don't need the table to exist in order to set up a native query
 -- stanza.
 
-featureFlagForLogicalModels :: String
-featureFlagForLogicalModels = "HASURA_FF_LOGICAL_MODEL_INTERFACE"
+featureFlagForNativeQueries :: String
+featureFlagForNativeQueries = "HASURA_FF_NATIVE_QUERY_INTERFACE"
 
 spec :: SpecWith GlobalTestEnvironment
 spec = do
@@ -66,7 +66,7 @@ spec = do
               }
           ]
 
-  Fixture.hgeWithEnv [(featureFlagForLogicalModels, "True")] do
+  Fixture.hgeWithEnv [(featureFlagForNativeQueries, "True")] do
     traverse_
       (Fixture.runClean fixtures)
       [ testAdminAccess,
@@ -91,8 +91,8 @@ dividedStuffReturnType :: Schema.CustomType
 dividedStuffReturnType =
   (Schema.customType "divided_stuff")
     { Schema.customTypeColumns =
-        [ (Schema.logicalModelColumn "divided" Schema.TInt)
-            { Schema.logicalModelColumnDescription = Just "a divided thing"
+        [ (Schema.nativeQueryColumn "divided" Schema.TInt)
+            { Schema.nativeQueryColumnDescription = Just "a divided thing"
             }
         ]
     }
@@ -103,16 +103,16 @@ testAdminAccess = do
       query = "SELECT (thing / {{denominator}})::integer AS divided FROM stuff WHERE date = {{target_date}}"
 
   describe "Admin access" do
-    let dividedStuffLogicalModel :: Schema.LogicalModel
-        dividedStuffLogicalModel =
-          (Schema.logicalModel "divided_stuff" query "divided_stuff")
-            { Schema.logicalModelArguments =
-                [ Schema.logicalModelColumn "denominator" Schema.TInt,
-                  Schema.logicalModelColumn "target_date" Schema.TUTCTime
+    let dividedStuffNativeQuery :: Schema.NativeQuery
+        dividedStuffNativeQuery =
+          (Schema.nativeQuery "divided_stuff" query "divided_stuff")
+            { Schema.nativeQueryArguments =
+                [ Schema.nativeQueryColumn "denominator" Schema.TInt,
+                  Schema.nativeQueryColumn "target_date" Schema.TUTCTime
                 ]
             }
 
-    it "Fails to track a Logical Model without admin access" $
+    it "Fails to track a Native Query without admin access" $
       \testEnvironment -> do
         let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
             sourceName = BackendType.backendSourceName backendTypeMetadata
@@ -126,7 +126,7 @@ testAdminAccess = do
               testEnvironment
               [ ("X-Hasura-Role", "not-admin")
               ]
-              (Schema.trackLogicalModelCommand sourceName backendTypeMetadata dividedStuffLogicalModel)
+              (Schema.trackNativeQueryCommand sourceName backendTypeMetadata dividedStuffNativeQuery)
           )
           [yaml|
             code: access-denied
@@ -134,7 +134,7 @@ testAdminAccess = do
             path: "$.args"
           |]
 
-    it "Fails to untrack a Logical Model without admin access" $
+    it "Fails to untrack a Native Query without admin access" $
       \testEnvironment -> do
         let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
             sourceName = BackendType.backendSourceName backendTypeMetadata
@@ -148,7 +148,7 @@ testAdminAccess = do
               testEnvironment
               [ ("X-Hasura-Role", "not-admin")
               ]
-              (Schema.untrackLogicalModelCommand sourceName backendTypeMetadata dividedStuffLogicalModel)
+              (Schema.untrackNativeQueryCommand sourceName backendTypeMetadata dividedStuffNativeQuery)
           )
           [yaml|
             code: access-denied
@@ -156,12 +156,12 @@ testAdminAccess = do
             path: "$.args"
           |]
 
-    it "Fails to list a Logical Model without admin access" $
+    it "Fails to list a Native Query without admin access" $
       \testEnvironment -> do
         let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
             sourceName = BackendType.backendSourceName backendTypeMetadata
             backendType = BackendType.backendTypeString backendTypeMetadata
-            getRequestType = backendType <> "_get_logical_model"
+            getRequestType = backendType <> "_get_native_query"
 
         shouldReturnYaml
           testEnvironment
@@ -195,30 +195,30 @@ testImplementation = do
       query = "SELECT (thing / {{denominator}})::integer AS divided FROM stuff WHERE date = {{target_date}}"
 
   describe "Implementation" $ do
-    it "Adds a simple logical model of a function with no arguments and returns a 200" $ \testEnvironment -> do
+    it "Adds a simple native query of a function with no arguments and returns a 200" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
 
-          dividedStuffLogicalModel :: Schema.LogicalModel
-          dividedStuffLogicalModel =
-            (Schema.logicalModel "divided_stuff" simpleQuery "divided_stuff")
-              { Schema.logicalModelArguments =
-                  [Schema.logicalModelColumn "unused" Schema.TInt]
+          dividedStuffNativeQuery :: Schema.NativeQuery
+          dividedStuffNativeQuery =
+            (Schema.nativeQuery "divided_stuff" simpleQuery "divided_stuff")
+              { Schema.nativeQueryArguments =
+                  [Schema.nativeQueryColumn "unused" Schema.TInt]
               }
 
       Schema.trackCustomType sourceName dividedStuffReturnType testEnvironment
-      Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
+      Schema.trackNativeQuery sourceName dividedStuffNativeQuery testEnvironment
 
-    it "Adding a logical model of a function with broken SQL returns a 400" $ \testEnvironment -> do
+    it "Adding a native query of a function with broken SQL returns a 400" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
           brokenQuery = "SELECT * FROM dogs WHERE name = {{name"
 
-          brokenQueryLogicalModel :: Schema.LogicalModel
-          brokenQueryLogicalModel =
-            (Schema.logicalModel "divided_stuff" brokenQuery "divided_stuff")
-              { Schema.logicalModelArguments =
-                  [Schema.logicalModelColumn "unused" Schema.TInt]
+          brokenQueryNativeQuery :: Schema.NativeQuery
+          brokenQueryNativeQuery =
+            (Schema.nativeQuery "divided_stuff" brokenQuery "divided_stuff")
+              { Schema.nativeQueryArguments =
+                  [Schema.nativeQueryColumn "unused" Schema.TInt]
               }
 
       shouldReturnYaml
@@ -226,7 +226,7 @@ testImplementation = do
         ( GraphqlEngine.postMetadataWithStatus
             400
             testEnvironment
-            (Schema.trackLogicalModelCommand sourceName backendTypeMetadata brokenQueryLogicalModel)
+            (Schema.trackNativeQueryCommand sourceName backendTypeMetadata brokenQueryNativeQuery)
         )
         [yaml|
           code: parse-failed
@@ -234,26 +234,26 @@ testImplementation = do
           path: "$.args"
         |]
 
-    it "Checks for the logical model of a function" $ \testEnvironment -> do
+    it "Checks for the native query of a function" $ \testEnvironment -> do
       let rootfield :: Text
           rootfield = "divided_stuff2"
 
           backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
           backendType = BackendType.backendTypeString backendTypeMetadata
-          getRequestType = backendType <> "_get_logical_model"
+          getRequestType = backendType <> "_get_native_query"
 
-          dividedStuffLogicalModel :: Schema.LogicalModel
-          dividedStuffLogicalModel =
-            (Schema.logicalModel rootfield query "divided_stuff")
-              { Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "denominator" Schema.TInt,
-                    Schema.logicalModelColumn "target_date" Schema.TUTCTime
+          dividedStuffNativeQuery :: Schema.NativeQuery
+          dividedStuffNativeQuery =
+            (Schema.nativeQuery rootfield query "divided_stuff")
+              { Schema.nativeQueryArguments =
+                  [ Schema.nativeQueryColumn "denominator" Schema.TInt,
+                    Schema.nativeQueryColumn "target_date" Schema.TUTCTime
                   ]
               }
 
       Schema.trackCustomType sourceName dividedStuffReturnType testEnvironment
-      Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
+      Schema.trackNativeQuery sourceName dividedStuffNativeQuery testEnvironment
 
       shouldReturnYaml
         testEnvironment
@@ -278,43 +278,43 @@ testImplementation = do
             returns: divided_stuff
         |]
 
-    it "Drops a logical model of a function and returns a 200" $ \testEnvironment -> do
+    it "Drops a native query of a function and returns a 200" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
 
-          dividedStuffLogicalModel :: Schema.LogicalModel
-          dividedStuffLogicalModel =
-            (Schema.logicalModel "divided_stuff" query "divided_stuff")
-              { Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "denominator" Schema.TInt,
-                    Schema.logicalModelColumn "target_date" Schema.TUTCTime
+          dividedStuffNativeQuery :: Schema.NativeQuery
+          dividedStuffNativeQuery =
+            (Schema.nativeQuery "divided_stuff" query "divided_stuff")
+              { Schema.nativeQueryArguments =
+                  [ Schema.nativeQueryColumn "denominator" Schema.TInt,
+                    Schema.nativeQueryColumn "target_date" Schema.TUTCTime
                   ]
               }
 
       Schema.trackCustomType sourceName dividedStuffReturnType testEnvironment
 
-      Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
-      Schema.untrackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
+      Schema.trackNativeQuery sourceName dividedStuffNativeQuery testEnvironment
+      Schema.untrackNativeQuery sourceName dividedStuffNativeQuery testEnvironment
 
-    it "Checks the logical model of a function can be deleted" $ \testEnvironment -> do
+    it "Checks the native query of a function can be deleted" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
           backendType = BackendType.backendTypeString backendTypeMetadata
-          getRequestType = backendType <> "_get_logical_model"
+          getRequestType = backendType <> "_get_native_query"
 
-          dividedStuffLogicalModel :: Schema.LogicalModel
-          dividedStuffLogicalModel =
-            (Schema.logicalModel "divided_stuff" query "divided_stuff")
-              { Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "denominator" Schema.TInt,
-                    Schema.logicalModelColumn "target_date" Schema.TUTCTime
+          dividedStuffNativeQuery :: Schema.NativeQuery
+          dividedStuffNativeQuery =
+            (Schema.nativeQuery "divided_stuff" query "divided_stuff")
+              { Schema.nativeQueryArguments =
+                  [ Schema.nativeQueryColumn "denominator" Schema.TInt,
+                    Schema.nativeQueryColumn "target_date" Schema.TUTCTime
                   ]
               }
 
       Schema.trackCustomType sourceName dividedStuffReturnType testEnvironment
-      Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
+      Schema.trackNativeQuery sourceName dividedStuffNativeQuery testEnvironment
 
-      Schema.untrackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
+      Schema.untrackNativeQuery sourceName dividedStuffNativeQuery testEnvironment
 
       shouldReturnYaml
         testEnvironment
@@ -330,23 +330,23 @@ testImplementation = do
           []
         |]
 
-    it "Fails to add a logical model with a non-existent return type" $ \testEnvironment -> do
+    it "Fails to add a native query with a non-existent return type" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
 
-          dividedStuffLogicalModel :: Schema.LogicalModel
-          dividedStuffLogicalModel =
-            (Schema.logicalModel "divided_stuff" query "bad_return_type")
-              { Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "denominator" Schema.TInt,
-                    Schema.logicalModelColumn "target_date" Schema.TUTCTime
+          dividedStuffNativeQuery :: Schema.NativeQuery
+          dividedStuffNativeQuery =
+            (Schema.nativeQuery "divided_stuff" query "bad_return_type")
+              { Schema.nativeQueryArguments =
+                  [ Schema.nativeQueryColumn "denominator" Schema.TInt,
+                    Schema.nativeQueryColumn "target_date" Schema.TUTCTime
                   ]
               }
 
       shouldReturnYaml
         testEnvironment
         ( GraphqlEngine.postMetadataWithStatus 400 testEnvironment $
-            Schema.trackLogicalModelCommand sourceName backendTypeMetadata dividedStuffLogicalModel
+            Schema.trackNativeQueryCommand sourceName backendTypeMetadata dividedStuffNativeQuery
         )
         [yaml|
           code: not-found
@@ -354,25 +354,25 @@ testImplementation = do
           path: $.args
         |]
 
-    it "Adds two logical models with the same return type" $ \testEnvironment -> do
+    it "Adds two native queries with the same return type" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
 
-          logicalModelOne :: Schema.LogicalModel
-          logicalModelOne =
-            (Schema.logicalModel "first" query "divided_stuff")
-              { Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "denominator" Schema.TInt,
-                    Schema.logicalModelColumn "target_date" Schema.TUTCTime
+          nativeQueryOne :: Schema.NativeQuery
+          nativeQueryOne =
+            (Schema.nativeQuery "first" query "divided_stuff")
+              { Schema.nativeQueryArguments =
+                  [ Schema.nativeQueryColumn "denominator" Schema.TInt,
+                    Schema.nativeQueryColumn "target_date" Schema.TUTCTime
                   ]
               }
 
-          logicalModelTwo :: Schema.LogicalModel
-          logicalModelTwo =
-            (Schema.logicalModel "second" query "divided_stuff")
-              { Schema.logicalModelArguments =
-                  [ Schema.logicalModelColumn "denominator" Schema.TInt,
-                    Schema.logicalModelColumn "target_date" Schema.TUTCTime
+          nativeQueryTwo :: Schema.NativeQuery
+          nativeQueryTwo =
+            (Schema.nativeQuery "second" query "divided_stuff")
+              { Schema.nativeQueryArguments =
+                  [ Schema.nativeQueryColumn "denominator" Schema.TInt,
+                    Schema.nativeQueryColumn "target_date" Schema.TUTCTime
                   ]
               }
 
@@ -381,14 +381,14 @@ testImplementation = do
       shouldReturnYaml
         testEnvironment
         ( GraphqlEngine.postMetadata testEnvironment $
-            Schema.trackLogicalModelCommand sourceName backendTypeMetadata logicalModelOne
+            Schema.trackNativeQueryCommand sourceName backendTypeMetadata nativeQueryOne
         )
         [yaml| message: success |]
 
       shouldReturnYaml
         testEnvironment
         ( GraphqlEngine.postMetadata testEnvironment $
-            Schema.trackLogicalModelCommand sourceName backendTypeMetadata logicalModelTwo
+            Schema.trackNativeQueryCommand sourceName backendTypeMetadata nativeQueryTwo
         )
         [yaml| message: success |]
 
@@ -396,15 +396,15 @@ testImplementation = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
 
-          dividedStuffLogicalModel :: Schema.LogicalModel
-          dividedStuffLogicalModel =
-            (Schema.logicalModel "divided_stuff" simpleQuery "divided_stuff")
-              { Schema.logicalModelArguments =
-                  [Schema.logicalModelColumn "unused" Schema.TInt]
+          dividedStuffNativeQuery :: Schema.NativeQuery
+          dividedStuffNativeQuery =
+            (Schema.nativeQuery "divided_stuff" simpleQuery "divided_stuff")
+              { Schema.nativeQueryArguments =
+                  [Schema.nativeQueryColumn "unused" Schema.TInt]
               }
 
       Schema.trackCustomType sourceName dividedStuffReturnType testEnvironment
-      Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
+      Schema.trackNativeQuery sourceName dividedStuffNativeQuery testEnvironment
 
       metadata <-
         GraphqlEngine.postMetadata
@@ -445,19 +445,19 @@ testImplementation = do
                 code: SELECT (thing / 2)::integer AS divided FROM stuff
                 returns: divided_stuff
                 root_field_name: divided_stuff
-              name: logical_model divided_stuff in source #{sourceName}
+              name: native_query divided_stuff in source #{sourceName}
               reason: "Inconsistent object: The custom return type divided_stuff could not be found"
-              type: logical_model
+              type: native_query
           path: $.args
         |]
 
 metadataHandlingWhenDisabledSpec :: SpecWith GlobalTestEnvironment
 metadataHandlingWhenDisabledSpec = do
-  describe "When logical models are enabled" do
+  describe "When native queries are enabled" do
     withHge
       ( emptyHgeConfig
           { hgeConfigEnvironmentVars =
-              [ (featureFlagForLogicalModels, "True")
+              [ (featureFlagForNativeQueries, "True")
               ]
           }
       )
@@ -468,7 +468,7 @@ metadataHandlingWhenDisabledSpec = do
           _ <- hgePost env 200 "/v1/metadata" [] command
 
           currentMetadata <- export_metadata env
-          actual <- replace_metadata env (metadataWithLogicalModel currentMetadata)
+          actual <- replace_metadata env (metadataWithNativeQuery currentMetadata)
 
           actual
             `shouldBeYaml` [yaml|
@@ -481,7 +481,7 @@ metadataHandlingWhenDisabledSpec = do
           _ <- hgePost env 200 "/v1/metadata" [] command
 
           currentMetadata <- export_metadata env
-          _res <- replace_metadata env (metadataWithLogicalModel currentMetadata)
+          _res <- replace_metadata env (metadataWithNativeQuery currentMetadata)
 
           let expected =
                 [yaml|
@@ -493,12 +493,12 @@ metadataHandlingWhenDisabledSpec = do
           actual <- hgePostGraphql env queryTypesIntrospection
           actual `shouldBeYaml` expected
 
-  describe "When logical models are disabled" do
+  describe "When native queries are disabled" do
     withHge emptyHgeConfig $ do
       withPostgresSource "default" $ do
         it "They do not appear in the schema" $ \env -> do
           currentMetadata <- export_metadata env
-          _res <- replace_metadata env (metadataWithLogicalModel currentMetadata)
+          _res <- replace_metadata env (metadataWithNativeQuery currentMetadata)
 
           let expected =
                 [yaml|
@@ -509,7 +509,7 @@ metadataHandlingWhenDisabledSpec = do
           actual <- hgePostGraphql env queryTypesIntrospection
           actual `shouldBeYaml` expected
   where
-    logicalModelsMetadata =
+    nativeQueriesMetadata =
       [yaml|
           arguments:
             divided:
@@ -520,13 +520,13 @@ metadataHandlingWhenDisabledSpec = do
           root_field_name: divided_stuff
       |]
 
-    metadataWithLogicalModel :: A.Value -> A.Value
-    metadataWithLogicalModel currentMetadata =
+    metadataWithNativeQuery :: A.Value -> A.Value
+    metadataWithNativeQuery currentMetadata =
       currentMetadata
         & key "sources"
           . nth 0
-          . atKey "logical_models"
-          .~ Just [yaml| - *logicalModelsMetadata |]
+          . atKey "native_queries"
+          .~ Just [yaml| - *nativeQueriesMetadata |]
 
     queryTypesIntrospection :: A.Value
     queryTypesIntrospection =

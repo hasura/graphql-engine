@@ -34,19 +34,19 @@ planNoPlan ::
 planNoPlan fromIrConfig userInfo queryDB = do
   rootField <- traverse (prepareValueNoPlan (_uiSession userInfo)) queryDB
 
-  (select, FromIrWriter {fromIrWriterLogicalModels}) <-
+  (select, FromIrWriter {fromIrWriterNativeQueries}) <-
     runValidate (BigQuery.runFromIr fromIrConfig (BigQuery.fromRootField rootField))
       `onLeft` (E.throw400 E.NotSupported . (tshow :: NonEmpty Error -> Text))
 
-  -- Logical models used within this query need to be converted into CTEs.
+  -- Native queries used within this query need to be converted into CTEs.
   -- These need to come before any other CTEs in case those CTEs also depend on
-  -- the logical models.
-  let logicalModels :: Maybe With
-      logicalModels = do
-        ctes <- NE.nonEmpty (Map.toList fromIrWriterLogicalModels)
+  -- the native queries.
+  let nativeQueries :: Maybe With
+      nativeQueries = do
+        ctes <- NE.nonEmpty (Map.toList fromIrWriterNativeQueries)
         pure (With [Aliased query (toTxt name) | (name, query) <- ctes])
 
-  pure select {selectWith = logicalModels <> selectWith select}
+  pure select {selectWith = nativeQueries <> selectWith select}
 
 --------------------------------------------------------------------------------
 -- Resolving values

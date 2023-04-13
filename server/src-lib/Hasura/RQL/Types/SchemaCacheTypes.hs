@@ -30,7 +30,7 @@ import Data.Text.Extended
 import Data.Text.NonEmpty
 import Hasura.Base.Error
 import Hasura.CustomReturnType.Types (CustomReturnTypeName)
-import Hasura.LogicalModel.Types (LogicalModelName)
+import Hasura.NativeQuery.Types (NativeQueryName)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (PartialSQLExp)
 import Hasura.RQL.Types.Backend
@@ -76,7 +76,7 @@ data SourceObjId (b :: BackendType)
   = SOITable (TableName b)
   | SOITableObj (TableName b) (TableObjId b)
   | SOIFunction (FunctionName b)
-  | SOILogicalModel LogicalModelName
+  | SOINativeQuery NativeQueryName
   | SOICustomReturnType CustomReturnTypeName
   | SOICustomReturnTypeObj CustomReturnTypeName (CustomReturnTypeObjId b)
   deriving (Eq, Generic)
@@ -107,7 +107,7 @@ reportSchemaObj = \case
       \case
         SOITable tn -> "table " <> toTxt tn
         SOIFunction fn -> "function " <> toTxt fn
-        SOILogicalModel lmn -> "logical model " <> toTxt lmn
+        SOINativeQuery lmn -> "native query " <> toTxt lmn
         SOICustomReturnType crt -> "custom return type " <> toTxt crt
         SOICustomReturnTypeObj crt (CRTOCol cn) ->
           "custom return type column " <> toTxt crt <> "." <> toTxt cn

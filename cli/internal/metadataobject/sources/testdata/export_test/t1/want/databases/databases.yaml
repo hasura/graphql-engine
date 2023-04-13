@@ -51,7 +51,7 @@
               - question
             filter: {}
           role: user
-  logical_models:
+  native_queries:
     - arguments:
         unused:
           description: An integer argument that we completely ignore

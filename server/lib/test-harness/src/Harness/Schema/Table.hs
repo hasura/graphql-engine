@@ -17,10 +17,10 @@ module Harness.Schema.Table
     BackendScalarValue (..),
     BackendScalarValueType (..),
     ManualRelationship (..),
-    LogicalModel (..),
-    logicalModel,
-    LogicalModelColumn (..),
-    logicalModelColumn,
+    NativeQuery (..),
+    nativeQuery,
+    NativeQueryColumn (..),
+    nativeQueryColumn,
     CustomType (..),
     customType,
     quotedValue,
@@ -94,38 +94,38 @@ table tableName =
       tableQualifiers = []
     }
 
-data LogicalModelColumn = LogicalModelColumn
-  { logicalModelColumnName :: Text,
-    logicalModelColumnType :: ScalarType,
-    logicalModelColumnNullable :: Bool,
-    logicalModelColumnDescription :: Maybe Text
+data NativeQueryColumn = NativeQueryColumn
+  { nativeQueryColumnName :: Text,
+    nativeQueryColumnType :: ScalarType,
+    nativeQueryColumnNullable :: Bool,
+    nativeQueryColumnDescription :: Maybe Text
   }
   deriving (Show, Eq)
 
-logicalModelColumn :: Text -> ScalarType -> LogicalModelColumn
-logicalModelColumn name colType =
-  LogicalModelColumn
-    { logicalModelColumnName = name,
-      logicalModelColumnType = colType,
-      logicalModelColumnNullable = False,
-      logicalModelColumnDescription = Nothing
+nativeQueryColumn :: Text -> ScalarType -> NativeQueryColumn
+nativeQueryColumn name colType =
+  NativeQueryColumn
+    { nativeQueryColumnName = name,
+      nativeQueryColumnType = colType,
+      nativeQueryColumnNullable = False,
+      nativeQueryColumnDescription = Nothing
     }
 
-data LogicalModel = LogicalModel
-  { logicalModelName :: Text,
-    logicalModelReturnType :: Text,
-    logicalModelQuery :: Text,
-    logicalModelArguments :: [LogicalModelColumn]
+data NativeQuery = NativeQuery
+  { nativeQueryName :: Text,
+    nativeQueryReturnType :: Text,
+    nativeQueryQuery :: Text,
+    nativeQueryArguments :: [NativeQueryColumn]
   }
   deriving (Show, Eq)
 
-logicalModel :: Text -> Text -> Text -> LogicalModel
-logicalModel logicalModelName query returnType =
-  LogicalModel
-    { logicalModelName,
-      logicalModelReturnType = returnType,
-      logicalModelQuery = query,
-      logicalModelArguments = mempty
+nativeQuery :: Text -> Text -> Text -> NativeQuery
+nativeQuery nativeQueryName query returnType =
+  NativeQuery
+    { nativeQueryName,
+      nativeQueryReturnType = returnType,
+      nativeQueryQuery = query,
+      nativeQueryArguments = mempty
     }
 
 -- | Foreign keys for backends that support it.
@@ -181,7 +181,7 @@ parseUTCTimeOrError = VUTCTime . parseTimeOrError True defaultTimeLocale "%F %T"
 
 data CustomType = CustomType
   { customTypeName :: Text,
-    customTypeColumns :: [LogicalModelColumn],
+    customTypeColumns :: [NativeQueryColumn],
     customTypeDescription :: Maybe Text
   }
   deriving (Show, Eq)

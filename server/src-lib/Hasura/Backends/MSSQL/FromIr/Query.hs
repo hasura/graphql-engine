@@ -35,8 +35,8 @@ import Hasura.Backends.MSSQL.FromIr.Expression
 import Hasura.Backends.MSSQL.Instances.Types ()
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.CustomReturnType.IR (CustomReturnType (..))
-import Hasura.LogicalModel.IR qualified as IR
-import Hasura.LogicalModel.Types (LogicalModelName (..), NullableScalarType (..))
+import Hasura.NativeQuery.IR qualified as IR
+import Hasura.NativeQuery.Types (NativeQueryName (..), NullableScalarType (..))
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Column qualified as IR
@@ -209,7 +209,7 @@ fromSelectRows annSelectG = do
       IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
       IR.FromIdentifier identifier -> pure $ FromIdentifier $ IR.unFIIdentifier identifier
       IR.FromFunction {} -> refute $ pure FunctionNotSupported
-      IR.FromLogicalModel logicalModel -> fromLogicalModel logicalModel
+      IR.FromNativeQuery nativeQuery -> fromNativeQuery nativeQuery
   Args
     { argsOrderBy,
       argsWhere,
@@ -331,13 +331,13 @@ mkAggregateSelect Args {..} foreignKeyConditions filterExpression selectFrom agg
     | (index, (fieldName, projections)) <- aggregates
   ]
 
-fromLogicalModel :: IR.LogicalModel 'MSSQL Expression -> FromIr TSQL.From
-fromLogicalModel logicalModel = do
-  let logicalModelName = IR.lmRootFieldName logicalModel
-      logicalModelSql = IR.lmInterpolatedQuery logicalModel
-      logicalModelReturnType = IR.lmReturnType logicalModel
+fromNativeQuery :: IR.NativeQuery 'MSSQL Expression -> FromIr TSQL.From
+fromNativeQuery nativeQuery = do
+  let nativeQueryName = IR.nqRootFieldName nativeQuery
+      nativeQuerySql = IR.nqInterpolatedQuery nativeQuery
+      nativeQueryReturnType = IR.nqReturnType nativeQuery
 
-      rawTempTableName = T.toTxt (getLogicalModelName logicalModelName)
+      rawTempTableName = T.toTxt (getNativeQueryName nativeQueryName)
       aliasedTempTableName = Aliased (TempTableName rawTempTableName) rawTempTableName
 
   let columns =
@@ -347,13 +347,13 @@ fromLogicalModel logicalModel = do
                 type' = (nstType ty)
               }
         )
-          <$> InsOrd.toList (crtFields logicalModelReturnType)
+          <$> InsOrd.toList (crtFields nativeQueryReturnType)
 
   -- \| add create temp table to "the environment"
   tellBefore (CreateTemp (TempTableName rawTempTableName) columns)
 
   -- \| add insert into temp table
-  tellBefore (InsertTemp (TempTableName rawTempTableName) logicalModelSql)
+  tellBefore (InsertTemp (TempTableName rawTempTableName) nativeQuerySql)
 
   -- \| when we're done, drop the temp table
   tellAfter (DropTemp (TempTableName rawTempTableName))
@@ -378,7 +378,7 @@ fromSelectAggregate
         IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
         IR.FromIdentifier identifier -> pure $ FromIdentifier $ IR.unFIIdentifier identifier
         IR.FromFunction {} -> refute $ pure FunctionNotSupported
-        IR.FromLogicalModel logicalModel -> fromLogicalModel logicalModel
+        IR.FromNativeQuery nativeQuery -> fromNativeQuery nativeQuery
       -- Below: When we're actually a RHS of a query (of CROSS APPLY),
       -- then we'll have a LHS table that we're joining on. So we get the
       -- conditions expressions from the field mappings. The LHS table is

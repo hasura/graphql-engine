@@ -45,7 +45,7 @@ import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
 import Hasura.CustomReturnType.Types
-import Hasura.LogicalModel.Types
+import Hasura.NativeQuery.Types
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
@@ -84,7 +84,7 @@ data SourceMetadataObjId b
   | SMOFunction (FunctionName b)
   | SMOFunctionPermission (FunctionName b) RoleName
   | SMOTableObj (TableName b) TableMetadataObjId
-  | SMOLogicalModel LogicalModelName
+  | SMONativeQuery NativeQueryName
   | SMOCustomReturnType CustomReturnTypeName
   | SMOCustomReturnTypeObj CustomReturnTypeName CustomReturnTypeMetadataObjId
   deriving (Generic)
@@ -147,7 +147,7 @@ moiTypeName = \case
     handleSourceObj = \case
       SMOTable _ -> "table"
       SMOFunction _ -> "function"
-      SMOLogicalModel _ -> "logical_model"
+      SMONativeQuery _ -> "native_query"
       SMOCustomReturnType _ -> "custom_type"
       SMOCustomReturnTypeObj _ customReturnTypeObjectId -> case customReturnTypeObjectId of
         CRTMOPerm _ permType -> permTypeToCode permType <> "_permission"
@@ -202,7 +202,7 @@ moiName objectId =
           <> toTxt functionName
           <> " in source "
           <> toTxt source
-      SMOLogicalModel name -> toTxt name <> " in source " <> toTxt source
+      SMONativeQuery name -> toTxt name <> " in source " <> toTxt source
       SMOCustomReturnType name -> toTxt name <> " in source " <> toTxt source
       SMOCustomReturnTypeObj customReturnTypeName customReturnTypeObjectId -> do
         let objectName :: Text

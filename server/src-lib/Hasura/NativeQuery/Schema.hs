@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
--- | Schema parsers for logical models.
-module Hasura.LogicalModel.Schema (defaultBuildLogicalModelRootFields) where
+-- | Schema parsers for native queries.
+module Hasura.NativeQuery.Schema (defaultBuildNativeQueryRootFields) where
 
 import Data.Has (Has (getter))
 import Data.HashMap.Strict qualified as HM
@@ -18,10 +18,10 @@ import Hasura.GraphQL.Schema.Common
   )
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
-import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
-import Hasura.LogicalModel.IR (LogicalModel (..))
-import Hasura.LogicalModel.Metadata (InterpolatedQuery (..), LogicalModelArgumentName (..))
-import Hasura.LogicalModel.Types (NullableScalarType (..), getLogicalModelName)
+import Hasura.NativeQuery.Cache (NativeQueryInfo (..))
+import Hasura.NativeQuery.IR (NativeQuery (..))
+import Hasura.NativeQuery.Metadata (InterpolatedQuery (..), NativeQueryArgumentName (..))
+import Hasura.NativeQuery.Types (NullableScalarType (..), getNativeQueryName)
 import Hasura.Prelude
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Select (QueryDB (QDBMultipleRows))
@@ -39,54 +39,54 @@ import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 
-defaultBuildLogicalModelRootFields ::
+defaultBuildNativeQueryRootFields ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
     BackendCustomReturnTypeSelectSchema b
   ) =>
-  LogicalModelInfo b ->
+  NativeQueryInfo b ->
   SchemaT
     r
     m
     (Maybe (P.FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
-defaultBuildLogicalModelRootFields LogicalModelInfo {..} = runMaybeT $ do
-  let fieldName = getLogicalModelName _lmiRootFieldName
+defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
+  let fieldName = getNativeQueryName _nqiRootFieldName
 
-  logicalModelArgsParser <-
-    logicalModelArgumentsSchema @b @r @m @n fieldName _lmiArguments
+  nativeQueryArgsParser <-
+    nativeQueryArgumentsSchema @b @r @m @n fieldName _nqiArguments
 
   sourceInfo :: SourceInfo b <- asks getter
 
   let sourceName = _siName sourceInfo
       tCase = _rscNamingConvention $ _siCustomization sourceInfo
-      description = G.Description <$> _lmiDescription
+      description = G.Description <$> _nqiDescription
 
   stringifyNumbers <- retrieve Options.soStringifyNumbers
 
   customReturnTypePermissions <-
     MaybeT . fmap Just $
-      buildCustomReturnTypePermissions @b @r @m @n _lmiReturns
+      buildCustomReturnTypePermissions @b @r @m @n _nqiReturns
 
   (selectionSetParser, customTypesArgsParser) <-
-    MaybeT $ buildCustomReturnTypeFields _lmiReturns
+    MaybeT $ buildCustomReturnTypeFields _nqiReturns
 
-  let interpolatedQuery lmArgs =
+  let interpolatedQuery nqArgs =
         InterpolatedQuery $
           (fmap . fmap)
-            ( \var@(LogicalModelArgumentName name) -> case HM.lookup var lmArgs of
+            ( \var@(NativeQueryArgumentName name) -> case HM.lookup var nqArgs of
                 Just arg -> UVParameter (FromInternal name) arg
                 Nothing ->
-                  -- the `logicalModelArgsParser` will already have checked
+                  -- the `nativeQueryArgsParser` will already have checked
                   -- we have all the args the query needs so this _should
                   -- not_ happen
-                  error $ "No logical model arg passed for " <> show var
+                  error $ "No native query arg passed for " <> show var
             )
-            (getInterpolatedQuery _lmiCode)
+            (getInterpolatedQuery _nqiCode)
 
   let sourceObj =
         MO.MOSourceObjId
           sourceName
-          (mkAnyBackend $ MO.SMOLogicalModel @b _lmiRootFieldName)
+          (mkAnyBackend $ MO.SMONativeQuery @b _nqiRootFieldName)
 
   pure $
     P.setFieldParserOrigin sourceObj $
@@ -95,20 +95,20 @@ defaultBuildLogicalModelRootFields LogicalModelInfo {..} = runMaybeT $ do
         description
         ( (,)
             <$> customTypesArgsParser
-            <*> logicalModelArgsParser
+            <*> nativeQueryArgsParser
         )
         selectionSetParser
-        <&> \((crtArgs, lmArgs), fields) ->
+        <&> \((crtArgs, nqArgs), fields) ->
           QDBMultipleRows $
             IR.AnnSelectG
               { IR._asnFields = fields,
                 IR._asnFrom =
-                  IR.FromLogicalModel
-                    LogicalModel
-                      { lmRootFieldName = _lmiRootFieldName,
-                        lmArgs,
-                        lmInterpolatedQuery = interpolatedQuery lmArgs,
-                        lmReturnType = buildCustomReturnTypeIR _lmiReturns
+                  IR.FromNativeQuery
+                    NativeQuery
+                      { nqRootFieldName = _nqiRootFieldName,
+                        nqArgs,
+                        nqInterpolatedQuery = interpolatedQuery nqArgs,
+                        nqReturnType = buildCustomReturnTypeIR _nqiReturns
                       },
                 IR._asnPerm = customReturnTypePermissions,
                 IR._asnArgs = crtArgs,
@@ -116,13 +116,13 @@ defaultBuildLogicalModelRootFields LogicalModelInfo {..} = runMaybeT $ do
                 IR._asnNamingConvention = Just tCase
               }
 
-logicalModelArgumentsSchema ::
+nativeQueryArgumentsSchema ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   G.Name ->
-  HashMap LogicalModelArgumentName (NullableScalarType b) ->
-  MaybeT (SchemaT r m) (P.InputFieldsParser n (HashMap LogicalModelArgumentName (Column.ColumnValue b)))
-logicalModelArgumentsSchema logicalModelName argsSignature = do
+  HashMap NativeQueryArgumentName (NullableScalarType b) ->
+  MaybeT (SchemaT r m) (P.InputFieldsParser n (HashMap NativeQueryArgumentName (Column.ColumnValue b)))
+nativeQueryArgumentsSchema nativeQueryName argsSignature = do
   -- Lift 'SchemaT r m (InputFieldsParser ..)' into a monoid using Applicative.
   -- This lets us use 'foldMap' + monoid structure of hashmaps to avoid awkwardly
   -- traversing the arguments and building the resulting parser.
@@ -135,10 +135,10 @@ logicalModelArgumentsSchema logicalModelName argsSignature = do
                 <$> lift (columnParser (Column.ColumnScalar nstType) (G.Nullability nstNullable))
             -- TODO: Naming conventions?
             -- TODO: Custom fields? (Probably not)
-            argName <- hoistMaybe (G.mkName (getLogicalModelArgumentName name))
+            argName <- hoistMaybe (G.mkName (getNativeQueryArgumentName name))
             let description = case nstDescription of
                   Just desc -> G.Description desc
-                  Nothing -> G.Description ("Logical model argument " <> getLogicalModelArgumentName name)
+                  Nothing -> G.Description ("Native query argument " <> getNativeQueryArgumentName name)
             pure $
               P.field
                 argName
@@ -147,7 +147,7 @@ logicalModelArgumentsSchema logicalModelName argsSignature = do
         )
         (HM.toList argsSignature)
 
-  let desc = Just $ G.Description $ G.unName logicalModelName <> " Logical Model Arguments"
+  let desc = Just $ G.Description $ G.unName nativeQueryName <> " Native Query Arguments"
 
   pure $
     if null argsSignature
@@ -156,4 +156,4 @@ logicalModelArgumentsSchema logicalModelName argsSignature = do
         P.field
           [G.name|args|]
           desc
-          (P.object (logicalModelName <> [G.name|_arguments|]) desc argsParser)
+          (P.object (nativeQueryName <> [G.name|_arguments|]) desc argsParser)

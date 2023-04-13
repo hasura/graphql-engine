@@ -1,7 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 
--- | Check the typechecking validation of logical model's custom return types.
-module Test.API.Metadata.LogicalModels.TypeCheckingSpec where
+-- | Check the typechecking validation of native query's custom return types.
+module Test.API.Metadata.NativeQueries.TypeCheckingSpec where
 
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
@@ -19,12 +19,12 @@ import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 import Test.QuickCheck
 
-featureFlagForLogicalModels :: String
-featureFlagForLogicalModels = "HASURA_FF_LOGICAL_MODEL_INTERFACE"
+featureFlagForNativeQueries :: String
+featureFlagForNativeQueries = "HASURA_FF_NATIVE_QUERY_INTERFACE"
 
 spec :: SpecWith GlobalTestEnvironment
 spec = do
-  Fixture.hgeWithEnv [(featureFlagForLogicalModels, "True")] do
+  Fixture.hgeWithEnv [(featureFlagForNativeQueries, "True")] do
     Fixture.run
       ( NE.fromList
           [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
@@ -82,7 +82,7 @@ allTypesReturnType :: Schema.CustomType
 allTypesReturnType =
   (Schema.customType "stuff_type")
     { Schema.customTypeColumns =
-        (\t -> Schema.logicalModelColumn t (customType t)) <$> types
+        (\t -> Schema.nativeQueryColumn t (customType t)) <$> types
     }
 
 types :: [Text]
@@ -112,7 +112,7 @@ types =
 
 tests :: BackendDifferences -> SpecWith TestEnvironment
 tests BackendDifferences {..} = do
-  describe "Validation succeeds tracking a logical model" do
+  describe "Validation succeeds tracking a native query" do
     it "for all supported types" $
       \testEnvironment -> do
         let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -121,9 +121,9 @@ tests BackendDifferences {..} = do
         let simpleQuery :: Text
             simpleQuery = "SELECT * FROM stuff"
 
-        let logicalModel :: Schema.LogicalModel
-            logicalModel =
-              (Schema.logicalModel "typed_model" simpleQuery "stuff_type")
+        let nativeQuery :: Schema.NativeQuery
+            nativeQuery =
+              (Schema.nativeQuery "typed_model" simpleQuery "stuff_type")
 
         Schema.trackCustomType sourceName allTypesReturnType testEnvironment
 
@@ -131,13 +131,13 @@ tests BackendDifferences {..} = do
           testEnvironment
           ( GraphqlEngine.postMetadata
               testEnvironment
-              (Schema.trackLogicalModelCommand sourceName backendTypeMetadata logicalModel)
+              (Schema.trackNativeQueryCommand sourceName backendTypeMetadata nativeQuery)
           )
           [yaml|
           message: success
         |]
 
-  describe "Validation fails tracking a logical model" do
+  describe "Validation fails tracking a native query" do
     it "when there's a type mismatch" $ \testEnvironment ->
       withMaxSuccess maxSuccesses $
         forAll (generator isDifferentTypeThan) $ \DifferentTypes {..} -> do
@@ -147,12 +147,12 @@ tests BackendDifferences {..} = do
           let wrongQuery :: Text
               wrongQuery = "SELECT " <> tableType <> " AS " <> customtypeType <> " FROM stuff_" <> tableType
 
-          let logicalModel :: Schema.LogicalModel
-              logicalModel =
-                (Schema.logicalModel ("typed_model_" <> customtypeType) wrongQuery ("stuff_type_" <> customtypeType))
+          let nativeQuery :: Schema.NativeQuery
+              nativeQuery =
+                (Schema.nativeQuery ("typed_model_" <> customtypeType) wrongQuery ("stuff_type_" <> customtypeType))
 
           -- Possible cleanup after last test that may have tracked this custom type
-          _ <- Schema.untrackLogicalModel sourceName logicalModel testEnvironment `catch` \(_ :: SomeException) -> pure ()
+          _ <- Schema.untrackNativeQuery sourceName nativeQuery testEnvironment `catch` \(_ :: SomeException) -> pure ()
           _ <- Schema.untrackCustomType sourceName (mkCustomType customtypeType) testEnvironment `catch` \(_ :: SomeException) -> pure ()
           Schema.trackCustomType sourceName (mkCustomType customtypeType) testEnvironment
 
@@ -176,7 +176,7 @@ tests BackendDifferences {..} = do
             GraphqlEngine.postMetadataWithStatus
               400
               testEnvironment
-              (Schema.trackLogicalModelCommand sourceName backendTypeMetadata logicalModel)
+              (Schema.trackNativeQueryCommand sourceName backendTypeMetadata nativeQuery)
           actual `shouldAtLeastBe` expected
 
 -- ** Utils
@@ -185,7 +185,7 @@ mkCustomType :: Text -> Schema.CustomType
 mkCustomType typ =
   (Schema.customType ("stuff_type_" <> typ))
     { Schema.customTypeColumns =
-        [Schema.logicalModelColumn typ (customType typ)]
+        [Schema.nativeQueryColumn typ (customType typ)]
     }
 
 -- | Match a column from a table type and the custom type.

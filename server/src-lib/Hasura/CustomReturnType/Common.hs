@@ -5,7 +5,7 @@ where
 
 import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.Text.Extended (ToTxt (toTxt))
-import Hasura.LogicalModel.Types (NullableScalarType (..))
+import Hasura.NativeQuery.Types (NullableScalarType (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnType (..))

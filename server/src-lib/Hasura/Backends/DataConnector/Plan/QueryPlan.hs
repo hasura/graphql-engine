@@ -122,7 +122,7 @@ extractTableName selectG =
     FromTable tn -> pure $ Witch.from tn
     FromIdentifier _ -> throw400 NotSupported "AnnSelectG: FromIdentifier not supported"
     FromFunction {} -> throw400 NotSupported "AnnSelectG: FromFunction not supported"
-    FromLogicalModel {} -> throw400 NotSupported "AnnSelectG: FromLogicalModel not supported"
+    FromNativeQuery {} -> throw400 NotSupported "AnnSelectG: FromNativeQuery not supported"
 
 translateAnnSelect ::
   ( Has TableRelationships writerOutput,

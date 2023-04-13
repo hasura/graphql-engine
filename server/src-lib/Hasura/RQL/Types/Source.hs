@@ -13,7 +13,7 @@ module Hasura.RQL.Types.Source
     unsafeSourceName,
     unsafeSourceTables,
     siConfiguration,
-    siLogicalModels,
+    siNativeQueries,
     siCustomReturnTypes,
     siFunctions,
     siName,
@@ -51,7 +51,7 @@ import Hasura.Base.Error
 import Hasura.CustomReturnType.Cache (CustomReturnTypeCache)
 import Hasura.Function.Cache
 import Hasura.Logging qualified as L
-import Hasura.LogicalModel.Cache (LogicalModelCache)
+import Hasura.NativeQuery.Cache (NativeQueryCache)
 import Hasura.Prelude
 import Hasura.QueryTags.Types
 import Hasura.RQL.Types.Backend
@@ -73,7 +73,7 @@ data SourceInfo b = SourceInfo
   { _siName :: SourceName,
     _siTables :: TableCache b,
     _siFunctions :: FunctionCache b,
-    _siLogicalModels :: LogicalModelCache b,
+    _siNativeQueries :: NativeQueryCache b,
     _siCustomReturnTypes :: CustomReturnTypeCache b,
     _siConfiguration :: ~(SourceConfig b),
     _siQueryTagsConfig :: Maybe QueryTagsConfig,
@@ -86,7 +86,7 @@ instance
   ( Backend b,
     ToJSON (TableCache b),
     ToJSON (FunctionCache b),
-    ToJSON (LogicalModelCache b),
+    ToJSON (NativeQueryCache b),
     ToJSON (QueryTagsConfig),
     ToJSON (SourceCustomization)
   ) =>
@@ -97,7 +97,7 @@ instance
       [ "name" .= _siName,
         "tables" .= _siTables,
         "functions" .= _siFunctions,
-        "logical_models" .= _siLogicalModels,
+        "native_queries" .= _siNativeQueries,
         "configuration" .= _siConfiguration,
         "query_tags_config" .= _siQueryTagsConfig
       ]

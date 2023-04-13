@@ -25,8 +25,8 @@ import Hasura.EncJSON
 import Hasura.Function.API qualified as Functions
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as L
-import Hasura.LogicalModel.API qualified as LogicalModels
 import Hasura.Metadata.Class
+import Hasura.NativeQuery.API qualified as NativeQueries
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ApiLimit
@@ -137,10 +137,10 @@ data RQLMetadataV1
   | RMDropComputedField !(AnyBackend DropComputedField)
   | -- Connection template
     RMTestConnectionTemplate !(AnyBackend TestConnectionTemplate)
-  | -- Logical Models
-    RMGetLogicalModel !(AnyBackend LogicalModels.GetLogicalModel)
-  | RMTrackLogicalModel !(AnyBackend LogicalModels.TrackLogicalModel)
-  | RMUntrackLogicalModel !(AnyBackend LogicalModels.UntrackLogicalModel)
+  | -- Native Queries
+    RMGetNativeQuery !(AnyBackend NativeQueries.GetNativeQuery)
+  | RMTrackNativeQuery !(AnyBackend NativeQueries.TrackNativeQuery)
+  | RMUntrackNativeQuery !(AnyBackend NativeQueries.UntrackNativeQuery)
   | -- Custom types
     RMGetCustomReturnType !(AnyBackend CustomReturnType.GetCustomReturnType)
   | RMTrackCustomReturnType !(AnyBackend CustomReturnType.TrackCustomReturnType)
@@ -508,9 +508,9 @@ queryModifiesMetadata = \case
       RMGetTableInfo _ -> False
       RMTestConnectionTemplate _ -> False
       RMSuggestRelationships _ -> False
-      RMGetLogicalModel _ -> False
-      RMTrackLogicalModel _ -> True
-      RMUntrackLogicalModel _ -> True
+      RMGetNativeQuery _ -> False
+      RMTrackNativeQuery _ -> True
+      RMUntrackNativeQuery _ -> True
       RMGetCustomReturnType _ -> False
       RMTrackCustomReturnType _ -> True
       RMUntrackCustomReturnType _ -> True
@@ -704,9 +704,9 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
   RMAddComputedField q -> dispatchMetadata runAddComputedField q
   RMDropComputedField q -> dispatchMetadata runDropComputedField q
   RMTestConnectionTemplate q -> dispatchMetadata runTestConnectionTemplate q
-  RMGetLogicalModel q -> dispatchMetadata LogicalModels.runGetLogicalModel q
-  RMTrackLogicalModel q -> dispatchMetadata (LogicalModels.runTrackLogicalModel env) q
-  RMUntrackLogicalModel q -> dispatchMetadata LogicalModels.runUntrackLogicalModel q
+  RMGetNativeQuery q -> dispatchMetadata NativeQueries.runGetNativeQuery q
+  RMTrackNativeQuery q -> dispatchMetadata (NativeQueries.runTrackNativeQuery env) q
+  RMUntrackNativeQuery q -> dispatchMetadata NativeQueries.runUntrackNativeQuery q
   RMGetCustomReturnType q -> dispatchMetadata CustomReturnType.runGetCustomReturnType q
   RMTrackCustomReturnType q -> dispatchMetadata CustomReturnType.runTrackCustomReturnType q
   RMUntrackCustomReturnType q -> dispatchMetadata CustomReturnType.runUntrackCustomReturnType q

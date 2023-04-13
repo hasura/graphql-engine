@@ -41,7 +41,7 @@ import Data.Text.Lazy.Builder qualified as L
 import Database.ODBC.SQLServer
 import Hasura.Backends.MSSQL.Types
 import Hasura.Backends.MSSQL.Types qualified as MSSQL
-import Hasura.LogicalModel.Metadata (InterpolatedItem (..), InterpolatedQuery (..))
+import Hasura.NativeQuery.Metadata (InterpolatedItem (..), InterpolatedQuery (..))
 import Hasura.Prelude hiding (GT, LT)
 
 --------------------------------------------------------------------------------
