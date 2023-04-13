@@ -392,6 +392,65 @@ testImplementation = do
         )
         [yaml| message: success |]
 
+    it "Causes a metadata inconsistency when the return type is deleted" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+
+          dividedStuffLogicalModel :: Schema.LogicalModel
+          dividedStuffLogicalModel =
+            (Schema.logicalModel "divided_stuff" simpleQuery "divided_stuff")
+              { Schema.logicalModelArguments =
+                  [Schema.logicalModelColumn "unused" Schema.TInt]
+              }
+
+      Schema.trackCustomType sourceName dividedStuffReturnType testEnvironment
+      Schema.trackLogicalModel sourceName dividedStuffLogicalModel testEnvironment
+
+      metadata <-
+        GraphqlEngine.postMetadata
+          testEnvironment
+          [yaml|
+            type: export_metadata
+            args: {}
+          |]
+
+      let inconsistent :: A.Value
+          inconsistent =
+            metadata
+              & key "sources" . values . key "custom_return_types"
+                .~ A.Array mempty
+
+          integer :: Text
+          integer = Fixture.backendScalarType backendTypeMetadata Schema.TInt
+
+      shouldReturnYaml
+        testEnvironment
+        ( GraphqlEngine.postMetadataWithStatus
+            400
+            testEnvironment
+            [yaml|
+              type: replace_metadata
+              args: *inconsistent
+            |]
+        )
+        [interpolateYaml|
+          code: unexpected
+          error: cannot continue due to inconsistent metadata
+          internal:
+            - definition:
+                arguments:
+                  unused:
+                    nullable: false
+                    type: #{integer}
+                code: SELECT (thing / 2)::integer AS divided FROM stuff
+                returns: divided_stuff
+                root_field_name: divided_stuff
+              name: logical_model divided_stuff in source #{sourceName}
+              reason: "Inconsistent object: The custom return type divided_stuff could not be found"
+              type: logical_model
+          path: $.args
+        |]
+
 metadataHandlingWhenDisabledSpec :: SpecWith GlobalTestEnvironment
 metadataHandlingWhenDisabledSpec = do
   describe "When logical models are enabled" do

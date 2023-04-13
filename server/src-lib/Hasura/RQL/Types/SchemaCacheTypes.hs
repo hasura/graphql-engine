@@ -173,6 +173,7 @@ data DependencyReason
   | DRRemoteSchema
   | DRRemoteRelationship
   | DRParentRole
+  | DRCustomReturnType
   deriving (Show, Eq, Generic)
 
 instance Hashable DependencyReason
@@ -195,6 +196,7 @@ reasonToTxt = \case
   DRRemoteSchema -> "remote_schema"
   DRRemoteRelationship -> "remote_relationship"
   DRParentRole -> "parent_role"
+  DRCustomReturnType -> "custom_return_type"
 
 instance ToJSON DependencyReason where
   toJSON = String . reasonToTxt

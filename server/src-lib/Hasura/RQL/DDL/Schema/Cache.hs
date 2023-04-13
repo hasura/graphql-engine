@@ -774,22 +774,37 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
       let customReturnTypesCache :: CustomReturnTypeCache b
           customReturnTypesCache = mapFromL _crtiName (catMaybes customReturnTypeCacheMaybes)
 
-      let mkLogicalModelMetadataObject :: LogicalModelMetadata b -> MetadataObject
-          mkLogicalModelMetadataObject lmm =
-            ( MetadataObject
-                ( MOSourceObjId sourceName $
-                    AB.mkAnyBackend $
-                      SMOLogicalModel @b (_lmmRootFieldName lmm)
-                )
-                (toJSON lmm)
-            )
-
       logicalModelCacheMaybes <-
         interpretWriter
           -< for
             (OMap.elems logicalModels)
-            \lmm@LogicalModelMetadata {..} ->
-              withRecordInconsistencyM (mkLogicalModelMetadataObject lmm) $ do
+            \lmm@LogicalModelMetadata {..} -> do
+              let metadataObject :: MetadataObject
+                  metadataObject =
+                    MetadataObject
+                      ( MOSourceObjId sourceName $
+                          AB.mkAnyBackend $
+                            SMOLogicalModel @b _lmmRootFieldName
+                      )
+                      (toJSON lmm)
+
+                  schemaObjId :: SchemaObjId
+                  schemaObjId =
+                    SOSourceObj sourceName $
+                      AB.mkAnyBackend $
+                        SOILogicalModel @b _lmmRootFieldName
+
+                  dependency :: SchemaDependency
+                  dependency =
+                    SchemaDependency
+                      { sdObjId =
+                          SOSourceObj sourceName $
+                            AB.mkAnyBackend $
+                              SOICustomReturnType @b _lmmReturns,
+                        sdReason = DRCustomReturnType
+                      }
+
+              withRecordInconsistencyM metadataObject $ do
                 unless (_cdcAreLogicalModelsEnabled dynamicConfig) $
                   throw400 InvalidConfiguration "The Logical Models feature is disabled"
 
@@ -797,6 +812,9 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                   onNothing
                     (M.lookup _lmmReturns customReturnTypesCache)
                     (throw400 InvalidConfiguration ("The custom return type " <> toTxt _lmmReturns <> " could not be found"))
+
+                recordDependenciesM metadataObject schemaObjId $
+                  Seq.singleton dependency
 
                 pure
                   LogicalModelInfo
