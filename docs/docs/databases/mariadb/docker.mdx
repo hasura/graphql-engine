@@ -1,20 +1,20 @@
 ---
 sidebar_label: Docker
 description: Getting Started with Docker for Hasura Enterprise Edition
-title: 'MySQL: Getting Started with Docker'
+title: 'MariaDB: Getting Started with Docker'
 keywords:
   - hasura
   - docs
   - enterprise
   - docker
-  - mysql
+  - mariadb
 sidebar_position: 1
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import LatestRelease from '@site/src/components/LatestRelease';
 
-# Getting Started with Hasura and MySQL in Docker
+# Getting Started with Hasura and MariaDB in Docker
 
 <div className="badge-container">
   <div className="badge badge--primary heading-badge">Available on: Enterprise (Self-hosted)</div>
@@ -24,23 +24,21 @@ import LatestRelease from '@site/src/components/LatestRelease';
 ## Introduction
 
 This guide will help you get set up with the [Enterprise Edition](/enterprise/overview.mdx) of Hasura GraphQL Engine
-with our MySQL integration using Docker Compose. This is the easiest way to set up Hasura Enterprise Edition and the
-MySQL GraphQL Data Connector.
+with our MariaDB integration using Docker Compose. This is the easiest way to set up Hasura Enterprise Edition and the
+MariaDB GraphQL Data Connector.
 
 :::tip Supported versions:
 
-1.  Hasura GraphQL Engine `v2.19.0` onwards
-2.  MySQL version 8.0 and higher
-3.  Currently only standard implementations of MySQL are supported. PlanetScale and certain other providers are
-    unsupported.
+1.  Hasura GraphQL Engine `v2.23.0` onwards
+2.  MariaDB version 10.5 and higher
 
 :::
 
 :::tip Alpha version supported features
 
-Hasura currently supports queries, mutations (INSERT, UPDATE, DELETE), table relationships, remote relationships and permissions on MySQL.
+Hasura currently supports queries, mutations (INSERT, UPDATE, DELETE), table relationships, remote relationships and permissions on MariaDB.
 
-Note that Hasura doesn't yet support the ability to modify the database schema for MySQL, so the database you
+Note that Hasura doesn't yet support the ability to modify the database schema for MariaDB, so the database you
 connect to should already contain tables and data. You should also ideally have access to it outside of Hasura to
 modify the schema.
 
@@ -56,7 +54,7 @@ This tutorial assumes that the following prerequisites have been met:
   already have one.
 - You have [Docker](https://docs.docker.com/install/) and [Docker Compose](https://docs.docker.com/compose/install/)
   working on your machine.
-- You have access to a MySQL database for which you would like to create an API.
+- You have access to a MariaDB database for which you would like to create an API.
 
 ### Step 1: Get the Docker Compose file
 
@@ -66,9 +64,9 @@ in order to store the Hasura metadata and a Redis instance for caching.
 
 ```bash
 # in a new directory run
-wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/enterprise/mysql/docker-compose.yaml
+wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/enterprise/mariadb/docker-compose.yaml
 # or run
-curl https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/enterprise/mysql/docker-compose.yaml -o docker-compose.yaml
+curl https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/enterprise/mariadb/docker-compose.yaml -o docker-compose.yaml
 ```
 
 ### Step 2: Set the Hasura EE license key and the admin secret
@@ -118,44 +116,44 @@ b0b1aac0508d postgres                           ... 1m ago  Up 1m  5432/tcp ...
 7b5b2ee70ece hasura/graphql-data-connector      ... 1m ago  Up 1m  5005/tcp ..
 ```
 
-### Step 5: Load the Hasura Console
+### Step 4: Load the Hasura Console
 
 Open the Hasura Console by navigating to `http://localhost:8080/console`. You will need to input your admin secret key
 as set in your Docker Compose file to log in.
 
-### Step 6: Connect to a MySQL database
+### Step 5: Connect to a MariaDB database
 
 From the Console, click the `Data` tab:
 
 <Thumbnail src="/img/getting-started/connect-db-console.png" alt="Connect database" width="1000px" />
 
-Select the MySQL (Alpha) data source driver, enter in a display name for the database and set the JDBC Connection URL
-for your MySQL instance.
+Select the MariaDB (Alpha) data source driver, enter in a display name for the database and set the JDBC Connection URL
+for your MariaDB instance.
 
 The JDBC connection URL should look like this:
 
 ```yaml {4-6}
-jdbc:mysql://<hostname>:<port>/<database name>?user=<username>&password=<password>
+jdbc:mariadb://<hostname>:<port>/<database name>?user=<username>&password=<password>
 ```
 
 For example:
 
 ```yaml {4-6}
-jdbc:mysql://myhost.mycompany.com/mysqltest?user=abc&password=pqr  # assuming the default port 3306
-jdbc:mysql://localhost:4533/mysqltest?user=abc&password=pqr        # assuming MySQL is running on port 4533
+jdbc:mariadb://myhost.mycompany.com/mariadb?user=abc&password=pqr  # assuming the default port 3306
+jdbc:mariadb://localhost:4533/mariadb?user=abc&password=pqr        # assuming MariaDB is running on port 4533
 ```
 
 For more information see
-[MySQL Connection URL syntax](https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-jdbc-url-format.html).
+[MariaDB Connection URL syntax](https://mariadb.com/kb/en/about-mariadb-connector-j/#using-the-driver).
 
 Click `Connect Database`.
 
-### Step 7: Track tables and run GraphQL API queries
+### Step 6: Track tables and run GraphQL API queries
 
-Now that you have successfully connected your MySQL database to Hasura, you can track tables and use Hasura to
+Now that you have successfully connected your MariaDB database to Hasura, you can track tables and use Hasura to
 automatically build a full-featured GraphQL API for it.
 
-### Step 8 (optional): Use managed PostgreSQL and Redis instances
+### Step 7 (optional): Use managed PostgreSQL and Redis instances
 
 The Hasura EE Docker compose files come with containerized open-source versions of PostgreSQL and Redis.
 
