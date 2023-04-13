@@ -27665,6 +27665,7 @@ RMSetCatalogState :: !SetCatalogState -> RQLMetadataV1
 RMTestWebhookTransform :: !Unvalidated TestWebhookTransform -> RQLMetadataV1
 RMGetFeatureFlag :: !GetFeatureFlag -> RQLMetadataV1
 RMBulk :: [RQLMetadataRequest] -> RQLMetadataV1
+RMBulkKeepGoing :: [RQLMetadataRequest] -> RQLMetadataV1
 
 -- | The payload for the <tt><i>v1</i>metadata</tt> endpoint. See:
 --   
