@@ -50,7 +50,7 @@ modify the schema.
 
 This tutorial assumes that the following prerequisites have been met:
 
-- To deploy Hasura EE, you will need a license key. Please [contact Hasura Sales](mailto:sales@hasura.io) if you do not
+- To deploy Hasura Enterprise Edition, you will need a license key. Please [contact Hasura Sales](mailto:sales@hasura.io) if you do not
   already have one.
 - You have [Docker](https://docs.docker.com/install/) and [Docker Compose](https://docs.docker.com/compose/install/)
   working on your machine.
@@ -69,7 +69,7 @@ wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-mani
 curl https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/enterprise/mariadb/docker-compose.yaml -o docker-compose.yaml
 ```
 
-### Step 2: Set the Hasura EE license key and the admin secret
+### Step 2: Set the Hasura Enterprise Edition license key and the admin secret
 
 Edit the downloaded `docker-compose.yaml` and set the license key and admin secret.
 
@@ -155,7 +155,7 @@ automatically build a full-featured GraphQL API for it.
 
 ### Step 7 (optional): Use managed PostgreSQL and Redis instances
 
-The Hasura EE Docker compose files come with containerized open-source versions of PostgreSQL and Redis.
+The Hasura Enterprise Edition Docker compose files come with containerized open-source versions of PostgreSQL and Redis.
 
 We highly recommend using managed PostgreSQL and Redis instances especially when running in production.
 

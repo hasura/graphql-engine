@@ -94,7 +94,7 @@ X-Hasura-Role: admin
 | enable_manual          | false    | Boolean                                                                                                                                | If set to true, the Event Trigger can be invoked manually                                                              |
 | request_transform      | false    | [RequestTransformation](/api-reference/syntax-defs.mdx#requesttransformation)                                                          | Attaches a Request Transformation to the Event Trigger.                                                                |
 | response_transform     | false    | [ResponseTransformation](/api-reference/syntax-defs.mdx#responsetransformation)                                                        | Attaches a Request Transformation to the Event Trigger.                                                                |
-| cleanup_config         | false    | [AutoEventTriggerCleanupConfig](/api-reference/syntax-defs.mdx#autoeventtriggercleanupconfig)                                          | Cleanup config for the auto cleanup process (EE/Cloud only).                                                           |
+| cleanup_config         | false    | [AutoEventTriggerCleanupConfig](/api-reference/syntax-defs.mdx#autoeventtriggercleanupconfig)                                          | Cleanup config for the auto cleanup process (Enterprise Edition/Cloud only).                                           |
 | trigger_on_replication | false    | Boolean                                                                                                                                | Specification for enabling/disabling the Event Trigger during logical replication                                      |
 
 (\*) Either `webhook` or `webhook_from_env` are required.
@@ -256,7 +256,7 @@ X-Hasura-Role: admin
 | enable_manual          | false    | Boolean                                                                                                                                | If set to true, the Event Trigger can be invoked manually                         |
 | request_transform      | false    | [RequestTransformation](/api-reference/syntax-defs.mdx#requesttransformation)                                                          | Attaches a Request Transformation to the Event Trigger.                           |
 | response_transform     | false    | [ResponseTransformation](/api-reference/syntax-defs.mdx#responsetransformation)                                                        | Attaches a Request Transformation to the Event Trigger.                           |
-| cleanup_config         | false    | [AutoEventTriggerCleanupConfig](/api-reference/syntax-defs.mdx#autoeventtriggercleanupconfig)                                          | Cleanup config for the auto cleanup process (EE/Cloud only).                      |
+| cleanup_config         | false    | [AutoEventTriggerCleanupConfig](/api-reference/syntax-defs.mdx#autoeventtriggercleanupconfig)                                          | Cleanup config for the auto cleanup process (Enterprise Edition/Cloud only).      |
 | trigger_on_replication | false    | Boolean                                                                                                                                | Specification for enabling/disabling the Event Trigger during logical replication |
 
 (\*) Either `webhook` or `webhook_from_env` are required.
