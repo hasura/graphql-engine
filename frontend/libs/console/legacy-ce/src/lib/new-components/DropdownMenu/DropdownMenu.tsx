@@ -70,7 +70,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
         {...options?.content}
         className={zIndex}
       >
-        <div className="origin-top-left absolute left-0 z-10 mt-xs w-max rounded shadow-md bg-white ring-1 ring-gray-300 divide-y divide-gray-300 focus:outline-none">
+        <div className="z-10 mt-xs w-max rounded shadow-md bg-white ring-1 ring-gray-300 divide-y divide-gray-300 focus:outline-none">
           {items.map((group, groupIndex) => (
             <div className="py-1" key={groupIndex}>
               {group.map((item, itemIndex) => (
