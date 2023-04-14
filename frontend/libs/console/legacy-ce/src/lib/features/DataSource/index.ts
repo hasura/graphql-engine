@@ -1,18 +1,20 @@
-import { Source, SupportedDrivers, Table } from '../hasura-metadata-types';
 import { Capabilities, OpenApiSchema } from '@hasura/dc-api-types';
 import { DataNode } from 'antd/lib/tree';
 import { AxiosInstance } from 'axios';
-import { z } from 'zod';
 import pickBy from 'lodash/pickBy';
+import { z } from 'zod';
+import { Source, SupportedDrivers, Table } from '../hasura-metadata-types';
+import { AlloyDbTable, alloy } from './alloydb';
 import { bigquery } from './bigquery';
 import { citus } from './citus';
 import { cockroach } from './cockroach';
 import { gdc } from './gdc';
 import { mssql } from './mssql';
 import { postgres } from './postgres';
-import { alloy, AlloyDbTable } from './alloydb';
 import type {
+  ChangeDatabaseSchemaProps,
   DriverInfo,
+  GetDatabaseSchemaProps,
   GetDefaultQueryRootProps,
   GetFKRelationshipProps,
   GetSupportedOperatorsProps,
@@ -33,23 +35,44 @@ import type {
 } from './types';
 
 import { transformSchemaToZodObject } from '../OpenApi3Form/utils';
+import { QueryType } from '../Permissions/types';
 import {
-  exportMetadata,
-  getDriverPrefix,
   NetworkArgs,
-  runIntrospectionQuery,
+  RunSQLAPIError,
+  RunSQLCommandResponse,
   RunSQLResponse,
   RunSQLSelectResponse,
-  RunSQLCommandResponse,
+  exportMetadata,
+  getDriverPrefix,
   runGraphQL,
+  runIntrospectionQuery,
   runMetadataQuery,
 } from './api';
 import { getAllSourceKinds } from './common/getAllSourceKinds';
 import { getTableName } from './common/getTableName';
-import { QueryType } from '../Permissions/types';
 import { ReleaseType } from './types';
 
+export * from './common/utils';
+export type { GDCTable } from './gdc';
+export * from './guards';
 export type { PostgresTable } from './postgres';
+export * from './types';
+export {
+  exportMetadata,
+  runGraphQL,
+  getTableName,
+  runMetadataQuery,
+  getDriverPrefix,
+  runIntrospectionQuery,
+};
+export type {
+  RunSQLResponse,
+  RunSQLSelectResponse,
+  RunSQLCommandResponse,
+  NetworkArgs,
+  AlloyDbTable,
+  RunSQLAPIError,
+};
 export enum Feature {
   NotImplemented = 'Not Implemented',
 }
@@ -109,6 +132,9 @@ export type Database = {
     getSupportedOperators: (
       props: GetSupportedOperatorsProps
     ) => Promise<Operator[] | Feature.NotImplemented>;
+    getDatabaseSchemas: (
+      props: GetDatabaseSchemaProps
+    ) => Promise<string[] | Feature.NotImplemented>;
   };
   query?: {
     getTableRows: (
@@ -117,6 +143,12 @@ export type Database = {
   };
   modify?: {
     defaultQueryRoot: (props: GetDefaultQueryRootProps) => Promise<string>;
+    createDatabaseSchema: (
+      props: ChangeDatabaseSchemaProps
+    ) => Promise<RunSQLResponse | Feature.NotImplemented>;
+    deleteDatabaseSchema: (
+      props: ChangeDatabaseSchemaProps
+    ) => Promise<RunSQLResponse | Feature.NotImplemented>;
   };
   config: {
     getDefaultQueryRoot: (
@@ -495,25 +527,27 @@ export const DataSource = (httpClient: AxiosInstance) => ({
       driver
     );
   },
+  getDatabaseSchemas: async ({
+    dataSourceName,
+  }: {
+    dataSourceName: string;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    if (!database.introspection?.getDatabaseSchemas)
+      throw new Error(`getDatabaseSchema() not callable for ${dataSourceName}`);
+
+    return database.introspection?.getDatabaseSchemas({
+      dataSourceName,
+      httpClient,
+    });
+  },
+  modifyDatabase: async ({ dataSourceName }: { dataSourceName: string }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    if (!database.modify)
+      throw new Error(`modify methods are not callable for ${dataSourceName}`);
+
+    return database.modify;
+  },
 });
-
-export type { GDCTable } from './gdc';
-export * from './guards';
-export * from './types';
-export * from './common/utils';
-export {
-  exportMetadata,
-  runGraphQL,
-  getTableName,
-  runMetadataQuery,
-  getDriverPrefix,
-  runIntrospectionQuery,
-};
-
-export type {
-  RunSQLResponse,
-  RunSQLSelectResponse,
-  RunSQLCommandResponse,
-  NetworkArgs,
-  AlloyDbTable,
-};

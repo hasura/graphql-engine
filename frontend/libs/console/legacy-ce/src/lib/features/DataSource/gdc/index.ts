@@ -31,6 +31,7 @@ export const gdc: Database = {
     getFKRelationships,
     getTablesListAsTree,
     getSupportedOperators,
+    getDatabaseSchemas: async () => Feature.NotImplemented,
   },
   query: {
     getTableRows,

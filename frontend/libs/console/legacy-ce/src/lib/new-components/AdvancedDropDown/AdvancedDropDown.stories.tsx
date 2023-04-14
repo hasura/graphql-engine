@@ -1,12 +1,13 @@
-import { DropDown } from '.';
-import { Badge } from '../Badge';
-import { Button } from '../Button';
 import { action } from '@storybook/addon-actions';
 import { expect } from '@storybook/jest';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import { screen, userEvent, within } from '@storybook/testing-library';
+import randomWords from 'random-words';
 import React from 'react';
 import { GiHamburgerMenu } from 'react-icons/gi';
+import { DropDown } from '.';
+import { Badge } from '../Badge';
+import { Button } from '../Button';
 
 export default {
   title: 'components/Advanced Dropdown Menu 🧬',
@@ -384,6 +385,21 @@ SubMenu.play = async ({ canvasElement }) => {
   await expect(
     await screen.findByText('Super Nested Item')
   ).toBeInTheDocument();
+};
+
+export const LotsOfItems: ComponentStory<typeof DropDown.Root> = () => {
+  const data = React.useRef(randomWords(100));
+  return (
+    <div className="w-full">
+      <DropDown.Root defaultOpen trigger={<Trigger />} maxHeight={'75vh'}>
+        <DropDown.SubMenu label="Sub Menu">
+          {data.current.map(w => (
+            <DropDown.BasicItem>{w}</DropDown.BasicItem>
+          ))}
+        </DropDown.SubMenu>
+      </DropDown.Root>
+    </div>
+  );
 };
 
 export const CompleteExample: ComponentStory<typeof DropDown.Root> = args => {

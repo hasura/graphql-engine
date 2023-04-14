@@ -74,7 +74,7 @@ export const ManageTrackedTables = ({
         <div>
           <div className="flex mb-1 items-center">
             <div className="font-semibold inline-flex items-center text-lg text-gray-600">
-              Untracked Tables/Views
+              Tables/Views
             </div>
             <Tooltip
               tooltipContentChildren="Expose the tables available in your database via the GraphQL API"

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
-import { runMetadataQuery } from '../DataSource';
+import { runMetadataQuery } from './runMetadataQuery';
 import { useHttpClient } from '../Network';
 import { InconsistentMetadata } from './types';
 

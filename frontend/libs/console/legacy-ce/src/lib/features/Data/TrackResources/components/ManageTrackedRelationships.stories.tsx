@@ -30,9 +30,7 @@ Base.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
   // Reset initial metadata to make sure tests start from a clean slate everytime
 
-  userEvent.click(
-    await canvas.findByText('Untracked Foreign Key Relationships')
-  );
+  userEvent.click(await canvas.findByText('Foreign Key Relationships'));
 
   await expect(
     canvas.getByText('No untracked relationships found')

@@ -23,3 +23,7 @@ export const twDefault = `
 export const twDangerous = `
    !text-red-600
    group-data-[highlighted]/item:!bg-red-100`;
+
+export const twLink = `
+   !text-blue-500
+   group-data-[highlighted]/item:!bg-blue-100`;

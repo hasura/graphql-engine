@@ -42,7 +42,7 @@ export const ManageTrackedRelationships: React.VFC<
         <div>
           <div className="flex mb-1 items-center">
             <div className="font-semibold inline-flex items-center text-lg">
-              Untracked Foreign Key Relationships
+              Foreign Key Relationships
             </div>
             <Tooltip
               tooltipContentChildren="Expose the tables available in your database via the GraphQL API"
@@ -69,7 +69,7 @@ export const ManageTrackedRelationships: React.VFC<
         </p>
 
         <Tabs.List
-          className="border-b border-gray-300 px-4 flex space-x-4"
+          className="border-b border-gray-300 flex space-x-4"
           aria-label="Tabs"
         >
           <Tabs.Trigger

@@ -8,6 +8,7 @@ import {
   getFKRelationships,
   getTablesListAsTree,
   getSupportedOperators,
+  getDatabaseSchemas,
 } from '../postgres/introspection';
 import { getTableRows } from '../postgres/query';
 import { runSQL } from '../api';
@@ -45,6 +46,7 @@ export const alloy: Database = {
     getFKRelationships,
     getTablesListAsTree,
     getSupportedOperators,
+    getDatabaseSchemas,
   },
   query: {
     getTableRows,

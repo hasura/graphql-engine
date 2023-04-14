@@ -169,3 +169,12 @@ export type GetDefaultQueryRootProps = {
   dataSourceName: string;
   table: Table;
 };
+
+export type GetDatabaseSchemaProps = {
+  dataSourceName: string;
+} & NetworkArgs;
+
+export type ChangeDatabaseSchemaProps = {
+  dataSourceName: string;
+  schemaName: string;
+} & NetworkArgs;

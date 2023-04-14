@@ -77,15 +77,13 @@ export const TemplateGalleryModalBody: React.VFC<{
         </p>
       ) : null}
       {details.imageUrl ? (
-        <>
-          <p className="py-3">
-            <img
-              className={styles.image_in_detail}
-              src={details.imageUrl}
-              alt=""
-            />
-          </p>
-        </>
+        <p className="py-3">
+          <img
+            className={styles.image_in_detail}
+            src={details.imageUrl}
+            alt=""
+          />
+        </p>
       ) : null}
       <p
         className={`${styles.mb_xs} ${styles.strong} ${styles.muted} border-t border-gray-300 pt-4`}

@@ -1,4 +1,4 @@
-import { exportMetadata } from '../DataSource';
+import { exportMetadata } from './exportMetadata';
 import { Metadata } from '../hasura-metadata-types';
 import { useHttpClient } from '../Network';
 import { useCallback } from 'react';

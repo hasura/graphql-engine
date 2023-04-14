@@ -1,34 +1,14 @@
 import { AxiosInstance, AxiosResponseHeaders } from 'axios';
 import {
-  Metadata,
   NativeDrivers,
   Source,
   SupportedDrivers,
 } from '../hasura-metadata-types';
 import { isPostgres } from '../../metadata/dataSource.utils';
-
+export { runMetadataQuery, exportMetadata } from '../hasura-metadata-api';
 export interface NetworkArgs {
   httpClient: AxiosInstance;
 }
-
-export const exportMetadata = async ({
-  httpClient,
-}: NetworkArgs): Promise<Metadata> => {
-  return (
-    await httpClient.post('/v1/metadata', {
-      type: 'export_metadata',
-      version: 2,
-      args: {},
-    })
-  ).data;
-};
-
-export const runMetadataQuery = async <ResponseType>({
-  httpClient,
-  body,
-}: { body: Record<string, any> } & NetworkArgs): Promise<ResponseType> => {
-  return (await httpClient.post('/v1/metadata', body)).data;
-};
 
 type RunSqlArgs = {
   source: Pick<Source, 'kind' | 'name'>;
@@ -56,6 +36,9 @@ const getRunSqlType = (driver: NativeDrivers) => {
   return `${driver}_run_sql`;
 };
 
+// We need to type this better
+export type RunSQLAPIError = Record<string, any>;
+
 export const runQuery = async <ResponseType>({
   body,
   httpClient,
@@ -63,7 +46,10 @@ export const runQuery = async <ResponseType>({
   /**
    * Use v2 query instead of v1 because it supports other <db>_run_sql commands
    */
-  const result = await httpClient.post<ResponseType>('v2/query', body);
+  const result = await httpClient.post<ResponseType, RunSQLAPIError>(
+    'v2/query',
+    body
+  );
   return result.data;
 };
 

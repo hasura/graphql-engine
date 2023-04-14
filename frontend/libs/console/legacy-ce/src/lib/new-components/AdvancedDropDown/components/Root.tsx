@@ -4,6 +4,8 @@ import { Nullable } from '../../../types';
 
 import * as StyleWrappers from './style-wrappers';
 
+export type HeightOptions = '65vh' | '50vh' | '75vh' | '85vh' | '100vh';
+
 type RootProps = {
   trigger: React.ReactNode;
   defaultOpen?: boolean;
@@ -11,6 +13,7 @@ type RootProps = {
   side?: DropdownMenu.DropdownMenuContentProps['side'];
   arrow?: boolean;
   container?: Nullable<HTMLElement>;
+  maxHeight?: HeightOptions;
 };
 
 export const Root: React.FC<RootProps> = ({
@@ -21,6 +24,7 @@ export const Root: React.FC<RootProps> = ({
   side,
   arrow = true,
   container,
+  maxHeight = '65vh',
 }) => (
   <DropdownMenu.Root defaultOpen={defaultOpen}>
     <DropdownMenu.Trigger>{trigger}</DropdownMenu.Trigger>
@@ -31,7 +35,9 @@ export const Root: React.FC<RootProps> = ({
         align={align}
         side={side}
       >
-        <StyleWrappers.Content>{children}</StyleWrappers.Content>
+        <StyleWrappers.Content maxHeight={maxHeight}>
+          {children}
+        </StyleWrappers.Content>
         {arrow && <DropdownMenu.Arrow className="fill-white" />}
       </DropdownMenu.Content>
     </DropdownMenu.Portal>
