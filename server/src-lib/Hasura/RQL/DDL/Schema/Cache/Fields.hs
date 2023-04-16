@@ -8,17 +8,17 @@ import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Data.These (These (..))
 import Hasura.Base.Error
+import Hasura.Function.API
+import Hasura.Function.Cache
 import Hasura.Prelude
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.Relationship
 import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.Schema.Cache.Common
-import Hasura.RQL.DDL.Schema.Function
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
@@ -38,25 +38,26 @@ addNonColumnFields ::
   ) =>
   HashMap SourceName (AB.AnyBackend PartiallyResolvedSource) ->
   SourceName ->
+  HashMap G.Name (TableObjectType b) ->
   HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)) ->
   FieldInfoMap (ColumnInfo b) ->
   PartiallyResolvedRemoteSchemaMap ->
   DBFunctionsMetadata b ->
   NonColumnTableInputs b ->
   m (FieldInfoMap (FieldInfo b))
-addNonColumnFields allSources source rawTableInfo columns remoteSchemaMap pgFunctions NonColumnTableInputs {..} = do
+addNonColumnFields allSources source customObjectTypes rawTableInfos columns remoteSchemaMap pgFunctions NonColumnTableInputs {..} = do
   objectRelationshipInfos <-
     buildInfoMapPreservingMetadataM
       _rdName
       (mkRelationshipMetadataObject @b ObjRel source _nctiTable)
-      (buildObjectRelationship (_tciForeignKeys <$> rawTableInfo) source _nctiTable)
+      (buildObjectRelationship (_tciForeignKeys <$> rawTableInfos) source _nctiTable)
       _nctiObjectRelationships
 
   arrayRelationshipInfos <-
     buildInfoMapPreservingMetadataM
       _rdName
       (mkRelationshipMetadataObject @b ArrRel source _nctiTable)
-      (buildArrayRelationship (_tciForeignKeys <$> rawTableInfo) source _nctiTable)
+      (buildArrayRelationship (_tciForeignKeys <$> rawTableInfos) source _nctiTable)
       _nctiArrayRelationships
 
   let relationshipInfos = objectRelationshipInfos <> arrayRelationshipInfos
@@ -65,7 +66,7 @@ addNonColumnFields allSources source rawTableInfo columns remoteSchemaMap pgFunc
     buildInfoMapPreservingMetadataM
       _cfmName
       (mkComputedFieldMetadataObject source _nctiTable)
-      (buildComputedField (HS.fromList $ M.keys rawTableInfo) (HS.fromList $ map ciColumn $ M.elems columns) source pgFunctions _nctiTable)
+      (buildComputedField (HS.fromList $ M.keys rawTableInfos) (HS.fromList $ map ciColumn $ M.elems columns) source pgFunctions _nctiTable)
       _nctiComputedFields
   -- the fields that can be used for defining join conditions to other sources/remote schemas:
   -- 1. all columns
@@ -151,7 +152,7 @@ addNonColumnFields allSources source rawTableInfo columns remoteSchemaMap pgFunc
         return (fieldInfo, metadata)
 
     noColumnConflicts = \case
-      This columnInfo -> pure $ FIColumn columnInfo
+      This columnInfo -> pure $ columnInfoToFieldInfo customObjectTypes columnInfo
       That (fieldInfo, _) -> pure $ fieldInfo
       These columnInfo (_, fieldMetadata) -> do
         recordInconsistencyM Nothing fieldMetadata "field definition conflicts with postgres column"

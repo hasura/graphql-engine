@@ -34,11 +34,11 @@ import Harness.Permissions qualified as Permissions
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.RemoteServer qualified as RemoteServer
+import Harness.Schema (Table (..))
+import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture (LHSFixture, RHSFixture, SetupAction (..))
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..))
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction qualified as SetupAction
 import Harness.Test.TestResource (Managed)
 import Harness.TestEnvironment
@@ -778,14 +778,14 @@ rhsSqliteSetup (wholeTestEnvironment, _) = do
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-tests opts = describe "array-relationship" do
-  schemaTests opts
-  executionTests opts
-  permissionTests opts
+tests :: SpecWith (TestEnvironment, Maybe Server)
+tests = describe "array-relationship" do
+  schemaTests
+  executionTests
+  permissionTests
 
-schemaTests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-schemaTests _opts =
+schemaTests :: SpecWith (TestEnvironment, Maybe Server)
+schemaTests =
   -- we introspect the schema and validate it
   it "graphql-schema" \(testEnvironment, _) -> do
     let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
@@ -873,8 +873,8 @@ schemaTests _opts =
       |]
 
 -- | Basic queries using DB-to-DB joins
-executionTests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-executionTests opts = describe "execution" do
+executionTests :: SpecWith (TestEnvironment, Maybe Server)
+executionTests = describe "execution" do
   -- fetches the relationship data
   it "related-data" \(testEnvironment, _) -> do
     let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
@@ -901,7 +901,7 @@ executionTests opts = describe "execution" do
                - title: album3_artist1
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -928,7 +928,7 @@ executionTests opts = describe "execution" do
                albums: []
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -955,7 +955,7 @@ executionTests opts = describe "execution" do
                albums: null
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -995,7 +995,7 @@ executionTests opts = describe "execution" do
                albums: null
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -1006,8 +1006,8 @@ executionTests opts = describe "execution" do
 -- 1. _aggregate
 
 -- | tests that describe an array relationship's data in the presence of permisisons
-permissionTests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-permissionTests opts = describe "permission" do
+permissionTests :: SpecWith (TestEnvironment, Maybe Server)
+permissionTests = describe "permission" do
   -- only the allowed rows on the target table are queryable
   it "only-allowed-rows" \(testEnvironment, _) -> do
     let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
@@ -1043,7 +1043,7 @@ permissionTests opts = describe "permission" do
                albums: null
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -1086,7 +1086,7 @@ permissionTests opts = describe "permission" do
               - __typename: #{rhsSchema}_album
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -1115,7 +1115,7 @@ permissionTests opts = describe "permission" do
               - name: name
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -1145,7 +1145,7 @@ permissionTests opts = describe "permission" do
               - name: name
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -1177,7 +1177,7 @@ permissionTests opts = describe "permission" do
                - title: album2_artist1
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -1208,7 +1208,7 @@ permissionTests opts = describe "permission" do
                  - title: album1_artist1
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -1240,7 +1240,7 @@ permissionTests opts = describe "permission" do
                - title: album2_artist1
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -1280,7 +1280,7 @@ permissionTests opts = describe "permission" do
                  - title: album2_artist1
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -1320,6 +1320,6 @@ permissionTests opts = describe "permission" do
                  - title: album2_artist1
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse

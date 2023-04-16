@@ -73,7 +73,8 @@ capabilities =
             API._cMetrics = Just API.MetricsCapabilities {},
             API._cExplain = Just API.ExplainCapabilities {},
             API._cRaw = Just API.RawCapabilities {},
-            API._cDatasets = Just API.DatasetCapabilities {}
+            API._cDatasets = Just API.DatasetCapabilities {},
+            API._cLicensing = Nothing
           },
       _crConfigSchemaResponse =
         API.ConfigSchemaResponse
@@ -149,7 +150,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "Artist primary key identifier",
                       API._ciInsertable = True,
-                      API._ciUpdatable = False
+                      API._ciUpdatable = False,
+                      API._ciValueGenerated = Just API.AutoIncrement
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Name",
@@ -157,10 +159,11 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The name of the artist",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     }
                 ],
-              API._tiPrimaryKey = [API.ColumnName "ArtistId"],
+              API._tiPrimaryKey = Just $ API.ColumnName "ArtistId" :| [],
               API._tiDescription = Just "Collection of artists of music",
               API._tiForeignKeys = API.ForeignKeys mempty,
               API._tiInsertable = True,
@@ -177,7 +180,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "Album primary key identifier",
                       API._ciInsertable = True,
-                      API._ciUpdatable = False
+                      API._ciUpdatable = False,
+                      API._ciValueGenerated = Just API.AutoIncrement
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Title",
@@ -185,7 +189,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "The title of the album",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "ArtistId",
@@ -193,10 +198,11 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "The ID of the artist that created the album",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     }
                 ],
-              API._tiPrimaryKey = [API.ColumnName "AlbumId"],
+              API._tiPrimaryKey = Just $ API.ColumnName "AlbumId" :| [],
               API._tiDescription = Just "Collection of music albums created by artists",
               API._tiForeignKeys =
                 API.ForeignKeys $
@@ -215,7 +221,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "Customer primary key identifier",
                       API._ciInsertable = True,
-                      API._ciUpdatable = False
+                      API._ciUpdatable = False,
+                      API._ciValueGenerated = Just API.AutoIncrement
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "FirstName",
@@ -223,7 +230,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "The customer's first name",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "LastName",
@@ -231,7 +239,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "The customer's last name",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Company",
@@ -239,7 +248,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The customer's company name",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Address",
@@ -247,7 +257,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The customer's address line (street number, street)",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "City",
@@ -255,7 +266,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The customer's address city",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "State",
@@ -263,7 +275,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The customer's address state",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Country",
@@ -271,7 +284,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The customer's address country",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "PostalCode",
@@ -279,7 +293,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The customer's address postal code",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Phone",
@@ -287,7 +302,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The customer's phone number",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Fax",
@@ -295,7 +311,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The customer's fax number",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Email",
@@ -303,7 +320,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "The customer's email address",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "SupportRepId",
@@ -311,10 +329,11 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The ID of the Employee who is this customer's support representative",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     }
                 ],
-              API._tiPrimaryKey = [API.ColumnName "CustomerId"],
+              API._tiPrimaryKey = Just $ API.ColumnName "CustomerId" :| [],
               API._tiDescription = Just "Collection of customers who can buy tracks",
               API._tiForeignKeys =
                 API.ForeignKeys $
@@ -333,7 +352,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "Employee primary key identifier",
                       API._ciInsertable = True,
-                      API._ciUpdatable = False
+                      API._ciUpdatable = False,
+                      API._ciValueGenerated = Just API.AutoIncrement
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "LastName",
@@ -341,7 +361,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "The employee's last name",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "FirstName",
@@ -349,7 +370,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "The employee's first name",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Title",
@@ -357,7 +379,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's job title",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "ReportsTo",
@@ -365,7 +388,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's report",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "BirthDate",
@@ -373,7 +397,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's birth date",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "HireDate",
@@ -381,7 +406,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's hire date",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Address",
@@ -389,7 +415,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's address line (street number, street)",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "City",
@@ -397,7 +424,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's address city",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "State",
@@ -405,7 +433,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's address state",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Country",
@@ -413,7 +442,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's address country",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "PostalCode",
@@ -421,7 +451,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's address postal code",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Phone",
@@ -429,7 +460,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's phone number",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Fax",
@@ -437,7 +469,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's fax number",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Email",
@@ -445,10 +478,11 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's email address",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     }
                 ],
-              API._tiPrimaryKey = [API.ColumnName "EmployeeId"],
+              API._tiPrimaryKey = Just $ API.ColumnName "EmployeeId" :| [],
               API._tiDescription = Just "Collection of employees who work for the business",
               API._tiForeignKeys =
                 API.ForeignKeys $
@@ -467,7 +501,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "Genre primary key identifier",
                       API._ciInsertable = True,
-                      API._ciUpdatable = False
+                      API._ciUpdatable = False,
+                      API._ciValueGenerated = Just API.AutoIncrement
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Name",
@@ -475,10 +510,11 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The name of the genre",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     }
                 ],
-              API._tiPrimaryKey = [API.ColumnName "GenreId"],
+              API._tiPrimaryKey = Just $ API.ColumnName "GenreId" :| [],
               API._tiDescription = Just "Genres of music",
               API._tiForeignKeys = API.ForeignKeys mempty,
               API._tiInsertable = True,
@@ -495,7 +531,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "Invoice primary key identifier",
                       API._ciInsertable = True,
-                      API._ciUpdatable = False
+                      API._ciUpdatable = False,
+                      API._ciValueGenerated = Just API.AutoIncrement
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "CustomerId",
@@ -503,7 +540,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "ID of the customer who bought the music",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "InvoiceDate",
@@ -511,7 +549,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "Date of the invoice",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "BillingAddress",
@@ -519,7 +558,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The invoice's billing address line (street number, street)",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "BillingCity",
@@ -527,7 +567,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The invoice's billing address city",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "BillingState",
@@ -535,7 +576,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The invoice's billing address state",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "BillingCountry",
@@ -543,7 +585,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The invoice's billing address country",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "BillingPostalCode",
@@ -551,7 +594,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The invoice's billing address postal code",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Total",
@@ -559,10 +603,11 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "The total amount due on the invoice",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     }
                 ],
-              API._tiPrimaryKey = [API.ColumnName "InvoiceId"],
+              API._tiPrimaryKey = Just $ API.ColumnName "InvoiceId" :| [],
               API._tiDescription = Just "Collection of invoices of music purchases by a customer",
               API._tiForeignKeys =
                 API.ForeignKeys $
@@ -582,7 +627,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "Invoice Line primary key identifier",
                       API._ciInsertable = True,
-                      API._ciUpdatable = False
+                      API._ciUpdatable = False,
+                      API._ciValueGenerated = Just API.AutoIncrement
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "InvoiceId",
@@ -590,7 +636,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "ID of the invoice the line belongs to",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "TrackId",
@@ -598,7 +645,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "ID of the music track being purchased",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "UnitPrice",
@@ -606,7 +654,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "Price of each individual track unit",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Quantity",
@@ -614,10 +663,11 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "Quantity of the track purchased",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     }
                 ],
-              API._tiPrimaryKey = [API.ColumnName "InvoiceLineId"],
+              API._tiPrimaryKey = Just $ API.ColumnName "InvoiceLineId" :| [],
               API._tiDescription = Just "Collection of track purchasing line items of invoices",
               API._tiForeignKeys =
                 API.ForeignKeys $
@@ -639,7 +689,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "Media Type primary key identifier",
                       API._ciInsertable = True,
-                      API._ciUpdatable = False
+                      API._ciUpdatable = False,
+                      API._ciValueGenerated = Just API.AutoIncrement
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Name",
@@ -647,10 +698,11 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The name of the media type format",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     }
                 ],
-              API._tiPrimaryKey = [API.ColumnName "MediaTypeId"],
+              API._tiPrimaryKey = Just $ API.ColumnName "MediaTypeId" :| [],
               API._tiDescription = Just "Collection of media types that tracks can be encoded in",
               API._tiForeignKeys = API.ForeignKeys mempty,
               API._tiInsertable = True,
@@ -667,7 +719,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "The ID of the track",
                       API._ciInsertable = True,
-                      API._ciUpdatable = False
+                      API._ciUpdatable = False,
+                      API._ciValueGenerated = Just API.AutoIncrement
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Name",
@@ -675,7 +728,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "The name of the track",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "AlbumId",
@@ -683,7 +737,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The ID of the album the track belongs to",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "MediaTypeId",
@@ -691,7 +746,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "The ID of the media type the track is encoded with",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "GenreId",
@@ -699,7 +755,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The ID of the genre of the track",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Composer",
@@ -707,7 +764,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The name of the composer of the track",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Milliseconds",
@@ -715,7 +773,8 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "The length of the track in milliseconds",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Bytes",
@@ -723,7 +782,8 @@ schema =
                       API._ciNullable = True,
                       API._ciDescription = Just "The size of the track in bytes",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "UnitPrice",
@@ -731,10 +791,11 @@ schema =
                       API._ciNullable = False,
                       API._ciDescription = Just "The price of the track",
                       API._ciInsertable = True,
-                      API._ciUpdatable = True
+                      API._ciUpdatable = True,
+                      API._ciValueGenerated = Nothing
                     }
                 ],
-              API._tiPrimaryKey = [API.ColumnName "TrackId"],
+              API._tiPrimaryKey = Just $ API.ColumnName "TrackId" :| [],
               API._tiDescription = Just "Collection of music tracks",
               API._tiForeignKeys =
                 API.ForeignKeys $
@@ -751,21 +812,22 @@ schema =
             { API._tiName = mkTableName "MyCustomScalarsTable",
               API._tiType = API.Table,
               API._tiColumns =
-                [ API.ColumnInfo (API.ColumnName "MyIntColumn") (API.ScalarType "MyInt") False Nothing True True,
-                  API.ColumnInfo (API.ColumnName "MyFloatColumn") (API.ScalarType "MyFloat") False Nothing True True,
-                  API.ColumnInfo (API.ColumnName "MyStringColumn") (API.ScalarType "MyString") False Nothing True True,
-                  API.ColumnInfo (API.ColumnName "MyBooleanColumn") (API.ScalarType "MyBoolean") False Nothing True True,
-                  API.ColumnInfo (API.ColumnName "MyIDColumn") (API.ScalarType "MyID") False Nothing True True,
-                  API.ColumnInfo (API.ColumnName "MyAnythingColumn") (API.ScalarType "MyAnything") False Nothing True True
+                [ API.ColumnInfo (API.ColumnName "MyIntColumn") (API.ScalarType "MyInt") False Nothing True True Nothing,
+                  API.ColumnInfo (API.ColumnName "MyFloatColumn") (API.ScalarType "MyFloat") False Nothing True True Nothing,
+                  API.ColumnInfo (API.ColumnName "MyStringColumn") (API.ScalarType "MyString") False Nothing True True Nothing,
+                  API.ColumnInfo (API.ColumnName "MyBooleanColumn") (API.ScalarType "MyBoolean") False Nothing True True Nothing,
+                  API.ColumnInfo (API.ColumnName "MyIDColumn") (API.ScalarType "MyID") False Nothing True True Nothing,
+                  API.ColumnInfo (API.ColumnName "MyAnythingColumn") (API.ScalarType "MyAnything") False Nothing True True Nothing
                 ],
-              API._tiPrimaryKey = [],
+              API._tiPrimaryKey = Nothing,
               API._tiDescription = Nothing,
               API._tiForeignKeys = API.ForeignKeys mempty,
               API._tiInsertable = True,
               API._tiUpdatable = True,
               API._tiDeletable = True
             }
-        ]
+        ],
+      _srObjectTypes = Nothing
     }
 
 -- | Stock 'MockConfig' for a Chinook Agent.

@@ -66,6 +66,7 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Data.Time.Clock
+import Data.Time.Clock qualified as Time
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Base.Error
 import Hasura.Eventing.Common
@@ -162,7 +163,7 @@ data EventPayload (b :: BackendType) = EventPayload
     epTrigger :: TriggerMetadata,
     epEvent :: J.Value,
     epDeliveryInfo :: DeliveryInfo,
-    epCreatedAt :: UTCTime
+    epCreatedAt :: Time.UTCTime
   }
   deriving (Generic)
 
@@ -318,7 +319,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
       events <- liftIO . fmap concat $
         -- fetch pending events across all the sources asynchronously
         LA.forConcurrently (M.toList allSources) \(sourceName, sourceCache) ->
-          AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo _sourceName tableCache _functionCache _customSQLCache sourceConfig _queryTagsConfig _sourceCustomization :: SourceInfo b) -> do
+          AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo _sourceName tableCache _functionCache _nativeQueryCache _customReturnTypeCache sourceConfig _queryTagsConfig _sourceCustomization :: SourceInfo b) -> do
             let tables = M.elems tableCache
                 triggerMap = _tiEventTriggerInfoMap <$> tables
                 eventTriggerCount = sum (M.size <$> triggerMap)
@@ -553,13 +554,19 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                     Prometheus.Histogram.observe (eventWebhookProcessingTime eventTriggerMetrics) eventWebhookProcessingTime'
                     EKG.Distribution.add (smEventProcessingTime serverMetrics) eventProcessingTime'
                     Prometheus.Histogram.observe (eventProcessingTime eventTriggerMetrics) eventProcessingTime'
-                Left (HTTPError reqBody err) ->
-                  processError @b sourceConfig e retryConf logHeaders reqBody maintenanceModeVersion err >>= flip onLeft logQErr
-                Left (TransformationError _ err) -> do
-                  L.unLogger logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode err)
+                    Prometheus.Counter.inc (eventProcessedTotalSuccess eventTriggerMetrics)
+                    Prometheus.Counter.inc (eventInvocationTotalSuccess eventTriggerMetrics)
+                Left eventError -> do
+                  -- TODO (paritosh): We can also add a label to the metric to indicate the type of error
+                  liftIO $ Prometheus.Counter.inc (eventInvocationTotalFailure eventTriggerMetrics)
+                  case eventError of
+                    (HTTPError reqBody err) ->
+                      processError @b sourceConfig e retryConf logHeaders reqBody maintenanceModeVersion eventTriggerMetrics err >>= flip onLeft logQErr
+                    (TransformationError _ err) -> do
+                      L.unLogger logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode err)
 
-                  -- Record an Event Error
-                  recordError' @b sourceConfig e Nothing PESetError maintenanceModeVersion >>= flip onLeft logQErr
+                      -- Record an Event Error
+                      recordError' @b sourceConfig e Nothing PESetError maintenanceModeVersion >>= flip onLeft logQErr
       -- removing an event from the _eeCtxLockedEvents after the event has been processed:
       removeEventTriggerEventFromLockedEvents sourceName (eId e) leEvents
 
@@ -607,9 +614,10 @@ processError ::
   [HeaderConf] ->
   J.Value ->
   MaintenanceMode MaintenanceModeVersion ->
+  EventTriggerMetrics ->
   HTTPErr a ->
   m (Either QErr ())
-processError sourceConfig e retryConf reqHeaders ep maintenanceModeVersion err = do
+processError sourceConfig e retryConf reqHeaders ep maintenanceModeVersion eventTriggerMetrics err = do
   let invocation = case err of
         HClient httpException ->
           let statusMaybe = getHTTPExceptionStatus httpException
@@ -622,16 +630,17 @@ processError sourceConfig e retryConf reqHeaders ep maintenanceModeVersion err =
         HOther detail -> do
           let errMsg = SB.fromLBS $ J.encode detail
           mkInvocation (eId e) ep (Just 500) reqHeaders errMsg []
-  retryOrError <- retryOrSetError e retryConf err
+  retryOrError <- retryOrSetError e retryConf eventTriggerMetrics err
   recordError @b sourceConfig e invocation retryOrError maintenanceModeVersion
 
 retryOrSetError ::
   MonadIO m =>
   Event b ->
   RetryConf ->
+  EventTriggerMetrics ->
   HTTPErr a ->
   m ProcessEventError
-retryOrSetError e retryConf err = do
+retryOrSetError e retryConf eventTriggerMetrics err = do
   let mretryHeader = getRetryAfterHeaderFromError err
       tries = eTries e
       mretryHeaderSeconds = mretryHeader >>= parseRetryHeader
@@ -639,7 +648,9 @@ retryOrSetError e retryConf err = do
       noRetryHeader = isNothing mretryHeaderSeconds
   -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
   if triesExhausted && noRetryHeader
-    then pure PESetError
+    then do
+      liftIO $ Prometheus.Counter.inc (eventProcessedTotalFailure eventTriggerMetrics)
+      pure PESetError
     else do
       currentTime <- liftIO getCurrentTime
       let delay = fromMaybe (rcIntervalSec retryConf) mretryHeaderSeconds

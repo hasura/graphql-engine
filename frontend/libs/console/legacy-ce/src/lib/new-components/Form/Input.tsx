@@ -63,11 +63,11 @@ export type InputProps = FieldWrapperPassThroughProps & {
   /**
    * The input field prepend label
    */
-  prependLabel?: string;
+  prependLabel?: string | React.ReactNode;
   /**
    * The input field append label
    */
-  appendLabel?: string;
+  appendLabel?: string | React.ReactNode;
   /**
    * Renders a button to clear the input onClick
    */

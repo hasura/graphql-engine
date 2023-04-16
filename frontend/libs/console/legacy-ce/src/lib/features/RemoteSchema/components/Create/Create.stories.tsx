@@ -1,9 +1,9 @@
-import React, { useReducer } from 'react';
+import React from 'react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { ComponentMeta, Story } from '@storybook/react';
 import { RemoteSchema } from '../..';
 import { ReduxDecorator } from '../../../../storybook/decorators/redux-decorator';
-import { within, userEvent } from '@storybook/testing-library';
+import { within, userEvent, waitFor } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { handlers } from './mocks/handlers.mock';
 
@@ -17,11 +17,16 @@ export default {
 } as ComponentMeta<typeof RemoteSchema.Create>;
 
 export const Playground: Story = () => {
-  const [formSuccess, toggle] = useReducer(s => !s, false);
+  const [showSuccessText, setShowSuccessText] = React.useState(false);
+  const onSuccess = () => {
+    setShowSuccessText(true);
+  };
   return (
     <>
-      <RemoteSchema.Create onSuccess={() => toggle()} />
-      <div>{formSuccess ? 'Form saved succesfully!' : null}</div>
+      <RemoteSchema.Create onSuccess={onSuccess} />;
+      <p data-testid="@onSuccess">
+        {showSuccessText ? 'Form saved successfully!' : null}
+      </p>
     </>
   );
 };
@@ -84,7 +89,12 @@ Playground.play = async ({ canvasElement }) => {
 
   userEvent.click(await canvas.findByTestId('submit'));
 
-  expect(
-    await canvas.findByText('Form saved succesfully!')
-  ).toBeInTheDocument();
+  waitFor(
+    async () => {
+      await expect(await canvas.findByTestId('@onSuccess')).toHaveTextContent(
+        'Form saved successfully!'
+      );
+    },
+    { timeout: 5000 }
+  );
 };

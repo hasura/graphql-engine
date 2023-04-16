@@ -1,6 +1,6 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
-import { FaExclamationCircle, FaPlusCircle } from 'react-icons/fa';
+import { FaExclamationCircle, FaPlay, FaPlusCircle } from 'react-icons/fa';
 import z from 'zod';
 import { Badge } from '../../../../../../new-components/Badge';
 import { Button } from '../../../../../../new-components/Button';
@@ -33,7 +33,7 @@ const templates = {
   tenancy: {
     value: 'tenancy',
     title: 'Database Tenancy',
-    body: 'Tenancy template using a x-hasura-tenant variable to connect to a named database.',
+    body: 'Using x-hasura-tenant variable to route queries to different tenant databases.',
     template: `{{ if ($.request.session.x-hasura-tenant-id == "my_tenant_1")}}
     {{$.connection_set.my_tenant_1_connection}}
 {{ elif ($.request.session.x-hasura-tenant-id == "my_tenant_2")}}
@@ -47,7 +47,7 @@ const templates = {
   'no-stale-reads': {
     value: 'no-stale-reads',
     title: 'Read Replicas - No Stale Reads',
-    body: 'Using the primary for reads on mutations and replicas for all other reads.',
+    body: 'Routing reads to primary instead of read-replicas based on a header configuration.',
     template: `{{ if (($.request.query.operation_type == "query") 
 || ($.request.query.operation_type == "subscription")) 
 && ($.request.headers.x-query-read-no-stale == "true") }}
@@ -61,7 +61,7 @@ const templates = {
   },
   sharding: {
     value: 'sharding',
-    title: 'Different credentials',
+    title: 'Multi-user Database Credentials',
     body: 'Route specific queries to specific databases in a distributed database system model.',
     template: `{{ if ($.request.session.x-hasura-role == "manager")}}
     {{$.connection_set.manager_connection}}
@@ -95,6 +95,7 @@ interface DynamicDBRoutingFormProps {
   onEditConnection: (name: string) => void;
   isLoading: boolean;
   connectionTemplate?: string | null;
+  onOpenValidate: () => void;
 }
 
 export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
@@ -105,6 +106,7 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
     onEditConnection,
     isLoading,
     connectionTemplate,
+    onOpenValidate,
   } = props;
   const { setValue, watch } = useFormContext();
   const [template, setTemplate] = React.useState<keyof typeof templates>(
@@ -114,6 +116,7 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
   );
 
   const localConnectionTemplate = watch('connection_template');
+
   const [localTemplate, setLocalTemplate] = React.useState<
     Record<string, string | null | undefined>
   >(
@@ -136,7 +139,7 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
               className={`flex items-center rounded bg-gray-200 border border-gray-300 py-sm px-sm mb-md`}
             >
               <FaExclamationCircle className="fill-current self-start h-md text-muted" />
-              <div className="ml-xs">
+              <div className="ml-xs max-w-2xl">
                 <strong>Dynamic Routing Precedence</strong>
                 <p>
                   {' '}
@@ -212,6 +215,23 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
         </div>
         <div className="flex justify-end mt-4">
           <Analytics
+            name="data-tab-dynamic-db-routing-validate-connection-template"
+            passHtmlAttributesToChildren
+          >
+            <Button
+              onClick={onOpenValidate}
+              disabled={template === 'disabled'}
+              className="mr-2"
+              icon={
+                <div className="w-3 h-3 mr-1">
+                  <FaPlay />
+                </div>
+              }
+            >
+              Validate
+            </Button>
+          </Analytics>
+          <Analytics
             name="data-tab-dynamic-db-routing-update-connection-template"
             passHtmlAttributesToChildren
           >
@@ -276,7 +296,7 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
               <Badge color="light-gray">Read Replica Routing</Badge>,
             ],
             ...connectionSetMembers.map(connection => [
-              `{{$.${connection.name}}}`,
+              `{{$.connection_set.${connection.name}}}`,
               <>
                 <Analytics
                   name="data-tab-dynamic-db-routing-edit-connection"

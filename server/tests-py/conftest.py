@@ -3,7 +3,6 @@ import http.server
 import inspect
 import os
 import pytest
-import re
 import socket
 import sqlalchemy
 import sys
@@ -51,13 +50,6 @@ def pytest_addoption(parser):
     )
     parser.addoption(
         "--hge-jwt-conf", metavar="HGE_JWT_CONF", help="The JWT conf", required=False
-    )
-
-    parser.addoption(
-        "--test-ws-init-cookie",
-        metavar="read|noread",
-        required=False,
-        help="Run testcases for testing cookie sending over websockets"
     )
 
     parser.addoption(
@@ -161,13 +153,6 @@ This option may result in test failures if the schema has to change between the 
         help="Flag to specify if the pro tests are to be run"
     )
 
-    parser.addoption(
-        "--test-read-only-source",
-        action="store_true",
-        default=False,
-        required=False,
-        help="Run testcases with a read-only database source"
-    )
     parser.addoption(
         "--port-to-haskell",
         action="store_true",
@@ -340,7 +325,10 @@ def add_source(
                     pass
             return ignoring_errors_impl
 
-        def impl(name: str, customization: Any = None):
+        def impl(name: str, read_only: bool = False, customization: Any = None) -> fixtures.postgres.Backend:
+            if read_only:
+                raise Exception('Cannot add a read-only source.')
+
             if name == 'pg1':
                 env_var = 'HASURA_GRAPHQL_PG_SOURCE_URL_1'
             elif name == 'pg2' or name == 'postgres':
@@ -374,8 +362,8 @@ def add_source(
 
         return impl
 
-    def impl(name: str, customization: Any = None):
-        backend = fixtures.postgres.create_schema(request, owner_engine, runner_engine, f'source_{name}')
+    def impl(name: str, read_only: bool = False, customization: Any = None) -> fixtures.postgres.Backend:
+        backend = fixtures.postgres.create_schema(request, owner_engine, runner_engine, f'source_{name}', read_only)
         fixtures.postgres.add_source(hge_ctx_fixture, backend, name, customization)
         request.addfinalizer(lambda: fixtures.postgres.drop_source(hge_ctx_fixture, name))
         return backend

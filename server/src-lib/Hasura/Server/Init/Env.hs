@@ -191,6 +191,12 @@ instance FromEnv Int where
       Nothing -> Left "Expecting Int value"
       Just m -> Right m
 
+instance FromEnv Integer where
+  fromEnv s =
+    case readMaybe s of
+      Nothing -> Left "Expecting Integer value"
+      Just m -> Right m
+
 instance FromEnv Auth.AdminSecretHash where
   fromEnv = Right . Auth.hashAdminSecret . Text.pack
 

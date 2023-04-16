@@ -14,10 +14,10 @@ module Hasura.RQL.Types.Metadata.Common
     ComputedFieldMetadata (..),
     ComputedFields,
     CronTriggers,
+    CustomReturnTypes,
     Endpoints,
-    LogicalModels,
+    NativeQueries,
     EventTriggers,
-    FunctionMetadata (..),
     Functions,
     GetCatalogState (..),
     InheritedRoles,
@@ -32,10 +32,6 @@ module Hasura.RQL.Types.Metadata.Common
     TableMetadata (..),
     Tables,
     backendSourceMetadataCodec,
-    fmComment,
-    fmConfiguration,
-    fmFunction,
-    fmPermissions,
     getSourceName,
     mkSourceMetadata,
     mkTableMeta,
@@ -47,7 +43,8 @@ module Hasura.RQL.Types.Metadata.Common
     smQueryTags,
     smTables,
     smCustomization,
-    smLogicalModels,
+    smNativeQueries,
+    smCustomReturnTypes,
     smHealthCheckConfig,
     sourcesCodec,
     tmArrayRelationships,
@@ -81,9 +78,12 @@ import Data.List.Extended qualified as L
 import Data.Maybe (fromJust)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
-import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..), LogicalModelName)
+import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata (..), CustomReturnTypeName)
+import Hasura.Function.Metadata (FunctionMetadata (..))
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
+import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..), NativeQueryName)
 import Hasura.Prelude
+import Hasura.QueryTags.Types
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
@@ -93,12 +93,10 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.QueryTags
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Roles
@@ -339,60 +337,6 @@ instance (Backend b) => FromJSON (TableMetadata b) where
             enableAFKey
           ]
 
-data FunctionMetadata b = FunctionMetadata
-  { _fmFunction :: FunctionName b,
-    _fmConfiguration :: FunctionConfig,
-    _fmPermissions :: [FunctionPermissionInfo],
-    _fmComment :: Maybe Text
-  }
-  deriving (Generic)
-
-deriving instance (Backend b) => Show (FunctionMetadata b)
-
-deriving instance (Backend b) => Eq (FunctionMetadata b)
-
-instance (Backend b) => ToJSON (FunctionMetadata b) where
-  toJSON = genericToJSON hasuraJSON
-
-$(makeLenses ''FunctionMetadata)
-
-instance (Backend b) => FromJSON (FunctionMetadata b) where
-  parseJSON = withObject "FunctionMetadata" $ \o ->
-    FunctionMetadata
-      <$> o
-        .: "function"
-      <*> o
-        .:? "configuration"
-        .!= emptyFunctionConfig
-      <*> o
-        .:? "permissions"
-        .!= []
-      <*> o
-        .:? "comment"
-
-instance (Backend b) => HasCodec (FunctionMetadata b) where
-  codec =
-    CommentCodec
-      ( T.unlines
-          [ "A custom SQL function to add to the GraphQL schema with configuration.",
-            "",
-            "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#args-syntax"
-          ]
-      )
-      $ AC.object (codecNamePrefix @b <> "FunctionMetadata")
-      $ FunctionMetadata
-        <$> requiredField "function" nameDoc
-          AC..= _fmFunction
-        <*> optionalFieldWithOmittedDefault "configuration" emptyFunctionConfig configDoc
-          AC..= _fmConfiguration
-        <*> optionalFieldWithOmittedDefault' "permissions" []
-          AC..= _fmPermissions
-        <*> optionalField' "comment"
-          AC..= _fmComment
-    where
-      nameDoc = "Name of the SQL function"
-      configDoc = "Configuration for the SQL function"
-
 type RemoteSchemaMetadata = RemoteSchemaMetadataG RemoteRelationshipDefinition
 
 type RemoteSchemas = InsOrdHashMap RemoteSchemaName RemoteSchemaMetadata
@@ -401,7 +345,9 @@ type Tables b = InsOrdHashMap (TableName b) (TableMetadata b)
 
 type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 
-type LogicalModels b = InsOrdHashMap LogicalModelName (LogicalModelMetadata b)
+type NativeQueries b = InsOrdHashMap NativeQueryName (NativeQueryMetadata b)
+
+type CustomReturnTypes b = InsOrdHashMap CustomReturnTypeName (CustomReturnTypeMetadata b)
 
 type Endpoints = InsOrdHashMap EndpointName CreateEndpoint
 
@@ -417,7 +363,8 @@ data SourceMetadata b = SourceMetadata
     _smKind :: BackendSourceKind b,
     _smTables :: Tables b,
     _smFunctions :: Functions b,
-    _smLogicalModels :: LogicalModels b,
+    _smNativeQueries :: NativeQueries b,
+    _smCustomReturnTypes :: CustomReturnTypes b,
     _smConfiguration :: SourceConnConfiguration b,
     _smQueryTags :: Maybe QueryTagsConfig,
     _smCustomization :: SourceCustomization,
@@ -436,7 +383,8 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadat
     _smName <- o .: "name"
     _smTables <- oMapFromL _tmTable <$> o .: "tables"
     _smFunctions <- oMapFromL _fmFunction <$> o .:? "functions" .!= []
-    _smLogicalModels <- oMapFromL _lmmRootFieldName <$> o .:? "logical_models" .!= []
+    _smNativeQueries <- oMapFromL _nqmRootFieldName <$> o .:? "native_queries" .!= []
+    _smCustomReturnTypes <- oMapFromL _crtmName <$> o .:? "custom_return_types" .!= []
     _smConfiguration <- o .: "configuration"
     _smQueryTags <- o .:? "query_tags"
     _smCustomization <- o .:? "customization" .!= emptySourceCustomization
@@ -495,8 +443,10 @@ instance Backend b => HasCodec (SourceMetadata b) where
           .== _smTables
         <*> optionalFieldOrNullWithOmittedDefaultWith' "functions" (sortedElemsCodec _fmFunction) mempty
           .== _smFunctions
-        <*> optionalFieldOrNullWithOmittedDefaultWith' "logical_models" (sortedElemsCodec _lmmRootFieldName) mempty
-          .== _smLogicalModels
+        <*> optionalFieldOrNullWithOmittedDefaultWith' "native_queries" (sortedElemsCodec _nqmRootFieldName) mempty
+          .== _smNativeQueries
+        <*> optionalFieldOrNullWithOmittedDefaultWith' "custom_return_types" (sortedElemsCodec _crtmName) mempty
+          .== _smCustomReturnTypes
         <*> requiredField' "configuration"
           .== _smConfiguration
         <*> optionalFieldOrNull' "query_tags"
@@ -530,6 +480,7 @@ mkSourceMetadata name backendSourceKind config customization healthCheckConfig =
         @b
         name
         backendSourceKind
+        mempty
         mempty
         mempty
         mempty
@@ -616,6 +567,9 @@ deriving newtype instance (Backend b) => FromJSON (BackendConfigWrapper b)
 deriving newtype instance (Semigroup (BackendConfig b)) => Semigroup (BackendConfigWrapper b)
 
 deriving newtype instance (Monoid (BackendConfig b)) => Monoid (BackendConfigWrapper b)
+
+instance Backend b => HasCodec (BackendConfigWrapper b) where
+  codec = dimapCodec BackendConfigWrapper unBackendConfigWrapper codec
 
 data CatalogStateType
   = CSTCli

@@ -29,7 +29,7 @@ import Autodocodec
     requiredFieldWith',
   )
 import Autodocodec qualified as AC
-import Autodocodec.Extended (integralWithLowerBoundCodec, realFracWithLowerBoundCodec)
+import Autodocodec.Extended (integralWithLowerBoundCodec, realFracWithLowerBoundCodec, typeableName)
 import Control.Lens
 import Data.Aeson
 import Data.Aeson.Casing qualified as Casing
@@ -37,7 +37,6 @@ import Data.Map (Map)
 import Data.Text qualified as T
 import Data.Text.Extended (ToTxt (..))
 import Data.Typeable (Typeable)
-import Hasura.Metadata.DTO.Utils (typeableName)
 import Hasura.Prelude
 import Hasura.Server.Utils (isSessionVariable)
 import Hasura.Session (RoleName)

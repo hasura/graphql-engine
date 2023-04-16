@@ -2,6 +2,19 @@ import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 
 import { PrometheusSettingsForm } from './PrometheusSettingsForm';
+import { ReactQueryDecorator } from '../../storybook/decorators/react-query';
+import { EELiteAccess } from '../EETrial';
+
+const eeLiteAccessInfoMockActive: EELiteAccess = {
+  access: 'active',
+  kind: 'default',
+  license: {} as any,
+  expires_at: new Date(new Date().getTime() + 10000000),
+};
+
+const eeLiteAccessInfoMockEligible: EELiteAccess = {
+  access: 'eligible',
+};
 
 export default {
   title: 'Features/Settings/Prometheus/Form',
@@ -11,6 +24,7 @@ export default {
       source: { type: 'code', state: 'open' },
     },
   },
+  decorators: [ReactQueryDecorator()],
 } as ComponentMeta<typeof PrometheusSettingsForm>;
 
 export const Loading: ComponentStory<typeof PrometheusSettingsForm> = args => (
@@ -19,6 +33,16 @@ export const Loading: ComponentStory<typeof PrometheusSettingsForm> = args => (
 Loading.storyName = '💠 Demo Form Loading';
 Loading.args = {
   loading: true,
+  eeLiteAccess: eeLiteAccessInfoMockActive,
+};
+
+export const DisabledWithoutLicense: ComponentStory<
+  typeof PrometheusSettingsForm
+> = args => <PrometheusSettingsForm {...args} />;
+DisabledWithoutLicense.storyName = '💠 Demo Form Disabled without license';
+DisabledWithoutLicense.args = {
+  enabled: false,
+  eeLiteAccess: eeLiteAccessInfoMockEligible,
 };
 
 export const Disabled: ComponentStory<typeof PrometheusSettingsForm> = args => (
@@ -27,6 +51,7 @@ export const Disabled: ComponentStory<typeof PrometheusSettingsForm> = args => (
 Disabled.storyName = '💠 Demo Form Disabled';
 Disabled.args = {
   enabled: false,
+  eeLiteAccess: eeLiteAccessInfoMockActive,
 };
 
 export const Error: ComponentStory<typeof PrometheusSettingsForm> = args => (
@@ -35,6 +60,7 @@ export const Error: ComponentStory<typeof PrometheusSettingsForm> = args => (
 Error.storyName = '💠 Demo Form Error';
 Error.args = {
   errorMode: true,
+  eeLiteAccess: eeLiteAccessInfoMockActive,
 };
 
 const urlRegExp =
@@ -48,6 +74,7 @@ Enabled.storyName = '💠 Demo Form Enabled';
 Enabled.args = {
   enabled: true,
   prometheusUrl,
+  eeLiteAccess: eeLiteAccessInfoMockActive,
   prometheusConfig: `global:
     scrape_interval: 60s
   scrape_configs:

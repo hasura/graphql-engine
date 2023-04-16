@@ -78,6 +78,7 @@ data ExportDataConfig = ExportDataConfig
 data ExportFormat
   = JSON
   | JSONLines
+  | SingleJSONFile
   deriving stock (Eq, Show, Read)
 
 parseCommandLine :: IO Command

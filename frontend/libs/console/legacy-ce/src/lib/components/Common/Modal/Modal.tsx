@@ -1,9 +1,8 @@
 import React from 'react';
-import {
-  Modal as BootstrapModal,
-  Button as BootstrapModalButton,
-} from 'react-bootstrap';
-import styles from './Modal.module.scss';
+import * as RadixDialog from '@radix-ui/react-dialog';
+import { Button } from './../../../new-components/Button';
+import { FaTimes } from 'react-icons/fa';
+import clsx from 'clsx';
 
 export interface ModalProps {
   show?: boolean;
@@ -31,14 +30,18 @@ const Modal = ({
 }: ModalProps) => {
   const getHeader = () => {
     return (
-      <BootstrapModal.Header closeButton>
-        <BootstrapModal.Title>{title}</BootstrapModal.Title>
-      </BootstrapModal.Header>
+      <RadixDialog.Title className="p-4 border-b border-gray-300 text-lg">
+        {title}
+      </RadixDialog.Title>
     );
   };
 
   const getBody = () => {
-    return <BootstrapModal.Body>{children}</BootstrapModal.Body>;
+    return (
+      <RadixDialog.Description className=" p-4">
+        {children}
+      </RadixDialog.Description>
+    );
   };
 
   const triggerOnClose = () => {
@@ -55,46 +58,49 @@ const Modal = ({
     }
 
     return (
-      <BootstrapModal.Footer>
-        <div className={styles.modal_footer}>
+      <div>
+        <div className="flex items-center justify-between p-4 border-t border-gray-300">
           <div>{leftActions ?? null}</div>
-
-          <div>
-            <BootstrapModalButton onClick={triggerOnClose}>
-              Cancel
-            </BootstrapModalButton>
-            <BootstrapModalButton
-              onClick={onSubmit}
-              bsStyle="primary"
-              data-test={submitTestId}
-            >
+          <div className="flex gap-2">
+            <Button onClick={triggerOnClose}>Cancel</Button>
+            <Button onClick={onSubmit} mode="primary" data-test={submitTestId}>
               {submitText || 'Submit'}
-            </BootstrapModalButton>
+            </Button>
           </div>
         </div>
-      </BootstrapModal.Footer>
+      </div>
     );
   };
 
-  const bootstrapModalProps: BootstrapModal.ModalProps = {
-    show,
-    dialogClassName: customClass,
-    onHide() {},
+  const bootstrapModalProps: RadixDialog.DialogProps = {
+    open: show,
   };
 
-  if (onClose) {
-    bootstrapModalProps.onHide = onClose;
-  }
-
   return (
-    <BootstrapModal {...bootstrapModalProps}>
-      {getHeader()}
-      {getBody()}
-      {getFooter()}
-    </BootstrapModal>
+    <RadixDialog.Root {...bootstrapModalProps}>
+      <RadixDialog.Portal>
+        <RadixDialog.Overlay className="fixed top-0 left-0 h-full w-full bg-gray-900/90 backdrop-blur-sm z-[100]" />
+        <RadixDialog.Content
+          className={clsx(
+            'fixed transform w-1/2 -translate-x-2/4 left-2/4 mt-lg top-0 h-auto bg-gray-50 rounded shadow-lg z-[101]',
+            customClass
+          )}
+        >
+          <RadixDialog.Close className="fixed bg-legacybg rounded-full right-3 top-3">
+            <FaTimes
+              className="ml-auto w-5 h-5 cursor-pointer text-gray-400 fill-current hover:text-gray-500"
+              onClick={onClose}
+            />
+          </RadixDialog.Close>
+          {getHeader()}
+          {getBody()}
+          {getFooter()}
+        </RadixDialog.Content>
+      </RadixDialog.Portal>
+    </RadixDialog.Root>
   );
 };
 
-Modal.Button = BootstrapModalButton;
+Modal.Button = Button;
 
 export default Modal;

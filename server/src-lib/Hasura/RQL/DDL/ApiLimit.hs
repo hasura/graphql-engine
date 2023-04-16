@@ -58,7 +58,7 @@ compareTimeLimitWith userTimeLimitMaybe = do
 -- warning message if the user time limit API limit is greater than the cloud time limit API limit
 warningMessage :: MaxTime -> MaxTime -> MetadataWarning
 warningMessage userTimeLimit cloudTimeLimit =
-  MetadataWarning (MOSource defaultSource) $
+  MetadataWarning WCTimeLimitExceededSystemLimit (MOSource defaultSource) $
     "the configured time limit: "
       <> tshow (seconds $ unMaxTime userTimeLimit)
       <> " exceeds the project time limit: "

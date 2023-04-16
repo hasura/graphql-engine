@@ -16,12 +16,14 @@ import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Extended
 import Database.MSSQL.Transaction (forJsonQueryE)
 import Database.ODBC.SQLServer qualified as ODBC
+import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Execute.QueryTags (withQueryTags)
 import Hasura.Backends.MSSQL.Instances.Execute
 import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Backends.MSSQL.ToQuery
 import Hasura.Base.Error
+import Hasura.CredentialCache
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.Subscription.Plan
@@ -66,13 +68,14 @@ runQuery ::
   RootFieldAlias ->
   UserInfo ->
   L.Logger L.Hasura ->
+  Maybe (CredentialCache AgentLicenseKey) ->
   SourceConfig 'MSSQL ->
   OnBaseMonad (ExceptT QErr) (Maybe (AnyBackend ExecutionStats), EncJSON) ->
   Maybe (PreparedQuery 'MSSQL) ->
   ResolvedConnectionTemplate 'MSSQL ->
   -- | Also return the time spent in the PG query; for telemetry.
   m (DiffTime, EncJSON)
-runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql _ = do
+runQuery reqId query fieldName _userInfo logger _ _sourceConfig tx genSql _ = do
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId
   withElapsedTime $
     newSpan ("MSSQL Query for root field " <>> fieldName) $
@@ -84,9 +87,10 @@ runQueryExplain ::
     MonadError QErr m,
     MonadTrace m
   ) =>
+  Maybe (CredentialCache AgentLicenseKey) ->
   DBStepInfo 'MSSQL ->
   m EncJSON
-runQueryExplain (DBStepInfo _ _ _ action _) = fmap arResult (run action)
+runQueryExplain _ (DBStepInfo _ _ _ action _) = fmap arResult (run action)
 
 runMutation ::
   ( MonadIO m,
@@ -100,6 +104,7 @@ runMutation ::
   RootFieldAlias ->
   UserInfo ->
   L.Logger L.Hasura ->
+  Maybe (CredentialCache AgentLicenseKey) ->
   SourceConfig 'MSSQL ->
   OnBaseMonad (ExceptT QErr) EncJSON ->
   Maybe (PreparedQuery 'MSSQL) ->
@@ -107,7 +112,7 @@ runMutation ::
   -- | Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
   m (DiffTime, EncJSON)
-runMutation reqId query fieldName _userInfo logger _sourceConfig tx _genSql _ = do
+runMutation reqId query fieldName _userInfo logger _ _sourceConfig tx _genSql _ = do
   logQueryLog logger $ mkQueryLog query fieldName Nothing reqId
   withElapsedTime $
     newSpan ("MSSQL Mutation for root field " <>> fieldName) $

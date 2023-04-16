@@ -29,6 +29,8 @@ module Database.PG.Query.Transaction
     fromText,
     fromBuilder,
     getQueryText,
+    describePreparedStatement,
+    PreparedDescription (..),
   )
 where
 
@@ -45,6 +47,7 @@ import Control.Monad.Trans.Except (ExceptT, withExceptT)
 import Control.Monad.Trans.Reader (ReaderT (..))
 import Data.Aeson (ToJSON (toJSON), object, (.=))
 import Data.Aeson.Text (encodeToLazyText)
+import Data.ByteString (ByteString)
 import Data.Hashable (Hashable)
 import Data.String (IsString)
 import Data.Text (Text)
@@ -208,6 +211,18 @@ discardQE ::
 discardQE ef t r p = do
   Discard () <- withQE ef t r p
   return ()
+
+-- | Extract the description of a prepared statement.
+describePreparedStatement ::
+  (MonadIO m) =>
+  (PGTxErr -> e) ->
+  ByteString ->
+  TxET e m (PreparedDescription PQ.Oid)
+describePreparedStatement ef name = TxET $
+  ReaderT $ \pgConn ->
+    withExceptT (ef . PGTxErr mempty [] False) $
+      hoist liftIO $
+        describePrepared pgConn name
 
 serverVersion ::
   MonadIO m => TxET e m Int

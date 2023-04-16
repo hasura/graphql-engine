@@ -1,22 +1,46 @@
+import {
+  ChangeDatabaseSchemaProps,
+  Database,
+  Feature,
+  GetVersionProps,
+} from '..';
 import { Table } from '../../hasura-metadata-types';
-import { Database, Feature } from '..';
 import { NetworkArgs, runSQL } from '../api';
+import { postgresCapabilities } from '../common/capabilities';
 import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 import { adaptIntrospectedTables } from '../common/utils';
 import {
-  getTableColumns,
+  getDatabaseSchemas,
   getFKRelationships,
-  getTablesListAsTree,
   getSupportedOperators,
+  getTableColumns,
+  getTablesListAsTree,
 } from './introspection';
 import { getTableRows } from './query';
-import { postgresCapabilities } from '../common/capabilities';
 
 export type MssqlTable = { schema: string; name: string };
 
+const getCreateSchemaSql = (schema: string) => {
+  return `create schema ${schema};`;
+};
+
+const getDropSchemaSql = (schema: string) => {
+  return `drop schema ${schema};`;
+};
 export const mssql: Database = {
   ...defaultDatabaseProps,
   introspection: {
+    getVersion: async ({ dataSourceName, httpClient }: GetVersionProps) => {
+      const result = await runSQL({
+        source: {
+          name: dataSourceName,
+          kind: 'mssql',
+        },
+        sql: `SELECT @@VERSION as version;`,
+        httpClient,
+      });
+      return result.result?.[1][0] ?? '';
+    },
     getDriverInfo: async () => ({
       name: 'mssql',
       displayName: 'MS SQL Server',
@@ -56,6 +80,34 @@ export const mssql: Database = {
     getFKRelationships,
     getTablesListAsTree,
     getSupportedOperators,
+    getDatabaseSchemas,
+  },
+  modify: {
+    defaultQueryRoot: async () => Feature.NotImplemented,
+    createDatabaseSchema: async ({
+      dataSourceName,
+      schemaName,
+      httpClient,
+    }: ChangeDatabaseSchemaProps) => {
+      const response = await runSQL({
+        source: { name: dataSourceName, kind: 'mssql' },
+        sql: getCreateSchemaSql(schemaName),
+        httpClient,
+      });
+      return response;
+    },
+    deleteDatabaseSchema: async ({
+      dataSourceName,
+      schemaName,
+      httpClient,
+    }: ChangeDatabaseSchemaProps) => {
+      const response = await runSQL({
+        source: { name: dataSourceName, kind: 'mssql' },
+        sql: getDropSchemaSql(schemaName),
+        httpClient,
+      });
+      return response;
+    },
   },
   query: {
     getTableRows,

@@ -6,7 +6,9 @@ import Data.Aeson qualified as J
 import Data.Foldable (for_)
 import Data.Functor ((<&>))
 import Data.HashMap.Strict (HashMap)
+import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty (..))
+import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (fromMaybe, maybeToList)
 import Hasura.Backends.DataConnector.API
 import Test.AgentAPI (mutationGuarded, queryGuarded)
@@ -224,6 +226,14 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                                                           [ ("PlaylistId", _tdColumnField _tdPlaylistTracksTableName "PlaylistId"),
                                                             ("TrackId", _tdColumnField _tdPlaylistTracksTableName "TrackId")
                                                           ]
+                                                      & qOrderBy
+                                                        ?~ OrderBy
+                                                          mempty
+                                                          ( NonEmpty.fromList
+                                                              [ _tdOrderByColumn [] "PlaylistId" Ascending,
+                                                                _tdOrderByColumn [] "TrackId" Ascending
+                                                              ]
+                                                          )
                                                 )
                                             )
                                           )
@@ -245,7 +255,10 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
 
         let joinInPlaylistTracks (track :: HashMap FieldName FieldValue) =
               let trackId = track ^? Data.field "TrackId" . Data._ColumnFieldNumber
-                  playlistTracks = _tdPlaylistTracksRows & filter (\playlistTrack -> playlistTrack ^? Data.field "TrackId" . Data._ColumnFieldNumber == trackId)
+                  playlistTracks =
+                    _tdPlaylistTracksRows
+                      & filter (\playlistTrack -> playlistTrack ^? Data.field "TrackId" . Data._ColumnFieldNumber == trackId)
+                      & sortOn (\playlistTrack -> (playlistTrack ^? Data.field "PlaylistId", playlistTrack ^? Data.field "TrackId"))
                in Data.insertField "PlaylistTracks" (Data.mkSubqueryRowsFieldValue playlistTracks) track
 
         let joinInTrack (invoiceLine :: HashMap FieldName FieldValue) =

@@ -66,6 +66,7 @@ import Autodocodec
     stringConstCodec,
   )
 import Autodocodec qualified as AC
+import Autodocodec.Extended (typeableName)
 import Control.Lens (Lens)
 import Control.Lens qualified as Lens
 import Data.Aeson
@@ -85,7 +86,7 @@ import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
 import Hasura.EncJSON
 import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.Metadata.DTO.Utils (boolConstCodec, fromEnvCodec, typeableName)
+import Hasura.Metadata.DTO.Utils (boolConstCodec, fromEnvCodec)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers ()
 import Language.GraphQL.Draft.Syntax qualified as G

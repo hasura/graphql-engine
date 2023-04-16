@@ -8,8 +8,8 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
+import Harness.Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -56,8 +56,8 @@ testTable =
 --------------------------------------------------------------------------------
 -- Tests
 
-postgresTests :: Fixture.Options -> SpecWith TestEnvironment
-postgresTests opts = do
+postgresTests :: SpecWith TestEnvironment
+postgresTests = do
   it "Browse table rows using nulls_first" \testEnvironment -> do
     let schemaName = getSchemaName testEnvironment
         source = Fixture.backendSourceName Postgres.backendTypeMetadata
@@ -96,7 +96,7 @@ postgresTests opts = do
                       name: Author 2
                 |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postV2Query 200 testEnvironment queryYaml)
       expectedYaml
 
@@ -141,6 +141,6 @@ postgresTests opts = do
                 |]
 
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postV2Query 200 testEnvironment queryYaml)
       expectedYaml

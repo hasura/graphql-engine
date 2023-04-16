@@ -25,6 +25,41 @@
     test:
       sql: SELECT 1
     timeout: 5  
+  custom_return_types:
+    - name: quiz_answer
+      fields:
+        added_by_user_id:
+          nullable: false
+          type: integer
+        answer:
+          nullable: false
+          type: text
+        question:
+          nullable: false
+          type: text
+      select_permissions:
+        - permission:
+            columns:
+              - question
+              - answer
+            filter:
+              added_by_user_id:
+                _eq: X-Hasura-User-ID
+          role: editor
+        - permission:
+            columns:
+              - question
+            filter: {}
+          role: user
+  native_queries:
+    - arguments:
+        unused:
+          description: An integer argument that we completely ignore
+          nullable: true
+          type: integer
+      code: select question, answer, added_by_user_id from questions
+      returns: quiz_answer
+      root_field_name: quiz_answers
   tables: !include "s1/tables/tables.yaml"
   functions: !include "s1/functions/functions.yaml"
 - name: s2

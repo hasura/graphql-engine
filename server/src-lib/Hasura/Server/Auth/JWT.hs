@@ -462,7 +462,7 @@ tokenIssuer = coerce <$> (decodeClaimsSet >=> view Jose.claimIss)
 -- From the JWT config, we check which header to expect, it can be the "Authorization"
 -- or "Cookie" header
 --
--- Iff no "Authorization"/"Cookie" header was passed, we will fall back to the
+-- If no "Authorization"/"Cookie" header was passed, we will fall back to the
 -- unauthenticated user role [1], if one was configured at server start.
 --
 -- When no 'x-hasura-user-role' is specified in the request, the mandatory
@@ -477,7 +477,7 @@ processJwt ::
   [JWTCtx] ->
   HTTP.RequestHeaders ->
   Maybe RoleName ->
-  m (UserInfo, Maybe UTCTime, [N.Header])
+  m (UserInfo, Maybe UTCTime, [N.Header], Maybe JWTCtx)
 processJwt = processJwt_ processHeaderSimple tokenIssuer jcxHeader
 
 type AuthTokenLocation = JWTHeader
@@ -492,7 +492,7 @@ processJwt_ ::
   [JWTCtx] ->
   HTTP.RequestHeaders ->
   Maybe RoleName ->
-  m (UserInfo, Maybe UTCTime, [N.Header])
+  m (UserInfo, Maybe UTCTime, [N.Header], Maybe JWTCtx)
 processJwt_ processJwtBytes decodeIssuer fGetHeaderType jwtCtxs headers mUnAuthRole = do
   -- Here we use `intersectKeys` to match up the correct locations of JWTs to those specified in JWTCtxs
   -- Then we match up issuers, where no-issuer specified in a JWTCtx can match any issuer in a JWT
@@ -571,14 +571,14 @@ processJwt_ processJwtBytes decodeIssuer fGetHeaderType jwtCtxs headers mUnAuthR
             userInfo <-
               mkUserInfo (URBPreDetermined requestedRole) UAdminSecretNotSent $
                 mkSessionVariablesText metadata
-            pure (userInfo, expTimeM, [])
+            pure (userInfo, expTimeM, [], Just jwtCtx)
 
     withoutAuthZ = do
       unAuthRole <- onNothing mUnAuthRole (throw400 InvalidHeaders "Missing 'Authorization' or 'Cookie' header in JWT authentication mode")
       userInfo <-
         mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent $
           mkSessionVariablesHeaders headers
-      pure (userInfo, Nothing, [])
+      pure (userInfo, Nothing, [], Nothing)
 
     jwtNotIssuerError = throw400 JWTInvalid "Could not verify JWT: JWTNotInIssuer"
 

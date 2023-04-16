@@ -54,23 +54,23 @@ spec =
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, a)
-tests opts = describe "Queries" $ do
-  queryTests opts
-  primaryKeyTests opts
-  paginationTests opts
-  arrayRelatationshipsTests opts
-  objectRelatationshipsTests opts
-  whereClauseTests opts
-  orderByTests opts
-  customScalarTypesTests opts
+tests :: SpecWith (TestEnvironment, a)
+tests = describe "Queries" $ do
+  queryTests
+  primaryKeyTests
+  paginationTests
+  arrayRelatationshipsTests
+  objectRelatationshipsTests
+  whereClauseTests
+  orderByTests
+  customScalarTypesTests
 
-queryTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
-queryTests opts =
+queryTests :: SpecWith (TestEnvironment, a)
+queryTests =
   describe "Simple" $ do
     it "works with simple object query" $ \(testEnvironment, _) ->
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -89,12 +89,12 @@ queryTests opts =
                 Title: For Those About To Rock We Salute You
         |]
 
-primaryKeyTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
-primaryKeyTests opts =
+primaryKeyTests :: SpecWith (TestEnvironment, a)
+primaryKeyTests =
   describe "Primary Key" $ do
     it "works with a primary key" $ \(testEnvironment, _) ->
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -115,7 +115,7 @@ primaryKeyTests opts =
 
     it "works with non existent primary key" $ \(testEnvironment, _) ->
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -134,7 +134,7 @@ primaryKeyTests opts =
 
     it "works with a composite primary key" $ \(testEnvironment, _) ->
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -159,13 +159,13 @@ primaryKeyTests opts =
                 Name: "Balls to the Wall"
         |]
 
-paginationTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
-paginationTests opts =
+paginationTests :: SpecWith (TestEnvironment, a)
+paginationTests =
   describe "Pagination" $ do
     it "works with pagination" $ \(testEnvironment, _) -> do
       -- NOTE: We order by in this pagination test to ensure that the rows are ordered correctly (which they are not in Sqlite Chinook)
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -184,13 +184,13 @@ paginationTests opts =
               - AlbumId: 5
         |]
 
-arrayRelatationshipsTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
-arrayRelatationshipsTests opts =
+arrayRelatationshipsTests :: SpecWith (TestEnvironment, a)
+arrayRelatationshipsTests =
   describe "Array Relationships" $ do
     describe "Manual" $ do
       it "joins on album id" $ \(testEnvironment, _) ->
         shouldReturnYaml
-          opts
+          testEnvironment
           ( GraphqlEngine.postGraphql
               testEnvironment
               [graphql|
@@ -219,7 +219,7 @@ arrayRelatationshipsTests opts =
       it "joins on playlist_id" $ \(testEnvironment, _) -> do
         -- NOTE: Ordering is used for the query due to inconsistencies in data-set ordering.
         shouldReturnYaml
-          opts
+          testEnvironment
           ( GraphqlEngine.postGraphql
               testEnvironment
               [graphql|
@@ -241,13 +241,13 @@ arrayRelatationshipsTests opts =
                     - TrackId: 3501
           |]
 
-objectRelatationshipsTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
-objectRelatationshipsTests opts =
+objectRelatationshipsTests :: SpecWith (TestEnvironment, a)
+objectRelatationshipsTests =
   describe "Object Relationships" do
     describe "Manual" do
       it "joins on artist id" $ \(testEnvironment, _) ->
         shouldReturnYaml
-          opts
+          testEnvironment
           ( GraphqlEngine.postGraphql
               testEnvironment
               [graphql|
@@ -278,7 +278,7 @@ objectRelatationshipsTests opts =
         if supportsForeignKeys
           then
             shouldReturnYaml
-              opts
+              testEnvironment
               ( GraphqlEngine.postGraphql
                   testEnvironment
                   [graphql|
@@ -299,12 +299,12 @@ objectRelatationshipsTests opts =
               |]
           else pendingWith "Backend does not support Foreign Key Constraints"
 
-whereClauseTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
-whereClauseTests opts =
+whereClauseTests :: SpecWith (TestEnvironment, a)
+whereClauseTests =
   describe "Where Clause Tests" $ do
     it "works with '_in' predicate" $ \(testEnvironment, _) ->
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -329,7 +329,7 @@ whereClauseTests opts =
 
     it "works with '_nin' predicate" $ \(testEnvironment, _) ->
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -352,7 +352,7 @@ whereClauseTests opts =
 
     it "works with '_eq' predicate" $ \(testEnvironment, _) ->
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -373,7 +373,7 @@ whereClauseTests opts =
 
     it "works with '_neq' predicate" $ \(testEnvironment, _) ->
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -396,7 +396,7 @@ whereClauseTests opts =
 
     it "works with '_lt' predicate" $ \(testEnvironment, _) ->
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -417,7 +417,7 @@ whereClauseTests opts =
 
     it "works with '_lte' predicate" $ \(testEnvironment, _) ->
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -440,7 +440,7 @@ whereClauseTests opts =
 
     it "works with '_gt' predicate" $ \(testEnvironment, _) ->
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -461,7 +461,7 @@ whereClauseTests opts =
 
     it "works with '_gte' predicate" $ \(testEnvironment, _) ->
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -482,17 +482,17 @@ whereClauseTests opts =
                 Name: Philip Glass Ensemble
         |]
 
-orderByTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
-orderByTests opts =
+orderByTests :: SpecWith (TestEnvironment, a)
+orderByTests =
   describe "Order By Tests" $ do
-    orderByBasicTests opts
-    orderByAdvancedTests opts
+    orderByBasicTests
+    orderByAdvancedTests
 
-orderByBasicTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
-orderByBasicTests opts = do
+orderByBasicTests :: SpecWith (TestEnvironment, a)
+orderByBasicTests = do
   it "works with order_by id asc" $ \(testEnvironment, _) ->
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphqlEngine.postGraphql
           testEnvironment
           [graphql|
@@ -515,11 +515,11 @@ orderByBasicTests opts = do
                   Title: Restless and Wild
           |]
 
-orderByAdvancedTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
-orderByAdvancedTests opts = do
+orderByAdvancedTests :: SpecWith (TestEnvironment, a)
+orderByAdvancedTests = do
   it "works with order_by id desc" $ \(testEnvironment, _) ->
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphqlEngine.postGraphql
           testEnvironment
           [graphql|
@@ -544,7 +544,7 @@ orderByAdvancedTests opts = do
 
   it "can order by an aggregate" $ \(testEnvironment, _) -> do
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphqlEngine.postGraphql
           testEnvironment
           [graphql|
@@ -579,7 +579,7 @@ orderByAdvancedTests opts = do
 
   it "can order by a related field" $ \(testEnvironment, _) -> do
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphqlEngine.postGraphql
           testEnvironment
           [graphql|
@@ -610,14 +610,14 @@ orderByAdvancedTests opts = do
                 Title: Worlds
         |]
 
-customScalarTypesTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
-customScalarTypesTests opts =
+customScalarTypesTests :: SpecWith (TestEnvironment, a)
+customScalarTypesTests =
   describe "Custom scalar types and operators" $ do
     it "works with custom scalar types and comparison operators" $ \(testEnvironment, _) -> do
       when (fmap BackendType.backendType (TE.getBackendTypeConfig testEnvironment) == Just Fixture.DataConnectorSqlite) do
         pendingWith "TODO: Test currently broken for SQLite DataConnector"
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|

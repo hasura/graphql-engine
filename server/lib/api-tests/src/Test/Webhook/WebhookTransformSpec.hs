@@ -27,24 +27,24 @@ spec =
 --------------------------------------------------------------------------------
 -- Tests
 
-queryParameterTransformationTests :: Fixture.Options -> SpecWith TestEnvironment
-queryParameterTransformationTests opts = do
+queryParameterTransformationTests :: SpecWith TestEnvironment
+queryParameterTransformationTests = do
   describe "Query parameter string generation" do
     it "flatten list of arguments to create & separated query string" \testEnvironment -> do
       let baseUrlTemplate = "{{ $base_url }}"
           queryParamTemplate = "{{ concat ([concat({{ range _, x := $body.input }} \"tags={{x}}&\" {{ end }}), \"flag=smthng\"]) }}"
           expectedWebhookUrl = "http://localhost:3000?tags=apple&tags=banana&flag=smthng"
-      verifyTransformation testEnvironment opts baseUrlTemplate queryParamTemplate expectedWebhookUrl
+      verifyTransformation testEnvironment baseUrlTemplate queryParamTemplate expectedWebhookUrl
 
     it "flatten list of arguments to generate comma separated query string" \testEnvironment -> do
       let baseUrlTemplate = "{{ $base_url }}"
           queryParamTemplate = "{{ concat ([\"tags=\", concat({{ range _, x := $body.input }} \"{{x}},\" {{ end }})]) }}"
           expectedWebhookUrl = "http://localhost:3000?tags=apple%2Cbanana%2C"
 
-      verifyTransformation testEnvironment opts baseUrlTemplate queryParamTemplate expectedWebhookUrl
+      verifyTransformation testEnvironment baseUrlTemplate queryParamTemplate expectedWebhookUrl
 
-verifyTransformation :: TestEnvironment -> Fixture.Options -> Text -> Text -> Text -> IO ()
-verifyTransformation testEnvironment opts baseUrlTemplate queryParamTemplate expectedWebhookUrl = do
+verifyTransformation :: TestEnvironment -> Text -> Text -> Text -> IO ()
+verifyTransformation testEnvironment baseUrlTemplate queryParamTemplate expectedWebhookUrl = do
   let responseTransformQuery =
         [yaml|
           type: test_webhook_transform
@@ -73,6 +73,6 @@ verifyTransformation testEnvironment opts baseUrlTemplate queryParamTemplate exp
         |]
 
   shouldReturnYaml
-    opts
+    testEnvironment
     (GraphqlEngine.postMetadata testEnvironment responseTransformQuery)
     expectedResponse

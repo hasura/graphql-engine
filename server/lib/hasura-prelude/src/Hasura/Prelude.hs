@@ -32,6 +32,7 @@ module Hasura.Prelude
     bsToTxt,
     lbsToTxt,
     txtToBs,
+    txtToLbs,
     base64Decode,
     tshow,
 
@@ -279,6 +280,10 @@ lbsToTxt = bsToTxt . BL.toStrict
 txtToBs :: Text -> B.ByteString
 txtToBs = TE.encodeUtf8
 
+-- | UTF8 encode a 'Text' to 'BL.ByteString'.
+txtToLbs :: Text -> BL.ByteString
+txtToLbs = BL.fromStrict . TE.encodeUtf8
+
 -- | Base64 decode a 'Text' to 'B.ByteString'.
 base64Decode :: Text -> BL.ByteString
 base64Decode =
@@ -294,12 +299,14 @@ tshow = T.pack . show
 -- | Labeled, prettified 'traceShowId'.
 ltrace :: Show a => String -> a -> a
 ltrace lbl x = Debug.trace (lbl <> ": " <> TL.unpack (PS.pShow x)) x
-{-# WARNING ltrace "ltrace left in code" #-}
+
+{- HLINT ignore ltrace -}
 
 -- | Labeled, prettified 'traceShowM'.
 ltraceM :: Applicative m => Show a => String -> a -> m ()
 ltraceM lbl x = Debug.traceM (lbl <> ": " <> TL.unpack (PS.pShow x))
-{-# WARNING ltraceM "ltraceM left in code" #-}
+
+{- HLINT ignore ltraceM -}
 
 -- | Trace a prettified value to a file.
 traceToFile :: Show a => FilePath -> a -> a
@@ -307,7 +314,8 @@ traceToFile filepath x =
   Debug.trace
     ("tracing to " <> filepath)
     (unsafePerformIO (TLIO.writeFile filepath (PS.pShowNoColor x) $> x))
-{-# WARNING traceToFile "traceToFile left in code" #-}
+
+{- HLINT ignore traceToFile -}
 
 -- | Trace a prettified value to a file in an Applicative context.
 traceToFileM :: Applicative m => Show a => FilePath -> a -> m ()
@@ -318,7 +326,8 @@ traceToFileM filepath x =
         filepath,
         show $ unsafePerformIO $ TLIO.writeFile filepath $ PS.pShowNoColor x
       ]
-{-# WARNING traceToFileM "traceToFileM left in code" #-}
+
+{- HLINT ignore traceToFileM -}
 
 --------------------------------------------------------------------------------
 -- Map-related utilities

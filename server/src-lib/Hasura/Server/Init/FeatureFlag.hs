@@ -7,8 +7,9 @@ module Hasura.Server.Init.FeatureFlag
     checkFeatureFlag,
     Identifier (..),
     FeatureFlags (..),
+    HasFeatureFlagChecker (..),
     featureFlags,
-    logicalModelInterface,
+    nativeQueryInterface,
   )
 where
 
@@ -54,8 +55,22 @@ featureFlags =
   FeatureFlags $
     HashMap.fromList
       [ ("test-flag", testFlag),
-        ("native-query-interface", logicalModelInterface)
+        ("native-query-interface", nativeQueryInterface)
       ]
+
+--------------------------------------------------------------------------------
+
+class Monad m => HasFeatureFlagChecker m where
+  checkFlag :: FeatureFlag -> m Bool
+
+instance HasFeatureFlagChecker m => HasFeatureFlagChecker (ReaderT r m) where
+  checkFlag = lift . checkFlag
+
+instance HasFeatureFlagChecker m => HasFeatureFlagChecker (ExceptT e m) where
+  checkFlag = lift . checkFlag
+
+instance HasFeatureFlagChecker m => HasFeatureFlagChecker (StateT s m) where
+  checkFlag = lift . checkFlag
 
 --------------------------------------------------------------------------------
 
@@ -68,11 +83,11 @@ testFlag =
       ffEnvVar = "HASURA_FF_TEST_FLAG"
     }
 
-logicalModelInterface :: FeatureFlag
-logicalModelInterface =
+nativeQueryInterface :: FeatureFlag
+nativeQueryInterface =
   FeatureFlag
     { ffIdentifier = Identifier "native-query-interface",
       ffDefaultValue = False,
       ffDescription = "Expose custom views, permissions and advanced SQL functionality via custom queries",
-      ffEnvVar = "HASURA_FF_LOGICAL_MODEL_INTERFACE"
+      ffEnvVar = "HASURA_FF_NATIVE_QUERY_INTERFACE"
     }

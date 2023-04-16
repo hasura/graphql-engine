@@ -25,6 +25,7 @@ import {
 import { showErrorNotification } from '../../Common/Notification';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import { getActionsCreateRoute } from '../../../Common/utils/routesUtils';
+import { getQueryResponseCachingRoute } from '../../../../utils/routeUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
   setActionDefinition,
@@ -33,7 +34,9 @@ import {
 } from '../../Actions/Add/reducer';
 import { getGraphQLEndpoint } from '../utils';
 import snippets from './snippets';
-import { canAccessCacheButton } from '../../../../utils/permissions';
+import globals from '../../../../Globals';
+import { WithEELiteAccess } from '../../../../features/EETrial';
+import { isProConsole } from '../../../../utils/proConsole';
 
 import './GraphiQL.css';
 import _push from '../../Data/push';
@@ -188,10 +191,18 @@ class GraphiQLWrapper extends Component {
     const _toggleCacheDirective = () => {
       trackGraphiQlToolbarButtonClick('Cache');
 
-      const editor = graphiqlContext.getQueryEditor();
-      const operationString = editor.getValue();
-      const cacheToggledOperationString = toggleCacheDirective(operationString);
-      editor.setValue(cacheToggledOperationString);
+      try {
+        const editor = graphiqlContext.getQueryEditor();
+        const operationString = editor.getValue();
+        const cacheToggledOperationString =
+          toggleCacheDirective(operationString);
+        editor.setValue(cacheToggledOperationString);
+      } catch {
+        // throw a generic error
+        throw new Error(
+          'Caching directives can only be added to valid GraphQL queries.'
+        );
+      }
     };
 
     const renderGraphiqlFooter = responseTime &&
@@ -237,7 +248,7 @@ class GraphiQLWrapper extends Component {
       }
 
       // get toolbar buttons
-      const getGraphiqlButtons = () => {
+      const getGraphiqlButtons = eeLiteAccess => {
         const routeToREST = createRouteToREST(graphiqlProps);
 
         const buttons = [
@@ -262,8 +273,18 @@ class GraphiQLWrapper extends Component {
           {
             label: 'Cache',
             title: 'Cache the response of this query',
-            onClick: _toggleCacheDirective,
-            hide: !canAccessCacheButton(),
+            onClick: () => {
+              if (eeLiteAccess === 'active' || isProConsole(globals)) {
+                // toggle cache directive only if it is cloud/ee-classic/ee-lite-active
+                _toggleCacheDirective();
+              } else {
+                // send to the query-response-caching page if the EE lite trial isn't active
+                if (eeLiteAccess !== 'forbidden') {
+                  dispatch(_push(getQueryResponseCachingRoute()));
+                }
+              }
+            },
+            hide: !isProConsole(globals) && eeLiteAccess === 'forbidden',
           },
           {
             label: 'Code Exporter',
@@ -306,7 +327,11 @@ class GraphiQLWrapper extends Component {
           >
             <GraphiQL.Logo>GraphiQL</GraphiQL.Logo>
             <GraphiQL.Toolbar>
-              {getGraphiqlButtons()}
+              <WithEELiteAccess globals={globals}>
+                {({ access: eeLiteAccess }) => {
+                  return getGraphiqlButtons(eeLiteAccess);
+                }}
+              </WithEELiteAccess>
               <AnalyzeButton
                 operations={graphiqlContext && graphiqlContext.state.operations}
                 analyzeFetcher={analyzeFetcherInstance}

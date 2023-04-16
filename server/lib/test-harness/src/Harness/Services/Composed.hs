@@ -7,8 +7,10 @@ where
 
 import Data.Has
 import Data.Text qualified as T
+import Harness.Services.Database.Postgres as I
 import Harness.Services.GraphqlEngine as I
-import Harness.Services.PostgresDb as I
+import Harness.Services.Schema as I
+import Harness.Services.Source.Postgres as I
 import Hasura.Prelude
 import System.Directory
 import System.Environment

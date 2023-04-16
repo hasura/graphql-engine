@@ -61,6 +61,14 @@ const getInitialValue = (key: string, type?: PermissionType) => {
     case '_not':
     case '_contains':
     case '_contained_in':
+    case '_st_d_within':
+    case '_st_within':
+    case '_st_3d_d_within':
+    case '_st_contains':
+    case '_st_crosses':
+    case '_st_intersects':
+    case '_st_touches':
+    case '_st_overlaps':
       return {};
     case '_is_null':
       return false;

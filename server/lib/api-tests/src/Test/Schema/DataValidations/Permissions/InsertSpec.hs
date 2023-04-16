@@ -17,9 +17,9 @@ import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphqlWithHeaders, postMetadata_)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -88,12 +88,9 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
-      -- The error path differs across backends. Since it's immaterial for the tests we want to make we simply ignore it.
+tests :: SpecWith TestEnvironment
+tests = do
+  let -- The error path differs across backends. Since it's immaterial for the tests we want to make we simply ignore it.
       removeErrorPath :: Value -> Value
       removeErrorPath = key "errors" . values . key "extensions" . atKey "path" .~ Nothing
 
@@ -128,7 +125,7 @@ tests opts = do
                 }
               |]
 
-      fmap removeErrorPath actual `shouldBe` expected
+      shouldReturnYaml testEnvironment (fmap removeErrorPath actual) expected
 
   it "Allows authors to insert their own articles" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -170,7 +167,7 @@ tests opts = do
               }
             |]
 
-    fmap removeErrorPath actual `shouldBe` expected
+    shouldReturnYaml testEnvironment (fmap removeErrorPath actual) expected
 
   it "Authors can't add other authors" $ \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -202,7 +199,7 @@ tests opts = do
               }
             |]
 
-    fmap removeErrorPath actual `shouldBe` expected
+    shouldReturnYaml testEnvironment (fmap removeErrorPath actual) expected
 
 --------------------------------------------------------------------------------
 -- Metadata

@@ -44,10 +44,10 @@ import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Logging
 import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), SchemaName (..))
+import Harness.Schema qualified as Schema
 import Harness.Test.BackendType (BackendTypeConfig)
 import Harness.Test.BackendType qualified as BackendType
-import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), SchemaName (..))
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
 import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Prelude
@@ -168,7 +168,7 @@ createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk,
 scalarType :: HasCallStack => Schema.ScalarType -> Text
 scalarType = \case
   Schema.TInt -> "integer"
-  Schema.TStr -> "varchar"
+  Schema.TStr -> "text"
   Schema.TUTCTime -> "timestamp"
   Schema.TBool -> "boolean"
   Schema.TGeography -> "geography"
@@ -235,9 +235,8 @@ untrackTable testEnvironment table =
 -- Because the test harness sets the schema name we use for testing, we need
 -- to make sure it exists before we run the tests.
 -- we also need to add the `citus` extension: https://docs.citusdata.com/en/v11.1/admin_guide/cluster_management.html
-createSchema :: TestEnvironment -> IO ()
-createSchema testEnvironment = do
-  let schemaName = Schema.getSchemaName testEnvironment
+createSchema :: TestEnvironment -> SchemaName -> IO ()
+createSchema testEnvironment schemaName = do
   run_
     testEnvironment
     [i|
@@ -245,7 +244,6 @@ createSchema testEnvironment = do
         SET client_min_messages = error;
         SET log_min_messages = panic;
         CREATE SCHEMA IF NOT EXISTS #{unSchemaName schemaName};
-        CREATE EXTENSION citus;
         COMMIT;
       |]
 
@@ -263,8 +261,13 @@ createDatabase testEnvironment = do
     [i|
         CREATE DATABASE #{dbName};
       |]
+  run_
+    testEnvironment
+    [i|
+        CREATE EXTENSION citus;
+    |]
 
-  createSchema testEnvironment
+  createSchema testEnvironment (Schema.getSchemaName testEnvironment)
 
 -- | we drop databases at the end of test runs so we don't need to do DB clean
 -- up.

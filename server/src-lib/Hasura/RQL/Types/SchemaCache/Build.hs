@@ -1,4 +1,5 @@
 {-# LANGUAGE Arrows #-}
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -49,6 +50,7 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Analyse
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Prelude
+import Hasura.QueryTags
 import Hasura.RQL.Types.Allowlist (NormalizedQuery, unNormalizedQuery)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Endpoint
@@ -57,7 +59,7 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RemoteSchema.Metadata (RemoteSchemaName)
-import Hasura.Server.Types
+import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker)
 import Hasura.Services.Network
 import Hasura.Session
 import Hasura.Tracing (TraceT)
@@ -167,8 +169,7 @@ withRecordInconsistency f = proc (e, (metadataObject, s)) -> do
 -- operations for triggering a schema cache rebuild
 
 class (CacheRM m) => CacheRWM m where
-  buildSchemaCacheWithOptions ::
-    BuildReason -> CacheInvalidations -> Metadata -> m ()
+  buildSchemaCacheWithOptions :: BuildReason -> CacheInvalidations -> Metadata -> m ()
   setMetadataResourceVersionInSchemaCache :: MetadataResourceVersion -> m ()
 
 data BuildReason
@@ -222,7 +223,7 @@ instance (CacheRWM m) => CacheRWM (PG.TxET QErr m) where
   setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
 
 newtype MetadataT m a = MetadataT {unMetadataT :: StateT Metadata m a}
-  deriving
+  deriving newtype
     ( Functor,
       Applicative,
       Monad,
@@ -238,8 +239,10 @@ newtype MetadataT m a = MetadataT {unMetadataT :: StateT Metadata m a}
       Tracing.MonadTrace,
       MonadBase b,
       MonadBaseControl b,
-      ProvidesNetwork
+      ProvidesNetwork,
+      HasFeatureFlagChecker
     )
+  deriving anyclass (MonadQueryTags)
 
 instance (Monad m) => MetadataM (MetadataT m) where
   getMetadata = MetadataT get
@@ -247,9 +250,6 @@ instance (Monad m) => MetadataM (MetadataT m) where
 
 instance (UserInfoM m) => UserInfoM (MetadataT m) where
   askUserInfo = lift askUserInfo
-
-instance HasServerConfigCtx m => HasServerConfigCtx (MetadataT m) where
-  askServerConfigCtx = lift askServerConfigCtx
 
 -- | @runMetadataT@ puts a stateful metadata in scope. @MetadataDefaults@ is
 -- provided so that it can be considered from the --metadataDefaults arguments.
@@ -341,7 +341,7 @@ getInconsistentQueryCollections rs qcs lqToMetadataObj restEndpoints allowLst =
         lqs = _cdQueries . _ccDefinition $ cc
 
     inAllowList :: [NormalizedQuery] -> (ListedQuery) -> Bool
-    inAllowList logicalModelList (ListedQuery {..}) = any (\lmCode -> unNormalizedQuery lmCode == (unGQLQuery . getGQLQuery) _lqQuery) logicalModelList
+    inAllowList nativeQueryList (ListedQuery {..}) = any (\nqCode -> unNormalizedQuery nqCode == (unGQLQuery . getGQLQuery) _lqQuery) nativeQueryList
 
     inRESTEndpoints :: EndpointTrie GQLQueryWithText -> (ListedQuery) -> [Text]
     inRESTEndpoints edTrie lq = map fst $ filter (queryIsFaulty) allQueries

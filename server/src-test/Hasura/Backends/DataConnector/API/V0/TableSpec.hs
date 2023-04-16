@@ -23,7 +23,7 @@ spec = do
   describe "TableInfo" $ do
     describe "minimal" $
       testFromJSON
-        (TableInfo (TableName ["my_table_name"]) Table [] [] (ForeignKeys mempty) Nothing False False False)
+        (TableInfo (TableName ["my_table_name"]) Table [] Nothing (ForeignKeys mempty) Nothing False False False)
         [aesonQQ|
           { "name": ["my_table_name"],
             "columns": []
@@ -34,8 +34,8 @@ spec = do
         ( TableInfo
             (TableName ["my_table_name"])
             View
-            [ColumnInfo (ColumnName "id") (ScalarType "string") False Nothing False False]
-            [ColumnName "id"]
+            [ColumnInfo (ColumnName "id") (ScalarType "string") False Nothing False False Nothing]
+            (Just $ ColumnName "id" :| [])
             (ForeignKeys mempty)
             (Just "my description")
             True
@@ -58,8 +58,8 @@ spec = do
         ( TableInfo
             (TableName ["my_table_name"])
             Table
-            [ColumnInfo (ColumnName "id") (ScalarType "string") False Nothing False False]
-            [ColumnName "id"]
+            [ColumnInfo (ColumnName "id") (ScalarType "string") False Nothing False False Nothing]
+            (Just $ ColumnName "id" :| [])
             (ForeignKeys $ HashMap.singleton (ConstraintName "Artist") (Constraint (TableName ["artist_table"]) (HashMap.singleton (ColumnName "ArtistId") (ColumnName "ArtistId"))))
             (Just "my description")
             False
@@ -111,7 +111,7 @@ genTableInfo =
     <$> genTableName
     <*> genTableType
     <*> Gen.list defaultRange genColumnInfo
-    <*> Gen.list defaultRange genColumnName
+    <*> Gen.maybe (Gen.nonEmpty defaultRange genColumnName)
     <*> genForeignKeys
     <*> Gen.maybe (genArbitraryAlphaNumText defaultRange)
     <*> Gen.bool

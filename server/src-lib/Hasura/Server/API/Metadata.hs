@@ -20,10 +20,13 @@ import Data.Text.Extended qualified as T
 import GHC.Generics.Extended (constrName)
 import Hasura.App.State
 import Hasura.Base.Error
+import Hasura.CustomReturnType.API qualified as CustomReturnType
 import Hasura.EncJSON
+import Hasura.Function.API qualified as Functions
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as L
-import Hasura.LogicalModel.API qualified as LogicalModels
 import Hasura.Metadata.Class
+import Hasura.NativeQuery.API qualified as NativeQueries
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ApiLimit
@@ -48,6 +51,7 @@ import Hasura.RQL.DDL.Relationship.Suggest
 import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema
+import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.DDL.Schema.Source
 import Hasura.RQL.DDL.SourceKinds
 import Hasura.RQL.DDL.Webhook.Transform.Validation
@@ -76,6 +80,7 @@ import Hasura.SQL.AnyBackend
 import Hasura.SQL.Backend
 import Hasura.Server.API.Backend
 import Hasura.Server.API.Instances ()
+import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker)
 import Hasura.Server.Logging (SchemaSyncLog (..), SchemaSyncThreadType (TTMetadataApi))
 import Hasura.Server.Types
 import Hasura.Server.Utils (APIVersion (..))
@@ -91,7 +96,7 @@ data RQLMetadataV1
   | RMUpdateSource !(AnyBackend UpdateSource)
   | RMListSourceKinds !ListSourceKinds
   | RMGetSourceKindCapabilities !GetSourceKindCapabilities
-  | RMGetSourceTables !GetSourceTables
+  | RMGetSourceTables !(AnyBackend GetSourceTables)
   | RMGetTableInfo !GetTableInfo
   | -- Tables
     RMTrackTable !(AnyBackend TrackTableV2)
@@ -121,23 +126,27 @@ data RQLMetadataV1
   | RMUpdateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
   | RMDeleteRemoteRelationship !(AnyBackend DeleteFromSourceRelationship)
   | -- Functions
-    RMTrackFunction !(AnyBackend TrackFunctionV2)
-  | RMUntrackFunction !(AnyBackend UnTrackFunction)
-  | RMSetFunctionCustomization (AnyBackend SetFunctionCustomization)
+    RMTrackFunction !(AnyBackend Functions.TrackFunctionV2)
+  | RMUntrackFunction !(AnyBackend Functions.UnTrackFunction)
+  | RMSetFunctionCustomization (AnyBackend Functions.SetFunctionCustomization)
   | -- Functions permissions
-    RMCreateFunctionPermission !(AnyBackend FunctionPermissionArgument)
-  | RMDropFunctionPermission !(AnyBackend FunctionPermissionArgument)
+    RMCreateFunctionPermission !(AnyBackend Functions.FunctionPermissionArgument)
+  | RMDropFunctionPermission !(AnyBackend Functions.FunctionPermissionArgument)
   | -- Computed fields
     RMAddComputedField !(AnyBackend AddComputedField)
   | RMDropComputedField !(AnyBackend DropComputedField)
   | -- Connection template
     RMTestConnectionTemplate !(AnyBackend TestConnectionTemplate)
-  | -- Logical Models
-    RMGetLogicalModel !(AnyBackend LogicalModels.GetLogicalModel)
-  | RMTrackLogicalModel !(AnyBackend LogicalModels.TrackLogicalModel)
-  | RMUntrackLogicalModel !(AnyBackend LogicalModels.UntrackLogicalModel)
-  | RMCreateSelectLogicalModelPermission !(AnyBackend (LogicalModels.CreateLogicalModelPermission SelPerm))
-  | RMDropSelectLogicalModelPermission !(AnyBackend LogicalModels.DropLogicalModelPermission)
+  | -- Native Queries
+    RMGetNativeQuery !(AnyBackend NativeQueries.GetNativeQuery)
+  | RMTrackNativeQuery !(AnyBackend NativeQueries.TrackNativeQuery)
+  | RMUntrackNativeQuery !(AnyBackend NativeQueries.UntrackNativeQuery)
+  | -- Custom types
+    RMGetCustomReturnType !(AnyBackend CustomReturnType.GetCustomReturnType)
+  | RMTrackCustomReturnType !(AnyBackend CustomReturnType.TrackCustomReturnType)
+  | RMUntrackCustomReturnType !(AnyBackend CustomReturnType.UntrackCustomReturnType)
+  | RMCreateSelectCustomReturnTypePermission !(AnyBackend (CustomReturnType.CreateCustomReturnTypePermission SelPerm))
+  | RMDropSelectCustomReturnTypePermission !(AnyBackend CustomReturnType.DropCustomReturnTypePermission)
   | -- Tables event triggers
     RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)
@@ -225,6 +234,9 @@ data RQLMetadataV1
     RMGetFeatureFlag !GetFeatureFlag
   | -- Bulk metadata queries
     RMBulk [RQLMetadataRequest]
+  | -- Bulk metadata queries, but don't stop if something fails - return all
+    -- successes and failures as separate items
+    RMBulkKeepGoing [RQLMetadataRequest]
   deriving (Generic)
 
 -- NOTE! If you add a new request type here that is read-only, make sure to
@@ -277,7 +289,6 @@ instance FromJSON RQLMetadataV1 where
       "dc_delete_agent" -> RMDCDeleteAgent <$> args
       "list_source_kinds" -> RMListSourceKinds <$> args
       "get_source_kind_capabilities" -> RMGetSourceKindCapabilities <$> args
-      "get_source_tables" -> RMGetSourceTables <$> args
       "get_table_info" -> RMGetTableInfo <$> args
       "set_custom_types" -> RMSetCustomTypes <$> args
       "set_api_limits" -> RMSetApiLimits <$> args
@@ -304,6 +315,7 @@ instance FromJSON RQLMetadataV1 where
       "set_opentelemetry_status" -> RMSetOpenTelemetryStatus <$> args
       "get_feature_flag" -> RMGetFeatureFlag <$> args
       "bulk" -> RMBulk <$> args
+      "bulk_keep_going" -> RMBulkKeepGoing <$> args
       -- Backend prefixed metadata actions:
       _ -> do
         -- 1) Parse the backend source kind and metadata command:
@@ -382,23 +394,24 @@ runMetadataQuery ::
     MonadError QErr m,
     MonadBaseControl IO m,
     HasAppEnv m,
+    HasCacheStaticConfig m,
+    HasFeatureFlagChecker m,
     Tracing.MonadTrace m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadResolveSource m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
     MonadGetApiTimeLimit m,
-    UserInfoM m,
-    HasServerConfigCtx m
+    UserInfoM m
   ) =>
   AppContext ->
   RebuildableSchemaCache ->
   RQLMetadata ->
   m (EncJSON, RebuildableSchemaCache)
 runMetadataQuery appContext schemaCache RQLMetadata {..} = do
-  AppEnv {..} <- askAppEnv
+  appEnv@AppEnv {..} <- askAppEnv
   let logger = _lsLogger appEnvLoggers
-  (metadata, currentResourceVersion) <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
+  MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
   let exportsMetadata = \case
         RMV1 (RMExportMetadata _) -> True
         RMV2 (RMV2ExportMetadata _) -> True
@@ -422,12 +435,18 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
         if (exportsMetadata _rqlMetadata || queryModifiesMetadata _rqlMetadata)
           then emptyMetadataDefaults
           else acMetadataDefaults appContext
+  dynamicConfig <- buildCacheDynamicConfig appEnv appContext
   ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
-    runMetadataQueryM (acEnvironment appContext) currentResourceVersion _rqlMetadata
+    runMetadataQueryM
+      (acEnvironment appContext)
+      appEnvCheckFeatureFlag
+      (acRemoteSchemaPermsCtx appContext)
+      currentResourceVersion
+      _rqlMetadata
       -- TODO: remove this straight runReaderT that provides no actual new info
       & flip runReaderT logger
       & runMetadataT metadata metadataDefaults
-      & runCacheRWT schemaCache
+      & runCacheRWT dynamicConfig schemaCache
   -- set modified metadata in storage
   if queryModifiesMetadata _rqlMetadata
     then case (appEnvEnableMaintenanceMode, appEnvEnableReadOnlyMode) of
@@ -436,7 +455,7 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
         L.unLogger logger $
           SchemaSyncLog L.LevelInfo TTMetadataApi $
             String $
-              "Attempting to put new metadata in storage"
+              "Attempting to insert new metadata in storage"
         newResourceVersion <-
           Tracing.newSpan "setMetadata" $
             liftEitherM $
@@ -444,7 +463,7 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
         L.unLogger logger $
           SchemaSyncLog L.LevelInfo TTMetadataApi $
             String $
-              "Put new metadata in storage, received new resource version " <> tshow newResourceVersion
+              "Successfully inserted new metadata in storage with resource version: " <> showMetadataResourceVersion newResourceVersion
 
         -- notify schema cache sync
         Tracing.newSpan "notifySchemaCacheSync" $
@@ -453,12 +472,12 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
         L.unLogger logger $
           SchemaSyncLog L.LevelInfo TTMetadataApi $
             String $
-              "Sent schema cache sync notification at resource version " <> tshow newResourceVersion
+              "Inserted schema cache sync notification at resource version:" <> showMetadataResourceVersion newResourceVersion
 
         (_, modSchemaCache', _) <-
           Tracing.newSpan "setMetadataResourceVersionInSchemaCache" $
             setMetadataResourceVersionInSchemaCache newResourceVersion
-              & runCacheRWT modSchemaCache
+              & runCacheRWT dynamicConfig modSchemaCache
 
         pure (r, modSchemaCache')
       (MaintenanceModeEnabled (), ReadOnlyModeDisabled) ->
@@ -493,12 +512,16 @@ queryModifiesMetadata = \case
       RMGetTableInfo _ -> False
       RMTestConnectionTemplate _ -> False
       RMSuggestRelationships _ -> False
-      RMGetLogicalModel _ -> False
-      RMTrackLogicalModel _ -> True
-      RMUntrackLogicalModel _ -> True
-      RMCreateSelectLogicalModelPermission _ -> True
-      RMDropSelectLogicalModelPermission _ -> True
+      RMGetNativeQuery _ -> False
+      RMTrackNativeQuery _ -> True
+      RMUntrackNativeQuery _ -> True
+      RMGetCustomReturnType _ -> False
+      RMTrackCustomReturnType _ -> True
+      RMUntrackCustomReturnType _ -> True
+      RMCreateSelectCustomReturnTypePermission _ -> True
+      RMDropSelectCustomReturnTypePermission _ -> True
       RMBulk qs -> any queryModifiesMetadata qs
+      RMBulkKeepGoing qs -> any queryModifiesMetadata qs
       -- We used to assume that the fallthrough was True,
       -- but it is better to be explicit here to warn when new constructors are added.
       RMAddSource _ -> True
@@ -597,26 +620,28 @@ runMetadataQueryM ::
     Tracing.MonadTrace m,
     UserInfoM m,
     MetadataM m,
-    MonadMetadataStorageQueryAPI m,
-    HasServerConfigCtx m,
+    MonadMetadataStorage m,
     MonadReader r m,
     Has (L.Logger L.Hasura) r,
     MonadError QErr m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
-    MonadGetApiTimeLimit m
+    MonadGetApiTimeLimit m,
+    HasFeatureFlagChecker m
   ) =>
   Env.Environment ->
+  CheckFeatureFlag ->
+  Options.RemoteSchemaPermissions ->
   MetadataResourceVersion ->
   RQLMetadataRequest ->
   m EncJSON
-runMetadataQueryM env currentResourceVersion =
+runMetadataQueryM env checkFeatureFlag remoteSchemaPerms currentResourceVersion =
   withPathK "args" . \case
     -- NOTE: This is a good place to install tracing, since it's involved in
     -- the recursive case via "bulk":
     RMV1 q ->
       Tracing.newSpan ("v1 " <> T.pack (constrName q)) $
-        runMetadataQueryV1M env currentResourceVersion q
+        runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersion q
     RMV2 q ->
       Tracing.newSpan ("v2 " <> T.pack (constrName q)) $
         runMetadataQueryV2M currentResourceVersion q
@@ -629,31 +654,33 @@ runMetadataQueryV1M ::
     Tracing.MonadTrace m,
     UserInfoM m,
     MetadataM m,
-    MonadMetadataStorageQueryAPI m,
-    HasServerConfigCtx m,
+    MonadMetadataStorage m,
     MonadReader r m,
     Has (L.Logger L.Hasura) r,
     MonadError QErr m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
-    MonadGetApiTimeLimit m
+    MonadGetApiTimeLimit m,
+    HasFeatureFlagChecker m
   ) =>
   Env.Environment ->
+  CheckFeatureFlag ->
+  Options.RemoteSchemaPermissions ->
   MetadataResourceVersion ->
   RQLMetadataV1 ->
   m EncJSON
-runMetadataQueryV1M env currentResourceVersion = \case
+runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersion = \case
   RMAddSource q -> dispatchMetadata (runAddSource env) q
   RMDropSource q -> runDropSource q
   RMRenameSource q -> runRenameSource q
   RMUpdateSource q -> dispatchMetadata runUpdateSource q
   RMListSourceKinds q -> runListSourceKinds q
   RMGetSourceKindCapabilities q -> runGetSourceKindCapabilities q
-  RMGetSourceTables q -> runGetSourceTables env q
-  RMGetTableInfo q -> runGetTableInfo env q
+  RMGetSourceTables q -> dispatchMetadata runGetSourceTables q
+  RMGetTableInfo q -> runGetTableInfo q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
   RMUntrackTable q -> dispatchMetadataAndEventTrigger runUntrackTableQ q
-  RMSetFunctionCustomization q -> dispatchMetadata runSetFunctionCustomization q
+  RMSetFunctionCustomization q -> dispatchMetadata Functions.runSetFunctionCustomization q
   RMSetTableCustomization q -> dispatchMetadata runSetTableCustomization q
   RMSetApolloFederationConfig q -> dispatchMetadata runSetApolloFederationConfig q
   RMPgSetTableIsEnum q -> dispatchMetadata runSetExistingTableIsEnumQ q
@@ -675,18 +702,21 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMCreateRemoteRelationship q -> dispatchMetadata runCreateRemoteRelationship q
   RMUpdateRemoteRelationship q -> dispatchMetadata runUpdateRemoteRelationship q
   RMDeleteRemoteRelationship q -> dispatchMetadata runDeleteRemoteRelationship q
-  RMTrackFunction q -> dispatchMetadata runTrackFunctionV2 q
-  RMUntrackFunction q -> dispatchMetadata runUntrackFunc q
-  RMCreateFunctionPermission q -> dispatchMetadata runCreateFunctionPermission q
-  RMDropFunctionPermission q -> dispatchMetadata runDropFunctionPermission q
+  RMTrackFunction q -> dispatchMetadata Functions.runTrackFunctionV2 q
+  RMUntrackFunction q -> dispatchMetadata Functions.runUntrackFunc q
+  RMCreateFunctionPermission q -> dispatchMetadata Functions.runCreateFunctionPermission q
+  RMDropFunctionPermission q -> dispatchMetadata Functions.runDropFunctionPermission q
   RMAddComputedField q -> dispatchMetadata runAddComputedField q
   RMDropComputedField q -> dispatchMetadata runDropComputedField q
   RMTestConnectionTemplate q -> dispatchMetadata runTestConnectionTemplate q
-  RMGetLogicalModel q -> dispatchMetadata LogicalModels.runGetLogicalModel q
-  RMTrackLogicalModel q -> dispatchMetadata (LogicalModels.runTrackLogicalModel env) q
-  RMUntrackLogicalModel q -> dispatchMetadata LogicalModels.runUntrackLogicalModel q
-  RMCreateSelectLogicalModelPermission q -> dispatchMetadata LogicalModels.runCreateSelectLogicalModelPermission q
-  RMDropSelectLogicalModelPermission q -> dispatchMetadata LogicalModels.runDropSelectLogicalModelPermission q
+  RMGetNativeQuery q -> dispatchMetadata NativeQueries.runGetNativeQuery q
+  RMTrackNativeQuery q -> dispatchMetadata (NativeQueries.runTrackNativeQuery env) q
+  RMUntrackNativeQuery q -> dispatchMetadata NativeQueries.runUntrackNativeQuery q
+  RMGetCustomReturnType q -> dispatchMetadata CustomReturnType.runGetCustomReturnType q
+  RMTrackCustomReturnType q -> dispatchMetadata CustomReturnType.runTrackCustomReturnType q
+  RMUntrackCustomReturnType q -> dispatchMetadata CustomReturnType.runUntrackCustomReturnType q
+  RMCreateSelectCustomReturnTypePermission q -> dispatchMetadata CustomReturnType.runCreateSelectCustomReturnTypePermission q
+  RMDropSelectCustomReturnTypePermission q -> dispatchMetadata CustomReturnType.runDropSelectCustomReturnTypePermission q
   RMCreateEventTrigger q ->
     dispatchMetadataAndEventTrigger
       ( validateTransforms
@@ -706,7 +736,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMRemoveRemoteSchema q -> runRemoveRemoteSchema q
   RMReloadRemoteSchema q -> runReloadRemoteSchema q
   RMIntrospectRemoteSchema q -> runIntrospectRemoteSchema q
-  RMAddRemoteSchemaPermissions q -> runAddRemoteSchemaPermissions q
+  RMAddRemoteSchemaPermissions q -> runAddRemoteSchemaPermissions remoteSchemaPerms q
   RMDropRemoteSchemaPermissions q -> runDropRemoteSchemaPermissions q
   RMCreateRemoteSchemaRemoteRelationship q -> runCreateRemoteSchemaRemoteRelationship q
   RMUpdateRemoteSchemaRemoteRelationship q -> runUpdateRemoteSchemaRemoteRelationship q
@@ -778,8 +808,15 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMSetQueryTagsConfig q -> runSetQueryTagsConfig q
   RMSetOpenTelemetryConfig q -> runSetOpenTelemetryConfig q
   RMSetOpenTelemetryStatus q -> runSetOpenTelemetryStatus q
-  RMGetFeatureFlag q -> runGetFeatureFlag q
-  RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
+  RMGetFeatureFlag q -> runGetFeatureFlag checkFeatureFlag q
+  RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env checkFeatureFlag remoteSchemaPerms currentResourceVersion) q
+  RMBulkKeepGoing commands -> do
+    results <-
+      commands & indexedMapM \command ->
+        runMetadataQueryM env checkFeatureFlag remoteSchemaPerms currentResourceVersion command
+          `catchError` \qerr -> pure (encJFromJValue qerr)
+
+    pure (encJFromList results)
   where
     dispatchMetadata ::
       (forall b. BackendMetadata b => i b -> a) ->
@@ -801,7 +838,7 @@ runMetadataQueryV2M ::
     CacheRWM m,
     MonadBaseControl IO m,
     MetadataM m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadReader r m,
     Has (L.Logger L.Hasura) r,
     MonadError QErr m,

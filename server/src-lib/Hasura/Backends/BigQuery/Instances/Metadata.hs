@@ -3,6 +3,7 @@
 module Hasura.Backends.BigQuery.Instances.Metadata () where
 
 import Hasura.Backends.BigQuery.DDL qualified as BigQuery
+import Hasura.Backends.BigQuery.Schema.Introspection qualified as BigQuery (listAllTables)
 import Hasura.Base.Error (Code (UnexpectedPayload), throw400)
 import Hasura.Prelude
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (RETDoNothing))
@@ -15,7 +16,7 @@ instance BackendMetadata 'BigQuery where
   buildComputedFieldInfo = BigQuery.buildComputedFieldInfo
   fetchAndValidateEnumValues = BigQuery.fetchAndValidateEnumValues
   resolveSourceConfig = BigQuery.resolveSourceConfig
-  resolveDatabaseMetadata _ = BigQuery.resolveSource
+  resolveDatabaseMetadata _ _ = BigQuery.resolveSource
   parseBoolExpOperations = BigQuery.parseBoolExpOperations
   buildFunctionInfo = BigQuery.buildFunctionInfo
   updateColumnInEventTrigger = BigQuery.updateColumnInEventTrigger
@@ -24,4 +25,5 @@ instance BackendMetadata 'BigQuery where
   buildComputedFieldBooleanExp _ _ _ _ _ _ =
     throw400 UnexpectedPayload "Computed fields are not supported in boolean expressions"
   supportsBeingRemoteRelationshipTarget _ = True
-  validateLogicalModel _ _ _ = pure ()
+  listAllTables = BigQuery.listAllTables
+  validateNativeQuery _ _ _ _ = pure ()

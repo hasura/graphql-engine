@@ -35,7 +35,6 @@ import Database.PostgreSQL.LibPQ qualified as PQ
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache as M
 import Hasura.RQL.DDL.Schema.Catalog as M
-import Hasura.RQL.DDL.Schema.Function as M
 import Hasura.RQL.DDL.Schema.Rename as M
 import Hasura.RQL.DDL.Schema.Table as M
 

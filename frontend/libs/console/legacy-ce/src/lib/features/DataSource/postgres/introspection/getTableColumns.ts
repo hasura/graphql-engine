@@ -48,6 +48,7 @@ export const getTableColumns = async ({
       kind: 'postgres',
     },
     sql,
+    readOnly: true,
     httpClient,
   });
 
@@ -105,6 +106,7 @@ export const getTableColumns = async ({
       kind: 'postgres',
     },
     sql: primaryKeySql,
+    readOnly: true,
     httpClient,
   });
 

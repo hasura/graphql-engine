@@ -12,6 +12,8 @@ module Hasura.Backends.MSSQL.FromIr
     FromIr,
     runFromIr,
     Error (..),
+    tellBefore,
+    tellAfter,
 
     -- * Name generation
     NameTemplate (..),
@@ -21,6 +23,7 @@ where
 
 import Control.Monad.Validate
 import Control.Monad.Validate qualified as V
+import Control.Monad.Writer.Strict
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
 import Data.Text qualified as T
@@ -30,6 +33,28 @@ import Hasura.Base.Error (QErr, throw500)
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.SQL.Backend
+
+-- | Allow the query process to emit extra setup / teardown steps
+data IRWriter = IRWriter
+  { irwBefore :: [TempTableDDL],
+    irwAfter :: [TempTableDDL]
+  }
+
+instance Semigroup IRWriter where
+  (IRWriter a b) <> (IRWriter a' b') = IRWriter (a <> a') (b' <> b)
+
+instance Monoid IRWriter where
+  mempty = IRWriter mempty mempty
+
+-- | add a step to be run before the main query
+tellBefore :: TempTableDDL -> FromIr ()
+tellBefore step =
+  tell (IRWriter {irwBefore = [step], irwAfter = mempty})
+
+-- | add a step to be run after the main query
+tellAfter :: TempTableDDL -> FromIr ()
+tellAfter step =
+  tell (IRWriter {irwBefore = mempty, irwAfter = [step]})
 
 -- | The central Monad used throughout for all conversion functions.
 --
@@ -43,20 +68,29 @@ import Hasura.SQL.Backend
 --   translation process needing to be bothered about potential name shadowing.
 --   See 'generateAlias'.
 newtype FromIr a = FromIr
-  { unFromIr :: StateT (Map Text Int) (Validate (NonEmpty Error)) a
+  { unFromIr ::
+      StateT
+        (Map Text Int)
+        (WriterT IRWriter (Validate (NonEmpty Error)))
+        a
   }
-  deriving (Functor, Applicative, Monad, MonadValidate (NonEmpty Error))
+  deriving (Functor, Applicative, Monad, MonadValidate (NonEmpty Error), MonadWriter IRWriter)
 
 -- | Run a 'FromIr' action, throwing errors that have been collected using the
 -- supplied action.
-runFromIr :: MonadError QErr m => FromIr a -> m a
-runFromIr = flip onLeft (throw500 . tshow) . V.runValidate . flip evalStateT mempty . unFromIr
+runFromIr :: MonadError QErr m => FromIr a -> m (QueryWithDDL a)
+runFromIr =
+  fmap (\(result, IRWriter before after) -> QueryWithDDL before result after)
+    . flip onLeft (throw500 . tshow)
+    . V.runValidate
+    . runWriterT
+    . flip evalStateT mempty
+    . unFromIr
 
 -- | Errors that may happen during translation.
 data Error
   = UnsupportedOpExpG (IR.OpExpG 'MSSQL Expression)
   | FunctionNotSupported
-  | LogicalModelNotSupported
   deriving (Show, Eq)
 
 -- | Hints about the type of entity that 'generateAlias' is producing an alias

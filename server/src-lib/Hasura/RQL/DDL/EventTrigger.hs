@@ -20,7 +20,6 @@ module Hasura.RQL.DDL.EventTrigger
     getTriggerNames,
     getTriggersMap,
     getTableNameFromTrigger,
-    getTabInfoFromSchemaCache,
     cetqSource,
     cetqName,
     cetqTable,
@@ -182,11 +181,15 @@ instance Backend b => FromJSON (InvokeEventTriggerQuery b) where
       <*> o .:? "source" .!= defaultSource
       <*> o .: "payload"
 
--- | This typeclass have the implementation logic for the event trigger log cleanup
+-- | This typeclass have the implementation logic for the event trigger log cleanup.
+--
+-- TODO: this doesn't belong here in the DDL folder, but should be part of
+-- Hasura.Eventing. It could even be made a Service, since the whole point of it
+-- is to implement features differently between OSS and Pro.
 class Monad m => MonadEventLogCleanup m where
   -- Deletes the logs of event triggers
   runLogCleaner ::
-    TriggerLogCleanupConfig -> m (Either QErr EncJSON)
+    SourceCache -> TriggerLogCleanupConfig -> m (Either QErr EncJSON)
 
   -- Generates the cleanup schedules for event triggers which have log cleaners installed
   generateCleanupSchedules ::
@@ -220,27 +223,27 @@ class Monad m => MonadEventLogCleanup m where
     m (Either QErr ())
 
 instance (MonadEventLogCleanup m) => MonadEventLogCleanup (ReaderT r m) where
-  runLogCleaner conf = lift $ runLogCleaner conf
+  runLogCleaner sourceCache conf = lift $ runLogCleaner sourceCache conf
   generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
   updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
 
 instance (MonadEventLogCleanup m) => MonadEventLogCleanup (ExceptT e m) where
-  runLogCleaner conf = lift $ runLogCleaner conf
+  runLogCleaner sourceCache conf = lift $ runLogCleaner sourceCache conf
   generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
   updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
 
 instance (MonadEventLogCleanup m) => MonadEventLogCleanup (MetadataT m) where
-  runLogCleaner conf = lift $ runLogCleaner conf
+  runLogCleaner sourceCache conf = lift $ runLogCleaner sourceCache conf
   generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
   updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
 
 instance (MonadEventLogCleanup m) => MonadEventLogCleanup (TraceT m) where
-  runLogCleaner conf = lift $ runLogCleaner conf
+  runLogCleaner sourceCache conf = lift $ runLogCleaner sourceCache conf
   generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
   updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
 
 instance (MonadEventLogCleanup m) => MonadEventLogCleanup (StateT w m) where
-  runLogCleaner conf = lift $ runLogCleaner conf
+  runLogCleaner sourceCache conf = lift $ runLogCleaner sourceCache conf
   generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
   updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
 
@@ -419,20 +422,20 @@ askTabInfoFromTrigger ::
   m (TableInfo b)
 askTabInfoFromTrigger sourceName triggerName = do
   schemaCache <- askSchemaCache
-  tableInfoMaybe <- getTabInfoFromSchemaCache schemaCache sourceName triggerName
-  tableInfoMaybe `onNothing` throw400 NotExists errMsg
+  getTabInfoFromSchemaCache schemaCache sourceName triggerName
+    `onNothing` throw400 NotExists errMsg
   where
     errMsg = "event trigger " <> triggerName <<> " does not exist"
 
 getTabInfoFromSchemaCache ::
-  (Backend b, QErrM m) =>
+  Backend b =>
   SchemaCache ->
   SourceName ->
   TriggerName ->
-  m (Maybe (TableInfo b))
+  Maybe (TableInfo b)
 getTabInfoFromSchemaCache schemaCache sourceName triggerName = do
-  let tabInfos = HM.elems $ fromMaybe mempty $ unsafeTableCache sourceName $ scSources schemaCache
-  pure $ find (isJust . HM.lookup triggerName . _tiEventTriggerInfoMap) tabInfos
+  tableCache <- unsafeTableCache sourceName $ scSources schemaCache
+  find (isJust . HM.lookup triggerName . _tiEventTriggerInfoMap) (HM.elems tableCache)
 
 askEventTriggerInfo ::
   forall b m.
@@ -615,23 +618,23 @@ getTriggerNames ::
 getTriggerNames = Set.fromList . OMap.keys . getTriggersMap
 
 getTableNameFromTrigger ::
-  forall b m.
-  (Backend b, QErrM m) =>
+  forall b.
+  Backend b =>
   SchemaCache ->
   SourceName ->
   TriggerName ->
-  m (Maybe (TableName b))
+  Maybe (TableName b)
 getTableNameFromTrigger schemaCache sourceName triggerName = do
-  tableInfoMaybe <- getTabInfoFromSchemaCache @b schemaCache sourceName triggerName
-  case tableInfoMaybe of
-    Nothing -> pure Nothing
-    Just tableInfo -> pure $ Just $ (_tciName . _tiCoreInfo) $ tableInfo
+  tableInfo <- getTabInfoFromSchemaCache @b schemaCache sourceName triggerName
+  pure $ _tciName $ _tiCoreInfo tableInfo
 
 runCleanupEventTriggerLog ::
-  (MonadEventLogCleanup m, MonadError QErr m) =>
+  (MonadEventLogCleanup m, MonadError QErr m, CacheRWM m) =>
   TriggerLogCleanupConfig ->
   m EncJSON
-runCleanupEventTriggerLog conf = runLogCleaner conf >>= (flip onLeft) throwError
+runCleanupEventTriggerLog conf = do
+  sourceCache <- scSources <$> askSchemaCache
+  runLogCleaner sourceCache conf `onLeftM` throwError
 
 -- | Updates the cleanup switch in metadata given the source, table and trigger name
 -- The Bool value represents the status of the cleaner, whether to start or pause it
@@ -671,7 +674,7 @@ toggleEventTriggerCleanupAction conf cleanupSwitch = do
       case tlcs of
         TriggerAllSource -> do
           ifor_ (scSources schemaCache) $ \sourceName backendSourceInfo -> do
-            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo _ tableCache _ _customSQLCache _ _ _ :: SourceInfo b) -> do
+            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo _ tableCache _ _nativeQueryCache _customReturnTypeCache _ _ _ :: SourceInfo b) -> do
               traverseTableHelper tableCache cleanupSwitch sourceName
         TriggerSource sourceNameLst -> do
           forM_ sourceNameLst $ \sourceName -> do
@@ -679,7 +682,7 @@ toggleEventTriggerCleanupAction conf cleanupSwitch = do
               HM.lookup sourceName (scSources schemaCache)
                 `onNothing` throw400 NotExists ("source with name " <> sourceNameToText sourceName <> " does not exists")
 
-            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo _ tableCache _ _customSQLCache _ _ _ :: SourceInfo b) -> do
+            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo _ tableCache _ _nativeQueryCache _customReturnTypeCache _ _ _ :: SourceInfo b) -> do
               traverseTableHelper tableCache cleanupSwitch sourceName
     TriggerQualifier qualifierLst -> do
       forM_ qualifierLst $ \qualifier -> do
@@ -691,16 +694,15 @@ toggleEventTriggerCleanupAction conf cleanupSwitch = do
             `onNothing` throw400 NotExists ("source with name " <> sourceNameToText sourceName <> " does not exists")
 
         AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo {} :: SourceInfo b) -> do
-          forM_ triggerNames $ \triggerName -> do
+          for_ triggerNames $ \triggerName -> do
             eventTriggerInfo <- askEventTriggerInfo @b sourceName triggerName
-            tableNameMaybe <- getTableNameFromTrigger @b schemaCache sourceName triggerName
-            case tableNameMaybe of
-              Nothing -> throw400 NotExists $ "event trigger " <> triggerName <<> " does not exist"
-              Just tableName -> do
-                cleanupConfig <-
-                  (etiCleanupConfig eventTriggerInfo)
-                    `onNothing` throw400 NotExists ("cleanup config does not exist for " <> triggerNameToTxt triggerName)
-                updateCleanupStatusInMetadata @b cleanupConfig cleanupSwitch sourceName tableName triggerName
+            tableName <-
+              getTableNameFromTrigger @b schemaCache sourceName triggerName
+                `onNothing` throw400 NotExists ("event trigger " <> triggerName <<> " does not exist")
+            cleanupConfig <-
+              etiCleanupConfig eventTriggerInfo
+                `onNothing` throw400 NotExists ("cleanup config does not exist for " <> triggerNameToTxt triggerName)
+            updateCleanupStatusInMetadata @b cleanupConfig cleanupSwitch sourceName tableName triggerName
   pure successMsg
   where
     traverseTableHelper ::

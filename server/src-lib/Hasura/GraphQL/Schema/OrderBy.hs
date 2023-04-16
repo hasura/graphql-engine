@@ -3,7 +3,7 @@
 
 module Hasura.GraphQL.Schema.OrderBy
   ( tableOrderByExp,
-    customTypeOrderByExp,
+    customReturnTypeOrderByExp,
   )
 where
 
@@ -12,8 +12,10 @@ import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.CustomReturnType (CustomReturnType)
+import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo (_crtiFields, _crtiName))
 import Hasura.CustomReturnType.Common (toFieldInfo)
+import Hasura.CustomReturnType.Types (CustomReturnTypeName (..))
+import Hasura.Function.Cache
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
@@ -35,7 +37,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
@@ -65,22 +66,22 @@ orderByOperator tCase sourceInfo = case tCase of
 -- >   coln: order_by
 -- >   obj-rel: <remote-table>_order_by
 -- > }
-customTypeOrderByExp ::
+customReturnTypeOrderByExp ::
   forall b r m n.
   ( MonadBuildSchema b r m n
   ) =>
-  G.Name ->
-  CustomReturnType b ->
+  CustomReturnTypeInfo b ->
   SchemaT r m (Parser 'Input n [IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)])
-customTypeOrderByExp name customReturnType =
-  case toFieldInfo customReturnType of
-    Nothing -> throw500 $ "Error creating fields for custom type " <> tshow name
-    Just tableFields -> do
-      let description =
-            G.Description $
-              "Ordering options when selecting data from " <> name <<> "."
-          memoizeKey = name
-      orderByExpInternal (C.fromCustomName name) description tableFields memoizeKey
+customReturnTypeOrderByExp customReturnType =
+  let name = getCustomReturnTypeName (_crtiName customReturnType)
+   in case toFieldInfo (_crtiFields customReturnType) of
+        Nothing -> throw500 $ "Error creating fields for custom type " <> tshow name
+        Just tableFields -> do
+          let description =
+                G.Description $
+                  "Ordering options when selecting data from " <> name <<> "."
+              memoizeKey = name
+          orderByExpInternal (C.fromCustomName name) description tableFields memoizeKey
 
 -- | Corresponds to an object type for an order by.
 --
@@ -180,6 +181,7 @@ orderByExpInternal gqlName description tableFields memoizeKey = do
                     aggregationOrderBy
             ReturnsOthers -> empty
         FIRemoteRelationship _ -> empty
+        FINestedObject _ -> empty -- TODO(dmoverton)
 
 -- | Corresponds to an object type for an order by.
 --

@@ -57,6 +57,7 @@ library
     , aeson-pretty
     , base
     , bytestring
+    , containers
     , data-has
     , dc-api
     , directory
@@ -86,6 +87,7 @@ library
     , uuid
     , vector
     , time
+    , QuickCheck
 
   exposed-modules:
     Spec
@@ -93,11 +95,15 @@ library
     Test.API.ConcurrentBulkSpec
     Test.API.ExplainSpec
     Test.API.GraphQL.ContentLengthSpec
+    Test.API.Metadata.BulkKeepGoingSpec
     Test.API.Metadata.ComputedFieldsSpec
+    Test.API.Metadata.CustomTypeSpec
     Test.API.Metadata.InconsistentSpec
-    Test.API.Metadata.LogicalModelsSpec
-    Test.API.Metadata.LogicalModels.ValidationSpec
+    Test.API.Metadata.NativeQueriesSpec
+    Test.API.Metadata.NativeQueries.TypeCheckingSpec
+    Test.API.Metadata.NativeQueries.ValidationSpec
     Test.API.Metadata.SuggestRelationshipsSpec
+    Test.API.Metadata.TablesSpec
     Test.API.Metadata.TestConnectionTemplateSpec
     Test.API.Metadata.TransparentDefaultsSpec
     Test.API.Metadata.WarningsSpec
@@ -126,17 +132,19 @@ library
     Test.DataConnector.MockAgent.UpdateMutationsSpec
     Test.DataConnector.QuerySpec
     Test.DataConnector.SelectPermissionsSpec
+    Test.Databases.BigQuery.NativeQueriesSpec
     Test.Databases.BigQuery.Queries.SpatialTypesSpec
     Test.Databases.BigQuery.Queries.TypeInterpretationSpec
     Test.Databases.BigQuery.Schema.ComputedFields.TableSpec
     Test.Databases.Postgres.BackendOnlyPermissionsSpec
     Test.Databases.Postgres.DataValidation.PermissionSpec
     Test.Databases.Postgres.JsonbSpec
-    Test.Databases.Postgres.LogicalModelsSpec
+    Test.Databases.Postgres.NativeQueriesSpec
     Test.Databases.Postgres.TimestampSpec
     Test.Databases.Postgres.UniqueConstraintsSpec
     Test.Databases.SQLServer.DefaultValues.OnConflictSpec
     Test.Databases.SQLServer.InsertVarcharColumnSpec
+    Test.Databases.SQLServer.NativeQueriesSpec
     Test.Databases.SQLServer.VarcharLiteralsSpec
     Test.EventTriggers.EventTriggersSpecialCharactersSpec
     Test.EventTriggers.MSSQL.EventTriggerDropSourceCleanupSpec
@@ -152,7 +160,6 @@ library
     Test.EventTriggers.PG.EventTriggersClearMetadataSpec
     Test.EventTriggers.PG.EventTriggersRunSQLSpec
     Test.EventTriggers.PG.EventTriggersUniqueNameSpec
-    Test.EventTriggers.PG.EventTriggersCreatedAtUTCSpec
     Test.EventTriggers.PG.EventTriggersUntrackTableCleanupSpec
     Test.Harness.Quoter.YamlSpec
     Test.HealthCheckSpec
@@ -178,11 +185,12 @@ library
     Test.Queries.Errors.NoQueriesAvailableSpec
     Test.Queries.FilterSearch.AggregationPredicatesSpec
     Test.Queries.FilterSearch.FilterSearchSpec
-    Test.Queries.LogicalModels.LogicalModelsQueriesSpec
-    Test.Queries.LogicalModels.SubscriptionsSpec
+    Test.Queries.NativeQueries.NativeQueriesSpec
+    Test.Queries.NativeQueries.SubscriptionsSpec
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
     Test.Queries.Paginate.OffsetSpec
+    Test.Queries.Simple.JSONSpec
     Test.Queries.Simple.ObjectQueriesSpec
     Test.Queries.Simple.OperationNameSpec
     Test.Queries.Simple.PrimaryKeySpec
@@ -248,7 +256,7 @@ executable api-tests
     , lens-aeson
     , api-tests
     , base
-    , hspec
+    , hspec-core
 
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.

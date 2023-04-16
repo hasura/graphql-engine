@@ -41,26 +41,25 @@ remoteRelationshipField ::
   SourceCache ->
   RemoteSchemaMap ->
   RemoteSchemaPermissions ->
+  RemoteSourceRelationshipBuilder ->
   RemoteRelationshipParserBuilder
-remoteRelationshipField schemaContext schemaOptions sourceCache remoteSchemaCache remoteSchemaPermissions = RemoteRelationshipParserBuilder
+remoteRelationshipField schemaContext schemaOptions sourceCache remoteSchemaCache remoteSchemaPermissions remoteSourceRelationshipBuilder = RemoteRelationshipParserBuilder
   \RemoteFieldInfo {..} -> lift do
-    -- Remote relationships aren't currently supported in Relay, due to type conflicts, and
-    -- introspection issues such as https://github.com/hasura/graphql-engine/issues/5144.
-    if not $ isHasuraSchema $ scSchemaKind schemaContext
-      then pure Nothing
-      else case _rfiRHS of
-        RFISource anyRemoteSourceFieldInfo ->
-          -- see Note [SchemaT and stacking]
-          dispatchAnyBackendWithTwoConstraints @BackendSchema @BackendTableSelectSchema
+    case _rfiRHS of
+      RFISource anyRemoteSourceFieldInfo ->
+        -- see Note [SchemaT and stacking]
+        case remoteSourceRelationshipBuilder of
+          IncludeRemoteSourceRelationship -> dispatchAnyBackendWithTwoConstraints @BackendSchema @BackendTableSelectSchema
             anyRemoteSourceFieldInfo
             \remoteSourceFieldInfo -> do
               fields <- remoteRelationshipToSourceField schemaContext schemaOptions sourceCache remoteSourceFieldInfo
               pure $ Just $ fmap (IR.RemoteSourceField . mkAnyBackend) <$> fields
-        RFISchema remoteSchema ->
-          -- see Note [SchemaT and stacking]
-          runRemoteSchema schemaContext do
-            fields <- remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions _rfiLHS remoteSchema
-            pure $ fmap (pure . fmap IR.RemoteSchemaField) fields
+          ExcludeRemoteSourceRelationship -> pure Nothing
+      RFISchema remoteSchema ->
+        -- see Note [SchemaT and stacking]
+        runRemoteSchema schemaContext do
+          fields <- remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions _rfiLHS remoteSchema
+          pure $ fmap (pure . fmap IR.RemoteSchemaField) fields
 
 -- | Parser(s) for remote relationship fields to a remote schema
 remoteRelationshipToSchemaField ::

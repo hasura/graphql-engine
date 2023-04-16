@@ -21,7 +21,7 @@ where
 import Data.Aeson (FromJSON, ToJSON, (.:), (.:?), (.=))
 import Data.Aeson qualified as Aeson
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
+import Data.Map.Strict qualified as Map
 import Data.Text.Extended (ToTxt (..))
 import Data.Text.Extended qualified as Text.E
 import Data.Text.NonEmpty (NonEmptyText)
@@ -105,7 +105,7 @@ agentSourceKinds = do
   case agentsM of
     Nothing -> pure mempty
     Just (Metadata.BackendConfigWrapper agents) ->
-      pure $ SourceKinds $ fmap mkAgentSource $ InsOrdHashMap.toList agents
+      pure $ SourceKinds $ fmap mkAgentSource $ Map.toList agents
 
 mkAgentSource :: (DC.Types.DataConnectorName, DC.Types.DataConnectorOptions) -> SourceKindInfo
 mkAgentSource (dcName, DC.Types.DataConnectorOptions {_dcoDisplayName}) =

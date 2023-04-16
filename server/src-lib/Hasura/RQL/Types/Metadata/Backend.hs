@@ -7,11 +7,14 @@ import Control.Arrow.Extended
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Environment qualified as Env
+import Data.Has (Has)
 import Hasura.Base.Error
+import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata)
+import Hasura.Function.Cache
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
-import Hasura.LogicalModel.Metadata (LogicalModelMetadata)
+import Hasura.NativeQuery.Metadata (NativeQueryMetadata)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -20,7 +23,6 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Relationships.Local
@@ -32,6 +34,7 @@ import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Server.Migrate.Version
 import Hasura.Services.Network
+import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client qualified as HTTP
 
 class
@@ -92,7 +95,6 @@ class
   -- creates a connection pool (and other related parameters) in the process
   resolveSourceConfig ::
     (MonadIO m, MonadBaseControl IO m, MonadResolveSource m) =>
-    Logger Hasura ->
     SourceName ->
     SourceConnConfiguration b ->
     BackendSourceKind b ->
@@ -104,6 +106,7 @@ class
   -- | Function that introspects a database for tables, columns, functions etc.
   resolveDatabaseMetadata ::
     (MonadIO m, MonadBaseControl IO m, MonadResolveSource m) =>
+    Logger Hasura ->
     SourceMetadata b ->
     SourceConfig b ->
     m (Either QErr (DBObjectsIntrospection b))
@@ -187,14 +190,32 @@ class
     SourceConfig b ->
     ExceptT QErr m (RecreateEventTriggers, SourceCatalogMigrationState)
 
-  validateLogicalModel ::
+  -- | List all the tables on a given data source, including those not tracked
+  -- by Hasura. Primarily useful for user interfaces to allow untracked tables
+  -- to be tracked.
+  listAllTables ::
+    (CacheRM m, MonadBaseControl IO m, MetadataM m, MonadError QErr m, MonadIO m, MonadReader r m, Has (Logger Hasura) r, ProvidesNetwork m) =>
+    SourceName ->
+    m [TableName b]
+
+  validateNativeQuery ::
     (MonadIO m, MonadError QErr m) =>
     Env.Environment ->
     SourceConnConfiguration b ->
-    LogicalModelMetadata b ->
+    CustomReturnTypeMetadata b ->
+    NativeQueryMetadata b ->
     m ()
-  validateLogicalModel _ _ _ =
-    throw500 "validateLogicalModel: not implemented for this backend."
+  validateNativeQuery _ _ _ _ =
+    throw500 "validateNativeQuery: not implemented for this backend."
+
+  -- | How to convert a column to a field.
+  -- For backends that don't support nested objects or arrays the default implementation
+  -- (i.e. wrapping the ColumnInfo in FIColumn) is what you want.
+  columnInfoToFieldInfo ::
+    HashMap G.Name (TableObjectType b) ->
+    ColumnInfo b ->
+    FieldInfo b
+  columnInfoToFieldInfo _ = FIColumn
 
   -- | Allows the backend to control whether or not a particular source supports being
   -- the target of remote relationships or not

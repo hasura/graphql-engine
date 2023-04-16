@@ -10,7 +10,7 @@ import Data.Aeson
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec (genUpdateColumnOperatorName)
-import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
+import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName, genColumnValueGenerationStrategy)
 import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression)
 import Hasura.Backends.DataConnector.API.V0.QuerySpec (genField, genFieldMap, genFieldValue)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName, genTableRelationships)
@@ -37,23 +37,44 @@ spec = do
     jsonOpenApiProperties genMutationRequest
 
   describe "TableInsertSchema" $ do
-    testToFromJSONToSchema
-      (TableInsertSchema (TableName ["my_table"]) [])
-      [aesonQQ|
-        { "table": ["my_table"],
-          "fields": {} }
-      |]
+    describe "minimal" $ do
+      testToFromJSONToSchema
+        (TableInsertSchema (TableName ["my_table"]) Nothing [])
+        [aesonQQ|
+          { "table": ["my_table"],
+            "fields": {} }
+        |]
+    describe "non-minimal" $ do
+      testToFromJSONToSchema
+        (TableInsertSchema (TableName ["my_table"]) (Just $ ColumnName "pk" :| []) [])
+        [aesonQQ|
+          { "table": ["my_table"],
+            "primary_key": ["pk"],
+            "fields": {} }
+        |]
     jsonOpenApiProperties genTableInsertSchema
 
   describe "InsertFieldSchema" $ do
     describe "ColumnInsert" $ do
-      testToFromJSONToSchema
-        (ColumnInsert (ColumnInsertSchema (ColumnName "my_column") (ScalarType "number")))
-        [aesonQQ|
-          { "type": "column",
-            "column": "my_column",
-            "column_type": "number" }
-        |]
+      describe "minimal" $ do
+        testToFromJSONToSchema
+          (ColumnInsert (ColumnInsertSchema (ColumnName "my_column") (ScalarType "number") True Nothing))
+          [aesonQQ|
+            { "type": "column",
+              "column": "my_column",
+              "column_type": "number",
+              "nullable": true }
+          |]
+      describe "non-minimal" $ do
+        testToFromJSONToSchema
+          (ColumnInsert (ColumnInsertSchema (ColumnName "my_column") (ScalarType "number") True (Just UniqueIdentifier)))
+          [aesonQQ|
+            { "type": "column",
+              "column": "my_column",
+              "column_type": "number",
+              "nullable": true,
+              "value_generated": { "type": "unique_identifier" } }
+          |]
     describe "ObjectRelationInsert" $ do
       testToFromJSONToSchema
         (ObjectRelationInsert (ObjectRelationInsertSchema (RelationshipName "my_relation") BeforeParent))
@@ -236,6 +257,7 @@ genTableInsertSchema :: Gen TableInsertSchema
 genTableInsertSchema =
   TableInsertSchema
     <$> genTableName
+    <*> Gen.maybe (Gen.nonEmpty defaultRange genColumnName)
     <*> genFieldMap genInsertFieldSchema
 
 genInsertFieldSchema :: (MonadGen m, GenBase m ~ Identity) => m InsertFieldSchema
@@ -251,6 +273,8 @@ genColumnInsertSchema =
   ColumnInsertSchema
     <$> genColumnName
     <*> genScalarType
+    <*> Gen.bool
+    <*> Gen.maybe genColumnValueGenerationStrategy
 
 genObjectRelationInsertSchema :: MonadGen m => m ObjectRelationInsertSchema
 genObjectRelationInsertSchema =

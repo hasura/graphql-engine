@@ -1,3 +1,5 @@
+{-# LANGUAGE MonadComprehensions #-}
+
 -- | Planning T-SQL queries and subscriptions.
 module Hasura.Backends.BigQuery.Plan
   ( planNoPlan,
@@ -6,6 +8,8 @@ where
 
 import Control.Monad.Validate
 import Data.Aeson.Text
+import Data.List.NonEmpty qualified as NE
+import Data.Map.Strict qualified as Map
 import Data.Text.Extended
 import Data.Text.Lazy qualified as LT
 import Hasura.Backends.BigQuery.FromIr as BigQuery
@@ -29,8 +33,20 @@ planNoPlan ::
   m Select
 planNoPlan fromIrConfig userInfo queryDB = do
   rootField <- traverse (prepareValueNoPlan (_uiSession userInfo)) queryDB
-  runValidate (BigQuery.runFromIr fromIrConfig (BigQuery.fromRootField rootField))
-    `onLeft` (E.throw400 E.NotSupported . (tshow :: NonEmpty Error -> Text))
+
+  (select, FromIrWriter {fromIrWriterNativeQueries}) <-
+    runValidate (BigQuery.runFromIr fromIrConfig (BigQuery.fromRootField rootField))
+      `onLeft` (E.throw400 E.NotSupported . (tshow :: NonEmpty Error -> Text))
+
+  -- Native queries used within this query need to be converted into CTEs.
+  -- These need to come before any other CTEs in case those CTEs also depend on
+  -- the native queries.
+  let nativeQueries :: Maybe With
+      nativeQueries = do
+        ctes <- NE.nonEmpty (Map.toList fromIrWriterNativeQueries)
+        pure (With [Aliased query (toTxt name) | (name, query) <- ctes])
+
+  pure select {selectWith = nativeQueries <> selectWith select}
 
 --------------------------------------------------------------------------------
 -- Resolving values

@@ -203,9 +203,9 @@ createMissingSQLTriggers ::
   ( MonadIO m,
     MonadError QErr m,
     MonadBaseControl IO m,
-    HasServerConfigCtx m,
     Backend ('Postgres pgKind)
   ) =>
+  SQLGenCtx ->
   PGSourceConfig ->
   TableName ('Postgres pgKind) ->
   ([(ColumnInfo ('Postgres pgKind))], Maybe (PrimaryKey ('Postgres pgKind) (ColumnInfo ('Postgres pgKind)))) ->
@@ -213,15 +213,14 @@ createMissingSQLTriggers ::
   TriggerOnReplication ->
   TriggerOpsDef ('Postgres pgKind) ->
   m ()
-createMissingSQLTriggers sourceConfig table (allCols, _) triggerName triggerOnReplication opsDefinition = do
-  serverConfigCtx <- askServerConfigCtx
+createMissingSQLTriggers serverConfigCtx sourceConfig table (allCols, _) triggerName triggerOnReplication opsDefinition = do
   liftEitherM $
     runPgSourceWriteTx sourceConfig InternalRawQuery $ do
-      for_ (tdInsert opsDefinition) (doesSQLTriggerExist serverConfigCtx INSERT)
-      for_ (tdUpdate opsDefinition) (doesSQLTriggerExist serverConfigCtx UPDATE)
-      for_ (tdDelete opsDefinition) (doesSQLTriggerExist serverConfigCtx DELETE)
+      for_ (tdInsert opsDefinition) (doesSQLTriggerExist INSERT)
+      for_ (tdUpdate opsDefinition) (doesSQLTriggerExist UPDATE)
+      for_ (tdDelete opsDefinition) (doesSQLTriggerExist DELETE)
   where
-    doesSQLTriggerExist serverConfigCtx op opSpec = do
+    doesSQLTriggerExist op opSpec = do
       let opTriggerName = pgTriggerName op triggerName
       doesOpTriggerFunctionExist <-
         runIdentity . PG.getRow
@@ -242,7 +241,7 @@ createMissingSQLTriggers sourceConfig table (allCols, _) triggerName triggerOnRe
 
 createTableEventTrigger ::
   (Backend ('Postgres pgKind), MonadIO m, MonadBaseControl IO m) =>
-  ServerConfigCtx ->
+  SQLGenCtx ->
   PGSourceConfig ->
   QualifiedTable ->
   [ColumnInfo ('Postgres pgKind)] ->
@@ -675,7 +674,7 @@ pgIdenTrigger op = QualifiedTriggerName . pgFmtIdentifier . unQualifiedTriggerNa
 -- | Define the pgSQL trigger functions on database events.
 mkTriggerFunctionQ ::
   forall pgKind m.
-  (Backend ('Postgres pgKind), MonadTx m, MonadReader ServerConfigCtx m) =>
+  (Backend ('Postgres pgKind), MonadTx m, MonadReader SQLGenCtx m) =>
   TriggerName ->
   QualifiedTable ->
   [ColumnInfo ('Postgres pgKind)] ->
@@ -683,7 +682,7 @@ mkTriggerFunctionQ ::
   SubscribeOpSpec ('Postgres pgKind) ->
   m QualifiedTriggerName
 mkTriggerFunctionQ triggerName (QualifiedObject schema table) allCols op (SubscribeOpSpec listenColumns deliveryColumns') = do
-  strfyNum <- stringifyNum . _sccSQLGenCtx <$> ask
+  strfyNum <- asks stringifyNum
   let dbQualifiedTriggerName = pgIdenTrigger op triggerName
   () <-
     liftTx $
@@ -796,7 +795,7 @@ checkIfFunctionExistsQ triggerName op = do
 
 mkTrigger ::
   forall pgKind m.
-  (Backend ('Postgres pgKind), MonadTx m, MonadReader ServerConfigCtx m) =>
+  (Backend ('Postgres pgKind), MonadTx m, MonadReader SQLGenCtx m) =>
   TriggerName ->
   QualifiedTable ->
   TriggerOnReplication ->
@@ -831,7 +830,7 @@ mkTrigger triggerName table triggerOnReplication allCols op subOpSpec = do
 
 mkAllTriggersQ ::
   forall pgKind m.
-  (Backend ('Postgres pgKind), MonadTx m, MonadReader ServerConfigCtx m) =>
+  (Backend ('Postgres pgKind), MonadTx m, MonadReader SQLGenCtx m) =>
   TriggerName ->
   QualifiedTable ->
   TriggerOnReplication ->
@@ -1058,7 +1057,7 @@ deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
             [ST.st|
           SELECT id FROM hdb_catalog.event_log
           WHERE ((delivered = true OR error = true) AND trigger_name = $1)
-          AND created_at < (now() - interval '#{qRetentionPeriod}') AT TIME ZONE 'UTC'
+          AND created_at < now() - interval '#{qRetentionPeriod}'
           AND locked IS NULL
           LIMIT $2
         |]

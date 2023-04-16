@@ -8,7 +8,7 @@ module Hasura.Server.Telemetry.Types
     RelationshipMetric (..),
     PermissionMetric (..),
     ActionMetric (..),
-    LogicalModelsMetrics (..),
+    NativeQueriesMetrics (..),
     Metrics (..),
     SourceMetadata (..),
     HasuraTelemetry (..),
@@ -74,22 +74,22 @@ data ActionMetric = ActionMetric
 
 $(A.deriveToJSON hasuraJSON ''ActionMetric)
 
-data LogicalModelsMetrics = LogicalModelsMetrics
-  { _lmmWithParameters :: Int,
-    _lmmWithoutParameters :: Int
+data NativeQueriesMetrics = NativeQueriesMetrics
+  { _nqmWithParameters :: Int,
+    _nqmWithoutParameters :: Int
   }
   deriving (Show, Eq)
 
-instance Semigroup LogicalModelsMetrics where
+instance Semigroup NativeQueriesMetrics where
   a <> b =
-    LogicalModelsMetrics
-      (_lmmWithParameters a + _lmmWithParameters b)
-      (_lmmWithoutParameters a + _lmmWithoutParameters b)
+    NativeQueriesMetrics
+      (_nqmWithParameters a + _nqmWithParameters b)
+      (_nqmWithoutParameters a + _nqmWithoutParameters b)
 
-instance Monoid LogicalModelsMetrics where
-  mempty = LogicalModelsMetrics 0 0
+instance Monoid NativeQueriesMetrics where
+  mempty = NativeQueriesMetrics 0 0
 
-$(A.deriveToJSON hasuraJSON ''LogicalModelsMetrics)
+$(A.deriveToJSON hasuraJSON ''NativeQueriesMetrics)
 
 data Metrics = Metrics
   { _mtTables :: Int,
@@ -102,7 +102,7 @@ data Metrics = Metrics
     _mtRemoteSchemas :: Maybe Int,
     _mtServiceTimings :: Maybe ServiceTimingMetrics,
     _mtActions :: Maybe ActionMetric,
-    _mtLogicalModels :: LogicalModelsMetrics
+    _mtNativeQueries :: NativeQueriesMetrics
   }
   deriving (Show, Eq)
 

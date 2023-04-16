@@ -268,12 +268,13 @@ resolveMultiplexedValue ::
   UnpreparedValue ('Postgres pgKind) ->
   m S.SQLExp
 resolveMultiplexedValue allSessionVars = \case
-  UVParameter varM colVal -> do
-    varJsonPath <- case fmap getName varM of
-      Just varName -> do
+  UVParameter provenance colVal -> do
+    varJsonPath <- case provenance of
+      FromGraphQL varInfo -> do
+        let varName = getName varInfo
         modifying qpiReusableVariableValues $ Map.insert varName colVal
         pure ["query", G.unName varName]
-      Nothing -> do
+      _ -> do
         syntheticVarIndex <- use (qpiSyntheticVariableValues . to length)
         modifying qpiSyntheticVariableValues (|> colVal)
         pure ["synthetic", tshow syntheticVarIndex]

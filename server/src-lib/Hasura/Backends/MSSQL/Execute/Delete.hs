@@ -73,13 +73,15 @@ buildDeleteTx deleteOperation stringifyNum queryTags = do
         toQueryFlat $
           TQ.fromSelectIntoTempTable $
             TSQL.toSelectIntoTempTable tempTableNameDeleted (_adTable deleteOperation) (_adAllCols deleteOperation) RemoveConstraints
+
   -- Create a temp table
   Tx.unitQueryE defaultMSSQLTxErrorHandler (createInsertedTempTableQuery `withQueryTags` queryTags)
   let deleteQuery = TQ.fromDelete <$> TSQL.fromDelete deleteOperation
-  deleteQueryValidated <- toQueryFlat <$> runFromIr deleteQuery
+  deleteQueryValidated <- toQueryFlat . qwdQuery <$> runFromIr deleteQuery
+
   -- Execute DELETE statement
   Tx.unitQueryE mutationMSSQLTxErrorHandler (deleteQueryValidated `withQueryTags` queryTags)
-  mutationOutputSelect <- runFromIr $ mkMutationOutputSelect stringifyNum withAlias $ _adOutput deleteOperation
+  mutationOutputSelect <- qwdQuery <$> runFromIr (mkMutationOutputSelect stringifyNum withAlias $ _adOutput deleteOperation)
 
   let withSelect =
         emptySelect
@@ -88,8 +90,10 @@ buildDeleteTx deleteOperation stringifyNum queryTags = do
           }
       finalMutationOutputSelect = mutationOutputSelect {selectWith = Just $ With $ pure $ Aliased withSelect withAlias}
       mutationOutputSelectQuery = toQueryFlat $ TQ.fromSelect finalMutationOutputSelect
+
   -- Execute SELECT query and fetch mutation response
   result <- encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (mutationOutputSelectQuery `withQueryTags` queryTags)
+
   -- delete the temporary table
   let dropDeletedTempTableQuery = toQueryFlat $ dropTempTableQuery tempTableNameDeleted
   Tx.unitQueryE defaultMSSQLTxErrorHandler (dropDeletedTempTableQuery `withQueryTags` queryTags)

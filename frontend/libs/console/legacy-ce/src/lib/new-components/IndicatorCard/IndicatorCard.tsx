@@ -9,6 +9,9 @@ export type IndicatorCardProps = {
   headline?: string;
   children?: React.ReactNode;
   showIcon?: boolean;
+  className?: string;
+  contentFullWidth?: boolean;
+  customIcon?: React.VFC<{ className: string }>;
 };
 
 const cardColors: Record<indicatorCardStatus, string> = {
@@ -37,14 +40,18 @@ export const IndicatorCard = ({
   headline,
   showIcon,
   children,
+  className,
+  contentFullWidth = false,
+  customIcon,
 }: IndicatorCardProps) => {
-  const Icon = IconPerStatus[status];
+  const Icon = customIcon ?? IconPerStatus[status];
 
   return (
     <div
       className={clsx(
         'flex items-center bg-white rounded p-md border border-gray-300 border-l-4 mb-sm',
-        cardColors[status]
+        cardColors[status],
+        className
       )}
     >
       {showIcon ? (
@@ -57,9 +64,9 @@ export const IndicatorCard = ({
           <Icon className="h-4 fill-current stroke-2" />
         </div>
       ) : null}
-      <div>
+      <div className={clsx(contentFullWidth && 'w-full')}>
         {headline ? <p className="font-semibold">{headline}</p> : null}
-        <p className="m-0">{children}</p>
+        <div>{children}</div>
       </div>
     </div>
   );

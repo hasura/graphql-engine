@@ -28,20 +28,23 @@ import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
 import Data.Has (Has, getter)
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as HS
 import Data.List qualified as L
 import Data.List.Extended qualified as L
+import Data.Map.Strict qualified as Map
 import Data.SerializableBlob qualified as SB
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (dquote, dquoteList, (<<>))
 import Hasura.Base.Error
+import Hasura.CustomReturnType.API
 import Hasura.EncJSON
+import Hasura.Function.API
 import Hasura.Logging qualified as HL
-import Hasura.LogicalModel.API
 import Hasura.Metadata.Class
+import Hasura.NativeQuery.API
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ApiLimit
@@ -101,7 +104,7 @@ postDropSourceHookHelper oldSchemaCache sourceName sourceMetadataBackend = do
   logger :: (HL.Logger HL.Hasura) <- asks getter
 
   AB.dispatchAnyBackend @BackendMetadata sourceMetadataBackend \(_ :: SourceMetadata b) -> do
-    let sourceInfoMaybe = unsafeSourceInfo @b =<< Map.lookup sourceName (scSources oldSchemaCache)
+    let sourceInfoMaybe = unsafeSourceInfo @b =<< HM.lookup sourceName (scSources oldSchemaCache)
     case sourceInfoMaybe of
       Nothing -> do
         let message =
@@ -111,7 +114,7 @@ postDropSourceHookHelper oldSchemaCache sourceName sourceMetadataBackend = do
                 <> " Please consider cleaning the resources created by the graphql engine,"
                 <> " refer https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-footprints-manually"
         HL.unLogger logger $ MetadataLog HL.LevelWarn message J.Null
-        warn $ MetadataWarning (MOSource sourceName) message
+        warn $ MetadataWarning WCSourceCleanupFailed (MOSource sourceName) message
       Just sourceInfo -> runPostDropSourceHook defaultSource sourceInfo
 
 runClearMetadata ::
@@ -119,7 +122,7 @@ runClearMetadata ::
   ( MonadIO m,
     CacheRWM m,
     MetadataM m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadBaseControl IO m,
     MonadReader r m,
     MonadError QErr m,
@@ -151,6 +154,7 @@ runClearMetadata _ = do
                         @b
                         defaultSource
                         (_smKind @b s)
+                        mempty
                         mempty
                         mempty
                         mempty
@@ -191,7 +195,7 @@ runReplaceMetadata ::
     MetadataM m,
     MonadIO m,
     MonadBaseControl IO m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadReader r m,
     MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
@@ -209,7 +213,7 @@ runReplaceMetadataV1 ::
     MetadataM m,
     MonadIO m,
     MonadBaseControl IO m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadReader r m,
     MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
@@ -227,7 +231,7 @@ runReplaceMetadataV2 ::
     MetadataM m,
     MonadIO m,
     MonadBaseControl IO m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadReader r m,
     MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
@@ -251,7 +255,7 @@ runReplaceMetadataV2' ::
     MetadataM m,
     MonadIO m,
     MonadBaseControl IO m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadReader r m,
     MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
@@ -323,7 +327,7 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
               mkEventTriggerObjID tableName triggerName = MOSourceObjId source $ AB.mkAnyBackend $ SMOTableObj @b tableName $ MTOTrigger triggerName
               mkIllegalEventTriggerNameWarning (tableName, triggerName) =
                 -- TODO: capture the path as well
-                MetadataWarning (mkEventTriggerObjID tableName triggerName) $
+                MetadataWarning WCIllegalEventTriggerName (mkEventTriggerObjID tableName triggerName) $
                   "The event trigger with name "
                     <> dquote (triggerNameToTxt triggerName)
                     <> " may not work as expected, hasura suggests to use only alphanumeric, underscore and hyphens in an event trigger name"
@@ -404,23 +408,23 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
             case _rmv2Metadata of
               RMWithoutSources m -> _mnsCronTriggers m
               RMWithSources m -> _metaCronTriggers m
-          -- this function is intended to use with `Map.differenceWith`, it's used when two
+          -- this function is intended to use with `HM.differenceWith`, it's used when two
           -- equal keys are encountered, then the values are compared to calculate the diff.
           -- see https://hackage.haskell.org/package/unordered-containers-0.2.14.0/docs/Data-HashMap-Internal.html#v:differenceWith
           leftIfDifferent l r
             | l == r = Nothing
             | otherwise = Just l
           cronTriggersToBeAdded =
-            Map.differenceWith
+            HM.differenceWith
               leftIfDifferent
               (OMap.toHashMap allNewCronTriggers)
               (OMap.toHashMap oldCronTriggersIncludedInMetadata)
           cronTriggersToBeDropped =
-            Map.differenceWith
+            HM.differenceWith
               leftIfDifferent
               (OMap.toHashMap oldCronTriggersIncludedInMetadata)
               (OMap.toHashMap allNewCronTriggers)
-      liftEitherM $ dropFutureCronEvents $ MetadataCronTriggers $ Map.keys cronTriggersToBeDropped
+      liftEitherM $ dropFutureCronEvents $ MetadataCronTriggers $ HM.keys cronTriggersToBeDropped
       cronTriggers <- do
         -- traverse over the new cron triggers and check if any of them
         -- already exists as a cron trigger with "included_in_metadata: false"
@@ -481,26 +485,24 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
                               <> " Please refer https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-up-event-trigger-footprints-manually "
                               <> " to delete the sql triggers from the database manually."
                               <> " For more details, please refer https://hasura.io/docs/latest/graphql/core/event-triggers/index.html "
-                      warn $ MetadataWarning sourceObjID message
+                      warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
                       logger $ MetadataLog HL.LevelWarn message J.Null
                     Just sourceConfig -> do
-                      for_ droppedEventTriggers $
-                        \triggerName -> do
-                          -- TODO: The `tableName` parameter could be computed while building
-                          -- the triggers map and avoid the cache lookup.
-                          tableNameMaybe <- getTableNameFromTrigger @b oldSchemaCache source triggerName
-                          case tableNameMaybe of
-                            Nothing -> do
-                              let message = sqlTriggerError triggerName
-                              warn $ MetadataWarning sourceObjID message
-                              logger $ MetadataLog HL.LevelWarn message J.Null
-                            Just tableName ->
-                              dropTriggerAndArchiveEvents @b sourceConfig triggerName tableName
+                      for_ droppedEventTriggers \triggerName -> do
+                        -- TODO: The `tableName` parameter could be computed while building
+                        -- the triggers map and avoid the cache lookup.
+                        case getTableNameFromTrigger @b oldSchemaCache source triggerName of
+                          Nothing -> do
+                            let message = sqlTriggerError triggerName
+                            warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
+                            logger $ MetadataLog HL.LevelWarn message J.Null
+                          Just tableName ->
+                            dropTriggerAndArchiveEvents @b sourceConfig triggerName tableName
                       for_ (OMap.toList retainedNewTriggers) $ \(retainedNewTriggerName, retainedNewTriggerConf) ->
                         case OMap.lookup retainedNewTriggerName oldTriggersMap of
                           Nothing -> do
                             let message = sqlTriggerError retainedNewTriggerName
-                            warn $ MetadataWarning sourceObjID message
+                            warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
                             logger $ MetadataLog HL.LevelWarn message J.Null
                           Just oldTriggerConf -> do
                             let newTriggerOps = etcDefinition retainedNewTriggerConf
@@ -511,11 +513,10 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
                                     (bool Nothing (Just UPDATE) (isDroppedOp (tdUpdate oldTriggerOps) (tdUpdate newTriggerOps))),
                                     (bool Nothing (Just ET.DELETE) (isDroppedOp (tdDelete oldTriggerOps) (tdDelete newTriggerOps)))
                                   ]
-                            tableNameMaybe <- getTableNameFromTrigger @b oldSchemaCache source retainedNewTriggerName
-                            case tableNameMaybe of
+                            case getTableNameFromTrigger @b oldSchemaCache source retainedNewTriggerName of
                               Nothing -> do
                                 let message = sqlTriggerError retainedNewTriggerName
-                                warn $ MetadataWarning sourceObjID message
+                                warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
                                 logger $ MetadataLog HL.LevelWarn message J.Null
                               Just tableName ->
                                 dropDanglingSQLTrigger @b sourceConfig retainedNewTriggerName tableName (HS.fromList $ catMaybes droppedOps)
@@ -575,7 +576,7 @@ runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources reloadRecrea
   let allSources = HS.fromList $ OMap.keys $ _metaSources metadata
       allRemoteSchemas = HS.fromList $ OMap.keys $ _metaRemoteSchemas metadata
       allDataConnectors =
-        maybe mempty (HS.fromList . OMap.keys . unBackendConfigWrapper) $
+        maybe mempty (HS.fromList . Map.keys . unBackendConfigWrapper) $
           BackendMap.lookup @'DataConnector $
             _metaBackendConfigs metadata
       checkRemoteSchema name =
@@ -687,7 +688,7 @@ purgeMetadataObj = \case
   MODataConnectorAgent agentName ->
     MetadataModifier $
       metaBackendConfigs
-        %~ BackendMap.modify @'DataConnector (BackendConfigWrapper . OMap.delete agentName . unBackendConfigWrapper)
+        %~ BackendMap.modify @'DataConnector (BackendConfigWrapper . Map.delete agentName . unBackendConfigWrapper)
   MOOpenTelemetry subobject ->
     case subobject of
       OtelSubobjectAll ->
@@ -702,13 +703,14 @@ purgeMetadataObj = \case
       SMOTable qt -> dropTableInMetadata @b source qt
       SMOFunction qf -> dropFunctionInMetadata @b source qf
       SMOFunctionPermission qf rn -> dropFunctionPermissionInMetadata @b source qf rn
-      SMOLogicalModel lm -> dropLogicalModelInMetadata @b source lm
-      SMOLogicalModelObj logicalModelName logicalModelMetadataObjId ->
+      SMOCustomReturnType crt -> dropCustomReturnTypeInMetadata @b source crt
+      SMONativeQuery lm -> dropNativeQueryInMetadata @b source lm
+      SMOCustomReturnTypeObj customReturnTypeName customReturnTypeMetadataObjId ->
         MetadataModifier $
-          logicalModelMetadataSetter @b source logicalModelName
-            %~ case logicalModelMetadataObjId of
-              LMMOPerm roleName permType ->
-                dropLogicalModelPermissionInMetadata roleName permType
+          customReturnTypeMetadataSetter @b source customReturnTypeName
+            %~ case customReturnTypeMetadataObjId of
+              CRTMOPerm roleName permType ->
+                dropCustomReturnTypePermissionInMetadata roleName permType
       SMOTableObj qt tableObj ->
         MetadataModifier $
           tableMetadataSetter @b source qt %~ case tableObj of
@@ -755,12 +757,12 @@ purgeMetadataObj = \case
                 }
 
 runGetCatalogState ::
-  (MonadMetadataStorageQueryAPI m, MonadError QErr m) => GetCatalogState -> m EncJSON
+  (MonadMetadataStorage m, MonadError QErr m) => GetCatalogState -> m EncJSON
 runGetCatalogState _ =
   encJFromJValue <$> liftEitherM fetchCatalogState
 
 runSetCatalogState ::
-  (MonadMetadataStorageQueryAPI m, MonadError QErr m) => SetCatalogState -> m EncJSON
+  (MonadMetadataStorage m, MonadError QErr m) => SetCatalogState -> m EncJSON
 runSetCatalogState SetCatalogState {..} = do
   liftEitherM $ updateCatalogState _scsType _scsState
   pure successMsg

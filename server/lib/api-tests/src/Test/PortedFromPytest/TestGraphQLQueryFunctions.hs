@@ -229,11 +229,8 @@ fixture_Postgres =
 spec :: SpecWith GlobalTestEnvironment
 spec = Fixture.runSingleSetup (NE.fromList [fixture_Postgres]) tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Yaml.Value -> Yaml.Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   describe "test_search_posts" do
     -- from: queries/graphql_query/functions/query_search_posts.yaml [0]
     it "Custom GraphQL query using search_posts function" \testEnvironment -> do
@@ -263,7 +260,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/query_search_posts.yaml [1]
     it "...and make sure this didn't somehow end up under the mutation root" \testEnvironment -> do
@@ -294,7 +291,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/query_search_posts_aggregate.yaml
     it "Custom GraphQL aggregate query using search_posts function" \testEnvironment -> do
@@ -325,7 +322,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/query_get_users.yaml
     it "Query from users table using get_users function" \testEnvironment -> do
@@ -358,7 +355,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/query_get_users_arguments_error.yaml
     it "Query from users table using get_users function" \testEnvironment -> do
@@ -388,7 +385,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/query_get_users_default_arguments_error.yaml
     it "Query from users table using get_users function" \testEnvironment -> do
@@ -418,7 +415,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/alter_function_error.yaml
     it "Alter SQL function to type VOLATILE (error)" \testEnvironment -> do
@@ -473,7 +470,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/query_get_test_uuid.yaml
     it "Query using get_test function" \testEnvironment -> do
@@ -507,7 +504,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/query_my_add.yaml
     it "Run queries on SQL my_add function with null input values" \testEnvironment -> do
@@ -552,7 +549,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/query_get_session_var.yaml
     it "Query get_session_var custom SQL function" \testEnvironment -> do
@@ -584,7 +581,7 @@ tests opts = do
 
                   |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_function_v2_errors.yaml [0]
     it "setup a custom SQL function" \testEnvironment -> do
@@ -645,7 +642,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_function_v2_errors.yaml [2]
     it "Track function v2 with non json session argument" \testEnvironment -> do
@@ -684,7 +681,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_function_v2_errors.yaml [3]
     it "teardown function" \testEnvironment -> do
@@ -734,7 +731,7 @@ tests opts = do
 
                   |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/query_search_author_mview.yaml
     it "Custom GraphQL query using search_author_mview function which returns results from a materialized view" \testEnvironment -> do
@@ -764,7 +761,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_non_base_function_arg_type.yaml [0]
     it "setup a custom SQL function" \testEnvironment -> do
@@ -813,7 +810,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_non_base_function_arg_type.yaml [2]
     it "Introspect the new composite table scalar type created" \testEnvironment -> do
@@ -839,7 +836,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_non_base_function_arg_type.yaml [3]
     it "Execute the tracked function with a composite row type argument" \testEnvironment -> do
@@ -867,7 +864,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [0]
     it "Define the SQL function the tests will be using" \testEnvironment -> do
@@ -921,7 +918,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [2]
     it "Execute the function without the alias, which should fail" \testEnvironment -> do
@@ -951,7 +948,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [3]
     it "Execute the function by its alias, which should succeed" \testEnvironment -> do
@@ -980,7 +977,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [4]
     it "Execute the function with aggregation by its aggregation-alias, which should succeed" \testEnvironment -> do
@@ -1010,7 +1007,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [5]
     it "Teardown the test of fully given aliases" \testEnvironment -> do
@@ -1036,7 +1033,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [6]
     it "Test that we supply all custom names to `pg_track_function`." \testEnvironment -> do
@@ -1062,7 +1059,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [7]
     it "Execute the function without the alias, which should fail" \testEnvironment -> do
@@ -1092,7 +1089,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [8]
     it "Execute the function by its alias, which should succeed" \testEnvironment -> do
@@ -1121,7 +1118,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [9]
     it "Execute the function with aggregation by its aggregation-alias, which should succeed" \testEnvironment -> do
@@ -1153,7 +1150,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [10]
     it "Test that we fail on non-existing functions" \testEnvironment -> do
@@ -1179,7 +1176,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [11]
     it "Test that we fail on duplicate custom root fields" \testEnvironment -> do
@@ -1212,7 +1209,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [12]
     it "Test that we can clear the customized names" \testEnvironment -> do
@@ -1236,7 +1233,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [13]
     it "None" \testEnvironment -> do
@@ -1265,7 +1262,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [14]
     it "Test that we can set customized names using `set_function_customization`" \testEnvironment -> do
@@ -1292,7 +1289,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [15]
     it "Execute the function by its alias" \testEnvironment -> do
@@ -1321,7 +1318,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [16]
     it "Execute the function with aggregation (unaliased), which should succeed." \testEnvironment -> do
@@ -1359,7 +1356,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [17]
     it "Setup: Define a separate function to cause clashes" \testEnvironment -> do
@@ -1407,7 +1404,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [19]
     it "Setup: clear up aliases of unaliased_function" \testEnvironment -> do
@@ -1431,7 +1428,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [20]
     it "Test that we cannot alias `unaliased_function2` to `unaliased_function`" \testEnvironment -> do
@@ -1460,4 +1457,4 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected

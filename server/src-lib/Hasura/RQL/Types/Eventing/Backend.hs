@@ -19,7 +19,7 @@ import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table (PrimaryKey)
 import Hasura.SQL.Backend
-import Hasura.Server.Types (HasServerConfigCtx, MaintenanceMode, ServerConfigCtx)
+import Hasura.Server.Types (MaintenanceMode)
 import Hasura.Session (UserInfo)
 import Hasura.Tracing qualified as Tracing
 
@@ -187,7 +187,8 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
   --   exist according to the event trigger's specification. If any SQL trigger doesn't
   --   exist then it will create it.
   createMissingSQLTriggers ::
-    (MonadIO m, MonadError QErr m, MonadBaseControl IO m, Backend b, HasServerConfigCtx m) =>
+    (MonadIO m, MonadError QErr m, MonadBaseControl IO m, Backend b) =>
+    SQLGenCtx ->
     SourceConfig b ->
     TableName b ->
     ([ColumnInfo b], Maybe (PrimaryKey b (ColumnInfo b))) ->
@@ -198,7 +199,7 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
 
   createTableEventTrigger ::
     (MonadBaseControl IO m, MonadIO m, MonadError QErr m) =>
-    ServerConfigCtx ->
+    SQLGenCtx ->
     SourceConfig b ->
     TableName b ->
     [ColumnInfo b] ->
@@ -332,7 +333,7 @@ instance BackendEventTrigger ('Postgres 'Citus) where
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
   createTableEventTrigger _ _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
-  createMissingSQLTriggers _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
+  createMissingSQLTriggers _ _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
   checkIfTriggerExists _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
   addCleanupSchedules _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
   deleteAllScheduledCleanups _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
@@ -401,7 +402,7 @@ instance BackendEventTrigger 'BigQuery where
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   createTableEventTrigger _ _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
-  createMissingSQLTriggers _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
+  createMissingSQLTriggers _ _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
   checkIfTriggerExists _ _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
   addCleanupSchedules _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
   deleteAllScheduledCleanups _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
@@ -424,7 +425,7 @@ instance BackendEventTrigger 'MySQL where
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
   createTableEventTrigger _ _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
-  createMissingSQLTriggers _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
+  createMissingSQLTriggers _ _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
   checkIfTriggerExists _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
   addCleanupSchedules _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
   deleteAllScheduledCleanups _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
@@ -465,7 +466,7 @@ instance BackendEventTrigger 'DataConnector where
     runExceptT $ throw400 NotSupported "Event triggers are not supported for the Data Connector backend."
   createTableEventTrigger _ _ _ _ _ _ _ _ =
     runExceptT $ throw400 NotSupported "Event triggers are not supported for the Data Connector backend."
-  createMissingSQLTriggers _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector backend."
+  createMissingSQLTriggers _ _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector backend."
   checkIfTriggerExists _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector backend."
   addCleanupSchedules _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector backend."
   deleteAllScheduledCleanups _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector backend."

@@ -38,7 +38,7 @@ services:
     ports:
       - "65008:26257"
     environment:
-      COCKROACH_USER: "root"
+      COCKROACH_USER: "hasura"
       COCKROACH_DATABASE: "hasura"
     volumes:
       - cockroach-data:/cockroach/cockroach-data

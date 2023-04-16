@@ -7,8 +7,8 @@ import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine
 import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
 import Harness.Yaml
 import Hasura.Prelude
@@ -38,13 +38,13 @@ schema =
       }
   ]
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   it "Can query a table with a delimited identifier" $ \testEnv -> do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      opts
+      testEnv
       ( postGraphql
           testEnv
           [graphql|

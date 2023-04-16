@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
+import type { ColumnValueGenerationStrategy } from './ColumnValueGenerationStrategy';
 import type { ScalarType } from './ScalarType';
 
 export type ColumnInsertSchema = {
@@ -10,6 +11,11 @@ export type ColumnInsertSchema = {
    */
   column: string;
   column_type: ScalarType;
+  /**
+   * Is the column nullable
+   */
+  nullable: boolean;
   type: 'column';
+  value_generated?: ColumnValueGenerationStrategy;
 };
 

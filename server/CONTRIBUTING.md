@@ -9,7 +9,6 @@ This guide explains how to set up the graphql-engine server for development on y
 - There are few system packages required like `libpq-dev`, `libssl-dev`, etc. The best place to get the entire list is from the [Dockerfile](../packaging/graphql-engine-base/ubuntu.dockerfile)
 - Additional Haskell tools (expected versions can be found in _VERSIONS.json_):
   - [HLint](https://github.com/ndmitchell/hlint), for linting Haskell code
-  - [hpack](https://github.com/sol/hpack), for generating Cabal files
   - [Ormolu](https://github.com/tweag/ormolu), for formatting Haskell code
 - [Docker](https://www.docker.com/get-started/)
 - [Docker Compose](https://docs.docker.com/compose/install/)

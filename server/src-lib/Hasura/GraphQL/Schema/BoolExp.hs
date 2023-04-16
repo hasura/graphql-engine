@@ -4,7 +4,7 @@
 module Hasura.GraphQL.Schema.BoolExp
   ( AggregationPredicatesSchema (..),
     tableBoolExp,
-    customTypeBoolExp,
+    customReturnTypeBoolExp,
     mkBoolOperator,
     equalityOperators,
     comparisonOperators,
@@ -16,8 +16,10 @@ import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Base.Error (throw500)
-import Hasura.CustomReturnType (CustomReturnType)
+import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo (..))
 import Hasura.CustomReturnType.Common
+import Hasura.CustomReturnType.Types (CustomReturnTypeName (..))
+import Hasura.Function.Cache
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
@@ -38,7 +40,6 @@ import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
@@ -161,6 +162,7 @@ boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser = do
 
         -- Using remote relationship fields in boolean expressions is not supported.
         FIRemoteRelationship _ -> empty
+        FINestedObject _ -> empty -- TODO(dmoverton)
 
 -- |
 -- > input type_bool_exp {
@@ -171,19 +173,19 @@ boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser = do
 -- >   ...
 -- > }
 -- | Boolean expression for custom return types
-customTypeBoolExp ::
+customReturnTypeBoolExp ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
     AggregationPredicatesSchema b
   ) =>
-  G.Name ->
-  CustomReturnType b ->
+  CustomReturnTypeInfo b ->
   SchemaT r m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
-customTypeBoolExp name customReturnType =
-  case toFieldInfo customReturnType of
-    Nothing -> throw500 $ "Error creating fields for custom type " <> tshow customReturnType
+customReturnTypeBoolExp customReturnType =
+  case toFieldInfo (_crtiFields customReturnType) of
+    Nothing -> throw500 $ "Error creating fields for custom type " <> tshow (_crtiName customReturnType)
     Just fieldInfo -> do
-      let gqlName = mkTableBoolExpTypeName (C.fromCustomName name)
+      let name = getCustomReturnTypeName (_crtiName customReturnType)
+          gqlName = mkTableBoolExpTypeName (C.fromCustomName name)
 
           -- Aggregation parsers let us say things like, "select all authors
           -- with at least one article": they are predicates based on the

@@ -147,7 +147,7 @@ addLiveQuery ::
   PrometheusMetrics ->
   SubscriberMetadata ->
   SubscriptionsState ->
-  LiveQueriesOptions ->
+  IO (LiveQueriesOptions, StreamQueriesOptions) ->
   SourceName ->
   ParameterizedQueryHash ->
   -- | operation name of the query
@@ -163,7 +163,7 @@ addLiveQuery
   prometheusMetrics
   subscriberMetadata
   subscriptionState
-  lqOpts
+  getSubscriptionOptions
   source
   parameterizedQueryHash
   operationName
@@ -174,8 +174,8 @@ addLiveQuery
 
     -- disposable subscriber UUID:
     subscriberId <- newSubscriberId
-
     let !subscriber = Subscriber subscriberId subscriberMetadata requestId operationName onResultAction
+
     $assertNFHere subscriber -- so we don't write thunks to mutable vars
     (pollerMaybe, ()) <-
       STM.atomically $
@@ -193,6 +193,8 @@ addLiveQuery
       pollerId <- PollerId <$> UUID.nextRandom
       threadRef <- forkImmortal ("pollLiveQuery." <> show pollerId) logger $
         forever $ do
+          (lqOpts, _) <- getSubscriptionOptions
+          let SubscriptionsOptions _ refetchInterval = lqOpts
           pollLiveQuery @b pollerId lqOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts poller) postPollHook resolvedConnectionTemplate
           sleep $ unrefine $ unRefetchInterval refetchInterval
       let !pState = PollerIOState threadRef pollerId
@@ -206,7 +208,6 @@ addLiveQuery
     pure $ SubscriberDetails handlerId cohortKey subscriberId
     where
       SubscriptionsState lqMap _ postPollHook _ = subscriptionState
-      SubscriptionsOptions _ refetchInterval = lqOpts
       SubscriptionQueryPlan (ParameterizedSubscriptionQueryPlan role query) sourceConfig cohortId resolvedConnectionTemplate cohortKey _ = plan
 
       handlerId = BackendPollerKey $ AB.mkAnyBackend @b $ PollerKey source role (toTxt query) resolvedConnectionTemplate
@@ -233,7 +234,7 @@ addStreamSubscriptionQuery ::
   PrometheusMetrics ->
   SubscriberMetadata ->
   SubscriptionsState ->
-  StreamQueriesOptions ->
+  IO (LiveQueriesOptions, StreamQueriesOptions) ->
   SourceName ->
   ParameterizedQueryHash ->
   -- | operation name of the query
@@ -251,7 +252,7 @@ addStreamSubscriptionQuery
   prometheusMetrics
   subscriberMetadata
   subscriptionState
-  streamQOpts
+  getSubscriptionOptions
   source
   parameterizedQueryHash
   operationName
@@ -263,7 +264,6 @@ addStreamSubscriptionQuery
 
     -- disposable subscriber UUID:
     subscriberId <- newSubscriberId
-
     let !subscriber = Subscriber subscriberId subscriberMetadata requestId operationName onResultAction
 
     $assertNFHere subscriber -- so we don't write thunks to mutable vars
@@ -283,6 +283,8 @@ addStreamSubscriptionQuery
       pollerId <- PollerId <$> UUID.nextRandom
       threadRef <- forkImmortal ("pollStreamingQuery." <> show (unPollerId pollerId)) logger $
         forever $ do
+          (_, streamQOpts) <- getSubscriptionOptions
+          let SubscriptionsOptions _ refetchInterval = streamQOpts
           pollStreamingQuery @b pollerId streamQOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts handler) rootFieldName postPollHook Nothing resolvedConnectionTemplate
           sleep $ unrefine $ unRefetchInterval refetchInterval
       let !pState = PollerIOState threadRef pollerId
@@ -296,7 +298,6 @@ addStreamSubscriptionQuery
     pure $ SubscriberDetails handlerId (cohortKey, cohortCursorTVar) subscriberId
     where
       SubscriptionsState _ streamQueryMap postPollHook _ = subscriptionState
-      SubscriptionsOptions _ refetchInterval = streamQOpts
       SubscriptionQueryPlan (ParameterizedSubscriptionQueryPlan role query) sourceConfig cohortId resolvedConnectionTemplate cohortKey _ = plan
 
       handlerId = BackendPollerKey $ AB.mkAnyBackend @b $ PollerKey source role (toTxt query) resolvedConnectionTemplate

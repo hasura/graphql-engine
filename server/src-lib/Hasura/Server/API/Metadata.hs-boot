@@ -3,7 +3,9 @@ module Hasura.Server.API.Metadata
   )
 where
 
-import Hasura.LogicalModel.API qualified as LogicalModels
+import Hasura.CustomReturnType.API qualified as CustomReturnType
+import Hasura.Function.API qualified as Functions
+import Hasura.NativeQuery.API qualified as NativeQueries
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.ConnectionTemplate
@@ -45,7 +47,7 @@ data RQLMetadataV1
   | RMUpdateSource !(AnyBackend UpdateSource)
   | RMListSourceKinds !ListSourceKinds
   | RMGetSourceKindCapabilities !GetSourceKindCapabilities
-  | RMGetSourceTables !GetSourceTables
+  | RMGetSourceTables !(AnyBackend GetSourceTables)
   | RMGetTableInfo !GetTableInfo
   | -- Tables
     RMTrackTable !(AnyBackend TrackTableV2)
@@ -76,23 +78,27 @@ data RQLMetadataV1
   | RMUpdateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
   | RMDeleteRemoteRelationship !(AnyBackend DeleteFromSourceRelationship)
   | -- Functions
-    RMTrackFunction !(AnyBackend TrackFunctionV2)
-  | RMUntrackFunction !(AnyBackend UnTrackFunction)
-  | RMSetFunctionCustomization (AnyBackend SetFunctionCustomization)
+    RMTrackFunction !(AnyBackend Functions.TrackFunctionV2)
+  | RMUntrackFunction !(AnyBackend Functions.UnTrackFunction)
+  | RMSetFunctionCustomization (AnyBackend Functions.SetFunctionCustomization)
   | -- Functions permissions
-    RMCreateFunctionPermission !(AnyBackend FunctionPermissionArgument)
-  | RMDropFunctionPermission !(AnyBackend FunctionPermissionArgument)
+    RMCreateFunctionPermission !(AnyBackend Functions.FunctionPermissionArgument)
+  | RMDropFunctionPermission !(AnyBackend Functions.FunctionPermissionArgument)
   | -- Computed fields
     RMAddComputedField !(AnyBackend AddComputedField)
   | RMDropComputedField !(AnyBackend DropComputedField)
   | -- Connection template
     RMTestConnectionTemplate !(AnyBackend TestConnectionTemplate)
-  | -- Logical Models
-    RMGetLogicalModel !(AnyBackend LogicalModels.GetLogicalModel)
-  | RMTrackLogicalModel !(AnyBackend LogicalModels.TrackLogicalModel)
-  | RMUntrackLogicalModel !(AnyBackend LogicalModels.UntrackLogicalModel)
-  | RMCreateSelectLogicalModelPermission !(AnyBackend (LogicalModels.CreateLogicalModelPermission SelPerm))
-  | RMDropSelectLogicalModelPermission !(AnyBackend LogicalModels.DropLogicalModelPermission)
+  | -- Native Queries
+    RMGetNativeQuery !(AnyBackend NativeQueries.GetNativeQuery)
+  | RMTrackNativeQuery !(AnyBackend NativeQueries.TrackNativeQuery)
+  | RMUntrackNativeQuery !(AnyBackend NativeQueries.UntrackNativeQuery)
+  | -- Custom types
+    RMGetCustomReturnType !(AnyBackend CustomReturnType.GetCustomReturnType)
+  | RMTrackCustomReturnType !(AnyBackend CustomReturnType.TrackCustomReturnType)
+  | RMUntrackCustomReturnType !(AnyBackend CustomReturnType.UntrackCustomReturnType)
+  | RMCreateSelectCustomReturnTypePermission !(AnyBackend (CustomReturnType.CreateCustomReturnTypePermission SelPerm))
+  | RMDropSelectCustomReturnTypePermission !(AnyBackend CustomReturnType.DropCustomReturnTypePermission)
   | -- Tables event triggers
     RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)
@@ -180,6 +186,9 @@ data RQLMetadataV1
     RMGetFeatureFlag !GetFeatureFlag
   | -- Bulk metadata queries
     RMBulk [RQLMetadataRequest]
+  | -- Bulk metadata queries, but don't stop if something fails - return all
+    -- successes and failures as separate items
+    RMBulkKeepGoing [RQLMetadataRequest]
 
 data RQLMetadataV2
   = RMV2ReplaceMetadata !ReplaceMetadataV2

@@ -149,6 +149,7 @@ export const OperationEditor: React.FC<OperationEditorProps> = props => {
                     >
                       <input
                         type="checkbox"
+                        name={`column-${col.name}`}
                         className={`!mr-xs cursor-pointer ${focusYellowRing} disabled:bg-gray-200 disabled:cursor-not-allowed disabled:text-gray-200 border-gray-200 rounded-sm bg-white`}
                         checked={col.enabled}
                         disabled={readOnly}

@@ -18,7 +18,7 @@ import Control.Monad.Trans.Control
 import Data.Aeson (FromJSON, ToJSON, (.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as Aeson
 import Data.Has
-import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
+import Data.Map.Strict qualified as Map
 import Data.Monoid
 import Data.Text.Extended (ToTxt (..))
 import Hasura.Backends.DataConnector.API (ErrorResponse (_crDetails))
@@ -114,7 +114,7 @@ addAgent agentName agent = do
   let modifier' =
         Metadata.MetadataModifier $
           Metadata.metaBackendConfigs %~ BackendMap.modify @'Backend.DataConnector \oldMap ->
-            Metadata.BackendConfigWrapper $ InsOrdHashMap.insert agentName agent (coerce oldMap)
+            Metadata.BackendConfigWrapper $ Map.insert agentName agent (coerce oldMap)
   SC.Build.withNewInconsistentObjsCheck $ SC.Build.buildSchemaCache modifier'
 
   pure Common.successMsg
@@ -135,7 +135,7 @@ checkAgentAvailability url = do
   manager <- askHTTPManager
   logger <- asks getter
   res <- runExceptT $ do
-    capabilitiesU <- (ignoreTraceT . flip runAgentClientT (AgentClientContext logger url manager Nothing) $ genericClient @API.Routes // API._capabilities)
+    capabilitiesU <- (ignoreTraceT . flip runAgentClientT (AgentClientContext logger url manager Nothing Nothing) $ genericClient @API.Routes // API._capabilities)
     API.capabilitiesCase
       (Error.throw500 "Capabilities request failed unexpectedly")
       pure
@@ -169,7 +169,7 @@ runDeleteDataConnectorAgent DCDeleteAgent {..} = do
 
   let kindExists = do
         agentMap <- BackendMap.lookup @'Backend.DataConnector $ Metadata._metaBackendConfigs oldMetadata
-        InsOrdHashMap.lookup _dcdaName $ Metadata.unBackendConfigWrapper agentMap
+        Map.lookup _dcdaName $ Metadata.unBackendConfigWrapper agentMap
   case kindExists of
     Nothing -> Error.throw400 Error.NotFound $ "DC Agent '" <> toTxt _dcdaName <> "' not found"
     Just _ -> do
@@ -177,7 +177,7 @@ runDeleteDataConnectorAgent DCDeleteAgent {..} = do
             Metadata.MetadataModifier $
               Metadata.metaBackendConfigs
                 %~ BackendMap.alter @'Backend.DataConnector
-                  (fmap (coerce . InsOrdHashMap.delete _dcdaName . Metadata.unBackendConfigWrapper))
+                  (fmap (coerce . Map.delete _dcdaName . Metadata.unBackendConfigWrapper))
 
       SC.Build.withNewInconsistentObjsCheck $ SC.Build.buildSchemaCache modifier'
       pure Common.successMsg

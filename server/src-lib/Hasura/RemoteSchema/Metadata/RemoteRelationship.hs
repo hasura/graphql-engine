@@ -19,7 +19,7 @@ where
 
 import Autodocodec
 import Autodocodec qualified as AC
-import Autodocodec.Extended (graphQLFieldNameCodec, graphQLValueCodec, hashSetCodec)
+import Autodocodec.Extended (graphQLFieldNameCodec, graphQLValueCodec, hashSetCodec, typeableName)
 import Control.Exception.Safe (Typeable)
 import Control.Lens (makeLenses)
 import Data.Aeson qualified as J
@@ -33,7 +33,6 @@ import Data.HashMap.Strict.InsOrd.Autodocodec (insertionOrderedElemsCodec)
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Scientific (floatingOrInteger)
 import Data.Text qualified as T
-import Hasura.Metadata.DTO.Utils (typeableName)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RemoteSchema.Metadata.Base

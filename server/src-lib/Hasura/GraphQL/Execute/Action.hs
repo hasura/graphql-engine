@@ -38,6 +38,7 @@ import Data.Set (Set)
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Database.PG.Query qualified as PG
+import Hasura.App.State
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Execute.Prepare
 import Hasura.Backends.Postgres.Execute.Types
@@ -50,6 +51,7 @@ import Hasura.Backends.Postgres.Types.Function qualified as TF
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Eventing.Common
+import Hasura.Function.Cache
 import Hasura.GraphQL.Execute.Action.Types as Types
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Options qualified as Options
@@ -71,20 +73,20 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Eventing
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Backend
+import Hasura.Server.Init.Config (OptionalInterval (..))
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Utils
   ( mkClientHeadersForward,
     mkSetCookieHeaders,
   )
-import Hasura.Services.Network
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.Wreq qualified as Wreq
+import Refined (unrefine)
 import System.Metrics.Prometheus.Counter as Prometheus.Counter
 
 fetchActionLogResponses ::
@@ -358,7 +360,7 @@ resolveAsyncActionQuery userInfo annAction =
 
                   jsonbToRecordSet = QualifiedObject "pg_catalog" $ FunctionName "jsonb_to_recordset"
                   actionLogInput =
-                    IR.UVParameter Nothing $
+                    IR.UVParameter IR.Unknown $
                       ColumnValue (ColumnScalar PGJSONB) $
                         PGValJSONB $
                           PG.JSONB $
@@ -410,7 +412,7 @@ resolveAsyncActionQuery userInfo annAction =
                 ciMutability = ColumnMutability False False
               }
           sessionVarValue =
-            IR.UVParameter Nothing $
+            IR.UVParameter IR.Unknown $
               ColumnValue (ColumnScalar PGJSONB) $
                 PGValJSONB $
                   PG.JSONB $
@@ -428,49 +430,55 @@ resolveAsyncActionQuery userInfo annAction =
 -- See Note [Async action architecture] above
 asyncActionsProcessor ::
   forall m.
-  ( MonadIO m,
+  ( HasAppEnv m,
+    MonadIO m,
     MonadBaseControl IO m,
     LA.Forall (LA.Pure m),
     MonadMetadataStorage m,
-    ProvidesNetwork m,
     Tracing.MonadTrace m
   ) =>
-  Env.Environment ->
+  IO Env.Environment ->
   L.Logger L.Hasura ->
   IO SchemaCache ->
+  IO OptionalInterval ->
   STM.TVar (Set LockedActionEventId) ->
-  PrometheusMetrics ->
-  Milliseconds ->
   Maybe GH.GQLQueryText ->
   m (Forever m)
-asyncActionsProcessor env logger getSCFromRef' lockedActionEvents prometheusMetrics sleepTime gqlQueryText =
+asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedActionEvents gqlQueryText =
   return $
     Forever () $
       const $ do
-        actionCache <- scActions <$> liftIO getSCFromRef'
-        let asyncActions =
-              Map.filter ((== ActionMutation ActionAsynchronous) . (^. aiDefinition . adType)) actionCache
-        unless (Map.null asyncActions) $ do
-          -- fetch undelivered action events only when there's at least
-          -- one async action present in the schema cache
-          asyncInvocationsE <- fetchUndeliveredActionEvents
-          asyncInvocations <- liftIO $ onLeft asyncInvocationsE mempty
-          -- save the actions that are currently fetched from the DB to
-          -- be processed in a TVar (Set LockedActionEventId) and when
-          -- the action is processed we remove it from the set. This set
-          -- is maintained because on shutdown of the graphql-engine, we
-          -- would like to wait for a certain time (see `--graceful-shutdown-time`)
-          -- during which to complete all the in-flight actions. So, when this
-          -- locked action events set TVar is empty, it will mean that there are
-          -- no events that are in the 'processing' state
-          saveLockedEvents (map (EventId . actionIdToText . _aliId) asyncInvocations) lockedActionEvents
-          LA.mapConcurrently_ (callHandler actionCache) asyncInvocations
-        liftIO $ sleep $ milliseconds sleepTime
+        fetchInterval <- liftIO getFetchInterval
+        case fetchInterval of
+          -- async actions processor thread is a polling thread, so we sleep
+          -- for a second in case the fetch interval is not provided and try to
+          -- get it in the next iteration. If the fetch interval is available,
+          -- we check for async actions to process.
+          Skip -> liftIO $ sleep $ seconds 1
+          Interval sleepTime -> do
+            actionCache <- scActions <$> liftIO getSCFromRef'
+            let asyncActions =
+                  Map.filter ((== ActionMutation ActionAsynchronous) . (^. aiDefinition . adType)) actionCache
+            unless (Map.null asyncActions) $ do
+              -- fetch undelivered action events only when there's at least
+              -- one async action present in the schema cache
+              asyncInvocationsE <- fetchUndeliveredActionEvents
+              asyncInvocations <- liftIO $ onLeft asyncInvocationsE mempty
+              -- save the actions that are currently fetched from the DB to
+              -- be processed in a TVar (Set LockedActionEventId) and when
+              -- the action is processed we remove it from the set. This set
+              -- is maintained because on shutdown of the graphql-engine, we
+              -- would like to wait for a certain time (see `--graceful-shutdown-time`)
+              -- during which to complete all the in-flight actions. So, when this
+              -- locked action events set TVar is empty, it will mean that there are
+              -- no events that are in the 'processing' state
+              saveLockedEvents (map (EventId . actionIdToText . _aliId) asyncInvocations) lockedActionEvents
+              LA.mapConcurrently_ (callHandler actionCache) asyncInvocations
+            liftIO $ sleep $ milliseconds (unrefine sleepTime)
   where
     callHandler :: ActionCache -> ActionLogItem -> m ()
     callHandler actionCache actionLogItem =
       Tracing.newTrace Tracing.sampleAlways "async actions processor" do
-        httpManager <- askHTTPManager
         let ActionLogItem
               actionId
               actionName
@@ -490,13 +498,15 @@ asyncActionsProcessor env logger getSCFromRef' lockedActionEvents prometheusMetr
                 actionContext = ActionContext actionName
                 metadataRequestTransform = _adRequestTransform definition
                 metadataResponseTransform = _adResponseTransform definition
-            eitherRes <-
+            eitherRes <- do
+              env <- liftIO getEnvHook
+              AppEnv {..} <- askAppEnv
               runExceptT $
                 flip runReaderT logger $
                   callWebhook
                     env
-                    httpManager
-                    prometheusMetrics
+                    appEnvManager
+                    appEnvPrometheusMetrics
                     outputType
                     outputFields
                     reqHeaders

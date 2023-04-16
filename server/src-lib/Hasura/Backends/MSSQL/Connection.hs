@@ -8,7 +8,7 @@
 --   and conversion functions between MSSQL and graphql-engine.
 module Hasura.Backends.MSSQL.Connection
   ( MSSQLConnConfiguration (MSSQLConnConfiguration),
-    MSSQLSourceConfig (MSSQLSourceConfig, _mscExecCtx),
+    MSSQLSourceConfig (MSSQLSourceConfig, _mscExecCtx, _mscReadReplicas),
     MSSQLConnectionInfo (..),
     MSSQLPoolSettings (..),
     MSSQLExecCtx (..),
@@ -268,7 +268,9 @@ mkMSSQLAnyQueryTx q = do
 
 data MSSQLSourceConfig = MSSQLSourceConfig
   { _mscConnectionString :: MSPool.ConnectionString,
-    _mscExecCtx :: MSSQLExecCtx
+    _mscExecCtx :: MSSQLExecCtx,
+    -- | Number of read replicas used by the execution context
+    _mscReadReplicas :: Int
   }
   deriving (Generic)
 
@@ -276,7 +278,7 @@ instance Show MSSQLSourceConfig where
   show = show . _mscConnectionString
 
 instance Eq MSSQLSourceConfig where
-  MSSQLSourceConfig connStr1 _ == MSSQLSourceConfig connStr2 _ =
+  MSSQLSourceConfig connStr1 _ _ == MSSQLSourceConfig connStr2 _ _ =
     connStr1 == connStr2
 
 instance ToJSON MSSQLSourceConfig where

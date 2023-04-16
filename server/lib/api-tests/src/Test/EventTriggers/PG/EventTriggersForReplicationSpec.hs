@@ -8,9 +8,9 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldReturnYaml)
@@ -80,12 +80,8 @@ articlesTable tableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
-  setTriggerForReplication opts
-
-setTriggerForReplication :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-setTriggerForReplication opts =
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests =
   describe "verify trigger status when logical replication is used" do
     it "verify trigger is enabled on logical replication" $
       \(testEnvironment, (webhookServer, (Webhook.EventsQueue _eventsQueue))) -> do
@@ -118,7 +114,7 @@ setTriggerForReplication opts =
                     - A
               |]
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment getTriggerInfoQuery)
           expectedResponseForEnablingTriggers
 
@@ -153,7 +149,7 @@ setTriggerForReplication opts =
                     - O
               |]
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment getTriggerInfoQuery)
           expectedResponseForDisablingTriggers
 

@@ -1,6 +1,6 @@
 ---
 description: Documentation for Hasura Enterprise Edition
-title: 'EE: Hasura Enterprise'
+title: 'Enterprise Edition: Hasura Enterprise'
 keywords:
   - hasura
   - docs
@@ -12,18 +12,17 @@ sidebar_label: Overview
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import VersionedLink from '@site/src/components/VersionedLink';
+import ProductBadge from '@site/src/components/ProductBadge';
 import Enterprise from '@site/static/icons/features/enterprise.svg';
 
 # <Enterprise /> Hasura Enterprise
 
-<div className="badge badge--primary heading-badge" style={{ marginBottom: `1rem` }}>
-  Available on: Self-hosted Enterprise
-</div>
+<ProductBadge self />
 
 <div className="overview-header">
   <div className="overview-text">
     <p>
-    The open-source version of Hasura is highly capable, but Hasura Enterprise Edition (EE) has additional built-in 
+    The open-source version of Hasura is highly capable, but Hasura Enterprise Edition has additional built-in
     features for running Hasura in production on your own infrastructure. These features have key capabilities for observability, security, 
     and performance.
     </p>
@@ -32,7 +31,9 @@ import Enterprise from '@site/static/icons/features/enterprise.svg';
     the Hasura Enterprise Edition on your own infrastructure, or on a cloud provider of your choice.
     </p>
     <p>
-        If you'd like to learn more, please <a href="mailto:sales@hasura.io">contact us</a>.
+        Sign up for our <b>30-day free <VersionedLink to="/enterprise/try-hasura-enterprise-edition/">
+          Enterprise Edition Trial
+        </VersionedLink></b> and evaluate Enterprise Edition features right away. If you have more questions, please <a href="mailto:sales@hasura.io">contact us</a>.
     </p>
     <h4>Quick Links</h4>
     <ul>
@@ -42,8 +43,8 @@ import Enterprise from '@site/static/icons/features/enterprise.svg';
         </VersionedLink>
       </li>
       <li>
-        <VersionedLink to="/enterprise/upgrade-ce-to-ee/">
-          Upgrade from Hasura CE to Hasura Enterprise.
+        <VersionedLink to="/enterprise/try-hasura-enterprise-edition/">
+          Free 30 days Trial for Hasura Enterprise Edition.
         </VersionedLink>
       </li>
     </ul>
@@ -59,7 +60,7 @@ import Enterprise from '@site/static/icons/features/enterprise.svg';
 
 ## Hasura Enterprise Edition Features
 
-<p>Hasura EE capabilities include all the features of the Hasura Open Source Community Edition plus:</p>
+<p>Hasura Enterprise Edition capabilities include all the features of the Hasura Open Source Community Edition plus:</p>
 <div className="overview-gallery">
   <h2 style={{ gridColumn: `1 / -1`, marginTop: `1.2rem`, marginBottom: `.3rem`, justifySelf: `start`, fontSize: `1.8rem` }}>Databases</h2>
   <VersionedLink to="/databases/snowflake/index/">
@@ -87,7 +88,7 @@ import Enterprise from '@site/static/icons/features/enterprise.svg';
     </div>
   </VersionedLink>
   <h2 style={{ gridColumn: `1 / -1`, marginTop: `1.2rem`, marginBottom: `.3rem`, justifySelf: `start`, fontSize: `1.8rem` }}>Performance</h2>
-  <VersionedLink to="/queries/response-caching/">
+  <VersionedLink to="/enterprise/caching/">
     <div className="card">
       <h3>Caching</h3>
       <p>Learn how to configure caching in Hasura Enterprise Edition to improve the performance of your GraphQL API.</p>

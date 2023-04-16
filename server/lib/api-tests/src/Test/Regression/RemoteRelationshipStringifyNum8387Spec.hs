@@ -13,11 +13,11 @@ import Harness.Permissions (SelectPermissionDetails (..))
 import Harness.Permissions qualified as Permissions
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
+import Harness.Schema (Table (..))
+import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.FixtureName (FixtureName (..))
-import Harness.Test.Schema (Table (..))
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction qualified as SetupAction
 import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment (..), getBackendTypeConfig, stopServer)
 import Harness.Yaml (shouldReturnYaml)
@@ -330,8 +330,8 @@ rhsPostgresSetup (testEnvironment, _) = do
 -- Tests
 
 -- | Basic queries using *-to-DB joins
-testsWithFeatureOn :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-testsWithFeatureOn opts = describe "object-relationship (stringified numeric types)" $ do
+testsWithFeatureOn :: SpecWith (TestEnvironment, Maybe Server)
+testsWithFeatureOn = describe "object-relationship (stringified numeric types)" $ do
   -- fetches the relationship data
   it "related-data" $ \(testEnvironment, _) -> do
     let query =
@@ -356,13 +356,13 @@ testsWithFeatureOn opts = describe "object-relationship (stringified numeric typ
                     version: "1.075"
             |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
 -- | Expected behaviour when HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES is false
-testsWithFeatureOff :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-testsWithFeatureOff opts = describe "object-relationship (no stringified numeric types)" $ do
+testsWithFeatureOff :: SpecWith (TestEnvironment, Maybe Server)
+testsWithFeatureOff = describe "object-relationship (no stringified numeric types)" $ do
   -- fetches the relationship data
   it "related-data" $ \(testEnvironment, _) -> do
     let query =
@@ -387,6 +387,6 @@ testsWithFeatureOff opts = describe "object-relationship (no stringified numeric
                     version: 1.075
             |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse

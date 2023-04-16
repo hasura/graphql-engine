@@ -1,0 +1,91 @@
+[
+  {
+    "name": ["NoPrimaryKey"],
+    "type": "table",
+    "description": "Table with no primary key",
+    "columns": [
+      {
+        "name": "FirstName",
+        "type": "string",
+        "nullable": false,
+        "description": "First name",
+        "insertable": true,
+        "updatable": true
+      },
+      {
+        "name": "LastName",
+        "type": "string",
+        "nullable": false,
+        "description": "Surname",
+        "insertable": true,
+        "updatable": true
+      }
+    ],
+    "insertable": true,
+    "updatable": true,
+    "deletable": true
+  },
+  {
+    "name": ["DefaultedPrimaryKey"],
+    "type": "table",
+    "description": "Table with primary key that can be satisfied with",
+    "columns": [
+      {
+        "name": "TimestampKey",
+        "type": "DateTime",
+        "nullable": false,
+        "description": "Timestamp of when the row was inserted",
+        "insertable": true,
+        "updatable": false,
+        "value_generated": { "type": "default_value" }
+      },
+      {
+        "name": "Message",
+        "type": "string",
+        "nullable": true,
+        "description": "Some message",
+        "insertable": true,
+        "updatable": true
+      }
+    ],
+    "insertable": true,
+    "updatable": true,
+    "deletable": true
+  },
+  {
+    "name": ["AllColumnsDefaultable"],
+    "type": "table",
+    "description": "Table where all columns can have generated values on insert",
+    "columns": [
+      {
+        "name": "Id",
+        "type": "number",
+        "nullable": false,
+        "description": "Primary key ID",
+        "insertable": true,
+        "updatable": false,
+        "value_generated": { "type": "auto_increment" }
+      },
+      {
+        "name": "Message",
+        "type": "string",
+        "nullable": true,
+        "description": "Some message",
+        "insertable": true,
+        "updatable": true
+      },
+      {
+        "name": "Importance",
+        "type": "number",
+        "nullable": false,
+        "description": "Importance level",
+        "insertable": true,
+        "updatable": true,
+        "value_generated": { "type": "default_value" }
+      }
+    ],
+    "insertable": true,
+    "updatable": true,
+    "deletable": true
+  }
+]

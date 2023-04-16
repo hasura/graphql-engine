@@ -107,6 +107,8 @@ export function json_object(relationships: TableRelationships[], fields: Fields,
           throw new Error(`Couldn't find relationship ${field.relationship} for field ${fieldName} on table ${table}`);
         }
         return `'${fieldName}', ${relationship(relationships, rel, field, tableAlias)}`;
+      case "object":
+        throw new Error('Unsupported field type "object"');
       default:
         return unreachable(field["type"]);
     }

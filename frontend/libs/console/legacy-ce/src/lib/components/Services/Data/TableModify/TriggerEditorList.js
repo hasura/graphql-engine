@@ -99,7 +99,10 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
           <div>
             <i>
               {trigger.action_timing} {trigger.event_manipulation}, FOR EACH{' '}
-              {trigger.action_orientation}
+              {trigger.action_orientation}{' '}
+              {trigger.action_condition
+                ? ' WHEN ' + trigger.action_condition
+                : ''}
             </i>
             <AceEditor
               mode="sql"

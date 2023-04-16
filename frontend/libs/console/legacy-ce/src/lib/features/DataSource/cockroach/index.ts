@@ -3,7 +3,7 @@ import { Database, Feature } from '..';
 import { runSQL } from '../api';
 import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 import { adaptIntrospectedTables } from '../common/utils';
-import { GetTrackableTablesProps } from '../types';
+import { GetTrackableTablesProps, GetVersionProps } from '../types';
 import {
   getTableColumns,
   getFKRelationships,
@@ -18,10 +18,22 @@ export type CockroachDBTable = { name: string; schema: string };
 export const cockroach: Database = {
   ...defaultDatabaseProps,
   introspection: {
+    getVersion: async ({ dataSourceName, httpClient }: GetVersionProps) => {
+      const result = await runSQL({
+        source: {
+          name: dataSourceName,
+          kind: 'cockroach',
+        },
+        sql: `SELECT VERSION()`,
+        httpClient,
+      });
+      console.log(result);
+      return result.result?.[1][0] ?? '';
+    },
     getDriverInfo: async () => ({
       name: 'cockroach',
       displayName: 'CockroachDB',
-      release: 'Beta',
+      release: 'GA',
     }),
     getDatabaseConfiguration: async () => {
       return Feature.NotImplemented;
@@ -65,6 +77,7 @@ export const cockroach: Database = {
     getFKRelationships,
     getTablesListAsTree,
     getSupportedOperators,
+    getDatabaseSchemas: async () => Feature.NotImplemented,
   },
   query: {
     getTableRows,

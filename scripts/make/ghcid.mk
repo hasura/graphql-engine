@@ -5,7 +5,7 @@ GRAPHQL_ENGINE_PATH=$(shell cabal list-bin exe:graphql-engine)
 # Traditional way
 GHC_OPTIONS=-Wno-prepositive-qualified-module
 
-GHCID_FLAGS = --builddir ./dist-newstyle/repl --repl-option -O0 --repl-option -fobject-code --ghc-options=$(GHC_OPTIONS)
+GHCID_FLAGS = --builddir ./dist-newstyle/repl --repl-option -O0 --repl-option -frefinement-level-hole-fits=0 -fobject-code --ghc-options=$(GHC_OPTIONS)
 GHCID_TESTS_FLAGS = --builddir ./dist-newstyle/repl-tests --repl-option -O0 --ghc-options=$(GHC_OPTIONS)
 
 define run_ghcid_api_tests

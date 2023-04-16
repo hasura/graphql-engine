@@ -20,6 +20,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.SchemaCache
   ( MetadataResourceVersion (..),
+    MetadataWithResourceVersion (..),
     initialResourceVersion,
   )
 import Hasura.RQL.Types.SchemaCache.Build (CacheInvalidations)
@@ -40,7 +41,7 @@ fetchMetadataFromCatalog = do
     [Identity (PG.ViaJSON metadata)] -> pure metadata
     _ -> throw500 "multiple rows in hdb_metadata table"
 
-fetchMetadataAndResourceVersionFromCatalog :: PG.TxE QErr (Metadata, MetadataResourceVersion)
+fetchMetadataAndResourceVersionFromCatalog :: PG.TxE QErr MetadataWithResourceVersion
 fetchMetadataAndResourceVersionFromCatalog = do
   rows <-
     PG.withQE
@@ -50,7 +51,7 @@ fetchMetadataAndResourceVersionFromCatalog = do
     |]
       ()
       True
-  case rows of
+  uncurry MetadataWithResourceVersion <$> case rows of
     [] -> pure (emptyMetadata, initialResourceVersion)
     [(PG.ViaJSON metadata, resourceVersion)] -> pure (metadata, MetadataResourceVersion resourceVersion)
     _ -> throw500 "multiple rows in hdb_metadata table"

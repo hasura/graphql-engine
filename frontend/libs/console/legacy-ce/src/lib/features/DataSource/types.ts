@@ -109,10 +109,13 @@ export type GetTablesListAsTreeProps = {
 
 export type ReleaseType = 'GA' | 'Beta' | 'Alpha' | 'disabled';
 
-export type DriverInfoResponse = {
+export type DriverInfo = {
   name: SupportedDrivers;
   displayName: string;
   release: ReleaseType;
+  native?: boolean;
+  available?: boolean;
+  enterprise?: boolean;
 };
 
 export type GetTableRowsProps = {
@@ -153,6 +156,8 @@ export type Operator = {
 };
 export type GetSupportedOperatorsProps = NetworkArgs;
 
+export type Version = string;
+export type GetVersionProps = { dataSourceName: string } & NetworkArgs;
 export type InsertRowArgs = {
   dataSourceName: string;
   httpClient: NetworkArgs['httpClient'];
@@ -164,3 +169,12 @@ export type GetDefaultQueryRootProps = {
   dataSourceName: string;
   table: Table;
 };
+
+export type GetDatabaseSchemaProps = {
+  dataSourceName: string;
+} & NetworkArgs;
+
+export type ChangeDatabaseSchemaProps = {
+  dataSourceName: string;
+  schemaName: string;
+} & NetworkArgs;

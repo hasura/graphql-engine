@@ -8,6 +8,7 @@
 // https://on.cypress.io/custom-commands
 // ***********************************************
 
+import '@testing-library/cypress/add-commands';
 import 'cypress-plugin-snapshots/commands';
 // eslint-disable-next-line @typescript-eslint/no-namespace,@typescript-eslint/no-unused-vars
 declare namespace Cypress {

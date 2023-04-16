@@ -39,6 +39,7 @@
   min-width: 50px;
   .input_group {
     width: 100%;
+    position: relative;
     .loginLoader {
       cursor: pointer;
       font-size: 20px;
@@ -58,6 +59,11 @@
     }
     .input_addon_group {
       cursor: pointer;
+      position: absolute;
+      right: 0;
+      top: 0;
+      height: 100%;
+      display: flex;
     }
     input:focus {
       border: 1px solid #999;

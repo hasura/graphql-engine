@@ -119,7 +119,7 @@ data SubscriptionExecution
 
 buildSubscriptionPlan ::
   forall m.
-  (MonadError QErr m, EB.MonadQueryTags m, MonadIO m, MonadBaseControl IO m) =>
+  (MonadError QErr m, MonadQueryTags m, MonadIO m, MonadBaseControl IO m) =>
   UserInfo ->
   RootFieldMap (IR.QueryRootField IR.UnpreparedValue) ->
   ParameterizedQueryHash ->
@@ -142,7 +142,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders oper
                         exists
                         \(IR.SourceConfigWith sourceConfig queryTagsConfig (IR.QDBR qdb) :: IR.SourceConfigWith db b) -> do
                           let subscriptionQueryTagsAttributes = encodeQueryTags $ QTLiveQuery $ LivequeryMetadata rootFieldName parameterizedQueryHash
-                              queryTagsComment = Tagged.untag $ EB.createQueryTags @m subscriptionQueryTagsAttributes queryTagsConfig
+                              queryTagsComment = Tagged.untag $ createQueryTags @m subscriptionQueryTagsAttributes queryTagsConfig
                           SubscriptionQueryPlan . AB.mkAnyBackend . MultiplexedSubscriptionQueryPlan
                             <$> runReaderT
                               ( EB.mkDBStreamingSubscriptionPlan
@@ -254,7 +254,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders oper
         \(IR.SourceConfigWith sourceConfig queryTagsConfig _ :: IR.SourceConfigWith db b) -> do
           qdbs <- traverse (checkField @b sourceName) allFields
           let subscriptionQueryTagsAttributes = encodeQueryTags $ QTLiveQuery $ LivequeryMetadata rootFieldName parameterizedQueryHash
-          let queryTagsComment = Tagged.untag $ EB.createQueryTags @m subscriptionQueryTagsAttributes queryTagsConfig
+          let queryTagsComment = Tagged.untag $ createQueryTags @m subscriptionQueryTagsAttributes queryTagsConfig
           SubscriptionQueryPlan . AB.mkAnyBackend . MultiplexedSubscriptionQueryPlan
             <$> runReaderT (EB.mkLiveQuerySubscriptionPlan userInfo sourceName sourceConfig (_rfaNamespace rootFieldName) qdbs reqHeaders operationName) queryTagsComment
       pure (sourceName, subscriptionPlan)
@@ -308,7 +308,7 @@ getResolvedExecPlan ::
     MonadBaseControl IO m,
     Tracing.MonadTrace m,
     EC.MonadGQLExecutionCheck m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     ProvidesNetwork m
   ) =>
   Env.Environment ->

@@ -4,9 +4,9 @@ module Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec 
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Harness.Backend.Postgres qualified as Postgres
+import Harness.Schema
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction qualified as SetupAction
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
 import Hasura.Prelude
@@ -73,8 +73,8 @@ functionSetup testEnvironment =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests _opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   describe "Tracking the same function as a root field and as a computed field" do
     it "Does not give rise to metadata inconsistencies" \testEnvironment -> do
       let schemaName = T.unpack $ unSchemaName (getSchemaName testEnvironment)

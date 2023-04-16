@@ -12,6 +12,7 @@ module Hasura.GraphQL.Schema.Mutation
   )
 where
 
+import Control.Lens ((^.))
 import Data.Has (getter)
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
@@ -210,6 +211,7 @@ tableFieldsInput tableInfo = do
     mkFieldParser = \case
       FIComputedField _ -> pure Nothing
       FIRemoteRelationship _ -> pure Nothing
+      FINestedObject _ -> pure Nothing -- TODO(dmoverton)
       FIColumn columnInfo -> do
         if (_cmIsInsertable $ ciMutability columnInfo)
           then mkColumnParser columnInfo
@@ -348,12 +350,16 @@ mkInsertObject objects tableInfo backendInsert insertPerms updatePerms =
       _aiTableName = table,
       _aiCheckCondition = (insertCheck, updateCheck),
       _aiTableColumns = columns,
+      _aiPrimaryKey = primaryKey,
+      _aiExtraTableMetadata = extraTableMetadata,
       _aiPresetValues = presetValues,
       _aiBackendInsert = backendInsert
     }
   where
     table = tableInfoName tableInfo
     columns = tableColumns tableInfo
+    primaryKey = tableInfo ^. tiCoreInfo . tciPrimaryKey <&> (_pkColumns >>> fmap ciColumn)
+    extraTableMetadata = tableInfo ^. tiCoreInfo . tciExtraTableMetadata
     insertCheck = fmap partialSQLExpToUnpreparedValue <$> ipiCheck insertPerms
     updateCheck = (fmap . fmap . fmap) partialSQLExpToUnpreparedValue $ upiCheck =<< updatePerms
     presetValues = partialSQLExpToUnpreparedValue <$> ipiSet insertPerms

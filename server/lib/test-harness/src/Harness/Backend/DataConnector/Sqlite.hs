@@ -27,10 +27,10 @@ import Harness.DataConnectorAgent (createClone, createClone', deleteClone, delet
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
+import Harness.Schema (SchemaName)
+import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (SchemaName)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
@@ -195,7 +195,6 @@ teardown (reverse -> tables) (testEnvironment, _) = do
 runSql :: TestEnvironment -> String -> String -> IO ()
 runSql testEnvironment source sql = do
   Schema.runSQL source sql testEnvironment
-  GraphqlEngine.reloadMetadata testEnvironment
 
 -- | Serialize Table into a SQLite statement, as needed, and execute it on the SQLite backend
 createTable :: String -> TestEnvironment -> Schema.Table -> IO ()

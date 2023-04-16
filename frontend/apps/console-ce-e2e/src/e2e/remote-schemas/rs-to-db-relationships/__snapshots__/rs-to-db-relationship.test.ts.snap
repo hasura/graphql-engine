@@ -1,0 +1,24 @@
+exports[`check if remote schema to db relationships are created properly > verify creating a new rs-to-db relationship #0`] =
+[
+  {
+    "relationships": [
+      {
+        "definition": {
+          "to_source": {
+            "field_mapping": {
+              "id": "name"
+            },
+            "relationship_type": "array",
+            "source": "default",
+            "table": {
+              "name": "destination_table",
+              "schema": "public"
+            }
+          }
+        },
+        "name": "RelationshipName"
+      }
+    ],
+    "type_name": "Pokemon"
+  }
+];

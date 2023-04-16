@@ -205,7 +205,6 @@ const globals = {
     : null,
   cliUUID: window.__env?.cliUUID || '',
   hasuraUUID: '',
-  telemetryNotificationShown: false,
   isProduction,
   herokuOAuthClientId: window.__env?.herokuOAuthClientId,
   hasuraCloudTenantId: window.__env?.tenantID,

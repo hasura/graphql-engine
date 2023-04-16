@@ -13,10 +13,7 @@ module Hasura.Server.Types
     PGVersion (PGVersion),
     pgToDbVersion,
     RequestId (..),
-    ServerConfigCtx (..),
-    HasServerConfigCtx (..),
     CheckFeatureFlag (..),
-    askMetadataDefaults,
     getRequestId,
     ApolloFederationStatus (..),
     isApolloFederationEnabled,
@@ -24,14 +21,9 @@ module Hasura.Server.Types
 where
 
 import Data.Aeson
-import Data.HashSet qualified as Set
 import Data.Text (intercalate, unpack)
 import Database.PG.Query qualified as PG
-import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude hiding (intercalate)
-import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Metadata (MetadataDefaults)
 import Hasura.Server.Init.FeatureFlag (CheckFeatureFlag (..))
 import Hasura.Server.Utils
 import Network.HTTP.Types qualified as HTTP
@@ -70,6 +62,8 @@ newtype MetadataDbId = MetadataDbId {getMetadataDbId :: Text}
 mdDbIdToDbUid :: MetadataDbId -> DbUid
 mdDbIdToDbUid = DbUid . getMetadataDbId
 
+-- | A UUID for each running instance of graphql-engine, generated fresh each
+-- time graphql-engine starts up
 newtype InstanceId = InstanceId {getInstanceId :: Text}
   deriving (Show, Eq, ToJSON, FromJSON, PG.FromCol, PG.ToPrepArg)
 
@@ -140,38 +134,6 @@ data ReadOnlyMode = ReadOnlyModeEnabled | ReadOnlyModeDisabled
 -- This is an internal feature and will not be exposed to users.
 data EventingMode = EventingEnabled | EventingDisabled
   deriving (Show, Eq)
-
-data ServerConfigCtx = ServerConfigCtx
-  { _sccFunctionPermsCtx :: Options.InferFunctionPermissions,
-    _sccRemoteSchemaPermsCtx :: Options.RemoteSchemaPermissions,
-    _sccSQLGenCtx :: SQLGenCtx,
-    _sccMaintenanceMode :: MaintenanceMode (),
-    _sccExperimentalFeatures :: Set.HashSet ExperimentalFeature,
-    _sccEventingMode :: EventingMode,
-    _sccReadOnlyMode :: ReadOnlyMode,
-    -- | stores global default naming convention
-    _sccDefaultNamingConvention :: NamingCase,
-    _sccMetadataDefaults :: MetadataDefaults,
-    _sccCheckFeatureFlag :: CheckFeatureFlag,
-    _sccApolloFederationStatus :: ApolloFederationStatus
-  }
-
-askMetadataDefaults :: HasServerConfigCtx m => m MetadataDefaults
-askMetadataDefaults = do
-  ServerConfigCtx {_sccMetadataDefaults} <- askServerConfigCtx
-  pure _sccMetadataDefaults
-
-class (Monad m) => HasServerConfigCtx m where
-  askServerConfigCtx :: m ServerConfigCtx
-
-instance HasServerConfigCtx m => HasServerConfigCtx (ReaderT r m) where
-  askServerConfigCtx = lift askServerConfigCtx
-
-instance HasServerConfigCtx m => HasServerConfigCtx (ExceptT e m) where
-  askServerConfigCtx = lift askServerConfigCtx
-
-instance HasServerConfigCtx m => HasServerConfigCtx (StateT s m) where
-  askServerConfigCtx = lift askServerConfigCtx
 
 -- | Whether or not to enable apollo federation fields.
 data ApolloFederationStatus = ApolloFederationEnabled | ApolloFederationDisabled

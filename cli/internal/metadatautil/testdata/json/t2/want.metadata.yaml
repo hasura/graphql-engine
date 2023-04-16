@@ -12990,7 +12990,8 @@ sources:
                           _in: X-Hasura-Conference-Ids
                       - subconferenceId:
                           _in: X-Hasura-Subconference-Ids
-    logical_models: null
+    native_queries: null
+    custom_return_types: null
     functions:
       - function:
           schema: collection

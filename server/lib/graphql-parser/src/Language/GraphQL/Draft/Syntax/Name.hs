@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# HLINT ignore "Use onNothing" #-}
 {-# LANGUAGE TemplateHaskellQuotes #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
@@ -29,6 +30,7 @@ import Control.DeepSeq (NFData)
 import Data.Aeson qualified as J
 import Data.Char qualified as C
 import Data.Coerce (coerce)
+import Data.Data (Data)
 import Data.Hashable (Hashable)
 import Data.Text (Text)
 import Data.Text qualified as T
@@ -42,7 +44,7 @@ import Prelude
 
 -- Defined here and re-exported in the public module to avoid exporting `unName`.`
 newtype Name = Name {unName :: Text}
-  deriving stock (Eq, Lift, Ord, Show)
+  deriving stock (Data, Eq, Lift, Ord, Show)
   deriving newtype (Semigroup, Hashable, NFData, Pretty, J.ToJSONKey, J.ToJSON)
 
 instance HasCodec Name where

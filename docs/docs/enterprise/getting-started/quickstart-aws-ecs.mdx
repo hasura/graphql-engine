@@ -1,7 +1,7 @@
 ---
 sidebar_label: Quickstart with AWS ECS
 description: Quickstart with AWS ECS for Hasura Enterprise Edition
-title: 'EE: Quickstart with AWS ECS'
+title: 'Enterprise Edition: Quickstart with AWS ECS'
 keywords:
   - hasura
   - docs
@@ -10,10 +10,11 @@ sidebar_position: 2
 ---
 
 import LatestRelease from '@site/src/components/LatestRelease';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Quickstart with AWS ECS
 
-<div className="badge badge--primary heading-badge">Available on: Self-hosted Enterprise</div>
+<ProductBadge self />
 
 ## Introduction
 
@@ -22,14 +23,12 @@ Fargate task, and perform other common tasks in Amazon ECS with the AWS CLI.
 
 **This guide requires HGE versions `v2.12.0` and above.** Installation instructions are below.
 
-## Deploying Hasura EE on ECS
+## Deploying Hasura Enterprise Edition on ECS
 
 ### Prerequisites
 
 This tutorial assumes that the following prerequisites have been met:
 
-- To deploy Hasura EE, you will need a license key. [Please contact Hasura Sales](mailto:sales@hasura.io) if you do not
-  already have one.
 - The latest version of the AWS CLI is installed and configured. For more information about installing or upgrading your
   AWS CLI, see
   [Installing the AWS Command Line Interface](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
@@ -70,14 +69,10 @@ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-mani
 
 Edit `hasura-fargate-task.json` and set the right values:
 
-```json {6,10,14,18,22}
+```json {6,10,14,18}
 ---
 {
   "environment": [
-    {
-      "name": "HASURA_GRAPHQL_EE_LICENSE_KEY",
-      "value": "<license key>"
-    },
     {
       "name": "HASURA_GRAPHQL_METADATA_DATABASE_URL",
       "value": "postgres://<username>:<password>@hostname:<port>/<dbname>"
@@ -129,13 +124,50 @@ Examples of `HASURA_GRAPHQL_REDIS_URL` and `HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`
 
 :::
 
-### Step 4: Register the Task Definition
+### Step 4 (optional): Set the Enterprise Edition license key
+
+If you have been provided a license key by Hasura Sales, add this as an environment variable.
+
+Edit `hasura-fargate-task.json` and add the license key value:
+
+```json {6}
+---
+{
+  "environment": [
+    {
+      "name": "HASURA_GRAPHQL_EE_LICENSE_KEY",
+      "value": "<license key>"
+    },
+    {
+      "name": "HASURA_GRAPHQL_METADATA_DATABASE_URL",
+      "value": "postgres://<username>:<password>@hostname:<port>/<dbname>"
+    },
+    {
+      "name": "HASURA_GRAPHQL_REDIS_URL",
+      "value": "redis://hostname:6379"
+    },
+    {
+      "name": "HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL",
+      "value": "redis://hostname:6379"
+    },
+    {
+      "name": "HASURA_GRAPHQL_ADMIN_SECRET",
+      "value": "myadminsecretkey"
+    }
+  ]
+}
+```
+
+This is not a required step. You can also enable Enterprise Edition features just by registering for
+[Enterprise Edition Trial](/enterprise/try-hasura-enterprise-edition.mdx) in the Hasura Console.
+
+### Step 5: Register the Task Definition
 
 ```bash
 aws ecs register-task-definition --cli-input-json file://hasura-fargate-task.json
 ```
 
-### Step 5: List Task Definitions
+### Step 6: List Task Definitions
 
 You can list the task definitions for your account at any time with the list-task-definitions command. The output of
 this command shows the `family` and `revision` values that you can use together when calling **run-task** or
@@ -153,7 +185,7 @@ Output:
 }
 ```
 
-### Step 6: Create a Service
+### Step 7: Create a Service
 
 After you have registered a task for your account, you can create a service for the registered task in your cluster. For
 this example, you create a service with one instance of the `hasura:1` task definition running in your cluster.
@@ -190,7 +222,7 @@ aws ecs create-service \
 
 The **create-service** command returns a description of the task definition after it completes its registration.
 
-### Step 7: Describe the Running Service
+### Step 8: Describe the Running Service
 
 Describe the service using the service name retrieved earlier to get more information about the task.
 
@@ -205,7 +237,7 @@ You may also find information on the task definition, the network configuration 
 section, you will find information on failures, if any, associated with the call. For troubleshooting, see
 [Service Event Messages](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-event-messages.html).
 
-### Step 8: Open the Hasura Console
+### Step 9: Open the Hasura Console
 
 Copy the task id from the previous step and describe the task in the service so that you can get the Elastic Network
 Interface (ENI) for the task.

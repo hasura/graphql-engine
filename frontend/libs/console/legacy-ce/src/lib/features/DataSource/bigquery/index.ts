@@ -37,6 +37,7 @@ export const bigquery: Database = {
     getFKRelationships: async () => Feature.NotImplemented,
     getTablesListAsTree,
     getSupportedOperators,
+    getDatabaseSchemas: async () => Feature.NotImplemented,
   },
   query: {
     getTableRows,

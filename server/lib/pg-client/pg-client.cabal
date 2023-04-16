@@ -1,4 +1,4 @@
-cabal-version:      3.0
+cabal-version:      3.6
 name:               pg-client
 version:            0.1.0
 homepage:           https://github.com/hasura/graphql-engine

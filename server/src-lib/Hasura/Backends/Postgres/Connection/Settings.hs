@@ -55,7 +55,7 @@ import Data.Semigroup (Max (..))
 import Data.Text (unpack)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
-import Data.Text.Extended (ToTxt (toTxt), dquoteList)
+import Data.Text.Extended (ToTxt (toTxt), dquote, dquoteList)
 import Data.Text.NonEmpty
 import Data.Time
 import Data.Time.Clock.Compat ()
@@ -66,7 +66,10 @@ import Hasura.RQL.Types.Common (UrlConf (..))
 import Hasura.SQL.Types (ExtensionsSchema (..))
 import Hasura.Server.Utils (parseConnLifeTime, readIsoLevel)
 import Kriti qualified
+import Kriti.Error qualified as Kriti
 import Kriti.Parser qualified as Kriti
+import Prettyprinter qualified as PP
+import Prettyprinter.Render.Text qualified as PP
 import Test.QuickCheck.Instances.Semigroup ()
 import Test.QuickCheck.Instances.Time ()
 
@@ -401,7 +404,14 @@ instance FromJSON KritiTemplate where
     KritiTemplate templateSrc
       <$> Kriti.parser (T.encodeUtf8 templateSrc)
       `onLeft` \err ->
-        fail $ "Kriti template parsing failed - " <> show err
+        fail $ "Kriti template parsing failed - " <> (T.unpack . serializedErrorToString . Kriti.serialize $ err)
+
+serializedErrorToString :: Kriti.SerializedError -> Text
+serializedErrorToString (Kriti.SerializedError code msg errSpan) =
+  let prettyText = PP.renderStrict . PP.layoutPretty PP.defaultLayoutOptions . PP.pretty
+      spanToText (Kriti.Span start end) = "from " <> prettySpan start <> " to " <> prettySpan end
+      prettySpan (Kriti.AlexSourcePos line col) = "line " <> tshow line <> ", column " <> tshow col
+   in msg <> " Occured " <> spanToText errSpan <> " with error code " <> dquote (prettyText code) <> "."
 
 instance HasCodec KritiTemplate where
   codec = codecViaAeson "KritiTemplate"

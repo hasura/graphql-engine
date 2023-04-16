@@ -69,6 +69,7 @@ def create_schema(
     owner_engine: sqlalchemy.engine.Engine,
     runner_engine: sqlalchemy.engine.Engine,
     prefix: str,
+    read_only: bool = False,
 ) -> Backend:
     # generate a database from the fully-qualified test name
     # e.g. for the test, 'test_metadata.py::TestMetadata::test_reload_metadata',
@@ -103,10 +104,23 @@ def create_schema(
         # have superuser privileges.
         connection.execute('CREATE EXTENSION IF NOT EXISTS pgcrypto')
 
-        connection.execute(f'GRANT ALL PRIVILEGES ON DATABASE {schema_name} TO {runner_engine.url.username}')
-        connection.execute(f'GRANT ALL PRIVILEGES ON SCHEMA public TO {runner_engine.url.username}')
+        # Some tests use the "hge_tests" schema.
         connection.execute('CREATE SCHEMA hge_tests')
-        connection.execute(f'GRANT ALL PRIVILEGES ON SCHEMA hge_tests TO {runner_engine.url.username}')
+
+        # If the test requires a read-only source, revoke all write privileges.
+        if read_only:
+            connection.execute(f'REVOKE ALL PRIVILEGES ON SCHEMA public FROM public')
+            connection.execute(f'REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM public')
+            connection.execute(f'GRANT USAGE ON SCHEMA public TO public')
+            connection.execute(f'GRANT SELECT ON ALL TABLES IN SCHEMA public TO public')
+            connection.execute(f'GRANT SELECT ON ALL TABLES IN SCHEMA pg_catalog TO public')
+            connection.execute(f'GRANT SELECT ON ALL TABLES IN SCHEMA information_schema TO public')
+            connection.execute(f'ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO public')
+        # Otherwise, grant all privileges.
+        else:
+            connection.execute(f'GRANT ALL PRIVILEGES ON DATABASE {schema_name} TO {runner_engine.url.username}')
+            connection.execute(f'GRANT ALL PRIVILEGES ON SCHEMA public TO {runner_engine.url.username}')
+            connection.execute(f'GRANT ALL PRIVILEGES ON SCHEMA hge_tests TO {runner_engine.url.username}')
 
     engine = switch_schema(runner_engine, schema_name)
     return Backend(name = schema_name, engine = engine)

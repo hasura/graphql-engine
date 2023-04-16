@@ -39,6 +39,7 @@ import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName, TableName)
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.Function.Cache
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Diff qualified as Diff
@@ -46,10 +47,8 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata hiding
-  ( fmFunction,
-    tmComputedFields,
+  ( tmComputedFields,
     tmTable,
   )
 import Hasura.RQL.Types.Metadata.Backend
@@ -60,7 +59,6 @@ import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
-import Hasura.Server.Types
 import Hasura.Server.Utils (quoteRegex)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -208,7 +206,6 @@ runRunSQL ::
     FetchTableMetadata pgKind,
     FetchFunctionMetadata pgKind,
     CacheRWM m,
-    HasServerConfigCtx m,
     MetadataM m,
     MonadBaseControl IO m,
     MonadError QErr m,
@@ -216,9 +213,10 @@ runRunSQL ::
     Tracing.MonadTrace m,
     UserInfoM m
   ) =>
+  SQLGenCtx ->
   RunSQL ->
   m EncJSON
-runRunSQL q@RunSQL {..} = do
+runRunSQL sqlGen q@RunSQL {..} = do
   sourceConfig <- askSourceConfig @('Postgres pgKind) rSource
   traceCtx <- Tracing.currentContext
   userInfo <- askUserInfo
@@ -226,7 +224,7 @@ runRunSQL q@RunSQL {..} = do
   if (isSchemaCacheBuildRequiredRunSQL q)
     then do
       -- see Note [Checking metadata consistency in run_sql]
-      withMetadataCheck @pgKind rSource rCascade rTxAccessMode $
+      withMetadataCheck @pgKind sqlGen rSource rCascade rTxAccessMode $
         withTraceContext traceCtx $
           withUserInfo userInfo $
             execRawSQL rSql
@@ -251,19 +249,19 @@ withMetadataCheck ::
     FetchTableMetadata pgKind,
     FetchFunctionMetadata pgKind,
     CacheRWM m,
-    HasServerConfigCtx m,
     MetadataM m,
     MonadBaseControl IO m,
     MonadError QErr m,
     MonadIO m
   ) =>
+  SQLGenCtx ->
   SourceName ->
   Bool ->
   PG.TxAccess ->
   PG.TxET QErr m a ->
   m a
-withMetadataCheck source cascade txAccess runSQLQuery = do
-  SourceInfo _ tableCache functionCache _customSQL sourceConfig _ _ <- askSourceInfo @('Postgres pgKind) source
+withMetadataCheck sqlGen source cascade txAccess runSQLQuery = do
+  SourceInfo _ tableCache functionCache _nativeQueries _customReturnTypes sourceConfig _ _ <- askSourceInfo @('Postgres pgKind) source
 
   -- Run SQL query and metadata checker in a transaction
   (queryResult, metadataUpdater) <- runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cascade runSQLQuery
@@ -282,14 +280,14 @@ withMetadataCheck source cascade txAccess runSQLQuery = do
     recreateEventTriggers :: PGSourceConfig -> SchemaCache -> m ()
     recreateEventTriggers sourceConfig schemaCache = do
       let tables = fromMaybe mempty $ unsafeTableCache @('Postgres pgKind) source $ scSources schemaCache
-      serverConfigCtx <- askServerConfigCtx
       liftEitherM $
         runPgSourceWriteTx sourceConfig RunSQLQuery $
           forM_ (M.elems tables) $ \(TableInfo coreInfo _ eventTriggers _) -> do
             let table = _tciName coreInfo
                 columns = getCols $ _tciFieldInfoMap coreInfo
             forM_ (M.toList eventTriggers) $ \(triggerName, EventTriggerInfo {etiOpsDef, etiTriggerOnReplication}) -> do
-              flip runReaderT serverConfigCtx $ mkAllTriggersQ triggerName table etiTriggerOnReplication columns etiOpsDef
+              flip runReaderT sqlGen $
+                mkAllTriggersQ triggerName table etiTriggerOnReplication columns etiOpsDef
 
 -- | @'runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cascadeDependencies tx' checks for
 -- changes in GraphQL Engine metadata when a @'tx' is executed on the database alters Postgres

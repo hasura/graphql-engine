@@ -6,6 +6,7 @@ export const defaultDatabaseProps: Database = {
     getSupportedQueryTypes: async () => Feature.NotImplemented,
   },
   introspection: {
+    getVersion: async () => Feature.NotImplemented,
     getDriverInfo: async () => Feature.NotImplemented,
     getDatabaseConfiguration: async () => Feature.NotImplemented,
     getDriverCapabilities: async () => Feature.NotImplemented,
@@ -15,6 +16,7 @@ export const defaultDatabaseProps: Database = {
     getFKRelationships: async () => Feature.NotImplemented,
     getTablesListAsTree: async () => Feature.NotImplemented,
     getSupportedOperators: async () => Feature.NotImplemented,
+    getDatabaseSchemas: async () => Feature.NotImplemented,
   },
   query: {
     getTableRows: async () => Feature.NotImplemented,

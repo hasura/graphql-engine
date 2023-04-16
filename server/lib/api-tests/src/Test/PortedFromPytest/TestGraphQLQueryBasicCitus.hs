@@ -303,11 +303,8 @@ fixture_Citus =
 spec :: SpecWith GlobalTestEnvironment
 spec = Fixture.runSingleSetup (NE.fromList [fixture_Citus]) tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Yaml.Value -> Yaml.Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   describe "test_nested_select_with_foreign_key_alter" do
     -- from: queries/graphql_query/citus/nested_select_with_foreign_key_alter_citus.yaml [0]
     it "Alter foreign key constraint on article table" \testEnvironment -> do
@@ -373,7 +370,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/citus/select_query_disaster_relationships_distributed.yaml [0]
     it "A distributed table can have foreign keys if it is referencing another colocated hash distributed table. Array relationship" \testEnvironment -> do
@@ -417,7 +414,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/citus/select_query_disaster_relationships_distributed.yaml [1]
     it "A distributed table can have foreign keys if it is referencing another colocated hash distributed table. Object relationship" \testEnvironment -> do
@@ -460,7 +457,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/citus/select_query_disaster_relationships_distributed.yaml [2]
     it "A distributed table can have foreign keys if it is referencing a reference table" \testEnvironment -> do
@@ -494,7 +491,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/citus/select_query_disaster_relationships_reference.yaml [0]
     it "Reference tables and local tables can only have foreign keys to reference tables and local tables. Array relationship" \testEnvironment -> do
@@ -528,7 +525,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/citus/select_query_disaster_relationships_reference.yaml [1]
     it "Reference tables and local tables can only have foreign keys to reference tables and local tables. Object relationship" \testEnvironment -> do
@@ -568,7 +565,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/citus/select_query_disaster_relationships_reference.yaml [2]
     it "Reference tables and local tables cannot have foreign keys references to distributed tables" \testEnvironment -> do
@@ -620,7 +617,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/citus/select_query_disaster_functions.yaml [0]
     it "Querying a tracked SQL function will succeed" \testEnvironment -> do
@@ -646,7 +643,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/citus/select_query_disaster_functions.yaml [1]
     it "Querying a tracked PL/PGSQL function will succeed" \testEnvironment -> do
@@ -672,7 +669,7 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/citus/select_query_disaster_functions.yaml [2]
     it "However, trying to use a relationship will result in an error" \testEnvironment -> do
@@ -727,4 +724,4 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected

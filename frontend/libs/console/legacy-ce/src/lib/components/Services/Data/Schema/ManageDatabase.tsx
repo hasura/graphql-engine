@@ -14,7 +14,6 @@ import { browserHistory } from 'react-router';
 import produce from 'immer';
 import { ManageAgents } from '../../../../features/ManageAgents';
 import { Button } from '../../../../new-components/Button';
-import { useMetadataSource } from '../../../../features/MetadataAPI';
 import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import { nativeDrivers } from '../../../../features/DataSource';
 import { getProjectId } from '../../../../utils/cloudConsole';
@@ -59,6 +58,19 @@ import {
   useVPCBannerVisibility,
 } from './utils';
 import { NeonDashboardLink } from '../DataSources/CreateDataSource/Neon/components/NeonDashboardLink';
+import { getRoute } from '../../../../utils/getDataRoute';
+import {
+  availableFeatureFlagIds,
+  useIsFeatureFlagEnabled,
+} from '../../../../features/FeatureFlags';
+import { Collapsible } from '../../../../new-components/Collapsible';
+import { IconTooltip } from '../../../../new-components/Tooltip';
+import { ListConnectedDatabases } from '../../../../features/ConnectDBRedesign';
+import {
+  MetadataSelectors,
+  useMetadata,
+} from '../../../../features/hasura-metadata-api';
+import { PostgresConfiguration } from '../../../../features/hasura-metadata-types';
 
 const KNOW_MORE_PROJECT_REGION_UPDATE =
   'https://hasura.io/docs/latest/projects/regions/#changing-region-of-an-existing-project';
@@ -90,7 +102,9 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
   const [removing, setRemoving] = useState(false);
   const [showUrl, setShowUrl] = useState(false);
   const [dbVersion, setDbVersion] = useState('');
-  const { data: sourceInfo } = useMetadataSource(dataSource?.name);
+  const { data: sourceInfo } = useMetadata(m =>
+    MetadataSelectors.findSource(dataSource?.name)(m)
+  );
 
   const fetchDBVersion = () => {
     const query = services[dataSource.driver].getDatabaseVersionSql ?? '';
@@ -134,12 +148,12 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
     inconsistentObjects
   );
 
-  const isTotalMaxConnectionSet =
-    !!sourceInfo?.configuration?.connection_info?.pool_settings
-      ?.total_max_connections;
-  const isMaxConnectionSet =
-    !!sourceInfo?.configuration?.connection_info?.pool_settings
-      ?.max_connections;
+  const isTotalMaxConnectionSet = !!(
+    sourceInfo?.configuration as PostgresConfiguration
+  )?.connection_info?.pool_settings?.total_max_connections;
+  const isMaxConnectionSet = !!(
+    sourceInfo?.configuration as PostgresConfiguration
+  )?.connection_info?.pool_settings?.max_connections;
   const showMaxConnectionWarning =
     isCloudConsole(globals) && !isTotalMaxConnectionSet && isMaxConnectionSet;
 
@@ -269,8 +283,15 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   dataHeaders,
   sourcesFromMetadata,
 }) => {
+  const { enabled: isConnectDBRedesignEnabled, isLoading } =
+    useIsFeatureFlagEnabled(availableFeatureFlagIds.connectDBRedesign);
+
   useEffect(() => {
-    if (sourcesFromMetadata.length === 0 && !autoRedirectedToConnectPage) {
+    if (
+      sourcesFromMetadata.length === 0 &&
+      !autoRedirectedToConnectPage &&
+      !isLoading
+    ) {
       /**
        * Because the getDataSources() doesn't list the GDC sources, the Data tab will redirect to the /connect page
        * thinking that are no sources available in Hasura, even if there are GDC sources connected to it. Modifying getDataSources()
@@ -278,10 +299,21 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
        * So a quick workaround is to check from the actual metadata if any sources are present -
        * Combined with checks between getDataSources() and metadata -> we know the remaining sources are GDC sources. In such a case redirect to the manage db route
        */
-      dispatch(_push('/data/manage/connect'));
+      if (isConnectDBRedesignEnabled)
+        dispatch(_push('/data/v2/manage/connect'));
+      else {
+        dispatch(_push('/data/manage/connect'));
+      }
       autoRedirectedToConnectPage = true;
     }
-  }, [location, dataSources, dispatch]);
+  }, [
+    location,
+    dataSources,
+    dispatch,
+    sourcesFromMetadata.length,
+    isConnectDBRedesignEnabled,
+    isLoading,
+  ]);
 
   const { show: shouldShowVPCBanner, dismiss: dismissVPCBanner } =
     useVPCBannerVisibility();
@@ -321,7 +353,9 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   };
 
   const onClickConnectDB = () => {
-    dispatch(_push('/data/manage/connect'));
+    isConnectDBRedesignEnabled
+      ? dispatch(_push(getRoute().connectDatabase()))
+      : dispatch(_push('/data/manage/connect'));
   };
 
   const pushRoute = (route: string) => {
@@ -414,6 +448,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
           data-test="manage-database-section"
         >
           <BreadCrumb breadCrumbs={crumbs} />
+
           <div className={styles.padd_top}>
             <div className={`${styles.display_flex} manage-db-header`}>
               <h2
@@ -434,160 +469,186 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
               <VPCBanner className="mt-md" onClose={dismissVPCBanner} />
             )}
           </div>
-          <div className={styles.manage_db_content}>
-            <hr className="my-md" />
 
-            <div className="overflow-x-auto border border-gray-300 rounded">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <th className="px-sm py-xs max-w-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider" />
-                  <th className="px-sm py-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
-                    Database
-                  </th>
-                  <th className="px-sm py-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
-                    Connection String
-                  </th>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {sourcesFromMetadata.length ? (
-                    sourcesFromMetadata.map(source => {
-                      if (nativeDrivers.includes(source.kind)) {
-                        const data = dataSources.find(
-                          s => s.name === source.name
-                        );
-                        if (!data) return null;
+          <hr className="mt-sm" />
 
-                        return (
-                          <DatabaseListItem
-                            key={data.name}
-                            dataSource={data}
-                            inconsistentObjects={inconsistentObjects}
-                            pushRoute={pushRoute}
-                            onEdit={onEdit}
-                            onReload={onReload}
-                            onRemove={onRemove}
-                            dispatch={dispatch}
-                            dataHeaders={dataHeaders}
-                            dbLatencyData={
-                              isCloudConsole(globals)
-                                ? getSourceInfoFromLatencyData(
-                                    data.name,
-                                    latencyCheckData
-                                  )
-                                : undefined
-                            }
-                          />
-                        );
-                      }
-                      return (
-                        <GDCDatabaseListItem
-                          dataSource={{
-                            name: source.name,
-                            kind: source.kind,
-                          }}
-                          inconsistentObjects={inconsistentObjects}
-                          dispatch={dispatch}
-                        />
-                      );
-                    })
-                  ) : (
-                    <td colSpan={3} className="text-center px-sm py-xs">
-                      You don&apos;t have any data sources connected, please
-                      connect one to continue.
-                    </td>
-                  )}
-                </tbody>
-              </table>
+          {isConnectDBRedesignEnabled ? (
+            <div className="mt-sm">
+              <ListConnectedDatabases />
             </div>
-          </div>
+          ) : (
+            <>
+              <div className={styles.manage_db_content}>
+                <div className="overflow-x-auto border border-gray-300 rounded">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <th className="px-sm py-xs max-w-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider" />
+                      <th className="px-sm py-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
+                        Database
+                      </th>
+                      <th className="px-sm py-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
+                        Connection String
+                      </th>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {sourcesFromMetadata.length ? (
+                        sourcesFromMetadata.map(source => {
+                          if (nativeDrivers.includes(source.kind)) {
+                            const data = dataSources.find(
+                              s => s.name === source.name
+                            );
+                            if (!data) return null;
 
-          {showCheckLatencyButton ? (
-            <Button
-              size="md"
-              className="mt-xs mr-xs"
-              icon={<FaHourglassHalf />}
-              onClick={checkDatabaseLatency}
-              isLoading={queryResponse.isLoading}
-              loadingText="Measuring Latencies..."
+                            return (
+                              <DatabaseListItem
+                                key={data.name}
+                                dataSource={data}
+                                inconsistentObjects={inconsistentObjects}
+                                pushRoute={pushRoute}
+                                onEdit={onEdit}
+                                onReload={onReload}
+                                onRemove={onRemove}
+                                dispatch={dispatch}
+                                dataHeaders={dataHeaders}
+                                dbLatencyData={
+                                  isCloudConsole(globals)
+                                    ? getSourceInfoFromLatencyData(
+                                        data.name,
+                                        latencyCheckData
+                                      )
+                                    : undefined
+                                }
+                              />
+                            );
+                          }
+                          return (
+                            <GDCDatabaseListItem
+                              dataSource={{
+                                name: source.name,
+                                kind: source.kind,
+                              }}
+                              inconsistentObjects={inconsistentObjects}
+                              dispatch={dispatch}
+                            />
+                          );
+                        })
+                      ) : (
+                        <td colSpan={3} className="text-center px-sm py-xs">
+                          You don&apos;t have any data sources connected, please
+                          connect one to continue.
+                        </td>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {showCheckLatencyButton ? (
+                <Button
+                  size="md"
+                  className="mt-xs mr-xs"
+                  icon={<FaHourglassHalf />}
+                  onClick={checkDatabaseLatency}
+                  isLoading={queryResponse.isLoading}
+                  loadingText="Measuring Latencies..."
+                >
+                  Check Database Latency
+                </Button>
+              ) : null}
+              {showAccelerateProjectSection ? (
+                <div className="mt-xs">
+                  <IndicatorCard
+                    status="negative"
+                    headline="Accelerate your Hasura Project"
+                  >
+                    <div className="flex items-center flex-row">
+                      <span>
+                        Databases marked with “Elevated Latency” indicate that
+                        it took us over 200 ms for this Hasura project to
+                        communicate with your database. These conditions
+                        generally happen when databases and projects are in
+                        geographically distant regions. This can cause API and
+                        subsequently application performance issues. We want
+                        your GraphQL APIs to be <b>lightning fast</b>, therefore
+                        we recommend that you either deploy your Hasura project
+                        in the same region as your database or select a database
+                        instance that&apos;s closer to where you&apos;ve
+                        deployed Hasura.
+                        <LearnMoreLink href={KNOW_MORE_PROJECT_REGION_UPDATE} />
+                      </span>
+                      <div className="flex items-center flex-row ml-xs">
+                        <Button
+                          className="mr-xs"
+                          onClick={checkDatabaseLatency}
+                          isLoading={queryResponse.isLoading}
+                          loadingText="Measuring Latencies..."
+                          icon={<FaRedoAlt />}
+                        >
+                          Re-check Database Latency
+                        </Button>
+                        <Button
+                          className="mr-xs"
+                          onClick={openUpdateProjectRegionPage}
+                          icon={<FaExternalLinkAlt />}
+                        >
+                          Update Project Region
+                        </Button>
+                      </div>
+                    </div>
+                  </IndicatorCard>
+                </div>
+              ) : null}
+              {showErrorIndicator ? (
+                <div className="mt-xs">
+                  <IndicatorCard
+                    status="negative"
+                    headline="Houston, we've got a problem here!"
+                    showIcon
+                  >
+                    <div className="flex items-center flex-row">
+                      <span>
+                        There was an error in fetching the latest latency data.
+                        <pre className="w-1/2">{queryResponse.data}</pre>
+                      </span>
+                      <div className="flex items-center flex-row ml-xs">
+                        <Button
+                          className="mr-xs"
+                          onClick={checkDatabaseLatency}
+                          isLoading={queryResponse.isLoading}
+                          loadingText="Measuring Latencies..."
+                        >
+                          Re-check Database Latency
+                        </Button>
+                        <Button
+                          onClick={() => setLatencyButtonVisibility(true)}
+                        >
+                          Close
+                        </Button>
+                      </div>
+                    </div>
+                  </IndicatorCard>
+                </div>
+              ) : null}
+              <NeonDashboardLink className="mt-lg" />
+            </>
+          )}
+
+          <hr className="my-md" />
+          <div className="mt-4">
+            <Collapsible
+              triggerChildren={
+                <div className="flex font-bold items-center text-gray-600 text-lg">
+                  Data Connector Agents
+                  <IconTooltip
+                    message={
+                      'Data Connector Agents act as an intermediary abstraction between a data source and the Hasura GraphQL Engine.'
+                    }
+                  />
+                </div>
+              }
             >
-              Check Database Latency
-            </Button>
-          ) : null}
-          {showAccelerateProjectSection ? (
-            <div className="mt-xs">
-              <IndicatorCard
-                status="negative"
-                headline="Accelerate your Hasura Project"
-              >
-                <div className="flex items-center flex-row">
-                  <span>
-                    Databases marked with “Elevated Latency” indicate that it
-                    took us over 200 ms for this Hasura project to communicate
-                    with your database. These conditions generally happen when
-                    databases and projects are in geographically distant
-                    regions. This can cause API and subsequently application
-                    performance issues. We want your GraphQL APIs to be{' '}
-                    <b>lightning fast</b>, therefore we recommend that you
-                    either deploy your Hasura project in the same region as your
-                    database or select a database instance that&apos;s closer to
-                    where you&apos;ve deployed Hasura.
-                    <LearnMoreLink href={KNOW_MORE_PROJECT_REGION_UPDATE} />
-                  </span>
-                  <div className="flex items-center flex-row ml-xs">
-                    <Button
-                      className="mr-xs"
-                      onClick={checkDatabaseLatency}
-                      isLoading={queryResponse.isLoading}
-                      loadingText="Measuring Latencies..."
-                      icon={<FaRedoAlt />}
-                    >
-                      Re-check Database Latency
-                    </Button>
-                    <Button
-                      className="mr-xs"
-                      onClick={openUpdateProjectRegionPage}
-                      icon={<FaExternalLinkAlt />}
-                    >
-                      Update Project Region
-                    </Button>
-                  </div>
-                </div>
-              </IndicatorCard>
-            </div>
-          ) : null}
-          {showErrorIndicator ? (
-            <div className="mt-xs">
-              <IndicatorCard
-                status="negative"
-                headline="Houston, we've got a problem here!"
-                showIcon
-              >
-                <div className="flex items-center flex-row">
-                  <span>
-                    There was an error in fetching the latest latency data.
-                    <pre className="w-1/2">{queryResponse.data}</pre>
-                  </span>
-                  <div className="flex items-center flex-row ml-xs">
-                    <Button
-                      className="mr-xs"
-                      onClick={checkDatabaseLatency}
-                      isLoading={queryResponse.isLoading}
-                      loadingText="Measuring Latencies..."
-                    >
-                      Re-check Database Latency
-                    </Button>
-                    <Button onClick={() => setLatencyButtonVisibility(true)}>
-                      Close
-                    </Button>
-                  </div>
-                </div>
-              </IndicatorCard>
-            </div>
-          ) : null}
-          <NeonDashboardLink className="mt-lg" />
-
-          <div className="mt-lg">
-            <ManageAgents />
+              <ManageAgents />
+            </Collapsible>
           </div>
         </div>
       </Analytics>

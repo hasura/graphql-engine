@@ -12,10 +12,10 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
-import Harness.Services.PostgresDb qualified as Postgres
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
+import Harness.Services.Database.Postgres qualified as Postgres
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (permitTeardownFail)
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
@@ -72,12 +72,8 @@ authorsTable tableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
-  cleanupEventTriggersWhenSourceRemoved opts
-
-cleanupEventTriggersWhenSourceRemoved :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-cleanupEventTriggersWhenSourceRemoved opts =
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests =
   describe "removing a source with event trigger via replace_metadata should also remove the event trigger related stuffs (hdb_catalog.event_log)" do
     it "remove source via replace_metadata, check that the event_log table is removed as well" $
       \(testEnvironment, (_, _)) -> do
@@ -100,7 +96,7 @@ cleanupEventTriggersWhenSourceRemoved opts =
 
         -- Checking if the replace_metadata was successful
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postMetadata testEnvironment replaceMetadata)
           expectedResponse
 

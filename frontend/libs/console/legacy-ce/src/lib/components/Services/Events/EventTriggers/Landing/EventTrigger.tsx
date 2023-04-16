@@ -54,7 +54,7 @@ insert_user(objects: [{name: "testuser"}] ){
 
     return (
       <Button
-        data-test="data-create-trigger"
+        data-testid="data-create-trigger"
         mode="primary"
         type="submit"
         className="ml-md"

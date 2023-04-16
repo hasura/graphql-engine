@@ -39,6 +39,8 @@ module Database.PG.Query.Connection
     lenientDecodeUtf8,
     PGErrInternal (..),
     PGStmtErrDetail (..),
+    describePrepared,
+    PreparedDescription (..),
   )
 where
 
@@ -567,3 +569,39 @@ execMulti pgConn (Template t) convF = do
   withExceptT PGIUnexpected $ convF resOk
   where
     PGConn conn _ cancelable _ _ _ _ _ _ = pgConn
+
+-- | Extract the description of a prepared statement.
+describePrepared ::
+  PGConn ->
+  ByteString ->
+  ExceptT PGErrInternal IO (PreparedDescription PQ.Oid)
+describePrepared pgConn name = do
+  resOk <- retryOnConnErr pgConn $ do
+    mRes <-
+      bool lift (cancelOnAsync (pgPQConn pgConn)) (pgCancel pgConn) $
+        PQ.describePrepared (pgPQConn pgConn) name
+    checkResult (pgPQConn pgConn) mRes
+
+  let res = getPQRes resOk
+  lift $ do
+    numberOfParams <- PQ.nparams res
+    numberOfFields <- PQ.nfields res
+    PreparedDescription
+      <$> traverse (PQ.paramtype res) [0 .. (numberOfParams - 1)]
+      <*> traverse
+        ( \i ->
+            (,)
+              <$> PQ.fname res i
+              <*> PQ.ftype res i
+        )
+        [0 .. (numberOfFields - 1)]
+
+-- | The description of a prepared statement.
+--   See "PQdescribePrepared" in <https://www.postgresql.org/docs/current/libpq-exec.html> for more information.
+data PreparedDescription typ = PreparedDescription
+  { -- | input parameters
+    pd_paramtype :: [typ],
+    -- | output columns
+    pd_fname_ftype :: [(Maybe ByteString, typ)]
+  }
+  deriving stock (Eq, Show)

@@ -21,6 +21,7 @@ module Hasura.RQL.DDL.Warnings
     runMetadataWarnings,
     mkSuccessResponseWithWarnings,
     successMsgWithWarnings,
+    WarningCode (..),
   )
 where
 
@@ -74,18 +75,31 @@ instance ToJSON AllowWarnings where
       toBool AllowWarnings = True
       toBool NoAllowWarnings = False
 
+data WarningCode
+  = WCSourceCleanupFailed
+  | WCIllegalEventTriggerName
+  | WCTimeLimitExceededSystemLimit
+  deriving (Eq, Ord)
+
+instance ToJSON WarningCode where
+  toJSON WCIllegalEventTriggerName = "illegal-event-trigger-name"
+  toJSON WCTimeLimitExceededSystemLimit = "time-limit-exceeded-system-limit"
+  toJSON WCSourceCleanupFailed = "source-cleanup-failed"
+
 data MetadataWarning = MetadataWarning
-  { _mwMetadataObj :: MetadataObjId,
+  { _mwCode :: WarningCode,
+    _mwMetadataObj :: MetadataObjId,
     _mwMessage :: Text
   }
   deriving (Eq, Ord)
 
 instance ToJSON MetadataWarning where
-  toJSON (MetadataWarning mObj msg) =
+  toJSON (MetadataWarning code mObj msg) =
     Aeson.object
       [ "message" .= msg,
         "type" .= moiTypeName mObj,
-        "name" .= moiName mObj
+        "name" .= moiName mObj,
+        "code" .= code
       ]
 
 type MetadataWarnings = Seq MetadataWarning

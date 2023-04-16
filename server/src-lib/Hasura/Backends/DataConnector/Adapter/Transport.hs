@@ -4,14 +4,16 @@ module Hasura.Backends.DataConnector.Adapter.Transport () where
 
 --------------------------------------------------------------------------------
 
+import Control.Concurrent.STM
 import Control.Exception.Safe (throwIO)
 import Control.Monad.Trans.Control
 import Data.Aeson qualified as J
 import Data.Text.Extended ((<>>))
 import Hasura.Backends.DataConnector.Adapter.Execute (DataConnectorPreparedQuery (..), encodePreparedQueryToJsonText)
 import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig (..))
-import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), AgentClientT, runAgentClientT)
-import Hasura.Base.Error (QErr)
+import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), AgentClientT, AgentLicenseKey (..), runAgentClientT)
+import Hasura.Base.Error (QErr (..))
+import Hasura.CredentialCache
 import Hasura.EncJSON (EncJSON)
 import Hasura.GraphQL.Execute.Backend (DBStepInfo (..), OnBaseMonad (..), arResult)
 import Hasura.GraphQL.Logging qualified as HGL
@@ -50,18 +52,30 @@ runDBQuery' ::
   RootFieldAlias ->
   UserInfo ->
   Logger Hasura ->
+  Maybe (CredentialCache AgentLicenseKey) ->
   SourceConfig ->
-  OnBaseMonad AgentClientT (Maybe (AnyBackend HGL.ExecutionStats), a) ->
+  OnBaseMonad AgentClientT (Maybe (AnyBackend HGL.ExecutionStats), EncJSON) ->
   Maybe DataConnectorPreparedQuery ->
   ResolvedConnectionTemplate 'DataConnector ->
-  m (DiffTime, a)
-runDBQuery' requestId query fieldName _userInfo logger SourceConfig {..} action queryRequest _ = do
+  m (DiffTime, EncJSON)
+runDBQuery' requestId query fieldName _userInfo logger licenseKeyCacheMaybe SourceConfig {..} action queryRequest _ = do
+  agentAuthKey <-
+    for licenseKeyCacheMaybe \licenseKeyCache -> do
+      (key, _requestKeyRefresh) <- liftIO $ atomically $ getCredential licenseKeyCache
+      -- TODO: If the license key has expired or is otherwise invalid, request a key refresh
+      pure key
+
+  -- TODO: Re-introduce this case statement once we no longer want to
+  -- allow CE to attempt GDC requests.
+  -- case (_cLicensing _scCapabilities, agentAuthKey) of
+  --  (Just _, Nothing) -> throw401 "EE License Key Required."
+  --  _ -> do
   void $ HGL.logQueryLog logger $ mkQueryLog query fieldName queryRequest requestId
   withElapsedTime
     . Tracing.newSpan ("Data Connector backend query for root field " <>> fieldName)
-    . flip runAgentClientT (AgentClientContext logger _scEndpoint _scManager _scTimeoutMicroseconds)
-    . fmap snd
+    . flip runAgentClientT (AgentClientContext logger _scEndpoint _scManager _scTimeoutMicroseconds agentAuthKey)
     . runOnBaseMonad
+    . fmap snd
     $ action
 
 mkQueryLog ::
@@ -84,11 +98,23 @@ runDBQueryExplain' ::
     MonadError QErr m,
     Tracing.MonadTrace m
   ) =>
+  Maybe (CredentialCache AgentLicenseKey) ->
   DBStepInfo 'DataConnector ->
   m EncJSON
-runDBQueryExplain' (DBStepInfo _ SourceConfig {..} _ action _) =
-  flip runAgentClientT (AgentClientContext nullLogger _scEndpoint _scManager _scTimeoutMicroseconds) $
-    fmap arResult (runOnBaseMonad action)
+runDBQueryExplain' licenseKeyCacheMaybe (DBStepInfo _ SourceConfig {..} _ action _) = do
+  agentAuthKey <-
+    for licenseKeyCacheMaybe \licenseKeyCache -> do
+      (key, _requestKeyRefresh) <- liftIO $ atomically $ getCredential licenseKeyCache
+      -- TODO: If the license key has expired or is otherwise invalid, request a key refresh
+      pure key
+  -- TODO: Re-introduce this case statement once we no longer want to
+  -- allow CE to attempt GDC requests.
+  -- case (_cLicensing _scCapabilities, agentAuthKey) of
+  --   (Just _, Nothing) -> throw401 "EE License Key Required."
+  --   _ ->
+  flip runAgentClientT (AgentClientContext nullLogger _scEndpoint _scManager _scTimeoutMicroseconds agentAuthKey)
+    . fmap arResult
+    $ runOnBaseMonad action
 
 runDBMutation' ::
   ( MonadIO m,
@@ -102,15 +128,27 @@ runDBMutation' ::
   RootFieldAlias ->
   UserInfo ->
   Logger Hasura ->
+  Maybe (CredentialCache AgentLicenseKey) ->
   SourceConfig ->
   OnBaseMonad AgentClientT a ->
   Maybe DataConnectorPreparedQuery ->
   ResolvedConnectionTemplate 'DataConnector ->
   m (DiffTime, a)
-runDBMutation' requestId query fieldName _userInfo logger SourceConfig {..} action queryRequest _ = do
+runDBMutation' requestId query fieldName _userInfo logger licenseKeyCacheMaybe SourceConfig {..} action queryRequest _ = do
+  agentAuthKey <-
+    for licenseKeyCacheMaybe \licenseKeyCache -> do
+      (key, _requestKeyRefresh) <- liftIO $ atomically $ getCredential licenseKeyCache
+      -- TODO: If the license key has expired or is otherwise invalid, request a key refresh
+      pure key
+
+  -- TODO: Re-introduce this case statement once we no longer want to
+  -- allow CE to attempt GDC requests.
+  -- case (_cLicensing _scCapabilities, agentAuthKey) of
+  --   (Just _, Nothing) -> throw401 "EE License Key Required."
+  --   _ -> do
   void $ HGL.logQueryLog logger $ mkQueryLog query fieldName queryRequest requestId
   withElapsedTime
     . Tracing.newSpan ("Data Connector backend mutation for root field " <>> fieldName)
-    . flip runAgentClientT (AgentClientContext logger _scEndpoint _scManager _scTimeoutMicroseconds)
+    . flip runAgentClientT (AgentClientContext logger _scEndpoint _scManager _scTimeoutMicroseconds agentAuthKey)
     . runOnBaseMonad
     $ action

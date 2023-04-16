@@ -37,9 +37,10 @@ import Data.List qualified as L
 import Data.List.Extended qualified as L
 import Data.Text qualified as T
 import Data.Text.Conversions (UTF8 (..), decodeText)
+import Hasura.App.State qualified as State
 import Hasura.HTTP
 import Hasura.Logging
-import Hasura.LogicalModel.Cache (LogicalModelInfo (_lmiArguments))
+import Hasura.NativeQuery.Cache (NativeQueryInfo (_nqiArguments))
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Common
@@ -52,6 +53,8 @@ import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as Any
 import Hasura.SQL.Backend (BackendType)
 import Hasura.SQL.Tag
+import Hasura.Server.AppStateRef qualified as HGE
+import Hasura.Server.Init.Config
 import Hasura.Server.Telemetry.Counters (dumpServiceTimingMetrics)
 import Hasura.Server.Telemetry.Types
 import Hasura.Server.Types
@@ -127,46 +130,52 @@ telemetryUrl = "https://telemetry.hasura.io/v1/http"
 -- hours. The send time depends on when the server was started and will
 -- naturally drift.
 runTelemetry ::
+  forall m impl.
+  ( MonadIO m,
+    State.HasAppEnv m
+  ) =>
   Logger Hasura ->
-  HTTP.Manager ->
-  -- | an action that always returns the latest schema cache
-  IO SchemaCache ->
+  -- | an action that always returns the latest schema cache ref
+  HGE.AppStateRef impl ->
   MetadataDbId ->
-  InstanceId ->
   PGVersion ->
-  HashSet ExperimentalFeature ->
-  IO void
-runTelemetry (Logger logger) manager getSchemaCache metadataDbUid instanceId pgVersion experimentalFeatures = do
-  let options = wreqOptions manager []
-  forever $ do
-    schemaCache <- getSchemaCache
-    serviceTimings <- dumpServiceTimingMetrics
-    ci <- CI.getCI
+  m Void
+runTelemetry (Logger logger) appStateRef metadataDbUid pgVersion = do
+  State.AppEnv {..} <- State.askAppEnv
+  let options = wreqOptions appEnvManager []
+  forever $ liftIO $ do
+    telemetryStatus <- State.acEnableTelemetry <$> HGE.getAppContext appStateRef
+    case telemetryStatus of
+      TelemetryEnabled -> do
+        schemaCache <- HGE.getSchemaCache appStateRef
+        serviceTimings <- dumpServiceTimingMetrics
+        experimentalFeatures <- State.acExperimentalFeatures <$> HGE.getAppContext appStateRef
+        ci <- CI.getCI
+        -- Creates a telemetry payload for a specific backend.
+        let telemetryForSource :: forall (b :: BackendType). HasTag b => SourceInfo b -> TelemetryPayload
+            telemetryForSource =
+              mkTelemetryPayload
+                metadataDbUid
+                appEnvInstanceId
+                currentVersion
+                pgVersion
+                ci
+                serviceTimings
+                (scRemoteSchemas schemaCache)
+                (scActions schemaCache)
+                experimentalFeatures
+            telemetries =
+              map
+                (\sourceinfo -> (Any.dispatchAnyBackend @HasTag) sourceinfo telemetryForSource)
+                (HM.elems (scSources schemaCache))
+            payloads = A.encode <$> telemetries
 
-    -- Creates a telemetry payload for a specific backend.
-    let telemetryForSource :: forall (b :: BackendType). HasTag b => SourceInfo b -> TelemetryPayload
-        telemetryForSource =
-          mkTelemetryPayload
-            metadataDbUid
-            instanceId
-            currentVersion
-            pgVersion
-            ci
-            serviceTimings
-            (scRemoteSchemas schemaCache)
-            (scActions schemaCache)
-            experimentalFeatures
-        telemetries =
-          map
-            (\sourceinfo -> (Any.dispatchAnyBackend @HasTag) sourceinfo telemetryForSource)
-            (HM.elems (scSources schemaCache))
-        payloads = A.encode <$> telemetries
-
-    for_ payloads $ \payload -> do
-      logger $ debugLBS $ "metrics_info: " <> payload
-      resp <- try $ Wreq.postWith options (T.unpack telemetryUrl) payload
-      either logHttpEx handleHttpResp resp
-    C.sleep $ days 1
+        for_ payloads $ \payload -> do
+          logger $ debugLBS $ "metrics_info: " <> payload
+          resp <- try $ Wreq.postWith options (T.unpack telemetryUrl) payload
+          either logHttpEx handleHttpResp resp
+        C.sleep $ days 1
+      TelemetryDisabled -> C.sleep $ seconds 1
   where
     logHttpEx :: HTTP.HttpException -> IO ()
     logHttpEx ex = do
@@ -258,7 +267,7 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
       _mtRemoteSchemas = Map.size <$> remoteSchemaMap
       _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . _fiSystemDefined) sourceFunctionCache
       _mtActions = computeActionsMetrics <$> actionCache
-      _mtLogicalModels = countLogicalModels (HM.elems $ _siLogicalModels sourceInfo)
+      _mtNativeQueries = countNativeQueries (HM.elems $ _siNativeQueries sourceInfo)
    in Metrics {..}
   where
     sourceTableCache = _siTables sourceInfo
@@ -271,13 +280,13 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
     permsOfTbl :: TableInfo b -> [(RoleName, RolePermInfo b)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap
 
-    countLogicalModels :: [LogicalModelInfo b] -> LogicalModelsMetrics
-    countLogicalModels =
+    countNativeQueries :: [NativeQueryInfo b] -> NativeQueriesMetrics
+    countNativeQueries =
       foldMap
         ( \logimo ->
-            if null (_lmiArguments logimo)
-              then mempty {_lmmWithoutParameters = 1}
-              else mempty {_lmmWithParameters = 1}
+            if null (_nqiArguments logimo)
+              then mempty {_nqmWithoutParameters = 1}
+              else mempty {_nqmWithParameters = 1}
         )
 
 -- | Compute the relevant metrics for actions from the action cache.

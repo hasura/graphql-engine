@@ -1,22 +1,29 @@
 module Hasura.Server.AppStateRef
   ( -- * AppState
-    AppStateRef (..),
-    AppState (..),
+    AppStateRef,
     initialiseAppStateRef,
     withSchemaCacheUpdate,
-    readAppContextRef,
-    readSchemaCacheRef,
+    withAppContextUpdate,
+    updateAppStateRef,
 
     -- * TLS AllowList reference
     TLSAllowListRef,
     createTLSAllowListRef,
     readTLSAllowList,
 
+    -- * Metrics config reference
+    MetricsConfigRef,
+    createMetricsConfigRef,
+    readMetricsConfig,
+
     -- * Utility
     getSchemaCache,
     getSchemaCacheWithVersion,
+    getRebuildableSchemaCacheWithVersion,
+    readAppContextRef,
     getAppContext,
     logInconsistentMetadata,
+    withSchemaCacheReadUpdate,
   )
 where
 
@@ -28,6 +35,7 @@ import Hasura.App.State
 import Hasura.Logging qualified as L
 import Hasura.Prelude hiding (get, put)
 import Hasura.RQL.DDL.Schema
+import Hasura.RQL.Types.Common (MetricsConfig)
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.SchemaCache
@@ -80,19 +88,23 @@ data AppState impl = AppState
 -- newly minted 'SchemaCacheRef'.
 initialiseAppStateRef ::
   MonadIO m =>
-  TLSAllowListRef impl ->
+  TLSAllowListRef ->
+  Maybe MetricsConfigRef ->
   ServerMetrics ->
   RebuildableSchemaCache ->
   RebuildableAppContext impl ->
   m (AppStateRef impl)
-initialiseAppStateRef (TLSAllowListRef tlsAllowListRef) serverMetrics rebuildableSchemaCache rebuildableAppCtx = liftIO $ do
+initialiseAppStateRef (TLSAllowListRef tlsAllowListRef) metricsConfigRefM serverMetrics rebuildableSchemaCache rebuildableAppCtx = liftIO do
   cacheLock <- newMVar ()
   let appState = AppState (rebuildableSchemaCache, initSchemaCacheVer) rebuildableAppCtx
   cacheCell <- newIORef appState
   let metadataVersionGauge = smSchemaCacheMetadataResourceVersion serverMetrics
   updateMetadataVersionGauge metadataVersionGauge rebuildableSchemaCache
-  liftIO $ writeIORef tlsAllowListRef (Right cacheCell)
-  pure $ AppStateRef cacheLock cacheCell metadataVersionGauge
+  let ref = AppStateRef cacheLock cacheCell metadataVersionGauge
+  liftIO $ writeIORef tlsAllowListRef (scTlsAllowlist <$> getSchemaCache ref)
+  for_ metricsConfigRefM \(MetricsConfigRef metricsConfigRef) ->
+    liftIO $ writeIORef metricsConfigRef (scMetricsConfig <$> getSchemaCache ref)
+  pure ref
 
 -- | Set the 'AppStateRef' to the 'RebuildableSchemaCache' produced by the
 -- given action.
@@ -135,13 +147,49 @@ withSchemaCacheUpdate (AppStateRef lock cacheRef metadataVersionGauge) logger mL
 
     pure res
 
+withSchemaCacheReadUpdate ::
+  (MonadIO m, MonadBaseControl IO m) =>
+  (AppStateRef impl) ->
+  L.Logger L.Hasura ->
+  Maybe (STM.TVar Bool) ->
+  (RebuildableSchemaCache -> m (a, RebuildableSchemaCache)) ->
+  m a
+withSchemaCacheReadUpdate (AppStateRef lock cacheRef metadataVersionGauge) logger mLogCheckerTVar action =
+  withMVarMasked lock $ const do
+    (rebuildableSchemaCache, _) <- asSchemaCache <$> liftIO (readIORef cacheRef)
+    (!res, !newSC) <- action rebuildableSchemaCache
+    liftIO do
+      -- update schemacache in IO reference
+      modifyIORef' cacheRef $ \appState ->
+        let !newVer = incSchemaCacheVer (snd $ asSchemaCache appState)
+         in appState {asSchemaCache = (newSC, newVer)}
+
+      -- update metric with new metadata version
+      updateMetadataVersionGauge metadataVersionGauge newSC
+
+      let inconsistentObjectsList = scInconsistentObjs $ lastBuiltSchemaCache newSC
+          logInconsistentMetadata' = logInconsistentMetadata logger inconsistentObjectsList
+      -- log any inconsistent objects only once and not everytime this method is called
+      case mLogCheckerTVar of
+        Nothing -> logInconsistentMetadata'
+        Just logCheckerTVar -> do
+          logCheck <- STM.readTVarIO logCheckerTVar
+          if null inconsistentObjectsList && logCheck
+            then do
+              STM.atomically $ STM.writeTVar logCheckerTVar False
+            else do
+              unless (logCheck || null inconsistentObjectsList) $ do
+                STM.atomically $ STM.writeTVar logCheckerTVar True
+                logInconsistentMetadata'
+    pure res
+
 -- | Read the contents of the 'AppStateRef' to get the latest 'RebuildableAppContext'
 readAppContextRef :: AppStateRef impl -> IO (RebuildableAppContext impl)
 readAppContextRef scRef = asAppCtx <$> readIORef (_scrCache scRef)
 
 -- | Read the contents of the 'AppStateRef' to get the latest 'RebuildableSchemaCache' and 'SchemaCacheVer'
-readSchemaCacheRef :: AppStateRef impl -> IO (RebuildableSchemaCache, SchemaCacheVer)
-readSchemaCacheRef scRef = asSchemaCache <$> readIORef (_scrCache scRef)
+getRebuildableSchemaCacheWithVersion :: AppStateRef impl -> IO (RebuildableSchemaCache, SchemaCacheVer)
+getRebuildableSchemaCacheWithVersion scRef = asSchemaCache <$> readIORef (_scrCache scRef)
 
 --------------------------------------------------------------------------------
 -- TLS Allow List
@@ -157,33 +205,51 @@ readSchemaCacheRef scRef = asSchemaCache <$> readIORef (_scrCache scRef)
 -- that would refer to the list in the schema cache. Now, instead, we only
 -- create one Manager, which uses a 'TLSAllowListRef' to dynamically access the
 -- Allow List.
-newtype TLSAllowListRef impl
-  = TLSAllowListRef
-      ( IORef (Either [TlsAllow] (IORef (AppState impl)))
-      )
+newtype TLSAllowListRef = TLSAllowListRef (IORef (IO [TlsAllow]))
 
 -- | Creates a new 'TLSAllowListRef' that points to the given list.
-createTLSAllowListRef :: [TlsAllow] -> IO (TLSAllowListRef impl)
-createTLSAllowListRef = fmap TLSAllowListRef . newIORef . Left
+createTLSAllowListRef :: [TlsAllow] -> IO TLSAllowListRef
+createTLSAllowListRef = fmap TLSAllowListRef . newIORef . pure
 
 -- | Reads the TLS AllowList by attempting to read from the schema cache, and
 -- defaulting to the list given when the ref was created.
-readTLSAllowList :: TLSAllowListRef impl -> IO [TlsAllow]
-readTLSAllowList (TLSAllowListRef ref) =
-  readIORef ref >>= \case
-    Right scRef -> scTlsAllowlist . lastBuiltSchemaCache . fst . asSchemaCache <$> readIORef scRef
-    Left list -> pure list
+readTLSAllowList :: TLSAllowListRef -> IO [TlsAllow]
+readTLSAllowList (TLSAllowListRef ref) = join $ readIORef ref
+
+--------------------------------------------------------------------------------
+-- Metrics config
+
+-- | Reference to the metadata's 'MetricsConfig'.
+--
+-- Similarly to the 'TLSAllowListRef', this exists to break a
+-- chicken-and-egg problem in the initialisation of the engine: the
+-- implementation of several behaviour classes requires access to said
+-- config, but those classes are implemented on the app monad, that
+-- doesn't have access to the schema cache. This small type allows the
+-- app monad to have access to the config, even before we build the
+-- first schema cache.
+newtype MetricsConfigRef
+  = MetricsConfigRef (IORef (IO MetricsConfig))
+
+-- | Creates a new 'MetricsConfigRef' that points to the given config.
+createMetricsConfigRef :: MetricsConfig -> IO (MetricsConfigRef)
+createMetricsConfigRef = fmap MetricsConfigRef . newIORef . pure
+
+-- | Reads the TLS AllowList by attempting to read from the schema cache, and
+-- defaulting to the list given when the ref was created.
+readMetricsConfig :: MetricsConfigRef -> IO MetricsConfig
+readMetricsConfig (MetricsConfigRef ref) = join $ readIORef ref
 
 --------------------------------------------------------------------------------
 -- Utility functions
 
 -- | Read the latest 'SchemaCache' from the 'AppStateRef'.
 getSchemaCache :: AppStateRef impl -> IO SchemaCache
-getSchemaCache asRef = lastBuiltSchemaCache . fst <$> readSchemaCacheRef asRef
+getSchemaCache asRef = lastBuiltSchemaCache . fst <$> getRebuildableSchemaCacheWithVersion asRef
 
 -- | Read the latest 'SchemaCache' and its version from the 'AppStateRef'.
 getSchemaCacheWithVersion :: AppStateRef impl -> IO (SchemaCache, SchemaCacheVer)
-getSchemaCacheWithVersion scRef = first lastBuiltSchemaCache <$> readSchemaCacheRef scRef
+getSchemaCacheWithVersion scRef = fmap (\(sc, ver) -> (lastBuiltSchemaCache sc, ver)) $ getRebuildableSchemaCacheWithVersion scRef
 
 -- | Read the latest 'AppContext' from the 'AppStateRef'.
 getAppContext :: AppStateRef impl -> IO AppContext
@@ -203,4 +269,50 @@ logInconsistentMetadata logger objs =
 updateMetadataVersionGauge :: MonadIO m => Gauge -> RebuildableSchemaCache -> m ()
 updateMetadataVersionGauge metadataVersionGauge schemaCache = do
   let metadataVersion = scMetadataResourceVersion . lastBuiltSchemaCache $ schemaCache
-  liftIO $ traverse_ (Gauge.set metadataVersionGauge . getMetadataResourceVersion) metadataVersion
+  liftIO $ Gauge.set metadataVersionGauge $ getMetadataResourceVersion metadataVersion
+
+-- | Set the 'RebuildableAppContext' to the 'AppStateRef' produced by the given
+-- action.
+--
+-- An internal lock ensures that at most one update to the 'AppStateRef' may
+-- proceed at a time.
+withAppContextUpdate ::
+  (MonadIO m, MonadBaseControl IO m) =>
+  AppStateRef impl ->
+  m (a, RebuildableAppContext impl) ->
+  m a
+withAppContextUpdate (AppStateRef lock cacheRef _) action =
+  withMVarMasked lock $ \() -> do
+    (!res, !newCtx) <- action
+    liftIO $ do
+      -- update app ctx in IO reference
+      modifyIORef' cacheRef $ \appState -> appState {asAppCtx = newCtx}
+    return res
+
+-- | Set the 'AppStateRef', atomically, to the ('RebuildableSchemaCache',
+-- 'RebuildableAppContext') produced by the given action.
+--
+-- An internal lock ensures that at most one update to the 'AppStateRef' may
+-- proceed at a time.
+updateAppStateRef ::
+  (MonadIO m, MonadBaseControl IO m) =>
+  AppStateRef impl ->
+  L.Logger L.Hasura ->
+  RebuildableAppContext impl ->
+  RebuildableSchemaCache ->
+  m ()
+updateAppStateRef (AppStateRef lock cacheRef metadataVersionGauge) logger !newAppCtx !newSC =
+  withMVarMasked lock $ const do
+    liftIO do
+      -- update schemacache in IO reference
+      modifyIORef' cacheRef $ \appState ->
+        let !newVer = incSchemaCacheVer (snd $ asSchemaCache appState)
+         in appState {asSchemaCache = (newSC, newVer), asAppCtx = newAppCtx}
+
+      -- update metric with new metadata version
+      updateMetadataVersionGauge metadataVersionGauge newSC
+
+      let inconsistentObjectsList = scInconsistentObjs $ lastBuiltSchemaCache newSC
+          logInconsistentMetadata' = logInconsistentMetadata logger inconsistentObjectsList
+      -- log any inconsistent objects everytime this method is called
+      logInconsistentMetadata'

@@ -18,6 +18,7 @@ where
 
 import Autodocodec (object, optionalField', optionalFieldWithDefault', optionalFieldWithDefaultWith', requiredField', (.=))
 import Autodocodec.Class (HasCodec (codec))
+import Autodocodec.Extended (typeableName)
 import Control.Lens (makeLenses)
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
@@ -27,7 +28,6 @@ import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Text qualified as T
 import Data.Typeable (Typeable)
 import Hasura.Base.Error
-import Hasura.Metadata.DTO.Utils (typeableName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (HeaderConf (..))
 import Hasura.RQL.Types.Common

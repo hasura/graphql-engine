@@ -12,6 +12,7 @@ export const getPlaceholder = (type: TableColumn['data_type']) => {
     case dataSource.columnDataTypes.DATE:
       return getISODatePart();
     case dataSource.columnDataTypes.TIME:
+    case 'time':
       // eslint-disable-next-line no-case-declarations
       const time = getISOTimePart();
       return `${time}Z or ${time}+05:30`;

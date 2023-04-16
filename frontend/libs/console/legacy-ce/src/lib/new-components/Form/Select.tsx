@@ -31,6 +31,10 @@ export type SelectProps = FieldWrapperPassThroughProps & {
    * The value of the field
    */
   value?: string;
+  /**
+   * The input field classes
+   */
+  selectClassName?: string;
 };
 
 export const Select: React.VFC<SelectProps> = ({
@@ -40,6 +44,7 @@ export const Select: React.VFC<SelectProps> = ({
   dataTest,
   disabled = false,
   value: val,
+  selectClassName,
   ...wrapperProps
 }) => {
   const {
@@ -60,7 +65,8 @@ export const Select: React.VFC<SelectProps> = ({
           watchValue && watchValue !== '' ? 'text-black' : 'text-gray-500',
           disabled
             ? 'cursor-not-allowed bg-gray-200 border-gray-200 hover:border-gray-200'
-            : 'hover:border-gray-400'
+            : 'hover:border-gray-400',
+          selectClassName
         )}
         disabled={disabled}
         value={val || watchValue}

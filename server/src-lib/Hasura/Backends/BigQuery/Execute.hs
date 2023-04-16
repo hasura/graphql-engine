@@ -87,6 +87,7 @@ data OutputValue
   | BoolOutputValue Bool
   | ArrayOutputValue (Vector OutputValue)
   | RecordOutputValue (InsOrdHashMap FieldNameText OutputValue)
+  | JsonOutputValue Aeson.Value
   | NullOutputValue -- TODO: Consider implications.
   deriving (Show, Eq, Generic)
 
@@ -108,6 +109,7 @@ instance Aeson.ToJSON OutputValue where
     BoolOutputValue i -> Aeson.toJSON i
     IntegerOutputValue i -> Aeson.toJSON i
     ArrayOutputValue vector -> Aeson.toJSON vector
+    JsonOutputValue value -> value
     RecordOutputValue record -> Aeson.toJSON record
 
 data ExecuteReader = ExecuteReader
@@ -141,13 +143,21 @@ executeProblemMessage :: ShowDetails -> ExecuteProblem -> Text
 executeProblemMessage showDetails = \case
   GetJobDecodeProblem err -> "Fetching BigQuery job status, cannot decode HTTP response; " <> tshow err
   CreateQueryJobDecodeProblem err -> "Creating BigQuery job, cannot decode HTTP response: " <> tshow err
-  ExecuteRunBigQueryProblem _ -> "Cannot execute BigQuery request"
-  InsertDatasetDecodeProblem _ -> "Cannot create BigQuery dataset"
+  ExecuteRunBigQueryProblem err ->
+    "Cannot execute BigQuery request" <> showErr err
+  InsertDatasetDecodeProblem err ->
+    "Cannot create BigQuery dataset" <> showErr err
   RESTRequestNonOK status body ->
     let summary = "BigQuery HTTP request failed with status " <> tshow (statusCode status) <> " " <> tshow (statusMessage status)
      in case showDetails of
           HideDetails -> summary
           InsecurelyShowDetails -> summary <> " and body:\n" <> LT.toStrict (LT.decodeUtf8 (Aeson.encode body))
+  where
+    showErr :: forall a. Show a => a -> Text
+    showErr err =
+      case showDetails of
+        HideDetails -> ""
+        InsecurelyShowDetails -> ":\n" <> tshow err
 
 -- | Execute monad; as queries are performed, the record sets are
 -- stored in the map.
@@ -178,6 +188,7 @@ data BigQueryType
   | TIMESTAMP
   | DATETIME
   | TIME
+  | JSON
   | BIGDECIMAL
   deriving (Show, Eq)
 
@@ -217,6 +228,7 @@ data BigQueryFieldType
   | FieldGEOGRAPHY
   | FieldDECIMAL
   | FieldBIGDECIMAL
+  | FieldJSON
   | FieldSTRUCT (Vector BigQueryField)
   deriving (Show)
 
@@ -326,6 +338,7 @@ valueType =
     TimeValue {} -> TIME
     DateValue {} -> DATE
     TimestampValue {} -> TIMESTAMP
+    JsonValue {} -> JSON
     ArrayValue values ->
       ARRAY
         ( maybe
@@ -364,6 +377,7 @@ valueToBigQueryJson = go
         GeographyValue (Geography i) -> Aeson.object ["value" .= i]
         StringValue i -> Aeson.object ["value" .= Aeson.String i]
         BytesValue i -> Aeson.object ["value" .= i]
+        JsonValue i -> Aeson.object ["value" .= i]
         BoolValue i ->
           Aeson.object
             [ "value"
@@ -766,6 +780,16 @@ parseBigQueryValue isNullable fieldType object =
     FieldBYTES ->
       has_v isNullable (fmap BytesOutputValue . Aeson.parseJSON) object
         Aeson.<?> Aeson.Key "BYTES"
+    FieldJSON ->
+      has_v isNullable (fmap JsonOutputValue . parseJson) object
+        Aeson.<?> Aeson.Key "JSON"
+
+-- | This is a little unfortunate: in its JSON responses, BigQuery gives JSON
+-- fields as strings. So, to parse a JSON response, we need to parse it out of
+-- a JSON string type, hence the unintuitive type signature here.
+parseJson :: Aeson.Value -> Aeson.Parser Aeson.Value
+parseJson = Aeson.withText "JSON" \str ->
+  Aeson.eitherDecode (txtToLbs str) `onLeft` fail
 
 -- | Parse upstream timestamp value in epoch milliseconds and convert it to calendar date time format
 -- https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#timestamp_type
@@ -846,6 +870,7 @@ instance Aeson.ToJSON BigQueryType where
       DATE -> atomic "DATE"
       TIME -> atomic "TIME"
       DATETIME -> atomic "DATETIME"
+      JSON -> atomic "JSON"
       TIMESTAMP -> atomic "TIMESTAMP"
       FLOAT -> atomic "FLOAT"
       GEOGRAPHY -> atomic "GEOGRAPHY"
@@ -872,6 +897,7 @@ instance Aeson.FromJSON BigQueryField where
                   | flag == "FLOAT64" || flag == "FLOAT" -> pure FieldFLOAT
                   | flag == "BOOLEAN" || flag == "BOOL" -> pure FieldBOOL
                   | flag == "STRING" -> pure FieldSTRING
+                  | flag == "JSON" -> pure FieldJSON
                   | flag == "DATE" -> pure FieldDATE
                   | flag == "TIME" -> pure FieldTIME
                   | flag == "DATETIME" -> pure FieldDATETIME

@@ -26,11 +26,11 @@ import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.QueryTags
+import Hasura.QueryTags.Types
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
-import Hasura.RQL.Types.QueryTags
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (RequestId (..))
@@ -119,7 +119,7 @@ convertQuerySelSet
                       queryTagsAttributes = encodeQueryTags $ QTQuery $ QueryMetadata mReqId maybeOperationName rootFieldName parameterizedQueryHash
                       queryTagsComment = Tagged.untag $ createQueryTags @m queryTagsAttributes queryTagsConfig
                       (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsQueryDB db
-                  dbStepInfo <- flip runReaderT queryTagsComment $ mkDBQueryPlan @b userInfo env sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName
+                  dbStepInfo <- flip runReaderT queryTagsComment $ mkDBQueryPlan @b userInfo sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName
                   pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
             RFRemote rf -> do
               RemoteSchemaRootField remoteSchemaInfo resultCustomizer remoteField <- runVariableCache $ for rf $ resolveRemoteVariable userInfo

@@ -11,9 +11,9 @@ module Hasura.Backends.DataConnector.Adapter.Types
     scDataConnectorName,
     scEndpoint,
     scManager,
-    scSchema,
     scTemplate,
     scTimeoutMicroseconds,
+    scEnvironment,
     DataConnectorName,
     unDataConnectorName,
     mkDataConnectorName,
@@ -30,17 +30,21 @@ module Hasura.Backends.DataConnector.Adapter.Types
     ScalarType (..),
     mkScalarType,
     fromGQLType,
+    ExtraTableMetadata (..),
+    ExtraColumnMetadata (..),
   )
 where
 
-import Autodocodec (HasCodec (codec))
+import Autodocodec (HasCodec (codec), optionalField', requiredField', requiredFieldWith')
 import Autodocodec qualified as AC
+import Autodocodec.Extended (baseUrlCodec)
 import Control.Lens (makeLenses)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, genericParseJSON, genericToJSON)
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as J
-import Data.Aeson.Types (toJSONKeyText)
+import Data.Aeson.Types (parseEither, toJSONKeyText)
 import Data.Data (Typeable)
+import Data.Environment (Environment)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as Text
@@ -80,10 +84,22 @@ instance FromJSON ConnSourceConfig where
       Just _ -> ConnSourceConfig <$> o J..: "value" <*> o J..:? "template" <*> (o J..:? "timeout")
       Nothing -> ConnSourceConfig (API.Config o) Nothing <$> (o J..:? "timeout")
 
--- TODO: Write a proper codec, and use it to derive FromJSON and ToJSON
--- instances.
 instance HasCodec ConnSourceConfig where
-  codec = AC.named "DataConnectorConnConfiguration" $ placeholderCodecViaJSON
+  codec = AC.bimapCodec dec enc $ AC.possiblyJointEitherCodec withValueProp inlineConfig
+    where
+      withValueProp =
+        AC.object "DataConnectorConnSourceConfig" $
+          ConnSourceConfig
+            <$> requiredField' "value" AC..= value
+            <*> optionalField' "template" AC..= template
+            <*> optionalField' "timeout" AC..= timeout
+      inlineConfig = codec @API.Config
+
+      dec (Left config) = Right config
+      dec (Right config@(API.Config jsonObj)) =
+        parseEither (\o -> ConnSourceConfig config Nothing <$> (o J..:? "timeout")) jsonObj
+
+      enc = Left
 
 --------------------------------------------------------------------------------
 
@@ -100,6 +116,24 @@ sourceTimeoutMicroseconds = \case
   SourceTimeoutSeconds s -> s * 1000000
   SourceTimeoutMilliseconds m -> m * 1000
   SourceTimeoutMicroseconds u -> u
+
+instance HasCodec SourceTimeout where
+  codec =
+    AC.dimapCodec dec enc $
+      AC.disjointEitherCodec secondsCodec $
+        AC.disjointEitherCodec millisecondsCodec microsecondsCodec
+    where
+      secondsCodec = AC.object "DataConnectorSourceTimeoutSeconds" $ requiredFieldWith' "seconds" AC.scientificCodec
+      millisecondsCodec = AC.object "DataConnectorSourceTimeoutMilliseconds" $ requiredFieldWith' "milliseconds" AC.scientificCodec
+      microsecondsCodec = AC.object "DataConnectorSourceTimeoutMicroseconds" $ requiredFieldWith' "microseconds" AC.scientificCodec
+
+      dec (Left n) = SourceTimeoutSeconds $ round n
+      dec (Right (Left n)) = SourceTimeoutMilliseconds $ round n
+      dec (Right (Right n)) = SourceTimeoutMicroseconds $ round n
+
+      enc (SourceTimeoutSeconds n) = Left $ fromIntegral n
+      enc (SourceTimeoutMilliseconds n) = Right $ Left $ fromIntegral n
+      enc (SourceTimeoutMicroseconds n) = Right $ Right $ fromIntegral n
 
 instance FromJSON SourceTimeout where
   parseJSON = J.withObject "SourceTimeout" \o ->
@@ -123,21 +157,21 @@ data SourceConfig = SourceConfig
     _scConfig :: API.Config,
     _scTemplate :: Maybe Text, -- TODO: Use Parsed Kriti Template, specify template language
     _scCapabilities :: API.Capabilities,
-    _scSchema :: API.SchemaResponse,
     _scManager :: HTTP.Manager,
     _scTimeoutMicroseconds :: Maybe Int,
-    _scDataConnectorName :: DataConnectorName
+    _scDataConnectorName :: DataConnectorName,
+    _scEnvironment :: Environment
   }
 
 instance Eq SourceConfig where
-  SourceConfig ep1 capabilities1 config1 template1 schema1 _ timeout1 dcName1 == SourceConfig ep2 capabilities2 config2 template2 schema2 _ timeout2 dcName2 =
+  SourceConfig ep1 capabilities1 config1 template1 _ timeout1 dcName1 env1 == SourceConfig ep2 capabilities2 config2 template2 _ timeout2 dcName2 env2 =
     ep1 == ep2
       && capabilities1 == capabilities2
       && config1 == config2
       && template1 == template2
-      && schema1 == schema2
       && timeout1 == timeout2
       && dcName1 == dcName2
+      && env1 == env2
 
 instance Show SourceConfig where
   show _ = "SourceConfig"
@@ -176,6 +210,13 @@ data DataConnectorOptions = DataConnectorOptions
     _dcoDisplayName :: Maybe Text
   }
   deriving stock (Eq, Ord, Show, Generic)
+
+instance HasCodec DataConnectorOptions where
+  codec =
+    AC.object "DataConnectorOptions" $
+      DataConnectorOptions
+        <$> requiredFieldWith' "uri" baseUrlCodec AC..= _dcoUri
+        <*> optionalField' "display_name" AC..= _dcoDisplayName
 
 instance FromJSON DataConnectorOptions where
   parseJSON = genericParseJSON hasuraJSON
@@ -354,6 +395,20 @@ mkScalarType API.Capabilities {..} apiType@(API.ScalarType name) =
 fromGQLType :: GQL.Name -> API.ScalarType
 fromGQLType typeName =
   API.ScalarType $ GQL.unName typeName
+
+--------------------------------------------------------------------------------
+
+-- | This type captures backend-specific "extra" information about tables
+-- and is used on types like 'DBTableMetadata'
+data ExtraTableMetadata = ExtraTableMetadata
+  {_etmExtraColumnMetadata :: HashMap ColumnName ExtraColumnMetadata}
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
+
+data ExtraColumnMetadata = ExtraColumnMetadata
+  {_ecmValueGenerated :: Maybe API.ColumnValueGenerationStrategy}
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 
 --------------------------------------------------------------------------------
 

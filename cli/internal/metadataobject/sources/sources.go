@@ -24,12 +24,14 @@ const (
 )
 
 type SourceWithNormalFields struct {
-	Name          string    `yaml:"name"`
-	Kind          string    `yaml:"kind"`
-	Configuration yaml.Node `yaml:"configuration"`
-	QueryTags     yaml.Node `yaml:"query_tags,omitempty"`
-	Customization yaml.Node `yaml:"customization,omitempty"`
-	HealthCheck   yaml.Node `yaml:"health_check,omitempty"`
+	Name              string    `yaml:"name"`
+	Kind              string    `yaml:"kind"`
+	Configuration     yaml.Node `yaml:"configuration"`
+	QueryTags         yaml.Node `yaml:"query_tags,omitempty"`
+	Customization     yaml.Node `yaml:"customization,omitempty"`
+	HealthCheck       yaml.Node `yaml:"health_check,omitempty"`
+	CustomReturnTypes yaml.Node `yaml:"custom_return_types,omitempty"`
+	NativeQueries     yaml.Node `yaml:"native_queries,omitempty"`
 }
 type Source struct {
 	SourceWithNormalFields `yaml:",inline"`

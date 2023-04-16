@@ -214,7 +214,7 @@ dropDanglingSQLTrigger sourceConfig triggerName table ops =
 
 createTableEventTrigger ::
   MonadIO m =>
-  ServerConfigCtx ->
+  SQLGenCtx ->
   MSSQLSourceConfig ->
   TableName ->
   [ColumnInfo 'MSSQL] ->
@@ -223,7 +223,7 @@ createTableEventTrigger ::
   TriggerOpsDef 'MSSQL ->
   Maybe (PrimaryKey 'MSSQL (ColumnInfo 'MSSQL)) ->
   m (Either QErr ())
-createTableEventTrigger _serverConfigCtx sourceConfig table columns triggerName triggerOnReplication opsDefinition primaryKeyMaybe = do
+createTableEventTrigger _sqlGen sourceConfig table columns triggerName triggerOnReplication opsDefinition primaryKeyMaybe = do
   liftIO $
     runMSSQLSourceWriteTx sourceConfig $ do
       mkAllTriggersQ triggerName table triggerOnReplication columns opsDefinition primaryKeyMaybe
@@ -233,6 +233,7 @@ createMissingSQLTriggers ::
     MonadError QErr m,
     MonadBaseControl IO m
   ) =>
+  SQLGenCtx ->
   MSSQLSourceConfig ->
   TableName ->
   ([ColumnInfo 'MSSQL], Maybe (PrimaryKey 'MSSQL (ColumnInfo 'MSSQL))) ->
@@ -241,6 +242,7 @@ createMissingSQLTriggers ::
   TriggerOpsDef 'MSSQL ->
   m ()
 createMissingSQLTriggers
+  _serverConfigCtx
   sourceConfig
   table@(TableName tableNameText (SchemaName schemaText))
   (allCols, primaryKeyMaybe)

@@ -15,9 +15,11 @@ import {
   fetchAllOnboardingDataQuery,
   fetchAllOnboardingDataQueryVariables,
   oneClickDeploymentOnboardingShown,
+  useCaseExperimentOnboarding,
 } from './constants';
 import { WizardState } from './hooks/useWizardState';
 import { OnboardingResponseData, UserOnboarding } from './types';
+import { getLSItem, LS_KEYS } from '../../../utils';
 
 export function shouldShowOnboarding(onboardingData: UserOnboarding) {
   const userActivity = onboardingData?.activity;
@@ -30,7 +32,8 @@ export function shouldShowOnboarding(onboardingData: UserOnboarding) {
       'true' ||
     userActivity?.[templateSummaryRunQueryClickVariables.kind]?.value ===
       'true' ||
-    userActivity?.[oneClickDeploymentOnboardingShown.kind]?.value === 'true'
+    userActivity?.[oneClickDeploymentOnboardingShown.kind]?.value === 'true' ||
+    userActivity?.[useCaseExperimentOnboarding.kind]?.value === 'true'
   ) {
     return false;
   }
@@ -74,6 +77,9 @@ export function getWizardState(
   // transform the onboarding data if present, to a consumable format
   const transformedOnboardingData = onboardingDataTransformFn(onboardingData);
   if (shouldShowOnboarding(transformedOnboardingData)) {
+    if (getLSItem(LS_KEYS.useCaseExperimentOnboarding)) {
+      return 'use-case-onboarding';
+    }
     if (showFamiliaritySurvey) return 'familiarity-survey';
     return 'landing-page';
   }

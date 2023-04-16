@@ -20,6 +20,7 @@ module Harness.GraphqlEngine
     postGraphqlYaml,
     postGraphqlYamlWithHeaders,
     postGraphql,
+    postGraphqlInternal,
     postGraphqlWithVariables,
     postGraphqlWithPair,
     postGraphqlWithHeaders,
@@ -54,6 +55,7 @@ import Data.Aeson.Types (Pair)
 import Data.ByteString (ByteString)
 import Data.CaseInsensitive (original)
 import Data.Environment qualified as Env
+import Data.Has
 import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8)
@@ -63,11 +65,13 @@ import Harness.Exceptions (bracket, withFrozenCallStack)
 import Harness.Http qualified as Http
 import Harness.Logging
 import Harness.Quoter.Yaml (fromYaml, yaml)
+import Harness.Services.GraphqlEngine
 import Harness.TestEnvironment (Protocol (..), Server (..), TestEnvironment (..), TestingRole (..), getServer, requestProtocol, serverUrl)
 import Harness.WebSockets (responseListener)
 import Hasura.App qualified as App
 import Hasura.Logging (Hasura)
 import Hasura.Prelude
+import Hasura.Server.App (CEConsoleType (OSSConsole))
 import Hasura.Server.Init (PostgresConnInfo (..), ServeOptions (..), unsafePort)
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
@@ -194,11 +198,14 @@ postGraphqlYamlWithHeaders ::
 postGraphqlYamlWithHeaders testEnvironment headers =
   withFrozenCallStack $ postWithHeaders testEnvironment "/v1/graphql" headers
 
+postGraphql :: Has PostGraphql testEnvironment => testEnvironment -> Value -> IO Value
+postGraphql = getPostGraphql . getter
+
 -- | Same as 'postGraphqlYaml', but adds the @{query:..}@ wrapper.
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
-postGraphql :: HasCallStack => TestEnvironment -> Value -> IO Value
-postGraphql testEnvironment value =
+postGraphqlInternal :: HasCallStack => TestEnvironment -> Value -> IO Value
+postGraphqlInternal testEnvironment value =
   withFrozenCallStack $ postGraphqlYaml testEnvironment (object ["query" .= value])
 
 -- | Same as 'postGraphql', but accepts variables to the GraphQL query as well.
@@ -402,15 +409,17 @@ runApp serveOptions = do
         liftIO $ createServerMetrics $ EKG.subset ServerSubset store
       pure (EKG.subset EKG.emptyOf store, serverMetrics)
   prometheusMetrics <- makeDummyPrometheusMetrics
-  let managedServerCtx = App.initialiseContext env defaultConnInfo serveOptions Nothing serverMetrics prometheusMetrics sampleAlways
-  runManagedT managedServerCtx \(appCtx, appEnv) ->
-    App.runAppM appEnv $
+  let managedServerCtx = App.initialiseAppEnv env defaultConnInfo serveOptions Nothing serverMetrics prometheusMetrics sampleAlways
+  runManagedT managedServerCtx \(appInit, appEnv) ->
+    App.runAppM appEnv do
+      appCtx <- App.initialiseAppContext env serveOptions appInit
       lowerManagedT $
         App.runHGEServer
           (const $ pure ())
           appCtx
           initTime
           Nothing
+          OSSConsole
           ekgStore
 
 -- | Used only for 'runApp' above.

@@ -16,7 +16,9 @@ import Data.HashSet qualified as HS
 import Data.IntMap.Strict qualified as IntMap
 import Data.Text qualified as T
 import Data.Tuple (swap)
+import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Base.Error
+import Hasura.CredentialCache
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend qualified as EB
 import Hasura.GraphQL.Execute.Instances ()
@@ -30,6 +32,7 @@ import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqOutgoing, GQLReqUnparsed, _
 import Hasura.GraphQL.Transport.Instances ()
 import Hasura.Logging qualified as L
 import Hasura.Prelude
+import Hasura.QueryTags
 import Hasura.RQL.Types.Common
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
@@ -56,7 +59,7 @@ processRemoteJoins ::
   ( MonadError QErr m,
     MonadIO m,
     MonadBaseControl IO m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     MonadQueryLog m,
     MonadExecutionLog m,
     Tracing.MonadTrace m,
@@ -64,6 +67,7 @@ processRemoteJoins ::
   ) =>
   RequestId ->
   L.Logger L.Hasura ->
+  Maybe (CredentialCache AgentLicenseKey) ->
   Env.Environment ->
   [HTTP.Header] ->
   UserInfo ->
@@ -71,14 +75,13 @@ processRemoteJoins ::
   Maybe RemoteJoins ->
   GQLReqUnparsed ->
   m EncJSON
-processRemoteJoins requestId logger env requestHeaders userInfo lhs maybeJoinTree gqlreq =
+processRemoteJoins requestId logger agentLicenseKey env requestHeaders userInfo lhs maybeJoinTree gqlreq =
   forRemoteJoins maybeJoinTree lhs \joinTree -> do
     lhsParsed <-
       JO.eitherDecode (encJToLBS lhs)
         `onLeft` (throw500 . T.pack)
     jsonResult <-
       foldJoinTreeWith
-        env
         callSource
         callRemoteServer
         userInfo
@@ -103,6 +106,7 @@ processRemoteJoins requestId logger env requestHeaders userInfo lhs maybeJoinTre
             _sjcRootFieldAlias
             userInfo
             logger
+            agentLicenseKey
             _sjcSourceConfig
             (fmap (statsToAnyBackend @b) (EB.dbsiAction _sjcStepInfo))
             (EB.dbsiPreparedQuery _sjcStepInfo)
@@ -128,10 +132,9 @@ processRemoteJoins requestId logger env requestHeaders userInfo lhs maybeJoinTre
 -- allowing it to be used in tests.
 foldJoinTreeWith ::
   ( MonadError QErr m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     Traversable f
   ) =>
-  Env.Environment ->
   -- | How to process a call to a source.
   (AB.AnyBackend S.SourceJoinCall -> m BL.ByteString) ->
   -- | How to process a call to a remote schema.
@@ -144,7 +147,7 @@ foldJoinTreeWith ::
   [HTTP.Header] ->
   Maybe G.Name ->
   m (f JO.Value)
-foldJoinTreeWith env callSource callRemoteSchema userInfo lhs joinTree reqHeaders operationName = do
+foldJoinTreeWith callSource callRemoteSchema userInfo lhs joinTree reqHeaders operationName = do
   (compositeValue, joins) <- collectJoinArguments (assignJoinIds joinTree) lhs
   joinIndices <- fmap catMaybes $
     for joins $ \JoinArguments {..} -> do
@@ -155,13 +158,12 @@ foldJoinTreeWith env callSource callRemoteSchema userInfo lhs joinTree reqHeader
           maybeJoinIndex <- RS.makeRemoteSchemaJoinCall (callRemoteSchema remoteSchemaInfo) userInfo remoteSchemaJoin joinArguments
           pure $ fmap (childJoinTree,) maybeJoinIndex
         RemoteJoinSource sourceJoin childJoinTree -> do
-          maybeJoinIndex <- S.makeSourceJoinCall env callSource userInfo sourceJoin _jalFieldName joinArguments reqHeaders operationName
+          maybeJoinIndex <- S.makeSourceJoinCall callSource userInfo sourceJoin _jalFieldName joinArguments reqHeaders operationName
           pure $ fmap (childJoinTree,) maybeJoinIndex
       for previousStep $ \(childJoinTree, joinIndex) -> do
         forRemoteJoins childJoinTree joinIndex $ \childRemoteJoins -> do
           results <-
             foldJoinTreeWith
-              env
               callSource
               callRemoteSchema
               userInfo

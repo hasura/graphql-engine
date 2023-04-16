@@ -133,21 +133,27 @@ library
     Harness.DataConnectorAgent
     Harness.Env
     Harness.Exceptions
+    Harness.GlobalTestEnvironment
     Harness.GraphqlEngine
     Harness.Http
     Harness.Logging
     Harness.Logging.Messages
+    Harness.PassthroughEnvVars
     Harness.Permissions
     Harness.PytestPortedCompat
     Harness.Quoter.Graphql
     Harness.Quoter.Yaml
     Harness.Quoter.Yaml.InterpolateYaml
     Harness.RemoteServer
+    Harness.Schema
+    Harness.Schema.Name
+    Harness.Schema.Table
     Harness.Services.Composed
+    Harness.Services.Database.Postgres
     Harness.Services.GraphqlEngine
     Harness.Services.Metadata
-    Harness.Services.PostgresDb
-    Harness.Services.PostgresSource
+    Harness.Services.Schema
+    Harness.Services.Source.Postgres
     Harness.Subscriptions
     Harness.Test.BackendType
     Harness.Test.CustomOptions
@@ -156,13 +162,12 @@ library
     Harness.Test.Introspection
     Harness.Test.Protocol
     Harness.Test.ScalarType
-    Harness.Test.Schema
-    Harness.Test.SchemaName
     Harness.Test.SetupAction
     Harness.Test.TestResource
     Harness.TestEnvironment
-    Harness.Webhook
+    Harness.UniqueTestId
     Harness.WebSockets
+    Harness.Webhook
     Harness.Yaml
 
   other-modules:

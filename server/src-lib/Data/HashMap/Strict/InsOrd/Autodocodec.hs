@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 module Data.HashMap.Strict.InsOrd.Autodocodec
   ( insertionOrderedElemsCodec,
     insertionOrderedElemsCodecWith,

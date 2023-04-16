@@ -23,6 +23,7 @@ module Hasura.GraphQL.Schema.Common
     ConnectionSelectExp,
     AnnotatedActionField,
     AnnotatedActionFields,
+    AnnotatedNestedObjectSelect,
     EdgeFields,
     Scenario (..),
     SelectArgs,
@@ -31,7 +32,7 @@ module Hasura.GraphQL.Schema.Common
     StreamSelectExp,
     TablePerms,
     getTableRoles,
-    getLogicalModelRoles,
+    getCustomReturnTypeRoles,
     askTableInfo,
     comparisonAggOperators,
     mapField,
@@ -41,7 +42,7 @@ module Hasura.GraphQL.Schema.Common
     parsedSelectionsToFields,
     partialSQLExpToUnpreparedValue,
     requiredFieldParser,
-    takeValidLogicalModels,
+    takeValidNativeQueries,
     takeValidFunctions,
     takeValidTables,
     textToName,
@@ -65,6 +66,8 @@ import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Base.Error
+import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo (_crtiPermissions))
+import Hasura.Function.Cache
 import Hasura.GraphQL.Namespace (NamespacedField)
 import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
 import Hasura.GraphQL.Schema.Node
@@ -72,13 +75,12 @@ import Hasura.GraphQL.Schema.Options (SchemaOptions)
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Typename
-import Hasura.LogicalModel.Cache (LogicalModelCache, _lmiPermissions)
+import Hasura.NativeQuery.Cache (NativeQueryCache)
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
@@ -310,6 +312,8 @@ type AnnotatedActionFields = IR.ActionFieldsG (IR.RemoteRelationshipField IR.Unp
 
 type AnnotatedActionField = IR.ActionFieldG (IR.RemoteRelationshipField IR.UnpreparedValue)
 
+type AnnotatedNestedObjectSelect b = IR.AnnNestedObjectSelectG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)
+
 -------------------------------------------------------------------------------
 
 data RemoteSchemaParser n = RemoteSchemaParser
@@ -323,10 +327,10 @@ getTableRoles bsi = AB.dispatchAnyBackend @Backend bsi go
   where
     go si = Map.keys . _tiRolePermInfoMap =<< Map.elems (_siTables si)
 
-getLogicalModelRoles :: BackendSourceInfo -> [RoleName]
-getLogicalModelRoles bsi = AB.dispatchAnyBackend @Backend bsi go
+getCustomReturnTypeRoles :: BackendSourceInfo -> [RoleName]
+getCustomReturnTypeRoles bsi = AB.dispatchAnyBackend @Backend bsi go
   where
-    go si = Map.keys . _lmiPermissions =<< Map.elems (_siLogicalModels si)
+    go si = Map.keys . _crtiPermissions =<< Map.elems (_siCustomReturnTypes si)
 
 -- | Looks up table information for the given table name. This function
 -- should never fail, since the schema cache construction process is
@@ -436,9 +440,9 @@ takeValidFunctions = Map.filter functionFilter
   where
     functionFilter = not . isSystemDefined . _fiSystemDefined
 
--- | Currently we do no validation on logical models in schema. Should we?
-takeValidLogicalModels :: forall b. LogicalModelCache b -> LogicalModelCache b
-takeValidLogicalModels = id
+-- | Currently we do no validation on native queries in schema. Should we?
+takeValidNativeQueries :: forall b. NativeQueryCache b -> NativeQueryCache b
+takeValidNativeQueries = id
 
 -- root field builder helpers
 

@@ -1,7 +1,7 @@
 {-# LANGUAGE Arrows #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.DataConnector.Adapter.Metadata () where
+module Hasura.Backends.DataConnector.Adapter.Metadata (requestDatabaseSchema) where
 
 import Control.Arrow.Extended
 import Control.Monad.Trans.Control
@@ -9,19 +9,19 @@ import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Environment (Environment)
-import Data.HashMap.Strict qualified as Map
+import Data.Has (Has (getter))
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.Extended qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as HashSet
-import Data.Sequence qualified as Seq
+import Data.Map.Strict qualified as Map
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text.Extended (toTxt, (<<>), (<>>))
 import Hasura.Backends.DataConnector.API (capabilitiesCase, errorResponseSummary, schemaCase)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.API.V0.ErrorResponse (_crDetails)
 import Hasura.Backends.DataConnector.Adapter.Backend (columnTypeToScalarType)
-import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformConnSourceConfig)
+import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformSourceConfig, validateConnSourceConfig)
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), runAgentClientT)
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..))
@@ -33,10 +33,12 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (OpExpG (..), PartialSQLExp (..), RootOrCurrent (..), RootOrCurrentColumn (..))
 import Hasura.RQL.Types.Column qualified as RQL.T.C
 import Hasura.RQL.Types.Common (OID (..), SourceName)
+import Hasura.RQL.Types.CustomTypes (GraphQLType (..))
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (RETDoNothing))
 import Hasura.RQL.Types.Metadata (SourceMetadata (..))
 import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.SchemaCache (CacheRM, askSourceConfig)
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source (DBObjectsIntrospection (..))
 import Hasura.RQL.Types.Table (ForeignKey (_fkConstraint))
@@ -48,9 +50,10 @@ import Hasura.Server.Utils qualified as HSU
 import Hasura.Services.Network
 import Hasura.Session (SessionVariable, mkSessionVariable)
 import Hasura.Tracing (ignoreTraceT)
+import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax qualified as GQL
 import Network.HTTP.Client qualified as HTTP
-import Servant.Client.Core.HasClient ((//))
+import Servant.Client ((//))
 import Servant.Client.Generic (genericClient)
 import Witch qualified
 
@@ -73,6 +76,8 @@ instance BackendMetadata 'DataConnector where
   postDropSourceHook _sourceConfig _tableTriggerMap = pure ()
   buildComputedFieldBooleanExp _ _ _ _ _ _ =
     error "buildComputedFieldBooleanExp: not implemented for the Data Connector backend."
+  columnInfoToFieldInfo = columnInfoToFieldInfo'
+  listAllTables = listAllTables'
   supportsBeingRemoteRelationshipTarget = supportsBeingRemoteRelationshipTarget'
 
 resolveBackendInfo' ::
@@ -86,7 +91,7 @@ resolveBackendInfo' ::
     ProvidesNetwork m
   ) =>
   Logger Hasura ->
-  (Inc.Dependency (Maybe (HashMap DC.DataConnectorName Inc.InvalidationKey)), InsOrdHashMap DC.DataConnectorName DC.DataConnectorOptions) `arr` HashMap DC.DataConnectorName DC.DataConnectorInfo
+  (Inc.Dependency (Maybe (HashMap DC.DataConnectorName Inc.InvalidationKey)), Map.Map DC.DataConnectorName DC.DataConnectorOptions) `arr` HashMap DC.DataConnectorName DC.DataConnectorInfo
 resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
   maybeDataConnectorCapabilities <-
     (|
@@ -94,7 +99,7 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
         ( \dataConnectorName dataConnectorOptions -> do
             getDataConnectorCapabilitiesIfNeeded -< (invalidationKeys, dataConnectorName, dataConnectorOptions)
         )
-      |) (OMap.toHashMap optionsMap)
+      |) (toHashMap optionsMap)
   returnA -< HashMap.catMaybes maybeDataConnectorCapabilities
   where
     getDataConnectorCapabilitiesIfNeeded ::
@@ -105,7 +110,7 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
       Inc.dependOn -< Inc.selectMaybeD (Inc.ConstS dataConnectorName) invalidationKeys
       (|
         withRecordInconsistency
-          ( liftEitherA <<< bindA -< getDataConnectorCapabilities dataConnectorOptions httpMgr
+          ( bindErrorA -< ExceptT $ getDataConnectorCapabilities dataConnectorOptions httpMgr
           )
         |) metadataObj
 
@@ -116,7 +121,7 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
     getDataConnectorCapabilities options@DC.DataConnectorOptions {..} manager = runExceptT do
       capabilitiesU <-
         ignoreTraceT
-          . flip runAgentClientT (AgentClientContext logger _dcoUri manager Nothing)
+          . flip runAgentClientT (AgentClientContext logger _dcoUri manager Nothing Nothing)
           $ genericClient @API.Routes // API._capabilities
 
       let defaultAction = throw400 DataConnectorError "Unexpected data connector capabilities response - Unexpected Type"
@@ -124,11 +129,10 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
 
       capabilitiesCase defaultAction capabilitiesAction errorAction capabilitiesU
 
+    toHashMap = HashMap.fromList . Map.toList
+
 resolveSourceConfig' ::
-  ( MonadIO m,
-    MonadBaseControl IO m
-  ) =>
-  Logger Hasura ->
+  (Monad m) =>
   SourceName ->
   DC.ConnSourceConfig ->
   BackendSourceKind 'DataConnector ->
@@ -137,26 +141,15 @@ resolveSourceConfig' ::
   HTTP.Manager ->
   m (Either QErr DC.SourceConfig)
 resolveSourceConfig'
-  logger
   sourceName
   csc@DC.ConnSourceConfig {template, timeout, value = originalConfig}
   (DataConnectorKind dataConnectorName)
   backendInfo
   env
   manager = runExceptT do
-    DC.DataConnectorInfo {..} <- getDataConnectorInfo dataConnectorName backendInfo
-    let DC.DataConnectorOptions {_dcoUri} = _dciOptions
+    DC.DataConnectorInfo {_dciOptions = DC.DataConnectorOptions {_dcoUri}, ..} <- getDataConnectorInfo dataConnectorName backendInfo
 
-    transformedConfig <- transformConnSourceConfig dataConnectorName sourceName _dciConfigSchemaResponse csc [("$session", J.object []), ("$env", J.toJSON env)] env
-
-    schemaResponseU <-
-      ignoreTraceT
-        . flip runAgentClientT (AgentClientContext logger _dcoUri manager (DC.sourceTimeoutMicroseconds <$> timeout))
-        $ (genericClient // API._schema) (toTxt sourceName) transformedConfig
-
-    let defaultAction = throw400 DataConnectorError "Unexpected data connector schema response - Unexpected Type"
-
-    schemaResponse <- schemaCase defaultAction pure errorAction schemaResponseU
+    validateConnSourceConfig dataConnectorName sourceName _dciConfigSchemaResponse csc Nothing env
 
     pure
       DC.SourceConfig
@@ -164,26 +157,33 @@ resolveSourceConfig'
           _scConfig = originalConfig,
           _scTemplate = template,
           _scCapabilities = _dciCapabilities,
-          _scSchema = schemaResponse,
           _scManager = manager,
           _scTimeoutMicroseconds = (DC.sourceTimeoutMicroseconds <$> timeout),
-          _scDataConnectorName = dataConnectorName
+          _scDataConnectorName = dataConnectorName,
+          _scEnvironment = env
         }
 
 getDataConnectorInfo :: (MonadError QErr m) => DC.DataConnectorName -> HashMap DC.DataConnectorName DC.DataConnectorInfo -> m DC.DataConnectorInfo
 getDataConnectorInfo dataConnectorName backendInfo =
-  onNothing (Map.lookup dataConnectorName backendInfo) $
+  onNothing (HashMap.lookup dataConnectorName backendInfo) $
     throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <<> " was not found in the data connector backend info")
 
 resolveDatabaseMetadata' ::
-  Applicative m =>
+  ( MonadIO m,
+    MonadBaseControl IO m
+  ) =>
+  Logger Hasura ->
   SourceMetadata 'DataConnector ->
   DC.SourceConfig ->
   m (Either QErr (DBObjectsIntrospection 'DataConnector))
-resolveDatabaseMetadata' _ DC.SourceConfig {_scSchema = API.SchemaResponse {..}, ..} =
-  let tables = Map.fromList $ do
+resolveDatabaseMetadata' logger SourceMetadata {_smName} sourceConfig@DC.SourceConfig {_scCapabilities} = runExceptT do
+  API.SchemaResponse {..} <- requestDatabaseSchema logger _smName sourceConfig
+  let typeNames = maybe mempty (HashSet.fromList . toList . fmap API._otdName) _srObjectTypes
+      customObjectTypes =
+        maybe mempty (HashMap.fromList . mapMaybe (toTableObjectType _scCapabilities typeNames) . toList) _srObjectTypes
+      tables = HashMap.fromList $ do
         API.TableInfo {..} <- _srTables
-        let primaryKeyColumns = Seq.fromList $ coerce <$> _tiPrimaryKey
+        let primaryKeyColumns = fmap Witch.from . NESeq.fromList <$> _tiPrimaryKey
         let meta =
               RQL.T.T.DBTableMetadata
                 { _ptmiOid = OID 0, -- TODO: This is wrong and needs to be fixed. It is used for diffing tables and seeing what's new/deleted/altered, so reusing 0 for all tables is problematic.
@@ -198,7 +198,7 @@ resolveDatabaseMetadata' _ DC.SourceConfig {_scSchema = API.SchemaResponse {..},
                           rciDescription = fmap GQL.Description _ciDescription,
                           rciMutability = RQL.T.C.ColumnMutability _ciInsertable _ciUpdatable
                         },
-                  _ptmiPrimaryKey = RQL.T.T.PrimaryKey (RQL.T.T.Constraint (DC.ConstraintName "") (OID 0)) <$> NESeq.nonEmptySeq primaryKeyColumns,
+                  _ptmiPrimaryKey = RQL.T.T.PrimaryKey (RQL.T.T.Constraint (DC.ConstraintName "") (OID 0)) <$> primaryKeyColumns,
                   _ptmiUniqueConstraints = mempty,
                   _ptmiForeignKeys = buildForeignKeySet _tiForeignKeys,
                   _ptmiViewInfo =
@@ -207,16 +207,59 @@ resolveDatabaseMetadata' _ DC.SourceConfig {_scSchema = API.SchemaResponse {..},
                         else Just $ RQL.T.T.ViewInfo _tiInsertable _tiUpdatable _tiDeletable
                     ),
                   _ptmiDescription = fmap PGDescription _tiDescription,
-                  _ptmiExtraTableMetadata = ()
+                  _ptmiExtraTableMetadata =
+                    DC.ExtraTableMetadata
+                      { _etmExtraColumnMetadata =
+                          _tiColumns
+                            & fmap (\API.ColumnInfo {..} -> (Witch.from _ciName, DC.ExtraColumnMetadata _ciValueGenerated))
+                            & HashMap.fromList
+                      },
+                  _ptmiCustomObjectTypes = Just customObjectTypes
                 }
         pure (coerce _tiName, meta)
    in pure $
-        pure $
-          DBObjectsIntrospection
-            { _rsTables = tables,
-              _rsFunctions = mempty,
-              _rsScalars = mempty
-            }
+        DBObjectsIntrospection
+          { _rsTables = tables,
+            _rsFunctions = mempty,
+            _rsScalars = mempty
+          }
+
+requestDatabaseSchema ::
+  (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
+  Logger Hasura ->
+  SourceName ->
+  DC.SourceConfig ->
+  m API.SchemaResponse
+requestDatabaseSchema logger sourceName sourceConfig = do
+  transformedSourceConfig <- transformSourceConfig sourceConfig Nothing
+
+  schemaResponseU <-
+    ignoreTraceT
+      . flip runAgentClientT (AgentClientContext logger (DC._scEndpoint transformedSourceConfig) (DC._scManager transformedSourceConfig) (DC._scTimeoutMicroseconds transformedSourceConfig) Nothing)
+      $ (genericClient // API._schema) (toTxt sourceName) (DC._scConfig transformedSourceConfig)
+
+  let defaultAction = throw400 DataConnectorError "Unexpected data connector schema response - Unexpected Type"
+
+  schemaCase defaultAction pure errorAction schemaResponseU
+
+toTableObjectType :: API.Capabilities -> HashSet G.Name -> API.ObjectTypeDefinition -> Maybe (G.Name, RQL.T.T.TableObjectType 'DataConnector)
+toTableObjectType capabilities typeNames API.ObjectTypeDefinition {..} =
+  (_otdName,) . RQL.T.T.TableObjectType _otdName (G.Description <$> _otdDescription) <$> traverse toTableObjectFieldDefinition _otdColumns
+  where
+    toTableObjectFieldDefinition API.ColumnInfo {..} = do
+      fieldTypeName <- G.mkName $ API.getScalarType _ciType
+      fieldName <- G.mkName $ API.unColumnName _ciName
+      pure $
+        RQL.T.T.TableObjectFieldDefinition
+          { _tofdColumn = Witch.from _ciName,
+            _tofdName = fieldName,
+            _tofdDescription = G.Description <$> _ciDescription,
+            _tofdGType = GraphQLType $ G.TypeNamed (G.Nullability _ciNullable) fieldTypeName,
+            _tofdFieldType =
+              if HashSet.member fieldTypeName typeNames
+                then RQL.T.T.TOFTObject fieldTypeName
+                else RQL.T.T.TOFTScalar fieldTypeName $ DC.mkScalarType capabilities _ciType
+          }
 
 -- | Construct a 'HashSet' 'RQL.T.T.ForeignKeyMetadata'
 -- 'DataConnector' to build the foreign key constraints in the table
@@ -373,6 +416,37 @@ mkTypedSessionVar columnType =
 errorAction :: MonadError QErr m => API.ErrorResponse -> m a
 errorAction e = throw400WithDetail DataConnectorError (errorResponseSummary e) (_crDetails e)
 
+-- | This function assumes that if a type name is present in the custom object types for the table then it
+-- refers to a nested object of that type.
+-- Otherwise it is a normal (scalar) column.
+columnInfoToFieldInfo' :: HashMap G.Name (RQL.T.T.TableObjectType 'DataConnector) -> RQL.T.C.ColumnInfo 'DataConnector -> RQL.T.T.FieldInfo 'DataConnector
+columnInfoToFieldInfo' gqlTypes columnInfo@RQL.T.C.ColumnInfo {..} =
+  maybe (RQL.T.T.FIColumn columnInfo) RQL.T.T.FINestedObject getNestedObjectInfo
+  where
+    getNestedObjectInfo =
+      case ciType of
+        RQL.T.C.ColumnScalar (DC.ScalarType scalarTypeName _) -> do
+          gqlName <- GQL.mkName scalarTypeName
+          guard $ HashMap.member gqlName gqlTypes
+          pure $
+            RQL.T.C.NestedObjectInfo
+              { RQL.T.C._noiSupportsNestedObjects = (),
+                RQL.T.C._noiColumn = ciColumn,
+                RQL.T.C._noiName = ciName,
+                RQL.T.C._noiType = gqlName,
+                RQL.T.C._noiIsNullable = ciIsNullable,
+                RQL.T.C._noiDescription = ciDescription,
+                RQL.T.C._noiMutability = ciMutability
+              }
+        RQL.T.C.ColumnEnumReference {} -> Nothing
+
 supportsBeingRemoteRelationshipTarget' :: DC.SourceConfig -> Bool
 supportsBeingRemoteRelationshipTarget' DC.SourceConfig {..} =
   isJust $ API._qcForeach =<< API._cQueries _scCapabilities
+
+listAllTables' :: (CacheRM m, Has (Logger Hasura) r, MonadIO m, MonadBaseControl IO m, MonadReader r m, MonadError QErr m, MetadataM m) => SourceName -> m [DC.TableName]
+listAllTables' sourceName = do
+  (logger :: Logger Hasura) <- asks getter
+  sourceConfig <- askSourceConfig @'DataConnector sourceName
+  schemaResponse <- requestDatabaseSchema logger sourceName sourceConfig
+  pure $ fmap (Witch.from . API._tiName) $ API._srTables schemaResponse

@@ -28,7 +28,7 @@ describe('Actions with Transform', () => {
 
     // --------------------
     cy.log('**--- Click on the Create button of the Actions panel**');
-    cy.get('[data-test=data-create-actions]').click();
+    cy.get('[data-testid=data-create-actions]').click();
 
     // Assign an alias to the most unclear selectors for future references
     cy.get('textarea').eq(0).as('actionDefinitionTextarea');

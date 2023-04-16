@@ -103,6 +103,7 @@ export const metadataQueryTypes = [
   'dc_add_agent',
   'dc_delete_agent',
   'suggest_relationships',
+  'pg_test_connection_template',
 ] as const;
 
 export type MetadataQueryType = (typeof metadataQueryTypes)[number];

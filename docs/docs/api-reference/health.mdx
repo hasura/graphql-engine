@@ -27,19 +27,27 @@ completely.
 ### Request
 
 ```http
-GET /healthz HTTP/1.1
+GET /healthz?strict=false HTTP/1.1
 ```
+
+#### Parameters
+
+| Name   | Required | type    | Description                                                                               |
+|--------|----------|---------|-------------------------------------------------------------------------------------------|
+| strict | false    | boolean | If set to `true`, response returns `500` if inconsistent objects exist (default: `false`) |
+
 
 ### Response
 
 Depending on the server health status any of the following responses can
 be returned:
 
-| Server condition                                                          | HTTP Status | Message                              |
-| ------------------------------------------------------------------------- | ----------- | ------------------------------------ |
-| All healthy                                                               | 200         | OK                                   |
-| Serving requests but some Metadata objects are inconsistent/not-available | 200         | WARN: inconsistent objects in schema |
-| Unhealthy                                                                 | 500         | ERROR                                |
+| Server condition                                                          | `strict` parameter | HTTP Status | Message                               |
+|---------------------------------------------------------------------------|--------------------|-------------|---------------------------------------|
+| All healthy                                                               | Any                | 200         | OK                                    |
+| Serving requests but some Metadata objects are inconsistent/not-available | `false`            | 200         | WARN: inconsistent objects in schema  |
+| Serving requests but some Metadata objects are inconsistent/not-available | `true`             | 500         | ERROR: inconsistent objects in schema |
+| Unhealthy                                                                 | Any                | 500         | ERROR                                 |
 
 :::info Note
 

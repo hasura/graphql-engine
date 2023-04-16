@@ -1,7 +1,7 @@
 export * from './source';
 export * from './table';
 export * from './relationships';
-export {
+export type {
   PostgresConfiguration,
   MssqlConfiguration,
   BigQueryConfiguration,

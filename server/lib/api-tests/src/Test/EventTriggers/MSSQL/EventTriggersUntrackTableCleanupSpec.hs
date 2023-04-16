@@ -10,9 +10,9 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (permitTeardownFail)
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
@@ -71,12 +71,8 @@ authorsTable tableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
-  cleanupEventTriggersWhenTableUntracked opts
-
-cleanupEventTriggersWhenTableUntracked :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-cleanupEventTriggersWhenTableUntracked opts =
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests =
   describe "untrack a table with event triggers should remove the SQL triggers created on the table" do
     it "check: inserting a new row invokes a event trigger" $
       \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
@@ -106,7 +102,7 @@ cleanupEventTriggersWhenTableUntracked opts =
 
         -- Insert a row into the table with event trigger
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment insertQuery)
           expectedResponse
 
@@ -136,7 +132,7 @@ cleanupEventTriggersWhenTableUntracked opts =
 
         -- Untracking the table should remove the SQL triggers on the table
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postMetadata testEnvironment untrackTableQuery)
           untrackTableQueryExpectedResponse
 
@@ -169,7 +165,7 @@ cleanupEventTriggersWhenTableUntracked opts =
         -- If the clean-up did not happen properly this insert query would add
         -- entries to the 'hdb_catalog.event_log' table
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment checkIfTriggerExists)
           expectedResponse
 

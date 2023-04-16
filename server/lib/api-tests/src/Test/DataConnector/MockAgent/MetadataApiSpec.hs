@@ -14,6 +14,7 @@ import Data.Vector qualified as Vector
 import Harness.Backend.DataConnector.Mock (MockRequestResults (..), mockAgentMetadataTest)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml.InterpolateYaml (interpolateYaml)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
@@ -54,20 +55,23 @@ sourceMetadata =
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-tests _opts = do
+tests :: SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
+tests = do
   describe "MetadataAPI Mock Tests" $ do
     mockAgentMetadataTest "Should perform a template transform when calling get_source_tables" $ \testEnvironment performMetadataRequest -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          backendType = BackendType.backendTypeString backendTypeMetadata
+
       sourceString <-
         BackendType.backendSourceName
           <$> getBackendTypeConfig testEnvironment
           `onNothing` assertFailure "Backend source name not found in test environment"
 
       let request =
-            [yaml|
-              type: get_source_tables
+            [interpolateYaml|
+              type: #{backendType}_get_source_tables
               args:
-                source: *sourceString
+                source: #{sourceString}
             |]
 
       MockRequestResults {..} <- performMetadataRequest Mock.chinookMock request

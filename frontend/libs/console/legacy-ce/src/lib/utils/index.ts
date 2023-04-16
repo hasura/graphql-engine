@@ -21,7 +21,6 @@ export {
 } from './permissions';
 export {
   isProConsole,
-  isProLiteConsole,
   isMonitoringTabSupportedEnvironment,
   isEnvironmentSupportMultiTenantConnectionPooling,
   isImportFromOpenAPIEnabled,

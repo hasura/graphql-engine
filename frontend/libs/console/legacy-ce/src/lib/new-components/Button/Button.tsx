@@ -2,7 +2,7 @@ import React, { ReactElement } from 'react';
 import { CgSpinner } from 'react-icons/cg';
 import clsx from 'clsx';
 
-type ButtonModes = 'default' | 'destructive' | 'primary';
+type ButtonModes = 'default' | 'destructive' | 'primary' | 'success';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends React.ComponentProps<'button'> {
@@ -29,7 +29,7 @@ export interface ButtonProps extends React.ComponentProps<'button'> {
   /**
    * The button label when in loading state
    */
-  loadingText?: string;
+  loadingText?: React.ReactNode;
   /**
    * The button icon
    */
@@ -42,25 +42,27 @@ export interface ButtonProps extends React.ComponentProps<'button'> {
    * The button will take the maximum with possible
    */
   full?: boolean;
+  // /**
+  //  * Will use newer flat style buttons
+  //  */
+  // appearance?: 'flat' | 'default';
 }
 
-const buttonSizing: Record<ButtonSize, string> = {
+export const buttonSizing: Record<ButtonSize, string> = {
   lg: 'px-md py-sm',
   md: 'h-btn px-sm',
   sm: 'h-btnsm px-sm ',
 };
 
-const buttonModesStyles: Record<ButtonModes, string> = {
-  default:
-    'text-gray-600 bg-gray-50 from-transparent to-white border-gray-300 hover:border-gray-400 disabled:border-gray-300 focus-visible:from-bg-gray-50 focus-visible:to-bg-gray-50',
-  destructive:
-    'text-red-600 bg-gray-50 from-transparent to-white border-gray-300 hover:border-gray-400 disabled:border-gray-300 focus-visible:from-bg-gray-50 focus-visible:to-bg-gray-50',
-  primary:
-    'text-gray-600 from-primary to-primary-light border-primary-dark hover:border-primary-darker focus-visible:from-primary focus-visible:to-primary disabled:border-primary-dark',
-};
+const twWhiteBg = `bg-gray-50 from-transparent to-white border-gray-300 hover:border-gray-400 disabled:border-gray-300 focus-visible:from-bg-gray-50 focus-visible:to-bg-gray-50`;
 
-const sharedButtonStyle =
-  'items-center max-w-full justify-center inline-flex items-center text-sm font-sans font-semibold bg-gradient-to-t border rounded shadow-sm focus-visible:outline-none focus-visible:bg-gradient-to-t focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-yellow-400 disabled:opacity-60';
+export const twButtonStyles = {
+  all: `items-center max-w-full justify-center inline-flex text-sm font-sans font-semibold bg-gradient-to-t border rounded shadow-sm focus-visible:outline-none focus-visible:bg-gradient-to-t focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-yellow-400 disabled:opacity-60`,
+  default: `text-gray-600 ${twWhiteBg} focus-visible:ring-gray-400`,
+  destructive: `text-red-600 ${twWhiteBg} focus-visible:ring-red-400`,
+  success: `text-green-600 ${twWhiteBg} focus-visible:ring-green-400`,
+  primary: `text-gray-600 from-primary to-primary-light border-primary-dark hover:border-primary-darker focus-visible:from-primary focus-visible:to-primary disabled:border-primary-dark`,
+};
 
 const fullWidth = 'w-full';
 
@@ -78,15 +80,18 @@ export const Button = (props: ButtonProps) => {
     full,
     ...otherHtmlAttributes
   } = props;
+
   const isDisabled = disabled || isLoading;
+
+  const styles = twButtonStyles;
 
   const buttonAttributes = {
     type,
     ...otherHtmlAttributes,
     disabled: isDisabled,
     className: clsx(
-      sharedButtonStyle,
-      buttonModesStyles[mode],
+      styles.all,
+      styles[mode],
       buttonSizing[size],
       isDisabled ? 'cursor-not-allowed' : '',
       full && fullWidth,

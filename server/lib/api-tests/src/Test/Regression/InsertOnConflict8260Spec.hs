@@ -14,9 +14,9 @@ import Harness.GraphqlEngine (postGraphqlWithHeaders)
 import Harness.Permissions (InsertPermissionDetails (..), Permission (..), SelectPermissionDetails (..), insertPermission, selectPermission)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Introspection (introspectEnums, introspectTypes)
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (setupPermissionsAction)
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
@@ -90,11 +90,8 @@ permissions =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests =
   describe "The schema for insert mutations with an 'on_conflict' clause" do
     describe "When no columns are updateable" do
       it "Is still present with an empty enum" \testEnvironment -> do
@@ -135,7 +132,7 @@ tests opts = do
                       }
                     |]
 
-          actual `shouldBe` expected
+          shouldReturnYaml testEnvironment actual expected
 
         do
           let expected :: Value
@@ -163,4 +160,4 @@ tests opts = do
                     }
                   |]
 
-          actual `shouldBe` expected
+          shouldReturnYaml testEnvironment actual expected

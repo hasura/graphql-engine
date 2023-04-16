@@ -1,14 +1,18 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Backends.DataConnector.Agent.Client
-  ( AgentClientContext (..),
+  ( AgentLicenseKey (..),
+    AgentClientContext (..),
     AgentClientT,
     runAgentClientT,
   )
 where
 
+--------------------------------------------------------------------------------
+
 import Control.Exception (try)
-import Control.Lens ((&~), (.=))
+import Control.Lens ((%=), (&~), (.=))
+import Data.ByteString (ByteString)
 import Hasura.Backends.DataConnector.Logging (logAgentRequest, logClientError)
 import Hasura.Base.Error
 import Hasura.HTTP qualified
@@ -21,11 +25,17 @@ import Servant.Client
 import Servant.Client.Core (Request, RunClient (..))
 import Servant.Client.Internal.HttpClient (clientResponseToResponse, mkFailureResponse)
 
+-------------------------------------------------------------------------------rs
+
+-- | Auth Key provided to the GDC Agent in 'Request' headers.
+newtype AgentLicenseKey = AgentLicenseKey {unAgentLicenseKey :: ByteString}
+
 data AgentClientContext = AgentClientContext
   { _accLogger :: Logger Hasura,
     _accBaseUrl :: BaseUrl,
     _accHttpManager :: HTTP.Manager,
-    _accResponseTimeout :: Maybe Int
+    _accResponseTimeout :: Maybe Int,
+    _accAgentLicenseKey :: Maybe AgentLicenseKey
   }
 
 newtype AgentClientT m a = AgentClientT (ReaderT AgentClientContext m a)
@@ -49,7 +59,9 @@ runRequestAcceptStatus' acceptStatus req = do
   -- Set the response timeout explicitly if it is provided
   let transformableReq' =
         transformableReq &~ do
-          for _accResponseTimeout \x -> HTTP.timeout .= HTTP.responseTimeoutMicro x
+          for_ _accResponseTimeout \x -> HTTP.timeout .= HTTP.responseTimeoutMicro x
+          HTTP.headers
+            %= \headers -> maybe headers (\(AgentLicenseKey key) -> ("X-Hasura-License", key) : headers) _accAgentLicenseKey
 
   (tracedReq, responseOrException) <- traceHTTPRequest transformableReq' \tracedReq ->
     fmap (tracedReq,) . liftIO . try @HTTP.HttpException $ HTTP.httpLbs tracedReq _accHttpManager
@@ -71,4 +83,6 @@ throwClientError' :: (MonadIO m, MonadTrace m, MonadError QErr m) => ClientError
 throwClientError' err = do
   AgentClientContext {..} <- askClientContext
   logClientError _accLogger err
-  throw500 $ "Error in Data Connector backend: " <> Hasura.HTTP.serializeServantClientErrorMessage err
+  case err of
+    FailureResponse _ r | responseStatusCode r == HTTP.status401 -> throw401 "EE License Key Required."
+    _ -> throw500 $ "Error in Data Connector backend: " <> Hasura.HTTP.serializeServantClientErrorMessage err

@@ -34,6 +34,7 @@ import Hasura.Backends.Postgres.Types.Update as PGIR
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.Base.ToErrorValue
+import Hasura.Function.Cache (FunctionInfo)
 import Hasura.GraphQL.ApolloFederation (ApolloFederationParserFunction)
 import Hasura.GraphQL.Schema.Backend
   ( BackendSchema,
@@ -65,8 +66,8 @@ import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Update qualified as SU
 import Hasura.GraphQL.Schema.Update.Batch qualified as SUB
-import Hasura.LogicalModel.Schema qualified as LogicalModels
 import Hasura.Name qualified as Name
+import Hasura.NativeQuery.Schema qualified as NativeQueries
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
@@ -79,7 +80,6 @@ import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column
-import Hasura.RQL.Types.Function (FunctionInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table (TableInfo (..), UpdPermInfo (..))
@@ -286,10 +286,10 @@ instance
   ( PostgresSchema pgKind,
     Backend ('Postgres pgKind)
   ) =>
-  BS.BackendCustomTypeSelectSchema ('Postgres pgKind)
+  BS.BackendCustomReturnTypeSelectSchema ('Postgres pgKind)
   where
-  logicalModelArguments = defaultLogicalModelArgs
-  logicalModelSelectionSet = defaultLogicalModelSelectionSet
+  customReturnTypeArguments = defaultCustomReturnTypeArgs
+  customReturnTypeSelectionSet = defaultCustomReturnTypeSelectionSet
 
 instance
   ( Backend ('Postgres pgKind),
@@ -307,7 +307,7 @@ instance
   buildFunctionQueryFields = buildFunctionQueryFieldsPG
   buildFunctionRelayQueryFields = pgkBuildFunctionRelayQueryFields
   buildFunctionMutationFields = buildFunctionMutationFieldsPG
-  buildLogicalModelRootFields = LogicalModels.defaultBuildLogicalModelRootFields
+  buildNativeQueryRootFields = NativeQueries.defaultBuildNativeQueryRootFields
 
   mkRelationshipParser = GSB.mkDefaultRelationshipParser backendInsertParser ()
 
@@ -841,7 +841,7 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
     mkListParameter :: ColumnType ('Postgres pgKind) -> [ColumnValue ('Postgres pgKind)] -> IR.UnpreparedValue ('Postgres pgKind)
     mkListParameter columnType columnValues = do
       let scalarType = unsafePGColumnToBackend columnType
-      IR.UVParameter Nothing $
+      IR.UVParameter IR.Unknown $
         ColumnValue
           (ColumnScalar $ Postgres.PGArray scalarType)
           (Postgres.PGValArray $ cvValue <$> columnValues)

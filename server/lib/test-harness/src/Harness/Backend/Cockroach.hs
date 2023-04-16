@@ -43,10 +43,10 @@ import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Logging
 import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), SchemaName (..))
+import Harness.Schema qualified as Schema
 import Harness.Test.BackendType (BackendTypeConfig)
 import Harness.Test.BackendType qualified as BackendType
-import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), SchemaName (..))
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
 import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Prelude
@@ -150,11 +150,10 @@ defaultSourceConfiguration testEnvironment =
 createTable :: TestEnvironment -> Schema.Table -> IO ()
 createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableConstraints, tableUniqueIndexes} = do
   let schemaName = Schema.getSchemaName testEnv
-
   run_
     testEnv
     [i|
-      CREATE TABLE #{ Constants.cockroachDb }."#{ tableName }"
+      CREATE TABLE #{ schemaName }."#{ tableName }"
         (#{
           commaSeparated $
             (mkColumnSql <$> tableColumns)
@@ -169,7 +168,7 @@ createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk,
 scalarType :: HasCallStack => Schema.ScalarType -> Text
 scalarType = \case
   Schema.TInt -> "integer"
-  Schema.TStr -> "varchar"
+  Schema.TStr -> "text"
   Schema.TUTCTime -> "timestamp"
   Schema.TBool -> "boolean"
   Schema.TGeography -> "geography"
@@ -189,10 +188,11 @@ insertTable :: TestEnvironment -> Schema.Table -> IO ()
 insertTable testEnvironment Schema.Table {tableName, tableColumns, tableData}
   | null tableData = pure ()
   | otherwise = do
+      let schemaName = Schema.getSchemaName testEnvironment
       run_ testEnvironment $
         T.unwords
           [ "INSERT INTO",
-            Constants.cockroachDb <> "." <> wrapIdentifier tableName,
+            Schema.unSchemaName schemaName <> "." <> wrapIdentifier tableName,
             "(",
             commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
             ")",
@@ -263,7 +263,8 @@ createDatabase testEnvironment = do
   runWithInitialDb_
     testEnvironment
     ("CREATE DATABASE " <> uniqueDbName (uniqueTestId testEnvironment) <> ";")
-  createSchema testEnvironment
+  let schemaName = Schema.getSchemaName testEnvironment
+  createSchema testEnvironment schemaName
 
 -- | we drop databases at the end of test runs so we don't need to do DB clean
 -- up.
@@ -277,9 +278,8 @@ dropDatabase testEnvironment = do
 
 -- Because the test harness sets the schema name we use for testing, we need
 -- to make sure it exists before we run the tests.
-createSchema :: TestEnvironment -> IO ()
-createSchema testEnvironment = do
-  let schemaName = Schema.getSchemaName testEnvironment
+createSchema :: TestEnvironment -> SchemaName -> IO ()
+createSchema testEnvironment schemaName = do
   run_
     testEnvironment
     [i|

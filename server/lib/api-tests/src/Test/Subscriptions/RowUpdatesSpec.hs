@@ -14,9 +14,9 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine
 import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml (yaml)
+import Harness.Schema qualified as Schema
 import Harness.Subscriptions
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -63,11 +63,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   withSubscriptions do
     it "Hasura sends updated query results after insert" \(mkSubscription, testEnvironment) -> do
       let schemaName :: Schema.SchemaName
@@ -94,7 +91,7 @@ tests opts = do
             actual :: IO Value
             actual = getNextResponse query
 
-        actual `shouldBe` expected
+        shouldReturnYaml testEnvironment actual expected
 
       -- add some data
       do
@@ -118,7 +115,7 @@ tests opts = do
                     }
                   }
                 |]
-        actual `shouldBe` expected
+        shouldReturnYaml testEnvironment actual expected
 
       -- fetch the next response
       do
@@ -133,7 +130,7 @@ tests opts = do
                       name: "B"
               |]
 
-        getNextResponse query `shouldBe` expected
+        shouldReturnYaml testEnvironment (getNextResponse query) expected
 
   withSubscriptions do
     it "Multiplexes" \(mkSubscription, testEnvironment) -> do
@@ -164,17 +161,21 @@ tests opts = do
           |]
           []
 
-      getNextResponse subIdEq3
-        `shouldBe` [yaml|
-        data:
-          hasura_example: []
-      |]
+      shouldReturnYaml
+        testEnvironment
+        (getNextResponse subIdEq3)
+        [yaml|
+          data:
+            hasura_example: []
+        |]
 
-      getNextResponse subIdEq4
-        `shouldBe` [yaml|
-        data:
-          hasura_example: []
-      |]
+      shouldReturnYaml
+        testEnvironment
+        (getNextResponse subIdEq4)
+        [yaml|
+          data:
+            hasura_example: []
+        |]
 
       let expected :: Value
           expected =
@@ -201,23 +202,27 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
-      getNextResponse subIdEq3
-        `shouldBe` [yaml|
-        data:
-          hasura_example:
-            - id: 3
-              name: "A"
-      |]
+      shouldReturnYaml
+        testEnvironment
+        (getNextResponse subIdEq3)
+        [yaml|
+          data:
+            hasura_example:
+              - id: 3
+                name: "A"
+        |]
 
-      getNextResponse subIdEq4
-        `shouldBe` [yaml|
-        data:
-          hasura_example:
-            - id: 4
-              name: "B"
-      |]
+      shouldReturnYaml
+        testEnvironment
+        (getNextResponse subIdEq4)
+        [yaml|
+          data:
+            hasura_example:
+              - id: 4
+                name: "B"
+        |]
 
   withSubscriptions do
     it "Live query with variables" \(mkSubscription, testEnvironment) -> do
@@ -249,7 +254,7 @@ tests opts = do
             actual :: IO Value
             actual = getNextResponse query
 
-        actual `shouldBe` expected
+        shouldReturnYaml testEnvironment actual expected
 
       -- add some data
       do
@@ -273,7 +278,7 @@ tests opts = do
                     }
                   }
                 |]
-        actual `shouldBe` expected
+        shouldReturnYaml testEnvironment actual expected
 
       -- fetch the next response
       do
@@ -286,7 +291,7 @@ tests opts = do
                       name: "Alice"
               |]
 
-        getNextResponse query `shouldBe` expected
+        shouldReturnYaml testEnvironment (getNextResponse query) expected
 
       -- add another alice
       do
@@ -310,7 +315,7 @@ tests opts = do
                     }
                   }
                 |]
-        actual `shouldBe` expected
+        shouldReturnYaml testEnvironment actual expected
 
       -- fetch the next response
       do
@@ -325,4 +330,4 @@ tests opts = do
                       name: "Alice"
               |]
 
-        getNextResponse query `shouldBe` expected
+        shouldReturnYaml testEnvironment (getNextResponse query) expected

@@ -13,11 +13,12 @@ sidebar_position: 1
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import LatestRelease from '@site/src/components/LatestRelease';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Getting Started with Hasura and MySQL in Docker
 
 <div className="badge-container">
-  <div className="badge badge--primary heading-badge">Available on: Enterprise (Self-hosted)</div>
+  <ProductBadge self />
   <div className="badge badge-gray heading-badge">Alpha</div>
 </div>
 
@@ -38,11 +39,11 @@ MySQL GraphQL Data Connector.
 
 :::tip Alpha version supported features
 
-Hasura currently supports queries, mutations (INSERT, UPDATE, DELETE), table relationships and permissions on MySQL.
+Hasura currently supports queries, mutations (INSERT, UPDATE, DELETE), table relationships, remote relationships and permissions on MySQL.
 
-Note that Hasura doesn't yet support the ability to modify the database schema for MySQL, so the database you
-connect to should already contain tables and data. You should also ideally have access to it outside of Hasura to
-modify the schema.
+Note that Hasura doesn't yet support the ability to modify the database schema for MySQL, so the database you connect to
+should already contain tables and data. You should also ideally have access to it outside of Hasura to modify the
+schema.
 
 :::
 
@@ -52,8 +53,8 @@ modify the schema.
 
 This tutorial assumes that the following prerequisites have been met:
 
-- To deploy Hasura EE, you will need a license key. Please [contact Hasura Sales](mailto:sales@hasura.io) if you do not
-  already have one.
+- To deploy Hasura Enterprise Edition, you will need a license key. Please
+  [contact Hasura Sales](mailto:sales@hasura.io) if you do not already have one.
 - You have [Docker](https://docs.docker.com/install/) and [Docker Compose](https://docs.docker.com/compose/install/)
   working on your machine.
 - You have access to a MySQL database for which you would like to create an API.
@@ -71,7 +72,7 @@ wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-mani
 curl https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/enterprise/mysql/docker-compose.yaml -o docker-compose.yaml
 ```
 
-### Step 2: Set the Hasura EE license key and the admin secret
+### Step 2: Set the Hasura Enterprise Edition license key and the admin secret
 
 Edit the downloaded `docker-compose.yaml` and set the license key and admin secret.
 
@@ -81,7 +82,6 @@ the Hasura Console are not publicly accessible.
 #### Edit the Docker Compose file to include the license key and admin secret environment variables
 
 ```yaml {5-6}
-
 ---
 graphql-engine:
   image: hasura/graphql-engine:v2.12.0
@@ -157,7 +157,7 @@ automatically build a full-featured GraphQL API for it.
 
 ### Step 8 (optional): Use managed PostgreSQL and Redis instances
 
-The Hasura EE Docker compose files come with containerized open-source versions of PostgreSQL and Redis.
+The Hasura Enterprise Edition Docker compose files come with containerized open-source versions of PostgreSQL and Redis.
 
 We highly recommend using managed PostgreSQL and Redis instances especially when running in production.
 
@@ -170,7 +170,6 @@ HASURA_GRAPHQL_METADATA_DATABASE_URL HASURA_GRAPHQL_REDIS_URL HASURA_GRAPHQL_RAT
 For example:
 
 ```yaml {5-7}
-
 ---
 graphql-engine:
   image: hasura/graphql-engine:v2.12.0

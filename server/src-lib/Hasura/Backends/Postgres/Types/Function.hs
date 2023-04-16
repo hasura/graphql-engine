@@ -12,8 +12,8 @@ where
 
 import Data.Aeson
 import Hasura.Backends.Postgres.SQL.Types
+import Hasura.Function.Cache
 import Hasura.Prelude
-import Hasura.RQL.Types.Function
 
 newtype HasDefault = HasDefault {unHasDefault :: Bool}
   deriving (Show, Eq, Generic, ToJSON, NFData, Hashable)

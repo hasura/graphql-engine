@@ -14,6 +14,7 @@ query:
       configuration:
         service_account: {from_env: HASURA_BIGQUERY_SERVICE_KEY}
         project_id: {from_env: HASURA_BIGQUERY_PROJECT_ID}
+        retry_limit: 5
         datasets:
         - hasura
         global_select_limit: 1

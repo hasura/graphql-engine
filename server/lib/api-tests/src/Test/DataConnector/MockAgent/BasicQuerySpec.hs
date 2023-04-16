@@ -105,8 +105,8 @@ sourceMetadata =
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-tests _opts = describe "Basic Tests" $ do
+tests :: SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
+tests = describe "Basic Tests" $ do
   mockAgentGraphqlTest "works with simple object query" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =

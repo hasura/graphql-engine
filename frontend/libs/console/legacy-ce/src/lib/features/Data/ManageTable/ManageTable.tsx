@@ -47,7 +47,12 @@ const availableTabs = (
       value: 'browse',
       label: 'Browse',
       content: (
-        <BrowseRowsContainer dataSourceName={dataSourceName} table={table} />
+        <BrowseRowsContainer
+          // key is used to force remounting of the component when users switch between tables
+          key={'browse-' + JSON.stringify(table)}
+          dataSourceName={dataSourceName}
+          table={table}
+        />
       ),
     },
     // NOTE: uncomment this part to enable the new Insert Row tab

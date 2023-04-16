@@ -4,6 +4,7 @@ const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
 //const { withReact } = require('@nrwl/react');
 const util = require('util');
 const withConsoleTweaks = require('./tools/webpack/withConsoleTweaks');
+const withNodejsFallbacks = require('./tools/webpack/withNodejsFallbacks');
 const withDevAssetLoader = require('./tools/webpack/withDevAssetLoader');
 const withCircularDependencyPlugin = require('./tools/webpack/withCircularDependencyPlugin');
 const withNxEnvCleanup = require('./tools/webpack/withNxEnvCleanup');
@@ -13,6 +14,7 @@ module.exports = composePlugins(
   withNx(),
   // Replace this with withReact for fast refresh once we are able to use it
   withWeb(),
+  withNodejsFallbacks(),
   withConsoleTweaks(),
   withDevAssetLoader(),
   withNxEnvCleanup()

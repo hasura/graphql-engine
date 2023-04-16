@@ -5,8 +5,10 @@ module Hasura.Backends.MySQL.Instances.Transport (runQuery) where
 import Control.Monad.Trans.Control
 import Data.Aeson qualified as J
 import Data.Text.Extended
+import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Backends.MySQL.Instances.Execute ()
 import Hasura.Base.Error
+import Hasura.CredentialCache
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Logging
@@ -41,13 +43,14 @@ runQuery ::
   RootFieldAlias ->
   UserInfo ->
   L.Logger L.Hasura ->
+  Maybe (CredentialCache AgentLicenseKey) ->
   SourceConfig 'MySQL ->
   OnBaseMonad IdentityT (Maybe (AnyBackend ExecutionStats), EncJSON) ->
   Maybe (PreparedQuery 'MySQL) ->
   ResolvedConnectionTemplate 'MySQL ->
   -- | Also return the time spent in the PG query; for telemetry.
   m (DiffTime, EncJSON)
-runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql _ = do
+runQuery reqId query fieldName _userInfo logger _ _sourceConfig tx genSql _ = do
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId
   withElapsedTime $
     newSpan ("MySQL Query for root field " <>> fieldName) $
@@ -59,9 +62,10 @@ runQueryExplain ::
     MonadError QErr m,
     MonadTrace m
   ) =>
+  Maybe (CredentialCache AgentLicenseKey) ->
   DBStepInfo 'MySQL ->
   m EncJSON
-runQueryExplain (DBStepInfo _ _ _ action _) = fmap arResult (run action)
+runQueryExplain _ (DBStepInfo _ _ _ action _) = fmap arResult (run action)
 
 run :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m, MonadTrace m) => OnBaseMonad IdentityT a -> m a
 run = runIdentityT . runOnBaseMonad

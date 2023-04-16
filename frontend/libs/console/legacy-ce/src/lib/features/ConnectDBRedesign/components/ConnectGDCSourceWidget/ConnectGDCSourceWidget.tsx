@@ -18,6 +18,8 @@ import { generateGDCRequestPayload } from './utils/generateRequest';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
 import { capitaliseFirstLetter } from '../../../../components/Common/ConfigureTransformation/utils';
+import { Collapsible } from '../../../../new-components/Collapsible';
+import { DisplayToastErrorMessage } from '../Common/DisplayToastErrorMessage';
 
 interface ConnectGDCSourceWidgetProps {
   driver: string;
@@ -72,8 +74,8 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
       onError: err => {
         hasuraToast({
           type: 'error',
-          title: 'An error occurred while adding database',
-          children: JSON.stringify(err),
+          title: err.name,
+          children: <DisplayToastErrorMessage message={err.message} />,
         });
       },
     });
@@ -159,13 +161,20 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
                     schemaObject={data?.configSchemas.configSchema}
                     references={data?.configSchemas.otherSchemas}
                   />
+
+                  <div className="mt-sm">
+                    <Collapsible
+                      triggerChildren={
+                        <div className="font-semibold text-muted">
+                          GraphQL Customization
+                        </div>
+                      }
+                    >
+                      <GraphQLCustomization name="customization" />
+                    </Collapsible>
+                  </div>
                 </div>
               ),
-            },
-            {
-              value: 'customization',
-              label: 'GraphQL Customization',
-              content: <GraphQLCustomization name="customization" />,
             },
           ]}
         />

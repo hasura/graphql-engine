@@ -45,6 +45,8 @@ import { isEmpty } from '../../../../Common/utils/jsUtils';
 import requestAction from '../../../../../utils/requestAction';
 import Endpoints from '../../../../../Endpoints';
 import { Button } from '../../../../../new-components/Button';
+import { useEELiteAccess } from '../../../../../features/EETrial';
+import globals from '../../../../../Globals';
 import { MapStateToProps } from '../../../../../types';
 import { useEventTrigger } from '../state';
 import { Header } from '../../../../Common/Headers/Headers';
@@ -83,6 +85,13 @@ const Add: React.FC<Props> = props => {
   const { dispatch, readOnlyMode, dataSourcesList } = props;
 
   const [databaseInfo, setDatabaseInfo] = useState<DatabaseInfo>({});
+
+  const { access: eeLiteAccess } = useEELiteAccess(globals);
+
+  const autoCleanupSupport =
+    isProConsole(globals) || eeLiteAccess === 'active'
+      ? 'active'
+      : eeLiteAccess;
 
   useEffect(() => {
     const driver = getSourceDriver(dataSourcesList, source);
@@ -303,7 +312,7 @@ const Add: React.FC<Props> = props => {
     const newState = { ...state };
 
     /* don't cleanup_config if console type is oss */
-    if (!isProConsole(window.__env)) {
+    if (autoCleanupSupport === 'active') {
       delete newState?.cleanupConfig;
     }
 
@@ -413,6 +422,7 @@ const Add: React.FC<Props> = props => {
                     handleHeadersChange={handleHeadersChange}
                     handleToggleAllColumn={setState.toggleAllColumnChecked}
                     handleAutoCleanupChange={handleAutoCleanupChange}
+                    autoCleanupSupport={autoCleanupSupport}
                   />
                   <ConfigureTransformation
                     transformationType="event"

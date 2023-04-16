@@ -7,33 +7,19 @@ export type ProConsoleEnv = {
 };
 
 export const isProConsole = (env: ProConsoleEnv) => {
-  if (
-    env.consoleMode === 'server' &&
-    (env.consoleType === 'cloud' ||
-      env.consoleType === 'pro' ||
-      env.consoleType === 'pro-lite')
-  ) {
+  if (env.consoleType === 'cloud' || env.consoleType === 'pro') {
     return true;
   }
 
-  if (env.consoleMode === 'cli') {
-    if (
-      env.consoleType === 'cloud' ||
-      env.consoleType === 'pro' ||
-      env.consoleType === 'pro-lite'
-    )
-      return true;
-
-    // to support old CLI logic, when consoleType is not provided by the CLI
-    if (env.pro === true) return true;
-  }
+  if (env.consoleMode === 'cli' && env.pro === true) return true;
 
   return false;
 };
 
-export const isProLiteConsole = (env: ProConsoleEnv) => {
-  return env.consoleType === 'pro-lite';
-};
+// Commented this function so that it's not used
+// export const isProLiteConsole = (env: ProConsoleEnv) => {
+//   return env.consoleType === 'pro-lite';
+// };
 
 export const isMonitoringTabSupportedEnvironment = (env: ProConsoleEnv) => {
   // pro-lite and OSS environments won't have access to metrics server

@@ -42,12 +42,8 @@ import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Extended
 import Data.Text.Extended qualified as Text.E
-import Hasura.Backends.DataConnector.API (errorResponseSummary, schemaCase)
 import Hasura.Backends.DataConnector.API qualified as API
-import Hasura.Backends.DataConnector.API.V0.ErrorResponse (_crDetails)
-import Hasura.Backends.DataConnector.Adapter.ConfigTransform (getConfigSchemaResponse, transformConnSourceConfig)
-import Hasura.Backends.DataConnector.Adapter.Types qualified as DC.Types
-import Hasura.Backends.DataConnector.Agent.Client qualified as Agent.Client
+import Hasura.Backends.DataConnector.Adapter.Metadata (requestDatabaseSchema)
 import Hasura.Base.Error
 import Hasura.Base.Error qualified as Error
 import Hasura.EncJSON
@@ -74,14 +70,8 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.AnyBackend qualified as AnyBackend
 import Hasura.SQL.Backend
 import Hasura.SQL.Backend qualified as Backend
-import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.Logging (MetadataLog (..))
 import Hasura.Services
-import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Client qualified as HTTP
-import Servant.API (Union)
-import Servant.Client (BaseUrl, (//))
-import Servant.Client.Generic qualified as Servant.Client
 
 --------------------------------------------------------------------------------
 -- Add source
@@ -343,51 +333,30 @@ runUpdateSource (UpdateSource name sourceConfig sourceCustomization healthCheckC
 
 --------------------------------------------------------------------------------
 
-newtype GetSourceTables = GetSourceTables {_gstSourceName :: Common.SourceName}
+newtype GetSourceTables (b :: BackendType) = GetSourceTables {_gstSourceName :: SourceName}
 
-instance FromJSON GetSourceTables where
+instance FromJSON (GetSourceTables b) where
   parseJSON = Aeson.withObject "GetSourceTables" \o -> do
     _gstSourceName <- o .: "source"
     pure $ GetSourceTables {..}
 
--- | Fetch a list of tables for the request data source. Currently
--- this is only supported for Data Connectors.
+-- | Fetch a list of tables for the request data source.
 runGetSourceTables ::
-  ( CacheRM m,
-    Has (L.Logger L.Hasura) r,
-    MonadReader r m,
+  forall b m r.
+  ( BackendMetadata b,
+    CacheRM m,
     MonadError Error.QErr m,
     Metadata.MetadataM m,
     MonadIO m,
     MonadBaseControl IO m,
+    MonadReader r m,
+    Has (L.Logger L.Hasura) r,
     ProvidesNetwork m
   ) =>
-  Env.Environment ->
-  GetSourceTables ->
+  GetSourceTables b ->
   m EncJSON
-runGetSourceTables env GetSourceTables {..} = do
-  metadata <- Metadata.getMetadata
-
-  let sources = fmap Metadata.unBackendSourceMetadata $ Metadata._metaSources metadata
-      bmap = Metadata._metaBackendConfigs metadata
-
-  abSourceMetadata <- lookupSourceMetadata _gstSourceName sources
-
-  AnyBackend.dispatchAnyBackend @RQL.Types.Backend abSourceMetadata $ \Metadata.SourceMetadata {_smKind, _smConfiguration} -> do
-    case _smKind of
-      Backend.DataConnectorKind dcName -> do
-        logger :: L.Logger L.Hasura <- asks getter
-        manager <- askHTTPManager
-        let timeout = DC.Types.timeout _smConfiguration
-
-        DC.Types.DataConnectorOptions {..} <- lookupDataConnectorOptions dcName bmap
-        configSchemaResponse <- getConfigSchemaResponse dcName
-        transformedConfig <- transformConnSourceConfig dcName _gstSourceName configSchemaResponse _smConfiguration [("$session", J.object []), ("$env", J.toJSON env)] env
-        schemaResponse <- querySourceSchema logger manager timeout _dcoUri _gstSourceName transformedConfig
-
-        let fullyQualifiedTableNames = fmap API._tiName $ API._srTables schemaResponse
-        pure $ EncJSON.encJFromJValue fullyQualifiedTableNames
-      backend -> Error.throw500 ("Schema fetching is not supported for '" <> Text.E.toTxt backend <> "'")
+runGetSourceTables GetSourceTables {..} = do
+  fmap EncJSON.encJFromJValue (listAllTables @b _gstSourceName)
 
 --------------------------------------------------------------------------------
 
@@ -407,35 +376,28 @@ instance FromJSON GetTableInfo where
 runGetTableInfo ::
   ( CacheRM m,
     Has (L.Logger L.Hasura) r,
-    ProvidesNetwork m,
     MonadReader r m,
     MonadError Error.QErr m,
     Metadata.MetadataM m,
     MonadIO m,
     MonadBaseControl IO m
   ) =>
-  Env.Environment ->
   GetTableInfo ->
   m EncJSON
-runGetTableInfo env GetTableInfo {..} = do
+runGetTableInfo GetTableInfo {..} = do
   metadata <- Metadata.getMetadata
 
   let sources = fmap Metadata.unBackendSourceMetadata $ Metadata._metaSources metadata
-      bmap = Metadata._metaBackendConfigs metadata
 
   abSourceMetadata <- lookupSourceMetadata _gtiSourceName sources
 
   AnyBackend.dispatchAnyBackend @RQL.Types.Backend abSourceMetadata $ \Metadata.SourceMetadata {_smKind, _smConfiguration} -> do
     case _smKind of
-      Backend.DataConnectorKind dcName -> do
-        logger :: L.Logger L.Hasura <- asks getter
-        manager <- askHTTPManager
-        let timeout = DC.Types.timeout _smConfiguration
+      Backend.DataConnectorKind _dcName -> do
+        sourceConfig <- askSourceConfig @'DataConnector _gtiSourceName
+        (logger :: L.Logger L.Hasura) <- asks getter
 
-        DC.Types.DataConnectorOptions {..} <- lookupDataConnectorOptions dcName bmap
-        configSchemaResponse <- getConfigSchemaResponse dcName
-        transformedConfig <- transformConnSourceConfig dcName _gtiSourceName configSchemaResponse _smConfiguration [("$session", J.object []), ("$env", J.toJSON env)] env
-        schemaResponse <- querySourceSchema logger manager timeout _dcoUri _gtiSourceName transformedConfig
+        schemaResponse <- requestDatabaseSchema logger _gtiSourceName sourceConfig
 
         let table = find ((== _gtiTableName) . API._tiName) $ API._srTables schemaResponse
         pure $ EncJSON.encJFromJValue table
@@ -448,32 +410,3 @@ lookupSourceMetadata :: (MonadError QErr m) => SourceName -> InsOrdHashMap Sourc
 lookupSourceMetadata sourceName sources =
   InsOrdHashMap.lookup sourceName sources
     `onNothing` Error.throw400 Error.DataConnectorError ("Source '" <> Text.E.toTxt sourceName <> "' not found")
-
-lookupDataConnectorOptions :: (MonadError QErr m) => DC.Types.DataConnectorName -> BackendMap.BackendMap BackendConfigWrapper -> m DC.Types.DataConnectorOptions
-lookupDataConnectorOptions dcName bmap =
-  let backendConfig = Metadata.unBackendConfigWrapper <$> BackendMap.lookup @'Backend.DataConnector bmap
-   in (InsOrdHashMap.lookup dcName =<< backendConfig)
-        `onNothing` (Error.throw400 Error.DataConnectorError ("Data connector named " <> Text.E.toTxt dcName <> " was not found in the data connector backend config"))
-
-querySourceSchema ::
-  ( MonadIO m,
-    MonadBaseControl IO m,
-    MonadError QErr m
-  ) =>
-  L.Logger L.Hasura ->
-  HTTP.Manager ->
-  Maybe DC.Types.SourceTimeout ->
-  BaseUrl ->
-  SourceName ->
-  API.Config ->
-  m API.SchemaResponse
-querySourceSchema logger manager timeout uri sourceName transformedConfig =
-  Tracing.ignoreTraceT
-    . flip Agent.Client.runAgentClientT (Agent.Client.AgentClientContext logger uri manager (DC.Types.sourceTimeoutMicroseconds <$> timeout))
-    $ schemaGuard =<< (Servant.Client.genericClient // API._schema) (Text.E.toTxt sourceName) transformedConfig
-
-schemaGuard :: MonadError QErr m => Union API.SchemaResponses -> m API.SchemaResponse
-schemaGuard = schemaCase defaultAction pure errorAction
-  where
-    defaultAction = throw400 DataConnectorError "Error resolving source schema"
-    errorAction e = throw400WithDetail DataConnectorError ("Error resolving source schema: " <> errorResponseSummary e) (_crDetails e)

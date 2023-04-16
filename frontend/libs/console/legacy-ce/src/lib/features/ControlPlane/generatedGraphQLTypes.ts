@@ -60437,7 +60437,7 @@ export type Unnamed_3_MutationVariables = Exact<{
   jobId: Scalars['uuid'];
   projectId: Scalars['uuid'];
   isLatencyDisplayed: Scalars['Boolean'];
-  datasDifferenceInMilliseconds: Scalars['Int'];
+  dateDifferenceInMilliseconds: Scalars['Int'];
 }>;
 
 export type Unnamed_3_Mutation = {
@@ -60493,6 +60493,27 @@ export type TriggerOneClickDeploymentMutation = {
     __typename?: 'OneClickDeployResponse';
     message?: string | null;
     status: string;
+  } | null;
+};
+
+export type RegisterEeTrialMutationVariables = Exact<{
+  metadataDbId: Scalars['uuid'];
+  first: Scalars['String'];
+  last: Scalars['String'];
+  email: Scalars['String'];
+  jobFunction: Scalars['String'];
+  organization: Scalars['String'];
+  phone: Scalars['String'];
+}>;
+
+export type RegisterEeTrialMutation = {
+  __typename?: 'mutation_root';
+  registerEETrial?: {
+    __typename?: 'RegisterEETrialResponse';
+    status?: string | null;
+    type?: string | null;
+    expiry_at?: any | null;
+    grace_at?: any | null;
   } | null;
 };
 

@@ -25,12 +25,15 @@ import Data.List (intersperse)
 import Data.List.NonEmpty qualified as NE
 import Data.String
 import Data.Text qualified as T
+import Data.Text.Extended qualified as T (toTxt)
 import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Builder (Builder)
 import Data.Text.Lazy.Builder qualified as LT
 import Data.Tuple
 import Data.Vector qualified as V
 import Hasura.Backends.BigQuery.Types
+import Hasura.NativeQuery.Metadata (InterpolatedItem (..), InterpolatedQuery (..))
+import Hasura.NativeQuery.Types (NativeQueryName (..))
 import Hasura.Prelude hiding (second)
 
 --------------------------------------------------------------------------------
@@ -139,6 +142,7 @@ fromScalarType =
     StructScalarType -> "STRUCT"
     DecimalScalarType -> "DECIMAL"
     BigDecimalScalarType -> "BIGDECIMAL"
+    JsonScalarType -> "JSON"
 
 fromOp :: Op -> Printer
 fromOp =
@@ -184,10 +188,26 @@ fromSelect Select {..} = finalExpression
     fromAsStruct = \case
       AsStruct -> "AS STRUCT"
       NoAsStruct -> ""
+    interpolatedQuery = \case
+      IIText t -> UnsafeTextPrinter t <+> NewlinePrinter
+      IIVariable v -> fromExpression v
+    fromWith = \case
+      Just (With expressions) -> do
+        let go :: InterpolatedQuery Expression -> Printer
+            go = foldr ((<+>) . interpolatedQuery) "" . getInterpolatedQuery
+
+        "WITH "
+          <+> SepByPrinter
+            ("," <+> NewlinePrinter)
+            [ fromNameText alias <+> " AS " <+> parens (go thing)
+              | Aliased thing alias <- toList expressions
+            ]
+      Nothing -> ""
     inner =
       SepByPrinter
         NewlinePrinter
-        [ "SELECT ",
+        [ fromWith selectWith,
+          "SELECT ",
           fromAsStruct selectAsStruct,
           IndentPrinter 7 projections,
           "FROM " <+> IndentPrinter 5 (fromFrom selectFrom),
@@ -539,6 +559,8 @@ fromFrom =
             )
             selectFromFunction
         )
+    FromNativeQuery (NativeQueryName nativeQueryName) ->
+      fromNameText (T.toTxt nativeQueryName)
 
 fromTableName :: TableName -> Printer
 fromTableName TableName {tableName, tableNameSchema} =

@@ -19,10 +19,11 @@ import Hasura.App.State
 import Hasura.Backends.Postgres.DDL.RunSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.GraphQL.Execute.Backend
+import Hasura.Function.API qualified as Functions
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
+import Hasura.QueryTags
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ApiLimit
 import Hasura.RQL.DDL.ComputedField
@@ -37,6 +38,7 @@ import Hasura.RQL.DDL.Relationship.Rename
 import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema
+import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.DML.Count
 import Hasura.RQL.DML.Delete
 import Hasura.RQL.DML.Insert
@@ -51,6 +53,7 @@ import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.ScheduledTrigger
+import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.RemoteSchema.MetadataAPI
@@ -67,8 +70,8 @@ data RQLQueryV1
   | RQUntrackTable !(UntrackTable ('Postgres 'Vanilla))
   | RQSetTableIsEnum !(SetTableIsEnum ('Postgres 'Vanilla))
   | RQSetTableCustomization !(SetTableCustomization ('Postgres 'Vanilla))
-  | RQTrackFunction !(TrackFunction ('Postgres 'Vanilla))
-  | RQUntrackFunction !(UnTrackFunction ('Postgres 'Vanilla))
+  | RQTrackFunction !(Functions.TrackFunction ('Postgres 'Vanilla))
+  | RQUntrackFunction !(Functions.UnTrackFunction ('Postgres 'Vanilla))
   | RQCreateObjectRelationship !(CreateObjRel ('Postgres 'Vanilla))
   | RQCreateArrayRelationship !(CreateArrRel ('Postgres 'Vanilla))
   | RQDropRelationship !(DropRel ('Postgres 'Vanilla))
@@ -137,7 +140,7 @@ data RQLQueryV1
 data RQLQueryV2
   = RQV2TrackTable !(TrackTableV2 ('Postgres 'Vanilla))
   | RQV2SetTableCustomFields !SetTableCustomFields -- deprecated
-  | RQV2TrackFunction !(TrackFunctionV2 ('Postgres 'Vanilla))
+  | RQV2TrackFunction !(Functions.TrackFunctionV2 ('Postgres 'Vanilla))
   | RQV2ReplaceMetadata !ReplaceMetadataV2
 
 data RQLQuery
@@ -178,23 +181,23 @@ runQuery ::
   ( MonadIO m,
     MonadError QErr m,
     HasAppEnv m,
+    HasCacheStaticConfig m,
     Tracing.MonadTrace m,
     MonadBaseControl IO m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadResolveSource m,
     MonadQueryTags m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
     MonadGetApiTimeLimit m,
-    UserInfoM m,
-    HasServerConfigCtx m
+    UserInfoM m
   ) =>
   AppContext ->
   RebuildableSchemaCache ->
   RQLQuery ->
   m (EncJSON, RebuildableSchemaCache)
 runQuery appContext sc query = do
-  AppEnv {..} <- askAppEnv
+  appEnv@AppEnv {..} <- askAppEnv
   let logger = _lsLogger appEnvLoggers
   when ((appEnvEnableReadOnlyMode == ReadOnlyModeEnabled) && queryModifiesUserDB query) $
     throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
@@ -206,14 +209,15 @@ runQuery appContext sc query = do
         if (exportsMetadata query)
           then emptyMetadataDefaults
           else acMetadataDefaults appContext
+  dynamicConfig <- buildCacheDynamicConfig appEnv appContext
 
-  (metadata, currentResourceVersion) <- liftEitherM fetchMetadata
+  MetadataWithResourceVersion metadata currentResourceVersion <- liftEitherM fetchMetadata
   ((result, updatedMetadata), updatedCache, invalidations) <-
-    runQueryM (acEnvironment appContext) query
+    runQueryM (acEnvironment appContext) (acSQLGenCtx appContext) query
       -- TODO: remove this straight runReaderT that provides no actual new info
       & flip runReaderT logger
       & runMetadataT metadata metadataDefaults
-      & runCacheRWT sc
+      & runCacheRWT dynamicConfig sc
   when (queryModifiesSchemaCache query) $ do
     case appEnvEnableMaintenanceMode of
       MaintenanceModeDisabled -> do
@@ -389,10 +393,9 @@ runQueryM ::
     UserInfoM m,
     MonadBaseControl IO m,
     MonadIO m,
-    HasServerConfigCtx m,
     Tracing.MonadTrace m,
     MetadataM m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadQueryTags m,
     MonadReader r m,
     MonadError QErr m,
@@ -402,9 +405,10 @@ runQueryM ::
     MonadGetApiTimeLimit m
   ) =>
   Env.Environment ->
+  SQLGenCtx ->
   RQLQuery ->
   m EncJSON
-runQueryM env rq = withPathK "args" $ case rq of
+runQueryM env sqlGen rq = withPathK "args" $ case rq of
   RQV1 q -> runQueryV1M q
   RQV2 q -> runQueryV2M q
   where
@@ -414,8 +418,8 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQUntrackTable q -> runUntrackTableQ q
       RQSetTableIsEnum q -> runSetExistingTableIsEnumQ q
       RQSetTableCustomization q -> runSetTableCustomization q
-      RQTrackFunction q -> runTrackFunc q
-      RQUntrackFunction q -> runUntrackFunc q
+      RQTrackFunction q -> Functions.runTrackFunc q
+      RQUntrackFunction q -> Functions.runUntrackFunc q
       RQCreateObjectRelationship q -> runCreateRelationship ObjRel $ unCreateObjRel q
       RQCreateArrayRelationship q -> runCreateRelationship ArrRel $ unCreateArrRel q
       RQDropRelationship q -> runDropRel q
@@ -434,10 +438,10 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQSetPermissionComment q -> runSetPermComment q
       RQGetInconsistentMetadata q -> runGetInconsistentMetadata q
       RQDropInconsistentMetadata q -> runDropInconsistentMetadata q
-      RQInsert q -> runInsert q
-      RQSelect q -> runSelect q
-      RQUpdate q -> runUpdate q
-      RQDelete q -> runDelete q
+      RQInsert q -> runInsert sqlGen q
+      RQSelect q -> runSelect sqlGen q
+      RQUpdate q -> runUpdate sqlGen q
+      RQDelete q -> runDelete sqlGen q
       RQCount q -> runCount q
       RQAddRemoteSchema q -> runAddRemoteSchema env q
       RQUpdateRemoteSchema q -> runUpdateRemoteSchema env q
@@ -473,14 +477,14 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQCreateRestEndpoint q -> runCreateEndpoint q
       RQDropRestEndpoint q -> runDropEndpoint q
       RQDumpInternalState q -> runDumpInternalState q
-      RQRunSql q -> runRunSQL @'Vanilla q
+      RQRunSql q -> runRunSQL @'Vanilla sqlGen q
       RQSetCustomTypes q -> runSetCustomTypes q
-      RQBulk qs -> encJFromList <$> indexedMapM (runQueryM env) qs
+      RQBulk qs -> encJFromList <$> indexedMapM (runQueryM env sqlGen) qs
 
     runQueryV2M = \case
       RQV2TrackTable q -> runTrackTableV2Q q
       RQV2SetTableCustomFields q -> runSetTableCustomFieldsQV2 q
-      RQV2TrackFunction q -> runTrackFunctionV2 q
+      RQV2TrackFunction q -> Functions.runTrackFunctionV2 q
       RQV2ReplaceMetadata q -> runReplaceMetadataV2 q
 
 requiresAdmin :: RQLQuery -> Bool

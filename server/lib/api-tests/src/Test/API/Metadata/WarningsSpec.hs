@@ -8,9 +8,9 @@ import Data.Maybe qualified as Maybe
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postMetadata, postMetadataWithStatus, postMetadata_)
 import Harness.Quoter.Yaml
+import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment
 import Hasura.Prelude
 import Test.Hspec
@@ -33,8 +33,8 @@ spec =
 table :: Schema.Table
 table = (Schema.table "table1") {Schema.tableColumns = [Schema.column "id" Schema.TInt]}
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests _opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   describe "replace_metadata warnings for event trigger name" do
     it "should fail for creating trigger with invalid name and not allowing warnings" \testEnvironment -> do
       Postgres.createTable testEnvironment table
@@ -45,7 +45,8 @@ tests _opts = do
           code: metadata-warnings
           error: failed due to metadata warnings
           internal:
-          - message: The event trigger with name "weird$name" may not work as expected, hasura suggests to use only alphanumeric, underscore and hyphens in an event trigger name
+          - code: illegal-event-trigger-name
+            message: The event trigger with name "weird$name" may not work as expected, hasura suggests to use only alphanumeric, underscore and hyphens in an event trigger name
             name: event_trigger weird$name in table hasura.table1 in source postgres
             type: event_trigger
           path: $.args
@@ -60,7 +61,8 @@ tests _opts = do
           is_consistent: true
           inconsistent_objects: []
           warnings:
-          - message: The event trigger with name "weird$name" may not work as expected, hasura suggests to use only alphanumeric, underscore and hyphens in an event trigger name
+          - code: illegal-event-trigger-name
+            message: The event trigger with name "weird$name" may not work as expected, hasura suggests to use only alphanumeric, underscore and hyphens in an event trigger name
             name: event_trigger weird$name in table hasura.table1 in source postgres
             type: event_trigger
         |]

@@ -11,6 +11,8 @@ keywords:
   - view
 ---
 
+import ProductBadge from '@site/src/components/ProductBadge';
+
 # Metadata API Reference: Tables/Views
 
 ## Introduction
@@ -274,7 +276,7 @@ Setting `apollo_federation_config` to `null` will disable Apollo Federation supp
 
 ## pg_test_connection_template {#metadata-pg-test-connection-template}
 
-<div className="badge badge--primary heading-badge">Available on: Self-hosted Enterprise</div>
+<ProductBadge self />
 
 `pg_test_connection_template` allows you to test the connection template set for a source.
 
@@ -301,17 +303,21 @@ X-Hasura-Role: admin
         "operation_type": "query",
         "operation_name": "users_by_pk"
       }
-    }
+    },
+    "connection_template": {
+        "template": "{{ if $.request.session?[\"x-hasura-role\"] == \"user\" }} {{$.connection_set.connection_set_member_name}} {{else}} {{$.primary}} {{ end }}"
+      }
   }
 }
 ```
 
 ### Args syntax {#metadata-pg-test-connection-template-syntax}
 
-| Key             | Required | Schema                                                          | Description                                                   |
-| --------------- | -------- | --------------------------------------------------------------- | ------------------------------------------------------------- |
-| source_name     | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)         | Name of the source database of the table (default: `default`) |
-| request_context | true     | [RequestContext](/api-reference/syntax-defs.mdx#requestcontext) | Request context                                               |
+| Key                 | Required | Schema                                                                      | Description                                                   |
+| ------------------- | -------- | --------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| source_name         | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                     | Name of the source database of the table (default: `default`) |
+| request_context     | true     | [RequestContext](/api-reference/syntax-defs.mdx#requestcontext)             | Request context                                               |
+| connection_template | false    | [PGConnectionTemplate](/api-reference/syntax-defs.mdx#pgconnectiontemplate) | DB connection template                                        |
 
 :::info Enterprise only
 

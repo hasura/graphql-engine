@@ -16,10 +16,10 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
+import Harness.Schema (Table (..))
+import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..))
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Backends.DataConnector.API qualified as API
@@ -193,8 +193,8 @@ teardownPostgres testEnv = do
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-tests _opts = do
+tests :: SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
+tests = do
   mockAgentGraphqlTest "can act as the target of a remote array relationship" $ \testEnv performGraphqlRequest -> do
     let pgSchemaName = Schema.getSchemaName testEnv
     let headers = []
@@ -474,14 +474,14 @@ tests _opts = do
                   ]
         )
 
-errorTests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-errorTests opts = do
+errorTests :: SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
+errorTests = do
   it "creating a remote relationship returns an error when it is unsupported by the target" $ \(testEnv, _) -> do
     let mockAgentSourceName = BackendType.backendSourceName Mock.backendTypeMetadata
         schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      opts
+      testEnv
       ( GraphqlEngine.postMetadataWithStatus
           400
           testEnv

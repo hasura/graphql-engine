@@ -23,14 +23,14 @@ where
 
 import Autodocodec (HasCodec (codec), dimapCodec, disjointEitherCodec, optionalField', requiredField')
 import Autodocodec qualified as AC
-import Autodocodec.Extended (optionalFieldOrIncludedNull')
+import Autodocodec.Extended (optionalFieldOrIncludedNull', typeableName)
 import Control.Lens (makeLenses)
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH
 import Data.Aeson.Types
 import Data.Text qualified as T
 import Data.Typeable (Typeable)
-import Hasura.Metadata.DTO.Utils (codecNamePrefix, typeableName)
+import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common

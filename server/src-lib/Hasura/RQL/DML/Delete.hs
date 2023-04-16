@@ -29,7 +29,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Backend
-import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 
@@ -109,17 +108,17 @@ runDelete ::
   ( QErrM m,
     UserInfoM m,
     CacheRM m,
-    HasServerConfigCtx m,
     MonadIO m,
     Tracing.MonadTrace m,
     MonadBaseControl IO m,
     MetadataM m
   ) =>
+  SQLGenCtx ->
   DeleteQuery ->
   m EncJSON
-runDelete q = do
+runDelete sqlGen q = do
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (doSource q)
-  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
+  let strfyNum = stringifyNum sqlGen
   userInfo <- askUserInfo
   validateDeleteQ q
     >>= runTxWithCtx (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) LegacyRQLQuery

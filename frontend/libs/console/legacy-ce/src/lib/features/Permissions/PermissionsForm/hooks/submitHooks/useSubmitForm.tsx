@@ -75,7 +75,9 @@ export const useSubmitForm = (args: UseSubmitFormArgs) => {
   const mutate = useMetadataMigration();
 
   const submit = async (formData: PermissionsSchema) => {
-    const { metadata, resource_version } = await exportMetadata({ httpClient });
+    const { metadata, resource_version } = await exportMetadata({
+      httpClient,
+    });
 
     const metadataSource = metadata?.sources.find(
       s => s.name === dataSourceName

@@ -104,8 +104,8 @@ sourceMetadata =
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-tests _opts = do
+tests :: SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
+tests = do
   mockAgentGraphqlTest "update rows with update permissions" $ \_testEnv performGraphqlRequest -> do
     let headers = [("X-Hasura-AlbumId", "3"), ("X-Hasura-Role", testRoleName)]
     let graphqlRequest =

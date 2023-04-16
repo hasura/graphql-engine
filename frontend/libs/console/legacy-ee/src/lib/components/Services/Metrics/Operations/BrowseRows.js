@@ -59,9 +59,6 @@ const BrowserRows = props => {
 
   const whereClause = {
     _and: [...filtersObj],
-    // there is delay response_size synchronization on websocket operations
-    // we temporary hide them until these values are updated
-    response_size: { _gt: 0 },
   };
 
   if (projectId) {

@@ -5,7 +5,7 @@ let
   # Unix ODBC Support
   freetdsWithODBC = pkgs.freetds.override {
     odbcSupport = true;
-    inherit (pkgs) unixODBC;
+    inherit unixODBC;
   };
 
   msodbcsql = pkgs.unixODBCDrivers.msodbcsql18;
@@ -14,14 +14,19 @@ let
   # The output should be the headings from the odbcinst.ini file.
   # (You can easily see the generated file by running `cat $ODBCINSTINI`.)
   # If you see any errors, please contact your friendly MSSQL and/or Nix expert.
-  odbcinstFile = pkgs.writeTextFile {
-    name = "odbcinst.ini";
+  odbcConfiguration = pkgs.writeTextFile {
+    name = "odbc-configuration";
     text = ''
       [${msodbcsql.fancyName}]
       Description = ${msodbcsql.meta.description}
       Driver = ${msodbcsql}/${msodbcsql.driver}
     '';
+    destination = "/odbcinst.ini";
   };
+
+  unixODBC = pkgs.unixODBC.overrideAttrs (oldAttrs: {
+    configureFlags = [ "--disable-gui" "--sysconfdir=${odbcConfiguration}" ];
+  });
 
   baseInputs = [
     pkgs.stdenv
@@ -61,7 +66,6 @@ let
     pkgs.haskell.packages.${pkgs.ghcName}.happy
     pkgs.haskell.packages.${pkgs.ghcName}.haskell-language-server
     (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.hlint)
-    (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.hpack)
     pkgs.haskell.packages.${pkgs.ghcName}.hoogle
     pkgs.haskell.packages.${pkgs.ghcName}.hspec-discover
     (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.ormolu)
@@ -94,7 +98,7 @@ let
     pkgs.libmysqlclient
     pkgs.mariadb
     pkgs.postgresql_15
-    pkgs.unixODBC
+    unixODBC
     msodbcsql
   ]
   # Linux-specific libraries.
@@ -118,11 +122,6 @@ let
 in
 pkgs.mkShell {
   buildInputs = baseInputs ++ consoleInputs ++ docsInputs ++ serverDeps ++ devInputs ++ ciInputs;
-
-  # We set the ODBCINSTINI to the file defined above, which points to the MSSQL ODBC driver.
-  # The path is relative to `ODBCSYSINI`, which we set to empty.
-  ODBCSYSINI = "";
-  ODBCINSTINI = "${odbcinstFile}";
 
   LD_LIBRARY_PATH = pkgs.lib.strings.makeLibraryPath dynamicLibraries;
   shellHook = pkgs.lib.strings.optionalString pkgs.stdenv.targetPlatform.isDarwin ''

@@ -1,7 +1,8 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Autodocodec.Extended
-  ( caseInsensitiveHashMapCodec,
+  ( baseUrlCodec,
+    caseInsensitiveHashMapCodec,
     caseInsensitiveTextCodec,
     graphQLEnumValueCodec,
     graphQLExecutableDocumentCodec,
@@ -24,6 +25,7 @@ module Autodocodec.Extended
     realFracWithUpperBoundCodec,
     refinedCodec,
     refinedCodecWith,
+    typeableName,
     unitCodec,
   )
 where
@@ -31,13 +33,13 @@ where
 import Autodocodec
 import Data.Aeson (FromJSONKey, ToJSONKey)
 import Data.CaseInsensitive qualified as CI
+import Data.Char (isAlphaNum)
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as HashSet
 import Data.Scientific (Scientific (base10Exponent), floatingOrInteger)
 import Data.Scientific qualified as Scientific
 import Data.Text qualified as T
-import Data.Typeable (Typeable)
-import Hasura.Metadata.DTO.Utils (typeableName)
+import Data.Typeable (Proxy (Proxy), Typeable, typeRep)
 import Hasura.Prelude
 import Language.GraphQL.Draft.Parser qualified as G
 import Language.GraphQL.Draft.Parser qualified as GParser
@@ -45,10 +47,21 @@ import Language.GraphQL.Draft.Printer qualified as G
 import Language.GraphQL.Draft.Printer qualified as GPrinter
 import Language.GraphQL.Draft.Syntax qualified as G
 import Refined qualified as R
+import Servant.Client (BaseUrl)
+import Servant.Client qualified as S
 import Text.Builder qualified as TB
 
 instance HasCodec () where
   codec = unitCodec
+
+-- | Codec for URL type from the servant-client package.
+baseUrlCodec :: JSONCodec BaseUrl
+baseUrlCodec = bimapCodec dec enc stringCodec
+  where
+    dec t = case S.parseBaseUrl t of
+      Just u -> Right u
+      Nothing -> Left $ "Invalid base url: " ++ t
+    enc = S.showBaseUrl
 
 -- | Like 'hashMapCodec', but with case-insensitive keys.
 caseInsensitiveHashMapCodec ::
@@ -296,6 +309,13 @@ refinedCodecWith underlyingCodec = bimapCodec dec enc underlyingCodec
   where
     dec = mapLeft show . R.refine
     enc = R.unrefine
+
+-- | Provides a string based on the given type to use to uniquely name
+-- instantiations of polymorphic codecs.
+typeableName :: forall a. (Typeable a) => Text
+typeableName = T.map toValidChar $ tshow $ typeRep (Proxy @a)
+  where
+    toValidChar c = if isAlphaNum c then c else '_'
 
 -- | Serializes () the same way that the stock Aeson instance does
 unitCodec :: JSONCodec ()

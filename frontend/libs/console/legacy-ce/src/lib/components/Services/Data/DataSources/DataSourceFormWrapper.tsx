@@ -110,7 +110,7 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
         <Analytics name="EditDataSource" {...REDACT_EVERYTHING}>
           <form
             onSubmit={onSubmit}
-            className={`${styles.connect_db_content} ${styles.connect_form_width}`}
+            className={`${styles.connect_db_content} max-w-screen-md`}
           >
             <div className="max-w-xl">
               {!isReadReplica && (
@@ -154,12 +154,13 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
 
             <ConnectDatabaseForm isEditState={isEditState} {...props} />
             {children}
-            <div className={styles.add_button_layout}>
+            <div>
               <Analytics
                 name="data-tab-connect-db-button"
                 passHtmlAttributesToChildren
               >
                 <Button
+                  className="mt-sm"
                   size="lg"
                   mode="primary"
                   type="submit"

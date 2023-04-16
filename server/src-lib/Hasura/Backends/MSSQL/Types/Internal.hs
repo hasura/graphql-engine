@@ -61,12 +61,14 @@ module Hasura.Backends.MSSQL.Types.Internal
     Deleted (..),
     Output (..),
     Projection (..),
+    QueryWithDDL (..),
     Reselect (..),
     Root (..),
     ScalarType (..),
     SchemaName (..),
     Select (..),
     SetIdentityInsert (..),
+    TempTableDDL (..),
     TempTableName (..),
     SomeTableName (..),
     TempTable (..),
@@ -104,11 +106,13 @@ module Hasura.Backends.MSSQL.Types.Internal
 where
 
 import Data.Aeson qualified as J
+import Data.Text qualified as T
 import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Casing qualified as C
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Name qualified as GName
+import Hasura.NativeQuery.Metadata (InterpolatedQuery)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
 import Hasura.SQL.Backend
@@ -377,6 +381,23 @@ newtype Where
 newtype With
   = With (NonEmpty (Aliased Select))
 
+-- | Extra query steps that can be emitted from the main
+-- query to do things like setup temp tables
+data TempTableDDL
+  = -- | create a temp table
+    CreateTemp
+      { stcTempTableName :: TempTableName,
+        stcColumns :: [UnifiedColumn]
+      }
+  | -- | insert output of a statement into a temp table
+    InsertTemp
+      { stiTempTableName :: TempTableName,
+        stiExpression :: InterpolatedQuery Expression
+      }
+  | -- | Drop a temp table
+    DropTemp
+      {stdTempTableName :: TempTableName}
+
 data Top
   = NoTop
   | Top Int
@@ -521,6 +542,13 @@ newtype ConstraintName = ConstraintName {constraintNameText :: Text}
 
 newtype FunctionName = FunctionName {functionNameText :: Text}
 
+-- | type for a query generated from IR along with any DDL actions
+data QueryWithDDL a = QueryWithDDL
+  { qwdBeforeSteps :: [TempTableDDL],
+    qwdQuery :: a,
+    qwdAfterSteps :: [TempTableDDL]
+  }
+
 -- | Derived from the odbc package.
 data ScalarType
   = CharType
@@ -632,7 +660,11 @@ parseScalarType = \case
   "uniqueidentifier" -> GuidType
   "geography" -> GeographyType
   "geometry" -> GeometryType
-  t -> UnknownType t
+  t ->
+    -- if the type is something like `varchar(127)`, try stripping off the data length
+    if T.isInfixOf "(" t
+      then parseScalarType (T.takeWhile (\c -> c /= '(') t)
+      else UnknownType t
 
 parseScalarValue :: ScalarType -> J.Value -> Either QErr Value
 parseScalarValue scalarType jValue = case scalarType of

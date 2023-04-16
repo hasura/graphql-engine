@@ -50,6 +50,7 @@ import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.OpenTelemetry (emptyOpenTelemetryConfig)
+import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
@@ -112,7 +113,7 @@ migrateCatalog ::
   ExtensionsSchema ->
   MaintenanceMode () ->
   UTCTime ->
-  m (MigrationResult, Metadata)
+  m (MigrationResult, MetadataWithResourceVersion)
 migrateCatalog maybeDefaultSourceConfig extensionsSchema maintenanceMode migrationTime = do
   catalogSchemaExists <- doesSchemaExist (SchemaName "hdb_catalog")
   versionTableExists <- doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version")
@@ -135,8 +136,8 @@ migrateCatalog maybeDefaultSourceConfig extensionsSchema maintenanceMode migrati
             True -> case versionTableExists of
               False -> initialize False
               True -> migrateFrom =<< liftTx getCatalogVersion
-  metadata <- liftTx fetchMetadataFromCatalog
-  pure (migrationResult, metadata)
+  metadataWithVersion <- liftTx fetchMetadataAndResourceVersionFromCatalog
+  pure (migrationResult, metadataWithVersion)
   where
     -- initializes the catalog, creating the schema if necessary
     initialize :: Bool -> m MigrationResult
@@ -158,6 +159,7 @@ migrateCatalog maybeDefaultSourceConfig extensionsSchema maintenanceMode migrati
                         @('Postgres 'Vanilla)
                         defaultSource
                         PostgresVanillaKind
+                        mempty
                         mempty
                         mempty
                         mempty
@@ -334,7 +336,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
                     defaultSourceMetadata =
                       BackendSourceMetadata $
                         AB.mkAnyBackend $
-                          SourceMetadata defaultSource PostgresVanillaKind _mnsTables _mnsFunctions mempty defaultSourceConfig Nothing emptySourceCustomization Nothing
+                          SourceMetadata defaultSource PostgresVanillaKind _mnsTables _mnsFunctions mempty mempty defaultSourceConfig Nothing emptySourceCustomization Nothing
                  in Metadata
                       (OMap.singleton defaultSource defaultSourceMetadata)
                       _mnsRemoteSchemas

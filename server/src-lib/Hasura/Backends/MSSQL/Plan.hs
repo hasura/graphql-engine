@@ -52,7 +52,7 @@ planQuery ::
   MonadError QErr m =>
   SessionVariables ->
   QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->
-  m Select
+  m (QueryWithDDL Select)
 planQuery sessionVariables queryDB = do
   rootField <- traverse (prepareValueQuery sessionVariables) queryDB
   runIrWrappingRoot $ fromQueryRootField rootField
@@ -78,17 +78,19 @@ planSourceRelationship
       traverseSourceRelationshipSelection
         (fmap Const . prepareValueQuery sessionVariables)
         sourceRelationshipRaw
-    runIrWrappingRoot $
-      fromSourceRelationship
-        lhs
-        lhsSchema
-        argumentId
-        (relationshipName, sourceRelationship)
+    qwdQuery
+      <$> runIrWrappingRoot
+        ( fromSourceRelationship
+            lhs
+            lhsSchema
+            argumentId
+            (relationshipName, sourceRelationship)
+        )
 
 runIrWrappingRoot ::
   MonadError QErr m =>
   FromIr Select ->
-  m Select
+  m (QueryWithDDL Select)
 runIrWrappingRoot selectAction =
   runFromIr selectAction `onLeft` (throwError . overrideQErrStatus HTTP.status400 NotSupported)
 
@@ -136,7 +138,7 @@ planSubscription unpreparedMap sessionVariables = do
           unpreparedMap
       )
       emptyPrepareState
-  selectMap <- runFromIr (traverse fromQueryRootField rootFieldMap)
+  selectMap <- qwdQuery <$> runFromIr (traverse fromQueryRootField rootFieldMap)
   pure (collapseMap selectMap, prepareState)
 
 -- Plan a query without prepare/exec.
@@ -224,26 +226,26 @@ prepareValueSubscription globalVariables =
           ("missing session variable: " <>> sessionVariableToText text)
       modify' (\s -> s {sessionVariables = text `Set.insert` sessionVariables s})
       pure $ resultVarExp (sessionDot $ toTxt text)
-    UVParameter mVariableInfo columnValue ->
-      case fmap GraphQL.getName mVariableInfo of
-        Nothing -> do
-          currentIndex <- toInteger . length <$> gets positionalArguments
-          modify'
-            ( \s ->
-                s
-                  { positionalArguments = positionalArguments s <> [columnValue]
-                  }
-            )
-          pure (resultVarExp (syntheticIx currentIndex))
-        Just name -> do
-          modify
-            ( \s ->
-                s
-                  { namedArguments =
-                      HM.insert name columnValue (namedArguments s)
-                  }
-            )
-          pure $ resultVarExp (queryDot $ G.unName name)
+    UVParameter (FromGraphQL variableInfo) columnValue -> do
+      let name = GraphQL.getName variableInfo
+
+      modify
+        ( \s ->
+            s
+              { namedArguments =
+                  HM.insert name columnValue (namedArguments s)
+              }
+        )
+      pure $ resultVarExp (queryDot $ G.unName name)
+    UVParameter _ columnValue -> do
+      currentIndex <- toInteger . length <$> gets positionalArguments
+      modify'
+        ( \s ->
+            s
+              { positionalArguments = positionalArguments s <> [columnValue]
+              }
+        )
+      pure (resultVarExp (syntheticIx currentIndex))
   where
     resultVarExp :: JsonPath -> Expression
     resultVarExp =

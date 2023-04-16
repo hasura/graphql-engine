@@ -143,13 +143,13 @@ mutation (
   $jobId: uuid!,
   $projectId: uuid!,
   $isLatencyDisplayed: Boolean!,
-  $datasDifferenceInMilliseconds: Int!
+  $dateDifferenceInMilliseconds: Int!
 ) {
   insert_db_latency_one(object: {
     job_id: $jobId,
     is_latency_displayed: $isLatencyDisplayed,
     project_id: $projectId,
-    console_check_duration: $datasDifferenceInMilliseconds
+    console_check_duration: $dateDifferenceInMilliseconds
   }) {
     id
   }

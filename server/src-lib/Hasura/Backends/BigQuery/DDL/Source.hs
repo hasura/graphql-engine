@@ -21,12 +21,11 @@ import Hasura.Backends.BigQuery.Meta
 import Hasura.Backends.BigQuery.Source
 import Hasura.Backends.BigQuery.Types
 import Hasura.Base.Error
-import Hasura.Logging (Hasura, Logger)
+import Hasura.Function.Cache (FunctionOverloads (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (BackendConfig)
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Function (FunctionOverloads (..))
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
@@ -42,7 +41,6 @@ defaultRetryBaseDelay = 500000
 
 resolveSourceConfig ::
   MonadIO m =>
-  Logger Hasura ->
   SourceName ->
   BigQueryConnSourceConfig ->
   BackendSourceKind 'BigQuery ->
@@ -50,7 +48,7 @@ resolveSourceConfig ::
   Env.Environment ->
   manager ->
   m (Either QErr BigQuerySourceConfig)
-resolveSourceConfig _logger _name BigQueryConnSourceConfig {..} _backendKind _backendConfig env _manager = runExceptT $ do
+resolveSourceConfig _name BigQueryConnSourceConfig {..} _backendKind _backendConfig env _manager = runExceptT $ do
   eSA <- resolveConfigurationJson env _cscServiceAccount
   case eSA of
     Left e -> throw400 Unexpected $ T.pack e
@@ -132,7 +130,8 @@ resolveSource sourceConfig =
                             _ptmiForeignKeys = mempty,
                             _ptmiViewInfo = Just $ ViewInfo False False False,
                             _ptmiDescription = Nothing,
-                            _ptmiExtraTableMetadata = ()
+                            _ptmiExtraTableMetadata = (),
+                            _ptmiCustomObjectTypes = mempty
                           }
                       )
                       | (index, RestTable {tableReference, schema}) <-
@@ -160,6 +159,7 @@ restTypeToScalarType =
     STRUCT -> StructScalarType
     BIGDECIMAL -> BigDecimalScalarType
     DECIMAL -> DecimalScalarType
+    JSON -> JsonScalarType
 
 -- Hierarchy: Project / Dataset / Table
 -- see <https://cloud.google.com/bigquery/docs/datasets-intro>

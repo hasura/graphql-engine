@@ -63,14 +63,13 @@ buildRemoteSchemas env =
       remoteSchemaContextParts <-
         (|
           withRecordInconsistency
-            ( liftEitherA <<< bindA
-                -< runExceptT
-                  case M.lookup name =<< storedIntrospection of
-                    Nothing -> noopTrace $ addRemoteSchemaP2Setup env defn
-                    Just rawIntro -> do
-                      rsDef <- validateRemoteSchemaDef env defn
-                      (ir, rsi) <- stitchRemoteSchema rawIntro rsDef
-                      pure (ir, rawIntro, rsi)
+            ( bindErrorA
+                -< case M.lookup name =<< storedIntrospection of
+                  Nothing -> noopTrace $ addRemoteSchemaP2Setup env defn
+                  Just rawIntro -> do
+                    rsDef <- validateRemoteSchemaDef env defn
+                    (ir, rsi) <- stitchRemoteSchema rawIntro rsDef
+                    pure (ir, rawIntro, rsi)
             )
           |) (mkRemoteSchemaMetadataObject remoteSchema)
       case remoteSchemaContextParts of
@@ -155,9 +154,9 @@ buildRemoteSchemaPermissions = proc ((remoteSchemaName, originalIntrospection, o
         withRecordInconsistency
           ( do
               (resolvedSchemaIntrospection, dependency) <-
-                liftEitherA <<< bindA
+                bindErrorA
                   -<
-                    runExceptT $ modifyErr addPermContext $ resolveRoleBasedRemoteSchema roleName remoteSchemaName originalIntrospection providedSchemaDoc
+                    modifyErr addPermContext $ resolveRoleBasedRemoteSchema roleName remoteSchemaName originalIntrospection providedSchemaDoc
               recordDependencies -< (metadataObject, schemaObject, pure dependency)
               returnA -< resolvedSchemaIntrospection
           )

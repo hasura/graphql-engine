@@ -5,6 +5,29 @@ import isEmpty from 'lodash/isEmpty';
 import { useOperators } from './utils/comparatorsFromSchema';
 import { ObjectValueInput } from './ObjectValueInput';
 import { BooleanValueInput } from './BooleanValueInput';
+import { Operator } from './types';
+
+const checkUseObjectInput = (
+  comparatorName: string,
+  operator: Operator | undefined
+) => {
+  if (operator?.type === 'json' || operator?.type === 'jsonb') return true;
+  if (
+    comparatorName === '_st_d_within' ||
+    comparatorName === '_st_within' ||
+    comparatorName === '_st_3d_d_within' ||
+    comparatorName === '_st_contains' ||
+    comparatorName === '_st_crosses' ||
+    comparatorName === '_st_intersects' ||
+    comparatorName === '_st_touches' ||
+    comparatorName === '_st_overlaps' ||
+    comparatorName === '_st_crosses'
+  )
+    return true;
+  if (operator?.inputStructure === 'object') return true;
+
+  return false;
+};
 
 export const ValueInputType = ({
   componentLevelId,
@@ -31,7 +54,8 @@ export const ValueInputType = ({
       />
     );
   }
-  if (operator?.type === 'jsonb' && operator?.inputStructure === 'object') {
+
+  if (checkUseObjectInput(comparatorName, operator)) {
     return (
       <ObjectValueInput
         componentLevelId={componentLevelId}
@@ -40,7 +64,6 @@ export const ValueInputType = ({
       />
     );
   }
-
   return (
     <input
       data-testid={componentLevelId}
@@ -49,11 +72,13 @@ export const ValueInputType = ({
       type="text"
       value={value}
       onChange={e => {
+        let value = e.target.value as any;
+        if (!isNaN(value) && value !== '') {
+          value = parseInt(value);
+        }
         setValue(
           path,
-          operator?.inputType === 'boolean'
-            ? Boolean(e.target.value)
-            : e.target.value
+          operator?.inputType === 'boolean' ? Boolean(e.target.value) : value
         );
       }}
     />

@@ -12,7 +12,7 @@ module Hasura.RQL.Types.Metadata
     dropEventTriggerInMetadata,
     dropFunctionInMetadata,
     dropPermissionInMetadata,
-    dropLogicalModelPermissionInMetadata,
+    dropCustomReturnTypePermissionInMetadata,
     dropRelationshipInMetadata,
     dropRemoteRelationshipInMetadata,
     dropTableInMetadata,
@@ -22,7 +22,8 @@ module Hasura.RQL.Types.Metadata
     emptyMetadata,
     emptyMetadataDefaults,
     functionMetadataSetter,
-    logicalModelMetadataSetter,
+    customReturnTypeMetadataSetter,
+    nativeQueryMetadataSetter,
     metaActions,
     metaAllowlist,
     metaApiLimits,
@@ -54,10 +55,12 @@ import Data.Aeson.TH
 import Data.Aeson.Types
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Monoid (Dual (..), Endo (..))
+import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata, CustomReturnTypeName, crtmSelectPermissions)
+import Hasura.Function.Cache
+import Hasura.Function.Metadata (FunctionMetadata (..))
 import Hasura.Incremental qualified as Inc
-import Hasura.LogicalModel.Metadata (LogicalModelMetadata, LogicalModelName, lmmSelectPermissions)
 import Hasura.Metadata.DTO.MetadataV3 (MetadataV3 (..))
-import Hasura.Metadata.DTO.Placeholder (IsPlaceholder (placeholder))
+import Hasura.NativeQuery.Metadata (NativeQueryMetadata, NativeQueryName)
 import Hasura.Prelude
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
@@ -67,7 +70,6 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Metadata.Common
 import Hasura.RQL.Types.Metadata.Serialization
@@ -277,15 +279,25 @@ functionMetadataSetter ::
 functionMetadataSetter source function =
   metaSources . ix source . toSourceMetadata . smFunctions . ix function
 
--- | A lens setter for the metadata of a logical model as identified by the
+-- | A lens setter for the metadata of a custom return type as identified by the
 -- source name and root field name.
-logicalModelMetadataSetter ::
+customReturnTypeMetadataSetter ::
   (Backend b) =>
   SourceName ->
-  LogicalModelName ->
-  ASetter' Metadata (LogicalModelMetadata b)
-logicalModelMetadataSetter source logicalModelName =
-  metaSources . ix source . toSourceMetadata . smLogicalModels . ix logicalModelName
+  CustomReturnTypeName ->
+  ASetter' Metadata (CustomReturnTypeMetadata b)
+customReturnTypeMetadataSetter source name =
+  metaSources . ix source . toSourceMetadata . smCustomReturnTypes . ix name
+
+-- | A lens setter for the metadata of a native query as identified by the
+-- source name and root field name.
+nativeQueryMetadataSetter ::
+  (Backend b) =>
+  SourceName ->
+  NativeQueryName ->
+  ASetter' Metadata (NativeQueryMetadata b)
+nativeQueryMetadataSetter source nativeQueryName =
+  metaSources . ix source . toSourceMetadata . smNativeQueries . ix nativeQueryName
 
 -- | A simple monad class which enables fetching and setting @'Metadata'
 -- in the state.
@@ -384,10 +396,10 @@ dropPermissionInMetadata rn = \case
   PTDelete -> tmDeletePermissions %~ OM.delete rn
   PTUpdate -> tmUpdatePermissions %~ OM.delete rn
 
-dropLogicalModelPermissionInMetadata ::
-  RoleName -> PermType -> LogicalModelMetadata b -> LogicalModelMetadata b
-dropLogicalModelPermissionInMetadata rn = \case
-  PTSelect -> lmmSelectPermissions %~ OM.delete rn
+dropCustomReturnTypePermissionInMetadata ::
+  RoleName -> PermType -> CustomReturnTypeMetadata b -> CustomReturnTypeMetadata b
+dropCustomReturnTypePermissionInMetadata rn = \case
+  PTSelect -> crtmSelectPermissions %~ OM.delete rn
   PTInsert -> error "Not implemented yet"
   PTDelete -> error "Not implemented yet"
   PTUpdate -> error "Not implemented yet"
@@ -543,10 +555,6 @@ metadataToDTO
         metaV3InheritedRoles = inheritedRoles,
         metaV3GraphqlSchemaIntrospection = introspectionDisabledRoles,
         metaV3Network = networkConfig,
-        metaV3BackendConfigs = placeholder . objectFromOrdJSON <$> backendConfigsToOrdJSON backendConfigs,
+        metaV3BackendConfigs = backendConfigs,
         metaV3OpenTelemetryConfig = openTelemetryConfig
       }
-    where
-      -- This is a /partial/ function to unwrap a JSON object
-      objectFromOrdJSON (AO.Object obj) = obj
-      objectFromOrdJSON _ = error "expected an object"

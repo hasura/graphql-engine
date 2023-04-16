@@ -374,6 +374,53 @@
                 ],
                 "type": "object"
             },
+            "BackendMap_BackendConfigWrapper": {
+                "properties": {
+                    "bigquery": {
+                        "items": {
+                            "type": "null"
+                        },
+                        "type": "array"
+                    },
+                    "citus": {
+                        "items": {
+                            "type": "null"
+                        },
+                        "type": "array"
+                    },
+                    "cockroach": {
+                        "items": {
+                            "type": "null"
+                        },
+                        "type": "array"
+                    },
+                    "dataconnector": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/DataConnectorOptions"
+                        },
+                        "type": "object"
+                    },
+                    "mssql": {
+                        "items": {
+                            "type": "null"
+                        },
+                        "type": "array"
+                    },
+                    "mysql": {
+                        "items": {
+                            "type": "null"
+                        },
+                        "type": "array"
+                    },
+                    "postgres": {
+                        "items": {
+                            "type": "null"
+                        },
+                        "type": "array"
+                    }
+                },
+                "type": "object"
+            },
             "BigQueryComputedFieldDefinition": {
                 "properties": {
                     "argument_mapping": {
@@ -615,23 +662,35 @@
                 ],
                 "type": "object"
             },
-            "BigqueryCustomReturnType": {
-                "description": "A return type for a logical model.",
+            "BigqueryCustomReturnTypeMetadata": {
+                "description": "A return type.",
                 "properties": {
-                    "columns": {
-                        "description": "Return types for the logical model",
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the custom return type",
                         "items": {
                             "$ref": "#/components/schemas/NullableScalarType"
                         },
                         "type": "array"
                     },
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
+                    "name": {
+                        "description": "A name for a custom return type",
                         "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/BigquerySelectPermDef"
+                        },
+                        "type": "array"
                     }
                 },
                 "required": [
-                    "columns"
+                    "name",
+                    "fields"
                 ],
                 "type": "object"
             },
@@ -750,8 +809,8 @@
                 ],
                 "type": "object"
             },
-            "BigqueryLogicalModelMetadata": {
-                "description": "A logical model as represented in metadata.",
+            "BigqueryNativeQueryMetadata": {
+                "description": "A native query as represented in metadata.",
                 "properties": {
                     "arguments": {
                         "additionalProperties": {
@@ -766,22 +825,16 @@
                         "type": "string"
                     },
                     "description": {
-                        "description": "A description of the logical model which appears in the graphql schema",
+                        "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
                     },
                     "returns": {
-                        "$ref": "#/components/schemas/BigqueryCustomReturnType"
-                    },
-                    "root_field_name": {
-                        "description": "Root field name for the logical model",
+                        "description": "Return type (table) of the expression",
                         "type": "string"
                     },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/BigquerySelectPermDef"
-                        },
-                        "type": "array"
+                    "root_field_name": {
+                        "description": "Root field name for the native query",
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -977,6 +1030,14 @@
                     "configuration": {
                         "$ref": "#/components/schemas/BigQueryConnSourceConfig"
                     },
+                    "custom_return_types": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/BigqueryCustomReturnTypeMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -994,16 +1055,16 @@
                         ],
                         "type": "string"
                     },
-                    "logical_models": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "native_queries": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/BigqueryLogicalModelMetadata"
+                            "$ref": "#/components/schemas/BigqueryNativeQueryMetadata"
                         },
                         "nullable": true,
                         "type": "array"
-                    },
-                    "name": {
-                        "type": "string"
                     },
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
@@ -1330,23 +1391,35 @@
                 ],
                 "type": "object"
             },
-            "CitusCustomReturnType": {
-                "description": "A return type for a logical model.",
+            "CitusCustomReturnTypeMetadata": {
+                "description": "A return type.",
                 "properties": {
-                    "columns": {
-                        "description": "Return types for the logical model",
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the custom return type",
                         "items": {
                             "$ref": "#/components/schemas/NullableScalarType"
                         },
                         "type": "array"
                     },
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
+                    "name": {
+                        "description": "A name for a custom return type",
                         "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CitusSelectPermDef"
+                        },
+                        "type": "array"
                     }
                 },
                 "required": [
-                    "columns"
+                    "name",
+                    "fields"
                 ],
                 "type": "object"
             },
@@ -1568,8 +1641,8 @@
                 ],
                 "type": "object"
             },
-            "CitusLogicalModelMetadata": {
-                "description": "A logical model as represented in metadata.",
+            "CitusNativeQueryMetadata": {
+                "description": "A native query as represented in metadata.",
                 "properties": {
                     "arguments": {
                         "additionalProperties": {
@@ -1584,22 +1657,16 @@
                         "type": "string"
                     },
                     "description": {
-                        "description": "A description of the logical model which appears in the graphql schema",
+                        "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
                     },
                     "returns": {
-                        "$ref": "#/components/schemas/CitusCustomReturnType"
-                    },
-                    "root_field_name": {
-                        "description": "Root field name for the logical model",
+                        "description": "Return type (table) of the expression",
                         "type": "string"
                     },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/CitusSelectPermDef"
-                        },
-                        "type": "array"
+                    "root_field_name": {
+                        "description": "Root field name for the native query",
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -1820,6 +1887,14 @@
                     "configuration": {
                         "$ref": "#/components/schemas/PostgresConnConfiguration"
                     },
+                    "custom_return_types": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CitusCustomReturnTypeMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -1840,16 +1915,16 @@
                         ],
                         "type": "string"
                     },
-                    "logical_models": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "native_queries": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/CitusLogicalModelMetadata"
+                            "$ref": "#/components/schemas/CitusNativeQueryMetadata"
                         },
                         "nullable": true,
                         "type": "array"
-                    },
-                    "name": {
-                        "type": "string"
                     },
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
@@ -2183,23 +2258,35 @@
                 ],
                 "type": "object"
             },
-            "CockroachCustomReturnType": {
-                "description": "A return type for a logical model.",
+            "CockroachCustomReturnTypeMetadata": {
+                "description": "A return type.",
                 "properties": {
-                    "columns": {
-                        "description": "Return types for the logical model",
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the custom return type",
                         "items": {
                             "$ref": "#/components/schemas/NullableScalarType"
                         },
                         "type": "array"
                     },
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
+                    "name": {
+                        "description": "A name for a custom return type",
                         "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CockroachSelectPermDef"
+                        },
+                        "type": "array"
                     }
                 },
                 "required": [
-                    "columns"
+                    "name",
+                    "fields"
                 ],
                 "type": "object"
             },
@@ -2421,8 +2508,8 @@
                 ],
                 "type": "object"
             },
-            "CockroachLogicalModelMetadata": {
-                "description": "A logical model as represented in metadata.",
+            "CockroachNativeQueryMetadata": {
+                "description": "A native query as represented in metadata.",
                 "properties": {
                     "arguments": {
                         "additionalProperties": {
@@ -2437,22 +2524,16 @@
                         "type": "string"
                     },
                     "description": {
-                        "description": "A description of the logical model which appears in the graphql schema",
+                        "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
                     },
                     "returns": {
-                        "$ref": "#/components/schemas/CockroachCustomReturnType"
-                    },
-                    "root_field_name": {
-                        "description": "Root field name for the logical model",
+                        "description": "Return type (table) of the expression",
                         "type": "string"
                     },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/CockroachSelectPermDef"
-                        },
-                        "type": "array"
+                    "root_field_name": {
+                        "description": "Root field name for the native query",
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -2673,6 +2754,14 @@
                     "configuration": {
                         "$ref": "#/components/schemas/PostgresConnConfiguration"
                     },
+                    "custom_return_types": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CockroachCustomReturnTypeMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -2693,16 +2782,16 @@
                         ],
                         "type": "string"
                     },
-                    "logical_models": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "native_queries": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/CockroachLogicalModelMetadata"
+                            "$ref": "#/components/schemas/CockroachNativeQueryMetadata"
                         },
                         "nullable": true,
                         "type": "array"
-                    },
-                    "name": {
-                        "type": "string"
                     },
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
@@ -2991,6 +3080,12 @@
                 },
                 "type": "object"
             },
+            "Config": {
+                "additionalProperties": {
+                    "additionalProperties": true
+                },
+                "type": "object"
+            },
             "ConnectionTemplate": {
                 "description": "https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconnectiontemplate",
                 "nullable": true,
@@ -3145,9 +3240,79 @@
                 },
                 "type": "object"
             },
-            "DataConnectorConnConfiguration": {
-                "additionalProperties": true,
-                "description": "value with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+            "DataConnectorConnSourceConfig": {
+                "properties": {
+                    "template": {
+                        "type": "string"
+                    },
+                    "timeout": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/DataConnectorSourceTimeoutSeconds"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DataConnectorSourceTimeoutMilliseconds"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DataConnectorSourceTimeoutMicroseconds"
+                            }
+                        ]
+                    },
+                    "value": {
+                        "$ref": "#/components/schemas/Config"
+                    }
+                },
+                "required": [
+                    "value"
+                ],
+                "type": "object"
+            },
+            "DataConnectorOptions": {
+                "properties": {
+                    "display_name": {
+                        "type": "string"
+                    },
+                    "uri": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "uri"
+                ],
+                "type": "object"
+            },
+            "DataConnectorSourceTimeoutMicroseconds": {
+                "properties": {
+                    "microseconds": {
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "microseconds"
+                ],
+                "type": "object"
+            },
+            "DataConnectorSourceTimeoutMilliseconds": {
+                "properties": {
+                    "milliseconds": {
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "milliseconds"
+                ],
+                "type": "object"
+            },
+            "DataConnectorSourceTimeoutSeconds": {
+                "properties": {
+                    "seconds": {
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "seconds"
+                ],
+                "type": "object"
             },
             "DataconnectorArrRelUsingFKeyOnMultipleColumns": {
                 "properties": {
@@ -3214,23 +3379,35 @@
                 ],
                 "type": "object"
             },
-            "DataconnectorCustomReturnType": {
-                "description": "A return type for a logical model.",
+            "DataconnectorCustomReturnTypeMetadata": {
+                "description": "A return type.",
                 "properties": {
-                    "columns": {
-                        "description": "Return types for the logical model",
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the custom return type",
                         "items": {
                             "$ref": "#/components/schemas/NullableScalarType"
                         },
                         "type": "array"
                     },
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
+                    "name": {
+                        "description": "A name for a custom return type",
                         "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/DataconnectorSelectPermDef"
+                        },
+                        "type": "array"
                     }
                 },
                 "required": [
-                    "columns"
+                    "name",
+                    "fields"
                 ],
                 "type": "object"
             },
@@ -3353,8 +3530,8 @@
                 ],
                 "type": "object"
             },
-            "DataconnectorLogicalModelMetadata": {
-                "description": "A logical model as represented in metadata.",
+            "DataconnectorNativeQueryMetadata": {
+                "description": "A native query as represented in metadata.",
                 "properties": {
                     "arguments": {
                         "additionalProperties": {
@@ -3369,22 +3546,16 @@
                         "type": "string"
                     },
                     "description": {
-                        "description": "A description of the logical model which appears in the graphql schema",
+                        "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
                     },
                     "returns": {
-                        "$ref": "#/components/schemas/DataconnectorCustomReturnType"
-                    },
-                    "root_field_name": {
-                        "description": "Root field name for the logical model",
+                        "description": "Return type (table) of the expression",
                         "type": "string"
                     },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/DataconnectorSelectPermDef"
-                        },
-                        "type": "array"
+                    "root_field_name": {
+                        "description": "Root field name for the native query",
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -3587,7 +3758,23 @@
             "DataconnectorSourceMetadata": {
                 "properties": {
                     "configuration": {
-                        "$ref": "#/components/schemas/DataConnectorConnConfiguration"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DataConnectorConnSourceConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/Config"
+                            }
+                        ]
+                    },
+                    "custom_return_types": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/DataconnectorCustomReturnTypeMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
@@ -3603,16 +3790,16 @@
                     "kind": {
                         "$ref": "#/components/schemas/GraphQLName"
                     },
-                    "logical_models": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "native_queries": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/DataconnectorLogicalModelMetadata"
+                            "$ref": "#/components/schemas/DataconnectorNativeQueryMetadata"
                         },
                         "nullable": true,
                         "type": "array"
-                    },
-                    "name": {
-                        "type": "string"
                     },
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
@@ -4425,8 +4612,7 @@
                         "$ref": "#/components/schemas/ApiLimit"
                     },
                     "backend_configs": {
-                        "additionalProperties": true,
-                        "description": "TODO\n\n\nobject with unspecified properties - this is a placeholder that will eventually be replaced with a more detailed description"
+                        "$ref": "#/components/schemas/BackendMap_BackendConfigWrapper"
                     },
                     "cron_triggers": {
                         "default": [],
@@ -4594,23 +4780,35 @@
                 ],
                 "type": "object"
             },
-            "MssqlCustomReturnType": {
-                "description": "A return type for a logical model.",
+            "MssqlCustomReturnTypeMetadata": {
+                "description": "A return type.",
                 "properties": {
-                    "columns": {
-                        "description": "Return types for the logical model",
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the custom return type",
                         "items": {
                             "$ref": "#/components/schemas/NullableScalarType"
                         },
                         "type": "array"
                     },
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
+                    "name": {
+                        "description": "A name for a custom return type",
                         "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MssqlSelectPermDef"
+                        },
+                        "type": "array"
                     }
                 },
                 "required": [
-                    "columns"
+                    "name",
+                    "fields"
                 ],
                 "type": "object"
             },
@@ -4824,8 +5022,8 @@
                 ],
                 "type": "object"
             },
-            "MssqlLogicalModelMetadata": {
-                "description": "A logical model as represented in metadata.",
+            "MssqlNativeQueryMetadata": {
+                "description": "A native query as represented in metadata.",
                 "properties": {
                     "arguments": {
                         "additionalProperties": {
@@ -4840,22 +5038,16 @@
                         "type": "string"
                     },
                     "description": {
-                        "description": "A description of the logical model which appears in the graphql schema",
+                        "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
                     },
                     "returns": {
-                        "$ref": "#/components/schemas/MssqlCustomReturnType"
-                    },
-                    "root_field_name": {
-                        "description": "Root field name for the logical model",
+                        "description": "Return type (table) of the expression",
                         "type": "string"
                     },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/MssqlSelectPermDef"
-                        },
-                        "type": "array"
+                    "root_field_name": {
+                        "description": "Root field name for the native query",
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -5075,6 +5267,14 @@
                     "configuration": {
                         "$ref": "#/components/schemas/MSSQLConnConfiguration"
                     },
+                    "custom_return_types": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MssqlCustomReturnTypeMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -5095,16 +5295,16 @@
                         ],
                         "type": "string"
                     },
-                    "logical_models": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "native_queries": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/MssqlLogicalModelMetadata"
+                            "$ref": "#/components/schemas/MssqlNativeQueryMetadata"
                         },
                         "nullable": true,
                         "type": "array"
-                    },
-                    "name": {
-                        "type": "string"
                     },
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
@@ -5504,23 +5704,35 @@
                 ],
                 "type": "object"
             },
-            "MysqlCustomReturnType": {
-                "description": "A return type for a logical model.",
+            "MysqlCustomReturnTypeMetadata": {
+                "description": "A return type.",
                 "properties": {
-                    "columns": {
-                        "description": "Return types for the logical model",
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the custom return type",
                         "items": {
                             "$ref": "#/components/schemas/NullableScalarType"
                         },
                         "type": "array"
                     },
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
+                    "name": {
+                        "description": "A name for a custom return type",
                         "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MysqlSelectPermDef"
+                        },
+                        "type": "array"
                     }
                 },
                 "required": [
-                    "columns"
+                    "name",
+                    "fields"
                 ],
                 "type": "object"
             },
@@ -5640,8 +5852,8 @@
                 ],
                 "type": "object"
             },
-            "MysqlLogicalModelMetadata": {
-                "description": "A logical model as represented in metadata.",
+            "MysqlNativeQueryMetadata": {
+                "description": "A native query as represented in metadata.",
                 "properties": {
                     "arguments": {
                         "additionalProperties": {
@@ -5656,22 +5868,16 @@
                         "type": "string"
                     },
                     "description": {
-                        "description": "A description of the logical model which appears in the graphql schema",
+                        "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
                     },
                     "returns": {
-                        "$ref": "#/components/schemas/MysqlCustomReturnType"
-                    },
-                    "root_field_name": {
-                        "description": "Root field name for the logical model",
+                        "description": "Return type (table) of the expression",
                         "type": "string"
                     },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/MysqlSelectPermDef"
-                        },
-                        "type": "array"
+                    "root_field_name": {
+                        "description": "Root field name for the native query",
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -5922,6 +6128,14 @@
                     "configuration": {
                         "$ref": "#/components/schemas/MySQLConnSourceConfig"
                     },
+                    "custom_return_types": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MysqlCustomReturnTypeMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -5939,16 +6153,16 @@
                         ],
                         "type": "string"
                     },
-                    "logical_models": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "native_queries": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/MysqlLogicalModelMetadata"
+                            "$ref": "#/components/schemas/MysqlNativeQueryMetadata"
                         },
                         "nullable": true,
                         "type": "array"
-                    },
-                    "name": {
-                        "type": "string"
                     },
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
@@ -6519,23 +6733,35 @@
                 ],
                 "type": "object"
             },
-            "PostgresCustomReturnType": {
-                "description": "A return type for a logical model.",
+            "PostgresCustomReturnTypeMetadata": {
+                "description": "A return type.",
                 "properties": {
-                    "columns": {
-                        "description": "Return types for the logical model",
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the custom return type",
                         "items": {
                             "$ref": "#/components/schemas/NullableScalarType"
                         },
                         "type": "array"
                     },
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
+                    "name": {
+                        "description": "A name for a custom return type",
                         "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/PostgresSelectPermDef"
+                        },
+                        "type": "array"
                     }
                 },
                 "required": [
-                    "columns"
+                    "name",
+                    "fields"
                 ],
                 "type": "object"
             },
@@ -6757,8 +6983,8 @@
                 ],
                 "type": "object"
             },
-            "PostgresLogicalModelMetadata": {
-                "description": "A logical model as represented in metadata.",
+            "PostgresNativeQueryMetadata": {
+                "description": "A native query as represented in metadata.",
                 "properties": {
                     "arguments": {
                         "additionalProperties": {
@@ -6773,22 +6999,16 @@
                         "type": "string"
                     },
                     "description": {
-                        "description": "A description of the logical model which appears in the graphql schema",
+                        "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
                     },
                     "returns": {
-                        "$ref": "#/components/schemas/PostgresCustomReturnType"
-                    },
-                    "root_field_name": {
-                        "description": "Root field name for the logical model",
+                        "description": "Return type (table) of the expression",
                         "type": "string"
                     },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/PostgresSelectPermDef"
-                        },
-                        "type": "array"
+                    "root_field_name": {
+                        "description": "Root field name for the native query",
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -7121,6 +7341,14 @@
                     "configuration": {
                         "$ref": "#/components/schemas/PostgresConnConfiguration"
                     },
+                    "custom_return_types": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/PostgresCustomReturnTypeMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -7143,16 +7371,16 @@
                         ],
                         "type": "string"
                     },
-                    "logical_models": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "native_queries": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/PostgresLogicalModelMetadata"
+                            "$ref": "#/components/schemas/PostgresNativeQueryMetadata"
                         },
                         "nullable": true,
                         "type": "array"
-                    },
-                    "name": {
-                        "type": "string"
                     },
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"

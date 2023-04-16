@@ -60,8 +60,8 @@ sourceMetadata =
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-tests _opts = describe "Error Protocol Tests" $ do
+tests :: SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
+tests = describe "Error Protocol Tests" $ do
   mockAgentGraphqlTest "handles returned errors correctly" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =

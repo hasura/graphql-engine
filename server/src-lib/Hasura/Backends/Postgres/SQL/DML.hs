@@ -114,7 +114,7 @@ import Data.String (fromString)
 import Data.Text (pack)
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types
-import Hasura.LogicalModel.Metadata
+import Hasura.NativeQuery.Metadata
 import Hasura.Prelude
 import Hasura.SQL.Types
 import Text.Builder qualified as TB

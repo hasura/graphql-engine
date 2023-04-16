@@ -130,30 +130,28 @@ test-integration-postgres: remove-tix-file
 	HASURA_GRAPHQL_DATABASE_URL='$(TEST_POSTGRES_URL)' \
 			cabal run graphql-engine:test:graphql-engine-test-postgres
 
-.PHONY: test-logical-models
-## test-logical-models: run all tests for the Logical Model feature
-test-logical-models:
+.PHONY: test-native-queries
+## test-native-queries: run all tests for the Native Query feature
+test-native-queries:
 	cabal build exe:graphql-engine
 	docker compose up -d --wait postgres citus sqlserver-healthcheck
-	HSPEC_MATCH=LogicalModels make test-unit
+	HSPEC_MATCH=NativeQueries make test-unit
 	HASURA_TEST_BACKEND_TYPE=Postgres \
-		HSPEC_MATCH=LogicalModels \
+		HSPEC_MATCH=NativeQueries \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		cabal run api-tests:exe:api-tests
 	HASURA_TEST_BACKEND_TYPE=Citus \
-		HSPEC_MATCH=LogicalModels \
+		HSPEC_MATCH=NativeQueries \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		cabal run api-tests:exe:api-tests
 	HASURA_TEST_BACKEND_TYPE=BigQuery \
-		HSPEC_MATCH=Metadata.LogicalModel \
+		HSPEC_MATCH=NativeQuery \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		cabal run api-tests:exe:api-tests
 	HASURA_TEST_BACKEND_TYPE=SQLServer \
-		HSPEC_MATCH=Metadata.LogicalModel \
+		HSPEC_MATCH=NativeQuery \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		cabal run api-tests:exe:api-tests
-
-
 
 .PHONY: py-tests
 ## py-tests: run the python-based test suite

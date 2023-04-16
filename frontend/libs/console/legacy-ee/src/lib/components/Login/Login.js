@@ -30,6 +30,7 @@ import ssoIcon from './black-building.svg';
 import keyIcon from './black-key.svg';
 import { AdminSecretLogin } from './AdminSecretLogin';
 import { SSOLogin } from './SSOLogin';
+import SSOLoginButton from './SSOLoginButton';
 
 class Login extends Component {
   constructor(props) {
@@ -100,6 +101,27 @@ class Login extends Component {
         );
         // return <LoginWith location={location} />;
       }
+    };
+
+    const renderSSOLogin = () => {
+      if (
+        !Array.isArray(globals.ssoIdentityProviders) ||
+        !globals.ssoIdentityProviders.length ||
+        !['pro', 'cloud', 'pro-lite'].includes(globals.consoleType)
+      ) {
+        return null;
+      }
+
+      return globals.ssoIdentityProviders.map((idp, i) => (
+        <SSOLoginButton
+          key={`idp-${idp.client_id}-${i}`}
+          location={location}
+          clientId={idp.client_id}
+          name={idp.name}
+          authorizationUrl={idp.authorization_url}
+          scope={idp.scope}
+        />
+      ));
     };
 
     const handleLoginClick = e => {
@@ -240,6 +262,7 @@ class Login extends Component {
               keyIcon={keyIcon}
             />
           )}
+          {renderSSOLogin()}
         </div>
       );
     }
@@ -254,6 +277,7 @@ class Login extends Component {
             </div>
             <div className={styles.loginWrapper}>
               <form className="form-horizontal" onSubmit={handleLoginClick}>
+                {renderSSOLogin()}
                 <div
                   className={styles.input_addon_group + ' ' + styles.padd_top}
                 >

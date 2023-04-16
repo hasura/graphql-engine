@@ -10,7 +10,6 @@ where
 
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as BL
-import Data.Environment qualified as Env
 import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (toTxt)
 import Hasura.Backends.DataConnector.API qualified as API
@@ -55,9 +54,9 @@ instance BackendExecute 'DataConnector where
   type MultiplexedQuery 'DataConnector = Void
   type ExecutionMonad 'DataConnector = AgentClientT
 
-  mkDBQueryPlan UserInfo {..} env sourceName sourceConfig ir _headers _gName = do
+  mkDBQueryPlan UserInfo {..} sourceName sourceConfig ir _headers _gName = do
     queryPlan@Plan {..} <- Plan.mkQueryPlan _uiSession sourceConfig ir
-    transformedSourceConfig <- transformSourceConfig sourceConfig [("$session", J.toJSON _uiSession), ("$env", J.toJSON env)] env
+    transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
     pure
       DBStepInfo
         { dbsiSourceName = sourceName,
@@ -69,7 +68,7 @@ instance BackendExecute 'DataConnector where
 
   mkDBQueryExplain fieldName UserInfo {..} sourceName sourceConfig ir _headers _gName = do
     queryPlan@Plan {..} <- Plan.mkQueryPlan _uiSession sourceConfig ir
-    transformedSourceConfig <- transformSourceConfig sourceConfig [("$session", J.toJSON _uiSession), ("$env", J.object [])] Env.emptyEnvironment
+    transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
     pure $
       mkAnyBackend @'DataConnector
         DBStepInfo
@@ -80,9 +79,9 @@ instance BackendExecute 'DataConnector where
             dbsiResolvedConnectionTemplate = ()
           }
 
-  mkDBMutationPlan UserInfo {..} env _stringifyNum sourceName sourceConfig mutationDB _headers _gName = do
+  mkDBMutationPlan UserInfo {..} _stringifyNum sourceName sourceConfig mutationDB _headers _gName = do
     mutationPlan@Plan {..} <- Plan.mkMutationPlan _uiSession mutationDB
-    transformedSourceConfig <- transformSourceConfig sourceConfig [("$session", J.toJSON _uiSession), ("$env", J.toJSON env)] env
+    transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
     pure
       DBStepInfo
         { dbsiSourceName = sourceName,
@@ -98,9 +97,9 @@ instance BackendExecute 'DataConnector where
   mkDBStreamingSubscriptionPlan _ _ _ _ _ _ =
     throw400 NotSupported "mkLiveQuerySubscriptionPlan: not implemented for the Data Connector backend."
 
-  mkDBRemoteRelationshipPlan env UserInfo {..} sourceName sourceConfig joinIds joinIdsSchema argumentIdFieldName (resultFieldName, ir) _ _ _ = do
+  mkDBRemoteRelationshipPlan UserInfo {..} sourceName sourceConfig joinIds joinIdsSchema argumentIdFieldName (resultFieldName, ir) _ _ _ = do
     remoteRelationshipPlan@Plan {..} <- Plan.mkRemoteRelationshipPlan _uiSession sourceConfig joinIds joinIdsSchema argumentIdFieldName resultFieldName ir
-    transformedSourceConfig <- transformSourceConfig sourceConfig [("$session", J.toJSON _uiSession), ("$env", J.toJSON env)] env
+    transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
     pure
       DBStepInfo
         { dbsiSourceName = sourceName,

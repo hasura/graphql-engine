@@ -29,20 +29,21 @@ module Hasura.App
     initBasicConnectionInfo,
     resolvePostgresConnInfo,
 
+    -- * app init
+    initialiseAppEnv,
+    initialiseAppContext,
+    migrateCatalogAndFetchMetadata,
+    buildFirstSchemaCache,
+    initSubscriptionsState,
+    initLockedEventsCtx,
+
     -- * app monad
     AppM,
     runAppM,
 
     -- * misc
-    flushLogger,
     getCatalogStateTx,
     updateJwkCtxThread,
-    initialiseContext,
-    initSubscriptionsState,
-    initLockedEventsCtx,
-    initSQLGenCtx,
-    migrateCatalogAndFetchMetadata,
-    buildFirstSchemaCache,
     notifySchemaCacheSyncTx,
     parseArgs,
     runHGEServer,
@@ -64,7 +65,6 @@ import Control.Monad.Catch
     MonadCatch,
     MonadMask,
     MonadThrow,
-    onException,
   )
 import Control.Monad.Morph (hoist)
 import Control.Monad.Stateless
@@ -100,7 +100,6 @@ import Hasura.GraphQL.Execute
   )
 import Hasura.GraphQL.Execute.Action
 import Hasura.GraphQL.Execute.Action.Subscription
-import Hasura.GraphQL.Execute.Backend qualified as EB
 import Hasura.GraphQL.Execute.Subscription.Poll qualified as ES
 import Hasura.GraphQL.Execute.Subscription.State qualified as ES
 import Hasura.GraphQL.Logging (MonadExecutionLog (..), MonadQueryLog (..))
@@ -111,6 +110,7 @@ import Hasura.GraphQL.Transport.HTTP
 import Hasura.GraphQL.Transport.HTTP.Protocol (toParsed)
 import Hasura.GraphQL.Transport.WSServerApp qualified as WS
 import Hasura.GraphQL.Transport.WebSocket.Server qualified as WS
+import Hasura.GraphQL.Transport.WebSocket.Types (WSServerEnv (..))
 import Hasura.Logging
 import Hasura.Metadata.Class
 import Hasura.PingSources
@@ -120,10 +120,12 @@ import Hasura.RQL.DDL.ApiLimit (MonadGetApiTimeLimit (..))
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..))
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
+import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.DDL.Schema.Catalog
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.EECredentials
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Network
@@ -162,7 +164,6 @@ import Network.Wai (Application)
 import Network.Wai.Handler.Warp qualified as Warp
 import Options.Applicative
 import Refined (unrefine)
-import System.Log.FastLogger qualified as FL
 import System.Metrics qualified as EKG
 import System.Metrics.Gauge qualified as EKG.Gauge
 import Text.Mustache.Compile qualified as M
@@ -214,6 +215,7 @@ printJSON = liftIO . BLC.putStrLn . A.encode
 mkPGLogger :: Logger Hasura -> PG.PGLogger
 mkPGLogger (Logger logger) (PG.PLERetryMsg msg) = logger $ PGLog LevelWarn msg
 
+-- | Create all loggers based on the set of enabled logs and chosen log level.
 mkLoggers ::
   (MonadIO m, MonadBaseControl IO m) =>
   HashSet (EngineLogType Hasura) ->
@@ -347,6 +349,293 @@ resolvePostgresConnInfo env dbUrlConf (fromMaybe 1 -> retries) = do
   pure $ PG.ConnInfo retries $ PG.CDDatabaseURI $ txtToBs dbUrlText
 
 --------------------------------------------------------------------------------
+-- App init
+
+-- | The initialisation of the app is split into several functions, for clarity;
+-- but there are several pieces of information that need to be threaded across
+-- those initialisation functions. This small data structure groups together all
+-- such pieces of information that are required throughout the initialisation,
+-- but that aren't needed in the rest of the application.
+data AppInit = AppInit
+  { aiTLSAllowListRef :: TLSAllowListRef,
+    aiMetadataWithResourceVersion :: MetadataWithResourceVersion
+  }
+
+-- | Initializes or migrates the catalog and creates the 'AppEnv' required to
+-- start the server, and also create the 'AppInit' that needs to be threaded
+-- along the init code.
+--
+-- For historical reasons, this function performs a few additional startup tasks
+-- that are not required to create the 'AppEnv', such as starting background
+-- processes and logging startup information. All of those are flagged with a
+-- comment marking them as a side-effect.
+initialiseAppEnv ::
+  (C.ForkableMonadIO m) =>
+  Env.Environment ->
+  BasicConnectionInfo ->
+  ServeOptions Hasura ->
+  Maybe ES.SubscriptionPostPollHook ->
+  ServerMetrics ->
+  PrometheusMetrics ->
+  SamplingPolicy ->
+  ManagedT m (AppInit, AppEnv)
+initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liveQueryHook serverMetrics prometheusMetrics traceSamplingPolicy = do
+  loggers@(Loggers _loggerCtx logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
+
+  -- SIDE EFFECT: print a warning if no admin secret is set.
+  when (null soAdminSecret) $
+    unLogger
+      logger
+      StartupLog
+        { slLogLevel = LevelWarn,
+          slKind = "no_admin_secret",
+          slInfo = A.toJSON ("WARNING: No admin secret provided" :: Text)
+        }
+
+  -- SIDE EFFECT: log all server options.
+  unLogger logger $ serveOptsToLog serveOptions
+
+  -- SIDE EFFECT: log metadata postgres connection info.
+  unLogger logger $ connInfoToLog bciMetadataConnInfo
+
+  -- Generate the instance id.
+  instanceId <- liftIO generateInstanceId
+
+  -- Init metadata db pool.
+  metadataDbPool <-
+    allocate
+      (liftIO $ PG.initPGPool bciMetadataConnInfo soConnParams pgLogger)
+      (liftIO . PG.destroyPGPool)
+
+  -- Migrate the catalog and fetch the metdata.
+  metadataWithVersion <-
+    lift $
+      migrateCatalogAndFetchMetadata
+        logger
+        metadataDbPool
+        bciDefaultPostgres
+        soEnableMaintenanceMode
+        soExtensionsSchema
+
+  -- Create the TLSAllowListRef and the HTTP Manager.
+  let metadata = _mwrvMetadata metadataWithVersion
+  tlsAllowListRef <- liftIO $ createTLSAllowListRef $ networkTlsAllowlist $ _metaNetwork metadata
+  httpManager <- liftIO $ mkHttpManager (readTLSAllowList tlsAllowListRef) mempty
+
+  -- Start a background thread for listening schema sync events from other
+  -- server instances (an interval of 0 indicates that no schema sync is
+  -- required). Logs whether the thread is started or not, and with what
+  -- interval.
+  -- TODO: extract into a separate init function.
+  metaVersionRef <- liftIO $ STM.newEmptyTMVarIO
+  case soSchemaPollInterval of
+    Skip -> unLogger logger $ mkGenericLog @Text LevelInfo "schema-sync" "Schema sync disabled"
+    Interval interval -> do
+      unLogger logger $ mkGenericLog @String LevelInfo "schema-sync" ("Schema sync enabled. Polling at " <> show interval)
+      void $ startSchemaSyncListenerThread logger metadataDbPool instanceId interval metaVersionRef
+
+  -- Generate the shutdown latch.
+  latch <- liftIO newShutdownLatch
+
+  -- Generate subscription state.
+  subscriptionsState <- liftIO $ initSubscriptionsState logger liveQueryHook
+
+  -- Generate event's trigger shared state
+  lockedEventsCtx <- liftIO $ initLockedEventsCtx
+
+  pure
+    ( AppInit
+        { aiTLSAllowListRef = tlsAllowListRef,
+          aiMetadataWithResourceVersion = metadataWithVersion
+        },
+      AppEnv
+        { appEnvPort = soPort,
+          appEnvHost = soHost,
+          appEnvMetadataDbPool = metadataDbPool,
+          appEnvManager = httpManager,
+          appEnvLoggers = loggers,
+          appEnvMetadataVersionRef = metaVersionRef,
+          appEnvInstanceId = instanceId,
+          appEnvEnableMaintenanceMode = soEnableMaintenanceMode,
+          appEnvLoggingSettings = LoggingSettings soEnabledLogTypes soEnableMetadataQueryLogging,
+          appEnvEventingMode = soEventingMode,
+          appEnvEnableReadOnlyMode = soReadOnlyMode,
+          appEnvServerMetrics = serverMetrics,
+          appEnvShutdownLatch = latch,
+          appEnvMetaVersionRef = metaVersionRef,
+          appEnvPrometheusMetrics = prometheusMetrics,
+          appEnvTraceSamplingPolicy = traceSamplingPolicy,
+          appEnvSubscriptionState = subscriptionsState,
+          appEnvLockedEventsCtx = lockedEventsCtx,
+          appEnvConnParams = soConnParams,
+          appEnvTxIso = soTxIso,
+          appEnvConsoleAssetsDir = soConsoleAssetsDir,
+          appEnvConsoleSentryDsn = soConsoleSentryDsn,
+          appEnvConnectionOptions = soConnectionOptions,
+          appEnvWebSocketKeepAlive = soWebSocketKeepAlive,
+          appEnvWebSocketConnectionInitTimeout = soWebSocketConnectionInitTimeout,
+          appEnvGracefulShutdownTimeout = soGracefulShutdownTimeout,
+          appEnvCheckFeatureFlag = CheckFeatureFlag $ checkFeatureFlag env,
+          appEnvSchemaPollInterval = soSchemaPollInterval,
+          appEnvLicenseKeyCache = Nothing
+        }
+    )
+
+-- | Initializes the 'AppContext' and returns a corresponding 'AppStateRef'.
+--
+-- This function is meant to be run in the app monad, which provides the
+-- 'AppEnv'.
+initialiseAppContext ::
+  (C.ForkableMonadIO m, HasAppEnv m) =>
+  Env.Environment ->
+  ServeOptions Hasura ->
+  AppInit ->
+  m (AppStateRef Hasura)
+initialiseAppContext env serveOptions@ServeOptions {..} AppInit {..} = do
+  appEnv@AppEnv {..} <- askAppEnv
+  let CheckFeatureFlag runCheckFlag = appEnvCheckFeatureFlag
+  nativeQueriesEnabled <- liftIO $ runCheckFlag nativeQueryInterface
+  let Loggers _ logger pgLogger = appEnvLoggers
+      sqlGenCtx = initSQLGenCtx soExperimentalFeatures soStringifyNum soDangerousBooleanCollapse
+      cacheStaticConfig = buildCacheStaticConfig appEnv
+      cacheDynamicConfig =
+        CacheDynamicConfig
+          soInferFunctionPermissions
+          soEnableRemoteSchemaPermissions
+          sqlGenCtx
+          soExperimentalFeatures
+          soDefaultNamingConvention
+          soMetadataDefaults
+          soApolloFederationStatus
+          nativeQueriesEnabled
+
+  -- Create the schema cache
+  rebuildableSchemaCache <-
+    buildFirstSchemaCache
+      env
+      logger
+      (mkPgSourceResolver pgLogger)
+      mkMSSQLSourceResolver
+      aiMetadataWithResourceVersion
+      cacheStaticConfig
+      cacheDynamicConfig
+      appEnvManager
+
+  -- Build the RebuildableAppContext.
+  -- (See note [Hasura Application State].)
+  rebuildableAppCtxE <- liftIO $ runExceptT (buildRebuildableAppContext (logger, appEnvManager) serveOptions env)
+  !rebuildableAppCtx <- onLeft rebuildableAppCtxE $ \e -> throwErrExit InvalidEnvironmentVariableOptionsError $ T.unpack $ qeError e
+
+  -- Initialise the 'AppStateRef' from 'RebuildableSchemaCacheRef' and 'RebuildableAppContext'.
+  initialiseAppStateRef aiTLSAllowListRef Nothing appEnvServerMetrics rebuildableSchemaCache rebuildableAppCtx
+
+-- | Runs catalogue migration, and returns the metadata that was fetched.
+--
+-- On success, this function logs the result of the migration, on failure it
+-- logs a 'catalog_migrate' error and throws a fatal error.
+migrateCatalogAndFetchMetadata ::
+  (MonadIO m, MonadBaseControl IO m) =>
+  Logger Hasura ->
+  PG.PGPool ->
+  Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) ->
+  MaintenanceMode () ->
+  ExtensionsSchema ->
+  m MetadataWithResourceVersion
+migrateCatalogAndFetchMetadata
+  logger
+  pool
+  defaultSourceConfig
+  maintenanceMode
+  extensionsSchema = do
+    -- TODO: should we allow the migration to happen during maintenance mode?
+    -- Allowing this can be a sanity check, to see if the hdb_catalog in the
+    -- DB has been set correctly
+    currentTime <- liftIO Clock.getCurrentTime
+    result <-
+      runExceptT $
+        PG.runTx pool (PG.Serializable, Just PG.ReadWrite) $
+          migrateCatalog
+            defaultSourceConfig
+            extensionsSchema
+            maintenanceMode
+            currentTime
+    case result of
+      Left err -> do
+        unLogger
+          logger
+          StartupLog
+            { slLogLevel = LevelError,
+              slKind = "catalog_migrate",
+              slInfo = A.toJSON err
+            }
+        liftIO (throwErrJExit DatabaseMigrationError err)
+      Right (migrationResult, metadataWithVersion) -> do
+        unLogger logger migrationResult
+        pure metadataWithVersion
+
+-- | Build the original 'RebuildableSchemaCache'.
+--
+-- On error, it logs a 'catalog_migrate' error and throws a fatal error. This
+-- misnomer is intentional: it is to preserve a previous behaviour of the code
+-- and avoid a breaking change.
+buildFirstSchemaCache ::
+  (MonadIO m) =>
+  Env.Environment ->
+  Logger Hasura ->
+  SourceResolver ('Postgres 'Vanilla) ->
+  SourceResolver ('MSSQL) ->
+  MetadataWithResourceVersion ->
+  CacheStaticConfig ->
+  CacheDynamicConfig ->
+  HTTP.Manager ->
+  m RebuildableSchemaCache
+buildFirstSchemaCache
+  env
+  logger
+  pgSourceResolver
+  mssqlSourceResolver
+  metadataWithVersion
+  cacheStaticConfig
+  cacheDynamicConfig
+  httpManager = do
+    let cacheBuildParams = CacheBuildParams httpManager pgSourceResolver mssqlSourceResolver cacheStaticConfig
+        buildReason = CatalogSync
+    result <-
+      runExceptT $
+        runCacheBuild cacheBuildParams $
+          buildRebuildableSchemaCacheWithReason buildReason logger env metadataWithVersion cacheDynamicConfig
+    result `onLeft` \err -> do
+      -- TODO: we used to bundle the first schema cache build with the catalog
+      -- migration, using the same error handler for both, meaning that an
+      -- error in the first schema cache build would be reported as
+      -- follows. Changing this will be a breaking change.
+      unLogger
+        logger
+        StartupLog
+          { slLogLevel = LevelError,
+            slKind = "catalog_migrate",
+            slInfo = A.toJSON err
+          }
+      liftIO (throwErrJExit DatabaseMigrationError err)
+
+initSubscriptionsState ::
+  Logger Hasura ->
+  Maybe ES.SubscriptionPostPollHook ->
+  IO ES.SubscriptionsState
+initSubscriptionsState logger liveQueryHook = ES.initSubscriptionsState postPollHook
+  where
+    postPollHook = fromMaybe (ES.defaultSubscriptionPostPollHook logger) liveQueryHook
+
+initLockedEventsCtx :: IO LockedEventsCtx
+initLockedEventsCtx =
+  liftM4
+    LockedEventsCtx
+    (STM.newTVarIO mempty)
+    (STM.newTVarIO mempty)
+    (STM.newTVarIO mempty)
+    (STM.newTVarIO mempty)
+
+--------------------------------------------------------------------------------
 -- App monad
 
 -- | The base app monad of the CE engine.
@@ -370,6 +659,14 @@ runAppM c (AppM a) = ignoreTraceT $ runReaderT a c
 
 instance HasAppEnv AppM where
   askAppEnv = ask
+
+instance HasFeatureFlagChecker AppM where
+  checkFlag f = AppM do
+    CheckFeatureFlag runCheckFeatureFlag <- asks appEnvCheckFeatureFlag
+    liftIO $ runCheckFeatureFlag f
+
+instance HasCacheStaticConfig AppM where
+  askCacheStaticConfig = buildCacheStaticConfig <$> askAppEnv
 
 instance MonadTrace AppM where
   newTraceWith c p n (AppM a) = AppM $ newTraceWith c p n a
@@ -431,8 +728,9 @@ instance MonadMetadataApiAuthorization AppM where
         throw400 AccessDenied accessDeniedErrMsg
 
 instance ConsoleRenderer AppM where
-  renderConsole path authMode enableTelemetry consoleAssetsDir consoleSentryDsn =
-    return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn
+  type ConsoleType AppM = CEConsoleType
+  renderConsole path authMode enableTelemetry consoleAssetsDir consoleSentryDsn consoleType =
+    return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn consoleType
 
 instance MonadVersionAPIWithExtraData AppM where
   -- we always default to CE as the `server_type` in this codebase
@@ -465,11 +763,11 @@ instance MonadResolveSource AppM where
   getPGSourceResolver = asks (mkPgSourceResolver . _lsPgLogger . appEnvLoggers)
   getMSSQLSourceResolver = return mkMSSQLSourceResolver
 
-instance EB.MonadQueryTags AppM where
+instance MonadQueryTags AppM where
   createQueryTags _attributes _qtSourceConfig = return $ emptyQueryTagsComment
 
 instance MonadEventLogCleanup AppM where
-  runLogCleaner _ = pure $ throw400 NotSupported "Event log cleanup feature is enterprise edition only"
+  runLogCleaner _ _ = pure $ throw400 NotSupported "Event log cleanup feature is enterprise edition only"
   generateCleanupSchedules _ _ _ = pure $ Right ()
   updateTriggerCleanupSchedules _ _ _ _ = pure $ Right ()
 
@@ -490,7 +788,7 @@ instance MonadMetadataStorage AppM where
   checkMetadataStorageHealth = runInSeparateTx $ checkDbConnection
 
   getDeprivedCronTriggerStats = runInSeparateTx . getDeprivedCronTriggerStatsTx
-  getScheduledEventsForDelivery = runInSeparateTx getScheduledEventsForDeliveryTx
+  getScheduledEventsForDelivery = runInSeparateTx . getScheduledEventsForDeliveryTx
   insertCronEvents = runInSeparateTx . insertCronEventsTx
   insertOneOffScheduledEvent = runInSeparateTx . insertOneOffScheduledEventTx
   insertScheduledEventInvocation a b = runInSeparateTx $ insertInvocationTx a b
@@ -510,9 +808,13 @@ instance MonadMetadataStorage AppM where
   clearActionData = runInSeparateTx . clearActionDataTx
   setProcessingActionLogsToPending = runInSeparateTx . setProcessingActionLogsToPendingTx
 
-instance MonadMetadataStorageQueryAPI AppM
+instance MonadEECredentialsStorage AppM where
+  getEEClientCredentials = runInSeparateTx getEEClientCredentialsTx
+  setEEClientCredentials a = runInSeparateTx $ setEEClientCredentialsTx a
 
 --------------------------------------------------------------------------------
+-- misc
+
 -- TODO(SOLOMON): Move Into `Hasura.Server.Init`. Unable to do so
 -- currently due `throwErrExit`.
 
@@ -544,237 +846,6 @@ updateJwkCtxThread getAppCtx httpManager logger = forever $ do
   updateJwkCtx authMode httpManager logger
   liftIO $ sleep $ seconds 1
 
-initSubscriptionsState ::
-  Logger Hasura ->
-  Maybe ES.SubscriptionPostPollHook ->
-  IO ES.SubscriptionsState
-initSubscriptionsState logger liveQueryHook = ES.initSubscriptionsState postPollHook
-  where
-    postPollHook = fromMaybe (ES.defaultSubscriptionPostPollHook logger) liveQueryHook
-
-initLockedEventsCtx :: IO LockedEventsCtx
-initLockedEventsCtx = LockedEventsCtx <$> STM.newTVarIO mempty <*> STM.newTVarIO mempty <*> STM.newTVarIO mempty <*> STM.newTVarIO mempty
-
--- | Initializes or migrates the catalog and returns the context required to start the server.
-initialiseContext ::
-  (C.ForkableMonadIO m, MonadCatch m) =>
-  Env.Environment ->
-  BasicConnectionInfo ->
-  ServeOptions Hasura ->
-  Maybe ES.SubscriptionPostPollHook ->
-  ServerMetrics ->
-  PrometheusMetrics ->
-  SamplingPolicy ->
-  ManagedT m (AppStateRef Hasura, AppEnv)
-initialiseContext env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liveQueryHook serverMetrics prometheusMetrics traceSamplingPolicy = do
-  instanceId <- liftIO generateInstanceId
-  latch <- liftIO newShutdownLatch
-  loggers@(Loggers loggerCtx logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
-  when (null soAdminSecret) $ do
-    let errMsg :: Text
-        errMsg = "WARNING: No admin secret provided"
-    unLogger logger $
-      StartupLog
-        { slLogLevel = LevelWarn,
-          slKind = "no_admin_secret",
-          slInfo = A.toJSON errMsg
-        }
-  -- log serve options
-  unLogger logger $ serveOptsToLog serveOptions
-
-  -- log metadata connection info
-  unLogger logger $ connInfoToLog bciMetadataConnInfo
-
-  metadataDbPool <-
-    allocate
-      (liftIO $ PG.initPGPool bciMetadataConnInfo soConnParams pgLogger)
-      (liftIO . PG.destroyPGPool)
-
-  let sqlGenCtx = initSQLGenCtx soExperimentalFeatures soStringifyNum soDangerousBooleanCollapse
-      checkFeatureFlag' = CheckFeatureFlag $ checkFeatureFlag env
-      serverConfigCtx =
-        ServerConfigCtx
-          soInferFunctionPermissions
-          soEnableRemoteSchemaPermissions
-          sqlGenCtx
-          soEnableMaintenanceMode
-          soExperimentalFeatures
-          soEventingMode
-          soReadOnlyMode
-          soDefaultNamingConvention
-          soMetadataDefaults
-          checkFeatureFlag'
-          soApolloFederationStatus
-
-  -- Migrate the catalog and fetch the metdata
-  metadata <-
-    lift $
-      flip onException (flushLogger loggerCtx) $
-        migrateCatalogAndFetchMetadata
-          logger
-          metadataDbPool
-          bciDefaultPostgres
-          soEnableMaintenanceMode
-          soExtensionsSchema
-
-  -- Create the TLSAllowListRef, and the HTTP Manager
-  tlsAllowListRef <- liftIO $ createTLSAllowListRef $ networkTlsAllowlist $ _metaNetwork metadata
-  httpManager <- liftIO $ mkHttpManager (readTLSAllowList tlsAllowListRef) mempty
-
-  -- Create the schema cache
-  rebuildableSchemaCache <-
-    lift $
-      flip onException (flushLogger $ _lsLoggerCtx loggers) $
-        buildFirstSchemaCache
-          env
-          logger
-          serverConfigCtx
-          (mkPgSourceResolver pgLogger)
-          mkMSSQLSourceResolver
-          metadata
-          httpManager
-
-  -- Start a background thread for listening schema sync events from other server instances,
-  metaVersionRef <- liftIO $ STM.newEmptyTMVarIO
-
-  -- Building the RebuildableAppContext, for more info on AppContext,
-  -- see note [Hasura Application State]
-  rebuildableAppCtxE <- liftIO $ runExceptT (buildRebuildableAppContext (logger, httpManager) serveOptions env)
-  !rebuildableAppCtx <- onLeft rebuildableAppCtxE $ \e -> throwErrExit InvalidEnvironmentVariableOptionsError $ T.unpack $ qeError e
-
-  -- Initialise the 'AppStateRef' from 'RebuildableSchemaCacheRef' and 'RebuildableAppContext'
-  appStateRef <- initialiseAppStateRef tlsAllowListRef serverMetrics rebuildableSchemaCache rebuildableAppCtx
-
-  -- An interval of 0 indicates that no schema sync is required
-  case soSchemaPollInterval of
-    Skip -> unLogger logger $ mkGenericLog @Text LevelInfo "schema-sync" "Schema sync disabled"
-    Interval interval -> do
-      unLogger logger $ mkGenericLog @String LevelInfo "schema-sync" ("Schema sync enabled. Polling at " <> show interval)
-      void $ startSchemaSyncListenerThread logger metadataDbPool instanceId interval metaVersionRef
-
-  subscriptionsState <- liftIO $ initSubscriptionsState logger liveQueryHook
-  lockedEventsCtx <- liftIO $ initLockedEventsCtx
-
-  let appEnv =
-        AppEnv
-          { appEnvPort = soPort,
-            appEnvHost = soHost,
-            appEnvMetadataDbPool = metadataDbPool,
-            appEnvManager = httpManager,
-            appEnvLoggers = loggers,
-            appEnvMetadataVersionRef = metaVersionRef,
-            appEnvInstanceId = instanceId,
-            appEnvEnableMaintenanceMode = soEnableMaintenanceMode,
-            appEnvLoggingSettings = LoggingSettings soEnabledLogTypes soEnableMetadataQueryLogging,
-            appEnvEventingMode = soEventingMode,
-            appEnvEnableReadOnlyMode = soReadOnlyMode,
-            appEnvServerMetrics = serverMetrics,
-            appEnvShutdownLatch = latch,
-            appEnvMetaVersionRef = metaVersionRef,
-            appEnvPrometheusMetrics = prometheusMetrics,
-            appEnvTraceSamplingPolicy = traceSamplingPolicy,
-            appEnvSubscriptionState = subscriptionsState,
-            appEnvLockedEventsCtx = lockedEventsCtx,
-            appEnvConnParams = soConnParams,
-            appEnvTxIso = soTxIso,
-            appEnvConsoleAssetsDir = soConsoleAssetsDir,
-            appEnvConsoleSentryDsn = soConsoleSentryDsn,
-            appEnvConnectionOptions = soConnectionOptions,
-            appEnvWebSocketKeepAlive = soWebSocketKeepAlive,
-            appEnvWebSocketConnectionInitTimeout = soWebSocketConnectionInitTimeout,
-            appEnvGracefulShutdownTimeout = soGracefulShutdownTimeout,
-            appEnvCheckFeatureFlag = checkFeatureFlag',
-            appEnvSchemaPollInterval = soSchemaPollInterval
-          }
-  pure (appStateRef, appEnv)
-
--- | Runs catalogue migration, and returns the metadata that was fetched.
---
--- On success, this function logs the result of the migration, on failure it
--- logs a 'catalog_migrate' error and throws a fatal error.
-migrateCatalogAndFetchMetadata ::
-  (MonadIO m, MonadBaseControl IO m) =>
-  Logger Hasura ->
-  PG.PGPool ->
-  Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) ->
-  MaintenanceMode () ->
-  ExtensionsSchema ->
-  m Metadata
-migrateCatalogAndFetchMetadata
-  logger
-  pool
-  defaultSourceConfig
-  maintenanceMode
-  extensionsSchema = do
-    -- TODO: should we allow the migration to happen during maintenance mode?
-    -- Allowing this can be a sanity check, to see if the hdb_catalog in the
-    -- DB has been set correctly
-    currentTime <- liftIO Clock.getCurrentTime
-    result <-
-      runExceptT $
-        PG.runTx pool (PG.Serializable, Just PG.ReadWrite) $
-          migrateCatalog
-            defaultSourceConfig
-            extensionsSchema
-            maintenanceMode
-            currentTime
-    case result of
-      Left err -> do
-        unLogger
-          logger
-          StartupLog
-            { slLogLevel = LevelError,
-              slKind = "catalog_migrate",
-              slInfo = A.toJSON err
-            }
-        liftIO (throwErrJExit DatabaseMigrationError err)
-      Right (migrationResult, metadata) -> do
-        unLogger logger migrationResult
-        pure metadata
-
--- | Build the original 'RebuildableSchemaCache'.
---
--- On error, it logs a 'catalog_migrate' error and throws a fatal error. This
--- misnomer is intentional: it is to preserve a previous behaviour of the code
--- and avoid a breaking change.
-buildFirstSchemaCache ::
-  (MonadIO m) =>
-  Env.Environment ->
-  Logger Hasura ->
-  ServerConfigCtx ->
-  SourceResolver ('Postgres 'Vanilla) ->
-  SourceResolver ('MSSQL) ->
-  Metadata ->
-  HTTP.Manager ->
-  m RebuildableSchemaCache
-buildFirstSchemaCache
-  env
-  logger
-  serverConfigCtx
-  pgSourceResolver
-  mssqlSourceResolver
-  metadata
-  httpManager = do
-    let cacheBuildParams = CacheBuildParams httpManager pgSourceResolver mssqlSourceResolver serverConfigCtx
-        buildReason = CatalogSync
-    result <-
-      runExceptT $
-        runCacheBuild cacheBuildParams $
-          buildRebuildableSchemaCacheWithReason buildReason logger env metadata
-    result `onLeft` \err -> do
-      -- TODO: we used to bundle the first schema cache build with the catalog
-      -- migration, using the same error handler for both, meaning that an
-      -- error in the first schema cache build would be reported as
-      -- follows. Changing this will be a breaking change.
-      unLogger
-        logger
-        StartupLog
-          { slLogLevel = LevelError,
-            slKind = "catalog_migrate",
-            slInfo = A.toJSON err
-          }
-      liftIO (throwErrJExit DatabaseMigrationError err)
-
 -- | Event triggers live in the user's DB and other events
 --  (cron, one-off and async actions)
 --   live in the metadata DB, so we need a way to differentiate the
@@ -782,13 +853,6 @@ buildFirstSchemaCache
 data ShutdownAction
   = EventTriggerShutdownAction (IO ())
   | MetadataDBShutdownAction (ExceptT QErr IO ())
-
--- | If an exception is encountered , flush the log buffer and
--- rethrow If we do not flush the log buffer on exception, then log lines
--- may be missed
--- See: https://github.com/hasura/graphql-engine/issues/4772
-flushLogger :: MonadIO m => LoggerCtx impl -> m ()
-flushLogger = liftIO . FL.flushLogStr . _lcLoggerSet
 
 -- | This function acts as the entrypoint for the graphql-engine webserver.
 --
@@ -823,6 +887,8 @@ runHGEServer ::
     UserAuthentication m,
     HttpLog m,
     HasAppEnv m,
+    HasCacheStaticConfig m,
+    HasFeatureFlagChecker m,
     ConsoleRenderer m,
     MonadVersionAPIWithExtraData m,
     MonadMetadataApiAuthorization m,
@@ -833,9 +899,9 @@ runHGEServer ::
     WS.MonadWSLog m,
     MonadExecuteQuery m,
     HasResourceLimits m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadResolveSource m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
     MonadTrace m,
@@ -847,11 +913,12 @@ runHGEServer ::
   UTCTime ->
   -- | A hook which can be called to indicate when the server is started succesfully
   Maybe (IO ()) ->
+  ConsoleType m ->
   EKG.Store EKG.EmptyMetrics ->
   ManagedT m ()
-runHGEServer setupHook appStateRef initTime startupStatusHook ekgStore = do
+runHGEServer setupHook appStateRef initTime startupStatusHook consoleType ekgStore = do
   AppEnv {..} <- lift askAppEnv
-  waiApplication <- mkHGEServer setupHook appStateRef ekgStore
+  waiApplication <- mkHGEServer setupHook appStateRef consoleType ekgStore
 
   let logger = _lsLogger appEnvLoggers
   -- `startupStatusHook`: add `Service started successfully` message to config_status
@@ -915,6 +982,8 @@ mkHGEServer ::
     UserAuthentication m,
     HttpLog m,
     HasAppEnv m,
+    HasCacheStaticConfig m,
+    HasFeatureFlagChecker m,
     ConsoleRenderer m,
     MonadVersionAPIWithExtraData m,
     MonadMetadataApiAuthorization m,
@@ -925,9 +994,9 @@ mkHGEServer ::
     WS.MonadWSLog m,
     MonadExecuteQuery m,
     HasResourceLimits m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadResolveSource m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
     MonadTrace m,
@@ -935,9 +1004,10 @@ mkHGEServer ::
   ) =>
   (AppStateRef impl -> Spock.SpockT m ()) ->
   AppStateRef impl ->
+  ConsoleType m ->
   EKG.Store EKG.EmptyMetrics ->
   ManagedT m Application
-mkHGEServer setupHook appStateRef ekgStore = do
+mkHGEServer setupHook appStateRef consoleType ekgStore = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -948,26 +1018,16 @@ mkHGEServer setupHook appStateRef ekgStore = do
   AppEnv {..} <- lift askAppEnv
   let Loggers loggerCtx logger _ = appEnvLoggers
 
-  wsServerEnv <-
-    WS.createWSServerEnv
-      (_lsLogger appEnvLoggers)
-      appEnvSubscriptionState
-      appStateRef
-      appEnvManager
-      appEnvEnableReadOnlyMode
-      appEnvWebSocketKeepAlive
-      appEnvServerMetrics
-      appEnvPrometheusMetrics
-      appEnvTraceSamplingPolicy
+  wsServerEnv <- lift $ WS.createWSServerEnv appStateRef
 
   HasuraApp app actionSubState stopWsServer <-
     lift $
-      flip onException (flushLogger loggerCtx) $
-        mkWaiApp
-          setupHook
-          appStateRef
-          ekgStore
-          wsServerEnv
+      mkWaiApp
+        setupHook
+        appStateRef
+        consoleType
+        ekgStore
+        wsServerEnv
 
   -- Log Warning if deprecated environment variables are used
   sources <- scSources <$> liftIO (getSchemaCache appStateRef)
@@ -1024,24 +1084,24 @@ mkHGEServer setupHook appStateRef ekgStore = do
             (scSourcePingConfig <$> getSchemaCache appStateRef)
         )
 
+  -- initialise the websocket connection reaper thread
+  _websocketConnectionReaperThread <-
+    C.forkManagedT "websocket connection reaper thread" logger $
+      liftIO $
+        WS.websocketConnectionReaper getLatestConfigForWSServer getSchemaCache' (_wseServer wsServerEnv)
+
+  dbUid <-
+    getMetadataDbUid `onLeftM` throwErrJExit DatabaseMigrationError
+  pgVersion <-
+    liftIO (runExceptT $ PG.runTx appEnvMetadataDbPool (PG.ReadCommitted, Nothing) $ getPgVersion)
+      `onLeftM` throwErrJExit DatabaseMigrationError
+
+  lift . unLogger logger $ mkGenericLog @Text LevelInfo "telemetry" telemetryNotice
+
   -- start a background thread for telemetry
   _telemetryThread <-
-    if isTelemetryEnabled acEnableTelemetry
-      then do
-        lift . unLogger logger $ mkGenericLog @Text LevelInfo "telemetry" telemetryNotice
-
-        dbUid <-
-          getMetadataDbUid `onLeftM` throwErrJExit DatabaseMigrationError
-        pgVersion <-
-          liftIO (runExceptT $ PG.runTx appEnvMetadataDbPool (PG.ReadCommitted, Nothing) $ getPgVersion)
-            `onLeftM` throwErrJExit DatabaseMigrationError
-
-        telemetryThread <-
-          C.forkManagedT "runTelemetry" logger $
-            liftIO $
-              runTelemetry logger appEnvManager (getSchemaCache appStateRef) dbUid appEnvInstanceId pgVersion acExperimentalFeatures
-        return $ Just telemetryThread
-      else return Nothing
+    C.forkManagedT "runTelemetry" logger $
+      runTelemetry logger appStateRef dbUid pgVersion
 
   -- forking a dedicated polling thread to dynamically get the latest JWK settings
   -- set by the user and update the JWK accordingly. This will help in applying the
@@ -1060,6 +1120,12 @@ mkHGEServer setupHook appStateRef ekgStore = do
       return $ case resp of
         Right _ -> False
         Left err -> qeCode err == ConcurrentUpdate
+
+    getLatestConfigForWSServer =
+      fmap
+        (\appCtx -> (acAuthMode appCtx, acEnableAllowlist appCtx, acCorsPolicy appCtx, acSQLGenCtx appCtx, acExperimentalFeatures appCtx, acDefaultNamingConvention appCtx))
+        (getAppContext appStateRef)
+    getSchemaCache' = getSchemaCache appStateRef
 
     prepareScheduledEvents (Logger logger) = do
       liftIO $ logger $ mkGenericLog @Text LevelInfo "scheduled_triggers" "preparing data"
@@ -1082,7 +1148,7 @@ mkHGEServer setupHook appStateRef ekgStore = do
       -- event triggers should be tied to the life cycle of a source
       lockedEvents <- readTVarIO leEvents
       forM_ sources $ \backendSourceInfo -> do
-        AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo sourceName _ _ _ sourceConfig _ _ :: SourceInfo b) -> do
+        AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo sourceName _ _ _ _ sourceConfig _ _ :: SourceInfo b) -> do
           let sourceNameText = sourceNameToText sourceName
           logger $ mkGenericLog LevelInfo "event_triggers" $ "unlocking events of source: " <> sourceNameText
           for_ (HM.lookup sourceName lockedEvents) $ \sourceLockedEvents -> do
@@ -1192,37 +1258,31 @@ mkHGEServer setupHook appStateRef ekgStore = do
 
     startAsyncActionsPollerThread logger lockedEventsCtx actionSubState = do
       AppEnv {..} <- lift askAppEnv
-      AppContext {..} <- liftIO $ getAppContext appStateRef
-      -- start a background thread to handle async actions
-      case acAsyncActionsFetchInterval of
-        Skip -> pure () -- Don't start the poller thread
-        Interval (unrefine -> sleepTime) -> do
-          let label = "asyncActionsProcessor"
-              asyncActionGracefulShutdownAction =
-                ( liftWithStateless \lowerIO ->
-                    ( waitForProcessingAction
-                        logger
-                        "async_actions"
-                        (length <$> readTVarIO (leActionEvents lockedEventsCtx))
-                        (MetadataDBShutdownAction (hoist lowerIO (shutdownAsyncActions lockedEventsCtx)))
-                        (unrefine appEnvGracefulShutdownTimeout)
-                    )
+      let label = "asyncActionsProcessor"
+          asyncActionGracefulShutdownAction =
+            ( liftWithStateless \lowerIO ->
+                ( waitForProcessingAction
+                    logger
+                    "async_actions"
+                    (length <$> readTVarIO (leActionEvents lockedEventsCtx))
+                    (MetadataDBShutdownAction (hoist lowerIO (shutdownAsyncActions lockedEventsCtx)))
+                    (unrefine appEnvGracefulShutdownTimeout)
                 )
+            )
 
-          void
-            $ C.forkManagedTWithGracefulShutdown
-              label
-              logger
-              (C.ThreadShutdown asyncActionGracefulShutdownAction)
-            $ asyncActionsProcessor
-              -- TODO: puru: send IO hook for acEnvironment
-              acEnvironment
-              logger
-              (getSchemaCache appStateRef)
-              (leActionEvents lockedEventsCtx)
-              appEnvPrometheusMetrics
-              sleepTime
-              Nothing
+      -- start a background thread to handle async actions
+      void
+        $ C.forkManagedTWithGracefulShutdown
+          label
+          logger
+          (C.ThreadShutdown asyncActionGracefulShutdownAction)
+        $ asyncActionsProcessor
+          (acEnvironment <$> getAppContext appStateRef)
+          logger
+          (getSchemaCache appStateRef)
+          (acAsyncActionsFetchInterval <$> getAppContext appStateRef)
+          (leActionEvents lockedEventsCtx)
+          Nothing
 
       -- start a background thread to handle async action live queries
       void $
@@ -1231,7 +1291,6 @@ mkHGEServer setupHook appStateRef ekgStore = do
 
     startScheduledEventsPollerThread logger lockedEventsCtx = do
       AppEnv {..} <- lift askAppEnv
-      AppContext {..} <- liftIO $ getAppContext appStateRef
       -- prepare scheduled triggers
       lift $ prepareScheduledEvents logger
 
@@ -1260,12 +1319,11 @@ mkHGEServer setupHook appStateRef ekgStore = do
           logger
           (C.ThreadShutdown scheduledEventsGracefulShutdownAction)
         $ processScheduledTriggers
-          -- TODO: puru: send IO hook for acEnvironment
-          acEnvironment
+          (acEnvironment <$> getAppContext appStateRef)
           logger
           scheduledEventsStatsLogger
           appEnvManager
-          appEnvPrometheusMetrics
+          (pmScheduledTriggerMetrics appEnvPrometheusMetrics)
           (getSchemaCache appStateRef)
           lockedEventsCtx
 
@@ -1332,8 +1390,15 @@ setCatalogStateTx stateTy stateValue =
 
 --- helper functions ---
 
-mkConsoleHTML :: Text -> AuthMode -> TelemetryStatus -> Maybe Text -> Maybe Text -> Either String Text
-mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn =
+mkConsoleHTML ::
+  Text ->
+  AuthMode ->
+  TelemetryStatus ->
+  Maybe Text ->
+  Maybe Text ->
+  CEConsoleType ->
+  Either String Text
+mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn ceConsoleType =
   renderHtmlTemplate consoleTmplt $
     -- variables required to render the template
     A.object
@@ -1344,6 +1409,7 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn =
         "consoleSentryDsn" A..= fromMaybe "" consoleSentryDsn,
         "assetsVersion" A..= consoleAssetsVersion,
         "serverVersion" A..= currentVersion,
+        "consoleType" A..= ceConsoleTypeIdentifier ceConsoleType, -- TODO(awjchen): This is a kludge that will be removed when the entitlement service is fully implemented.
         "consoleSentryDsn" A..= ("" :: Text)
       ]
   where
@@ -1389,4 +1455,5 @@ mkMSSQLSourceResolver env _name (MSSQLConnConfiguration connInfo _) = runExceptT
           }
   (connString, mssqlPool) <- createMSSQLPool iConnString connOptions env
   let mssqlExecCtx = mkMSSQLExecCtx mssqlPool NeverResizePool
-  pure $ MSSQLSourceConfig connString mssqlExecCtx
+      numReadReplicas = 0
+  pure $ MSSQLSourceConfig connString mssqlExecCtx numReadReplicas

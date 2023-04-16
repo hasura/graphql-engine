@@ -34,7 +34,6 @@ import Hasura.Backends.MSSQL.Meta
 import Hasura.Backends.MSSQL.SQL.Error qualified as HGE
 import Hasura.Backends.MSSQL.Types
 import Hasura.Base.Error
-import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (BackendConfig)
 import Hasura.RQL.Types.Common
@@ -50,7 +49,6 @@ import Text.Shakespeare.Text qualified as ST
 
 resolveSourceConfig ::
   (MonadIO m, MonadResolveSource m) =>
-  Logger Hasura ->
   SourceName ->
   MSSQLConnConfiguration ->
   BackendSourceKind 'MSSQL ->
@@ -58,7 +56,7 @@ resolveSourceConfig ::
   Env.Environment ->
   manager ->
   m (Either QErr MSSQLSourceConfig)
-resolveSourceConfig _logger name config _backendKind _backendConfig env _manager = runExceptT do
+resolveSourceConfig name config _backendKind _backendConfig env _manager = runExceptT do
   sourceResolver <- getMSSQLSourceResolver
   liftEitherM $ liftIO $ sourceResolver env name config
 
@@ -70,14 +68,14 @@ resolveDatabaseMetadata config = runExceptT do
   dbTablesMetadata <- mssqlRunReadOnly mssqlExecCtx $ loadDBMetadata
   pure $ DBObjectsIntrospection dbTablesMetadata mempty mempty
   where
-    MSSQLSourceConfig _connString mssqlExecCtx = config
+    MSSQLSourceConfig _connString mssqlExecCtx _numReadReplicas = config
 
 postDropSourceHook ::
   (MonadIO m, MonadBaseControl IO m) =>
   MSSQLSourceConfig ->
   TableEventTriggers 'MSSQL ->
   m ()
-postDropSourceHook (MSSQLSourceConfig _ mssqlExecCtx) tableTriggersMap = do
+postDropSourceHook (MSSQLSourceConfig _ mssqlExecCtx _) tableTriggersMap = do
   -- The SQL triggers for MSSQL source are created within the schema of the table,
   -- and is not associated with 'hdb_catalog' schema. Thus only deleting the
   -- 'hdb_catalog' schema is not sufficient, since it will still leave the SQL

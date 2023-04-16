@@ -11,27 +11,27 @@ hide_table_of_contents: true
 sidebar_position: 1
 ---
 
-import Thumbnail from '@site/src/components/Thumbnail';
 import VersionedLink from '@site/src/components/VersionedLink';
 import DataFederation from '@site/static/icons/features/data_federation.svg';
 
-# <DataFederation /> Data Federation
+# <DataFederation /> GraphQL Federation
 
 <div className="overview-header">
   <div className="overview-text">
     <p>
-      Hasura's data federation capabilities allow you to compose data from different sources that reside in independent
-      data stores but are semantically related.
+      Federation with GraphQL and Hasura allows you to combine multiple sub-graphs into a supergraph. This allows you to
+      combine data from multiple sources into a single, consolidated endpoint.
     </p>
     <p>
-      Hasura creates a single GraphQL schema from multiple data sources thereby making the data access process
-      self-serve, allowing you to query, mutate or federate real-time and stream data across services without writing
-      any custom code.
+      These sub-graphs can be sourced from different data sources such as databases, REST APIs, or GraphQL APIs,
+      streamlining queries and mutations while maintaining the flexibility and modularity of the underlying services.
     </p>
     <h4>Quick Links</h4>
     <ul>
       <li>
-        <VersionedLink to="/data-federation/data-federation-types/">Learn about data federation types.</VersionedLink>
+        <VersionedLink to="/data-federation/hasura-graphql-federation-architectures/">
+          Learn about Hasura architectures.
+        </VersionedLink>
       </li>
     </ul>
   </div>
@@ -43,13 +43,13 @@ import DataFederation from '@site/static/icons/features/data_federation.svg';
   />
 </div>
 
-## Using Data Federation
+## Using GraphQL Federation
 
 <div className="overview-gallery">
-  <VersionedLink to="/schema/postgres/remote-relationships/remote-source-relationships/">
+  <VersionedLink to="/data-federation/hasura-graphql-federation-architectures/">
     <div className="card">
-      <h3>Create a Database-to-Remote-Database Relationship</h3>
-      <p>Learn how to create a database-to-database relationship using remote relationships.</p>
+      <h3>Hasura GraphQL Federation Architectures</h3>
+      <p>Learn about the different federation models enabled by Hasura.</p>
     </div>
   </VersionedLink>
   <VersionedLink to="/schema/postgres/remote-relationships/remote-schema-relationships/">

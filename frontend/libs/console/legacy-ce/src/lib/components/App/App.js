@@ -6,14 +6,10 @@ import { hot } from 'react-hot-loader';
 import { ThemeProvider } from 'styled-components';
 import 'react-loading-skeleton/dist/skeleton.css';
 import ErrorBoundary from '../Error/ErrorBoundary';
-import {
-  telemetryNotificationShown,
-  setTelemetryNotificationShownInDB,
-} from '../../telemetry/Actions';
-import { showTelemetryNotification } from '../../telemetry/Notifications';
 import globals from '../../Globals';
 import styles from './App.module.scss';
 import { ToastsHub } from '../../new-components/Toasts';
+import { AlertProvider } from '../../new-components/Alert/AlertProvider';
 
 import { theme } from '../UIKit/theme';
 import { trackCustomEvent } from '../../features/Analytics';
@@ -28,7 +24,6 @@ const App = ({
   connectionFailed,
   dispatch,
   metadata,
-  telemetry,
 }) => {
   React.useEffect(() => {
     const className = document.getElementById('content').className;
@@ -46,23 +41,6 @@ const App = ({
       object: 'App',
     });
   }, []);
-  const telemetryShown = React.useRef(false);
-  // should be true only in the case of hasura cloud
-  const isContextCloud = globals.consoleType === 'cloud';
-
-  React.useEffect(() => {
-    if (
-      telemetry.console_opts &&
-      !telemetry.console_opts.telemetryNotificationShown &&
-      !telemetryShown.current &&
-      !isContextCloud
-    ) {
-      telemetryShown.current = true;
-      dispatch(showTelemetryNotification());
-      dispatch(telemetryNotificationShown());
-      dispatch(setTelemetryNotificationShownInDB());
-    }
-  }, [dispatch, telemetry, isContextCloud]);
 
   let connectionFailMsg = null;
   if (connectionFailed) {
@@ -83,19 +61,21 @@ const App = ({
     <GlobalContext.Provider value={globals}>
       <ThemeProvider theme={theme}>
         <ErrorBoundary metadata={metadata} dispatch={dispatch}>
-          <div>
-            {connectionFailMsg}
-            {ongoingRequest && (
-              <ProgressBar
-                percent={percent}
-                autoIncrement={true} // eslint-disable-line react/jsx-boolean-value
-                intervalTime={intervalTime}
-                spinner={false}
-              />
-            )}
-            <div>{children}</div>
-            <ToastsHub />
-          </div>
+          <AlertProvider>
+            <div>
+              {connectionFailMsg}
+              {ongoingRequest && (
+                <ProgressBar
+                  percent={percent}
+                  autoIncrement={true} // eslint-disable-line react/jsx-boolean-value
+                  intervalTime={intervalTime}
+                  spinner={false}
+                />
+              )}
+              <div>{children}</div>
+              <ToastsHub />
+            </div>
+          </AlertProvider>
         </ErrorBoundary>
       </ThemeProvider>
     </GlobalContext.Provider>
@@ -123,7 +103,6 @@ const mapStateToProps = state => {
   return {
     ...state.progressBar,
     notifications: state.notifications,
-    telemetry: state.telemetry,
     metadata: state.metadata,
   };
 };

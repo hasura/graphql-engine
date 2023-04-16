@@ -151,3 +151,91 @@ export const tables: Tables = [
     relationships: [],
   },
 ];
+
+export const tableWithGeolocationSupport = [
+  {
+    table: { name: 'user_location', schema: 'public' },
+    dataSource: {
+      name: 'postgis',
+      kind: 'postgres',
+      tables: [
+        {
+          table: { name: 'user_location', schema: 'public' },
+          select_permissions: [
+            {
+              role: 'new',
+              permission: {
+                columns: [],
+                filter: {
+                  location: {
+                    _st_d_within: {
+                      distance: 100000,
+                      from: { coordinates: [1.4, 2.5], type: 'Point' },
+                      use_spheroid: false,
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+      ],
+      configuration: {
+        connection_info: {
+          database_url: { from_env: 'DB2' },
+          isolation_level: 'read-committed',
+          use_prepared_statements: false,
+        },
+      },
+    },
+    relationships: [],
+    columns: [
+      {
+        name: 'user_id',
+        dataType: 'integer',
+        consoleDataType: 'number',
+        nullable: false,
+        isPrimaryKey: true,
+        graphQLProperties: { name: 'user_id', scalarType: 'Int' },
+      },
+      {
+        name: 'location',
+        dataType: 'USER-DEFINED',
+        consoleDataType: 'string',
+        nullable: true,
+        isPrimaryKey: false,
+        graphQLProperties: { name: 'location', scalarType: 'geography' },
+      },
+      {
+        name: 'topoelement',
+        dataType: 'ARRAY',
+        consoleDataType: 'string',
+        nullable: true,
+        isPrimaryKey: false,
+        graphQLProperties: { name: 'topoelement', scalarType: '_int4' },
+      },
+      {
+        name: 'norm_addy',
+        dataType: 'USER-DEFINED',
+        consoleDataType: 'string',
+        nullable: true,
+        isPrimaryKey: false,
+        graphQLProperties: {
+          name: 'norm_addy',
+          scalarType: 'norm_addy_scalar',
+        },
+      },
+      {
+        name: 'valid_topo',
+        dataType: 'USER-DEFINED',
+        consoleDataType: 'string',
+        nullable: true,
+        isPrimaryKey: false,
+        graphQLProperties: {
+          name: 'valid_topo',
+          scalarType: 'validatetopology_returntype_scalar',
+        },
+      },
+    ],
+  },
+];

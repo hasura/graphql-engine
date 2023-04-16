@@ -29,7 +29,12 @@ export const EntryType = ({
   if (k === '_exists') {
     return <ExistsEntry k={k} v={v} path={path} />;
   }
-  if (operator?.name === '_contains' || operator?.name === '_contained_in') {
+  if (
+    operator?.name === '_contains' ||
+    operator?.name === '_contained_in' ||
+    operator?.type === 'geometric' ||
+    operator?.type === 'geometric_geographic'
+  ) {
     return <ValueInput value={v} path={path} />;
   }
 

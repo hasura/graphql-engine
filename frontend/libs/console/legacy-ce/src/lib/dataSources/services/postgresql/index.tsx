@@ -384,6 +384,7 @@ const columnDataTypes = {
   BIGINT: 'bigint',
   BIGSERIAL: 'bigserial',
   BOOLEAN: 'boolean',
+  BOOL: 'bool',
   DATE: 'date',
   DATETIME: 'datetime',
   INTEGER: 'integer',
@@ -764,7 +765,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     ssl_certificates:
       globals.consoleType === 'cloud' ||
       globals.consoleType === 'pro' ||
-      globals.consoleType === 'pro-lite',
+      globals.consoleType === 'pro-lite', // TODO: should be enabled only when license is active
   },
 };
 

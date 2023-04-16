@@ -26,7 +26,6 @@ import Data.Aeson.Ordered qualified as AO
 import Data.Aeson.Ordered qualified as JO
 import Data.Bifunctor (bimap)
 import Data.ByteString.Lazy qualified as BL
-import Data.Environment (Environment)
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.IntMap.Strict qualified as IntMap
 import Data.List.NonEmpty qualified as NE
@@ -40,6 +39,7 @@ import Hasura.GraphQL.Execute.RemoteJoin.Types
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Transport.Instances ()
 import Hasura.Prelude
+import Hasura.QueryTags
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.SQL.AnyBackend qualified as AB
@@ -52,8 +52,7 @@ import Network.HTTP.Types qualified as HTTP
 
 -- | Construct and execute a call to a source for a remote join.
 makeSourceJoinCall ::
-  Environment ->
-  (EB.MonadQueryTags m, MonadError QErr m) =>
+  (MonadQueryTags m, MonadError QErr m) =>
   -- | Function to dispatch a request to a source.
   (AB.AnyBackend SourceJoinCall -> m BL.ByteString) ->
   -- | User information.
@@ -68,14 +67,14 @@ makeSourceJoinCall ::
   Maybe G.Name ->
   -- | The resulting join index (see 'buildJoinIndex') if any.
   m (Maybe (IntMap.IntMap AO.Value))
-makeSourceJoinCall env networkFunction userInfo remoteSourceJoin jaFieldName joinArguments reqHeaders operationName = do
+makeSourceJoinCall networkFunction userInfo remoteSourceJoin jaFieldName joinArguments reqHeaders operationName = do
   -- step 1: create the SourceJoinCall
   -- maybeSourceCall <-
   --   AB.dispatchAnyBackend @EB.BackendExecute remoteSourceJoin \(sjc :: SourceJoinCall b) ->
   --     buildSourceJoinCall @b userInfo jaFieldName joinArguments sjc
   maybeSourceCall <-
     AB.dispatchAnyBackend @EB.BackendExecute remoteSourceJoin $
-      buildSourceJoinCall env userInfo jaFieldName joinArguments reqHeaders operationName
+      buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName
   -- if there actually is a remote call:
   for maybeSourceCall \sourceCall -> do
     -- step 2: send this call over the network
@@ -98,8 +97,7 @@ data SourceJoinCall b = SourceJoinCall
 -- Step 1: building the source call
 
 buildSourceJoinCall ::
-  (EB.BackendExecute b, EB.MonadQueryTags m, MonadError QErr m) =>
-  Environment ->
+  (EB.BackendExecute b, MonadQueryTags m, MonadError QErr m) =>
   UserInfo ->
   FieldName ->
   IntMap.IntMap JoinArgument ->
@@ -107,7 +105,7 @@ buildSourceJoinCall ::
   Maybe G.Name ->
   RemoteSourceJoin b ->
   m (Maybe (AB.AnyBackend SourceJoinCall))
-buildSourceJoinCall env userInfo jaFieldName joinArguments reqHeaders operationName remoteSourceJoin = do
+buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName remoteSourceJoin = do
   let rows =
         IntMap.toList joinArguments <&> \(argumentId, argument) ->
           KM.insert "__argument_id__" (J.toJSON argumentId) $
@@ -120,7 +118,6 @@ buildSourceJoinCall env userInfo jaFieldName joinArguments reqHeaders operationN
     let sourceConfig = _rsjSourceConfig remoteSourceJoin
     stepInfo <-
       EB.mkDBRemoteRelationshipPlan
-        env
         userInfo
         (_rsjSource remoteSourceJoin)
         sourceConfig

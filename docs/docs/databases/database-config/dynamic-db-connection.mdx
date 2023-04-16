@@ -1,6 +1,6 @@
 ---
 description: Hasura Cloud and Hasura Enterprise dynamic database connection routing
-title: 'Cloud and EE: Dynamic database connection routing'
+title: 'Cloud and Enterprise Edition: Dynamic database connection routing'
 keywords:
   - hasura
   - docs
@@ -14,7 +14,7 @@ keywords:
   - routing
   - connections
   - pool
-sidebar_label: Dynamic DB connection routing ☁️🏢
+sidebar_label: Dynamic Routing for Databases
 sidebar_position: 3
 sidebar_class_name: cloud-and-enterprise-icon
 ---
@@ -23,12 +23,11 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
+import ProductBadge from '@site/src/components/ProductBadge';
 
-# Dynamic Database Connection Routing
+# Dynamic Routing for Databases
 
-<div className="badge badge--primary heading-badge" style={{ marginBottom: `20px` }}>
-  Available on: Cloud Professional, Cloud Enterprise, Self-hosted Enterprise
-</div>
+<ProductBadge pro ee self />
 
 ## Introduction
 
@@ -40,8 +39,7 @@ IDs.
 
 :::info Caution
 
-- Dynamic Database Connection Routing is available only for Postgres backends.
-- The routing is applicable only for non-admin GraphQL requests.
+- Dynamic Database Connection Routing is available only for Postgres and Postgres-like backends currently.
 
 :::
 
@@ -64,18 +62,24 @@ connection by using some operation context variable like an operation name or a 
 In a distributed database system like YugabyteDB or CockroachDB, sometimes, you may want to route the request to a
 specific node. You can achieve this in Hasura using a connection template.
 
+## How it works
+
+When a request is executed, dynamic routing will use a connection template (in Kriti lang) to resolve a connection from
+a connection set. Note that only non-admin roles use the connection template. The admin role will always use the
+`primary` connection.
+
 There are two configurable parameters in the source configuration useful for dynamic routing:
 
 1. [Connection set](#connection-set)
 2. [Connection template](#connection-template)
 
-## Connection set
+### Connection set
 
 You can define a set of connections that are available for routing. You can refer the members of this connection set in
 the [connection template](#connection-template) by their unique name using the variable
 `$.connection_set.<member's name>`.
 
-## Connection template
+### Connection template
 
 The logic for connection routing is defined as a [Kriti template](/api-reference/kriti-templating.mdx). This can resolve
 to the following:
@@ -226,14 +230,14 @@ Explanation:
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-To access Dynamic DB Routing, navigate to the `Dynamic DB Routing` tab in the Edit Data Source page.
+To access Dynamic Routing, navigate to the `Dynamic Routing` tab in the Edit Data Source page.
 
 Select the template you want to use from the list of available templates, or click on `Custom Template` to create your
 own template.
 
 <Thumbnail
   src="/img/databases/postgres/dynamic-db-routing/edit-connection-template.png"
-  alt="Dynamic DB routing"
+  alt="Dynamic routing"
   max-width="543px"
 />
 
@@ -245,12 +249,11 @@ connection.
 
 <Thumbnail
   src="/img/databases/postgres/dynamic-db-routing/add-connection.png"
-  alt="Dynamic DB routing"
+  alt="Dynamic routing"
   max-width="543px"
 />
 
-Adjust the connection template settings to suit your needs, then click `Update Connection Template` to save the
-changes.
+Adjust the connection template settings to suit your needs, then click `Update Connection Template` to save the changes.
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -338,11 +341,37 @@ X-Hasura-Role: admin
 
 ## Testing connection template
 
-Hasura also provides a Metadata API
+Hasura offers a convenient way to test the connection template for a source through the Hasura Console, which simulates
+an actual GraphQL request without hitting the database. The Hasura Console internally uses the Metadata API
 ([pg_test_connection_template](/api-reference/metadata-api/table-view.mdx#metadata-pg-test-connection-template)) for
-testing the connection template for a source. It simulates an actual GraphQL request without hitting the database.
+this process. Alternatively, you can also test the connection template directly using the Metadata API.
 
-An example call to the `pg_test_connection_template` API is given below:
+<Tabs groupId="testing-connection-template" className="api-tabs">
+<TabItem value="console" label="Console">
+
+1. Navigate to the `Dynamic Routing` tab in the Edit Data Source page.
+2. Click on `Validate` button next to the connection template you want to test.
+
+<Thumbnail
+  src="/img/databases/postgres/dynamic-db-routing/validate-connection-template.png"
+  alt="Dynamic DB routing"
+  max-width="543px"
+/>
+
+3. Fill in the `Headers`, `Session Variables`, `Operation Type and Name` as needed for your test scenario.
+4. Click the `Validate` button and the result will be displayed.
+5. You can edit the connection template in the validate modal, the modified template will be updated in the previous
+   screen.
+
+<Thumbnail
+  src="/img/databases/postgres/dynamic-db-routing/validate-connection-template-modal.png"
+  alt="Dynamic DB routing"
+  max-width="543px"
+/>
+
+</TabItem>
+
+<TabItem value="api" label="API">
 
 Request:
 
@@ -354,7 +383,7 @@ X-Hasura-Role: admin
 {
   "type": "pg_test_connection_template",
   "args": {
-    "source": "source_name",
+    "source_name": "source_name",
     "request_context": {
       "headers": {
         "header_name": "header_value"
@@ -366,7 +395,10 @@ X-Hasura-Role: admin
         "operation_type": "query",
         "operation_name": "op_name"
       }
-    }
+    },
+    "connection_template": {
+        "template": "{{ if $.request.session?[\"x-hasura-role\"] == \"user\" }} {{$.primary}} {{else}} {{$.connection_set.db_1}} {{ end }}"
+      }
   }
 }
 ```
@@ -381,6 +413,16 @@ Success Response:
   }
 }
 ```
+
+:::info Note
+
+`connection_template` is an optional argument which has precedence over the connection template present in the source.
+If `connection_template` is provided in the API, then the source's connection template will be ignored.
+
+:::
+
+</TabItem>
+</Tabs>
 
 ## Limitations
 
@@ -400,8 +442,8 @@ differs in the Postgres schema from the primary connection.
 
 ### Event Triggers
 
-[Hasura Event Triggers](/event-triggers/overview.mdx) are triggered only for mutations executed on the primary connection.
-Mutations routed to the members of the connection set will not trigger Event Triggers.
+[Hasura Event Triggers](/event-triggers/overview.mdx) are triggered only for mutations executed on the primary
+connection. Mutations routed to the members of the connection set will not trigger Event Triggers.
 
 ### Migrations
 

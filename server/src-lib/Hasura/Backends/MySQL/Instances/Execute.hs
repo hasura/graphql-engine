@@ -5,7 +5,6 @@ module Hasura.Backends.MySQL.Instances.Execute () where
 import Data.Aeson as J
 import Data.Bifunctor
 import Data.Coerce
-import Data.Environment qualified as Env
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
@@ -50,14 +49,13 @@ mysqlDBQueryPlan ::
   ( MonadError QErr m
   ) =>
   UserInfo ->
-  Env.Environment ->
   SourceName ->
   SourceConfig 'MySQL ->
   QueryDB 'MySQL Void (UnpreparedValue 'MySQL) ->
   [HTTP.Header] ->
   Maybe G.Name ->
   m (DBStepInfo 'MySQL)
-mysqlDBQueryPlan userInfo _env sourceName sourceConfig qrf _ _ = do
+mysqlDBQueryPlan userInfo sourceName sourceConfig qrf _ _ = do
   (headAndTail, actionsForest) <- queryToActionForest userInfo qrf
   pure
     ( DBStepInfo

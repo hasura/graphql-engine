@@ -10,8 +10,8 @@ import Data.Aeson (Value)
 import Data.Text qualified as Text
 import Harness.Permissions.Types qualified as Types
 import Harness.Quoter.Yaml (yaml)
+import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment (..), getBackendTypeConfig)
 import Hasura.Prelude
 

@@ -15,7 +15,8 @@ export const handlers = () => [
         body.type === 'bulk' ||
         body.type === 'concurrent_bulk' ||
         body.type === 'create_cron_trigger' ||
-        body.type === 'delete_cron_trigger'
+        body.type === 'delete_cron_trigger' ||
+        body.type === 'test_webhook_transform'
       ) {
         return res(ctx.json({ message: 'success' } as CronResponseBody));
       }

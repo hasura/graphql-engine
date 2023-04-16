@@ -28,9 +28,9 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.RemoteServer qualified as RemoteServer
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
 import Harness.Test.SetupAction qualified as SetupAction
 import Harness.Test.TestResource (Managed)
@@ -671,14 +671,14 @@ rhsRemoteSchemaTeardown (_, server) = stopServer server
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
-tests opts = describe "remote-schema-relationship" do
-  schemaTests opts
-  executionTests opts
+tests :: SpecWith (TestEnvironment, LocalTestTestEnvironment)
+tests = describe "remote-schema-relationship" do
+  schemaTests
+  executionTests
 
 -- | Basic queries using *-to-DB joins
-executionTests :: Fixture.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
-executionTests opts = describe "execution" do
+executionTests :: SpecWith (TestEnvironment, LocalTestTestEnvironment)
+executionTests = describe "execution" do
   -- fetches the relationship data
   it "related-data" \(testEnvironment, _) -> do
     let lhsSchema = Schema.getSchemaName testEnvironment
@@ -702,7 +702,7 @@ executionTests opts = describe "execution" do
                  title: album1_artist1
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -728,7 +728,7 @@ executionTests opts = describe "execution" do
                album: null
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -765,12 +765,12 @@ executionTests opts = describe "execution" do
                album: null
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
-schemaTests :: Fixture.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
-schemaTests opts =
+schemaTests :: SpecWith (TestEnvironment, LocalTestTestEnvironment)
+schemaTests =
   -- we use an introspection query to check:
   -- 1. a field 'album' is added to the track table
   -- 1. track's where clause does not have 'album' field
@@ -821,6 +821,6 @@ schemaTests opts =
               - name: title
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse

@@ -8,7 +8,7 @@ import { GraphQLError } from 'graphql/error';
 
 export const createControlPlaneClient = (
   endpoint: string = endpoints.luxDataGraphql,
-  headers = {
+  headers: Record<string, string> = {
     'content-type': 'application/json',
     'hasura-client-name': 'hasura-console',
   }

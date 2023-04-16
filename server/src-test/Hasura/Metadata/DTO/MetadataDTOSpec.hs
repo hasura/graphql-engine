@@ -117,7 +117,7 @@ emptyMetadataV3 =
       metaV3InheritedRoles = mempty,
       metaV3GraphqlSchemaIntrospection = mempty,
       metaV3Network = emptyNetwork,
-      metaV3BackendConfigs = Nothing,
+      metaV3BackendConfigs = mempty,
       metaV3OpenTelemetryConfig = emptyOpenTelemetryConfig
     }
 

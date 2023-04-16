@@ -16,10 +16,10 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphqlYaml)
 import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Protocol (withEachProtocol)
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -94,11 +94,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = describe "BasicFieldsSpec" do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = describe "BasicFieldsSpec" do
   describe "Use the `operationName` key" do
     it "Selects the correct operation" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
@@ -134,4 +131,4 @@ tests opts = describe "BasicFieldsSpec" do
                   }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected

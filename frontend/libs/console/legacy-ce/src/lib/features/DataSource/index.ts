@@ -1,18 +1,20 @@
-import { Source, SupportedDrivers, Table } from '../hasura-metadata-types';
 import { Capabilities, OpenApiSchema } from '@hasura/dc-api-types';
 import { DataNode } from 'antd/lib/tree';
 import { AxiosInstance } from 'axios';
-import { z } from 'zod';
 import pickBy from 'lodash/pickBy';
+import { z } from 'zod';
+import { Source, SupportedDrivers, Table } from '../hasura-metadata-types';
+import { AlloyDbTable, alloy } from './alloydb';
 import { bigquery } from './bigquery';
 import { citus } from './citus';
 import { cockroach } from './cockroach';
 import { gdc } from './gdc';
 import { mssql } from './mssql';
 import { postgres } from './postgres';
-import { alloy, AlloyDbTable } from './alloydb';
 import type {
-  DriverInfoResponse,
+  ChangeDatabaseSchemaProps,
+  DriverInfo,
+  GetDatabaseSchemaProps,
   GetDefaultQueryRootProps,
   GetFKRelationshipProps,
   GetSupportedOperatorsProps,
@@ -20,6 +22,7 @@ import type {
   GetTableRowsProps,
   GetTablesListAsTreeProps,
   GetTrackableTablesProps,
+  GetVersionProps,
   // Property,
   IntrospectedTable,
   Operator,
@@ -27,27 +30,49 @@ import type {
   TableColumn,
   TableFkRelationships,
   TableRow,
+  Version,
   WhereClause,
 } from './types';
 
 import { transformSchemaToZodObject } from '../OpenApi3Form/utils';
+import { QueryType } from '../Permissions/types';
 import {
-  exportMetadata,
-  getDriverPrefix,
   NetworkArgs,
-  runIntrospectionQuery,
+  RunSQLAPIError,
+  RunSQLCommandResponse,
   RunSQLResponse,
   RunSQLSelectResponse,
-  RunSQLCommandResponse,
+  exportMetadata,
+  getDriverPrefix,
   runGraphQL,
+  runIntrospectionQuery,
   runMetadataQuery,
 } from './api';
 import { getAllSourceKinds } from './common/getAllSourceKinds';
 import { getTableName } from './common/getTableName';
-import { QueryType } from '../Permissions/types';
 import { ReleaseType } from './types';
 
+export * from './common/utils';
+export type { GDCTable } from './gdc';
+export * from './guards';
 export type { PostgresTable } from './postgres';
+export * from './types';
+export {
+  exportMetadata,
+  runGraphQL,
+  getTableName,
+  runMetadataQuery,
+  getDriverPrefix,
+  runIntrospectionQuery,
+};
+export type {
+  RunSQLResponse,
+  RunSQLSelectResponse,
+  RunSQLCommandResponse,
+  NetworkArgs,
+  AlloyDbTable,
+  RunSQLAPIError,
+};
 export enum Feature {
   NotImplemented = 'Not Implemented',
 }
@@ -73,7 +98,10 @@ export const getDriver = (dataSource: Source) => {
 
 export type Database = {
   introspection?: {
-    getDriverInfo: () => Promise<DriverInfoResponse | Feature.NotImplemented>;
+    getVersion?: (
+      props: GetVersionProps
+    ) => Promise<Version | Feature.NotImplemented>;
+    getDriverInfo: () => Promise<DriverInfo | Feature.NotImplemented>;
     getDatabaseConfiguration: (
       httpClient: AxiosInstance,
       driver?: string
@@ -104,6 +132,9 @@ export type Database = {
     getSupportedOperators: (
       props: GetSupportedOperatorsProps
     ) => Promise<Operator[] | Feature.NotImplemented>;
+    getDatabaseSchemas: (
+      props: GetDatabaseSchemaProps
+    ) => Promise<string[] | Feature.NotImplemented>;
   };
   query?: {
     getTableRows: (
@@ -112,6 +143,12 @@ export type Database = {
   };
   modify?: {
     defaultQueryRoot: (props: GetDefaultQueryRootProps) => Promise<string>;
+    createDatabaseSchema: (
+      props: ChangeDatabaseSchemaProps
+    ) => Promise<RunSQLResponse | Feature.NotImplemented>;
+    deleteDatabaseSchema: (
+      props: ChangeDatabaseSchemaProps
+    ) => Promise<RunSQLResponse | Feature.NotImplemented>;
   };
   config: {
     getDefaultQueryRoot: (
@@ -164,12 +201,24 @@ const getDriverMethods = (driver: SupportedDrivers) => {
 
 export const DataSource = (httpClient: AxiosInstance) => ({
   driver: {
-    getAllSourceKinds: async () => {
+    getAllSourceKinds: async (): Promise<DriverInfo[]> => {
       const serverSupportedDrivers = await getAllSourceKinds({ httpClient });
-
+      const knownEnterpriseDrivers = [
+        'athena',
+        'snowflake',
+        'mysqlgdc',
+        'mariadb',
+      ];
       const allSupportedDrivers = serverSupportedDrivers
         // NOTE: AlloyDB is added here and not returned by the server because it's not a new data source (it's Postgres)
-        .concat([{ builtin: true, kind: 'alloy', display_name: 'AlloyDB' }])
+        .concat([
+          {
+            builtin: true,
+            kind: 'alloy',
+            display_name: 'AlloyDB',
+            available: true,
+          },
+        ])
         .sort((a, b) => (a.kind > b.kind ? 1 : -1));
 
       const allDrivers = allSupportedDrivers.map(async driver => {
@@ -183,13 +232,17 @@ export const DataSource = (httpClient: AxiosInstance) => ({
             displayName: driverInfo.displayName,
             release: driverInfo.release,
             native: driver.builtin,
+            available: true,
+            enterprise: false,
           };
 
         return {
           name: driver.kind,
           displayName: driver.display_name,
-          release: driver.release_name ?? 'GA',
+          release: (driver.release_name as ReleaseType) ?? 'GA',
           native: driver.builtin,
+          available: driver.available,
+          enterprise: knownEnterpriseDrivers.includes(driver.kind),
         };
       });
       return Promise.all(allDrivers);
@@ -197,6 +250,15 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   },
   getNativeDrivers: async () => {
     return nativeDrivers;
+  },
+  getDatabaseVersion: async (
+    dataSourceName: string
+  ): Promise<string | Feature.NotImplemented> => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+    return (
+      database.introspection?.getVersion?.({ dataSourceName, httpClient }) ??
+      Feature.NotImplemented
+    );
   },
   connectDB: {
     getConfigSchema: async (driver: string) => {
@@ -261,9 +323,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     );
 
     if (!dataSource) {
-      throw Error(
-        'DataSource.introspectTables data source not found in metadata'
-      );
+      throw Error(`${dataSourceName} not found in metadata`);
     }
 
     const kind = getDriver(dataSource);
@@ -467,25 +527,27 @@ export const DataSource = (httpClient: AxiosInstance) => ({
       driver
     );
   },
+  getDatabaseSchemas: async ({
+    dataSourceName,
+  }: {
+    dataSourceName: string;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    if (!database.introspection?.getDatabaseSchemas)
+      throw new Error(`getDatabaseSchema() not callable for ${dataSourceName}`);
+
+    return database.introspection?.getDatabaseSchemas({
+      dataSourceName,
+      httpClient,
+    });
+  },
+  modifyDatabase: async ({ dataSourceName }: { dataSourceName: string }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    if (!database.modify)
+      throw new Error(`modify methods are not callable for ${dataSourceName}`);
+
+    return database.modify;
+  },
 });
-
-export type { GDCTable } from './gdc';
-export * from './guards';
-export * from './types';
-export * from './common/utils';
-export {
-  exportMetadata,
-  runGraphQL,
-  getTableName,
-  runMetadataQuery,
-  getDriverPrefix,
-  runIntrospectionQuery,
-};
-
-export type {
-  RunSQLResponse,
-  RunSQLSelectResponse,
-  RunSQLCommandResponse,
-  NetworkArgs,
-  AlloyDbTable,
-};

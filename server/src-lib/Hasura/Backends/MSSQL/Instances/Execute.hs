@@ -17,7 +17,6 @@ where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson.Extended qualified as J
-import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
@@ -88,25 +87,30 @@ msDBQueryPlan ::
     MonadReader QueryTagsComment m
   ) =>
   UserInfo ->
-  Env.Environment ->
   SourceName ->
   SourceConfig 'MSSQL ->
   QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   [HTTP.Header] ->
   Maybe G.Name ->
   m (DBStepInfo 'MSSQL)
-msDBQueryPlan userInfo _env sourceName sourceConfig qrf _ _ = do
+msDBQueryPlan userInfo sourceName sourceConfig qrf _ _ = do
   let sessionVariables = _uiSession userInfo
-  statement <- planQuery sessionVariables qrf
+  (QueryWithDDL {qwdBeforeSteps, qwdAfterSteps, qwdQuery = statement}) <- planQuery sessionVariables qrf
   queryTags <- ask
+
   -- Append Query tags comment to the select statement
   let printer = fromSelect statement `withQueryTagsPrinter` queryTags
       queryString = ODBC.renderQuery (toQueryPretty printer)
 
-  pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) (runSelectQuery printer) ()
+  pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) (runSelectQuery printer qwdBeforeSteps qwdAfterSteps) ()
   where
-    runSelectQuery queryPrinter = OnBaseMonad do
-      let queryTx = encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat queryPrinter)
+    runSelectQuery queryPrinter beforeSteps afterSteps = OnBaseMonad do
+      let queryTx = do
+            let executeStep = Tx.unitQueryE defaultMSSQLTxErrorHandler . toQueryFlat . TQ.fromTempTableDDL
+            traverse_ executeStep beforeSteps
+            result <- encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat queryPrinter)
+            traverse_ executeStep afterSteps
+            pure result
       mssqlRunReadOnly (_mscExecCtx sourceConfig) (fmap withNoStatistics queryTx)
 
 runShowplan ::
@@ -133,7 +137,7 @@ msDBQueryExplain ::
   m (AB.AnyBackend DBStepInfo)
 msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf _ _ = do
   let sessionVariables = _uiSession userInfo
-  statement <- planQuery sessionVariables qrf
+  statement <- qwdQuery <$> planQuery sessionVariables qrf
   let query = toQueryPretty (fromSelect statement)
       queryString = ODBC.renderQuery query
       odbcQuery = OnBaseMonad $
@@ -245,7 +249,6 @@ msDBMutationPlan ::
     MonadReader QueryTagsComment m
   ) =>
   UserInfo ->
-  Env.Environment ->
   Options.StringifyNumbers ->
   SourceName ->
   SourceConfig 'MSSQL ->
@@ -253,7 +256,7 @@ msDBMutationPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   m (DBStepInfo 'MSSQL)
-msDBMutationPlan userInfo _environment stringifyNum sourceName sourceConfig mrf _headers _gName = do
+msDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf _headers _gName = do
   go <$> case mrf of
     MDBInsert annInsert -> executeInsert userInfo stringifyNum sourceConfig annInsert
     MDBDelete annDelete -> executeDelete userInfo stringifyNum sourceConfig annDelete
@@ -429,7 +432,6 @@ msDBRemoteRelationshipPlan ::
   forall m.
   ( MonadError QErr m
   ) =>
-  Env.Environment ->
   UserInfo ->
   SourceName ->
   SourceConfig 'MSSQL ->
@@ -447,7 +449,7 @@ msDBRemoteRelationshipPlan ::
   Maybe G.Name ->
   Options.StringifyNumbers ->
   m (DBStepInfo 'MSSQL)
-msDBRemoteRelationshipPlan _env userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship _headers _gName _stringifyNumbers = do
+msDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship _headers _gName _stringifyNumbers = do
   -- `stringifyNumbers` is not currently handled in any SQL Server operation
   statement <- planSourceRelationship (_uiSession userInfo) lhs lhsSchema argumentId relationship
 

@@ -7,7 +7,7 @@ module Hasura.RQL.Types.Metadata.Object
     MetadataObject (..),
     SourceMetadataObjId (..),
     TableMetadataObjId (..),
-    LogicalModelMetadataObjId (..),
+    CustomReturnTypeMetadataObjId (..),
     droppableInconsistentMetadata,
     getInconsistentRemoteSchemas,
     groupInconsistentMetadataById,
@@ -44,7 +44,8 @@ import Data.Text.Extended
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
-import Hasura.LogicalModel.Types
+import Hasura.CustomReturnType.Types
+import Hasura.NativeQuery.Types
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
@@ -71,20 +72,21 @@ data TableMetadataObjId
 
 instance Hashable TableMetadataObjId
 
--- | Identifiers for logical model elements within the metadata structure.
-data LogicalModelMetadataObjId
-  = LMMOPerm RoleName PermType
+-- | Identifiers for custom return type elements within the metadata structure.
+data CustomReturnTypeMetadataObjId
+  = CRTMOPerm RoleName PermType
   deriving (Show, Eq, Ord, Generic)
 
-instance Hashable LogicalModelMetadataObjId
+instance Hashable CustomReturnTypeMetadataObjId
 
 data SourceMetadataObjId b
   = SMOTable (TableName b)
   | SMOFunction (FunctionName b)
   | SMOFunctionPermission (FunctionName b) RoleName
   | SMOTableObj (TableName b) TableMetadataObjId
-  | SMOLogicalModel LogicalModelName
-  | SMOLogicalModelObj LogicalModelName LogicalModelMetadataObjId
+  | SMONativeQuery NativeQueryName
+  | SMOCustomReturnType CustomReturnTypeName
+  | SMOCustomReturnTypeObj CustomReturnTypeName CustomReturnTypeMetadataObjId
   deriving (Generic)
 
 deriving instance (Backend b) => Show (SourceMetadataObjId b)
@@ -145,9 +147,10 @@ moiTypeName = \case
     handleSourceObj = \case
       SMOTable _ -> "table"
       SMOFunction _ -> "function"
-      SMOLogicalModel _ -> "logical_model"
-      SMOLogicalModelObj _ logicalModelObjectId -> case logicalModelObjectId of
-        LMMOPerm _ permType -> permTypeToCode permType <> "_permission"
+      SMONativeQuery _ -> "native_query"
+      SMOCustomReturnType _ -> "custom_type"
+      SMOCustomReturnTypeObj _ customReturnTypeObjectId -> case customReturnTypeObjectId of
+        CRTMOPerm _ permType -> permTypeToCode permType <> "_permission"
       SMOFunctionPermission _ _ -> "function_permission"
       SMOTableObj _ tableObjectId -> case tableObjectId of
         MTORel _ relType -> relTypeToTxt relType <> "_relation"
@@ -199,17 +202,18 @@ moiName objectId =
           <> toTxt functionName
           <> " in source "
           <> toTxt source
-      SMOLogicalModel name -> toTxt name <> " in source " <> toTxt source
-      SMOLogicalModelObj logicalModelName logicalModelObjectId -> do
+      SMONativeQuery name -> toTxt name <> " in source " <> toTxt source
+      SMOCustomReturnType name -> toTxt name <> " in source " <> toTxt source
+      SMOCustomReturnTypeObj customReturnTypeName customReturnTypeObjectId -> do
         let objectName :: Text
-            objectName = case logicalModelObjectId of
-              LMMOPerm name _ -> toTxt name
+            objectName = case customReturnTypeObjectId of
+              CRTMOPerm name _ -> toTxt name
 
             sourceObjectId :: MetadataObjId
             sourceObjectId =
               MOSourceObjId source $
                 AB.mkAnyBackend $
-                  SMOLogicalModel @b logicalModelName
+                  SMOCustomReturnType @b customReturnTypeName
 
         objectName <> " in " <> moiName sourceObjectId
       SMOTableObj tableName tableObjectId ->

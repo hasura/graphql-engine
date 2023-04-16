@@ -14,8 +14,11 @@ import { UsePreparedStatements } from './parts/UsePreparedStatements';
 import { SslSettings } from './parts/SslSettings';
 import { Collapsible } from '../../../../new-components/Collapsible';
 import { ExtensionSchema } from './parts/ExtensionSchema';
-import { areReadReplicasEnabled, areSSLSettingsEnabled } from './utils/helpers';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { LimitedFeatureWrapper } from '../LimitedFeatureWrapper/LimitedFeatureWrapper';
+import { DynamicDBRouting } from './parts/DynamicDBRouting';
+import { Tabs } from '../../../../new-components/Tabs';
+import { DisplayToastErrorMessage } from '../Common/DisplayToastErrorMessage';
 
 interface ConnectPostgresWidgetProps {
   dataSourceName?: string;
@@ -27,6 +30,7 @@ interface ConnectPostgresWidgetProps {
 
 export const ConnectPostgresWidget = (props: ConnectPostgresWidgetProps) => {
   const { dataSourceName, overrideDriver, overrideDisplayName } = props;
+  const [tab, setTab] = useState('connectionDetails');
 
   const isEditMode = !!dataSourceName;
 
@@ -47,8 +51,8 @@ export const ConnectPostgresWidget = (props: ConnectPostgresWidgetProps) => {
       onError: err => {
         hasuraToast({
           type: 'error',
-          title: `Error while ${isEditMode ? 'updating' : 'adding'} database`,
-          children: JSON.stringify(err),
+          title: err.name,
+          children: <DisplayToastErrorMessage message={err.message} />,
         });
       },
     });
@@ -88,102 +92,156 @@ export const ConnectPostgresWidget = (props: ConnectPostgresWidgetProps) => {
   const hiddenOptions =
     overrideDriver === 'cockroach' ? ['connectionParams'] : [];
 
+  const dynamicDBRoutingTab =
+    dataSourceName && isEditMode && window.__env.consoleType !== 'oss'
+      ? [
+          {
+            value: 'dynamicDBRouting',
+            label: 'Dynamic Routing',
+            content: (
+              <div className="mt-sm">
+                <LimitedFeatureWrapper
+                  id="dynamic-db-routing"
+                  title="Dynamic Routing for Databases"
+                  description="Effortlessly scale your data architecture with Dynamic Routing for databases, allowing you to easily route GraphQL requests to different database connections and leverage different database topology patterns with Hasura."
+                >
+                  <DynamicDBRouting sourceName={dataSourceName} />
+                </LimitedFeatureWrapper>
+              </div>
+            ),
+          },
+        ]
+      : [];
+
   return (
-    <div>
+    <>
       <div className="text-xl text-gray-600 font-semibold">
         {isEditMode
           ? `Edit ${overrideDisplayName ?? 'Postgres'} Connection`
           : `Connect ${overrideDisplayName ?? 'Postgres'} Database`}
       </div>
-      <Form onSubmit={handleSubmit}>
-        <InputField
-          name="name"
-          label="Database name"
-          placeholder="Database name"
-        />
+      <Tabs
+        value={tab}
+        onValueChange={value => setTab(value)}
+        items={[
+          {
+            value: 'connectionDetails',
+            label: 'Connection Details',
+            content: (
+              <div className="mt-sm">
+                <Form onSubmit={handleSubmit}>
+                  <InputField
+                    name="name"
+                    label="Database name"
+                    placeholder="Database name"
+                  />
 
-        <div className="bg-white border border-hasGray-300 rounded-md shadow-sm overflow-hidden p-4">
-          <DatabaseUrl
-            name="configuration.connectionInfo.databaseUrl"
-            hideOptions={hiddenOptions}
-          />
-        </div>
-
-        <div className="mt-sm">
-          <Collapsible
-            triggerChildren={
-              <div className="font-semibold text-muted">Advanced Settings</div>
-            }
-          >
-            <PoolSettings name={`configuration.connectionInfo.poolSettings`} />
-            <IsolationLevel
-              name={`configuration.connectionInfo.isolationLevel`}
-            />
-            <UsePreparedStatements
-              name={`configuration.connectionInfo.usePreparedStatements`}
-            />
-            <ExtensionSchema name="configuration.extensionSchema" />
-            {areSSLSettingsEnabled() && (
-              <Collapsible
-                triggerChildren={
-                  <div className="font-semibold text-muted">
-                    SSL Certificates Settings
-                    <span className="px-1.5 italic font-light">
-                      (Certificates will be loaded from{' '}
-                      <a href="https://hasura.io/docs/latest/graphql/cloud/projects/create.html#existing-database">
-                        environment variables
-                      </a>
-                      )
-                    </span>
+                  <div className="bg-white border border-hasGray-300 rounded-md shadow-sm overflow-hidden p-4">
+                    <DatabaseUrl
+                      name="configuration.connectionInfo.databaseUrl"
+                      hideOptions={hiddenOptions}
+                    />
                   </div>
-                }
-              >
-                <SslSettings
-                  name={`configuration.connectionInfo.sslSettings`}
-                />
-              </Collapsible>
-            )}
-          </Collapsible>
-        </div>
 
-        {areReadReplicasEnabled() && (
-          <div className="mt-sm">
-            <Collapsible
-              triggerChildren={
-                <div className="font-semibold text-muted">Read Replicas</div>
-              }
-            >
-              <ReadReplicas
-                name="configuration.readReplicas"
-                hideOptions={hiddenOptions}
-              />
-            </Collapsible>
-          </div>
-        )}
+                  <div className="mt-sm">
+                    <Collapsible
+                      triggerChildren={
+                        <div className="font-semibold text-muted">
+                          Advanced Settings
+                        </div>
+                      }
+                    >
+                      <PoolSettings
+                        name={`configuration.connectionInfo.poolSettings`}
+                      />
+                      <IsolationLevel
+                        name={`configuration.connectionInfo.isolationLevel`}
+                      />
+                      <UsePreparedStatements
+                        name={`configuration.connectionInfo.usePreparedStatements`}
+                      />
+                      <ExtensionSchema name="configuration.extensionSchema" />
+                      <LimitedFeatureWrapper
+                        title="Looking to add SSL Settings?"
+                        id="db-ssl-settings"
+                        description="Get production-ready today with a 30-day free trial of Hasura EE, no credit card required."
+                      >
+                        <div className="mt-sm">
+                          <Collapsible
+                            triggerChildren={
+                              <div className="font-semibold text-muted">
+                                SSL Certificates Settings
+                                <span className="px-1.5 italic font-light">
+                                  (Certificates will be loaded from{' '}
+                                  <a href="https://hasura.io/docs/latest/graphql/cloud/projects/create.html#existing-database">
+                                    environment variables
+                                  </a>
+                                  )
+                                </span>
+                              </div>
+                            }
+                          >
+                            <SslSettings
+                              name={`configuration.connectionInfo.sslSettings`}
+                            />
+                          </Collapsible>
+                        </div>
+                      </LimitedFeatureWrapper>
+                    </Collapsible>
+                  </div>
 
-        <div className="mt-sm">
-          <Collapsible
-            triggerChildren={
-              <div className="font-semibold text-muted">
-                GraphQL Customization
+                  <div className="mt-sm">
+                    <Collapsible
+                      triggerChildren={
+                        <div className="font-semibold text-muted">
+                          GraphQL Customization
+                        </div>
+                      }
+                    >
+                      <GraphQLCustomization name="customization" />
+                    </Collapsible>
+                  </div>
+
+                  <div className="mt-sm">
+                    <LimitedFeatureWrapper
+                      id="read-replicas"
+                      title="Improve performance and handle increased traffic with read replicas"
+                      description="Scale your database by offloading read queries to
+            read-only replicas, allowing for better performance
+            and availability for users."
+                    >
+                      <Collapsible
+                        triggerChildren={
+                          <div className="font-semibold text-muted">
+                            Read Replicas
+                          </div>
+                        }
+                      >
+                        <ReadReplicas
+                          name="configuration.readReplicas"
+                          hideOptions={hiddenOptions}
+                        />
+                      </Collapsible>
+                    </LimitedFeatureWrapper>
+                  </div>
+
+                  <div className="flex justify-end mt-sm">
+                    <Button
+                      type="submit"
+                      mode="primary"
+                      isLoading={isLoading}
+                      loadingText="Saving"
+                    >
+                      {isEditMode ? 'Update Connection' : 'Connect Database'}
+                    </Button>
+                  </div>
+                </Form>
               </div>
-            }
-          >
-            <GraphQLCustomization name="customization" />
-          </Collapsible>
-        </div>
-
-        <div className="flex justify-end mt-sm">
-          <Button
-            type="submit"
-            mode="primary"
-            isLoading={isLoading}
-            loadingText="Saving"
-          >
-            {isEditMode ? 'Update Connection' : 'Connect Database'}
-          </Button>
-        </div>
-      </Form>
-    </div>
+            ),
+          },
+          ...dynamicDBRoutingTab,
+        ]}
+      />
+    </>
   );
 };

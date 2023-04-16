@@ -127,6 +127,21 @@ const whitelist: Record<string, string[]> = {
     '_has_keys_any',
     '_has_keys_all',
   ],
+  // JSON does not seem to come with any operators
+  // To match the old implementation, which does not provide any operators, we do not whitelist any for now
+  json: [],
+  geography: ['_st_d_within', '_is_null', '_st_intersects'],
+  geometry: [
+    '_is_null',
+    '_st_d_within',
+    '_st_within',
+    '_st_3d_d_within',
+    '_st_contains',
+    '_st_intersects',
+    '_st_touches',
+    '_st_overlaps',
+    '_st_crosses',
+  ],
 };
 
 export function useOperators({ path }: { path: string[] }) {
@@ -134,7 +149,12 @@ export function useOperators({ path }: { path: string[] }) {
   const { columns, table } = useContext(tableContext);
   const columnName = path[path.length - 2];
   const column = columns.find(c => c.name === columnName);
-  const dataType = column?.dataType || '';
+  let dataType = column?.dataType;
+  if (dataType === 'USER-DEFINED') {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    dataType = column?.graphQLProperties?.scalarType;
+  }
   const operators = getDataTypeOperators({
     comparators,
     path,
@@ -142,10 +162,8 @@ export function useOperators({ path }: { path: string[] }) {
     tables,
     table,
   });
-  if (hasWhitelistedOperators(dataType)) {
-    return operators.filter(o =>
-      whitelist[column?.dataType || ''].includes(o.name)
-    );
+  if (dataType && hasWhitelistedOperators(dataType)) {
+    return operators.filter(o => whitelist[dataType || '']?.includes(o.name));
   }
   return operators;
 }

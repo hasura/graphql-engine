@@ -7,8 +7,9 @@ import React, {
   useEffect,
 } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
-import { canAccessReadReplica } from '../../../../utils/permissions';
 import { isPostgres } from '../../../../metadata/dataSource.utils';
+import { useEELiteAccess } from '../../../../features/EETrial';
+import globals from '../../../../Globals';
 
 import Tabbed from './TabbedDataSourceConnection';
 import { ReduxState } from '../../../../types';
@@ -39,6 +40,7 @@ import { getSupportedDrivers } from '../../../../dataSources';
 import { Tabs } from '../../../../new-components/Tabs';
 import { DynamicDBRouting } from '../../../../features/ConnectDBRedesign/components/ConnectPostgresWidget/parts/DynamicDBRouting';
 import { isDynamicDBRoutingEnabled } from '../../../../utils/proConsole';
+import { canAccessReadReplica as isReadReplicaAccessible } from '../../../../utils';
 
 type ConnectDatabaseProps = InjectedProps;
 
@@ -49,6 +51,13 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
     connectDBReducer,
     getDefaultState(props)
   );
+
+  const { access: eeLiteAccess } = useEELiteAccess(globals);
+
+  // the first case is only for pro/cloud console. the second expression is for pro-lite
+  const canAccessReadReplica =
+    isReadReplicaAccessible(connectDBInputState.dbType) ||
+    (eeLiteAccess !== 'forbidden' && connectDBInputState.dbType !== 'bigquery');
 
   const [connectionType, changeConnectionType] = useState(
     props.dbConnection.envVar
@@ -404,7 +413,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
         {getSupportedDrivers('connectDbForm.read_replicas.edit').includes(
           connectDBInputState.dbType
         ) &&
-          canAccessReadReplica(connectDBInputState.dbType) && (
+          canAccessReadReplica && (
             <ReadReplicaForm
               readReplicaState={readReplicasState}
               readReplicaDispatch={readReplicaDispatch}
@@ -464,7 +473,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
         {getSupportedDrivers('connectDbForm.read_replicas.create').includes(
           connectDBInputState.dbType
         ) &&
-          canAccessReadReplica(connectDBInputState.dbType) && (
+          canAccessReadReplica && (
             <ReadReplicaForm
               readReplicaState={readReplicasState}
               readReplicaDispatch={readReplicaDispatch}

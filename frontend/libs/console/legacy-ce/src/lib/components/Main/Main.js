@@ -370,7 +370,7 @@ class Main extends React.Component {
                   </div>
                 </Link>
               </div>
-              <ul className="flex gap-2">
+              <ul className="flex gap-2" data-testid="Nav bar">
                 <HeaderNavItem
                   title="API"
                   icon={<FaFlask aria-hidden="true" />}

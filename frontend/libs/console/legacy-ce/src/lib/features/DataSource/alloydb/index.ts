@@ -1,5 +1,5 @@
 import { Table } from '../../hasura-metadata-types';
-import { Database } from '..';
+import { Database, GetVersionProps } from '..';
 import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 import {
   getDatabaseConfiguration,
@@ -8,8 +8,10 @@ import {
   getFKRelationships,
   getTablesListAsTree,
   getSupportedOperators,
+  getDatabaseSchemas,
 } from '../postgres/introspection';
 import { getTableRows } from '../postgres/query';
+import { runSQL } from '../api';
 import { postgresCapabilities } from '../common/capabilities';
 
 export type AlloyDbTable = { name: string; schema: string };
@@ -17,6 +19,18 @@ export type AlloyDbTable = { name: string; schema: string };
 export const alloy: Database = {
   ...defaultDatabaseProps,
   introspection: {
+    getVersion: async ({ dataSourceName, httpClient }: GetVersionProps) => {
+      const result = await runSQL({
+        source: {
+          name: dataSourceName,
+          kind: 'postgres',
+        },
+        sql: `SELECT VERSION()`,
+        httpClient,
+      });
+      console.log(result);
+      return result.result?.[1][0] ?? '';
+    },
     getDriverInfo: async () => ({
       name: 'alloy',
       displayName: 'AlloyDB',
@@ -32,6 +46,7 @@ export const alloy: Database = {
     getFKRelationships,
     getTablesListAsTree,
     getSupportedOperators,
+    getDatabaseSchemas,
   },
   query: {
     getTableRows,

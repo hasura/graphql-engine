@@ -13,7 +13,7 @@ services:
     environment:
       POSTGRES_PASSWORD: postgrespassword
   hasura:
-    image: hasura/graphql-engine:v2.19.0
+    image: hasura/graphql-engine:v2.22.0
     restart: always
     ports:
       - 8080:8080
@@ -47,7 +47,7 @@ services:
       data-connector-agent:
         condition: service_healthy
   data-connector-agent:
-    image: hasura/graphql-data-connector:v2.19.0
+    image: hasura/graphql-data-connector:v2.22.0
     restart: always
     ports:
       - 8081:8081
@@ -57,7 +57,7 @@ services:
       QUARKUS_OPENTELEMETRY_ENABLED: 'false'
       ## QUARKUS_OPENTELEMETRY_TRACER_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:8081/api/v1/mysql/health']
+      test: ["CMD", "curl", "-f", "http://localhost:8081/api/v1/mysql/health"]
       interval: 5s
       timeout: 10s
       retries: 5

@@ -25,7 +25,7 @@ class RemoteSchema extends React.Component {
       return (
         <div className="ml-sm">
           <Button
-            data-test="data-create-remote-schemas"
+            data-testid="data-create-remote-schemas"
             mode="primary"
             onClick={handleClick}
           >

@@ -41,7 +41,6 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Session
@@ -337,7 +336,7 @@ actionOutputFields outputType annotatedObject objectTypes = do
                           _rsfiType = _atrType,
                           _rsfiSource = _atrSource,
                           _rsfiSourceConfig = _atrSourceConfig,
-                          _rsfiTable = tableInfoName _atrTableInfo,
+                          _rsfiTable = _atrTableName,
                           _rsfiMapping = joinMapping
                         }
               }

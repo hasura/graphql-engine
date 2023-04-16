@@ -156,3 +156,5 @@ instance Backend 'MySQL where
 instance HasSourceConfiguration 'MySQL where
   type SourceConfig 'MySQL = MySQL.SourceConfig
   type SourceConnConfiguration 'MySQL = MySQL.ConnSourceConfig
+  sourceConfigNumReadReplicas = const 0 -- not supported
+  sourceConfigConnectonTemplateEnabled = const False -- not supported

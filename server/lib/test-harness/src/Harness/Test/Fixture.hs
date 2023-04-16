@@ -38,7 +38,6 @@ where
 import Control.Concurrent.Async qualified as Async
 import Control.Monad.Managed (Managed, runManaged, with)
 import Data.Aeson (Value)
-import Data.Has (getter)
 import Data.List (subsequences)
 import Data.Set qualified as S
 import Data.Text qualified as T
@@ -48,7 +47,7 @@ import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.Exceptions
-import Harness.GraphqlEngine (postMetadata_)
+import Harness.GraphqlEngine (postGraphqlInternal, postMetadata_)
 import Harness.Logging
 import Harness.Permissions (Permission (..))
 import Harness.Permissions qualified as Permissions
@@ -65,8 +64,10 @@ import Harness.TestEnvironment
     TestingMode (..),
     TestingRole (..),
     UniqueTestId (..),
+    getSchemaNameInternal,
     logger,
   )
+import Harness.Yaml
 import Hasura.Prelude hiding (log)
 import Test.Hspec
   ( ActionWith,
@@ -98,16 +99,13 @@ import Text.Show.Pretty (ppShow)
 -- The commented out version of this function runs setup and teardown for each Spec item individually.
 -- however it makes CI punishingly slow, so we defer to the "worse" version for
 -- now. When we come to run specs in parallel this will be helpful.
-run :: NonEmpty (Fixture ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith GlobalTestEnvironment
+run :: NonEmpty (Fixture ()) -> SpecWith TestEnvironment -> SpecWith GlobalTestEnvironment
 run = runSingleSetup
 
 -- this refreshes all the metadata on every test, so we can test mutations etc
 -- is much slower though so try `run` first
-runClean :: NonEmpty (Fixture ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith GlobalTestEnvironment
-runClean fixtures tests = do
-  runWithLocalTestEnvironment
-    fixtures
-    (\opts -> beforeWith (\(te, ()) -> return te) (tests opts))
+runClean :: NonEmpty (Fixture ()) -> SpecWith TestEnvironment -> SpecWith GlobalTestEnvironment
+runClean fixtures = runWithLocalTestEnvironment fixtures . beforeWith \(te, ()) -> return te
 
 -- given a fresh HgeServerInstance, add it in our `TestEnvironment`
 useHgeInTestEnvironment :: GlobalTestEnvironment -> HgeServerInstance -> IO GlobalTestEnvironment
@@ -130,18 +128,13 @@ hgeWithEnv env = do
   aroundAllWith
     ( \specs globalTestEnvironment -> runManaged $ do
         hgeServerInstance <-
-          spawnServer
-            (getter globalTestEnvironment)
-            (getter globalTestEnvironment)
-            (getter globalTestEnvironment)
-            hgeConfig
+          spawnServer globalTestEnvironment hgeConfig
         liftIO $ useHgeInTestEnvironment globalTestEnvironment hgeServerInstance >>= specs
     )
 
 {-# DEPRECATED runSingleSetup "runSingleSetup lets all specs in aFixture share a single database environment, which impedes parallelisation and out-of-order execution." #-}
-runSingleSetup :: NonEmpty (Fixture ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith GlobalTestEnvironment
-runSingleSetup fixtures tests = do
-  runWithLocalTestEnvironmentSingleSetup fixtures (\opts -> beforeWith (\(te, ()) -> return te) (tests opts))
+runSingleSetup :: NonEmpty (Fixture ()) -> SpecWith TestEnvironment -> SpecWith GlobalTestEnvironment
+runSingleSetup fixtures = runWithLocalTestEnvironmentSingleSetup fixtures . beforeWith \(te, ()) -> return te
 
 -- | Runs the given tests, for each provided 'Fixture'@ a@.
 --
@@ -158,7 +151,7 @@ runSingleSetup fixtures tests = do
 runWithLocalTestEnvironment ::
   forall a.
   NonEmpty (Fixture a) ->
-  (Options -> SpecWith (TestEnvironment, a)) ->
+  SpecWith (TestEnvironment, a) ->
   SpecWith GlobalTestEnvironment
 runWithLocalTestEnvironment = runWithLocalTestEnvironmentInternal aroundWith
 
@@ -166,7 +159,7 @@ runWithLocalTestEnvironment = runWithLocalTestEnvironmentInternal aroundWith
 runWithLocalTestEnvironmentSingleSetup ::
   forall a.
   NonEmpty (Fixture a) ->
-  (Options -> SpecWith (TestEnvironment, a)) ->
+  SpecWith (TestEnvironment, a) ->
   SpecWith GlobalTestEnvironment
 runWithLocalTestEnvironmentSingleSetup = runWithLocalTestEnvironmentInternal aroundAllWith
 
@@ -174,7 +167,7 @@ runWithLocalTestEnvironmentInternal ::
   forall a.
   ((ActionWith (TestEnvironment, a) -> ActionWith (GlobalTestEnvironment)) -> SpecWith (TestEnvironment, a) -> SpecWith (GlobalTestEnvironment)) ->
   NonEmpty (Fixture a) ->
-  (Options -> SpecWith (TestEnvironment, a)) ->
+  SpecWith (TestEnvironment, a) ->
   SpecWith GlobalTestEnvironment
 runWithLocalTestEnvironmentInternal aroundSomeWith fixtures tests =
   for_ fixtures \fixture' -> do
@@ -195,18 +188,19 @@ runWithLocalTestEnvironmentInternal aroundSomeWith fixtures tests =
           TestEverything -> True
 
     describe (show n) do
-      flip aroundSomeWith (tests options) \test globalTestEnvironment ->
+      flip aroundSomeWith tests \test globalTestEnvironment ->
         if not (n `shouldRunIn` testingMode globalTestEnvironment)
           then pendingWith $ "Inapplicable test."
           else case skipTests options of
             Just skipMsg -> pendingWith $ "Tests skipped: " <> T.unpack skipMsg
-            Nothing -> fixtureBracket fixture' test globalTestEnvironment
+            Nothing -> fixtureBracket fixture' options test globalTestEnvironment
 
 -- We want to be able to report exceptions happening both during the tests
 -- and at teardown, which is why we use a custom re-implementation of
 -- @bracket@.
 fixtureBracket ::
   Fixture b ->
+  Options ->
   (ActionWith (TestEnvironment, b)) ->
   ActionWith GlobalTestEnvironment
 fixtureBracket
@@ -215,12 +209,13 @@ fixtureBracket
       mkLocalTestEnvironment,
       setupTeardown
     }
+  options
   actionWith
   globalTestEnvironment =
     mask \restore -> runManaged do
       liftIO $ runLogger (logger globalTestEnvironment) $ LogFixtureTestStart (tshow name)
       -- create databases we need
-      testEnvironment <- liftIO $ setupTestEnvironment name globalTestEnvironment
+      testEnvironment <- liftIO $ setupTestEnvironment name globalTestEnvironment options
       -- set up local env for remote schema testing etc
       localTestEnvironment <- mkLocalTestEnvironment testEnvironment
       liftIO $ do
@@ -275,8 +270,8 @@ dropDatabases fixtureName testEnvironment =
 
 -- | Tests all run with unique schema names now, so we need to produce a test
 -- environment that points to a unique schema name.
-setupTestEnvironment :: FixtureName -> GlobalTestEnvironment -> IO TestEnvironment
-setupTestEnvironment name globalTestEnvironment = do
+setupTestEnvironment :: FixtureName -> GlobalTestEnvironment -> Options -> IO TestEnvironment
+setupTestEnvironment name globalTestEnvironment options = do
   uniqueTestId <- UniqueTestId <$> nextRandom
 
   let testEnvironment =
@@ -284,7 +279,11 @@ setupTestEnvironment name globalTestEnvironment = do
           { fixtureName = name,
             uniqueTestId = uniqueTestId,
             globalEnvironment = globalTestEnvironment,
-            permissions = Admin
+            permissions = Admin,
+            _options = options,
+            _postgraphqlInternal = postGraphqlInternal,
+            _shouldReturnYamlFInternal = \testEnv -> shouldReturnYamlFInternal (_options testEnv),
+            _getSchemaNameInternal = getSchemaNameInternal
           }
 
   -- create source databases
@@ -298,7 +297,7 @@ fixtureRepl ::
   GlobalTestEnvironment ->
   IO (IO ())
 fixtureRepl Fixture {name, mkLocalTestEnvironment, setupTeardown} globalTestEnvironment = do
-  testEnvironment <- setupTestEnvironment name globalTestEnvironment
+  testEnvironment <- setupTestEnvironment name globalTestEnvironment defaultOptions
   with (mkLocalTestEnvironment testEnvironment) \localTestEnvironment -> do
     let testEnvironments = (testEnvironment, localTestEnvironment)
     cleanup <- runSetupActions (logger $ globalEnvironment testEnvironment) (setupTeardown testEnvironments)

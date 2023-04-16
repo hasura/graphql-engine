@@ -43,12 +43,12 @@ import Hasura.Backends.Postgres.DDL.Source.Version
 import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName)
 import Hasura.Backends.Postgres.Types.ComputedField
 import Hasura.Base.Error
+import Hasura.Function.Cache
 import Hasura.Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (..))
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata (SourceMetadata (..), TableMetadata (..), _cfmDefinition)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
@@ -75,7 +75,6 @@ instance ToMetadataFetchQuery 'Cockroach where
 
 resolveSourceConfig ::
   (MonadIO m, MonadResolveSource m) =>
-  Logger Hasura ->
   SourceName ->
   PostgresConnConfiguration ->
   BackendSourceKind ('Postgres pgKind) ->
@@ -83,7 +82,7 @@ resolveSourceConfig ::
   Env.Environment ->
   manager ->
   m (Either QErr (SourceConfig ('Postgres pgKind)))
-resolveSourceConfig _logger name config _backendKind _backendConfig env _manager = runExceptT do
+resolveSourceConfig name config _backendKind _backendConfig env _manager = runExceptT do
   sourceResolver <- getPGSourceResolver
   liftEitherM $ liftIO $ sourceResolver env name config
 

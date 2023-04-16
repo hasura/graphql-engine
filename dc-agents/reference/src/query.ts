@@ -452,6 +452,9 @@ const projectRow = (fields: Record<string, Field>, findRelationship: (relationsh
         projectedRow[fieldName] = subquery ? performQuery(relationship.target_table, subquery) : { aggregates: null, rows: null };
         break;
 
+      case "object":
+        throw new Error('Unsupported field type "object"');
+
       default:
         return unreachable(field["type"]);
     }

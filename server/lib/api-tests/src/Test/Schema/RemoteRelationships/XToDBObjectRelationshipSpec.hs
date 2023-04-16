@@ -30,9 +30,9 @@ import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Quoter.Yaml.InterpolateYaml (interpolateYaml)
 import Harness.RemoteServer qualified as RemoteServer
+import Harness.Schema (Table (..))
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..))
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction as SetupAction
 import Harness.Test.TestResource (Managed)
 import Harness.TestEnvironment
@@ -1071,15 +1071,15 @@ rhsSqliteSetup (wholeTestEnvironment, _) = do
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-tests opts = describe "object-relationship" $ do
-  schemaTests opts
-  executionTests opts
-  permissionTests opts
+tests :: SpecWith (TestEnvironment, Maybe Server)
+tests = describe "object-relationship" $ do
+  schemaTests
+  executionTests
+  permissionTests
 
 -- | Basic queries using *-to-DB joins
-executionTests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-executionTests opts = describe "execution" $ do
+executionTests :: SpecWith (TestEnvironment, Maybe Server)
+executionTests = describe "execution" $ do
   -- fetches the relationship data
   it "related-data" $ \(testEnvironment, _) -> do
     let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
@@ -1103,7 +1103,7 @@ executionTests opts = describe "execution" $ do
                  title: album1_artist1
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -1129,7 +1129,7 @@ executionTests opts = describe "execution" $ do
                album: null
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -1166,14 +1166,14 @@ executionTests opts = describe "execution" $ do
                album: null
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
 -- | Spec that describe an object relationship's data in the presence of
 -- permisisons.
-permissionTests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-permissionTests opts = describe "permission" $ do
+permissionTests :: SpecWith (TestEnvironment, Maybe Server)
+permissionTests = describe "permission" $ do
   let userHeaders = [("x-hasura-role", "role1"), ("x-hasura-artist-id", "1")]
 
   -- only the allowed rows on the target table are queryable
@@ -1219,7 +1219,7 @@ permissionTests opts = describe "permission" $ do
                album: null
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -1258,12 +1258,12 @@ permissionTests opts = describe "permission" $ do
                 __typename: #{rhsSchema}_album
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
-schemaTests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-schemaTests opts =
+schemaTests :: SpecWith (TestEnvironment, Maybe Server)
+schemaTests =
   -- we use an introspection query to check:
   -- 1. a field 'album' is added to the track table
   -- 1. track's where clause does not have 'album' field
@@ -1314,6 +1314,6 @@ schemaTests opts =
               - name: title
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse

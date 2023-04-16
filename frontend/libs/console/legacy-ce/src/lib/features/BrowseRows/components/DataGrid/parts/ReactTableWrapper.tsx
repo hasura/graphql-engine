@@ -1,4 +1,4 @@
-import { TableRow } from '../../../../DataSource';
+import { TableColumn, TableRow } from '../../../../DataSource';
 import { CardedTable } from '../../../../../new-components/CardedTable';
 import {
   FaCaretDown,
@@ -36,7 +36,14 @@ interface ReactTableWrapperProps {
     sorting: ColumnSort[];
     setSorting: React.Dispatch<React.SetStateAction<ColumnSort[]>>;
   };
+  tableColumns: TableColumn[];
 }
+
+const renderColumnData = (data: any) => {
+  if (['bigint', 'string', 'number'].includes(typeof data)) return data;
+
+  return JSON.stringify(data);
+};
 
 export const ReactTableWrapper: React.VFC<ReactTableWrapperProps> = ({
   isRowsSelectionEnabled,
@@ -45,6 +52,7 @@ export const ReactTableWrapper: React.VFC<ReactTableWrapperProps> = ({
   relationships,
   rows,
   sort,
+  tableColumns: _tableColumns,
 }) => {
   const [currentActiveRow, setCurrentActiveRow] = useState<Record<
     string,
@@ -61,7 +69,7 @@ export const ReactTableWrapper: React.VFC<ReactTableWrapperProps> = ({
       header: () => <span key={column}>{column}</span>,
       enableSorting: true,
       enableMultiSort: true,
-      cell: (info: any) => info.getValue() ?? '',
+      cell: (info: any) => <>{renderColumnData(info.getValue())}</> ?? '',
     })
   );
 
@@ -269,6 +277,7 @@ export const ReactTableWrapper: React.VFC<ReactTableWrapperProps> = ({
         <RowDialog
           row={currentActiveRow}
           onClose={() => setCurrentActiveRow(null)}
+          columns={_tableColumns}
         />
       )}
     </>

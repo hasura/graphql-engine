@@ -18,8 +18,8 @@ import { useMetadataMigration } from '../../../../MetadataAPI';
 
 type UseSuggestedRelationshipsArgs = {
   dataSourceName: string;
-  table: Table;
-  existingRelationships: LocalRelationship[];
+  table?: Table;
+  existingRelationships?: LocalRelationship[];
   isEnabled: boolean;
 };
 
@@ -145,13 +145,18 @@ export const removeExistingRelationships = ({
     return false;
   });
 
+export const getSuggestedRelationshipsCacheQuery = (
+  dataSourceName: string,
+  table: Table
+) => ['suggested_relationships', dataSourceName, table];
+
 export const useSuggestedRelationships = ({
   dataSourceName,
   table,
-  existingRelationships,
+  existingRelationships = [],
   isEnabled,
 }: UseSuggestedRelationshipsArgs) => {
-  const { data: metadataSource } = useMetadata(
+  const { data: metadataSource, isFetching } = useMetadata(
     MetadataSelectors.findSource(dataSourceName)
   );
 
@@ -173,14 +178,14 @@ export const useSuggestedRelationships = ({
     refetch: refetchSuggestedRelationships,
     isLoading: isLoadingSuggestedRelationships,
   } = useQuery({
-    queryKey: ['suggested_relationships', dataSourceName, table],
+    queryKey: getSuggestedRelationshipsCacheQuery(dataSourceName, table),
     queryFn: async () => {
       const body = {
         type: `${dataSourcePrefix}_suggest_relationships`,
         args: {
           omit_tracked: true,
-          tables: [table],
           source: dataSourceName,
+          ...(table ? { tables: [table] } : {}),
         },
       };
       const result = await runMetadataQuery<SuggestedRelationshipsResponse>({
@@ -190,7 +195,7 @@ export const useSuggestedRelationships = ({
 
       return result;
     },
-    enabled: isEnabled,
+    enabled: isEnabled && !isFetching,
     refetchOnWindowFocus: false,
   });
 
@@ -202,11 +207,13 @@ export const useSuggestedRelationships = ({
     columnNames,
     relationshipType,
     toTable,
+    fromTable,
   }: {
     name: string;
     columnNames: string[];
     relationshipType: 'object' | 'array';
     toTable?: Table;
+    fromTable?: Table;
   }) => {
     setAddingSuggestedRelationship(true);
 
@@ -214,7 +221,7 @@ export const useSuggestedRelationships = ({
       query: {
         type: `${dataSourcePrefix}_create_${relationshipType}_relationship`,
         args: {
-          table,
+          table: fromTable || table,
           name,
           source: dataSourceName,
           using: {
@@ -229,10 +236,15 @@ export const useSuggestedRelationships = ({
         },
       },
     });
+
     setAddingSuggestedRelationship(false);
 
     queryClient.invalidateQueries({
       queryKey: generateQueryKeys.metadata(),
+    });
+
+    queryClient.invalidateQueries({
+      queryKey: getSuggestedRelationshipsCacheQuery(dataSourceName, table),
     });
   };
 
@@ -240,14 +252,16 @@ export const useSuggestedRelationships = ({
     if (dataSourcePrefix) {
       refetchSuggestedRelationships();
     }
-  }, [dataSourcePrefix]);
+  }, [dataSourcePrefix, refetchSuggestedRelationships]);
 
   const suggestedRelationships = data?.relationships || [];
 
-  const tableFilteredRelationships = filterTableRelationships({
-    table,
-    relationships: suggestedRelationships,
-  });
+  const tableFilteredRelationships = table
+    ? filterTableRelationships({
+        table,
+        relationships: suggestedRelationships,
+      })
+    : suggestedRelationships;
 
   // TODO: remove when the metadata request will correctly omit already tracked relationships
   const notExistingRelationships = removeExistingRelationships({

@@ -18,7 +18,7 @@ import Data.Foldable (find)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List (sort, sortOn)
 import Data.List.NonEmpty qualified as NonEmpty
-import Data.Maybe (isJust)
+import Data.Maybe (isJust, isNothing)
 import Data.Text qualified as Text
 import GHC.Stack (HasCallStack)
 import Hasura.Backends.DataConnector.API qualified as API
@@ -74,6 +74,12 @@ spec TestData {..} API.Capabilities {..} = describe "schema API" $ preloadAgentS
             & applyWhen
               (not supportsUpdates)
               (traverse %~ (_Object . at "updatable" ?~ Bool False))
+            -- If agent doesn't support update mutations then all columns won't be generated
+            -- This is a bit of a dubious assumption since it's possible a database supports
+            -- generated values but the agent just doesn't support mutations on that DB
+            & applyWhen
+              (isNothing _cMutations)
+              (traverse %~ (_Object . at "value_generated" .~ Nothing))
             & Just
 
     actualJsonColumns `jsonShouldBe` expectedJsonColumns
@@ -109,7 +115,7 @@ spec TestData {..} API.Capabilities {..} = describe "schema API" $ preloadAgentS
       actualPrimaryKey `jsonShouldBe` Just _tiPrimaryKey
     else testPerTable "returns no primary keys for the Chinook tables" $ \_expectedTable actualTable -> do
       let actualPrimaryKey = API._tiPrimaryKey <$> actualTable
-      actualPrimaryKey `jsonShouldBe` Just []
+      actualPrimaryKey `jsonShouldBe` Nothing
 
   if API._dscSupportsForeignKeys _cDataSchema
     then testPerTable "returns the correct foreign keys for the Chinook tables" $ \expectedTable actualTable -> do

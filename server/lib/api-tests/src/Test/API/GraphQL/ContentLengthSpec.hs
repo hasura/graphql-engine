@@ -14,9 +14,9 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Http qualified as Http
 import Harness.Quoter.Graphql (graphql)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..), getServer, serverUrl)
 import Hasura.Prelude
 import Network.HTTP.Simple qualified as Http
@@ -56,8 +56,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests _opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   describe "GraphQL query contains a Content-Length response header" do
     it "checks for the header in a valid GraphQL query" \testEnvironment -> do
       let schemaName :: Schema.SchemaName

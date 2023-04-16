@@ -6,6 +6,7 @@ import { generateQueryKeys } from '../../DatabaseRelationships/utils/queryClient
 import { useMetadataMigration } from '../../MetadataAPI';
 import { DatabaseConnection } from '../types';
 import { usePushRoute } from './usePushRoute';
+import { transformErrorResponse } from '../utils';
 
 export const useManageDatabaseConnection = ({
   onSuccess,
@@ -15,7 +16,9 @@ export const useManageDatabaseConnection = ({
   onError?: (err: Error) => void;
 }) => {
   const queryClient = useQueryClient();
-  const { mutate, ...rest } = useMetadataMigration();
+  const { mutate, ...rest } = useMetadataMigration({
+    errorTransform: transformErrorResponse,
+  });
   const push = usePushRoute();
   const dispatch = useAppDispatch();
 
@@ -30,10 +33,11 @@ export const useManageDatabaseConnection = ({
         dispatch(exportMetadata());
       },
       onError: (err: Error) => {
+        console.log('~', err);
         onError?.(err);
       },
     }),
-    [onError, onSuccess, queryClient]
+    [dispatch, onError, onSuccess, push, queryClient]
   );
 
   const createConnection = useCallback(

@@ -43,6 +43,9 @@ export interface RedactOptions {
   redactText?: boolean;
   /**
    * A comma-separated list of HTML attributes to redact.
+   *
+   * Please note that ids cannot be fully redacted, be sure ids do not contain sensitive information.
+   * @see https://developers.heap.io/docs/web#precise-data-redaction-via-heap-redact
    */
   htmlAttributesToRedact?: string;
 }

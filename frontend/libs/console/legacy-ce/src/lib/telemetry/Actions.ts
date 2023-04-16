@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-import { AnyAction, Dispatch } from 'redux';
+import { AnyAction } from 'redux';
 import { ThunkDispatch } from 'redux-thunk';
 
 import { getUserType } from '../components/Main/utils';
@@ -22,7 +22,6 @@ import { ConsoleState, defaultConsoleState, NotificationsState } from './state';
 import { isUpdateIDsEqual } from './utils';
 
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
-const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
 const SET_HASURA_UUID = 'Telemetry/SET_HASURA_UUID';
 const UPDATE_CONSOLE_NOTIFICATIONS = 'Telemetry/UPDATE_CONSOLE_NOTIFICATIONS';
 
@@ -79,33 +78,6 @@ const setConsoleOptsInDB =
       }
     );
   };
-
-const telemetryNotificationShown =
-  () => (dispatch: Dispatch<TelemetryActionTypes>) => {
-    dispatch({ type: SET_NOTIFICATION_SHOWN });
-  };
-
-const setTelemetryNotificationShownInDB = () => {
-  const successCb = (data: Record<string, unknown>) => {
-    console.log(
-      `Updated telemetry notification status in db ${JSON.stringify(data)}`
-    );
-  };
-
-  const errorCb = (error: Error) => {
-    console.error(
-      `Failed to update telemetry notification status in db ${JSON.stringify(
-        error
-      )}`
-    );
-  };
-
-  const opts = {
-    telemetryNotificationShown: true,
-  };
-
-  return setConsoleOptsInDB(opts, successCb, errorCb);
-};
 
 const setOnboardingCompletedInDB = (
   dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
@@ -381,9 +353,6 @@ const loadConsoleOpts =
             data: console_state,
           });
 
-          globals.telemetryNotificationShown =
-            !!console_state?.telemetryNotificationShown;
-
           if (
             !console_state?.console_notifications ||
             (console_state.console_notifications &&
@@ -417,9 +386,6 @@ interface SetConsoleOptsAction {
   type: typeof SET_CONSOLE_OPTS;
   data: ConsoleState['console_opts'];
 }
-interface SetNotificationShowAction {
-  type: typeof SET_NOTIFICATION_SHOWN;
-}
 
 interface SetHasuraUuid {
   type: typeof SET_HASURA_UUID;
@@ -433,7 +399,6 @@ interface UpdateConsoleNotifications {
 
 type TelemetryActionTypes =
   | SetConsoleOptsAction
-  | SetNotificationShowAction
   | SetHasuraUuid
   | UpdateConsoleNotifications;
 
@@ -453,14 +418,6 @@ const telemetryReducer = (
         ...state,
         console_opts: {
           ...action.data,
-        },
-      };
-    case SET_NOTIFICATION_SHOWN:
-      return {
-        ...state,
-        console_opts: {
-          ...state.console_opts,
-          telemetryNotificationShown: true,
         },
       };
     case SET_HASURA_UUID:
@@ -490,8 +447,6 @@ export {
   setConsoleOptsInDB,
   setOnboardingCompletedInDB,
   setPreReleaseNotificationOptOutInDB,
-  setTelemetryNotificationShownInDB,
-  telemetryNotificationShown,
   UPDATE_CONSOLE_NOTIFICATIONS,
   updateConsoleNotificationsState,
 };

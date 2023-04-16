@@ -5,6 +5,7 @@
 module Hasura.RQL.Types.Relationships.Remote
   ( RemoteRelationship,
     RemoteRelationshipDefinition (..),
+    RemoteSourceRelationshipBuilder (..),
     parseRemoteRelationshipDefinition,
     RRFormat (..),
     RRParseMode (..),
@@ -66,6 +67,9 @@ data RRFormat
   | -- | The remote relationship was parsed from the new unified format.
     RRFUnifiedFormat
   deriving (Show, Eq, Generic)
+
+-- | Specify whether remote schema <> source relationships should be built
+data RemoteSourceRelationshipBuilder = IncludeRemoteSourceRelationship | ExcludeRemoteSourceRelationship
 
 -- | Metadata representation of the internal definition of a remote relationship.
 data RemoteRelationshipDefinition

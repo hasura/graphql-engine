@@ -102,12 +102,14 @@ module Hasura.SQL.AnyBackend
     composeAnyBackend,
     runBackend,
     parseAnyBackendFromJSON,
+    anyBackendCodec,
     debugAnyBackendToJSON,
     backendSourceKindFromText,
     parseBackendSourceKindFromJSON,
   )
 where
 
+import Autodocodec (HasCodec (codec), JSONCodec, dimapCodec)
 import Control.Applicative
 import Control.Arrow.Extended (ArrowChoice)
 import Control.Lens (preview, _Right)
@@ -483,6 +485,25 @@ parseAnyBackendFromJSON backendKind value = case backendKind of
   BigQuery -> BigQueryValue <$> parseJSON value
   MySQL -> MySQLValue <$> parseJSON value
   DataConnector -> DataConnectorValue <$> parseJSON value
+
+-- | Codec that can be used to decode and encode @AnyBackend i@ values. Throws
+-- an error when attempting to encode a value with a mismatched @backendKind@
+-- argument.
+anyBackendCodec ::
+  forall i.
+  i `SatisfiesForAllBackends` HasCodec =>
+  BackendType ->
+  JSONCodec (AnyBackend i)
+anyBackendCodec backendKind = case backendKind of
+  Postgres Vanilla -> dimapCodec PostgresVanillaValue (\case (PostgresVanillaValue v) -> v; _ -> error msg) $ codec @(i ('Postgres 'Vanilla))
+  Postgres Citus -> dimapCodec PostgresCitusValue (\case (PostgresCitusValue v) -> v; _ -> error msg) $ codec @(i ('Postgres 'Citus))
+  Postgres Cockroach -> dimapCodec PostgresCockroachValue (\case (PostgresCockroachValue v) -> v; _ -> error msg) $ codec @(i ('Postgres 'Cockroach))
+  MSSQL -> dimapCodec MSSQLValue (\case (MSSQLValue v) -> v; _ -> error msg) $ codec @(i 'MSSQL)
+  BigQuery -> dimapCodec BigQueryValue (\case (BigQueryValue v) -> v; _ -> error msg) $ codec @(i 'BigQuery)
+  MySQL -> dimapCodec MySQLValue (\case (MySQLValue v) -> v; _ -> error msg) $ codec @(i 'MySQL)
+  DataConnector -> dimapCodec DataConnectorValue (\case (DataConnectorValue v) -> v; _ -> error msg) $ codec @(i 'DataConnector)
+  where
+    msg = "got unexpected backend type indicating anyBackendCodec was called with the wrong backendType value"
 
 -- | Outputs a debug JSON value from an 'AnyBackend'. This function must only be
 -- used for debug purposes, as it has no way of inserting the backend kind in

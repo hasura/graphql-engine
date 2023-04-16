@@ -6,7 +6,6 @@ import Autodocodec
   ( Autodocodec (Autodocodec),
     HasCodec (codec),
     object,
-    optionalField,
     optionalFieldWithOmittedDefault,
     optionalFieldWithOmittedDefault',
     optionalFieldWithOmittedDefaultWith,
@@ -17,7 +16,6 @@ import Autodocodec.OpenAPI ()
 import Data.Aeson (FromJSON, ToJSON)
 import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec)
 import Data.OpenApi qualified as OpenApi
-import Hasura.Metadata.DTO.Placeholder (PlaceholderObject)
 import Hasura.Metadata.DTO.Utils (versionField)
 import Hasura.Prelude
 import Hasura.RQL.Types.Action (ActionMetadata (_amName))
@@ -27,13 +25,14 @@ import Hasura.RQL.Types.Common (MetricsConfig, emptyMetricsConfig)
 import Hasura.RQL.Types.CustomTypes (CustomTypes, emptyCustomTypes)
 import Hasura.RQL.Types.Endpoint (_ceName)
 import Hasura.RQL.Types.GraphqlSchemaIntrospection (SetGraphqlIntrospectionOptions)
-import Hasura.RQL.Types.Metadata.Common (Actions, CronTriggers, Endpoints, InheritedRoles, QueryCollections, RemoteSchemas, Sources, sourcesCodec)
+import Hasura.RQL.Types.Metadata.Common (Actions, BackendConfigWrapper, CronTriggers, Endpoints, InheritedRoles, QueryCollections, RemoteSchemas, Sources, sourcesCodec)
 import Hasura.RQL.Types.Network (Network, emptyNetwork)
 import Hasura.RQL.Types.OpenTelemetry (OpenTelemetryConfig, emptyOpenTelemetryConfig)
 import Hasura.RQL.Types.QueryCollection qualified as QC
 import Hasura.RQL.Types.Roles (Role (_rRoleName))
 import Hasura.RQL.Types.ScheduledTrigger (CronTriggerMetadata (ctName))
 import Hasura.RemoteSchema.Metadata.Core (RemoteSchemaMetadataG (_rsmName))
+import Hasura.SQL.BackendMap (BackendMap)
 
 -- | Revision 3 of the Metadata export format. Note that values of the types,
 -- 'PlaceholderArray' and 'PlaceholderObject' will eventually be expanded to represent more detail.
@@ -51,7 +50,7 @@ data MetadataV3 = MetadataV3
     metaV3InheritedRoles :: InheritedRoles,
     metaV3GraphqlSchemaIntrospection :: SetGraphqlIntrospectionOptions,
     metaV3Network :: Network,
-    metaV3BackendConfigs :: Maybe PlaceholderObject,
+    metaV3BackendConfigs :: BackendMap BackendConfigWrapper,
     metaV3OpenTelemetryConfig :: OpenTelemetryConfig
   }
   deriving stock (Show, Eq, Generic)
@@ -85,5 +84,5 @@ instance HasCodec MetadataV3 where
         <*> optionalFieldWithOmittedDefaultWith "inherited_roles" (sortedElemsCodec _rRoleName) [] "an inherited role is a way to create a new role which inherits permissions from two or more roles" .= metaV3InheritedRoles
         <*> optionalFieldWithOmittedDefault' "graphql_schema_introspection" mempty .= metaV3GraphqlSchemaIntrospection
         <*> optionalFieldWithOmittedDefault' "network" emptyNetwork .= metaV3Network
-        <*> optionalField "backend_configs" "TODO" .= metaV3BackendConfigs
+        <*> optionalFieldWithOmittedDefault' "backend_configs" mempty .= metaV3BackendConfigs
         <*> optionalFieldWithOmittedDefault' "opentelemetry" emptyOpenTelemetryConfig .= metaV3OpenTelemetryConfig

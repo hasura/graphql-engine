@@ -121,9 +121,11 @@ module Hasura.Eventing.ScheduledTrigger
   )
 where
 
+import Control.Concurrent.Async.Lifted (forConcurrently_)
 import Control.Concurrent.Extended (Forever (..), sleep)
 import Control.Concurrent.STM
 import Control.Lens (preview)
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Environment qualified as Env
 import Data.Has
@@ -158,11 +160,12 @@ import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Types
-import Hasura.Server.Prometheus (PrometheusMetrics (..))
+import Hasura.Server.Prometheus (ScheduledTriggerMetrics (..))
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Refined (unrefine)
 import System.Metrics.Prometheus.Counter as Prometheus.Counter
+import System.Timeout.Lifted (timeout)
 import Text.Builder qualified as TB
 
 -- | runCronEventsGenerator makes sure that all the cron triggers
@@ -229,26 +232,32 @@ generateCronEventsFrom startTime CronTriggerInfo {..} =
     -- generate next 100 events; see getDeprivedCronTriggerStatsTx:
     generateScheduleTimes startTime 100 ctiSchedule
 
+-- | `upperBoundScheduledEventTimeout` is the maximum amount of time
+--    a scheduled event can take to process. This function is intended
+--    to use with a timeout.
+upperBoundScheduledEventTimeout :: DiffTime
+upperBoundScheduledEventTimeout = minutes 30
+
 processCronEvents ::
   ( MonadIO m,
     MonadMetadataStorage m,
-    Tracing.MonadTrace m
+    Tracing.MonadTrace m,
+    MonadBaseControl IO m
   ) =>
   L.Logger L.Hasura ->
   HTTP.Manager ->
-  PrometheusMetrics ->
+  ScheduledTriggerMetrics ->
   [CronEvent] ->
-  IO SchemaCache ->
+  HashMap TriggerName CronTriggerInfo ->
   TVar (Set.Set CronEventId) ->
   m ()
-processCronEvents logger httpMgr prometheusMetrics cronEvents getSC lockedCronEvents = do
-  cronTriggersInfo <- scCronTriggers <$> liftIO getSC
+processCronEvents logger httpMgr scheduledTriggerMetrics cronEvents cronTriggersInfo lockedCronEvents = do
   -- save the locked cron events that have been fetched from the
   -- database, the events stored here will be unlocked in case a
   -- graceful shutdown is initiated in midst of processing these events
   saveLockedEvents (map _ceId cronEvents) lockedCronEvents
   -- The `createdAt` of a cron event is the `created_at` of the cron trigger
-  for_ cronEvents $ \(CronEvent id' name st _ tries _ _) -> do
+  forConcurrently_ cronEvents $ \(CronEvent id' name st _ tries _ _) -> do
     case Map.lookup name cronTriggersInfo of
       Nothing ->
         logInternalError $
@@ -266,31 +275,46 @@ processCronEvents logger httpMgr prometheusMetrics cronEvents getSC lockedCronEv
                 ctiRequestTransform
                 ctiResponseTransform
             retryCtx = RetryContext tries ctiRetryConf
-        finally <-
-          runExceptT $
-            flip runReaderT (logger, httpMgr) $
-              processScheduledEvent
-                prometheusMetrics
-                id'
-                ctiHeaders
-                retryCtx
-                payload
-                ctiWebhookInfo
-                Cron
+            eventProcessingTimeout = min upperBoundScheduledEventTimeout (unrefine $ strcTimeoutSeconds $ ctiRetryConf)
+            processScheduledEventAction =
+              runExceptT $
+                flip runReaderT (logger, httpMgr) $
+                  processScheduledEvent
+                    scheduledTriggerMetrics
+                    id'
+                    ctiHeaders
+                    retryCtx
+                    payload
+                    ctiWebhookInfo
+                    Cron
+        eventProcessedMaybe <-
+          timeout (fromInteger (diffTimeToMicroSeconds eventProcessingTimeout)) $ processScheduledEventAction
+        case eventProcessedMaybe of
+          Nothing -> do
+            let eventTimeoutMessage = "Cron Scheduled event " <> id' <<> " of cron trigger " <> name <<> " timed out while processing."
+                eventTimeoutError = err500 TimeoutErrorCode eventTimeoutMessage
+            logInternalError eventTimeoutError
+            runExceptT (processError id' retryCtx [] Cron (mkErrorObject eventTimeoutMessage) (HOther $ T.unpack eventTimeoutMessage) scheduledTriggerMetrics)
+              >>= (`onLeft` logInternalError)
+          Just finally -> onLeft finally logInternalError
         removeEventFromLockedEvents id' lockedCronEvents
-        onLeft finally logInternalError
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
+
+    mkErrorObject :: Text -> J.Value
+    mkErrorObject errorMessage =
+      J.object $ ["error" J..= errorMessage]
 
 processOneOffScheduledEvents ::
   ( MonadIO m,
     Tracing.MonadTrace m,
-    MonadMetadataStorage m
+    MonadMetadataStorage m,
+    MonadBaseControl IO m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
   HTTP.Manager ->
-  PrometheusMetrics ->
+  ScheduledTriggerMetrics ->
   [OneOffScheduledEvent] ->
   TVar (Set.Set OneOffScheduledEventId) ->
   m ()
@@ -298,14 +322,14 @@ processOneOffScheduledEvents
   env
   logger
   httpMgr
-  prometheusMetrics
+  scheduledTriggerMetrics
   oneOffEvents
   lockedOneOffScheduledEvents = do
     -- save the locked one-off events that have been fetched from the
     -- database, the events stored here will be unlocked in case a
     -- graceful shutdown is initiated in midst of processing these events
     saveLockedEvents (map _ooseId oneOffEvents) lockedOneOffScheduledEvents
-    for_ oneOffEvents $ \OneOffScheduledEvent {..} -> do
+    forConcurrently_ oneOffEvents $ \OneOffScheduledEvent {..} -> do
       (either logInternalError pure) =<< runExceptT do
         let payload =
               ScheduledEventWebhookPayload
@@ -330,8 +354,23 @@ processOneOffScheduledEvents
               (Left eventWebhookErrors, Left eventHeaderErrorVars) -> Left $ These eventWebhookErrors eventHeaderErrorVars
         case webhookAndHeaderInfo of
           Right (webhookEnvRecord, eventHeaderInfo) -> do
-            flip runReaderT (logger, httpMgr) $
-              processScheduledEvent prometheusMetrics _ooseId eventHeaderInfo retryCtx payload webhookEnvRecord OneOff
+            let processScheduledEventAction =
+                  flip runReaderT (logger, httpMgr) $
+                    processScheduledEvent scheduledTriggerMetrics _ooseId eventHeaderInfo retryCtx payload webhookEnvRecord OneOff
+
+                eventTimeout = unrefine $ strcTimeoutSeconds $ _ooseRetryConf
+
+            -- Try to process the event with a timeout of min(`uppserBoundScheduledEventTimeout`, event's response timeout),
+            -- so that we're never blocked forever while processing a single event.
+            --
+            -- If the request times out, then process it as an erroneous invocation and move on.
+            timeout (fromInteger (diffTimeToMicroSeconds (min upperBoundScheduledEventTimeout eventTimeout))) processScheduledEventAction
+              `onNothingM` ( do
+                               let eventTimeoutMessage = "One-off Scheduled event " <> _ooseId <<> " timed out while processing."
+                                   eventTimeoutError = err500 TimeoutErrorCode eventTimeoutMessage
+                               lift $ logInternalError eventTimeoutError
+                               processError _ooseId retryCtx [] OneOff (mkErrorObject eventTimeoutMessage) (HOther $ T.unpack eventTimeoutMessage) scheduledTriggerMetrics
+                           )
             removeEventFromLockedEvents _ooseId lockedOneOffScheduledEvents
           Left envVarError ->
             processError
@@ -339,18 +378,16 @@ processOneOffScheduledEvents
               retryCtx
               []
               OneOff
-              (mkErrorObject $ mkInvalidEnvVarErrMsg envVarError)
+              (mkErrorObject $ "Error creating the request. " <> (mkInvalidEnvVarErrMsg $ envVarError))
               (HOther $ T.unpack $ qeError (err400 NotFound (mkInvalidEnvVarErrMsg envVarError)))
+              scheduledTriggerMetrics
     where
       logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
       getTemplateFromUrl url = printURLTemplate $ unInputWebhook url
       mkInvalidEnvVarErrMsg envVarErrorValues = "The value for environment variables not found: " <> (getInvalidEnvVarText envVarErrorValues)
-      mkErrorObject envVarNameText =
-        J.object
-          [ "error"
-              J..= ( "Error creating the request. " <> envVarNameText
-                   )
-          ]
+      mkErrorObject :: Text -> J.Value
+      mkErrorObject errorMessage =
+        J.object $ ["error" J..= errorMessage]
       getInvalidEnvVarText :: These ResolveWebhookError ResolveHeaderError -> Text
       getInvalidEnvVarText (This a) = toTxt a
       getInvalidEnvVarText (That b) = toTxt b
@@ -359,26 +396,29 @@ processOneOffScheduledEvents
 processScheduledTriggers ::
   ( MonadIO m,
     Tracing.MonadTrace m,
-    MonadMetadataStorage m
+    MonadMetadataStorage m,
+    MonadBaseControl IO m
   ) =>
-  Env.Environment ->
+  IO Env.Environment ->
   L.Logger L.Hasura ->
   FetchedScheduledEventsStatsLogger ->
   HTTP.Manager ->
-  PrometheusMetrics ->
+  ScheduledTriggerMetrics ->
   IO SchemaCache ->
   LockedEventsCtx ->
   m (Forever m)
-processScheduledTriggers env logger statsLogger httpMgr prometheusMetrics getSC LockedEventsCtx {..} = do
+processScheduledTriggers getEnvHook logger statsLogger httpMgr scheduledTriggerMetrics getSC LockedEventsCtx {..} = do
   return $
     Forever () $
       const do
-        getScheduledEventsForDelivery >>= \case
+        cronTriggersInfo <- scCronTriggers <$> liftIO getSC
+        env <- liftIO getEnvHook
+        getScheduledEventsForDelivery (Map.keys cronTriggersInfo) >>= \case
           Left e -> logInternalError e
           Right (cronEvents, oneOffEvents) -> do
             logFetchedScheduledEventsStats statsLogger (CronEventsCount $ length cronEvents) (OneOffScheduledEventsCount $ length oneOffEvents)
-            processCronEvents logger httpMgr prometheusMetrics cronEvents getSC leCronEvents
-            processOneOffScheduledEvents env logger httpMgr prometheusMetrics oneOffEvents leOneOffEvents
+            processCronEvents logger httpMgr scheduledTriggerMetrics cronEvents cronTriggersInfo leCronEvents
+            processOneOffScheduledEvents env logger httpMgr scheduledTriggerMetrics oneOffEvents leOneOffEvents
         -- NOTE: cron events are scheduled at times with minute resolution (as on
         -- unix), while one-off events can be set for arbitrary times. The sleep
         -- time here determines how overdue a scheduled event (cron or one-off)
@@ -396,7 +436,7 @@ processScheduledEvent ::
     MonadMetadataStorage m,
     MonadError QErr m
   ) =>
-  PrometheusMetrics ->
+  ScheduledTriggerMetrics ->
   ScheduledEventId ->
   [EventHeaderInfo] ->
   RetryContext ->
@@ -404,7 +444,7 @@ processScheduledEvent ::
   EnvRecord ResolvedWebhook ->
   ScheduledEventType ->
   m ()
-processScheduledEvent prometheusMetrics eventId eventHeaders retryCtx payload webhookUrl type' =
+processScheduledEvent scheduledTriggerMetrics eventId eventHeaders retryCtx payload webhookUrl type' =
   Tracing.newTrace Tracing.sampleAlways traceNote do
     currentTime <- liftIO getCurrentTime
     let retryConf = _rctxConf retryCtx
@@ -433,20 +473,25 @@ processScheduledEvent prometheusMetrics eventId eventHeaders retryCtx payload we
                         Left _err -> pure ()
                         Right response ->
                           Prometheus.Counter.add
-                            (pmScheduledTriggerBytesReceived prometheusMetrics)
+                            (stmScheduledTriggerBytesReceived scheduledTriggerMetrics)
                             (hrsSize response)
                       let RequestDetails {_rdOriginalSize, _rdTransformedSize} = d
                        in Prometheus.Counter.add
-                            (pmScheduledTriggerBytesSent prometheusMetrics)
+                            (stmScheduledTriggerBytesSent scheduledTriggerMetrics)
                             (fromMaybe _rdOriginalSize _rdTransformedSize)
+                      case (type', e) of
+                        (Cron, Left _err) -> Prometheus.Counter.inc (stmCronEventsInvocationTotalFailure scheduledTriggerMetrics)
+                        (Cron, Right _) -> Prometheus.Counter.inc (stmCronEventsInvocationTotalSuccess scheduledTriggerMetrics)
+                        (OneOff, Left _err) -> Prometheus.Counter.inc (stmOneOffEventsInvocationTotalFailure scheduledTriggerMetrics)
+                        (OneOff, Right _) -> Prometheus.Counter.inc (stmOneOffEventsInvocationTotalSuccess scheduledTriggerMetrics)
                   sessionVars = _rdSessionVars reqDetails
               resp <- invokeRequest reqDetails responseTransform sessionVars logger
               pure (request, resp)
         case eitherReqRes of
           Right (req, resp) ->
             let reqBody = fromMaybe J.Null $ preview (HTTP.body . HTTP._RequestBodyLBS) req >>= J.decode @J.Value
-             in processSuccess eventId decodedHeaders type' reqBody resp
-          Left (HTTPError reqBody e) -> processError eventId retryCtx decodedHeaders type' reqBody e
+             in processSuccess eventId decodedHeaders type' reqBody resp scheduledTriggerMetrics
+          Left (HTTPError reqBody e) -> processError eventId retryCtx decodedHeaders type' reqBody e scheduledTriggerMetrics
           Left (TransformationError _ e) -> do
             -- Log The Transformation Error
             logger :: L.Logger L.Hasura <- asks getter
@@ -468,8 +513,9 @@ processError ::
   ScheduledEventType ->
   J.Value ->
   HTTPErr a ->
+  ScheduledTriggerMetrics ->
   m ()
-processError eventId retryCtx decodedHeaders type' reqJson err = do
+processError eventId retryCtx decodedHeaders type' reqJson err scheduledTriggerMetric = do
   let invocation = case err of
         HClient httpException ->
           let statusMaybe = getHTTPExceptionStatus httpException
@@ -483,7 +529,7 @@ processError eventId retryCtx decodedHeaders type' reqJson err = do
           let errMsg = (SB.fromLBS $ J.encode detail)
           mkInvocation eventId (Just 500) decodedHeaders errMsg [] reqJson
   liftEitherM $ insertScheduledEventInvocation invocation type'
-  retryOrMarkError eventId retryCtx err type'
+  retryOrMarkError eventId retryCtx err type' scheduledTriggerMetric
 
 retryOrMarkError ::
   (MonadIO m, MonadMetadataStorage m, MonadError QErr m) =>
@@ -491,15 +537,20 @@ retryOrMarkError ::
   RetryContext ->
   HTTPErr a ->
   ScheduledEventType ->
+  ScheduledTriggerMetrics ->
   m ()
-retryOrMarkError eventId retryCtx err type' = do
+retryOrMarkError eventId retryCtx err type' scheduledTriggerMetric = do
   let RetryContext tries retryConf = retryCtx
       mRetryHeader = getRetryAfterHeaderFromHTTPErr err
       mRetryHeaderSeconds = parseRetryHeaderValue =<< mRetryHeader
       triesExhausted = tries >= strcNumRetries retryConf
       noRetryHeader = isNothing mRetryHeaderSeconds
   if triesExhausted && noRetryHeader
-    then liftEitherM $ setScheduledEventOp eventId (SEOpStatus SESError) type'
+    then do
+      liftEitherM $ setScheduledEventOp eventId (SEOpStatus SESError) type'
+      case type' of
+        Cron -> liftIO $ Prometheus.Counter.inc (stmCronEventsProcessedTotalFailure scheduledTriggerMetric)
+        OneOff -> liftIO $ Prometheus.Counter.inc (stmOneOffEventsProcessedTotalFailure scheduledTriggerMetric)
     else do
       currentTime <- liftIO getCurrentTime
       let delay =
@@ -544,20 +595,24 @@ and it can transition to other states in the following ways:
 -}
 
 processSuccess ::
-  (MonadMetadataStorage m, MonadError QErr m) =>
+  (MonadMetadataStorage m, MonadError QErr m, MonadIO m) =>
   ScheduledEventId ->
   [HeaderConf] ->
   ScheduledEventType ->
   J.Value ->
   HTTPResp a ->
+  ScheduledTriggerMetrics ->
   m ()
-processSuccess eventId decodedHeaders type' reqBodyJson resp = do
+processSuccess eventId decodedHeaders type' reqBodyJson resp scheduledTriggerMetric = do
   let respBody = hrsBody resp
       respHeaders = hrsHeaders resp
       respStatus = hrsStatus resp
       invocation = mkInvocation eventId (Just respStatus) decodedHeaders respBody respHeaders reqBodyJson
   liftEitherM $ insertScheduledEventInvocation invocation type'
   liftEitherM $ setScheduledEventOp eventId (SEOpStatus SESDelivered) type'
+  case type' of
+    Cron -> liftIO $ Prometheus.Counter.inc (stmCronEventsProcessedTotalSuccess scheduledTriggerMetric)
+    OneOff -> liftIO $ Prometheus.Counter.inc (stmOneOffEventsProcessedTotalSuccess scheduledTriggerMetric)
 
 processDead ::
   (MonadMetadataStorage m, MonadError QErr m) =>
@@ -619,8 +674,8 @@ getDeprivedCronTriggerStatsTx cronTriggerNames =
 --  - if we decide to fetch cron events less frequently we should wake up that
 --    thread at second 0 of every minute, and then pass hasura's now time into
 --    the query (since the DB may disagree about the time)
-getScheduledEventsForDeliveryTx :: PG.TxE QErr ([CronEvent], [OneOffScheduledEvent])
-getScheduledEventsForDeliveryTx =
+getScheduledEventsForDeliveryTx :: [TriggerName] -> PG.TxE QErr ([CronEvent], [OneOffScheduledEvent])
+getScheduledEventsForDeliveryTx cronTriggerNames =
   (,) <$> getCronEventsForDelivery <*> getOneOffEventsForDelivery
   where
     getCronEventsForDelivery :: PG.TxE QErr [CronEvent]
@@ -639,14 +694,14 @@ getScheduledEventsForDeliveryTx =
                                    (t.next_retry_at is NULL and t.scheduled_time <= now()) or
                                    (t.next_retry_at is not NULL and t.next_retry_at <= now())
                                   )
-                                )
+                                ) AND trigger_name = ANY($1)
                           FOR UPDATE SKIP LOCKED
                           )
             RETURNING *
           )
         SELECT row_to_json(t.*) FROM cte AS t
       |]
-          ()
+          (Identity $ PGTextArray $ triggerNameToTxt <$> cronTriggerNames)
           True
 
     getOneOffEventsForDelivery :: PG.TxE QErr [OneOffScheduledEvent]

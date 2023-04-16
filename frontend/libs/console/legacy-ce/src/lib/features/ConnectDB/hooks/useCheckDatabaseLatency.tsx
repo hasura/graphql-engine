@@ -98,7 +98,7 @@ const useInsertIntoDBLatencyTable = () => {
         jobId: props.jobId,
         projectId: props.projectId,
         isLatencyDisplayed: true,
-        datasDifferenceInMilliseconds: props.dateDiff,
+        dateDifferenceInMilliseconds: props.dateDiff,
       });
     },
     retry: 1,

@@ -36,7 +36,7 @@ export type FieldWrapperPassThroughProps = {
    */
   dataTest?: string;
   /**
-   * Flag indicating wheteher the field is loading
+   * Flag indicating whether the field is loading
    */
   loading?: boolean;
   /**

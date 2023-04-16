@@ -121,6 +121,7 @@ const DDButton: React.FC<DropDownButtonProps> = props => {
         value={inputVal || ''}
         placeholder={inputPlaceHolder}
         data-test={`${testId}-input`}
+        name={`${dataKey}[${dataIndex}]`}
       />
     </InputGroup>
   );

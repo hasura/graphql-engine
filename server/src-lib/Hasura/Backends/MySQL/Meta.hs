@@ -101,7 +101,8 @@ mergeMetadata InformationSchema {..} =
             else HS.empty,
         _ptmiViewInfo = Nothing,
         _ptmiDescription = Nothing,
-        _ptmiExtraTableMetadata = ()
+        _ptmiExtraTableMetadata = (),
+        _ptmiCustomObjectTypes = mempty
       }
 
 mergeDBTableMetadata :: DBTableMetadata 'MySQL -> DBTableMetadata 'MySQL -> DBTableMetadata 'MySQL
@@ -114,7 +115,8 @@ mergeDBTableMetadata new existing =
       _ptmiForeignKeys = _ptmiForeignKeys existing <> _ptmiForeignKeys new, -- union
       _ptmiViewInfo = _ptmiViewInfo existing <|> _ptmiViewInfo new,
       _ptmiDescription = _ptmiDescription existing <|> _ptmiDescription new,
-      _ptmiExtraTableMetadata = ()
+      _ptmiExtraTableMetadata = (),
+      _ptmiCustomObjectTypes = mempty
     }
 
 data InformationSchema = InformationSchema

@@ -2,7 +2,6 @@ import { useQuery } from 'react-query';
 import {
   DataSource,
   exportMetadata,
-  Feature,
   TableColumn,
 } from '../../../../../DataSource';
 import { MetadataTable } from '../../../../../hasura-metadata-types';
@@ -40,14 +39,6 @@ export const useTablesWithColumns = ({
       if (!currentMetadataSource)
         throw Error(`useTables.metadataSource not found`);
 
-      const introspectedTables = await DataSource(httpClient).introspectTables({
-        dataSourceName,
-      });
-
-      if (introspectedTables === Feature.NotImplemented)
-        throw Error(
-          `useTables.introspectedTables Feature is not available for ${currentMetadataSource.kind}`
-        );
       const result: TableWithColumns[] = [];
 
       for (const metadataTable of currentMetadataSource.tables) {

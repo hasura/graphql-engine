@@ -15,9 +15,9 @@ import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -248,8 +248,8 @@ sqlserverSetupPermissions testEnv =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = describe "RelationshipSpec" $ do
+tests :: SpecWith TestEnvironment
+tests = describe "RelationshipSpec" $ do
   let userHeaders = [("X-Hasura-Role", "user"), ("X-Hasura-User-Id", "1")]
   it "query root: 'list' root field for 'author' is accessible" $ \testEnvironment -> do
     let authorArticlesQuery =
@@ -277,7 +277,7 @@ tests opts = describe "RelationshipSpec" $ do
           |]
 
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders authorArticlesQuery)
       expectedResponse
 
@@ -302,6 +302,6 @@ tests opts = describe "RelationshipSpec" $ do
           |]
 
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders articleQuery)
       expectedResponse

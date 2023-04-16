@@ -21,6 +21,7 @@ import Data.Kind (Type)
 import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Extended
 import Data.Typeable (Typeable)
+import Hasura.Backends.Postgres.Connection.Settings (ConnectionTemplate (..))
 import Hasura.Base.Error
 import Hasura.Base.ToErrorValue
 import Hasura.EncJSON (EncJSON)
@@ -107,6 +108,7 @@ class
     FromJSON (ScalarType b),
     FromJSON (TableName b),
     FromJSONKey (Column b),
+    HasCodec (BackendConfig b),
     HasCodec (BackendSourceKind b),
     HasCodec (Column b),
     HasCodec (ComputedFieldDefinition b),
@@ -159,6 +161,13 @@ class
     Show (XRelay b),
     Eq (XStreamingSubscription b),
     Show (XStreamingSubscription b),
+    Eq (XNestedObjects b),
+    Ord (XNestedObjects b),
+    Show (XNestedObjects b),
+    NFData (XNestedObjects b),
+    Hashable (XNestedObjects b),
+    ToJSON (XNestedObjects b),
+    ToTxt (XNestedObjects b),
     -- Intermediate Representations
     Traversable (BooleanOperators b),
     Traversable (UpdateVariant b),
@@ -300,6 +309,9 @@ class
 
   type XStreamingSubscription b :: Type
 
+  type XNestedObjects b :: Type
+  type XNestedObjects b = XDisable
+
   -- The result of dynamic connection template resolution
   type ResolvedConnectionTemplate b :: Type
   type ResolvedConnectionTemplate b = () -- Uninmplemented value
@@ -309,8 +321,8 @@ class
   type ConnectionTemplateRequestContext b :: Type
   type ConnectionTemplateRequestContext b = () -- Uninmplemented value
 
-  resolveConnectionTemplate :: SourceConfig b -> ConnectionTemplateRequestContext b -> Either QErr EncJSON
-  resolveConnectionTemplate _ _ = Left (err400 (NotSupported) "connection template is not implemented")
+  resolveConnectionTemplate :: SourceConfig b -> ConnectionTemplateRequestContext b -> Maybe ConnectionTemplate -> Either QErr EncJSON
+  resolveConnectionTemplate _ _ _ = Left (err400 (NotSupported) "connection template is not implemented")
 
   -- | Information about the query execution that may be useful for debugging
   -- or reporting.

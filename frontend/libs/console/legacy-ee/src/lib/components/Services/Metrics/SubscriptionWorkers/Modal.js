@@ -1,7 +1,6 @@
 import React from 'react';
-import BootstrapModal from 'react-bootstrap/lib/Modal';
+import { Dialog } from '@hasura/console-legacy-ce';
 import { Tooltip } from '@hasura/console-legacy-ce';
-// import BootstrapModalButton from 'react-bootstrap/lib/Button';
 import CustomCopy from '../Common/CustomCopy';
 import { REFETCH_DELAY, EXECUTION_TIME_DIVIDER_CONSTANT } from './constants';
 import { hideVariableValues } from '../utils';
@@ -116,92 +115,86 @@ const Modal = props => {
   };
 
   return (
-    <BootstrapModal
+    <Dialog
       id="operationInspect"
-      onHide={onHide}
-      show
-      size="modal-lg"
-      className={styles.modalWrapper}
+      onClose={onHide}
+      hasBackdrop
+      size="xxl"
+      title="Inspect"
     >
-      <BootstrapModal.Header className={styles.modalHeader} closeButton>
-        <BootstrapModal.Title className={styles.title}>
-          Inspect
-        </BootstrapModal.Title>
-      </BootstrapModal.Header>
-      <BootstrapModal.Body
-        className={styles.modalContainer}
-        style={{ maxHeight: '986px' }}
-      >
-        <div
-          className={
-            styles.noPadd +
-            ' col-md-6 ' +
-            styles.borderRight +
-            ' ' +
-            styles.flexColumn
-          }
-        >
-          <div className={styles.infoWrapper}>
-            <div className={`${styles.infoField} ${styles.paddingBottom}`}>
-              <div className={styles.information}>
-                TIMESTAMP: <span>{new Date(time).toLocaleString()}</span>
+      <div className={styles.modalWrapper}>
+        <div className={styles.modalContainer}>
+          <div
+            className={
+              styles.noPadd +
+              ' col-md-6 ' +
+              styles.borderRight +
+              ' ' +
+              styles.flexColumn
+            }
+          >
+            <div className={styles.infoWrapper}>
+              <div className={`${styles.infoField} ${styles.paddingBottom}`}>
+                <div className={styles.information}>
+                  TIMESTAMP: <span>{new Date(time).toLocaleString()}</span>
+                </div>
+                <div
+                  className={
+                    styles.information +
+                    ' ' +
+                    styles.borderBottom +
+                    ' ' +
+                    styles.addPaddBottom
+                  }
+                >
+                  WORKER ID: <span>{pollerId}</span>
+                </div>
               </div>
-              <div
-                className={
-                  styles.information +
-                  ' ' +
-                  styles.borderBottom +
-                  ' ' +
-                  styles.addPaddBottom
-                }
-              >
-                WORKER ID: <span>{pollerId}</span>
-              </div>
-            </div>
-            <div className={`${styles.infoField} ${styles.noPaddingBottom}`}>
-              <div className={styles.information}>
-                LAST EXEC. TIME:
-                <span className={styles.paddingLeft}>
-                  {`${formatRoundNumber(lastExecutionTime * 1000, 2)} ms`}
-                </span>
-                {renderWarningSymbol()}
-              </div>
-              <div className={styles.information}>
-                REFETCH DELAY: <span>{`${refetchDelay}s`}</span>
-              </div>
-              <div className={styles.information}>
-                NO. OF BATCHES: <span>{executionBatchSize}</span>
-              </div>
-              <div className={styles.information}>
-                EACH BATCH SIZE: <span>{batchSize}</span>
-              </div>
-              <div className={`${styles.information} ${styles.borderBottom}`}>
-                TOTAL SUBSCRIBERS: <span>{totalSubscribers}</span>
+              <div className={`${styles.infoField} ${styles.noPaddingBottom}`}>
+                <div className={styles.information}>
+                  LAST EXEC. TIME:
+                  <span className={styles.paddingLeft}>
+                    {`${formatRoundNumber(lastExecutionTime * 1000, 2)} ms`}
+                  </span>
+                  {renderWarningSymbol()}
+                </div>
+                <div className={styles.information}>
+                  REFETCH DELAY: <span>{`${refetchDelay}s`}</span>
+                </div>
+                <div className={styles.information}>
+                  NO. OF BATCHES: <span>{executionBatchSize}</span>
+                </div>
+                <div className={styles.information}>
+                  EACH BATCH SIZE: <span>{batchSize}</span>
+                </div>
+                <div className={`${styles.information} ${styles.borderBottom}`}>
+                  TOTAL SUBSCRIBERS: <span>{totalSubscribers}</span>
+                </div>
               </div>
             </div>
+            <div>{renderGeneratedSql()}</div>
           </div>
-          <div>{renderGeneratedSql()}</div>
-        </div>
-        <div className={styles.noPadd + ' col-md-6'}>
-          <div className={styles.infoWrapper}>
-            <div className={styles.infoField} style={{ paddingBottom: 0 }}>
-              <div className={styles.information}>
-                USER ROLE: <span>{userRole}</span>
-              </div>
-              <div className={styles.information}>
-                OPERATION ID: <span>{operationId}</span>
-              </div>
-              <div className={`${styles.information} ${styles.borderBottom}`}>
-                OPERATION NAME: <span>{operationName}</span>
+          <div className={`overflow-auto ${styles.noPadd} col-md-6`}>
+            <div className={styles.infoWrapper}>
+              <div className={styles.infoField} style={{ paddingBottom: 0 }}>
+                <div className={styles.information}>
+                  USER ROLE: <span>{userRole}</span>
+                </div>
+                <div className={styles.information}>
+                  OPERATION ID: <span>{operationId}</span>
+                </div>
+                <div className={`${styles.information} ${styles.borderBottom}`}>
+                  OPERATION NAME: <span>{operationName}</span>
+                </div>
               </div>
             </div>
+            {renderOperationString()}
+            {renderQueryVariables()}
+            {renderSessionVariables()}
           </div>
-          {renderOperationString()}
-          {renderQueryVariables()}
-          {renderSessionVariables()}
         </div>
-      </BootstrapModal.Body>
-    </BootstrapModal>
+      </div>
+    </Dialog>
   );
 };
 

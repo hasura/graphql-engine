@@ -9,12 +9,22 @@ import {
 import { z, ZodType, ZodTypeDef } from 'zod';
 import { FieldWrapper, FieldWrapperPassThroughProps } from './FieldWrapper';
 import { Input } from './Input';
+import { filterDataAttributes } from './utils/filterDataAttributes';
 
 type TFormValues = Record<string, unknown>;
 
 export type Schema = ZodType<TFormValues, ZodTypeDef, TFormValues>;
 
-export type InputFieldProps<T extends z.infer<Schema>> =
+// for convenience
+type InputFieldDefaultType = z.infer<Schema>;
+
+// wrappers that want to extend the props in a simple way can use this type
+export type ExtendInputFieldProps<
+  T,
+  X extends InputFieldDefaultType = InputFieldDefaultType
+> = T & InputFieldProps<X>;
+
+export type InputFieldProps<T extends InputFieldDefaultType> =
   FieldWrapperPassThroughProps & {
     /**
      * The input field name
@@ -51,11 +61,11 @@ export type InputFieldProps<T extends z.infer<Schema>> =
     /**
      * The input field prepend label
      */
-    prependLabel?: string;
+    prependLabel?: string | React.ReactNode;
     /**
      * The input field append label
      */
-    appendLabel?: string;
+    appendLabel?: string | React.ReactNode;
     /**
      * A callback for transforming the input onChange for things like sanitizing input
      */
@@ -69,9 +79,14 @@ export type InputFieldProps<T extends z.infer<Schema>> =
      */
     clearButton?: boolean;
     /**
+     * Handler for when a user presses the clear button, and the state is cleared.
+     */
+    onClear?: () => void;
+    /**
      * The input field classes
      */
     inputClassName?: string;
+    rightButton?: ReactElement;
   };
 
 export const InputField = <T extends z.infer<Schema>>({
@@ -87,10 +102,15 @@ export const InputField = <T extends z.infer<Schema>>({
   inputTransform,
   renderDescriptionLineBreaks = false,
   clearButton,
+  onClear,
   inputClassName,
   fieldProps = {},
   ...wrapperProps
 }: InputFieldProps<T>) => {
+  const dataAttributes = filterDataAttributes(
+    wrapperProps as Record<string, unknown>
+  );
+
   const {
     register,
     formState: { errors },
@@ -129,6 +149,7 @@ export const InputField = <T extends z.infer<Schema>>({
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     setValue(name, '');
+    onClear?.();
   };
 
   return (
@@ -155,7 +176,8 @@ export const InputField = <T extends z.infer<Schema>>({
         onChange={onInputChangeEvent}
         onClearButtonClick={onClearButtonClick}
         inputProps={regReturn}
-        fieldProps={fieldProps}
+        fieldProps={{ ...fieldProps, ...dataAttributes }}
+        rightButton={wrapperProps?.rightButton}
       />
     </FieldWrapper>
   );

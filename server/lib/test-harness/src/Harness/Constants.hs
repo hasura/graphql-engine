@@ -38,7 +38,7 @@ where
 import Data.HashSet qualified as Set
 import Data.Word (Word16)
 import Database.PG.Query qualified as PG
-import Harness.TestEnvironment (UniqueTestId)
+import Harness.UniqueTestId (UniqueTestId)
 import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema (..))
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.Options qualified as Options
@@ -169,7 +169,7 @@ defaultCitusConnectionString =
 -- * Cockroach
 
 cockroachUser :: Text
-cockroachUser = "root"
+cockroachUser = "hasura"
 
 cockroachDb :: Text
 cockroachDb = "hasura"

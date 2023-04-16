@@ -14,6 +14,7 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.NonEmpty (NEHashMap)
 import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Data.Text qualified as T
+import Hasura.Function.Cache
 import Hasura.GraphQL.Execute.RemoteJoin.Types
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Name qualified as Name
@@ -22,7 +23,6 @@ import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -249,6 +249,12 @@ transformObjectSelect ::
   Collector (AnnObjectSelectG b Void (UnpreparedValue b))
 transformObjectSelect = traverseOf aosFields transformAnnFields
 
+transformNestedObjectSelect ::
+  Backend b =>
+  AnnNestedObjectSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
+  Collector (AnnNestedObjectSelectG b Void (UnpreparedValue b))
+transformNestedObjectSelect = traverseOf anosFields transformAnnFields
+
 transformGraphQLField ::
   GraphQLField (RemoteRelationshipField UnpreparedValue) var ->
   Collector (GraphQLField Void var)
@@ -325,6 +331,8 @@ transformAnnFields fields = do
             remoteAnnPlaceholder,
             Just $ createRemoteJoin (Map.intersection joinColumnAliases _rrsLHSJoinFields) _rrsRelationship
           )
+      AFNestedObject nestedObj ->
+        (,Nothing) . AFNestedObject <$> transformNestedObjectSelect nestedObj
 
   let transformedFields = (fmap . fmap) fst annotatedFields
       remoteJoins =

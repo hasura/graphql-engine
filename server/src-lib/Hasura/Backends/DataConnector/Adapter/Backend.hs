@@ -13,6 +13,7 @@ import Data.Aeson.Key (fromText)
 import Data.Aeson.Types qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NonEmpty
+import Data.Map.Strict (Map)
 import Data.Scientific (fromFloatDigits)
 import Data.Text qualified as Text
 import Data.Text.Casing qualified as C
@@ -40,7 +41,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 type Unimplemented = ()
 
 instance Backend 'DataConnector where
-  type BackendConfig 'DataConnector = InsOrdHashMap DC.DataConnectorName DC.DataConnectorOptions
+  type BackendConfig 'DataConnector = Map DC.DataConnectorName DC.DataConnectorOptions
   type BackendInfo 'DataConnector = HashMap DC.DataConnectorName DC.DataConnectorInfo
 
   type TableName 'DataConnector = DC.TableName
@@ -61,7 +62,7 @@ instance Backend 'DataConnector where
   type SQLExpression 'DataConnector = DC.Literal
   type ScalarSelectionArguments 'DataConnector = Void
   type BooleanOperators 'DataConnector = CustomBooleanOperator
-  type ExtraTableMetadata 'DataConnector = Unimplemented
+  type ExtraTableMetadata 'DataConnector = DC.ExtraTableMetadata
   type ComputedFieldDefinition 'DataConnector = Unimplemented
   type FunctionArgumentExp 'DataConnector = Const Unimplemented
   type ComputedFieldImplicitArguments 'DataConnector = Unimplemented
@@ -76,6 +77,7 @@ instance Backend 'DataConnector where
   type XEventTriggers 'DataConnector = XDisable
   type XNestedInserts 'DataConnector = XDisable
   type XStreamingSubscription 'DataConnector = XDisable
+  type XNestedObjects 'DataConnector = XEnable
 
   type HealthCheckTest 'DataConnector = Void
 
@@ -159,6 +161,8 @@ instance Backend 'DataConnector where
 instance HasSourceConfiguration 'DataConnector where
   type SourceConfig 'DataConnector = DC.SourceConfig
   type SourceConnConfiguration 'DataConnector = DC.ConnSourceConfig
+  sourceConfigNumReadReplicas = const 0 -- not supported
+  sourceConfigConnectonTemplateEnabled = const False -- not supported
 
 data CustomBooleanOperator a = CustomBooleanOperator
   { _cboName :: Text,

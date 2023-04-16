@@ -87,7 +87,7 @@ const DataSubSidebar = props => {
   const [schemaLoading, setSchemaLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [preLoadState, setPreLoadState] = useState(true);
-  const { enabled: isBigQueryEnabled } = useIsFeatureFlagEnabled(
+  const { enabled: isBigQueryEnabled, isLoading } = useIsFeatureFlagEnabled(
     availableFeatureFlagIds.enabledNewUIForBigQuery
   );
 
@@ -129,84 +129,84 @@ const DataSubSidebar = props => {
 
   const getItems = (schemaInfo = null) => {
     let sourceItems = [];
-    sources
-      .filter(source => !isBigQueryEnabled || source.kind !== 'bigquery')
-      .forEach(source => {
-        if (isInconsistentSource(source.name, inconsistentObjects)) return;
+    sources.forEach(source => {
+      if (source.kind === 'bigquery' && isBigQueryEnabled === true) return;
 
-        const sourceItem = { name: source.name, type: 'database' };
-        const sourceTables = !source.tables
-          ? []
-          : source.tables.map(data => {
-              const is_enum = data.is_enum ? true : false;
-              return {
-                name: data.table.name,
-                schema: data.table.schema,
-                type: 'table',
-                is_enum: is_enum,
-              };
-            });
-        const sourceFunctions = !source.functions
-          ? []
-          : source.functions.map(data => ({
-              name: data.function.name,
-              schema: data.function.schema,
-              type: 'function',
-            }));
+      if (isInconsistentSource(source.name, inconsistentObjects)) return;
 
-        const schemaGroups = groupByKey(
-          [...sourceTables, ...sourceFunctions],
-          'schema'
-        );
-
-        // Find out the difference between schemas from metadata and SchemaList from state
-        const schemasFromMetadata = Array.from(
-          new Set([
-            ...sourceTables.map(i => i.schema),
-            ...sourceFunctions.map(i => i.schema),
-          ])
-        );
-        const missingSchemas = schemaList.filter(
-          x => !schemasFromMetadata.includes(x)
-        );
-
-        let schemaItems = [];
-        Object.keys(schemaGroups).forEach(schema => {
-          const schemaItem = { name: schema, type: 'schema' };
-          const tableItems = [];
-          schemaGroups[schema].forEach(table => {
-            const is_view =
-              schemaInfo?.[source.name]?.[schema]?.[table.name]?.table_type ===
-                'view' ||
-              schemaInfo?.[source.name]?.[schema]?.[table.name]?.table_type ===
-                'materialized_view';
-            let type = table.type;
-            if (is_view) type = 'view';
-            if (table.is_enum) type = 'enum';
-            tableItems.push({
-              name: table.name,
-              type: type,
-            });
+      const sourceItem = { name: source.name, type: 'database' };
+      const sourceTables = !source.tables
+        ? []
+        : source.tables.map(data => {
+            const is_enum = data.is_enum ? true : false;
+            return {
+              name: data.table.name,
+              schema: data.table.schema,
+              type: 'table',
+              is_enum: is_enum,
+            };
           });
-          schemaItem.children = tableItems;
-          schemaItems = [...schemaItems, schemaItem];
+      const sourceFunctions = !source.functions
+        ? []
+        : source.functions.map(data => ({
+            name: data.function.name,
+            schema: data.function.schema,
+            type: 'function',
+          }));
+
+      const schemaGroups = groupByKey(
+        [...sourceTables, ...sourceFunctions],
+        'schema'
+      );
+
+      // Find out the difference between schemas from metadata and SchemaList from state
+      const schemasFromMetadata = Array.from(
+        new Set([
+          ...sourceTables.map(i => i.schema),
+          ...sourceFunctions.map(i => i.schema),
+        ])
+      );
+      const missingSchemas = schemaList.filter(
+        x => !schemasFromMetadata.includes(x)
+      );
+
+      let schemaItems = [];
+      Object.keys(schemaGroups).forEach(schema => {
+        const schemaItem = { name: schema, type: 'schema' };
+        const tableItems = [];
+        schemaGroups[schema].forEach(table => {
+          const is_view =
+            schemaInfo?.[source.name]?.[schema]?.[table.name]?.table_type ===
+              'view' ||
+            schemaInfo?.[source.name]?.[schema]?.[table.name]?.table_type ===
+              'materialized_view';
+          let type = table.type;
+          if (is_view) type = 'view';
+          if (table.is_enum) type = 'enum';
+          tableItems.push({
+            name: table.name,
+            type: type,
+          });
         });
-
-        sourceItem.children = schemaItems;
-
-        if (source.name === currentDataSource) {
-          sourceItem.children = [
-            ...missingSchemas.map(schemaName => ({
-              name: schemaName,
-              type: 'schema',
-              children: [],
-            })),
-            ...sourceItem.children,
-          ];
-        }
-
-        sourceItems = [...sourceItems, sourceItem];
+        schemaItem.children = tableItems;
+        schemaItems = [...schemaItems, schemaItem];
       });
+
+      sourceItem.children = schemaItems;
+
+      if (source.name === currentDataSource) {
+        sourceItem.children = [
+          ...missingSchemas.map(schemaName => ({
+            name: schemaName,
+            type: 'schema',
+            children: [],
+          })),
+          ...sourceItem.children,
+        ];
+      }
+
+      sourceItems = [...sourceItems, sourceItem];
+    });
     return sourceItems;
   };
 
@@ -250,7 +250,15 @@ const DataSubSidebar = props => {
         setTreeViewItems(newItems);
       }
     );
-  }, [sources.length, tables, functions, enums, schemaList, currentTable]);
+  }, [
+    sources.length,
+    tables,
+    functions,
+    enums,
+    schemaList,
+    currentTable,
+    isLoading,
+  ]);
 
   const databasesCount = metadataSources.length;
 
@@ -293,18 +301,20 @@ const DataSubSidebar = props => {
       </div>
       <ul className={styles.subSidebarListUL} data-test="table-links">
         <div style={{ pointerEvents: 'auto' }}>
-          <TreeView
-            items={treeViewItems}
-            onDatabaseChange={onDatabaseChange}
-            onSchemaChange={onSchemaChange}
-            currentDataSource={currentDataSource}
-            currentSchema={currentSchema}
-            pathname={pathname}
-            databaseLoading={databaseLoading}
-            schemaLoading={schemaLoading}
-            preLoadState={preLoadState}
-            gdcItemClick={handleClick}
-          />
+          {!isLoading && (
+            <TreeView
+              items={treeViewItems}
+              onDatabaseChange={onDatabaseChange}
+              onSchemaChange={onSchemaChange}
+              currentDataSource={currentDataSource}
+              currentSchema={currentSchema}
+              pathname={pathname}
+              databaseLoading={databaseLoading}
+              schemaLoading={schemaLoading}
+              preLoadState={preLoadState}
+              gdcItemClick={handleClick}
+            />
+          )}
         </div>
       </ul>
     </div>

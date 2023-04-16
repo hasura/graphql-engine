@@ -75,6 +75,8 @@ data AnnotatedInsertData (b :: BackendType) (f :: Type -> Type) (v :: Type) = An
     _aiTableName :: TableName b,
     _aiCheckCondition :: (AnnBoolExp b v, Maybe (AnnBoolExp b v)),
     _aiTableColumns :: [ColumnInfo b],
+    _aiPrimaryKey :: Maybe (NESeq (Column b)),
+    _aiExtraTableMetadata :: ExtraTableMetadata b,
     _aiPresetValues :: PreSetColsG b v,
     _aiBackendInsert :: BackendInsert b v
   }

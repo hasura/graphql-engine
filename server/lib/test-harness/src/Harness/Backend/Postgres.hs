@@ -56,16 +56,16 @@ import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (interpolateYaml)
-import Harness.Services.PostgresDb qualified as Postgres
-import Harness.Test.BackendType (BackendTypeConfig)
-import Harness.Test.BackendType qualified as BackendType
-import Harness.Test.Schema
+import Harness.Schema
   ( BackendScalarType (..),
     BackendScalarValue (..),
     ScalarValue (..),
     SchemaName (..),
   )
-import Harness.Test.Schema qualified as Schema
+import Harness.Schema qualified as Schema
+import Harness.Services.Database.Postgres qualified as Postgres
+import Harness.Test.BackendType (BackendTypeConfig)
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.SetupAction (SetupAction (..))
 import Harness.TestEnvironment (GlobalTestEnvironment (..), TestEnvironment (..), TestingMode (..))
 import Hasura.Prelude
@@ -174,15 +174,11 @@ doLivenessCheck (Postgres.PostgresServerUrl connectionString) = loop Constants.p
 -- On error, print something useful for debugging.
 run_ :: HasCallStack => TestEnvironment -> Text -> IO ()
 run_ testEnvironment =
-  Postgres.run
-    (logger $ globalEnvironment testEnvironment)
-    (makeFreshDbConnectionString testEnvironment)
+  Postgres.run (makeFreshDbConnectionString testEnvironment, testEnvironment)
 
 runCustomDB_ :: HasCallStack => TestEnvironment -> Postgres.ConnectInfo -> Text -> IO ()
 runCustomDB_ testEnvironment connectionInfo =
-  Postgres.run
-    (logger $ globalEnvironment testEnvironment)
-    (postgresServerUrl connectionInfo)
+  Postgres.run (postgresServerUrl connectionInfo, testEnvironment)
 
 runSQL :: String -> TestEnvironment -> IO ()
 runSQL = Schema.runSQL (BackendType.backendSourceName backendTypeMetadata)
@@ -282,7 +278,7 @@ createUniqueIndexSql (SchemaName schemaName) tableName = \case
 scalarType :: HasCallStack => Schema.ScalarType -> Text
 scalarType = \case
   Schema.TInt -> "integer"
-  Schema.TStr -> "varchar"
+  Schema.TStr -> "text"
   Schema.TUTCTime -> "timestamp"
   Schema.TBool -> "boolean"
   Schema.TGeography -> "geography"
@@ -403,15 +399,13 @@ untrackTable testEnvironment table =
 createDatabase :: TestEnvironment -> IO ()
 createDatabase testEnvironment = do
   Postgres.createDatabase
-    (logger (globalEnvironment testEnvironment))
-    (defaultPostgresConnectionString (globalEnvironment testEnvironment))
+    testEnvironment
     (uniqueDbName (uniqueTestId testEnvironment))
 
 dropDatabase :: TestEnvironment -> IO ()
 dropDatabase testEnvironment = do
   Postgres.dropDatabase
-    (logger (globalEnvironment testEnvironment))
-    (defaultPostgresConnectionString (globalEnvironment testEnvironment))
+    testEnvironment
     (uniqueDbName (uniqueTestId testEnvironment))
 
 createCustomDatabase :: TestEnvironment -> Postgres.ConnectInfo -> IO ()
@@ -419,15 +413,13 @@ createCustomDatabase testEnvironment connectionInfo = do
   let customDbName = T.pack $ Postgres.connectDatabase connectionInfo
 
   Postgres.run
-    (logger (globalEnvironment testEnvironment))
-    (defaultPostgresConnectionString (globalEnvironment testEnvironment))
+    testEnvironment
     ("CREATE DATABASE " <> customDbName <> ";")
 
   -- Create schema
   let schemaName = Schema.getSchemaName testEnvironment
   Postgres.run
-    (logger $ globalEnvironment testEnvironment)
-    (postgresServerUrl connectionInfo)
+    (postgresServerUrl connectionInfo, testEnvironment)
     [i|
       BEGIN;
       SET LOCAL client_min_messages = warning;

@@ -24,8 +24,7 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     TableBuildInput (TableBuildInput, _tbiName),
     TablePermissionInputs (..),
     addTableContext,
-    addLogicalModelContext,
-    bindErrorA,
+    addCustomReturnTypeContext,
     boActions,
     boCustomTypes,
     boBackendCache,
@@ -55,10 +54,11 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
+import Hasura.CustomReturnType.Types (CustomReturnTypeName)
 import Hasura.EncJSON
 import Hasura.Incremental qualified as Inc
-import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.Prelude
+import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
@@ -79,7 +79,6 @@ import Hasura.SQL.AnyBackend
 import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
-import Hasura.Server.Types
 import Hasura.Services
 import Hasura.Session
 import Network.HTTP.Client.Transformable qualified as HTTP
@@ -258,7 +257,7 @@ data CacheBuildParams = CacheBuildParams
   { _cbpManager :: HTTP.Manager,
     _cbpPGSourceResolver :: SourceResolver ('Postgres 'Vanilla),
     _cbpMSSQLSourceResolver :: SourceResolver 'MSSQL,
-    _cbpServerConfigCtx :: ServerConfigCtx
+    _cbpStaticConfig :: CacheStaticConfig
   }
 
 -- | The monad in which @'RebuildableSchemaCache' is being run
@@ -274,11 +273,11 @@ newtype CacheBuild a = CacheBuild (ReaderT CacheBuildParams (ExceptT QErr IO) a)
       MonadBaseControl IO
     )
 
+instance HasCacheStaticConfig CacheBuild where
+  askCacheStaticConfig = asks _cbpStaticConfig
+
 instance ProvidesNetwork CacheBuild where
   askHTTPManager = asks _cbpManager
-
-instance HasServerConfigCtx CacheBuild where
-  askServerConfigCtx = asks _cbpServerConfigCtx
 
 instance MonadResolveSource CacheBuild where
   getPGSourceResolver = asks _cbpPGSourceResolver
@@ -297,9 +296,9 @@ runCacheBuild params (CacheBuild m) = do
 runCacheBuildM ::
   ( MonadIO m,
     MonadError QErr m,
-    HasServerConfigCtx m,
     MonadResolveSource m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    HasCacheStaticConfig m
   ) =>
   CacheBuild a ->
   m a
@@ -309,20 +308,14 @@ runCacheBuildM m = do
       <$> askHTTPManager
       <*> getPGSourceResolver
       <*> getMSSQLSourceResolver
-      <*> askServerConfigCtx
+      <*> askCacheStaticConfig
   runCacheBuild params m
 
 data RebuildableSchemaCache = RebuildableSchemaCache
   { lastBuiltSchemaCache :: SchemaCache,
     _rscInvalidationMap :: InvalidationKeys,
-    _rscRebuild :: Inc.Rule (ReaderT BuildReason CacheBuild) (Metadata, InvalidationKeys, Maybe StoredIntrospection) SchemaCache
+    _rscRebuild :: Inc.Rule (ReaderT BuildReason CacheBuild) (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection) SchemaCache
   }
-
-bindErrorA ::
-  (ArrowChoice arr, ArrowKleisli m arr, ArrowError e arr, MonadError e m) =>
-  arr (m a) a
-bindErrorA = liftEitherA <<< arrM \m -> (Right <$> m) `catchError` (pure . Left)
-{-# INLINE bindErrorA #-}
 
 withRecordDependencies ::
   (ArrowWriter (Seq (Either im MetadataDependency)) arr) =>
@@ -434,5 +427,5 @@ buildInfoMapPreservingMetadataM extractKey mkMetadataObject buildInfo =
 addTableContext :: (Backend b) => TableName b -> Text -> Text
 addTableContext tableName e = "in table " <> tableName <<> ": " <> e
 
-addLogicalModelContext :: LogicalModelName -> Text -> Text
-addLogicalModelContext logicalModelName e = "in logical model " <> logicalModelName <<> ": " <> e
+addCustomReturnTypeContext :: CustomReturnTypeName -> Text -> Text
+addCustomReturnTypeContext customReturnTypeName e = "in custom return type " <> customReturnTypeName <<> ": " <> e

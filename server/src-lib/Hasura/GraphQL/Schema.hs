@@ -20,6 +20,8 @@ import Data.Text.NonEmpty qualified as NT
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
+import Hasura.CustomReturnType.Cache (_crtiPermissions)
+import Hasura.Function.Cache
 import Hasura.GraphQL.ApolloFederation
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Namespace
@@ -44,18 +46,18 @@ import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Schema.RemoteRelationship
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename (MkTypename (..))
-import Hasura.LogicalModel.Cache (LogicalModelCache, _lmiPermissions)
 import Hasura.Name qualified as Name
+import Hasura.NativeQuery.Cache (NativeQueryCache, _nqiReturns)
 import Hasura.Prelude
+import Hasura.QueryTags.Types
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission
-import Hasura.RQL.Types.QueryTags
+import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization as SC
@@ -96,7 +98,11 @@ buildGQLContext ::
   ( MonadError QErr m,
     MonadIO m
   ) =>
-  ServerConfigCtx ->
+  Options.InferFunctionPermissions ->
+  Options.RemoteSchemaPermissions ->
+  HashSet ExperimentalFeature ->
+  SQLGenCtx ->
+  ApolloFederationStatus ->
   SourceCache ->
   HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject) ->
   ActionCache ->
@@ -113,66 +119,75 @@ buildGQLContext ::
         GQLContext
       )
     )
-buildGQLContext ServerConfigCtx {..} sources allRemoteSchemas allActions customTypes = do
-  let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
-      actionRoles =
-        Set.insert adminRoleName $
-          Set.fromList (allActionInfos ^.. folded . aiPermissions . to Map.keys . folded)
-            <> Set.fromList (bool mempty remoteSchemasRoles $ _sccRemoteSchemaPermsCtx == Options.EnableRemoteSchemaPermissions)
-      allActionInfos = Map.elems allActions
-      allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
-      allLogicalModelRoles = Set.fromList $ getLogicalModelRoles =<< Map.elems sources
-      allRoles = actionRoles <> allTableRoles <> allLogicalModelRoles
+buildGQLContext
+  functionPermissions
+  remoteSchemaPermissions
+  experimentalFeatures
+  sqlGen
+  apolloFederationStatus
+  sources
+  allRemoteSchemas
+  allActions
+  customTypes = do
+    let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
+        actionRoles =
+          Set.insert adminRoleName $
+            Set.fromList (allActionInfos ^.. folded . aiPermissions . to Map.keys . folded)
+              <> Set.fromList (bool mempty remoteSchemasRoles $ remoteSchemaPermissions == Options.EnableRemoteSchemaPermissions)
+        allActionInfos = Map.elems allActions
+        allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
+        allCustomReturnTypeRoles = Set.fromList $ getCustomReturnTypeRoles =<< Map.elems sources
+        allRoles = actionRoles <> allTableRoles <> allCustomReturnTypeRoles
 
-  contexts <-
-    -- Buld role contexts in parallel. We'd prefer deterministic parallelism
-    -- but that isn't really acheivable (see mono #3829). NOTE: the admin role
-    -- will still be a bottleneck here, even on huge_schema which has many
-    -- roles.
-    fmap Map.fromList $
-      forConcurrentlyEIO 10 (Set.toList allRoles) $ \role -> do
-        (role,)
-          <$> concurrentlyEIO
-            ( buildRoleContext
-                (_sccSQLGenCtx, _sccFunctionPermsCtx)
-                sources
-                allRemoteSchemas
-                allActionInfos
-                customTypes
-                role
-                _sccRemoteSchemaPermsCtx
-                _sccExperimentalFeatures
-                _sccApolloFederationStatus
-            )
-            ( buildRelayRoleContext
-                (_sccSQLGenCtx, _sccFunctionPermsCtx)
-                sources
-                allActionInfos
-                customTypes
-                role
-                _sccExperimentalFeatures
-            )
-  let hasuraContexts = fst <$> contexts
-      relayContexts = snd <$> contexts
+    contexts <-
+      -- Buld role contexts in parallel. We'd prefer deterministic parallelism
+      -- but that isn't really acheivable (see mono #3829). NOTE: the admin role
+      -- will still be a bottleneck here, even on huge_schema which has many
+      -- roles.
+      fmap Map.fromList $
+        forConcurrentlyEIO 10 (Set.toList allRoles) $ \role -> do
+          (role,)
+            <$> concurrentlyEIO
+              ( buildRoleContext
+                  (sqlGen, functionPermissions)
+                  sources
+                  allRemoteSchemas
+                  allActionInfos
+                  customTypes
+                  role
+                  remoteSchemaPermissions
+                  experimentalFeatures
+                  apolloFederationStatus
+              )
+              ( buildRelayRoleContext
+                  (sqlGen, functionPermissions)
+                  sources
+                  allActionInfos
+                  customTypes
+                  role
+                  experimentalFeatures
+              )
+    let hasuraContexts = fst <$> contexts
+        relayContexts = snd <$> contexts
 
-  adminIntrospection <-
-    case Map.lookup adminRoleName hasuraContexts of
-      Just (_context, _errors, introspection) -> pure introspection
-      Nothing -> throw500 "buildGQLContext failed to build for the admin role"
-  (unauthenticated, unauthenticatedRemotesErrors) <- unauthenticatedContext allRemoteSchemas _sccRemoteSchemaPermsCtx
-  pure
-    ( ( adminIntrospection,
-        view _1 <$> hasuraContexts,
-        unauthenticated,
-        Set.unions $ unauthenticatedRemotesErrors : (view _2 <$> Map.elems hasuraContexts)
-      ),
-      ( relayContexts,
-        -- Currently, remote schemas are exposed through Relay, but ONLY through
-        -- the unauthenticated role.  This is probably an oversight.  See
-        -- hasura/graphql-engine-mono#3883.
-        unauthenticated
+    adminIntrospection <-
+      case Map.lookup adminRoleName hasuraContexts of
+        Just (_context, _errors, introspection) -> pure introspection
+        Nothing -> throw500 "buildGQLContext failed to build for the admin role"
+    (unauthenticated, unauthenticatedRemotesErrors) <- unauthenticatedContext (sqlGen, functionPermissions) sources allRemoteSchemas experimentalFeatures remoteSchemaPermissions
+    pure
+      ( ( adminIntrospection,
+          view _1 <$> hasuraContexts,
+          unauthenticated,
+          Set.unions $ unauthenticatedRemotesErrors : (view _2 <$> Map.elems hasuraContexts)
+        ),
+        ( relayContexts,
+          -- Currently, remote schemas are exposed through Relay, but ONLY through
+          -- the unauthenticated role.  This is probably an oversight.  See
+          -- hasura/graphql-engine-mono#3883.
+          unauthenticated
+        )
       )
-    )
 
 buildSchemaOptions ::
   (SQLGenCtx, Options.InferFunctionPermissions) ->
@@ -232,6 +247,7 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
               sources
               (fst <$> remotes)
               remoteSchemaPermsCtx
+              IncludeRemoteSourceRelationship
           )
           role
   runMemoizeT $ do
@@ -332,15 +348,15 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
           [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))], -- subscription fields
           [(G.Name, Parser 'Output P.Parse (ApolloFederationParserFunction P.Parse))] -- apollo federation tables
         )
-    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo _ tables functions logicalModels _ _ sourceCustomization) =
+    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo _ tables functions nativeQueries _customReturnTypes _ _ sourceCustomization) =
       runSourceSchema schemaContext schemaOptions sourceInfo do
         let validFunctions = takeValidFunctions functions
-            validLogicalModels = takeValidLogicalModels logicalModels
+            validNativeQueries = takeValidNativeQueries nativeQueries
             validTables = takeValidTables tables
             mkRootFieldName = _rscRootFields sourceCustomization
             makeTypename = SC._rscTypeNames sourceCustomization
         (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields, apolloFedTableParsers) <-
-          buildQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions validLogicalModels
+          buildQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions validNativeQueries
         (,,,,apolloFedTableParsers)
           <$> customizeFields
             sourceCustomization
@@ -377,13 +393,9 @@ buildRelayRoleContext options sources actions customTypes role expFeatures = do
       schemaContext =
         SchemaContext
           (RelaySchema $ nodeInterface sources)
-          ( remoteRelationshipField
-              schemaContext
-              schemaOptions
-              sources
-              mempty
-              Options.DisableRemoteSchemaPermissions
-          )
+          -- Remote relationships aren't currently supported in Relay, due to type conflicts, and
+          -- introspection issues such as https://github.com/hasura/graphql-engine/issues/5144.
+          ignoreRemoteRelationship
           role
   runMemoizeT do
     -- build all sources, and the node root
@@ -458,7 +470,7 @@ buildRelayRoleContext options sources actions customTypes role expFeatures = do
           [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))],
           [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))]
         )
-    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo _ tables functions _customSQL _ _ sourceCustomization) = do
+    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo _ tables functions _nativeQueries _customReturnTypes _ _ sourceCustomization) = do
       runSourceSchema schemaContext schemaOptions sourceInfo do
         let validFunctions = takeValidFunctions functions
             validTables = takeValidTables tables
@@ -498,21 +510,32 @@ unauthenticatedContext ::
   ( MonadError QErr m,
     MonadIO m
   ) =>
+  (SQLGenCtx, Options.InferFunctionPermissions) ->
+  SourceCache ->
   HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject) ->
+  Set.HashSet ExperimentalFeature ->
   Options.RemoteSchemaPermissions ->
   m (GQLContext, HashSet InconsistentMetadata)
-unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
-  let fakeSchemaContext =
+unauthenticatedContext options sources allRemotes expFeatures remoteSchemaPermsCtx = do
+  let schemaOptions = buildSchemaOptions options expFeatures
+      fakeSchemaContext =
         SchemaContext
           HasuraSchema
-          ignoreRemoteRelationship
+          ( remoteRelationshipField
+              fakeSchemaContext
+              schemaOptions
+              sources
+              (fst <$> allRemotes)
+              remoteSchemaPermsCtx
+              -- A remote schema is available in an unauthenticated context when the
+              -- remote schema permissions are disabled but sources are by default
+              -- not accessible to the unauthenticated context. Therefore,
+              -- the remote source relationship building is skipped.
+              ExcludeRemoteSourceRelationship
+          )
           fakeRole
       -- chosen arbitrarily to be as improbable as possible
       fakeRole = mkRoleNameSafe [NT.nonEmptyTextQQ|MyNameIsOzymandiasKingOfKingsLookOnMyWorksYeMightyAndDespair|]
-      -- we delete all references to remote joins
-      alteredRemoteSchemas =
-        allRemotes <&> first \context ->
-          context {_rscRemoteRelationships = mempty}
 
   runMemoizeT do
     (queryFields, mutationFields, subscriptionFields, remoteErrors) <- case remoteSchemaPermsCtx of
@@ -523,7 +546,7 @@ unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
         -- Permissions are disabled, unauthenticated users have access to remote schemas.
         (remoteFields, remoteSchemaErrors) <-
           runRemoteSchema fakeSchemaContext $
-            buildAndValidateRemoteSchemas alteredRemoteSchemas [] [] fakeRole remoteSchemaPermsCtx
+            buildAndValidateRemoteSchemas allRemotes [] [] fakeRole remoteSchemaPermsCtx
         pure
           ( fmap (fmap RFRemote) <$> concatMap piQuery remoteFields,
             fmap (fmap RFRemote) <$> concat (mapMaybe piMutation remoteFields),
@@ -644,7 +667,7 @@ buildQueryAndSubscriptionFields ::
   SourceInfo b ->
   TableCache b ->
   FunctionCache b ->
-  LogicalModelCache b ->
+  NativeQueryCache b ->
   SchemaT
     r
     m
@@ -652,7 +675,7 @@ buildQueryAndSubscriptionFields ::
       [P.FieldParser n (SubscriptionRootField UnpreparedValue)],
       [(G.Name, Parser 'Output n (ApolloFederationParserFunction n))]
     )
-buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs FEAQuery -> functions) logicalModels = do
+buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs FEAQuery -> functions) nativeQueries = do
   roleName <- retrieve scRole
   functionPermsCtx <- retrieve Options.soInferFunctionPermissions
   functionSelectExpParsers <-
@@ -664,8 +687,8 @@ buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs
             || functionPermsCtx == Options.InferFunctionPermissions
         let targetTableName = _fiReturnType functionInfo
         lift $ mkRFs $ buildFunctionQueryFields mkRootFieldName functionName functionInfo targetTableName
-  logicalModelRootFields <-
-    buildLogicalModelFields sourceInfo logicalModels
+  nativeQueryRootFields <-
+    buildNativeQueryFields sourceInfo nativeQueries
 
   (tableQueryFields, tableSubscriptionFields, apolloFedTableParsers) <-
     unzip3 . catMaybes
@@ -677,8 +700,8 @@ buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs
       tableSubscriptionRootFields = fmap mkRF $ concat tableSubscriptionFields
 
   pure
-    ( tableQueryRootFields <> functionSelectExpParsers <> logicalModelRootFields,
-      tableSubscriptionRootFields <> functionSelectExpParsers <> logicalModelRootFields,
+    ( tableQueryRootFields <> functionSelectExpParsers <> nativeQueryRootFields,
+      tableSubscriptionRootFields <> functionSelectExpParsers <> nativeQueryRootFields,
       catMaybes apolloFedTableParsers
     )
   where
@@ -691,25 +714,25 @@ buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs
 runMaybeTmempty :: (Monad m, Monoid a) => MaybeT m a -> m a
 runMaybeTmempty = (`onNothingM` (pure mempty)) . runMaybeT
 
-buildLogicalModelFields ::
+buildNativeQueryFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   SourceInfo b ->
-  LogicalModelCache b ->
+  NativeQueryCache b ->
   SchemaT r m [P.FieldParser n (QueryRootField UnpreparedValue)]
-buildLogicalModelFields sourceInfo logicalModels = runMaybeTmempty $ do
+buildNativeQueryFields sourceInfo nativeQueries = runMaybeTmempty $ do
   roleName <- retrieve scRole
 
-  map mkRF . catMaybes <$> for (Map.elems logicalModels) \logicalModel -> do
-    -- only include this logical model in the schema
+  map mkRF . catMaybes <$> for (Map.elems nativeQueries) \nativeQuery -> do
+    -- only include this native query in the schema
     -- if the current role is admin, or we have a select permission
     -- for this role (this is the broad strokes check. later, we'll filter
     -- more granularly on columns and then rows)
     guard $
       roleName == adminRoleName
-        || roleName `Map.member` _lmiPermissions logicalModel
+        || roleName `Map.member` _crtiPermissions (_nqiReturns nativeQuery)
 
-    lift (buildLogicalModelRootFields logicalModel)
+    lift (buildNativeQueryRootFields nativeQuery)
   where
     mkRF ::
       FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)) ->
@@ -784,6 +807,12 @@ buildMutationFields mkRootFieldName scenario sourceInfo tables (takeExposedAs FE
     -- A function exposed as mutation must have a function permission
     -- configured for the role. See Note [Function Permissions]
     guard $
+      -- when function permissions are inferred, we don't expose the
+      -- mutation functions for non-admin roles. See Note [Function Permissions]
+
+      -- when function permissions are inferred, we don't expose the
+      -- mutation functions for non-admin roles. See Note [Function Permissions]
+
       -- when function permissions are inferred, we don't expose the
       -- mutation functions for non-admin roles. See Note [Function Permissions]
       roleName == adminRoleName || roleName `Map.member` _fiPermissions functionInfo

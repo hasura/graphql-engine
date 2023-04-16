@@ -31,7 +31,6 @@ import Hasura.RQL.IR.Update.Batch (UpdateBatch (..))
 import Hasura.RQL.IR.Value (UnpreparedValue)
 import Hasura.RQL.Types.Column (ColumnInfo (..))
 import Hasura.RQL.Types.Common (SourceName (..))
-import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Source (SourceInfo (..))
 import Hasura.RQL.Types.SourceCustomization (ResolvedSourceCustomization (..))
 import Hasura.RQL.Types.Table (TableInfo (..))
@@ -99,7 +98,8 @@ runUpdateFieldTest UpdateTestSetup {..} =
         { _siName = SNDefault,
           _siTables = HM.singleton table tableInfo,
           _siFunctions = mempty,
-          _siLogicalModels = mempty,
+          _siNativeQueries = mempty,
+          _siCustomReturnTypes = mempty,
           _siConfiguration = notImplementedYet "SourceConfig",
           _siQueryTagsConfig = Nothing,
           _siCustomization = ResolvedSourceCustomization mempty mempty HasuraCase Nothing

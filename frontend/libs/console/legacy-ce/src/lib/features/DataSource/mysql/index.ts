@@ -19,6 +19,7 @@ export const mysql: Database = {
     getFKRelationships: async () => Feature.NotImplemented,
     getTablesListAsTree: async () => Feature.NotImplemented,
     getSupportedOperators: async () => Feature.NotImplemented,
+    getDatabaseSchemas: async () => Feature.NotImplemented,
   },
   query: {
     getTableRows: async () => Feature.NotImplemented,

@@ -856,8 +856,6 @@ class HGECtx:
         self.engine = sqlalchemy.create_engine(self.metadata_schema_url)
         self.meta = sqlalchemy.schema.MetaData()
 
-        self.ws_read_cookie = config.getoption('--test-ws-init-cookie')
-
         self.hge_scale_url = config.getoption('--test-hge-scale-url')
         self.avoid_err_msg_checks = config.getoption('--avoid-error-message-checks')
         self.pro_tests = config.getoption('--pro-tests')
