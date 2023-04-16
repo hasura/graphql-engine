@@ -206,9 +206,8 @@ buildResponseFromParts ::
   (MonadError QErr m) =>
   Telem.QueryType ->
   Either (Either GQExecError QErr) (RootFieldMap AnnotatedResponsePart) ->
-  HTTP.ResponseHeaders ->
   m AnnotatedResponse
-buildResponseFromParts telemType partsErr cacheHeaders =
+buildResponseFromParts telemType partsErr =
   buildResponse telemType partsErr \parts ->
     let responseData = Right $ encJToLBS $ encodeAnnotatedResponseParts parts
      in AnnotatedResponse
@@ -218,7 +217,7 @@ buildResponseFromParts telemType partsErr cacheHeaders =
             arResponse =
               HttpResponse
                 (Just responseData, encodeGQResp responseData)
-                (cacheHeaders <> foldMap arpHeaders parts)
+                (foldMap arpHeaders parts)
           }
 
 buildResponse ::
@@ -427,14 +426,14 @@ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agen
             -- TODO: can this be a `catch` rather than a `runExceptT`?
             conclusion <- runExceptT $ forWithKey queryPlans executeQueryStep
             -- 2. Construct an 'AnnotatedResponse' from the results of all steps in the 'ExecutionPlan'.
-            result <- buildResponseFromParts Telem.Query conclusion cachingHeaders
+            result <- buildResponseFromParts Telem.Query conclusion
             let response@(HttpResponse responseData _) = arResponse result
             -- 3. Cache the 'AnnotatedResponse'.
             cacheStoreRes <- keyedStore (snd responseData)
             let headers = case cacheStoreRes of
                   -- Note: Warning header format: "Warning: <warn-code> <warn-agent> <warn-text> [warn-date]"
                   -- See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Warning
-                  Right _ -> []
+                  Right _ -> cachingHeaders
                   (Left CacheStoreLimitReached) -> [("warning", "199 - cache-store-size-limit-exceeded")]
                   (Left CacheStoreNotEnoughCapacity) -> [("warning", "199 - cache-store-capacity-exceeded")]
                   (Left (CacheStoreBackendError _)) -> [("warning", "199 - cache-store-error")]
@@ -473,7 +472,7 @@ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agen
           Nothing -> do
             -- TODO: can this be a `catch` rather than a `runExceptT`?
             conclusion <- runExceptT $ forWithKey mutationPlans executeMutationStep
-            buildResponseFromParts Telem.Mutation conclusion []
+            buildResponseFromParts Telem.Mutation conclusion
       E.SubscriptionExecutionPlan _sub ->
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
 

@@ -62,8 +62,14 @@ corsMiddleware getPolicy app req sendResp = do
         ("Access-Control-Allow-Credentials", "true"),
         ( "Access-Control-Allow-Methods",
           B.intercalate "," $ TE.encodeUtf8 <$> cpMethods policy
+        ),
+        -- console requires this header to access the cache headers as HGE and console
+        -- are hosted on different domains in production
+        ( "Access-Control-Expose-Headers",
+          B.intercalate "," $ TE.encodeUtf8 <$> cacheExposedHeaders
         )
       ]
 
+    cacheExposedHeaders = ["X-Hasura-Query-Cache-Key", "X-Hasura-Query-Family-Cache-Key", "Warning"]
     setHeaders hdrs = mapResponseHeaders (\h -> mkRespHdrs hdrs ++ h)
     mkRespHdrs = map (\(k, v) -> (CI.mk k, v))
