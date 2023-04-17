@@ -44,7 +44,7 @@ jwt-cookie-unauthorized-role
 # streaming-subscriptions
 # remote-schema-https
 # query-caching
-query-logs
+# query-logs
 startup-db-calls
 # webhook-request-context
 # post-webhook
