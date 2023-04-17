@@ -23,7 +23,7 @@ services:
       - yugabyte-data:/var/lib/postgresql/data
 
   graphql-engine:
-    image: hasura/graphql-engine:v2.15.0-beta.1-ce
+    image: hasura/graphql-engine:v2.23.0
     ports:
       - '8080:8080'
     depends_on:
