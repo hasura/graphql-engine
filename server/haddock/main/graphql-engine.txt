@@ -26808,6 +26808,200 @@ runSetMetricsConfig :: (MonadIO m, CacheRWM m, MetadataM m, MonadError QErr m) =
 runRemoveMetricsConfig :: (MonadIO m, CacheRWM m, MetadataM m, MonadError QErr m) => m EncJSON
 runTestWebhookTransform :: QErrM m => TestWebhookTransform -> m EncJSON
 
+
+-- | The RQL metadata query ('<i>v1</i>metadata')
+module Hasura.Server.API.Metadata.Types
+data RQLMetadataV1
+RMAddSource :: !AnyBackend AddSource -> RQLMetadataV1
+RMDropSource :: DropSource -> RQLMetadataV1
+RMRenameSource :: !RenameSource -> RQLMetadataV1
+RMUpdateSource :: !AnyBackend UpdateSource -> RQLMetadataV1
+RMListSourceKinds :: !ListSourceKinds -> RQLMetadataV1
+RMGetSourceKindCapabilities :: !GetSourceKindCapabilities -> RQLMetadataV1
+RMGetSourceTables :: !AnyBackend GetSourceTables -> RQLMetadataV1
+RMGetTableInfo :: !GetTableInfo -> RQLMetadataV1
+RMTrackTable :: !AnyBackend TrackTableV2 -> RQLMetadataV1
+RMUntrackTable :: !AnyBackend UntrackTable -> RQLMetadataV1
+RMSetTableCustomization :: !AnyBackend SetTableCustomization -> RQLMetadataV1
+RMSetApolloFederationConfig :: AnyBackend SetApolloFederationConfig -> RQLMetadataV1
+RMPgSetTableIsEnum :: !AnyBackend SetTableIsEnum -> RQLMetadataV1
+RMCreateInsertPermission :: !AnyBackend (CreatePerm InsPerm) -> RQLMetadataV1
+RMCreateSelectPermission :: !AnyBackend (CreatePerm SelPerm) -> RQLMetadataV1
+RMCreateUpdatePermission :: !AnyBackend (CreatePerm UpdPerm) -> RQLMetadataV1
+RMCreateDeletePermission :: !AnyBackend (CreatePerm DelPerm) -> RQLMetadataV1
+RMDropInsertPermission :: !AnyBackend DropPerm -> RQLMetadataV1
+RMDropSelectPermission :: !AnyBackend DropPerm -> RQLMetadataV1
+RMDropUpdatePermission :: !AnyBackend DropPerm -> RQLMetadataV1
+RMDropDeletePermission :: !AnyBackend DropPerm -> RQLMetadataV1
+RMSetPermissionComment :: !AnyBackend SetPermComment -> RQLMetadataV1
+RMCreateObjectRelationship :: !AnyBackend CreateObjRel -> RQLMetadataV1
+RMCreateArrayRelationship :: !AnyBackend CreateArrRel -> RQLMetadataV1
+RMDropRelationship :: !AnyBackend DropRel -> RQLMetadataV1
+RMSetRelationshipComment :: !AnyBackend SetRelComment -> RQLMetadataV1
+RMRenameRelationship :: !AnyBackend RenameRel -> RQLMetadataV1
+RMSuggestRelationships :: !AnyBackend SuggestRels -> RQLMetadataV1
+RMCreateRemoteRelationship :: !AnyBackend CreateFromSourceRelationship -> RQLMetadataV1
+RMUpdateRemoteRelationship :: !AnyBackend CreateFromSourceRelationship -> RQLMetadataV1
+RMDeleteRemoteRelationship :: !AnyBackend DeleteFromSourceRelationship -> RQLMetadataV1
+RMTrackFunction :: !AnyBackend TrackFunctionV2 -> RQLMetadataV1
+RMUntrackFunction :: !AnyBackend UnTrackFunction -> RQLMetadataV1
+RMSetFunctionCustomization :: AnyBackend SetFunctionCustomization -> RQLMetadataV1
+RMCreateFunctionPermission :: !AnyBackend FunctionPermissionArgument -> RQLMetadataV1
+RMDropFunctionPermission :: !AnyBackend FunctionPermissionArgument -> RQLMetadataV1
+RMAddComputedField :: !AnyBackend AddComputedField -> RQLMetadataV1
+RMDropComputedField :: !AnyBackend DropComputedField -> RQLMetadataV1
+RMTestConnectionTemplate :: !AnyBackend TestConnectionTemplate -> RQLMetadataV1
+RMGetNativeQuery :: !AnyBackend GetNativeQuery -> RQLMetadataV1
+RMTrackNativeQuery :: !AnyBackend TrackNativeQuery -> RQLMetadataV1
+RMUntrackNativeQuery :: !AnyBackend UntrackNativeQuery -> RQLMetadataV1
+RMGetCustomReturnType :: !AnyBackend GetCustomReturnType -> RQLMetadataV1
+RMTrackCustomReturnType :: !AnyBackend TrackCustomReturnType -> RQLMetadataV1
+RMUntrackCustomReturnType :: !AnyBackend UntrackCustomReturnType -> RQLMetadataV1
+RMCreateSelectCustomReturnTypePermission :: !AnyBackend (CreateCustomReturnTypePermission SelPerm) -> RQLMetadataV1
+RMDropSelectCustomReturnTypePermission :: !AnyBackend DropCustomReturnTypePermission -> RQLMetadataV1
+RMCreateEventTrigger :: !AnyBackend (Unvalidated1 CreateEventTriggerQuery) -> RQLMetadataV1
+RMDeleteEventTrigger :: !AnyBackend DeleteEventTriggerQuery -> RQLMetadataV1
+RMRedeliverEvent :: !AnyBackend RedeliverEventQuery -> RQLMetadataV1
+RMInvokeEventTrigger :: !AnyBackend InvokeEventTriggerQuery -> RQLMetadataV1
+RMCleanupEventTriggerLog :: !TriggerLogCleanupConfig -> RQLMetadataV1
+RMResumeEventTriggerCleanup :: !TriggerLogCleanupToggleConfig -> RQLMetadataV1
+RMPauseEventTriggerCleanup :: !TriggerLogCleanupToggleConfig -> RQLMetadataV1
+RMAddRemoteSchema :: !AddRemoteSchemaQuery -> RQLMetadataV1
+RMUpdateRemoteSchema :: !AddRemoteSchemaQuery -> RQLMetadataV1
+RMRemoveRemoteSchema :: !RemoteSchemaNameQuery -> RQLMetadataV1
+RMReloadRemoteSchema :: !RemoteSchemaNameQuery -> RQLMetadataV1
+RMIntrospectRemoteSchema :: !RemoteSchemaNameQuery -> RQLMetadataV1
+RMAddRemoteSchemaPermissions :: !AddRemoteSchemaPermission -> RQLMetadataV1
+RMDropRemoteSchemaPermissions :: !DropRemoteSchemaPermissions -> RQLMetadataV1
+RMCreateRemoteSchemaRemoteRelationship :: CreateRemoteSchemaRemoteRelationship -> RQLMetadataV1
+RMUpdateRemoteSchemaRemoteRelationship :: CreateRemoteSchemaRemoteRelationship -> RQLMetadataV1
+RMDeleteRemoteSchemaRemoteRelationship :: DeleteRemoteSchemaRemoteRelationship -> RQLMetadataV1
+RMCreateCronTrigger :: !Unvalidated CreateCronTrigger -> RQLMetadataV1
+RMDeleteCronTrigger :: !ScheduledTriggerName -> RQLMetadataV1
+RMCreateScheduledEvent :: !CreateScheduledEvent -> RQLMetadataV1
+RMDeleteScheduledEvent :: !DeleteScheduledEvent -> RQLMetadataV1
+RMGetScheduledEvents :: !GetScheduledEvents -> RQLMetadataV1
+RMGetScheduledEventInvocations :: !GetScheduledEventInvocations -> RQLMetadataV1
+RMGetCronTriggers :: RQLMetadataV1
+RMCreateAction :: !Unvalidated CreateAction -> RQLMetadataV1
+RMDropAction :: !DropAction -> RQLMetadataV1
+RMUpdateAction :: !Unvalidated UpdateAction -> RQLMetadataV1
+RMCreateActionPermission :: !CreateActionPermission -> RQLMetadataV1
+RMDropActionPermission :: !DropActionPermission -> RQLMetadataV1
+RMCreateQueryCollection :: !CreateCollection -> RQLMetadataV1
+RMRenameQueryCollection :: !RenameCollection -> RQLMetadataV1
+RMDropQueryCollection :: !DropCollection -> RQLMetadataV1
+RMAddQueryToCollection :: !AddQueryToCollection -> RQLMetadataV1
+RMDropQueryFromCollection :: !DropQueryFromCollection -> RQLMetadataV1
+RMAddCollectionToAllowlist :: !AllowlistEntry -> RQLMetadataV1
+RMDropCollectionFromAllowlist :: !DropCollectionFromAllowlist -> RQLMetadataV1
+RMUpdateScopeOfCollectionInAllowlist :: !UpdateScopeOfCollectionInAllowlist -> RQLMetadataV1
+RMCreateRestEndpoint :: !CreateEndpoint -> RQLMetadataV1
+RMDropRestEndpoint :: !DropEndpoint -> RQLMetadataV1
+RMDCAddAgent :: !DCAddAgent -> RQLMetadataV1
+RMDCDeleteAgent :: !DCDeleteAgent -> RQLMetadataV1
+RMSetCustomTypes :: !CustomTypes -> RQLMetadataV1
+RMSetApiLimits :: !ApiLimit -> RQLMetadataV1
+RMRemoveApiLimits :: RQLMetadataV1
+RMSetMetricsConfig :: !MetricsConfig -> RQLMetadataV1
+RMRemoveMetricsConfig :: RQLMetadataV1
+RMAddInheritedRole :: !InheritedRole -> RQLMetadataV1
+RMDropInheritedRole :: !DropInheritedRole -> RQLMetadataV1
+RMReplaceMetadata :: !ReplaceMetadata -> RQLMetadataV1
+RMExportMetadata :: !ExportMetadata -> RQLMetadataV1
+RMClearMetadata :: !ClearMetadata -> RQLMetadataV1
+RMReloadMetadata :: !ReloadMetadata -> RQLMetadataV1
+RMGetInconsistentMetadata :: !GetInconsistentMetadata -> RQLMetadataV1
+RMDropInconsistentMetadata :: !DropInconsistentMetadata -> RQLMetadataV1
+RMSetGraphqlSchemaIntrospectionOptions :: !SetGraphqlIntrospectionOptions -> RQLMetadataV1
+RMAddHostToTLSAllowlist :: !AddHostToTLSAllowlist -> RQLMetadataV1
+RMDropHostFromTLSAllowlist :: !DropHostFromTLSAllowlist -> RQLMetadataV1
+RMSetQueryTagsConfig :: !SetQueryTagsConfig -> RQLMetadataV1
+RMSetOpenTelemetryConfig :: !OpenTelemetryConfig -> RQLMetadataV1
+RMSetOpenTelemetryStatus :: !OtelStatus -> RQLMetadataV1
+RMDumpInternalState :: !DumpInternalState -> RQLMetadataV1
+RMGetCatalogState :: !GetCatalogState -> RQLMetadataV1
+RMSetCatalogState :: !SetCatalogState -> RQLMetadataV1
+RMTestWebhookTransform :: !Unvalidated TestWebhookTransform -> RQLMetadataV1
+RMGetFeatureFlag :: !GetFeatureFlag -> RQLMetadataV1
+RMBulk :: [RQLMetadataRequest] -> RQLMetadataV1
+RMBulkKeepGoing :: [RQLMetadataRequest] -> RQLMetadataV1
+data RQLMetadataV2
+RMV2ReplaceMetadata :: !ReplaceMetadataV2 -> RQLMetadataV2
+RMV2ExportMetadata :: !ExportMetadata -> RQLMetadataV2
+data RQLMetadataRequest
+RMV1 :: !RQLMetadataV1 -> RQLMetadataRequest
+RMV2 :: !RQLMetadataV2 -> RQLMetadataRequest
+instance GHC.Generics.Generic Hasura.Server.API.Metadata.Types.RQLMetadataV2
+instance GHC.Generics.Generic Hasura.Server.API.Metadata.Types.RQLMetadataV1
+
+
+-- | BackendAPI
+--   
+--   This module defines the <a>BackendAPI</a> class, alongside a few
+--   helpers. Its goal is to delegate to backends the responsibility of
+--   creating the parsers for the metadata API. Each backend is expected to
+--   provide a list of <a>CommandParser</a>, which in turn is a simple
+--   function from command name and command arguments to a corresponding
+--   parser. Command parsers can easily be created using the
+--   <a>commandParser</a> function.
+--   
+--   Furthermore, for each set of related features, such as table tracking
+--   commands, or permission commands, a helper function is provided, that
+--   allows a backend to write its instance by simply listing the set of
+--   features it supports.
+module Hasura.Server.API.Backend
+class BackendAPI (b :: BackendType)
+metadataV1CommandParsers :: BackendAPI b => [CommandParser b]
+commandParser :: FromJSON a => Text -> (a -> RQLMetadataV1) -> CommandParser b
+sourceCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+tableCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+tablePermissionsCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+functionCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+functionPermissionsCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+relationshipCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+remoteRelationshipCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+eventTriggerCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+computedFieldCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+connectionTemplateCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+nativeQueriesCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+customReturnTypesCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+
+module Hasura.Backends.MySQL.Instances.API
+instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.MySQL
+
+
+-- | MSSQL Instances API
+--   
+--   Defines a <a>BackendAPI</a> type class instance for MSSQL.
+module Hasura.Backends.MSSQL.Instances.API
+instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.MSSQL
+
+module Hasura.Backends.DataConnector.Adapter.API
+instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.DataConnector
+
+module Hasura.Backends.BigQuery.Instances.API
+instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.BigQuery
+
+
+-- | Postgres Instances API
+--   
+--   Defines a <a>BackendAPI</a> type class instance for Postgres.
+module Hasura.Backends.Postgres.Instances.API
+instance Hasura.Server.API.Backend.BackendAPI ('Hasura.SQL.Backend.Postgres 'Hasura.SQL.Backend.Vanilla)
+instance Hasura.Server.API.Backend.BackendAPI ('Hasura.SQL.Backend.Postgres 'Hasura.SQL.Backend.Citus)
+instance Hasura.Server.API.Backend.BackendAPI ('Hasura.SQL.Backend.Postgres 'Hasura.SQL.Backend.Cockroach)
+
+module Hasura.Server.API.Instances
+
+
+-- | <a>FromJSON</a> instances for API.Metadata. Kept separately to
+--   discourage becoming a dumping ground for orphan instances
+module Hasura.Server.API.Metadata.Instances
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Metadata.Types.RQLMetadataV1
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Metadata.Types.RQLMetadataV2
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Metadata.Types.RQLMetadataRequest
+
 module Hasura.GraphQL.Transport.WebSocket.Server
 data WSId
 mkUnsafeWSId :: UUID -> WSId
@@ -27591,121 +27785,6 @@ instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Query.RQLQueryV2
 
 -- | The RQL metadata query ('<i>v1</i>metadata')
 module Hasura.Server.API.Metadata
-data RQLMetadataV1
-RMAddSource :: !AnyBackend AddSource -> RQLMetadataV1
-RMDropSource :: DropSource -> RQLMetadataV1
-RMRenameSource :: !RenameSource -> RQLMetadataV1
-RMUpdateSource :: !AnyBackend UpdateSource -> RQLMetadataV1
-RMListSourceKinds :: !ListSourceKinds -> RQLMetadataV1
-RMGetSourceKindCapabilities :: !GetSourceKindCapabilities -> RQLMetadataV1
-RMGetSourceTables :: !AnyBackend GetSourceTables -> RQLMetadataV1
-RMGetTableInfo :: !GetTableInfo -> RQLMetadataV1
-RMTrackTable :: !AnyBackend TrackTableV2 -> RQLMetadataV1
-RMUntrackTable :: !AnyBackend UntrackTable -> RQLMetadataV1
-RMSetTableCustomization :: !AnyBackend SetTableCustomization -> RQLMetadataV1
-RMSetApolloFederationConfig :: AnyBackend SetApolloFederationConfig -> RQLMetadataV1
-RMPgSetTableIsEnum :: !AnyBackend SetTableIsEnum -> RQLMetadataV1
-RMCreateInsertPermission :: !AnyBackend (CreatePerm InsPerm) -> RQLMetadataV1
-RMCreateSelectPermission :: !AnyBackend (CreatePerm SelPerm) -> RQLMetadataV1
-RMCreateUpdatePermission :: !AnyBackend (CreatePerm UpdPerm) -> RQLMetadataV1
-RMCreateDeletePermission :: !AnyBackend (CreatePerm DelPerm) -> RQLMetadataV1
-RMDropInsertPermission :: !AnyBackend DropPerm -> RQLMetadataV1
-RMDropSelectPermission :: !AnyBackend DropPerm -> RQLMetadataV1
-RMDropUpdatePermission :: !AnyBackend DropPerm -> RQLMetadataV1
-RMDropDeletePermission :: !AnyBackend DropPerm -> RQLMetadataV1
-RMSetPermissionComment :: !AnyBackend SetPermComment -> RQLMetadataV1
-RMCreateObjectRelationship :: !AnyBackend CreateObjRel -> RQLMetadataV1
-RMCreateArrayRelationship :: !AnyBackend CreateArrRel -> RQLMetadataV1
-RMDropRelationship :: !AnyBackend DropRel -> RQLMetadataV1
-RMSetRelationshipComment :: !AnyBackend SetRelComment -> RQLMetadataV1
-RMRenameRelationship :: !AnyBackend RenameRel -> RQLMetadataV1
-RMSuggestRelationships :: !AnyBackend SuggestRels -> RQLMetadataV1
-RMCreateRemoteRelationship :: !AnyBackend CreateFromSourceRelationship -> RQLMetadataV1
-RMUpdateRemoteRelationship :: !AnyBackend CreateFromSourceRelationship -> RQLMetadataV1
-RMDeleteRemoteRelationship :: !AnyBackend DeleteFromSourceRelationship -> RQLMetadataV1
-RMTrackFunction :: !AnyBackend TrackFunctionV2 -> RQLMetadataV1
-RMUntrackFunction :: !AnyBackend UnTrackFunction -> RQLMetadataV1
-RMSetFunctionCustomization :: AnyBackend SetFunctionCustomization -> RQLMetadataV1
-RMCreateFunctionPermission :: !AnyBackend FunctionPermissionArgument -> RQLMetadataV1
-RMDropFunctionPermission :: !AnyBackend FunctionPermissionArgument -> RQLMetadataV1
-RMAddComputedField :: !AnyBackend AddComputedField -> RQLMetadataV1
-RMDropComputedField :: !AnyBackend DropComputedField -> RQLMetadataV1
-RMTestConnectionTemplate :: !AnyBackend TestConnectionTemplate -> RQLMetadataV1
-RMGetNativeQuery :: !AnyBackend GetNativeQuery -> RQLMetadataV1
-RMTrackNativeQuery :: !AnyBackend TrackNativeQuery -> RQLMetadataV1
-RMUntrackNativeQuery :: !AnyBackend UntrackNativeQuery -> RQLMetadataV1
-RMGetCustomReturnType :: !AnyBackend GetCustomReturnType -> RQLMetadataV1
-RMTrackCustomReturnType :: !AnyBackend TrackCustomReturnType -> RQLMetadataV1
-RMUntrackCustomReturnType :: !AnyBackend UntrackCustomReturnType -> RQLMetadataV1
-RMCreateSelectCustomReturnTypePermission :: !AnyBackend (CreateCustomReturnTypePermission SelPerm) -> RQLMetadataV1
-RMDropSelectCustomReturnTypePermission :: !AnyBackend DropCustomReturnTypePermission -> RQLMetadataV1
-RMCreateEventTrigger :: !AnyBackend (Unvalidated1 CreateEventTriggerQuery) -> RQLMetadataV1
-RMDeleteEventTrigger :: !AnyBackend DeleteEventTriggerQuery -> RQLMetadataV1
-RMRedeliverEvent :: !AnyBackend RedeliverEventQuery -> RQLMetadataV1
-RMInvokeEventTrigger :: !AnyBackend InvokeEventTriggerQuery -> RQLMetadataV1
-RMCleanupEventTriggerLog :: !TriggerLogCleanupConfig -> RQLMetadataV1
-RMResumeEventTriggerCleanup :: !TriggerLogCleanupToggleConfig -> RQLMetadataV1
-RMPauseEventTriggerCleanup :: !TriggerLogCleanupToggleConfig -> RQLMetadataV1
-RMAddRemoteSchema :: !AddRemoteSchemaQuery -> RQLMetadataV1
-RMUpdateRemoteSchema :: !AddRemoteSchemaQuery -> RQLMetadataV1
-RMRemoveRemoteSchema :: !RemoteSchemaNameQuery -> RQLMetadataV1
-RMReloadRemoteSchema :: !RemoteSchemaNameQuery -> RQLMetadataV1
-RMIntrospectRemoteSchema :: !RemoteSchemaNameQuery -> RQLMetadataV1
-RMAddRemoteSchemaPermissions :: !AddRemoteSchemaPermission -> RQLMetadataV1
-RMDropRemoteSchemaPermissions :: !DropRemoteSchemaPermissions -> RQLMetadataV1
-RMCreateRemoteSchemaRemoteRelationship :: CreateRemoteSchemaRemoteRelationship -> RQLMetadataV1
-RMUpdateRemoteSchemaRemoteRelationship :: CreateRemoteSchemaRemoteRelationship -> RQLMetadataV1
-RMDeleteRemoteSchemaRemoteRelationship :: DeleteRemoteSchemaRemoteRelationship -> RQLMetadataV1
-RMCreateCronTrigger :: !Unvalidated CreateCronTrigger -> RQLMetadataV1
-RMDeleteCronTrigger :: !ScheduledTriggerName -> RQLMetadataV1
-RMCreateScheduledEvent :: !CreateScheduledEvent -> RQLMetadataV1
-RMDeleteScheduledEvent :: !DeleteScheduledEvent -> RQLMetadataV1
-RMGetScheduledEvents :: !GetScheduledEvents -> RQLMetadataV1
-RMGetScheduledEventInvocations :: !GetScheduledEventInvocations -> RQLMetadataV1
-RMGetCronTriggers :: RQLMetadataV1
-RMCreateAction :: !Unvalidated CreateAction -> RQLMetadataV1
-RMDropAction :: !DropAction -> RQLMetadataV1
-RMUpdateAction :: !Unvalidated UpdateAction -> RQLMetadataV1
-RMCreateActionPermission :: !CreateActionPermission -> RQLMetadataV1
-RMDropActionPermission :: !DropActionPermission -> RQLMetadataV1
-RMCreateQueryCollection :: !CreateCollection -> RQLMetadataV1
-RMRenameQueryCollection :: !RenameCollection -> RQLMetadataV1
-RMDropQueryCollection :: !DropCollection -> RQLMetadataV1
-RMAddQueryToCollection :: !AddQueryToCollection -> RQLMetadataV1
-RMDropQueryFromCollection :: !DropQueryFromCollection -> RQLMetadataV1
-RMAddCollectionToAllowlist :: !AllowlistEntry -> RQLMetadataV1
-RMDropCollectionFromAllowlist :: !DropCollectionFromAllowlist -> RQLMetadataV1
-RMUpdateScopeOfCollectionInAllowlist :: !UpdateScopeOfCollectionInAllowlist -> RQLMetadataV1
-RMCreateRestEndpoint :: !CreateEndpoint -> RQLMetadataV1
-RMDropRestEndpoint :: !DropEndpoint -> RQLMetadataV1
-RMDCAddAgent :: !DCAddAgent -> RQLMetadataV1
-RMDCDeleteAgent :: !DCDeleteAgent -> RQLMetadataV1
-RMSetCustomTypes :: !CustomTypes -> RQLMetadataV1
-RMSetApiLimits :: !ApiLimit -> RQLMetadataV1
-RMRemoveApiLimits :: RQLMetadataV1
-RMSetMetricsConfig :: !MetricsConfig -> RQLMetadataV1
-RMRemoveMetricsConfig :: RQLMetadataV1
-RMAddInheritedRole :: !InheritedRole -> RQLMetadataV1
-RMDropInheritedRole :: !DropInheritedRole -> RQLMetadataV1
-RMReplaceMetadata :: !ReplaceMetadata -> RQLMetadataV1
-RMExportMetadata :: !ExportMetadata -> RQLMetadataV1
-RMClearMetadata :: !ClearMetadata -> RQLMetadataV1
-RMReloadMetadata :: !ReloadMetadata -> RQLMetadataV1
-RMGetInconsistentMetadata :: !GetInconsistentMetadata -> RQLMetadataV1
-RMDropInconsistentMetadata :: !DropInconsistentMetadata -> RQLMetadataV1
-RMSetGraphqlSchemaIntrospectionOptions :: !SetGraphqlIntrospectionOptions -> RQLMetadataV1
-RMAddHostToTLSAllowlist :: !AddHostToTLSAllowlist -> RQLMetadataV1
-RMDropHostFromTLSAllowlist :: !DropHostFromTLSAllowlist -> RQLMetadataV1
-RMSetQueryTagsConfig :: !SetQueryTagsConfig -> RQLMetadataV1
-RMSetOpenTelemetryConfig :: !OpenTelemetryConfig -> RQLMetadataV1
-RMSetOpenTelemetryStatus :: !OtelStatus -> RQLMetadataV1
-RMDumpInternalState :: !DumpInternalState -> RQLMetadataV1
-RMGetCatalogState :: !GetCatalogState -> RQLMetadataV1
-RMSetCatalogState :: !SetCatalogState -> RQLMetadataV1
-RMTestWebhookTransform :: !Unvalidated TestWebhookTransform -> RQLMetadataV1
-RMGetFeatureFlag :: !GetFeatureFlag -> RQLMetadataV1
-RMBulk :: [RQLMetadataRequest] -> RQLMetadataV1
-RMBulkKeepGoing :: [RQLMetadataRequest] -> RQLMetadataV1
 
 -- | The payload for the <tt><i>v1</i>metadata</tt> endpoint. See:
 --   
@@ -27713,71 +27792,7 @@ RMBulkKeepGoing :: [RQLMetadataRequest] -> RQLMetadataV1
 --   <a>https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index/</a>
 data RQLMetadata
 runMetadataQuery :: (MonadIO m, MonadError QErr m, MonadBaseControl IO m, HasAppEnv m, HasCacheStaticConfig m, HasFeatureFlagChecker m, MonadTrace m, MonadMetadataStorage m, MonadResolveSource m, MonadEventLogCleanup m, ProvidesHasuraServices m, MonadGetApiTimeLimit m, UserInfoM m) => AppContext -> RebuildableSchemaCache -> RQLMetadata -> m (EncJSON, RebuildableSchemaCache)
-instance GHC.Generics.Generic Hasura.Server.API.Metadata.RQLMetadataV2
-instance GHC.Generics.Generic Hasura.Server.API.Metadata.RQLMetadataV1
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Metadata.RQLMetadata
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Metadata.RQLMetadataV1
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Metadata.RQLMetadataRequest
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.API.Metadata.RQLMetadataV2
-
-module Hasura.Server.API.Instances
-
-
--- | Postgres Instances API
---   
---   Defines a <a>BackendAPI</a> type class instance for Postgres.
-module Hasura.Backends.Postgres.Instances.API
-instance Hasura.Server.API.Backend.BackendAPI ('Hasura.SQL.Backend.Postgres 'Hasura.SQL.Backend.Vanilla)
-instance Hasura.Server.API.Backend.BackendAPI ('Hasura.SQL.Backend.Postgres 'Hasura.SQL.Backend.Citus)
-instance Hasura.Server.API.Backend.BackendAPI ('Hasura.SQL.Backend.Postgres 'Hasura.SQL.Backend.Cockroach)
-
-
--- | BackendAPI
---   
---   This module defines the <a>BackendAPI</a> class, alongside a few
---   helpers. Its goal is to delegate to backends the responsibility of
---   creating the parsers for the metadata API. Each backend is expected to
---   provide a list of <a>CommandParser</a>, which in turn is a simple
---   function from command name and command arguments to a corresponding
---   parser. Command parsers can easily be created using the
---   <a>commandParser</a> function.
---   
---   Furthermore, for each set of related features, such as table tracking
---   commands, or permission commands, a helper function is provided, that
---   allows a backend to write its instance by simply listing the set of
---   features it supports.
-module Hasura.Server.API.Backend
-class BackendAPI (b :: BackendType)
-metadataV1CommandParsers :: BackendAPI b => [CommandParser b]
-commandParser :: FromJSON a => Text -> (a -> RQLMetadataV1) -> CommandParser b
-sourceCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-tableCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-tablePermissionsCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-functionCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-functionPermissionsCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-relationshipCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-remoteRelationshipCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-eventTriggerCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-computedFieldCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-connectionTemplateCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-nativeQueriesCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-customReturnTypesCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-
-module Hasura.Backends.MySQL.Instances.API
-instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.MySQL
-
-
--- | MSSQL Instances API
---   
---   Defines a <a>BackendAPI</a> type class instance for MSSQL.
-module Hasura.Backends.MSSQL.Instances.API
-instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.MSSQL
-
-module Hasura.Backends.DataConnector.Adapter.API
-instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.DataConnector
-
-module Hasura.Backends.BigQuery.Instances.API
-instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.BigQuery
 
 module Hasura.GraphQL.Execute.Action
 fetchActionLogResponses :: (MonadError QErr m, MonadMetadataStorage m, Foldable t) => t ActionId -> m (ActionLogResponseMap, Bool)

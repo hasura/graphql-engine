@@ -9,10 +9,10 @@
 </span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.AnyBackend.html"><span class="hs-identifier">Hasura.SQL.AnyBackend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier">mkAnyBackend</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.API.Backend.html"><span class="hs-identifier">Hasura.Server.API.Backend</span></a></span><span>
-</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="hs-pragma">{-# SOURCE</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span class="annot"><a href="Hasura.Server.API.Metadata.html"><span class="hs-identifier">Hasura.Server.API.Metadata</span></a></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html"><span class="hs-identifier">Hasura.Server.API.Metadata.Types</span></a></span><span>
 </span><span id="line-13"></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Server.API.Backend.html#BackendAPI"><span class="hs-identifier hs-type">BackendAPI</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-15"></span><span>  </span><span id="local-6989586621691190503"><span class="annot"><span class="annottext">metadataV1CommandParsers :: [CommandParser ('Postgres 'Vanilla)]
+</span><span id="line-15"></span><span>  </span><span id="local-6989586621691176950"><span class="annot"><span class="annottext">metadataV1CommandParsers :: [CommandParser ('Postgres 'Vanilla)]
 </span><a href="Hasura.Server.API.Backend.html#metadataV1CommandParsers"><span class="hs-identifier hs-var hs-var hs-var hs-var">metadataV1CommandParsers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-16"></span><span>    </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">concat</span></a></span><span>
@@ -45,7 +45,7 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><span id="line-29"></span><span>            </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;set_table_is_enum&quot;</span></span><span>
 </span><span id="line-30"></span><span>            </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">AnyBackend SetTableIsEnum -&gt; RQLMetadataV1
-</span><a href="Hasura.Server.API.Metadata.html#RMPgSetTableIsEnum"><span class="hs-identifier hs-var">RMPgSetTableIsEnum</span></a></span><span>
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMPgSetTableIsEnum"><span class="hs-identifier hs-var">RMPgSetTableIsEnum</span></a></span><span>
 </span><span id="line-31"></span><span>                </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
@@ -58,8 +58,8 @@ i b -&gt; AnyBackend i
 </span><span id="line-35"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-36"></span><span>
 </span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Server.API.Backend.html#BackendAPI"><span class="hs-identifier hs-type">BackendAPI</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Citus"><span class="hs-identifier hs-type">Citus</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-38"></span><span>  </span><span id="local-6989586621691190461"><span class="annot"><span class="annottext">metadataV1CommandParsers :: [CommandParser ('Postgres 'Citus)]
-</span><a href="#local-6989586621691190461"><span class="hs-identifier hs-var hs-var hs-var hs-var">metadataV1CommandParsers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-38"></span><span>  </span><span id="local-6989586621691176908"><span class="annot"><span class="annottext">metadataV1CommandParsers :: [CommandParser ('Postgres 'Citus)]
+</span><a href="#local-6989586621691176908"><span class="hs-identifier hs-var hs-var hs-var hs-var">metadataV1CommandParsers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-39"></span><span>    </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">concat</span></a></span><span>
 </span><span id="line-40"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). Backend b =&gt; [CommandParser b]
@@ -85,8 +85,8 @@ i b -&gt; AnyBackend i
 </span><span id="line-50"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-51"></span><span>
 </span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Server.API.Backend.html#BackendAPI"><span class="hs-identifier hs-type">BackendAPI</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Cockroach"><span class="hs-identifier hs-type">Cockroach</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-53"></span><span>  </span><span id="local-6989586621691190435"><span class="annot"><span class="annottext">metadataV1CommandParsers :: [CommandParser ('Postgres 'Cockroach)]
-</span><a href="#local-6989586621691190435"><span class="hs-identifier hs-var hs-var hs-var hs-var">metadataV1CommandParsers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621691176882"><span class="annot"><span class="annottext">metadataV1CommandParsers :: [CommandParser ('Postgres 'Cockroach)]
+</span><a href="#local-6989586621691176882"><span class="hs-identifier hs-var hs-var hs-var hs-var">metadataV1CommandParsers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-54"></span><span>    </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">concat</span></a></span><span>
 </span><span id="line-55"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). Backend b =&gt; [CommandParser b]
@@ -106,7 +106,7 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><span id="line-61"></span><span>            </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;set_table_is_enum&quot;</span></span><span>
 </span><span id="line-62"></span><span>            </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">AnyBackend SetTableIsEnum -&gt; RQLMetadataV1
-</span><a href="Hasura.Server.API.Metadata.html#RMPgSetTableIsEnum"><span class="hs-identifier hs-var">RMPgSetTableIsEnum</span></a></span><span>
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMPgSetTableIsEnum"><span class="hs-identifier hs-var">RMPgSetTableIsEnum</span></a></span><span>
 </span><span id="line-63"></span><span>                </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
