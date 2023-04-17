@@ -1,7 +1,4 @@
-import {
-  isSameTableObjectRelationship,
-  TableFkRelationships,
-} from '../../DataSource';
+import { isSameTableObjectRelationship } from '../../DataSource';
 import { areTablesEqual } from '../../hasura-metadata-api';
 import {
   Legacy_SourceToRemoteSchemaRelationship,
@@ -19,6 +16,7 @@ import {
   LocalRelationship,
   RemoteDatabaseRelationship,
   RemoteSchemaRelationship,
+  SuggestedRelationship,
 } from '../types';
 
 const getKeyValuePair = (arr1: string[], arr2: string[]) => {
@@ -35,7 +33,7 @@ const getFkDefinition = (
     | SameTableObjectRelationship
     | LocalTableObjectRelationship
     | LocalTableArrayRelationship,
-  fkConstraints: TableFkRelationships[]
+  suggestedRelationships: SuggestedRelationship[]
 ): { toTable: Table; mapping: Record<string, string> } => {
   if (isSameTableObjectRelationship(relationship)) {
     const fromTable = table;
@@ -45,18 +43,18 @@ const getFkDefinition = (
       ? relationship.using.foreign_key_constraint_on
       : [relationship.using.foreign_key_constraint_on];
 
-    const matchingFkConstraint = fkConstraints.find(
-      fkConstraint =>
-        areTablesEqual(fromTable, fkConstraint.from.table) &&
-        isEqual(fromColumns.sort(), fkConstraint.from.column)
+    const matchingFkConstraint = suggestedRelationships.find(
+      suggestedRelationship =>
+        areTablesEqual(fromTable, suggestedRelationship.from.table) &&
+        isEqual(fromColumns.sort(), suggestedRelationship.from.columns)
     );
 
     return {
       toTable: matchingFkConstraint?.to.table,
       mapping: matchingFkConstraint
         ? getKeyValuePair(
-            matchingFkConstraint.from.column,
-            matchingFkConstraint.to.column
+            matchingFkConstraint.from.columns,
+            matchingFkConstraint.to.columns
           )
         : {},
     };
@@ -68,17 +66,18 @@ const getFkDefinition = (
       ? [relationship.using.foreign_key_constraint_on.column]
       : relationship.using.foreign_key_constraint_on.columns;
 
-  const matchingFkConstraint = fkConstraints.find(
-    fkConstraint =>
-      areTablesEqual(toTable, fkConstraint.to.table) &&
-      isEqual(toColumn.sort(), fkConstraint.to.column)
+  const matchingFkConstraint = suggestedRelationships.find(
+    suggestedRelationship =>
+      areTablesEqual(toTable, suggestedRelationship.to.table) &&
+      isEqual(toColumn.sort(), suggestedRelationship.to.columns)
   );
+
   return {
     toTable: matchingFkConstraint?.from.table,
     mapping: matchingFkConstraint
       ? getKeyValuePair(
-          matchingFkConstraint.to.column,
-          matchingFkConstraint.from.column
+          matchingFkConstraint.to.columns,
+          matchingFkConstraint.from.columns
         )
       : {},
   };
@@ -110,12 +109,12 @@ export const adaptLocalObjectRelationshipWithFkConstraint = ({
   table,
   dataSourceName,
   relationship,
-  fkConstraints,
+  suggestedRelationships,
 }: {
   table: Table;
   dataSourceName: string;
   relationship: SameTableObjectRelationship | LocalTableObjectRelationship;
-  fkConstraints: TableFkRelationships[];
+  suggestedRelationships: SuggestedRelationship[];
 }): LocalRelationship => {
   return {
     name: relationship.name,
@@ -123,7 +122,7 @@ export const adaptLocalObjectRelationshipWithFkConstraint = ({
     fromTable: table,
     relationshipType: 'Object',
     type: 'localRelationship',
-    definition: getFkDefinition(table, relationship, fkConstraints),
+    definition: getFkDefinition(table, relationship, suggestedRelationships),
   };
 };
 
@@ -153,12 +152,12 @@ export const adaptLocalArrayRelationshipWithFkConstraint = ({
   table,
   dataSourceName,
   relationship,
-  fkConstraints,
+  suggestedRelationships,
 }: {
   table: Table;
   dataSourceName: string;
   relationship: LocalTableArrayRelationship;
-  fkConstraints: TableFkRelationships[];
+  suggestedRelationships: SuggestedRelationship[];
 }): LocalRelationship => {
   return {
     name: relationship.name,
@@ -166,7 +165,7 @@ export const adaptLocalArrayRelationshipWithFkConstraint = ({
     fromTable: table,
     relationshipType: 'Array',
     type: 'localRelationship',
-    definition: getFkDefinition(table, relationship, fkConstraints),
+    definition: getFkDefinition(table, relationship, suggestedRelationships),
   };
 };
 

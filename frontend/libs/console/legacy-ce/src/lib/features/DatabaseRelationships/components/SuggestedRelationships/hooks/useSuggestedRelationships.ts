@@ -145,6 +145,14 @@ export const removeExistingRelationships = ({
     return false;
   });
 
+type AddSuggestedRelationship = {
+  name: string;
+  columnNames: string[];
+  relationshipType: 'object' | 'array';
+  toTable?: Table;
+  fromTable?: Table;
+};
+
 export const getSuggestedRelationshipsCacheQuery = (
   dataSourceName: string,
   table: Table
@@ -208,13 +216,7 @@ export const useSuggestedRelationships = ({
     relationshipType,
     toTable,
     fromTable,
-  }: {
-    name: string;
-    columnNames: string[];
-    relationshipType: 'object' | 'array';
-    toTable?: Table;
-    fromTable?: Table;
-  }) => {
+  }: AddSuggestedRelationship) => {
     setAddingSuggestedRelationship(true);
 
     await metadataMutation.mutateAsync({

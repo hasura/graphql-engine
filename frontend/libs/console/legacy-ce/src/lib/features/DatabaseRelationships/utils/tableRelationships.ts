@@ -3,7 +3,6 @@ import {
   isManualArrayRelationship,
   isManualObjectRelationship,
   isRemoteSchemaRelationship,
-  TableFkRelationships,
 } from '../../DataSource';
 import { MetadataTable } from '../../hasura-metadata-types';
 import {
@@ -11,6 +10,7 @@ import {
   Relationship,
   RemoteDatabaseRelationship,
   RemoteSchemaRelationship,
+  SuggestedRelationship,
 } from '../types';
 import {
   adaptLegacyRemoteSchemaRelationship,
@@ -25,7 +25,7 @@ import {
 export function tableRelationships(
   metadataTable: MetadataTable | undefined,
   dataSourceName: string,
-  fkConstraints: TableFkRelationships[] | undefined
+  suggestedRelationships: SuggestedRelationship[]
 ): Relationship[] {
   const table = metadataTable?.table;
   // adapt local array relationships
@@ -43,7 +43,7 @@ export function tableRelationships(
       table,
       dataSourceName,
       relationship,
-      fkConstraints: fkConstraints ?? [],
+      suggestedRelationships,
     });
   });
 
@@ -61,7 +61,7 @@ export function tableRelationships(
       table,
       dataSourceName,
       relationship,
-      fkConstraints: fkConstraints ?? [],
+      suggestedRelationships,
     });
   });
 

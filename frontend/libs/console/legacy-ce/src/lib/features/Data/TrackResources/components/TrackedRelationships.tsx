@@ -23,14 +23,13 @@ import {
   generateDeleteLocalRelationshipRequest,
   generateRemoteRelationshipDeleteRequest,
 } from '../../../DatabaseRelationships/utils/generateRequest';
-import { generateQueryKeys } from '../../../DatabaseRelationships/utils/queryClientUtils';
-import { useQueryClient } from 'react-query';
 import { exportMetadata } from '../../../DataSource';
 import { useHttpClient } from '../../../Network';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { MetadataDataSource } from '../../../../metadata/types';
 import Skeleton from 'react-loading-skeleton';
-import { getSuggestedRelationshipsCacheQuery } from '../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useSuggestedRelationships';
+import { generateQueryKeys } from '../../../DatabaseRelationships/utils/queryClientUtils';
+import { useQueryClient } from 'react-query';
 import { useCheckRows } from '../../../DatabaseRelationships/hooks/useCheckRows';
 
 const getQueryFunction = (relationship: Relationship) => {
@@ -59,7 +58,7 @@ interface TrackedRelationshipsProps {
   dataSourceName: string;
   driver?: MetadataDataSource['kind'];
   isLoading: boolean;
-  onRefetchMetadata: () => void;
+  onUpdate: () => void;
   relationships: Relationship[];
 }
 
@@ -67,12 +66,13 @@ export const TrackedRelationships: React.VFC<TrackedRelationshipsProps> = ({
   dataSourceName,
   driver,
   isLoading,
-  onRefetchMetadata,
+  onUpdate,
   relationships,
 }) => {
   const httpClient = useHttpClient();
   const { mutateAsync } = useMetadataMigration();
   const queryClient = useQueryClient();
+
   const [isTrackingSelectedRelationships, setTrackingSelectedRelationships] =
     useState(false);
 
@@ -118,50 +118,41 @@ export const TrackedRelationships: React.VFC<TrackedRelationshipsProps> = ({
       );
 
       if (driver) {
-        for (let i = 0; i < selectedRelationships.length; i++) {
-          const selectedRelationship = selectedRelationships[i];
-          const mutationOptions = {
+        const recentMetadata = await exportMetadata({ httpClient });
+
+        const queries = selectedRelationships.map(relationship => {
+          const queryFunction = getQueryFunction(relationship);
+
+          const query = queryFunction
+            ? queryFunction({
+                driver,
+                resource_version: recentMetadata.resource_version,
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                relationship,
+              })
+            : {};
+          return query;
+        });
+
+        await mutateAsync(
+          {
+            query: {
+              type: 'bulk',
+              args: queries,
+            },
+          },
+          {
             onSuccess: () => {
               queryClient.invalidateQueries(generateQueryKeys.metadata());
-
-              queryClient.invalidateQueries(
-                generateQueryKeys.suggestedRelationships({
-                  dataSourceName,
-                  table: selectedRelationship.fromTable,
-                })
-              );
             },
-          };
-
-          const queryFunction = getQueryFunction(selectedRelationship);
-          if (queryFunction) {
-            const recentMetadata = await exportMetadata({ httpClient });
-            await mutateAsync(
-              {
-                query: queryFunction({
-                  driver,
-                  resource_version: recentMetadata.resource_version,
-                  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                  // @ts-ignore
-                  relationship: selectedRelationship,
-                }),
-              },
-              mutationOptions
-            );
-            queryClient.invalidateQueries(
-              getSuggestedRelationshipsCacheQuery(
-                dataSourceName,
-                selectedRelationship.fromTable
-              )
-            );
           }
-        }
+        );
 
-        onRefetchMetadata();
+        onUpdate();
 
-        const relationshipLabel =
-          selectedRelationships.length > 1 ? 'Relationships' : 'Relationship';
-        const toastMessage = `${selectedRelationships.length} ${relationshipLabel} untracked`;
+        const plural = selectedRelationships.length > 1 ? 's' : '';
+        const toastMessage = `${selectedRelationships.length} relationship${plural} untracked`;
 
         hasuraToast({
           title: 'Success',
@@ -170,6 +161,7 @@ export const TrackedRelationships: React.VFC<TrackedRelationshipsProps> = ({
         });
       }
     } catch (err) {
+      console.error(err);
       setTrackingSelectedRelationships(false);
     }
     reset();
@@ -200,6 +192,7 @@ export const TrackedRelationships: React.VFC<TrackedRelationshipsProps> = ({
   };
 
   const onRelationshipActionSuccess = () => {
+    onUpdate();
     if (mode)
       fireNotification({
         type: 'success',

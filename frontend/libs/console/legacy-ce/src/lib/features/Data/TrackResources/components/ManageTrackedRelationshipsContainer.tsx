@@ -1,4 +1,4 @@
-import { useSuggestedRelationships } from '../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useSuggestedRelationships';
+import { useAllSuggestedRelationships } from '../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useAllSuggestedRelationships';
 import { useTrackedRelationships } from './hooks/useTrackedRelationships';
 import { ManageTrackedRelationships } from './ManageTrackedRelationships';
 
@@ -13,9 +13,9 @@ export const ManageTrackedRelationshipsContainer = ({
   } = useTrackedRelationships(dataSourceName);
 
   const { suggestedRelationships, isLoadingSuggestedRelationships } =
-    useSuggestedRelationships({
+    useAllSuggestedRelationships({
       dataSourceName,
-      existingRelationships: [],
+      omitTracked: true,
       isEnabled: true,
     });
 

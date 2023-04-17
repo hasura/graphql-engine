@@ -102,11 +102,11 @@ export const ManageTrackedRelationships: React.VFC<
           </div>
         ) : (
           <>
-            <Tabs.Content value="tracked" className="px-md">
-              <TrackedRelationshipsContainer dataSourceName={dataSourceName} />
-            </Tabs.Content>
             <Tabs.Content value="untracked" className="px-md">
               <UntrackedRelationships dataSourceName={dataSourceName} />
+            </Tabs.Content>
+            <Tabs.Content value="tracked" className="px-md">
+              <TrackedRelationshipsContainer dataSourceName={dataSourceName} />
             </Tabs.Content>
           </>
         )}

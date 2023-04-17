@@ -9,27 +9,39 @@ import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '../constants';
 import { paginate } from '../utils';
 import { SearchBar } from './SearchBar';
 import { Badge } from '../../../../new-components/Badge';
-import {
-  SuggestedRelationshipWithName,
-  useSuggestedRelationships,
-} from '../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useSuggestedRelationships';
+import { SuggestedRelationshipWithName } from '../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useSuggestedRelationships';
 import { RelationshipRow } from './RelationshipRow';
 import { SuggestedRelationshipTrackModal } from '../../../DatabaseRelationships/components/SuggestedRelationshipTrackModal/SuggestedRelationshipTrackModal';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import Skeleton from 'react-loading-skeleton';
-import { useQueryClient } from 'react-query';
-import { getTrackedRelationshipsCacheKey } from './hooks/useTrackedRelationships';
+import {
+  AddSuggestedRelationship,
+  useAllSuggestedRelationships,
+} from '../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useAllSuggestedRelationships';
 import { useCheckRows } from '../../../DatabaseRelationships/hooks/useCheckRows';
 
 interface UntrackedRelationshipsProps {
   dataSourceName: string;
 }
 
+const adaptTrackRelationship = (
+  relationship: SuggestedRelationshipWithName
+): AddSuggestedRelationship => {
+  const isObjectRelationship = !!relationship.from?.constraint_name;
+  return {
+    name: relationship.constraintName,
+    columnNames: isObjectRelationship
+      ? relationship.from.columns
+      : relationship.to.columns,
+    relationshipType: isObjectRelationship ? 'object' : 'array',
+    toTable: isObjectRelationship ? undefined : relationship.to.table,
+    fromTable: relationship.from.table,
+  };
+};
+
 export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
   dataSourceName,
 }) => {
-  const queryClient = useQueryClient();
-
   const [pageNumber, setPageNumber] = useState(DEFAULT_PAGE_NUMBER);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [searchText, setSearchText] = useState('');
@@ -41,12 +53,11 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
   const {
     suggestedRelationships,
     isLoadingSuggestedRelationships,
-    onAddSuggestedRelationship,
-    refetchSuggestedRelationships,
-  } = useSuggestedRelationships({
+    onAddMultipleSuggestedRelationships,
+  } = useAllSuggestedRelationships({
     dataSourceName,
-    existingRelationships: [],
     isEnabled: true,
+    omitTracked: true,
   });
 
   const checkboxRef = React.useRef<HTMLInputElement>(null);
@@ -82,19 +93,9 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
   }, [inputStatus]);
 
   const onTrackRelationship = (relationship: SuggestedRelationshipWithName) => {
-    const isObjectRelationship = !!relationship.from?.constraint_name;
-
-    return onAddSuggestedRelationship({
-      name: relationship.constraintName,
-      columnNames: isObjectRelationship
-        ? relationship.from.columns
-        : relationship.to.columns,
-      relationshipType: isObjectRelationship ? 'object' : 'array',
-      toTable: isObjectRelationship ? undefined : relationship.to.table,
-      fromTable: relationship.from.table,
-    }).then(() => {
-      refetchSuggestedRelationships();
-    });
+    return onAddMultipleSuggestedRelationships([
+      adaptTrackRelationship(relationship),
+    ]);
   };
 
   const [isTrackingSelectedRelationships, setTrackingSelectedRelationships] =
@@ -106,24 +107,21 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
         checkedIds.includes(rel.constraintName)
       );
 
-      for (const selectedRelationship of selectedRelationships) {
-        await onTrackRelationship(selectedRelationship);
-      }
+      const trackRelationships: AddSuggestedRelationship[] =
+        selectedRelationships.map(adaptTrackRelationship);
 
-      queryClient.invalidateQueries({
-        queryKey: getTrackedRelationshipsCacheKey(dataSourceName),
-      });
+      await onAddMultipleSuggestedRelationships(trackRelationships);
 
+      const plural = selectedRelationships.length > 1 ? 's' : '';
       hasuraToast({
         title: 'Success',
-        message: 'Relationships tracked',
+        message: `${selectedRelationships.length} relationship${plural} tracked`,
         type: 'success',
       });
     } catch (err) {
       setTrackingSelectedRelationships(false);
     }
     reset();
-    refetchSuggestedRelationships();
     setTrackingSelectedRelationships(false);
   };
 

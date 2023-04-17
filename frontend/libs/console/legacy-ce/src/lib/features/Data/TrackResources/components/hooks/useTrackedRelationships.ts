@@ -1,10 +1,7 @@
 import { useQuery } from 'react-query';
+import { useAllSuggestedRelationships } from '../../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useAllSuggestedRelationships';
 import { tableRelationships as getTableRelationships } from '../../../../DatabaseRelationships/utils/tableRelationships';
-import { DataSource } from '../../../../DataSource';
-import {
-  useMetadata,
-  MetadataSelectors,
-} from '../../../../hasura-metadata-api';
+import { exportMetadata } from '../../../../DataSource';
 import { useHttpClient } from '../../../../Network';
 
 export const getTrackedRelationshipsCacheKey = (dataSourceName: string) => [
@@ -15,29 +12,28 @@ export const getTrackedRelationshipsCacheKey = (dataSourceName: string) => [
 export const useTrackedRelationships = (dataSourceName: string) => {
   const httpClient = useHttpClient();
 
-  const {
-    data: metadataTables,
-    isFetching: isMetadataPending,
-    isLoading: isMetadataLoading,
-    error: metadataError,
-    refetch: refetchMetadata,
-  } = useMetadata(MetadataSelectors.getTables(dataSourceName));
+  const { suggestedRelationships } = useAllSuggestedRelationships({
+    dataSourceName,
+    isEnabled: true,
+    omitTracked: false,
+  });
 
   const fetchRelationships = async () => {
-    const _tableRelationships = [];
-    if (metadataTables && !isMetadataLoading) {
-      for (const metadataTable of metadataTables) {
-        const fkConstraints = await DataSource(
-          httpClient
-        ).getTableFkRelationships({
-          dataSourceName,
-          table: metadataTable.table,
-        });
+    const { metadata } = await exportMetadata({ httpClient });
 
+    const currentMetadataSource = metadata.sources?.find(
+      source => source.name === dataSourceName
+    );
+
+    const metadataTables = currentMetadataSource?.tables || [];
+
+    const _tableRelationships = [];
+    if (metadataTables) {
+      for (const metadataTable of metadataTables) {
         const tableRelationships = getTableRelationships(
           metadataTable,
           dataSourceName,
-          fkConstraints
+          suggestedRelationships
         );
         _tableRelationships.push(...tableRelationships);
       }
@@ -51,6 +47,7 @@ export const useTrackedRelationships = (dataSourceName: string) => {
     isLoading: isLoadingRelationships,
     isFetching: isFetchingRelationships,
     refetch: refetchRelationships,
+    error,
   } = useQuery({
     queryFn: fetchRelationships,
     queryKey: getTrackedRelationshipsCacheKey(dataSourceName),
@@ -58,10 +55,9 @@ export const useTrackedRelationships = (dataSourceName: string) => {
 
   return {
     data: relationships || [],
-    isFetching: isMetadataPending || isFetchingRelationships,
-    isLoading: isMetadataLoading || isLoadingRelationships,
-    error: [metadataError],
+    isFetching: isFetchingRelationships,
+    isLoading: isLoadingRelationships,
+    error: [error],
     refetchRelationships,
-    refetchMetadata,
   };
 };
