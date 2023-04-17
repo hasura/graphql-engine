@@ -1,8 +1,12 @@
-module Hasura.Server.API.Metadata
+-- | The RQL metadata query ('/v1/metadata')
+module Hasura.Server.API.Metadata.Types
   ( RQLMetadataV1 (..),
+    RQLMetadataV2 (..),
+    RQLMetadataRequest (..),
   )
 where
 
+import GHC.Generics
 import Hasura.CustomReturnType.API qualified as CustomReturnType
 import Hasura.Function.API qualified as Functions
 import Hasura.NativeQuery.API qualified as NativeQueries
@@ -30,7 +34,7 @@ import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
-import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata (GetCatalogState, SetCatalogState)
 import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.QueryCollection
@@ -54,8 +58,7 @@ data RQLMetadataV1
   | RMUntrackTable !(AnyBackend UntrackTable)
   | RMSetTableCustomization !(AnyBackend SetTableCustomization)
   | RMSetApolloFederationConfig (AnyBackend SetApolloFederationConfig)
-  | -- Tables (PG-specific)
-    RMPgSetTableIsEnum !(AnyBackend SetTableIsEnum)
+  | RMPgSetTableIsEnum !(AnyBackend SetTableIsEnum)
   | -- Tables permissions
     RMCreateInsertPermission !(AnyBackend (CreatePerm InsPerm))
   | RMCreateSelectPermission !(AnyBackend (CreatePerm SelPerm))
@@ -189,10 +192,12 @@ data RQLMetadataV1
   | -- Bulk metadata queries, but don't stop if something fails - return all
     -- successes and failures as separate items
     RMBulkKeepGoing [RQLMetadataRequest]
+  deriving (Generic)
 
 data RQLMetadataV2
   = RMV2ReplaceMetadata !ReplaceMetadataV2
   | RMV2ExportMetadata !ExportMetadata
+  deriving (Generic)
 
 data RQLMetadataRequest
   = RMV1 !RQLMetadataV1

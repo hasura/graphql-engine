@@ -703,6 +703,8 @@ library
                      , Hasura.Server.API.Backend
                      , Hasura.Server.API.Instances
                      , Hasura.Server.API.Metadata
+                     , Hasura.Server.API.Metadata.Instances
+                     , Hasura.Server.API.Metadata.Types
                      , Hasura.Server.API.PGDump
                      , Hasura.Server.API.Query
                      , Hasura.Server.API.V2Query

@@ -9,7 +9,7 @@ import Hasura.Prelude
 import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Hasura.SQL.Backend
 import Hasura.Server.API.Backend
-import {-# SOURCE #-} Hasura.Server.API.Metadata
+import Hasura.Server.API.Metadata.Types
 
 instance BackendAPI ('Postgres 'Vanilla) where
   metadataV1CommandParsers =

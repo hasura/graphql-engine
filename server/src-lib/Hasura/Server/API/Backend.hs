@@ -36,7 +36,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.SQL.AnyBackend
 import Hasura.SQL.Backend
-import {-# SOURCE #-} Hasura.Server.API.Metadata
+import Hasura.Server.API.Metadata.Types
 
 -- API class
 
