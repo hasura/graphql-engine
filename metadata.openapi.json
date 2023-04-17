@@ -672,7 +672,8 @@
                     "fields": {
                         "description": "Return types for the custom return type",
                         "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another custom return type\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
                         },
                         "type": "array"
                     },
@@ -819,6 +820,13 @@
                         "default": {},
                         "description": "Free variables in the expression and their types",
                         "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__BigQuery"
+                        },
+                        "type": "array"
                     },
                     "code": {
                         "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
@@ -1401,7 +1409,8 @@
                     "fields": {
                         "description": "Return types for the custom return type",
                         "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another custom return type\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
                         },
                         "type": "array"
                     },
@@ -1651,6 +1660,13 @@
                         "default": {},
                         "description": "Free variables in the expression and their types",
                         "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Citus_"
+                        },
+                        "type": "array"
                     },
                     "code": {
                         "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
@@ -2268,7 +2284,8 @@
                     "fields": {
                         "description": "Return types for the custom return type",
                         "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another custom return type\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
                         },
                         "type": "array"
                     },
@@ -2518,6 +2535,13 @@
                         "default": {},
                         "description": "Free variables in the expression and their types",
                         "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Cockroach_"
+                        },
+                        "type": "array"
                     },
                     "code": {
                         "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
@@ -3389,7 +3413,8 @@
                     "fields": {
                         "description": "Return types for the custom return type",
                         "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another custom return type\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
                         },
                         "type": "array"
                     },
@@ -3540,6 +3565,13 @@
                         "default": {},
                         "description": "Free variables in the expression and their types",
                         "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__DataConnector"
+                        },
+                        "type": "array"
                     },
                     "code": {
                         "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
@@ -4790,7 +4822,8 @@
                     "fields": {
                         "description": "Return types for the custom return type",
                         "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another custom return type\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
                         },
                         "type": "array"
                     },
@@ -5032,6 +5065,13 @@
                         "default": {},
                         "description": "Free variables in the expression and their types",
                         "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__MSSQL"
+                        },
+                        "type": "array"
                     },
                     "code": {
                         "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
@@ -5714,7 +5754,8 @@
                     "fields": {
                         "description": "Return types for the custom return type",
                         "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another custom return type\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
                         },
                         "type": "array"
                     },
@@ -5862,6 +5903,13 @@
                         "default": {},
                         "description": "Free variables in the expression and their types",
                         "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__MySQL"
+                        },
+                        "type": "array"
                     },
                     "code": {
                         "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
@@ -6379,32 +6427,6 @@
                 },
                 "type": "object"
             },
-            "NullableScalarType": {
-                "properties": {
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema",
-                        "type": "string"
-                    },
-                    "name": {
-                        "description": "name",
-                        "type": "string"
-                    },
-                    "nullable": {
-                        "default": false,
-                        "description": "Whether the type is nullable",
-                        "type": "boolean"
-                    },
-                    "type": {
-                        "description": "The base scalar type\nPostgres Scalar Types",
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "name",
-                    "type"
-                ],
-                "type": "object"
-            },
             "ObjectFieldDefinition_GraphQLType": {
                 "properties": {
                     "arguments": {
@@ -6743,7 +6765,8 @@
                     "fields": {
                         "description": "Return types for the custom return type",
                         "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another custom return type\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
                         },
                         "type": "array"
                     },
@@ -6993,6 +7016,13 @@
                         "default": {},
                         "description": "Free variables in the expression and their types",
                         "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Vanilla_"
+                        },
+                        "type": "array"
                     },
                     "code": {
                         "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
@@ -8024,6 +8054,132 @@
                 },
                 "required": [
                     "max_reqs_per_min"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig__BigQuery": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "$ref": "#/components/schemas/BigqueryRelManualConfig"
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig__DataConnector": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "$ref": "#/components/schemas/DataconnectorRelManualConfig"
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig__MSSQL": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "$ref": "#/components/schemas/MssqlRelManualConfig"
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig__MySQL": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "$ref": "#/components/schemas/MysqlRelManualConfig"
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig___Postgres__Citus_": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "$ref": "#/components/schemas/CitusRelManualConfig"
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig___Postgres__Cockroach_": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "$ref": "#/components/schemas/CockroachRelManualConfig"
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig___Postgres__Vanilla_": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "$ref": "#/components/schemas/PostgresRelManualConfig"
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
                 ],
                 "type": "object"
             },

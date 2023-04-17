@@ -622,7 +622,8 @@ data ScalarType
   | JsonScalarType
   | StructScalarType
   deriving stock (Show, Eq, Ord, Bounded, Enum, Generic, Data, Lift)
-  deriving anyclass (FromJSON, Hashable, NFData, ToJSON, ToJSONKey)
+  deriving anyclass (Hashable, NFData, ToJSONKey)
+  deriving (FromJSON, ToJSON) via AC.Autodocodec ScalarType
 
 instance HasCodec ScalarType where
   codec = AC.named "ScalarType" $

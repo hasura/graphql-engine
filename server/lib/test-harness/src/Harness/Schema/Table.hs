@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-partial-fields #-}
+
 -- | Common interface for setup/teardown for all backends - schema and data
 module Harness.Schema.Table
   ( Table (..),
@@ -21,8 +23,6 @@ module Harness.Schema.Table
     nativeQuery,
     NativeQueryColumn (..),
     nativeQueryColumn,
-    CustomType (..),
-    customType,
     quotedValue,
     unquotedValue,
     backendScalarValue,
@@ -36,6 +36,7 @@ module Harness.Schema.Table
   )
 where
 
+import Data.Aeson qualified as Aeson
 import Data.Time (defaultTimeLocale)
 import Data.Time.Format (parseTimeOrError)
 import Harness.Test.ScalarType
@@ -115,7 +116,8 @@ data NativeQuery = NativeQuery
   { nativeQueryName :: Text,
     nativeQueryReturnType :: Text,
     nativeQueryQuery :: Text,
-    nativeQueryArguments :: [NativeQueryColumn]
+    nativeQueryArguments :: [NativeQueryColumn],
+    nativeQueryArrayRelationships :: [Aeson.Value]
   }
   deriving (Show, Eq)
 
@@ -125,7 +127,8 @@ nativeQuery nativeQueryName query returnType =
     { nativeQueryName,
       nativeQueryReturnType = returnType,
       nativeQueryQuery = query,
-      nativeQueryArguments = mempty
+      nativeQueryArguments = mempty,
+      nativeQueryArrayRelationships = mempty
     }
 
 -- | Foreign keys for backends that support it.
@@ -178,18 +181,3 @@ columnNull name typ = (column name typ) {columnNullable = True}
 -- | Helper to construct UTCTime using @%F %T@ format. For e.g. @YYYY-MM-DD HH:MM:SS@
 parseUTCTimeOrError :: String -> ScalarValue
 parseUTCTimeOrError = VUTCTime . parseTimeOrError True defaultTimeLocale "%F %T"
-
-data CustomType = CustomType
-  { customTypeName :: Text,
-    customTypeColumns :: [NativeQueryColumn],
-    customTypeDescription :: Maybe Text
-  }
-  deriving (Show, Eq)
-
-customType :: Text -> CustomType
-customType customTypeName =
-  CustomType
-    { customTypeName,
-      customTypeColumns = mempty,
-      customTypeDescription = Nothing
-    }

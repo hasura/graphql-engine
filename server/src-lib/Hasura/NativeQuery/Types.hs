@@ -3,6 +3,7 @@ module Hasura.NativeQuery.Types
   ( NativeQueryName (..),
     NullableScalarType (..),
     nullableScalarTypeMapCodec,
+    nativeQueryArrayRelationshipsCodec,
   )
 where
 
@@ -14,6 +15,8 @@ import Data.Text.Extended (ToTxt)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend (Backend (..))
+import Hasura.RQL.Types.Common (RelName)
+import Hasura.RQL.Types.Relationships.Local (RelDef, RelManualConfig)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.Haskell.TH.Syntax (Lift)
 
@@ -108,4 +111,26 @@ nullableScalarTypeMapCodec =
     ( AC.listCodec $
         AC.object "NullableScalarType" $
           AC.objectCodec @(MergedObject (NameField (Column b)) (NullableScalarType b))
+    )
+
+nativeQueryArrayRelationshipsCodec ::
+  forall b.
+  (Backend b) =>
+  AC.Codec
+    Value
+    (InsOrd.InsOrdHashMap RelName (RelDef (RelManualConfig b)))
+    (InsOrd.InsOrdHashMap RelName (RelDef (RelManualConfig b)))
+nativeQueryArrayRelationshipsCodec =
+  AC.dimapCodec
+    ( InsOrd.fromList
+        . fmap
+          ( \(MergedObject (NameField name) nst) ->
+              (name, nst)
+          )
+    )
+    ( fmap (\(fld, nst) -> MergedObject (NameField fld) nst) . InsOrd.toList
+    )
+    ( AC.listCodec $
+        AC.object "RelDefRelManualConfig" $
+          AC.objectCodec @(MergedObject (NameField RelName) (RelDef (RelManualConfig b)))
     )

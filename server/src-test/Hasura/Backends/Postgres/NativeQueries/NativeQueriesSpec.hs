@@ -14,7 +14,6 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Base.Error
 import Hasura.CustomReturnType.Metadata
 import Hasura.NativeQuery.Metadata
-import Hasura.NativeQuery.Types
 import Hasura.Prelude hiding (first)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
@@ -81,6 +80,7 @@ spec = do
               _nqmCode = InterpolatedQuery mempty,
               _nqmReturns = CustomReturnTypeName (G.unsafeMkName "custom_return_type_name"),
               _nqmArguments = mempty,
+              _nqmArrayRelationships = mempty,
               _nqmDescription = mempty
             }
 

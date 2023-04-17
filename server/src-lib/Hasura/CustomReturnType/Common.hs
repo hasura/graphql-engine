@@ -1,16 +1,33 @@
 module Hasura.CustomReturnType.Common
   ( toFieldInfo,
+    columnsFromFields,
   )
 where
 
 import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.Text.Extended (ToTxt (toTxt))
+import Hasura.CustomReturnType.Types (CustomReturnTypeField (..))
 import Hasura.NativeQuery.Types (NullableScalarType (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnType (..))
 import Hasura.RQL.Types.Table (FieldInfo (..))
 import Language.GraphQL.Draft.Syntax qualified as G
+
+columnsFromFields ::
+  InsOrd.InsOrdHashMap k (CustomReturnTypeField b) ->
+  InsOrd.InsOrdHashMap k (NullableScalarType b)
+columnsFromFields =
+  InsOrd.mapMaybe
+    ( \case
+        CustomReturnTypeScalarField
+          { crtfType = nstType,
+            crtfNullable = nstNullable,
+            crtfDescription = nstDescription
+          } ->
+            Just (NullableScalarType {..})
+        _ -> Nothing
+    )
 
 toFieldInfo :: forall b. (Backend b) => InsOrd.InsOrdHashMap (Column b) (NullableScalarType b) -> Maybe [FieldInfo b]
 toFieldInfo fields =

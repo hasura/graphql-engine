@@ -48,6 +48,7 @@ import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo (..))
+import Hasura.CustomReturnType.Common (columnsFromFields)
 import Hasura.CustomReturnType.Types (CustomReturnTypeName (..))
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Internal.Parser qualified as IP
@@ -526,7 +527,7 @@ defaultCustomReturnTypeSelectionSet customReturnType = runMaybeT $ do
   let allowedColumns =
         filter
           (isSelectable . fst)
-          (InsOrd.toList (_crtiFields customReturnType))
+          (InsOrd.toList (columnsFromFields $ _crtiFields customReturnType))
 
   parsers <- traverse parseField allowedColumns
 

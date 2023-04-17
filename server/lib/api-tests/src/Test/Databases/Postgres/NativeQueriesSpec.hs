@@ -88,14 +88,14 @@ tests = do
                       |]
 
   describe "Testing Native Queries" $ do
-    let articleWithExcerptReturnType :: Schema.CustomType
+    let articleWithExcerptReturnType :: Schema.CustomReturnType
         articleWithExcerptReturnType =
           (Schema.customType "article_with_excerpt")
             { Schema.customTypeColumns =
-                [ Schema.nativeQueryColumn "id" Schema.TInt,
-                  Schema.nativeQueryColumn "title" Schema.TStr,
-                  Schema.nativeQueryColumn "excerpt" Schema.TStr,
-                  Schema.nativeQueryColumn "date" Schema.TUTCTime
+                [ Schema.customReturnTypeScalar "id" Schema.TInt,
+                  Schema.customReturnTypeScalar "title" Schema.TStr,
+                  Schema.customReturnTypeScalar "excerpt" Schema.TStr,
+                  Schema.customReturnTypeScalar "date" Schema.TUTCTime
                 ]
             }
 
@@ -111,7 +111,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
+      Schema.trackCustomReturnType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackNativeQuery
         source
@@ -149,7 +149,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
+      Schema.trackCustomReturnType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackNativeQuery
         source
@@ -191,7 +191,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
+      Schema.trackCustomReturnType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackNativeQuery
         source
@@ -228,7 +228,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
+      Schema.trackCustomReturnType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackNativeQuery
         source
@@ -269,12 +269,12 @@ tests = do
           queryWithDuplicates :: Text
           queryWithDuplicates = "SELECT * FROM (VALUES ('hello', 'world'), ('hello', 'friend')) as t(\"one\", \"two\")"
 
-          helloWorldReturnType :: Schema.CustomType
+          helloWorldReturnType :: Schema.CustomReturnType
           helloWorldReturnType =
             (Schema.customType "hello_world_function")
               { Schema.customTypeColumns =
-                  [ Schema.nativeQueryColumn "one" Schema.TStr,
-                    Schema.nativeQueryColumn "two" Schema.TStr
+                  [ Schema.customReturnTypeScalar "one" Schema.TStr,
+                    Schema.customReturnTypeScalar "two" Schema.TStr
                   ]
               }
 
@@ -282,7 +282,7 @@ tests = do
           helloWorldNativeQueryWithDuplicates =
             (Schema.nativeQuery "hello_world_function" queryWithDuplicates "hello_world_function")
 
-      Schema.trackCustomType source helloWorldReturnType testEnvironment
+      Schema.trackCustomReturnType source helloWorldReturnType testEnvironment
 
       Schema.trackNativeQuery source helloWorldNativeQueryWithDuplicates testEnvironment
 

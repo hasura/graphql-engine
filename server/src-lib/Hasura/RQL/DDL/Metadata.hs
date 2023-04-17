@@ -703,8 +703,13 @@ purgeMetadataObj = \case
       SMOTable qt -> dropTableInMetadata @b source qt
       SMOFunction qf -> dropFunctionInMetadata @b source qf
       SMOFunctionPermission qf rn -> dropFunctionPermissionInMetadata @b source qf rn
-      SMOCustomReturnType crt -> dropCustomReturnTypeInMetadata @b source crt
       SMONativeQuery lm -> dropNativeQueryInMetadata @b source lm
+      SMONativeQueryObj nativeQueryName nativeQueryMetadataObjId ->
+        MetadataModifier $
+          nativeQueryMetadataSetter @b source nativeQueryName
+            %~ case nativeQueryMetadataObjId of
+              NQMORel rn _ -> dropNativeQueryRelationshipInMetadata rn
+      SMOCustomReturnType crt -> dropCustomReturnTypeInMetadata @b source crt
       SMOCustomReturnTypeObj customReturnTypeName customReturnTypeMetadataObjId ->
         MetadataModifier $
           customReturnTypeMetadataSetter @b source customReturnTypeName

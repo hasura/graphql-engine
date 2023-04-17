@@ -11,6 +11,7 @@ module Hasura.NativeQuery.Metadata
     nqmCode,
     nqmDescription,
     nqmReturns,
+    nqmArrayRelationships,
     nqmRootFieldName,
     NativeQueryArgumentName (..),
     InterpolatedItem (..),
@@ -25,14 +26,22 @@ import Autodocodec qualified as AC
 import Control.Lens (makeLenses)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Bifunctor (first)
+import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec)
 import Data.Text qualified as T
-import Hasura.CustomReturnType.Metadata (CustomReturnTypeName)
+import Data.Text.Extended qualified as T
+import Hasura.CustomReturnType.Types
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
-import Hasura.NativeQuery.Types (NativeQueryName (..), NullableScalarType)
+import Hasura.NativeQuery.Types (NativeQueryName (..), NullableScalarType (..), nullableScalarTypeMapCodec)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common (RelName)
+import Hasura.RQL.Types.Relationships.Local (RelDef (..), RelManualConfig (..))
 import Hasura.SQL.Backend
 import Language.Haskell.TH.Syntax (Lift)
+
+-- | copy pasta'd from Hasura.RQL.Types.Metadata.Common, forgive me Padre i did
+-- not have the heart for the Real Fix.
+type Relationships = InsOrdHashMap RelName
 
 newtype RawQuery = RawQuery {getRawQuery :: Text}
   deriving newtype (Eq, Ord, Show, FromJSON, ToJSON)
@@ -123,6 +132,7 @@ data NativeQueryMetadata (b :: BackendType) = NativeQueryMetadata
     _nqmCode :: InterpolatedQuery NativeQueryArgumentName,
     _nqmReturns :: CustomReturnTypeName,
     _nqmArguments :: HashMap NativeQueryArgumentName (NullableScalarType b),
+    _nqmArrayRelationships :: Relationships (RelDef (RelManualConfig b)),
     _nqmDescription :: Maybe Text
   }
   deriving (Generic)
@@ -145,6 +155,8 @@ instance (Backend b) => HasCodec (NativeQueryMetadata b) where
           AC..= _nqmReturns
         <*> optionalFieldWithDefault "arguments" mempty argumentDoc
           AC..= _nqmArguments
+        <*> optSortedList "array_relationships" _rdName
+          AC..= _nqmArrayRelationships
         <*> optionalField "description" descriptionDoc
           AC..= _nqmDescription
     where
@@ -153,6 +165,14 @@ instance (Backend b) => HasCodec (NativeQueryMetadata b) where
       argumentDoc = "Free variables in the expression and their types"
       returnsDoc = "Return type (table) of the expression"
       descriptionDoc = "A description of the native query which appears in the graphql schema"
+
+      optSortedList ::
+        (HasCodec a, Eq a, Hashable k, Ord k, T.ToTxt k) =>
+        Text ->
+        (a -> k) ->
+        ObjectCodec (InsOrdHashMap k a) (InsOrdHashMap k a)
+      optSortedList name keyForElem =
+        AC.optionalFieldWithOmittedDefaultWith' name (sortedElemsCodec keyForElem) mempty
 
 deriving via
   (Autodocodec (NativeQueryMetadata b))

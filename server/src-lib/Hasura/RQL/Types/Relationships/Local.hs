@@ -21,7 +21,7 @@ module Hasura.RQL.Types.Relationships.Local
   )
 where
 
-import Autodocodec (HasCodec (codec), dimapCodec, disjointEitherCodec, optionalField', requiredField')
+import Autodocodec (HasCodec (codec), HasObjectCodec, dimapCodec, disjointEitherCodec, optionalField', requiredField')
 import Autodocodec qualified as AC
 import Autodocodec.Extended (optionalFieldOrIncludedNull', typeableName)
 import Control.Lens (makeLenses)
@@ -44,12 +44,14 @@ data RelDef a = RelDef
   deriving (Show, Eq, Generic)
 
 instance (HasCodec a, Typeable a) => HasCodec (RelDef a) where
-  codec =
-    AC.object ("RelDef_" <> typeableName @a) $
-      RelDef
-        <$> requiredField' "name" AC..= _rdName
-        <*> requiredField' "using" AC..= _rdUsing
-        <*> optionalField' "comment" AC..= _rdComment
+  codec = AC.object ("RelDef_" <> typeableName @a) AC.objectCodec
+
+instance (HasCodec a) => HasObjectCodec (RelDef a) where
+  objectCodec =
+    RelDef
+      <$> requiredField' "name" AC..= _rdName
+      <*> requiredField' "using" AC..= _rdUsing
+      <*> optionalField' "comment" AC..= _rdComment
 
 $(deriveFromJSON hasuraJSON {omitNothingFields = True} ''RelDef)
 $(makeLenses ''RelDef)

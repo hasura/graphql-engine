@@ -17,11 +17,6 @@ module Harness.Schema
     NativeQueryColumn (..),
     trackNativeQueryCommand,
     untrackNativeQueryCommand,
-    CustomType (..),
-    trackCustomType,
-    trackCustomTypeCommand,
-    untrackCustomType,
-    untrackCustomTypeCommand,
     resolveTableSchema,
     trackTable,
     untrackTable,
@@ -39,9 +34,10 @@ module Harness.Schema
     addSource,
     trackNativeQuery,
     untrackNativeQuery,
+    getSchemaName,
     module Harness.Schema.Table,
     module Harness.Schema.Name,
-    getSchemaName,
+    module Harness.Schema.CustomReturnType,
   )
 where
 
@@ -53,6 +49,7 @@ import Data.Vector qualified as V
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
+import Harness.Schema.CustomReturnType
 import Harness.Schema.Name
 import Harness.Schema.Table
 import Harness.Test.BackendType (BackendTypeConfig)
@@ -423,7 +420,7 @@ addSource sourceName sourceConfig testEnvironment = do
       |]
 
 trackNativeQueryCommand :: String -> BackendTypeConfig -> NativeQuery -> Value
-trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryName, nativeQueryArguments, nativeQueryQuery, nativeQueryReturnType}) =
+trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryArrayRelationships, nativeQueryName, nativeQueryArguments, nativeQueryQuery, nativeQueryReturnType}) =
   -- arguments are a map from name to type details
   let argsToJson =
         Aeson.object
@@ -431,13 +428,13 @@ trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryNa
             ( \NativeQueryColumn {..} ->
                 let key = K.fromText nativeQueryColumnName
                     descriptionPair = case nativeQueryColumnDescription of
-                      Just desc -> [(K.fromText "description", Aeson.String desc)]
+                      Just desc -> ["description" .= desc]
                       Nothing -> []
 
                     value =
                       Aeson.object $
-                        [ (K.fromText "type", Aeson.String ((BackendType.backendScalarType backendTypeConfig) nativeQueryColumnType)),
-                          (K.fromText "nullable", Aeson.Bool nativeQueryColumnNullable)
+                        [ ("type" .= (BackendType.backendScalarType backendTypeConfig) nativeQueryColumnType),
+                          ("nullable" .= nativeQueryColumnNullable)
                         ]
                           <> descriptionPair
                  in (key, value)
@@ -456,6 +453,7 @@ trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryNa
           root_field_name: *nativeQueryName 
           code: *nativeQueryQuery
           arguments: *arguments
+          array_relationships: *nativeQueryArrayRelationships
           returns: *nativeQueryReturnType
       |]
 
@@ -483,72 +481,6 @@ untrackNativeQuery source logMod testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
 
   let command = untrackNativeQueryCommand source backendTypeMetadata logMod
-
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    command
-
-trackCustomTypeCommand :: String -> BackendTypeConfig -> CustomType -> Value
-trackCustomTypeCommand sourceName backendTypeConfig (CustomType {customTypeDescription, customTypeName, customTypeColumns}) =
-  -- return type is an array of items
-  let returnTypeToJson =
-        Aeson.Array
-          . V.fromList
-          . fmap
-            ( \NativeQueryColumn {..} ->
-                let descriptionPair = case nativeQueryColumnDescription of
-                      Just desc -> [(K.fromText "description", Aeson.String desc)]
-                      Nothing -> []
-                 in Aeson.object $
-                      [ (K.fromText "name", Aeson.String nativeQueryColumnName),
-                        (K.fromText "type", Aeson.String ((BackendType.backendScalarType backendTypeConfig) nativeQueryColumnType)),
-                        (K.fromText "nullable", Aeson.Bool nativeQueryColumnNullable)
-                      ]
-                        <> descriptionPair
-            )
-
-      columns = returnTypeToJson customTypeColumns
-
-      -- need to make this only appear if it's Just, for now fall back to empty
-      -- string for lols
-      description = fromMaybe "" customTypeDescription
-
-      backendType = BackendType.backendTypeString backendTypeConfig
-
-      requestType = backendType <> "_track_custom_return_type"
-   in [yaml|
-        type: *requestType
-        args:
-          source: *sourceName
-          description: *description 
-          name: *customTypeName
-          fields: *columns
-      |]
-
-trackCustomType :: HasCallStack => String -> CustomType -> TestEnvironment -> IO ()
-trackCustomType sourceName ctmType testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
-
-  let command = trackCustomTypeCommand sourceName backendTypeMetadata ctmType
-
-  GraphqlEngine.postMetadata_ testEnvironment command
-
-untrackCustomTypeCommand :: String -> BackendTypeConfig -> CustomType -> Value
-untrackCustomTypeCommand source backendTypeMetadata CustomType {customTypeName} =
-  let backendType = BackendType.backendTypeString backendTypeMetadata
-      requestType = backendType <> "_untrack_custom_return_type"
-   in [yaml|
-      type: *requestType
-      args:
-        source: *source
-        name: *customTypeName
-    |]
-
-untrackCustomType :: HasCallStack => String -> CustomType -> TestEnvironment -> IO ()
-untrackCustomType source ctmType testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
-
-  let command = untrackCustomTypeCommand source backendTypeMetadata ctmType
 
   GraphqlEngine.postMetadata_
     testEnvironment

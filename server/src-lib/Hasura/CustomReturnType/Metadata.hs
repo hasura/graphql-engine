@@ -21,7 +21,6 @@ import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec)
 import Hasura.CustomReturnType.Types
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
-import Hasura.NativeQuery.Types (NullableScalarType (..), nullableScalarTypeMapCodec)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Common (SourceName, ToAesonPairs (toAesonPairs), defaultSource)
@@ -32,7 +31,7 @@ import Hasura.Session (RoleName)
 -- | Description of a custom return type for use in metadata (before schema cache)
 data CustomReturnTypeMetadata (b :: BackendType) = CustomReturnTypeMetadata
   { _crtmName :: CustomReturnTypeName,
-    _crtmFields :: InsOrd.InsOrdHashMap (Column b) (NullableScalarType b),
+    _crtmFields :: InsOrd.InsOrdHashMap (Column b) (CustomReturnTypeField b),
     _crtmDescription :: Maybe Text,
     _crtmSelectPermissions :: InsOrdHashMap RoleName (SelPermDef b)
   }
@@ -48,7 +47,7 @@ instance (Backend b) => HasCodec (CustomReturnTypeMetadata b) where
       $ CustomReturnTypeMetadata
         <$> AC.requiredField "name" nameDoc
           AC..= _crtmName
-        <*> AC.requiredFieldWith "fields" nullableScalarTypeMapCodec fieldsDoc
+        <*> AC.requiredFieldWith "fields" customReturnTypeFieldMapCodec fieldsDoc
           AC..= _crtmFields
         <*> AC.optionalField "description" descriptionDoc
           AC..= _crtmDescription

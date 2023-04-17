@@ -78,11 +78,11 @@ schema =
       )
       types
 
-allTypesReturnType :: Schema.CustomType
+allTypesReturnType :: Schema.CustomReturnType
 allTypesReturnType =
   (Schema.customType "stuff_type")
     { Schema.customTypeColumns =
-        (\t -> Schema.nativeQueryColumn t (customType t)) <$> types
+        (\t -> Schema.customReturnTypeScalar t (customType t)) <$> types
     }
 
 types :: [Text]
@@ -125,7 +125,7 @@ tests BackendDifferences {..} = do
             nativeQuery =
               (Schema.nativeQuery "typed_model" simpleQuery "stuff_type")
 
-        Schema.trackCustomType sourceName allTypesReturnType testEnvironment
+        Schema.trackCustomReturnType sourceName allTypesReturnType testEnvironment
 
         shouldReturnYaml
           testEnvironment
@@ -153,8 +153,8 @@ tests BackendDifferences {..} = do
 
           -- Possible cleanup after last test that may have tracked this custom type
           _ <- Schema.untrackNativeQuery sourceName nativeQuery testEnvironment `catch` \(_ :: SomeException) -> pure ()
-          _ <- Schema.untrackCustomType sourceName (mkCustomType customtypeType) testEnvironment `catch` \(_ :: SomeException) -> pure ()
-          Schema.trackCustomType sourceName (mkCustomType customtypeType) testEnvironment
+          _ <- Schema.untrackCustomReturnType sourceName (mkCustomReturnType customtypeType) testEnvironment `catch` \(_ :: SomeException) -> pure ()
+          Schema.trackCustomReturnType sourceName (mkCustomReturnType customtypeType) testEnvironment
 
           let message :: Text
               message =
@@ -181,11 +181,11 @@ tests BackendDifferences {..} = do
 
 -- ** Utils
 
-mkCustomType :: Text -> Schema.CustomType
-mkCustomType typ =
+mkCustomReturnType :: Text -> Schema.CustomReturnType
+mkCustomReturnType typ =
   (Schema.customType ("stuff_type_" <> typ))
     { Schema.customTypeColumns =
-        [Schema.nativeQueryColumn typ (customType typ)]
+        [Schema.customReturnTypeScalar typ (customType typ)]
     }
 
 -- | Match a column from a table type and the custom type.

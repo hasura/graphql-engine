@@ -66,14 +66,14 @@ tests = do
       articleQuery schemaName =
         "select id, title,(substring(content, 1, {{length}}) + (case when len(content) < {{length}} then '' else '...' end)) as excerpt,date from [" <> Schema.unSchemaName schemaName <> "].[article]"
 
-      articleWithExcerptReturnType :: Schema.CustomType
+      articleWithExcerptReturnType :: Schema.CustomReturnType
       articleWithExcerptReturnType =
         (Schema.customType "article_with_excerpt")
           { Schema.customTypeColumns =
-              [ Schema.nativeQueryColumn "id" Schema.TInt,
-                Schema.nativeQueryColumn "title" Schema.TStr,
-                Schema.nativeQueryColumn "excerpt" Schema.TStr,
-                Schema.nativeQueryColumn "date" Schema.TUTCTime
+              [ Schema.customReturnTypeScalar "id" Schema.TInt,
+                Schema.customReturnTypeScalar "title" Schema.TStr,
+                Schema.customReturnTypeScalar "excerpt" Schema.TStr,
+                Schema.customReturnTypeScalar "date" Schema.TUTCTime
               ]
           }
 
@@ -91,7 +91,7 @@ tests = do
           source = BackendType.backendSourceName backendTypeMetadata
           schemaName = Schema.getSchemaName testEnvironment
 
-      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
+      Schema.trackCustomReturnType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackNativeQuery source (articleWithExcerptNativeQuery "article_with_excerpt" schemaName) testEnvironment
 
@@ -127,7 +127,7 @@ tests = do
           source = BackendType.backendSourceName backendTypeMetadata
           schemaName = Schema.getSchemaName testEnvironment
 
-      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
+      Schema.trackCustomReturnType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackNativeQuery
         source
@@ -170,7 +170,7 @@ tests = do
           source = BackendType.backendSourceName backendTypeMetadata
           schemaName = Schema.getSchemaName testEnvironment
 
-      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
+      Schema.trackCustomReturnType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackNativeQuery source (articleWithExcerptNativeQuery "article_with_excerpt" schemaName) testEnvironment
 
@@ -205,7 +205,7 @@ tests = do
           source = BackendType.backendSourceName backendTypeMetadata
           schemaName = Schema.getSchemaName testEnvironment
 
-      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
+      Schema.trackCustomReturnType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackNativeQuery source (articleWithExcerptNativeQuery "article_with_excerpt" schemaName) testEnvironment
 
@@ -242,13 +242,13 @@ tests = do
 
           goodQuery = "EXEC sp_databases"
 
-          storedProcedureReturnType :: Schema.CustomType
+          storedProcedureReturnType :: Schema.CustomReturnType
           storedProcedureReturnType =
             (Schema.customType "stored_procedure")
               { Schema.customTypeColumns =
-                  [ Schema.nativeQueryColumn "database_name" Schema.TStr,
-                    Schema.nativeQueryColumn "database_size" Schema.TInt,
-                    Schema.nativeQueryColumn "remarks" Schema.TStr
+                  [ Schema.customReturnTypeScalar "database_name" Schema.TStr,
+                    Schema.customReturnTypeScalar "database_size" Schema.TInt,
+                    Schema.customReturnTypeScalar "remarks" Schema.TStr
                   ]
               }
 
@@ -256,7 +256,7 @@ tests = do
           useStoredProcedure =
             (Schema.nativeQuery "use_stored_procedure" goodQuery "stored_procedure")
 
-      Schema.trackCustomType source storedProcedureReturnType testEnvironment
+      Schema.trackCustomReturnType source storedProcedureReturnType testEnvironment
 
       Schema.trackNativeQuery source useStoredProcedure testEnvironment
 

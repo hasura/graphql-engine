@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# OPTIONS_GHC -Wno-incomplete-record-updates #-}
 
 -- | Access to the SQL
 module Test.Databases.BigQuery.NativeQueriesSpec (spec) where
@@ -79,23 +80,23 @@ tests = do
       helloWorldNativeQuery =
         (Schema.nativeQuery "hello_world_function" query "hello_world_function")
 
-      helloWorldReturnType :: Schema.CustomType
+      helloWorldReturnType :: Schema.CustomReturnType
       helloWorldReturnType =
         (Schema.customType "hello_world_function")
           { Schema.customTypeColumns =
-              [ Schema.nativeQueryColumn "one" Schema.TStr,
-                Schema.nativeQueryColumn "two" Schema.TStr
+              [ Schema.customReturnTypeScalar "one" Schema.TStr,
+                Schema.customReturnTypeScalar "two" Schema.TStr
               ]
           }
 
-      articleWithExcerptReturnType :: Schema.CustomType
+      articleWithExcerptReturnType :: Schema.CustomReturnType
       articleWithExcerptReturnType =
         (Schema.customType "article_with_excerpt")
           { Schema.customTypeColumns =
-              [ Schema.nativeQueryColumn "id" Schema.TInt,
-                Schema.nativeQueryColumn "title" Schema.TStr,
-                Schema.nativeQueryColumn "excerpt" Schema.TStr,
-                Schema.nativeQueryColumn "date" Schema.TUTCTime
+              [ Schema.customReturnTypeScalar "id" Schema.TInt,
+                Schema.customReturnTypeScalar "title" Schema.TStr,
+                Schema.customReturnTypeScalar "excerpt" Schema.TStr,
+                Schema.customReturnTypeScalar "date" Schema.TUTCTime
               ]
           }
 
@@ -106,16 +107,16 @@ tests = do
 
           nullableQuery = "SELECT thing / 2 AS divided, null as something_nullable FROM stuff"
 
-          descriptionsAndNullableReturnType :: Schema.CustomType
+          descriptionsAndNullableReturnType :: Schema.CustomReturnType
           descriptionsAndNullableReturnType =
             (Schema.customType "divided_stuff")
               { Schema.customTypeColumns =
-                  [ (Schema.nativeQueryColumn "divided" Schema.TInt)
-                      { Schema.nativeQueryColumnDescription = Just "A divided thing"
+                  [ (Schema.customReturnTypeScalar "divided" Schema.TInt)
+                      { Schema.customReturnTypeColumnDescription = Just "A divided thing"
                       },
-                    (Schema.nativeQueryColumn "something_nullable" Schema.TInt)
-                      { Schema.nativeQueryColumnDescription = Just "Something nullable",
-                        Schema.nativeQueryColumnNullable = True
+                    (Schema.customReturnTypeScalar "something_nullable" Schema.TInt)
+                      { Schema.customReturnTypeColumnDescription = Just "Something nullable",
+                        Schema.customReturnTypeColumnNullable = True
                       }
                   ],
                 Schema.customTypeDescription = Just "Return type description"
@@ -129,7 +130,7 @@ tests = do
                   ]
               }
 
-      Schema.trackCustomType sourceName descriptionsAndNullableReturnType testEnvironment
+      Schema.trackCustomReturnType sourceName descriptionsAndNullableReturnType testEnvironment
       Schema.trackNativeQuery sourceName descriptionsAndNullableNativeQuery testEnvironment
 
       let queryTypesIntrospection :: Value
@@ -196,7 +197,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-      Schema.trackCustomType source helloWorldReturnType testEnvironment
+      Schema.trackCustomReturnType source helloWorldReturnType testEnvironment
       Schema.trackNativeQuery source helloWorldNativeQuery testEnvironment
 
       let expected =
@@ -228,7 +229,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-      Schema.trackCustomType source helloWorldReturnType testEnvironment
+      Schema.trackCustomReturnType source helloWorldReturnType testEnvironment
 
       Schema.trackNativeQuery source helloWorldNativeQuery testEnvironment
 
@@ -266,7 +267,7 @@ tests = do
           helloWorldNativeQueryWithDuplicates =
             (Schema.nativeQuery "hello_world_function" queryWithDuplicates "hello_world_function")
 
-      Schema.trackCustomType source helloWorldReturnType testEnvironment
+      Schema.trackCustomReturnType source helloWorldReturnType testEnvironment
 
       Schema.trackNativeQuery source helloWorldNativeQueryWithDuplicates testEnvironment
 
@@ -300,7 +301,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
 
-      Schema.trackCustomType sourceName helloWorldReturnType testEnvironment
+      Schema.trackCustomReturnType sourceName helloWorldReturnType testEnvironment
 
       Schema.trackNativeQuery sourceName helloWorldNativeQuery testEnvironment
 
@@ -339,7 +340,7 @@ tests = do
                   ]
               }
 
-      Schema.trackCustomType source helloWorldReturnType testEnvironment
+      Schema.trackCustomReturnType source helloWorldReturnType testEnvironment
 
       Schema.trackNativeQuery source helloWorldNativeQueryWithDummyArgument testEnvironment
 
@@ -376,7 +377,7 @@ tests = do
           helloCommentNativeQuery =
             (Schema.nativeQuery "hello_comment_function" spicyQuery "hello_world_function")
 
-      Schema.trackCustomType source helloWorldReturnType testEnvironment
+      Schema.trackCustomReturnType source helloWorldReturnType testEnvironment
 
       Schema.trackNativeQuery source helloCommentNativeQuery testEnvironment
 
@@ -415,7 +416,7 @@ tests = do
           helloWorldPermNativeQuery =
             (Schema.nativeQuery "hello_world_perms" query "hello_world_function")
 
-      Schema.trackCustomType source helloWorldReturnType testEnvironment
+      Schema.trackCustomReturnType source helloWorldReturnType testEnvironment
 
       Schema.trackNativeQuery source helloWorldPermNativeQuery testEnvironment
 
@@ -474,7 +475,7 @@ tests = do
           helloWorldPermNativeQuery =
             (Schema.nativeQuery "hello_world_perms" query "hello_world_function")
 
-      Schema.trackCustomType source helloWorldReturnType testEnvironment
+      Schema.trackCustomReturnType source helloWorldReturnType testEnvironment
 
       Schema.trackNativeQuery source helloWorldPermNativeQuery testEnvironment
 
@@ -534,7 +535,7 @@ tests = do
           helloWorldPermNativeQuery =
             (Schema.nativeQuery "hello_world_perms" query "hello_world_function")
 
-      Schema.trackCustomType source helloWorldReturnType testEnvironment
+      Schema.trackCustomReturnType source helloWorldReturnType testEnvironment
 
       Schema.trackNativeQuery source helloWorldPermNativeQuery testEnvironment
 
@@ -616,7 +617,7 @@ tests = do
                   ]
               }
 
-      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
+      Schema.trackCustomReturnType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackNativeQuery source articleWithExcerptNativeQuery testEnvironment
 
@@ -662,7 +663,7 @@ tests = do
                   ]
               }
 
-      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
+      Schema.trackCustomReturnType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackNativeQuery
         source
@@ -715,7 +716,7 @@ tests = do
                   ]
               }
 
-      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
+      Schema.trackCustomReturnType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackNativeQuery source articleWithExcerptNativeQuery testEnvironment
 
@@ -760,7 +761,7 @@ tests = do
                   ]
               }
 
-      Schema.trackCustomType source articleWithExcerptReturnType testEnvironment
+      Schema.trackCustomReturnType source articleWithExcerptReturnType testEnvironment
 
       Schema.trackNativeQuery source articleWithExcerptNativeQuery testEnvironment
 

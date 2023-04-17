@@ -16,6 +16,7 @@ import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.CustomReturnType.Cache (crtiPermissions, _crtiFields)
 import Hasura.Function.Cache
+import Hasura.NativeQuery.Cache (nqiArrayRelationships)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal (permissionIsDefined)
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -304,6 +305,9 @@ deleteMetadataObject = \case
       SMOFunctionPermission functionName role ->
         siFunctions . ix functionName . fiPermissions %~ M.delete role
       SMONativeQuery name -> siNativeQueries %~ M.delete name
+      SMONativeQueryObj nativeQueryName nativeQueryObjId ->
+        siNativeQueries . ix nativeQueryName %~ case nativeQueryObjId of
+          NQMORel name _ -> nqiArrayRelationships %~ InsOrd.delete name
       SMOCustomReturnType name -> siCustomReturnTypes %~ M.delete name
       SMOCustomReturnTypeObj customReturnTypeName customReturnTypeObjectId ->
         siCustomReturnTypes . ix customReturnTypeName %~ case customReturnTypeObjectId of

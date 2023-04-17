@@ -27,11 +27,10 @@ import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.Text.Extended (toTxt, (<<>))
 import Hasura.Base.Error
 import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata (..), crtmSelectPermissions)
-import Hasura.CustomReturnType.Types (CustomReturnTypeName)
+import Hasura.CustomReturnType.Types (CustomReturnTypeField, CustomReturnTypeName, customReturnTypeFieldMapCodec)
 import Hasura.EncJSON
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..))
-import Hasura.NativeQuery.Types (NullableScalarType, nullableScalarTypeMapCodec)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Common (SourceName, defaultSource, sourceNameToText, successMsg)
@@ -51,7 +50,7 @@ data TrackCustomReturnType (b :: BackendType) = TrackCustomReturnType
   { tctSource :: SourceName,
     tctName :: CustomReturnTypeName,
     tctDescription :: Maybe Text,
-    tctFields :: InsOrd.InsOrdHashMap (Column b) (NullableScalarType b)
+    tctFields :: InsOrd.InsOrdHashMap (Column b) (CustomReturnTypeField b)
   }
 
 instance (Backend b) => HasCodec (TrackCustomReturnType b) where
@@ -66,7 +65,7 @@ instance (Backend b) => HasCodec (TrackCustomReturnType b) where
           AC..= tctName
         <*> AC.optionalField "description" descriptionDoc
           AC..= tctDescription
-        <*> AC.requiredFieldWith "fields" nullableScalarTypeMapCodec fieldsDoc
+        <*> AC.requiredFieldWith "fields" customReturnTypeFieldMapCodec fieldsDoc
           AC..= tctFields
     where
       sourceDoc = "The source in which this custom return type should be tracked"

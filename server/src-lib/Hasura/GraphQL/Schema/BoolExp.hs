@@ -181,7 +181,7 @@ customReturnTypeBoolExp ::
   CustomReturnTypeInfo b ->
   SchemaT r m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
 customReturnTypeBoolExp customReturnType =
-  case toFieldInfo (_crtiFields customReturnType) of
+  case toFieldInfo (columnsFromFields $ _crtiFields customReturnType) of
     Nothing -> throw500 $ "Error creating fields for custom type " <> tshow (_crtiName customReturnType)
     Just fieldInfo -> do
       let name = getCustomReturnTypeName (_crtiName customReturnType)

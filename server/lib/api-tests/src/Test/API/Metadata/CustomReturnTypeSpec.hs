@@ -1,7 +1,8 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# OPTIONS_GHC -Wno-incomplete-record-updates #-}
 
 -- | Tests of the newly separated Custom Return Types feature
-module Test.API.Metadata.CustomTypeSpec (spec) where
+module Test.API.Metadata.CustomReturnTypeSpec (spec) where
 
 import Control.Lens
 import Data.Aeson (Value)
@@ -53,13 +54,13 @@ schema = []
 
 testImplementation :: SpecWith TestEnvironment
 testImplementation = do
-  let myCustomType :: Schema.CustomType
-      myCustomType =
+  let myCustomReturnType :: Schema.CustomReturnType
+      myCustomReturnType =
         (Schema.customType "nice")
           { Schema.customTypeDescription = Just "hello",
             Schema.customTypeColumns =
-              [ (Schema.nativeQueryColumn "divided" Schema.TInt)
-                  { Schema.nativeQueryColumnDescription = Just "a divided thing"
+              [ (Schema.customReturnTypeScalar "divided" Schema.TInt)
+                  { Schema.customReturnTypeColumnDescription = Just "a divided thing"
                   }
               ]
           }
@@ -109,7 +110,24 @@ testImplementation = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
 
-      Schema.trackCustomType sourceName myCustomType testEnvironment
+      Schema.trackCustomReturnType sourceName myCustomReturnType testEnvironment
+
+    it "Adds a custom type with a nested custom type and returns a 200" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+
+          nestedCustomReturnType :: Schema.CustomReturnType
+          nestedCustomReturnType =
+            (Schema.customType "nested")
+              { Schema.customTypeDescription = Just "hello",
+                Schema.customTypeColumns =
+                  [ Schema.customReturnTypeScalar "name" Schema.TStr,
+                    Schema.customReturnTypeReference "nices" "nice"
+                  ]
+              }
+
+      Schema.trackCustomReturnType sourceName myCustomReturnType testEnvironment
+      Schema.trackCustomReturnType sourceName nestedCustomReturnType testEnvironment
 
     it "Checks for the custom type" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -117,7 +135,7 @@ testImplementation = do
           backendType = BackendType.backendTypeString backendTypeMetadata
           getRequestType = backendType <> "_get_custom_return_type"
 
-      Schema.trackCustomType sourceName myCustomType testEnvironment
+      Schema.trackCustomReturnType sourceName myCustomReturnType testEnvironment
 
       shouldReturnYaml
         testEnvironment
@@ -145,9 +163,9 @@ testImplementation = do
           backendType = BackendType.backendTypeString backendTypeMetadata
           getRequestType = backendType <> "_get_custom_return_type"
 
-      Schema.trackCustomType sourceName myCustomType testEnvironment
+      Schema.trackCustomReturnType sourceName myCustomReturnType testEnvironment
 
-      Schema.untrackCustomType sourceName myCustomType testEnvironment
+      Schema.untrackCustomReturnType sourceName myCustomReturnType testEnvironment
 
       shouldReturnYaml
         testEnvironment
@@ -171,13 +189,13 @@ testImplementation = do
           nativeQuery =
             (Schema.nativeQuery "native_query" "SELECT 1 as divided" "nice")
 
-      Schema.trackCustomType sourceName myCustomType testEnvironment
+      Schema.trackCustomReturnType sourceName myCustomReturnType testEnvironment
       Schema.trackNativeQuery sourceName nativeQuery testEnvironment
 
       shouldReturnYaml
         testEnvironment
         ( GraphqlEngine.postMetadataWithStatus 400 testEnvironment $
-            Schema.untrackCustomTypeCommand sourceName backendTypeMetadata myCustomType
+            Schema.untrackCustomReturnTypeCommand sourceName backendTypeMetadata myCustomReturnType
         )
         [yaml|
           code: constraint-violation
@@ -191,12 +209,12 @@ testImplementation = do
 
 testPermissions :: SpecWith TestEnvironment
 testPermissions = do
-  let customReturnType :: Schema.CustomType
+  let customReturnType :: Schema.CustomReturnType
       customReturnType =
         (Schema.customType "divided_stuff")
           { Schema.customTypeColumns =
-              [ (Schema.nativeQueryColumn "divided" Schema.TInt)
-                  { Schema.nativeQueryColumnDescription = Just "a divided thing"
+              [ (Schema.customReturnTypeScalar "divided" Schema.TInt)
+                  { Schema.customReturnTypeColumnDescription = Just "a divided thing"
                   }
               ]
           }
@@ -207,7 +225,7 @@ testPermissions = do
           sourceName = BackendType.backendSourceName backendTypeMetadata
           backendType = BackendType.backendTypeString backendTypeMetadata
 
-      Schema.trackCustomType sourceName customReturnType testEnvironment
+      Schema.trackCustomReturnType sourceName customReturnType testEnvironment
 
       shouldReturnYaml
         testEnvironment
@@ -262,7 +280,7 @@ testPermissions = do
           sourceName = BackendType.backendSourceName backendTypeMetadata
           backendType = BackendType.backendTypeString backendTypeMetadata
 
-      Schema.trackCustomType sourceName customReturnType testEnvironment
+      Schema.trackCustomReturnType sourceName customReturnType testEnvironment
 
       shouldReturnYaml
         testEnvironment

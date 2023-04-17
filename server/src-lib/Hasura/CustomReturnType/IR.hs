@@ -6,8 +6,7 @@ module Hasura.CustomReturnType.IR
 where
 
 import Data.HashMap.Strict.InsOrd qualified as InsOrd
-import Hasura.CustomReturnType.Types (CustomReturnTypeName)
-import Hasura.NativeQuery.Types (NullableScalarType (..))
+import Hasura.CustomReturnType.Types (CustomReturnTypeField, CustomReturnTypeName)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.SQL.Backend (BackendType)
@@ -15,7 +14,7 @@ import Hasura.SQL.Backend (BackendType)
 -- | Description of a custom return type for use in IR
 data CustomReturnType (b :: BackendType) = CustomReturnType
   { crtName :: CustomReturnTypeName,
-    crtFields :: InsOrd.InsOrdHashMap (Column b) (NullableScalarType b)
+    crtFields :: InsOrd.InsOrdHashMap (Column b) (CustomReturnTypeField b)
   }
   deriving (Generic)
 

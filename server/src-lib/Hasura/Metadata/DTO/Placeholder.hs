@@ -16,7 +16,17 @@ module Hasura.Metadata.DTO.Placeholder
   )
 where
 
-import Autodocodec (Autodocodec, HasCodec (codec), JSONCodec, bimapCodec, codecViaAeson, dimapCodec, valueCodec, vectorCodec, (<?>))
+import Autodocodec
+  ( Autodocodec,
+    HasCodec (codec),
+    JSONCodec,
+    bimapCodec,
+    codecViaAeson,
+    dimapCodec,
+    valueCodec,
+    vectorCodec,
+    (<?>),
+  )
 import Autodocodec.OpenAPI ()
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as JSON

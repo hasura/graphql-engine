@@ -34,6 +34,7 @@ import Hasura.Backends.MSSQL.FromIr.Constants
 import Hasura.Backends.MSSQL.FromIr.Expression
 import Hasura.Backends.MSSQL.Instances.Types ()
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
+import Hasura.CustomReturnType.Common (columnsFromFields)
 import Hasura.CustomReturnType.IR (CustomReturnType (..))
 import Hasura.NativeQuery.IR qualified as IR
 import Hasura.NativeQuery.Types (NativeQueryName (..), NullableScalarType (..))
@@ -347,7 +348,7 @@ fromNativeQuery nativeQuery = do
                 type' = (nstType ty)
               }
         )
-          <$> InsOrd.toList (crtFields nativeQueryReturnType)
+          <$> InsOrd.toList (columnsFromFields $ crtFields nativeQueryReturnType)
 
   -- \| add create temp table to "the environment"
   tellBefore (CreateTemp (TempTableName rawTempTableName) columns)

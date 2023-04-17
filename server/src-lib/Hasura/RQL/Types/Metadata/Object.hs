@@ -8,6 +8,7 @@ module Hasura.RQL.Types.Metadata.Object
     SourceMetadataObjId (..),
     TableMetadataObjId (..),
     CustomReturnTypeMetadataObjId (..),
+    NativeQueryMetadataObjId (..),
     droppableInconsistentMetadata,
     getInconsistentRemoteSchemas,
     groupInconsistentMetadataById,
@@ -79,12 +80,20 @@ data CustomReturnTypeMetadataObjId
 
 instance Hashable CustomReturnTypeMetadataObjId
 
+-- | the logical model should probably also link to its custom return type
+data NativeQueryMetadataObjId
+  = NQMORel RelName RelType
+  deriving (Show, Eq, Ord, Generic)
+
+instance Hashable NativeQueryMetadataObjId
+
 data SourceMetadataObjId b
   = SMOTable (TableName b)
   | SMOFunction (FunctionName b)
   | SMOFunctionPermission (FunctionName b) RoleName
   | SMOTableObj (TableName b) TableMetadataObjId
   | SMONativeQuery NativeQueryName
+  | SMONativeQueryObj NativeQueryName NativeQueryMetadataObjId
   | SMOCustomReturnType CustomReturnTypeName
   | SMOCustomReturnTypeObj CustomReturnTypeName CustomReturnTypeMetadataObjId
   deriving (Generic)
@@ -148,6 +157,8 @@ moiTypeName = \case
       SMOTable _ -> "table"
       SMOFunction _ -> "function"
       SMONativeQuery _ -> "native_query"
+      SMONativeQueryObj _ nativeQueryObjId -> case nativeQueryObjId of
+        NQMORel _ relType -> relTypeToTxt relType <> "_relation"
       SMOCustomReturnType _ -> "custom_type"
       SMOCustomReturnTypeObj _ customReturnTypeObjectId -> case customReturnTypeObjectId of
         CRTMOPerm _ permType -> permTypeToCode permType <> "_permission"
@@ -203,6 +214,9 @@ moiName objectId =
           <> " in source "
           <> toTxt source
       SMONativeQuery name -> toTxt name <> " in source " <> toTxt source
+      SMONativeQueryObj nativeQueryName nativeQueryObjId ->
+        case nativeQueryObjId of
+          NQMORel name _ -> toTxt name <> " in " <> toTxt nativeQueryName
       SMOCustomReturnType name -> toTxt name <> " in source " <> toTxt source
       SMOCustomReturnTypeObj customReturnTypeName customReturnTypeObjectId -> do
         let objectName :: Text

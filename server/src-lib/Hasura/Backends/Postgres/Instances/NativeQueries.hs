@@ -26,6 +26,7 @@ import Hasura.Backends.Postgres.Connection.Connect (withPostgresDB)
 import Hasura.Backends.Postgres.Instances.Types ()
 import Hasura.Backends.Postgres.SQL.Types (PGScalarType (..), pgScalarTypeToText)
 import Hasura.Base.Error
+import Hasura.CustomReturnType.Common (columnsFromFields)
 import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata (..))
 import Hasura.NativeQuery.Metadata
   ( InterpolatedItem (..),
@@ -50,7 +51,8 @@ validateNativeQuery ::
 validateNativeQuery pgTypeOidMapping env connConf customReturnType model = do
   (prepname, preparedQuery) <- nativeQueryToPreparedStatement customReturnType model
   description <- runCheck prepname (PG.fromText preparedQuery)
-  let returnColumns = bimap toTxt nstType <$> InsOrd.toList (_crtmFields customReturnType)
+  let returnColumns = bimap toTxt nstType <$> InsOrd.toList (columnsFromFields $ _crtmFields customReturnType)
+
   for_ (toList returnColumns) (matchTypes description)
   where
     -- Run stuff against the database.
@@ -223,7 +225,7 @@ nativeQueryToPreparedStatement customReturnType model = do
 
       returnedColumnNames :: Text
       returnedColumnNames =
-        commaSeparated $ InsOrd.keys (_crtmFields customReturnType)
+        commaSeparated $ InsOrd.keys (columnsFromFields $ _crtmFields customReturnType)
 
       wrapInCTE :: Text -> Text
       wrapInCTE query =

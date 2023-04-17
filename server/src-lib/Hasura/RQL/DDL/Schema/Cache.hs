@@ -38,7 +38,7 @@ import Data.Set qualified as S
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.CustomReturnType.Cache (CustomReturnTypeCache, CustomReturnTypeInfo (..))
-import Hasura.CustomReturnType.Common (toFieldInfo)
+import Hasura.CustomReturnType.Common (columnsFromFields, toFieldInfo)
 import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata (..))
 import Hasura.EncJSON
 import Hasura.Function.API
@@ -756,7 +756,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                 unless (_cdcAreNativeQueriesEnabled dynamicConfig) $
                   throw400 InvalidConfiguration "The Custom Return Type feature is disabled"
 
-                fieldInfoMap <- case toFieldInfo _crtmFields of
+                fieldInfoMap <- case toFieldInfo (columnsFromFields _crtmFields) of
                   Nothing -> pure mempty
                   Just fields -> pure (mapFromL fieldInfoName fields)
 
@@ -822,6 +822,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                       _nqiCode = _nqmCode,
                       _nqiReturns = customReturnType,
                       _nqiArguments = _nqmArguments,
+                      _nqiArrayRelationships = mempty,
                       _nqiDescription = _nqmDescription
                     }
 

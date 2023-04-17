@@ -14,6 +14,7 @@ module Hasura.RQL.Types.Metadata
     dropPermissionInMetadata,
     dropCustomReturnTypePermissionInMetadata,
     dropRelationshipInMetadata,
+    dropNativeQueryRelationshipInMetadata,
     dropRemoteRelationshipInMetadata,
     dropTableInMetadata,
     dropRemoteSchemaInMetadata,
@@ -60,7 +61,7 @@ import Hasura.Function.Cache
 import Hasura.Function.Metadata (FunctionMetadata (..))
 import Hasura.Incremental qualified as Inc
 import Hasura.Metadata.DTO.MetadataV3 (MetadataV3 (..))
-import Hasura.NativeQuery.Metadata (NativeQueryMetadata, NativeQueryName)
+import Hasura.NativeQuery.Metadata (NativeQueryMetadata, NativeQueryName, nqmArrayRelationships)
 import Hasura.Prelude
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
@@ -387,6 +388,10 @@ dropRelationshipInMetadata relName =
   -- not in both.
   (tmObjectRelationships %~ OM.delete relName)
     . (tmArrayRelationships %~ OM.delete relName)
+
+dropNativeQueryRelationshipInMetadata :: RelName -> NativeQueryMetadata b -> NativeQueryMetadata b
+dropNativeQueryRelationshipInMetadata relName =
+  nqmArrayRelationships %~ OM.delete relName
 
 dropPermissionInMetadata ::
   RoleName -> PermType -> TableMetadata b -> TableMetadata b
