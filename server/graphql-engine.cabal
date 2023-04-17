@@ -921,6 +921,12 @@ library
                      , Hasura.RQL.IR.Returning
                      , Hasura.RQL.IR.Root
                      , Hasura.RQL.IR.Select
+                     , Hasura.RQL.IR.Select.AnnSelectG
+                     , Hasura.RQL.IR.Select.Args
+                     , Hasura.RQL.IR.Select.From
+                     , Hasura.RQL.IR.Select.OrderBy
+                     , Hasura.RQL.IR.Select.RelationSelect
+                     , Hasura.RQL.IR.Select.TablePerm
                      , Hasura.RQL.IR.Update
                      , Hasura.RQL.IR.Update.Batch
                      , Hasura.RQL.IR.Value

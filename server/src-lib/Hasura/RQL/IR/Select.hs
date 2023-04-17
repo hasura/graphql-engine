@@ -40,17 +40,10 @@ module Hasura.RQL.IR.Select
     AnnNestedObjectSelect,
     AnnObjectSelect,
     AnnObjectSelectG (..),
-    AnnRelationSelectG (..),
-    AnnSelectG (..),
-    AnnSelectStreamG (..),
     AnnSimpleSelect,
     AnnSimpleSelectG,
     AnnSimpleStreamSelect,
     AnnSimpleStreamSelectG,
-    AnnotatedAggregateOrderBy (..),
-    AnnotatedOrderByElement (..),
-    AnnotatedOrderByItem,
-    AnnotatedOrderByItemG,
     ArrayAggregateSelect,
     ArrayAggregateSelectG,
     ArrayConnectionSelect,
@@ -60,8 +53,6 @@ module Hasura.RQL.IR.Select
     ArraySelectG (..),
     ColFld (..),
     ColumnFields,
-    ComputedFieldOrderBy (..),
-    ComputedFieldOrderByElement (..),
     ComputedFieldScalarSelect (..),
     ComputedFieldSelect (..),
     ConnectionField (..),
@@ -72,45 +63,25 @@ module Hasura.RQL.IR.Select
     ConnectionSplitKind (..),
     EdgeField (..),
     EdgeFields,
-    FIIdentifier (..),
     ObjectRelationSelect,
     ObjectRelationSelectG,
     PageInfoField (..),
     PageInfoFields,
     QueryDB (..),
     RemoteSourceSelect (..),
-    SelectArgs,
-    SelectArgsG (..),
-    SelectStreamArgsG (..),
-    SelectStreamArgs,
-    SelectFrom,
-    SelectFromG (..),
     RemoteRelationshipSelect (..),
     SourceRelationshipSelection (..),
-    StreamCursorItem (..),
     TableAggregateField,
     TableAggregateFieldG (..),
     TableAggregateFields,
     TableAggregateFieldsG,
-    TablePerm,
-    TablePermG (..),
     CountDistinct (..),
-    aarRelationshipName,
-    aarColumnMapping,
-    aarAnnSelect,
     anosSupportsNestedObjects,
     anosColumn,
     anosFields,
     aosFields,
     aosTableFrom,
     aosTableFilter,
-    asnArgs,
-    asnFields,
-    asnFrom,
-    asnPerm,
-    asnStrfyNum,
-    asnNamingConvention,
-    bifoldMapAnnSelectG,
     csXRelay,
     csPrimaryKeyColumns,
     csSplit,
@@ -119,13 +90,6 @@ module Hasura.RQL.IR.Select
     insertFunctionArg,
     mkAnnColumnField,
     mkAnnColumnFieldAsText,
-    noSelectArgs,
-    noTablePermissions,
-    saDistinct,
-    saLimit,
-    saOffset,
-    saOrderBy,
-    saWhere,
     traverseSourceRelationshipSelection,
     _AFArrayRelation,
     _AFColumn,
@@ -134,10 +98,6 @@ module Hasura.RQL.IR.Select
     _AFNodeId,
     _AFObjectRelation,
     _AFRemote,
-    _AOCArrayAggregation,
-    _AOCColumn,
-    _AOCComputedField,
-    _AOCObjectRelation,
     _TAFAgg,
     _TAFNodes,
     _TAFExp,
@@ -147,32 +107,38 @@ module Hasura.RQL.IR.Select
     _EdgeTypename,
     _EdgeCursor,
     _EdgeNode,
+    module Hasura.RQL.IR.Select.AnnSelectG,
+    module Hasura.RQL.IR.Select.Args,
+    module Hasura.RQL.IR.Select.From,
+    module Hasura.RQL.IR.Select.OrderBy,
+    module Hasura.RQL.IR.Select.TablePerm,
+    module Hasura.RQL.IR.Select.RelationSelect,
   )
 where
 
 import Control.Lens.TH (makeLenses, makePrisms)
 import Data.Bifoldable
 import Data.HashMap.Strict qualified as HM
-import Data.Int (Int64)
 import Data.Kind (Type)
 import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
-import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Function.Cache
-import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Options (StringifyNumbers)
-import Hasura.NativeQuery.IR (NativeQuery)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy
+import Hasura.RQL.IR.Select.AnnSelectG
+import Hasura.RQL.IR.Select.Args
+import Hasura.RQL.IR.Select.From
+import Hasura.RQL.IR.Select.OrderBy
+import Hasura.RQL.IR.Select.RelationSelect
+import Hasura.RQL.IR.Select.TablePerm
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Instances ()
-import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.Subscription
 import Hasura.SQL.Backend
 
 -- Root selection
@@ -195,73 +161,6 @@ instance Backend b => Bifoldable (QueryDB b) where
 
 -- Select
 
-data AnnSelectG (b :: BackendType) (f :: Type -> Type) (v :: Type) = AnnSelectG
-  { _asnFields :: Fields (f v),
-    _asnFrom :: SelectFromG b v,
-    _asnPerm :: TablePermG b v,
-    _asnArgs :: SelectArgsG b v,
-    _asnStrfyNum :: StringifyNumbers,
-    _asnNamingConvention :: Maybe NamingCase
-  }
-  deriving stock (Functor, Foldable, Traversable)
-
-deriving stock instance
-  ( Backend b,
-    Eq (Fields (f v)),
-    Eq (SelectArgsG b v),
-    Eq (SelectFromG b v),
-    Eq (TablePermG b v)
-  ) =>
-  Eq (AnnSelectG b f v)
-
-deriving stock instance
-  ( Backend b,
-    Show (Fields (f v)),
-    Show (SelectArgsG b v),
-    Show (SelectFromG b v),
-    Show (TablePermG b v)
-  ) =>
-  Show (AnnSelectG b f v)
-
--- | IR type representing nodes for streaming subscriptions
-data
-  AnnSelectStreamG
-    (b :: BackendType)
-    (f :: Type -> Type)
-    (v :: Type) = AnnSelectStreamG
-  { -- | type to indicate if streaming subscription has been enabled in the `BackendType`.
-    --   This type helps avoiding missing case match patterns for backends where it's disabled.
-    _assnXStreamingSubscription :: XStreamingSubscription b,
-    -- | output selection fields
-    _assnFields :: Fields (f v),
-    -- | table information to select from
-    _assnFrom :: SelectFromG b v,
-    -- | select permissions
-    _assnPerm :: TablePermG b v,
-    -- | streaming arguments
-    _assnArgs :: SelectStreamArgsG b v,
-    _assnStrfyNum :: StringifyNumbers
-  }
-  deriving (Functor, Foldable, Traversable)
-
-deriving instance
-  ( Backend b,
-    Eq (SelectFromG b v),
-    Eq (TablePermG b v),
-    Eq (SelectStreamArgsG b v),
-    Eq (f v)
-  ) =>
-  Eq (AnnSelectStreamG b f v)
-
-deriving instance
-  ( Backend b,
-    Show (SelectFromG b v),
-    Show (TablePermG b v),
-    Show (SelectStreamArgsG b v),
-    Show (f v)
-  ) =>
-  Show (AnnSelectStreamG b f v)
-
 type AnnSimpleSelectG b r v = AnnSelectG b (AnnFieldG b r) v
 
 type AnnAggregateSelectG b r v = AnnSelectG b (TableAggregateFieldG b r) v
@@ -273,23 +172,6 @@ type AnnSimpleSelect b = AnnSimpleSelectG b Void (SQLExpression b)
 type AnnAggregateSelect b = AnnAggregateSelectG b Void (SQLExpression b)
 
 type AnnSimpleStreamSelect b = AnnSimpleStreamSelectG b Void (SQLExpression b)
-
--- | We can't write a Bifoldable instance for AnnSelectG because the types don't line up.
--- Instead, we provide this function which can be used to help define Bifoldable instances of other types
--- containing AnnSelectG values.
-bifoldMapAnnSelectG :: (Backend b, Bifoldable (f b), Monoid m) => (r -> m) -> (v -> m) -> AnnSelectG b (f b r) v -> m
-bifoldMapAnnSelectG f g AnnSelectG {..} =
-  foldMap (foldMap $ bifoldMap f g) _asnFields
-    <> foldMap g _asnFrom
-    <> foldMap g _asnPerm
-    <> foldMap g _asnArgs
-
-bifoldMapAnnSelectStreamG :: (Backend b, Bifoldable (f b), Monoid m) => (r -> m) -> (v -> m) -> AnnSelectStreamG b (f b r) v -> m
-bifoldMapAnnSelectStreamG f g AnnSelectStreamG {..} =
-  foldMap (foldMap $ bifoldMap f g) _assnFields
-    <> foldMap g _assnFrom
-    <> foldMap g _assnPerm
-    <> foldMap g _assnArgs
 
 -- Relay select
 
@@ -364,270 +246,6 @@ data ConnectionSplitKind
   | CSKAfter
   deriving stock (Show, Eq, Generic)
   deriving anyclass (Hashable)
-
--- From
-
--- | Identifier used exclusively as the argument to 'FromIdentifier'
-newtype FIIdentifier = FIIdentifier
-  { unFIIdentifier :: Text
-  }
-  deriving stock (Generic)
-  deriving newtype (Eq, Show)
-  deriving anyclass (Hashable)
-
-instance Postgres.IsIdentifier FIIdentifier where
-  toIdentifier = coerce
-  {-# INLINE toIdentifier #-}
-
-data SelectFromG (b :: BackendType) v
-  = FromTable (TableName b)
-  | FromIdentifier FIIdentifier -- TODO: Make this into TableIdentifier?
-  | FromFunction
-      (FunctionName b)
-      (FunctionArgsExp b v)
-      -- a definition list
-      (Maybe [(Column b, ScalarType b)])
-  | FromNativeQuery (NativeQuery b v)
-  deriving stock (Generic)
-
-deriving stock instance (Backend b) => Functor (SelectFromG b)
-
-deriving stock instance (Backend b) => Foldable (SelectFromG b)
-
-deriving stock instance (Backend b) => Traversable (SelectFromG b)
-
-deriving stock instance
-  ( Backend b,
-    Eq v,
-    Eq (FunctionArgumentExp b v),
-    Eq (NativeQuery b v)
-  ) =>
-  Eq (SelectFromG b v)
-
-deriving stock instance
-  ( Backend b,
-    Show v,
-    Show (FunctionArgumentExp b v),
-    Show (NativeQuery b v)
-  ) =>
-  Show (SelectFromG b v)
-
-instance
-  ( Backend b,
-    Hashable v,
-    Hashable (FunctionArgumentExp b v),
-    Hashable (NativeQuery b v)
-  ) =>
-  Hashable (SelectFromG b v)
-
-type SelectFrom b = SelectFromG b (SQLExpression b)
-
--- Select arguments
-
-data SelectStreamArgsG (b :: BackendType) v = SelectStreamArgsG
-  { -- | optional filter to filter the stream results
-    _ssaWhere :: Maybe (AnnBoolExp b v),
-    -- | maximum number of rows to be returned in a single fetch
-    _ssaBatchSize :: Int,
-    -- | info related to the cursor column, a single item data type
-    --   currently because only single column cursors are supported
-    _ssaCursorArg :: StreamCursorItem b
-  }
-  deriving (Generic, Functor, Foldable, Traversable)
-
-type SelectStreamArgs b = SelectStreamArgsG b (SQLExpression b)
-
-deriving instance
-  ( Backend b,
-    Eq (AnnBoolExp b v),
-    Eq v
-  ) =>
-  Eq (SelectStreamArgsG b v)
-
-deriving instance
-  ( Backend b,
-    Show (AnnBoolExp b v),
-    Show v
-  ) =>
-  Show (SelectStreamArgsG b v)
-
-data SelectArgsG (b :: BackendType) v = SelectArgs
-  { _saWhere :: Maybe (AnnBoolExp b v),
-    _saOrderBy :: Maybe (NE.NonEmpty (AnnotatedOrderByItemG b v)),
-    _saLimit :: Maybe Int,
-    _saOffset :: Maybe Int64,
-    _saDistinct :: (Maybe (NE.NonEmpty (Column b)))
-  }
-  deriving stock (Generic, Functor, Foldable, Traversable)
-
-deriving stock instance
-  ( Backend b,
-    Eq (AnnBoolExp b v),
-    Eq (AnnotatedOrderByItemG b v)
-  ) =>
-  Eq (SelectArgsG b v)
-
-instance
-  ( Backend b,
-    Hashable (AnnBoolExp b v),
-    Hashable (AnnotatedOrderByItemG b v)
-  ) =>
-  Hashable (SelectArgsG b v)
-
-deriving stock instance
-  ( Backend b,
-    Show (AnnBoolExp b v),
-    Show (AnnotatedOrderByItemG b v)
-  ) =>
-  Show (SelectArgsG b v)
-
-type SelectArgs b = SelectArgsG b (SQLExpression b)
-
-noSelectArgs :: SelectArgsG backend v
-noSelectArgs = SelectArgs Nothing Nothing Nothing Nothing Nothing
-
--- Order by argument
-
--- | The order by element for a computed field based on its return type
-data ComputedFieldOrderByElement (b :: BackendType) v
-  = -- | Sort by the scalar computed field
-    CFOBEScalar (ScalarType b)
-  | CFOBETableAggregation
-      (TableName b)
-      (AnnBoolExp b v)
-      -- ^ Permission filter of the retuning table
-      (AnnotatedAggregateOrderBy b)
-      -- ^ Sort by aggregation fields of table rows returned by computed field
-  deriving stock (Generic, Functor, Foldable, Traversable)
-
-deriving stock instance
-  ( Backend b,
-    Eq (AnnBoolExp b v),
-    Eq (AnnotatedAggregateOrderBy b)
-  ) =>
-  Eq (ComputedFieldOrderByElement b v)
-
-deriving stock instance
-  ( Backend b,
-    Show v,
-    Show (AnnBoolExp b v),
-    Show (AnnotatedAggregateOrderBy b)
-  ) =>
-  Show (ComputedFieldOrderByElement b v)
-
-instance
-  ( Backend b,
-    Hashable (AnnBoolExp b v),
-    Hashable (AnnotatedAggregateOrderBy b)
-  ) =>
-  Hashable (ComputedFieldOrderByElement b v)
-
-data ComputedFieldOrderBy (b :: BackendType) v = ComputedFieldOrderBy
-  { _cfobXField :: XComputedField b,
-    _cfobName :: ComputedFieldName,
-    _cfobFunction :: FunctionName b,
-    _cfobFunctionArgsExp :: FunctionArgsExp b v,
-    _cfobOrderByElement :: ComputedFieldOrderByElement b v
-  }
-  deriving stock (Generic)
-
-deriving stock instance (Backend b) => Functor (ComputedFieldOrderBy b)
-
-deriving stock instance (Backend b) => Foldable (ComputedFieldOrderBy b)
-
-deriving stock instance (Backend b) => Traversable (ComputedFieldOrderBy b)
-
-deriving stock instance
-  ( Backend b,
-    Eq (ComputedFieldOrderByElement b v),
-    Eq (FunctionArgsExp b v)
-  ) =>
-  Eq (ComputedFieldOrderBy b v)
-
-deriving stock instance
-  ( Backend b,
-    Show (ComputedFieldOrderByElement b v),
-    Show (FunctionArgsExp b v)
-  ) =>
-  Show (ComputedFieldOrderBy b v)
-
-instance
-  ( Backend b,
-    Hashable (ComputedFieldOrderByElement b v),
-    Hashable (FunctionArgsExp b v)
-  ) =>
-  Hashable (ComputedFieldOrderBy b v)
-
-data AnnotatedOrderByElement (b :: BackendType) v
-  = AOCColumn (ColumnInfo b)
-  | AOCObjectRelation
-      (RelInfo b)
-      (AnnBoolExp b v)
-      -- ^ Permission filter of the remote table to which the relationship is defined
-      (AnnotatedOrderByElement b v)
-  | AOCArrayAggregation
-      (RelInfo b)
-      (AnnBoolExp b v)
-      -- ^ Permission filter of the remote table to which the relationship is defined
-      (AnnotatedAggregateOrderBy b)
-  | AOCComputedField (ComputedFieldOrderBy b v)
-  deriving stock (Generic, Functor, Foldable, Traversable)
-
-deriving stock instance
-  ( Backend b,
-    Eq (AnnBoolExp b v),
-    Eq (AnnotatedAggregateOrderBy b),
-    Eq (ComputedFieldOrderBy b v)
-  ) =>
-  Eq (AnnotatedOrderByElement b v)
-
-deriving stock instance
-  ( Backend b,
-    Show (AnnBoolExp b v),
-    Show (AnnotatedAggregateOrderBy b),
-    Show (ComputedFieldOrderBy b v)
-  ) =>
-  Show (AnnotatedOrderByElement b v)
-
-instance
-  ( Backend b,
-    Hashable (AnnBoolExp b v),
-    Hashable (AnnotatedAggregateOrderBy b),
-    Hashable (ComputedFieldOrderBy b v)
-  ) =>
-  Hashable (AnnotatedOrderByElement b v)
-
-data AnnotatedAggregateOrderBy (b :: BackendType)
-  = AAOCount
-  | -- | Order by an aggregate function applied to a column
-    -- Fields are: Aggregate function name, aggregate function return type, column being aggregated
-    AAOOp Text (ColumnType b) (ColumnInfo b)
-  deriving stock (Generic)
-
-deriving stock instance (Backend b) => Eq (AnnotatedAggregateOrderBy b)
-
-deriving stock instance (Backend b) => Show (AnnotatedAggregateOrderBy b)
-
-instance (Backend b) => Hashable (AnnotatedAggregateOrderBy b)
-
-type AnnotatedOrderByItemG b v = OrderByItemG b (AnnotatedOrderByElement b v)
-
-type AnnotatedOrderByItem b = AnnotatedOrderByItemG b (SQLExpression b)
-
--- | Cursor for streaming subscription
-data StreamCursorItem (b :: BackendType) = StreamCursorItem
-  { -- | Specifies how the cursor item should be ordered
-    _sciOrdering :: CursorOrdering,
-    -- | Column info of the cursor item
-    _sciColInfo :: ColumnInfo b,
-    -- | Initial value of the cursor item from where the streaming should start
-    _sciInitialValue :: ColumnValue b
-  }
-  deriving (Generic)
-
-deriving instance (Backend b) => Eq (StreamCursorItem b)
-
-deriving instance (Backend b) => Show (StreamCursorItem b)
 
 -- Fields
 
@@ -929,17 +547,6 @@ instance Backend b => Bifoldable (ComputedFieldSelect b) where
 
 -- Local relationship
 
-data AnnRelationSelectG (b :: BackendType) a = AnnRelationSelectG
-  { _aarRelationshipName :: RelName, -- Relationship name
-    _aarColumnMapping :: HashMap (Column b) (Column b), -- Column of left table to join with
-    _aarAnnSelect :: a -- Current table. Almost ~ to SQL Select
-  }
-  deriving stock (Functor, Foldable, Traversable)
-
-deriving stock instance (Backend b, Eq v) => Eq (AnnRelationSelectG b v)
-
-deriving stock instance (Backend b, Show v) => Show (AnnRelationSelectG b v)
-
 type ArrayRelationSelectG b r v = AnnRelationSelectG b (AnnSimpleSelectG b r v)
 
 type ArrayAggregateSelectG b r v = AnnRelationSelectG b (AnnAggregateSelectG b r v)
@@ -1097,37 +704,6 @@ instance Backend b => Bifoldable (AnnNestedObjectSelectG b) where
 
 type AnnNestedObjectSelect b r = AnnNestedObjectSelectG b r (SQLExpression b)
 
--- Permissions
-
-data TablePermG (b :: BackendType) v = TablePerm
-  { _tpFilter :: AnnBoolExp b v,
-    _tpLimit :: (Maybe Int)
-  }
-  deriving stock (Generic, Functor, Foldable, Traversable)
-
-deriving stock instance
-  ( Backend b,
-    Eq (AnnBoolExp b v)
-  ) =>
-  Eq (TablePermG b v)
-
-deriving stock instance
-  ( Backend b,
-    Show (AnnBoolExp b v)
-  ) =>
-  Show (TablePermG b v)
-
-instance
-  ( Backend b,
-    Hashable (AnnBoolExp b v)
-  ) =>
-  Hashable (TablePermG b v)
-
-type TablePerm b = TablePermG b (SQLExpression b)
-
-noTablePermissions :: TablePermG backend v
-noTablePermissions = TablePerm annBoolExpTrue Nothing
-
 -- | If argument positional index is less than or equal to length of
 -- 'positional' arguments then insert the value in 'positional' arguments else
 -- insert the value with argument name in 'named' arguments
@@ -1157,14 +733,10 @@ data CountDistinct
 
 -- Lenses
 
-$(makeLenses ''AnnSelectG)
 $(makeLenses ''AnnObjectSelectG)
 $(makeLenses ''AnnNestedObjectSelectG)
-$(makeLenses ''AnnRelationSelectG)
 $(makeLenses ''ConnectionSelect)
-$(makeLenses ''SelectArgsG)
 $(makePrisms ''AnnFieldG)
-$(makePrisms ''AnnotatedOrderByElement)
 $(makePrisms ''TableAggregateFieldG)
 $(makePrisms ''ConnectionField)
 $(makePrisms ''EdgeField)
