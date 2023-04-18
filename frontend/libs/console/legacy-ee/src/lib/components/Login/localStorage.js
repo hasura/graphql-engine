@@ -25,7 +25,7 @@ export const getFromLS = () => {
 
 export const getKeyFromLS = key => {
   const retrieveFromLS = getFromLS();
-  return retrieveFromLS[key] || '';
+  return retrieveFromLS?.[key] || '';
 };
 
 export const modifyKey = (key, value) => {
