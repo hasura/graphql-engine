@@ -173,7 +173,7 @@ schemaInspectionTests = describe "Schema and Source Inspection" $ do
                 nullable: false
                 type: *_stIntegerType
                 insertable: *supportsInserts
-                updatable: false
+                updatable: *supportsUpdates
                 value_generated:
                   type: auto_increment
               - name: *artistId

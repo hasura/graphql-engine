@@ -38,9 +38,8 @@ function determineScalarType(datatype: Datatype): ScalarTypeKey {
   }
 }
 
-function getColumns(ast: any[], primaryKeys: string[]) : ColumnInfo[] {
+function getColumns(ast: any[]) : ColumnInfo[] {
   return ast.map(column => {
-    const isPrimaryKey = primaryKeys.includes(column.name);
     const isAutoIncrement = column.definition.some((def: any) => def.type === "constraint" && def.autoIncrement === true);
 
     return {
@@ -48,7 +47,7 @@ function getColumns(ast: any[], primaryKeys: string[]) : ColumnInfo[] {
       type: determineScalarType(column.datatype),
       nullable: nullableCast(column.definition),
       insertable: MUTATIONS,
-      updatable: MUTATIONS && !isPrimaryKey,
+      updatable: MUTATIONS,
       ...(isAutoIncrement ? { value_generated: { type: "auto_increment" } } : {})
     };
   })
@@ -78,7 +77,7 @@ const formatTableInfo = (config: Config) => (info: TableInfoInternal): TableInfo
     ...primaryKey,
     ...foreignKey,
     description: info.sql,
-    columns: getColumns(columnsDdl, primaryKeys),
+    columns: getColumns(columnsDdl),
     insertable: MUTATIONS,
     updatable: MUTATIONS,
     deletable: MUTATIONS,
