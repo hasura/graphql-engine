@@ -10,7 +10,8 @@ const log = value =>
 module.exports =
   () =>
   (config, { options, context }) => {
-    const finalConfig = merge(config, {
+    const isDevBuild = context.configurationName === 'development';
+    let finalConfig = merge(config, {
       output: {
         publicPath: 'auto',
       },
@@ -66,6 +67,20 @@ module.exports =
         },
       },
     });
+
+    if (!isDevBuild) {
+      finalConfig = merge(finalConfig, {
+        // Forcing webpack to not generate sourcemap by itself
+        devtool: false,
+        plugins: [
+          // and instead fine tune the source map generation, excluding vendors
+          new webpack.SourceMapDevToolPlugin({
+            exclude: [/vendor\..*\.js/],
+            filename: '[file].map',
+          }),
+        ],
+      });
+    }
 
     finalConfig.module.rules = finalConfig.module.rules.map(rule => {
       if (/source-map-loader/.test(rule.loader)) {
