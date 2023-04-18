@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { useEffect, useRef } from 'react';
 import { InputCustomEvent } from './TextInput';
 import { ColumnRowInput } from './ColumnRowInput';
+import { SupportedDrivers } from '../../hasura-metadata-types';
 
 type RowValue = {
   columnName: string;
@@ -21,6 +22,7 @@ export type ColumnRowProps = {
   onChange: ({ columnName, selectionType, value }: RowValue) => void;
   resetToken: string;
   placeholder: string;
+  driver: SupportedDrivers;
 };
 
 export const ColumnRow = ({
@@ -33,6 +35,7 @@ export const ColumnRow = ({
   resetToken,
   placeholder,
   dataType,
+  driver,
 }: ColumnRowProps) => {
   const valueId = `${name}-value`;
   const nullId = `${name}-null`;
@@ -137,6 +140,7 @@ export const ColumnRow = ({
         placeholder={placeholder}
         onValueChange={onValueChange}
         onCheckValueRadio={onCheckValueRadio}
+        driver={driver}
       />
 
       <input

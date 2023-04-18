@@ -1,13 +1,8 @@
 import { useAddAgent } from '../../../../ManageAgents/hooks';
 import { AddAgentResponse } from '../../../../ManageAgents/hooks/useAddAgent';
+import { SuperConnectorDrivers } from '../../../../hasura-metadata-types';
 
-export type KnownSuperConnectorDrivers =
-  | 'snowflake'
-  | 'athena'
-  | 'mysqlgdc'
-  | string;
-
-export const agentPaths: Record<KnownSuperConnectorDrivers, string> = {
+export const agentPaths: Record<SuperConnectorDrivers, string> = {
   snowflake: '/api/v1/snowflake',
   athena: '/api/v1/athena',
   mysqlgdc: '/api/v1/mysql',
@@ -30,7 +25,7 @@ export const useAddSuperConnectorAgents = () => {
 
   const addAgents = async (
     superConnectorPath: string,
-    selectedAgent: KnownSuperConnectorDrivers
+    selectedAgent: SuperConnectorDrivers
   ) => {
     const args = Object.entries<string>(agentPaths).map(
       ([driverKind, agentPath]) => ({

@@ -15,8 +15,14 @@ export type NativeDrivers =
   | 'bigquery'
   | 'citus'
   | 'cockroach';
-export type GDCDriver = string;
-export type SupportedDrivers = Driver | GDCDriver;
+
+export type SuperConnectorDrivers =
+  | 'snowflake'
+  | 'athena'
+  | 'mysqlgdc'
+  | string;
+
+export type SupportedDrivers = Driver | SuperConnectorDrivers;
 
 export type NamingConvention = 'hasura-default' | 'graphql-default';
 
