@@ -1,6 +1,7 @@
 import { useContext } from 'react';
 import { rowPermissionsContext } from './RowPermissionsProvider';
 import { useOperators } from './utils/comparatorsFromSchema';
+import Select from 'react-select';
 
 export const Comparator = ({
   comparator,
@@ -16,20 +17,35 @@ export const Comparator = ({
   const operators = useOperators({ path });
 
   return (
-    <select
-      data-testid={comparatorLevelId}
-      className="border border-gray-200 rounded-md p-2"
-      value={comparator}
-      onChange={e => {
-        setKey({ path, key: e.target.value, type: 'comparator' });
+    <Select
+      inputId={`${comparatorLevelId}-select-value`}
+      isSearchable
+      aria-label={comparatorLevelId}
+      components={{ DropdownIndicator: null }}
+      options={operators.map(o => ({
+        value: o.name,
+        label: o.name,
+      }))}
+      onChange={option => {
+        const { value } = option as { value: string };
+        setKey({ path, key: value, type: 'comparator' });
       }}
-    >
-      <option value="">-</option>
-      {operators.map((o, index) => (
-        <option key={index} value={o.name}>
-          {o.name}
-        </option>
-      ))}
-    </select>
+      defaultValue={{
+        value: comparator,
+        label: comparator,
+      }}
+      value={{
+        value: comparator,
+        label: comparator,
+      }}
+      styles={{
+        control: base => ({
+          ...base,
+          border: 0,
+          minHeight: 'auto',
+        }),
+      }}
+      className="w-32 border border-gray-200 rounded-md"
+    />
   );
 };

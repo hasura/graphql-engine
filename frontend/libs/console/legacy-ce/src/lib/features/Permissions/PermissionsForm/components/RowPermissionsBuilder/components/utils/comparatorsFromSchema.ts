@@ -10,6 +10,7 @@ import { areTablesEqual } from '../../../../../../hasura-metadata-api';
 import { Table } from '../../../../../../hasura-metadata-types';
 import { useContext } from 'react';
 import { rowPermissionsContext } from '../RowPermissionsProvider';
+import { sourceDataTypes, SourceDataTypes } from './sourceDataTypes';
 
 function columnOperators(): Array<Operator> {
   return Object.keys(columnOperatorsInfo).reduce((acc, key) => {
@@ -144,9 +145,27 @@ const whitelist: Record<string, string[]> = {
   ],
 };
 
+type Sources =
+  | 'postgres'
+  | 'bigquery'
+  | 'mssql'
+  | 'citus'
+  | 'cockroach'
+  | 'alloy';
+
+export const mapScalarDataType = (
+  dataSource: string | undefined,
+  dataType: SourceDataTypes
+) => {
+  if (!dataSource) return dataType;
+  const dataTypes = sourceDataTypes[dataSource as Sources];
+  return dataTypes?.[dataType] || dataType;
+};
+
 export function useOperators({ path }: { path: string[] }) {
   const { comparators, tables } = useContext(rowPermissionsContext);
   const { columns, table } = useContext(tableContext);
+
   const columnName = path[path.length - 2];
   const column = columns.find(c => c.name === columnName);
   let dataType = column?.dataType;
@@ -168,19 +187,21 @@ export function useOperators({ path }: { path: string[] }) {
   return operators;
 }
 
-function getDataTypeOperators({
-  comparators,
-  path,
-  columns,
-  tables,
-  table,
-}: {
+export type GetDataTypeOperatorsProps = {
   comparators: Comparators;
   path: string[];
   columns: Columns;
   tables: Tables;
   table: Table;
-}) {
+};
+
+export const getDataTypeOperators = ({
+  comparators,
+  path,
+  columns,
+  tables,
+  table,
+}: GetDataTypeOperatorsProps) => {
   const columnName = path[path.length - 2];
   const column = columns.find(c => c.name === columnName);
   const dataSourceKind = tables.find(t => areTablesEqual(t.table, table))
@@ -191,10 +212,24 @@ function getDataTypeOperators({
   const comparatorKey = column ? `${column.dataType}${comparatorSuffix}` : '';
   const operators = comparators[comparatorKey]?.operators;
   if (!operators) {
-    return allOperators;
+    const dataSource = tables?.[0]?.dataSource?.name;
+    const dataType = mapScalarDataType(
+      dataSource,
+      column?.dataType as SourceDataTypes
+    );
+    const fallbackComparatorKey = column
+      ? `${dataType}${comparatorSuffix}`
+      : '';
+    const lowerCaseComparators = Object.fromEntries(
+      Object.entries(comparators).map(([k, v]) => [k.toLowerCase(), v])
+    );
+    const backupOperators =
+      lowerCaseComparators[fallbackComparatorKey]?.operators;
+    return backupOperators || allOperators;
   }
+
   return operators;
-}
+};
 
 function hasWhitelistedOperators(dataType: string) {
   return whitelist[dataType];

@@ -1,6 +1,12 @@
-import { comparatorsFromSchema } from './comparatorsFromSchema';
+import {
+  comparatorsFromSchema,
+  getDataTypeOperators,
+  mapScalarDataType,
+} from './comparatorsFromSchema';
 import { NamedTypeNode, parseType, typeFromAST } from 'graphql';
 import { schema } from '../__tests__/fixtures/graphql';
+import { SourceDataTypes } from './sourceDataTypes';
+import { mssqlRealColumnTypeInput } from '../__tests__/fixtures/getDataTypeOperators';
 
 describe('comparatorsFromSchema', () => {
   it('should return comparators from schema', () => {
@@ -111,5 +117,22 @@ describe('comparatorsFromSchema', () => {
         operator: '_clte',
       },
     ]);
+  });
+});
+
+describe('getDataTypeOperators', () => {
+  it('should fallback to use int for integer type fallback columns', () => {
+    const operators = getDataTypeOperators(mssqlRealColumnTypeInput);
+    expect(operators.length).toEqual(15);
+  });
+});
+
+describe('mapScalarDataType', () => {
+  describe('MSSQL', () => {
+    it('should return string for ntext type', () => {
+      const dataType = mapScalarDataType('mssql', 'ntext' as SourceDataTypes);
+
+      expect(dataType).toEqual('string');
+    });
   });
 });

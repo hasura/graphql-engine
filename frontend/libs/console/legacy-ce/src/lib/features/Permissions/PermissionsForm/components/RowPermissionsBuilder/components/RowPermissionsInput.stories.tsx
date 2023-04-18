@@ -304,7 +304,10 @@ export const BooleanArrayType: ComponentStory<
 BooleanArrayType.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
   expect(canvas.getByTestId('Author-operator')).toBeInTheDocument();
-  expect(canvas.getByTestId('Author._ceq-comparator')).toBeInTheDocument();
+  const element = await canvas.getByLabelText('Author._ceq-comparator');
+  await expect(element.getAttribute('id')).toEqual(
+    'Author._ceq-comparator-select-value'
+  );
   expect(
     canvas.getByTestId('Author._ceq-column-comparator-entry')
   ).toBeInTheDocument();
@@ -550,9 +553,9 @@ SetNotPermission.play = async ({ canvasElement }) => {
 
   await userEvent.selectOptions(canvas.getByTestId('_not-operator'), 'Period');
 
-  await userEvent.selectOptions(
-    canvas.getByTestId('_not.Period._eq-comparator'),
-    '_neq'
+  const element = await canvas.getByLabelText('_not.Period._eq-comparator');
+  await expect(element.getAttribute('id')).toEqual(
+    '_not.Period._eq-comparator-select-value'
   );
 };
 
@@ -641,9 +644,10 @@ JsonbColumns.play = async ({ canvasElement }) => {
     timeout: 50000,
   });
   // Expect jason._contained_in-comparator to be in the document
-  expect(
-    canvas.getByTestId('jason._contained_in-comparator')
-  ).toBeInTheDocument();
+  const element = await canvas.getByLabelText('jason._contained_in-comparator');
+  await expect(element.getAttribute('id')).toEqual(
+    'jason._contained_in-comparator-select-value'
+  );
   // Expect jason._contained_in-value-input to have value "{"a": "b"}"
   expect(canvas.getByTestId('jason._contained_in-value-input')).toHaveValue(
     '{"a":"b"}'
