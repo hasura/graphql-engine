@@ -10,6 +10,35 @@ type CheckerFunction = (
   | { ok: true; fileName: string }
   | { ok: false; errors: string[]; fileName: string };
 
+export const createForbiddenFileName = ({
+  forbiddenName,
+  extraReason,
+}: {
+  forbiddenName: string | RegExp;
+  extraReason?: string;
+}): CheckerFunction => {
+  const fileChecker = fileName => {
+    if (typeof forbiddenName === 'string') {
+      return fileName === forbiddenName;
+    }
+    return forbiddenName.test(fileName);
+  };
+  return (contnet, fileName) => {
+    if (fileChecker(fileName)) {
+      return {
+        ok: false,
+        errors: [
+          `${fileName} is matching "${forbiddenName}" forbidden file name.${
+            extraReason ? ' ' + extraReason : ''
+          }`,
+        ],
+        fileName,
+      };
+    }
+    return { ok: true, fileName };
+  };
+};
+
 const createForbiddenString =
   (patern: string): CheckerFunction =>
   (fileContent, fileName) => {
@@ -42,9 +71,32 @@ const createForbiddenEnv = (envVariableName: string): CheckerFunction => {
   };
 };
 
+const legacyNamesThatWeCantUseReason =
+  'This file name cannot be used anymore given it was used prior to 2.18 and cli will load this instead of the correct assets.';
+
 const checks = [
   createForbiddenString('NX_CLOUD_ACCESS_TOKEN'),
   createForbiddenEnv('NX_CLOUD_ACCESS_TOKEN'),
+  createForbiddenFileName({
+    forbiddenName: /vendor\..*\.js\.map/,
+    extraReason:
+      "Due to limitation on sentry, we don't want to ship vendor source maps.",
+  }),
+  createForbiddenFileName({
+    forbiddenName: 'main.css',
+    extraReason: legacyNamesThatWeCantUseReason,
+  }),
+  createForbiddenFileName({
+    forbiddenName: 'main.js',
+    extraReason: legacyNamesThatWeCantUseReason,
+  }),
+  createForbiddenFileName({
+    forbiddenName: 'assetLoader.js',
+  }),
+  createForbiddenFileName({
+    forbiddenName: 'vendor.js',
+    extraReason: legacyNamesThatWeCantUseReason,
+  }),
 ];
 
 export default async function runExecutor(
