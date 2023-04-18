@@ -244,6 +244,42 @@ tests = do
 
       shouldReturnYaml testEnvironment actual expected
 
+    it "Runs the a simple query with uppercase letters in the name" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          source = BackendType.backendSourceName backendTypeMetadata
+
+          uppercaseNativeQuery :: Schema.NativeQuery
+          uppercaseNativeQuery =
+            (Schema.nativeQuery "UppercaseNativeQuery" query "hello_world_return_type")
+
+      Schema.trackCustomReturnType source helloWorldReturnType testEnvironment
+      Schema.trackNativeQuery source uppercaseNativeQuery testEnvironment
+
+      let expected =
+            [yaml|
+                data:
+                  UppercaseNativeQuery:
+                    - one: "hello"
+                      two: "world"
+                    - one: "welcome"
+                      two: "friend"
+              |]
+
+          actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphql
+              testEnvironment
+              [graphql|
+              query {
+                UppercaseNativeQuery {
+                  one
+                  two
+                }
+              }
+           |]
+
+      shouldReturnYaml testEnvironment actual expected
+
     it "Runs simple query with a basic where clause" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata

@@ -350,6 +350,34 @@ tests = do
              path: $.args
           |]
 
+    it "when the native query name has a non-standard character" $
+      \testEnvironment -> do
+        let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+            sourceName = BackendType.backendSourceName backendTypeMetadata
+
+            dividedStuffNativeQuery :: Schema.NativeQuery
+            dividedStuffNativeQuery =
+              (Schema.nativeQuery "Divided-Stuff" simpleQuery "divided_stuff")
+                { Schema.nativeQueryArguments =
+                    [ Schema.nativeQueryColumn "denominator" Schema.TInt,
+                      Schema.nativeQueryColumn "target_date" Schema.TUTCTime
+                    ]
+                }
+
+        Schema.trackCustomReturnType sourceName dividedReturnType testEnvironment
+
+        actual <-
+          GraphqlEngine.postMetadataWithStatus
+            400
+            testEnvironment
+            (Schema.trackNativeQueryCommand sourceName backendTypeMetadata dividedStuffNativeQuery)
+        let expected =
+              [yaml|
+                 code: parse-failed
+                 path: $.args.root_field_name
+              |]
+        actual `shouldAtLeastBe` expected
+
   describe "Validation succeeds" do
     it "when tracking then untracking then re-tracking a native query" $
       \testEnvironment -> do
@@ -370,5 +398,23 @@ tests = do
         Schema.trackNativeQuery sourceName dividedStuffNativeQuery testEnvironment
 
         Schema.untrackNativeQuery sourceName dividedStuffNativeQuery testEnvironment
+
+        Schema.trackNativeQuery sourceName dividedStuffNativeQuery testEnvironment
+
+    it "when the native query name has an uppercase letter" $
+      \testEnvironment -> do
+        let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+            sourceName = BackendType.backendSourceName backendTypeMetadata
+
+            dividedStuffNativeQuery :: Schema.NativeQuery
+            dividedStuffNativeQuery =
+              (Schema.nativeQuery "DividedStuff" simpleQuery "divided_stuff")
+                { Schema.nativeQueryArguments =
+                    [ Schema.nativeQueryColumn "denominator" Schema.TInt,
+                      Schema.nativeQueryColumn "target_date" Schema.TUTCTime
+                    ]
+                }
+
+        Schema.trackCustomReturnType sourceName dividedReturnType testEnvironment
 
         Schema.trackNativeQuery sourceName dividedStuffNativeQuery testEnvironment

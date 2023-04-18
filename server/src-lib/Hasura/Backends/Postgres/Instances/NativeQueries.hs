@@ -34,7 +34,7 @@ import Hasura.NativeQuery.Metadata
     NativeQueryArgumentName,
     NativeQueryMetadata (..),
   )
-import Hasura.NativeQuery.Types (NullableScalarType (nstType), getNativeQueryName)
+import Hasura.NativeQuery.Types (NullableScalarType (nstType))
 import Hasura.Prelude
 import Hasura.SQL.Backend
 
@@ -205,11 +205,10 @@ nativeQueryToPreparedStatement ::
   NativeQueryMetadata ('Postgres pgKind) ->
   m (BS.ByteString, Text)
 nativeQueryToPreparedStatement customReturnType model = do
-  let name = getNativeQueryName $ _nqmRootFieldName model
   let (preparedIQ, argumentMapping) = renameIQ $ _nqmCode model
       logimoCode :: Text
       logimoCode = renderIQ preparedIQ
-      prepname = "_logimo_vali_" <> toTxt name
+      prepname = "_logimo_vali_"
 
       occurringArguments, declaredArguments, undeclaredArguments :: Set NativeQueryArgumentName
       occurringArguments = Set.fromList (Map.elems argumentMapping)
