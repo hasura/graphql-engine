@@ -15,6 +15,7 @@ module Hasura.Server.Prometheus
     incWebsocketConnections,
     decWebsocketConnections,
     ScheduledTriggerMetrics (..),
+    SubscriptionMetrics (..),
   )
 where
 
@@ -40,7 +41,8 @@ data PrometheusMetrics = PrometheusMetrics
     pmWebSocketBytesSent :: Counter,
     pmActionBytesReceived :: Counter,
     pmActionBytesSent :: Counter,
-    pmScheduledTriggerMetrics :: ScheduledTriggerMetrics
+    pmScheduledTriggerMetrics :: ScheduledTriggerMetrics,
+    pmSubscriptionMetrics :: SubscriptionMetrics
   }
 
 data GraphQLRequestMetrics = GraphQLRequestMetrics
@@ -80,6 +82,11 @@ data ScheduledTriggerMetrics = ScheduledTriggerMetrics
     stmOneOffEventsProcessedTotalFailure :: Counter
   }
 
+data SubscriptionMetrics = SubscriptionMetrics
+  { submActiveLiveQueryPollers :: Gauge,
+    submActiveStreamingPollers :: Gauge
+  }
+
 -- | Create dummy mutable references without associating them to a metrics
 -- store.
 makeDummyPrometheusMetrics :: IO PrometheusMetrics
@@ -93,6 +100,7 @@ makeDummyPrometheusMetrics = do
   pmActionBytesReceived <- Counter.new
   pmActionBytesSent <- Counter.new
   pmScheduledTriggerMetrics <- makeDummyScheduledTriggerMetrics
+  pmSubscriptionMetrics <- makeDummySubscriptionMetrics
   pure PrometheusMetrics {..}
 
 makeDummyGraphQLRequestMetrics :: IO GraphQLRequestMetrics
@@ -134,6 +142,12 @@ makeDummyScheduledTriggerMetrics = do
   stmOneOffEventsProcessedTotalSuccess <- Counter.new
   stmOneOffEventsProcessedTotalFailure <- Counter.new
   pure ScheduledTriggerMetrics {..}
+
+makeDummySubscriptionMetrics :: IO SubscriptionMetrics
+makeDummySubscriptionMetrics = do
+  submActiveLiveQueryPollers <- Gauge.new
+  submActiveStreamingPollers <- Gauge.new
+  pure SubscriptionMetrics {..}
 
 --------------------------------------------------------------------------------
 

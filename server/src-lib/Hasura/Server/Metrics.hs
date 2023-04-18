@@ -67,13 +67,13 @@ data
       "schema_cache_metadata_resource_version"
       'GaugeType
       ()
-  -- | Current number active live queries
+  -- | Current number of subscribers connected to live queries
   ActiveLiveQueries ::
     ServerMetricsSpec
       "active_livequeries"
       'GaugeType
       ()
-  -- | Current number of streaming subscriptions
+  -- | Current number of subscribers connected to streaming subscriptions
   ActiveStreaming ::
     ServerMetricsSpec
       "active_streaming_subscriptions"
@@ -103,18 +103,18 @@ data
 -- | Mutable references for the server metrics. See `ServerMetricsSpec` for a
 -- description of each metric.
 data ServerMetrics = ServerMetrics
-  { smWarpThreads :: !Gauge,
-    smWebsocketConnections :: !Gauge,
-    smActiveSubscriptions :: !Gauge,
-    smNumEventsFetchedPerBatch :: !Distribution,
-    smNumEventHTTPWorkers :: !Gauge,
-    smEventQueueTime :: !Distribution,
-    smSchemaCacheMetadataResourceVersion :: !Gauge,
-    smActiveLiveQueries :: !Gauge,
-    smActiveStreamingSubscriptions :: !Gauge,
-    smEventFetchTimePerBatch :: !Distribution,
-    smEventWebhookProcessingTime :: !Distribution,
-    smEventProcessingTime :: !Distribution
+  { smWarpThreads :: Gauge,
+    smWebsocketConnections :: Gauge,
+    smActiveSubscriptions :: Gauge,
+    smNumEventsFetchedPerBatch :: Distribution,
+    smNumEventHTTPWorkers :: Gauge,
+    smEventQueueTime :: Distribution,
+    smSchemaCacheMetadataResourceVersion :: Gauge,
+    smActiveLiveQueries :: Gauge,
+    smActiveStreamingSubscriptions :: Gauge,
+    smEventFetchTimePerBatch :: Distribution,
+    smEventWebhookProcessingTime :: Distribution,
+    smEventProcessingTime :: Distribution
   }
 
 createServerMetrics :: Store ServerMetricsSpec -> IO ServerMetrics
