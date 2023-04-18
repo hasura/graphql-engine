@@ -74,17 +74,17 @@ runSQL ::
   MSSQLRunSQL ->
   m EncJSON
 runSQL mssqlRunSQL@MSSQLRunSQL {..} = do
-  SourceInfo _ tableCache _ _ _ sourceConfig _ _ <- askSourceInfo @'MSSQL _mrsSource
+  SourceInfo {..} <- askSourceInfo @'MSSQL _mrsSource
   results <-
     -- If the SQL modifies the schema of the database then check for any metadata changes
     if isSchemaCacheBuildRequiredRunSQL mssqlRunSQL
       then do
-        (results, metadataUpdater) <- runTx sourceConfig $ withMetadataCheck tableCache
+        (results, metadataUpdater) <- runTx _siConfiguration $ withMetadataCheck _siTables
         -- Build schema cache with updated metadata
         withNewInconsistentObjsCheck $
           buildSchemaCacheWithInvalidations mempty {ciSources = HS.singleton _mrsSource} metadataUpdater
         pure results
-      else runTx sourceConfig sqlQueryTx
+      else runTx _siConfiguration sqlQueryTx
   pure $ encJFromJValue $ toResult results
   where
     runTx :: SourceConfig 'MSSQL -> Tx.TxET QErr m a -> m a

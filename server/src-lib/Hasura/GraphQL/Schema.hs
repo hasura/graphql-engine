@@ -348,30 +348,30 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
           [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))], -- subscription fields
           [(G.Name, Parser 'Output P.Parse (ApolloFederationParserFunction P.Parse))] -- apollo federation tables
         )
-    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo _ tables functions nativeQueries _customReturnTypes _ _ sourceCustomization) =
+    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo {..}) =
       runSourceSchema schemaContext schemaOptions sourceInfo do
-        let validFunctions = takeValidFunctions functions
-            validNativeQueries = takeValidNativeQueries nativeQueries
-            validTables = takeValidTables tables
-            mkRootFieldName = _rscRootFields sourceCustomization
-            makeTypename = SC._rscTypeNames sourceCustomization
+        let validFunctions = takeValidFunctions _siFunctions
+            validNativeQueries = takeValidNativeQueries _siNativeQueries
+            validTables = takeValidTables _siTables
+            mkRootFieldName = _rscRootFields _siCustomization
+            makeTypename = SC._rscTypeNames _siCustomization
         (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields, apolloFedTableParsers) <-
           buildQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions validNativeQueries
         (,,,,apolloFedTableParsers)
           <$> customizeFields
-            sourceCustomization
+            _siCustomization
             (makeTypename <> MkTypename (<> Name.__query))
             (pure uncustomizedQueryRootFields)
           <*> customizeFields
-            sourceCustomization
+            _siCustomization
             (makeTypename <> MkTypename (<> Name.__mutation_frontend))
             (buildMutationFields mkRootFieldName Frontend sourceInfo validTables validFunctions)
           <*> customizeFields
-            sourceCustomization
+            _siCustomization
             (makeTypename <> MkTypename (<> Name.__mutation_backend))
             (buildMutationFields mkRootFieldName Backend sourceInfo validTables validFunctions)
           <*> customizeFields
-            sourceCustomization
+            _siCustomization
             (makeTypename <> MkTypename (<> Name.__subscription))
             (pure uncustomizedSubscriptionRootFields)
 
@@ -470,29 +470,29 @@ buildRelayRoleContext options sources actions customTypes role expFeatures = do
           [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))],
           [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))]
         )
-    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo _ tables functions _nativeQueries _customReturnTypes _ _ sourceCustomization) = do
+    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo {..}) = do
       runSourceSchema schemaContext schemaOptions sourceInfo do
-        let validFunctions = takeValidFunctions functions
-            validTables = takeValidTables tables
-            mkRootFieldName = _rscRootFields sourceCustomization
-            makeTypename = SC._rscTypeNames sourceCustomization
+        let validFunctions = takeValidFunctions _siFunctions
+            validTables = takeValidTables _siTables
+            mkRootFieldName = _rscRootFields _siCustomization
+            makeTypename = SC._rscTypeNames _siCustomization
         (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields) <-
           buildRelayQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions
         (,,,)
           <$> customizeFields
-            sourceCustomization
+            _siCustomization
             (makeTypename <> MkTypename (<> Name.__query))
             (pure uncustomizedQueryRootFields)
           <*> customizeFields
-            sourceCustomization
+            _siCustomization
             (makeTypename <> MkTypename (<> Name.__mutation_frontend))
             (buildMutationFields mkRootFieldName Frontend sourceInfo validTables validFunctions)
           <*> customizeFields
-            sourceCustomization
+            _siCustomization
             (makeTypename <> MkTypename (<> Name.__mutation_backend))
             (buildMutationFields mkRootFieldName Backend sourceInfo validTables validFunctions)
           <*> customizeFields
-            sourceCustomization
+            _siCustomization
             (makeTypename <> MkTypename (<> Name.__subscription))
             (pure uncustomizedSubscriptionRootFields)
 

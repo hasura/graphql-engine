@@ -209,7 +209,8 @@ resolveDatabaseMetadata' logger SourceMetadata {_smName} sourceConfig@DC.SourceC
                   _ptmiDescription = fmap PGDescription _tiDescription,
                   _ptmiExtraTableMetadata =
                     DC.ExtraTableMetadata
-                      { _etmExtraColumnMetadata =
+                      { _etmTableType = _tiType,
+                        _etmExtraColumnMetadata =
                           _tiColumns
                             & fmap (\API.ColumnInfo {..} -> (Witch.from _ciName, DC.ExtraColumnMetadata _ciValueGenerated))
                             & HashMap.fromList

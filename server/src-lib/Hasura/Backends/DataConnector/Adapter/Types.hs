@@ -401,7 +401,9 @@ fromGQLType typeName =
 -- | This type captures backend-specific "extra" information about tables
 -- and is used on types like 'DBTableMetadata'
 data ExtraTableMetadata = ExtraTableMetadata
-  {_etmExtraColumnMetadata :: HashMap ColumnName ExtraColumnMetadata}
+  { _etmTableType :: API.TableType,
+    _etmExtraColumnMetadata :: HashMap ColumnName ExtraColumnMetadata
+  }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 

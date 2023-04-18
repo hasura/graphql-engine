@@ -261,10 +261,10 @@ withMetadataCheck ::
   PG.TxET QErr m a ->
   m a
 withMetadataCheck sqlGen source cascade txAccess runSQLQuery = do
-  SourceInfo _ tableCache functionCache _nativeQueries _customReturnTypes sourceConfig _ _ <- askSourceInfo @('Postgres pgKind) source
+  SourceInfo {..} <- askSourceInfo @('Postgres pgKind) source
 
   -- Run SQL query and metadata checker in a transaction
-  (queryResult, metadataUpdater) <- runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cascade runSQLQuery
+  (queryResult, metadataUpdater) <- runTxWithMetadataCheck source _siConfiguration txAccess _siTables _siFunctions cascade runSQLQuery
 
   -- Build schema cache with updated metadata
   withNewInconsistentObjsCheck $
@@ -273,7 +273,7 @@ withMetadataCheck sqlGen source cascade txAccess runSQLQuery = do
   postRunSQLSchemaCache <- askSchemaCache
 
   -- Recreate event triggers in hdb_catalog. Event triggers are dropped before executing @'runSQLQuery'.
-  recreateEventTriggers sourceConfig postRunSQLSchemaCache
+  recreateEventTriggers _siConfiguration postRunSQLSchemaCache
 
   pure queryResult
   where

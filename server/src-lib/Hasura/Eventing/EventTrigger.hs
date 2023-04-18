@@ -319,8 +319,8 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
       events <- liftIO . fmap concat $
         -- fetch pending events across all the sources asynchronously
         LA.forConcurrently (M.toList allSources) \(sourceName, sourceCache) ->
-          AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo _sourceName tableCache _functionCache _nativeQueryCache _customReturnTypeCache sourceConfig _queryTagsConfig _sourceCustomization :: SourceInfo b) -> do
-            let tables = M.elems tableCache
+          AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo {..} :: SourceInfo b) -> do
+            let tables = M.elems _siTables
                 triggerMap = _tiEventTriggerInfoMap <$> tables
                 eventTriggerCount = sum (M.size <$> triggerMap)
                 triggerNames = concatMap M.keys triggerMap
@@ -329,7 +329,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
             if eventTriggerCount > 0
               then do
                 eventPollStartTime <- getCurrentTime
-                runExceptT (fetchUndeliveredEvents @b sourceConfig sourceName triggerNames maintenanceMode (FetchBatchSize fetchBatchSize)) >>= \case
+                runExceptT (fetchUndeliveredEvents @b _siConfiguration sourceName triggerNames maintenanceMode (FetchBatchSize fetchBatchSize)) >>= \case
                   Right events -> do
                     if (null events)
                       then return []
@@ -340,7 +340,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                         Prometheus.Histogram.observe (eventsFetchTimePerBatch eventTriggerMetrics) eventPollTime
                         _ <- EKG.Distribution.add (smNumEventsFetchedPerBatch serverMetrics) (fromIntegral $ length events)
                         saveLockedEventTriggerEvents sourceName (eId <$> events) leEvents
-                        return $ map (\event -> AB.mkAnyBackend @b $ EventWithSource event sourceConfig sourceName eventsFetchedTime) events
+                        return $ map (\event -> AB.mkAnyBackend @b $ EventWithSource event _siConfiguration sourceName eventsFetchedTime) events
                   Left err -> do
                     liftIO $ L.unLogger logger $ EventInternalErr err
                     pure []

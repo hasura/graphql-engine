@@ -1148,13 +1148,13 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
       -- event triggers should be tied to the life cycle of a source
       lockedEvents <- readTVarIO leEvents
       forM_ sources $ \backendSourceInfo -> do
-        AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo sourceName _ _ _ _ sourceConfig _ _ :: SourceInfo b) -> do
-          let sourceNameText = sourceNameToText sourceName
+        AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo {..} :: SourceInfo b) -> do
+          let sourceNameText = sourceNameToText _siName
           logger $ mkGenericLog LevelInfo "event_triggers" $ "unlocking events of source: " <> sourceNameText
-          for_ (HM.lookup sourceName lockedEvents) $ \sourceLockedEvents -> do
+          for_ (HM.lookup _siName lockedEvents) $ \sourceLockedEvents -> do
             -- No need to execute unlockEventsTx when events are not present
             for_ (NE.nonEmptySet sourceLockedEvents) $ \nonEmptyLockedEvents -> do
-              res <- Retry.retrying Retry.retryPolicyDefault isRetryRequired (return $ unlockEventsInSource @b sourceConfig nonEmptyLockedEvents)
+              res <- Retry.retrying Retry.retryPolicyDefault isRetryRequired (return $ unlockEventsInSource @b _siConfiguration nonEmptyLockedEvents)
               case res of
                 Left err ->
                   logger $

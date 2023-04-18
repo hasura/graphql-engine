@@ -20,6 +20,7 @@ module Hasura.RQL.Types.Source
     siQueryTagsConfig,
     siTables,
     siCustomization,
+    siDbObjectsIntrospection,
 
     -- * Schema cache
     DBObjectsIntrospection (..),
@@ -77,10 +78,9 @@ data SourceInfo b = SourceInfo
     _siCustomReturnTypes :: CustomReturnTypeCache b,
     _siConfiguration :: ~(SourceConfig b),
     _siQueryTagsConfig :: Maybe QueryTagsConfig,
-    _siCustomization :: ResolvedSourceCustomization
+    _siCustomization :: ResolvedSourceCustomization,
+    _siDbObjectsIntrospection :: DBObjectsIntrospection b
   }
-
-$(makeLenses ''SourceInfo)
 
 instance
   ( Backend b,
@@ -117,9 +117,7 @@ unsafeSourceInfo :: forall b. HasTag b => BackendSourceInfo -> Maybe (SourceInfo
 unsafeSourceInfo = AB.unpackAnyBackend
 
 unsafeSourceName :: BackendSourceInfo -> SourceName
-unsafeSourceName bsi = AB.dispatchAnyBackend @Backend bsi go
-  where
-    go (SourceInfo name _ _ _ _ _ _ _) = name
+unsafeSourceName bsi = AB.dispatchAnyBackend @Backend bsi _siName
 
 unsafeSourceTables :: forall b. HasTag b => BackendSourceInfo -> Maybe (TableCache b)
 unsafeSourceTables = fmap _siTables . unsafeSourceInfo @b
@@ -234,3 +232,5 @@ data SourcePingInfo b = SourcePingInfo
 type BackendSourcePingInfo = AB.AnyBackend SourcePingInfo
 
 type SourcePingCache = HashMap SourceName BackendSourcePingInfo
+
+$(makeLenses ''SourceInfo)

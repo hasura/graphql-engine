@@ -647,14 +647,14 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
         SourceConfig b,
         HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)),
         HashMap (TableName b) (EventTriggerInfoMap b),
-        DBTablesMetadata b,
-        DBFunctionsMetadata b,
+        DBObjectsIntrospection b,
         PartiallyResolvedRemoteSchemaMap,
         OrderedRoles
       )
         `arr` (SourceInfo b)
-    buildSource = proc (dynamicConfig, allSources, sourceMetadata, sourceConfig, tablesRawInfo, eventTriggerInfoMaps, _dbTables, dbFunctions, remoteSchemaMap, orderedRoles) -> do
-      let SourceMetadata sourceName _backendKind tables functions nativeQueries customReturnTypes _ queryTagsConfig sourceCustomization _healthCheckConfig = sourceMetadata
+    buildSource = proc (dynamicConfig, allSources, sourceMetadata, sourceConfig, tablesRawInfo, eventTriggerInfoMaps, dbObjectsIntrospection, remoteSchemaMap, orderedRoles) -> do
+      let DBObjectsIntrospection _dbTables dbFunctions _scalars = dbObjectsIntrospection
+          SourceMetadata sourceName _backendKind tables functions nativeQueries customReturnTypes _ queryTagsConfig sourceCustomization _healthCheckConfig = sourceMetadata
           tablesMetadata = OMap.elems tables
           (_, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
           alignTableMap :: HashMap (TableName b) a -> HashMap (TableName b) c -> HashMap (TableName b) (a, c)
@@ -829,7 +829,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
       let nativeQueryCache :: NativeQueryCache b
           nativeQueryCache = mapFromL _nqiRootFieldName (catMaybes nativeQueryCacheMaybes)
 
-      returnA -< SourceInfo sourceName tableCache functionCache nativeQueryCache customReturnTypesCache sourceConfig queryTagsConfig resolvedCustomization
+      returnA -< SourceInfo sourceName tableCache functionCache nativeQueryCache customReturnTypesCache sourceConfig queryTagsConfig resolvedCustomization dbObjectsIntrospection
 
     buildAndCollectInfo ::
       forall arr m.
@@ -972,7 +972,6 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                         )
                     -> do
                       let PartiallyResolvedSource sourceMetadata sourceConfig introspection tablesInfo eventTriggers = partiallyResolvedSource
-                          DBObjectsIntrospection tablesMeta functionsMeta scalars = introspection
                       so <-
                         Inc.cache buildSource
                           -<
@@ -982,12 +981,11 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                               sourceConfig,
                               tablesInfo,
                               eventTriggers,
-                              tablesMeta,
-                              functionsMeta,
+                              introspection,
                               remoteSchemaCtxMap,
                               orderedRoles
                             )
-                      returnA -< (AB.mkAnyBackend so, BackendMap.singleton scalars)
+                      returnA -< (AB.mkAnyBackend so, BackendMap.singleton (_rsScalars introspection))
                   )
                   -<
                     ( exists,
