@@ -438,9 +438,25 @@ def generate_regression_report():
                 warn(f"Skipping '{name}' which is not found in the old report")
                 continue
 
-            # We also want to skip any metrics not present in both reports,
+            # NOTE: below we want to skip any metrics not present in both reports,
             # since we might decide to add or need to remove some:
             metrics = {}
+
+            # if this is a throughput benchmark set ( identified by the word
+            # "throughput" in the name)  then for now just look at the average
+            # RPS for the purposes of this regression report
+            if "throughput" in benchmark_set_name:
+                try:
+                    metrics['avg_peak_rps'] = pct_change(
+                        merge_base_bench["requests"]["average"],
+                        this_bench[      "requests"]["average"]
+                    )
+                    benchmark_set_results.append((name, metrics))
+                except KeyError:
+                    pass
+                # skip remaining metrics:
+                continue
+
             try:
                 metrics['bytes_alloc_per_req'] = pct_change(
                     merge_base_bench["extended_hasura_checks"]["bytes_allocated_per_request"],
