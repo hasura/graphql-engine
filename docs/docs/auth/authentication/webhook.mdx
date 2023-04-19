@@ -136,6 +136,9 @@ this request. Unlike JWT auth mode, you do not have to pass `X-Hasura-Allowed-Ro
 variables. This is because the webhook is called for each request, allowing the auth service to easily switch the user
 role if needed.
 
+In the example below the `X-Hasura-Is-Owner` and `X-Hasura-Custom` are examples of custom session variables which
+will be available to your permission rules in Hasura Engine.
+
 ```http
 HTTP/1.1 200 OK
 Content-Type: application/json
