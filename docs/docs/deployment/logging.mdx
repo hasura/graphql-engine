@@ -44,21 +44,44 @@ You can configure the GraphQL Engine to enable/disable certain log-types using t
 `HASURA_GRAPHQL_ENABLED_LOG_TYPES` env var. See
 [GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx)
 
-Default enabled log-types are: `startup, http-log, webhook-log, websocket-log, jwk-refresh-log`
+The default enabled **Community Edition** log-types are: `startup, http-log, webhook-log, websocket-log, jwk-refresh-log`
+
+The default enabled **Enterprise Edition** log-types are: `api-limit-log`
 
 ### Configurable log-types
 
-All the log-types that can be enabled/disabled are:
+The Community Edition log-types that can be enabled/disabled are:
 
-| Log type          | Description                                                                                                                                                                                                                       | Log Level          |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| `startup`         | Information that is logged during startup                                                                                                                                                                                         | `info`             |
-| `query-log`       | Logs: the entire GraphQL query with variables, generated SQL statements (only for database queries, not for mutations/subscriptions or Remote Schema and Action queries), the operation name (if provided in the GraphQL request) | `info`             |
-| `execution-log`   | Logs data-source-specific information generated during the request                                                                                                                                                                | `info`
-| `http-log`        | Http access and error logs at the webserver layer (handling GraphQL and Metadata requests)                                                                                                                                        | `info` and `error` |
-| `websocket-log`   | Websocket events and error logs at the websocket server layer (handling GraphQL requests)                                                                                                                                         | `info` and `error` |
-| `webhook-log`     | Logs responses and errors from the authorization webhook (if setup)                                                                                                                                                               | `info` and `error` |
-| `jwk-refresh-log` | Logs information and errors about periodic refreshing of JWK                                                                                                                                                                      | `info` and `error` |
+| Log type               | Description                                                                                                                                                                                                                       | Log Level          |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| `startup`              | Information that is logged during startup                                                                                                                                                                                         | `info`             |
+| `query-log`            | Logs: the entire GraphQL query with variables, generated SQL statements (only for database queries, not for mutations/subscriptions or Remote Schema and Action queries), the operation name (if provided in the GraphQL request) | `info`             |
+| `execution-log`        | Logs data-source-specific information generated during the request                                                                                                                                                                | `info`             |
+| `http-log`             | Http access and error logs at the webserver layer (handling GraphQL and Metadata requests)                                                                                                                                        | `info` and `error` |
+| `websocket-log`        | Websocket events and error logs at the websocket server layer (handling GraphQL requests)                                                                                                                                         | `info` and `error` |
+| `webhook-log`          | Logs responses and errors from the authorization webhook (if setup)                                                                                                                                                               | `info` and `error` |
+| `livequery-poller-log` | Logs information used for subscription metrics calculation                                                                                                                                                                        | `info`             |
+| `action-handler-log`   | Logs information and errors about action handlers                                                                                                                                                                                 | `info`             |
+| `data-connector-log`   | Logs debugging information communicated by data connectors                                                                                                                                                                        | `debug`            |
+| `jwk-refresh-log`      | Logs information and errors about periodic refreshing of JWK                                                                                                                                                                      | `info` and `error` |
+
+The Enterprise Edition log-types that can be enabled/disabled are: 
+
+| Log type                       | Description                                                                                         | Log Level                   |
+| ------------------------------ | --------------------------------------------------------------------------------------------------- | --------------------------- |
+| `http-response-log`            | Logs information about http response                                                                | `info`                      |
+| `api-limit-log`                | Logs errors in api limit                                                                            | `error`                     |
+| `livequery-poller-log`         | Logs information used for subscription metrics calculation                                          | `info`                      |
+| `response-caching-log`         | Logs response information and errors from query caching                                             | `info`, `error` and `debug` |
+| `tracing-log`                  | Logs information from tracing span                                                                  | `info`                      |
+| `metrics`                      | Logs tenant metrics information                                                                     | `info`                      |
+| `health-check-log`             | Logs information from health check                                                                  | `info` and `warn`           |
+
+:::info Note
+
+Hasura Enterprise Edition supports all Community Edition log-types.
+
+:::
 
 ### Internal log-types
 
