@@ -144,12 +144,43 @@ test-native-queries:
 		HSPEC_MATCH=NativeQueries \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		cabal run api-tests:exe:api-tests
-	HASURA_TEST_BACKEND_TYPE=BigQuery \
-		HSPEC_MATCH=NativeQuery \
+	HASURA_TEST_BACKEND_TYPE=SQLServer \
+		HSPEC_MATCH=NativeQueries \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		cabal run api-tests:exe:api-tests
+	HASURA_TEST_BACKEND_TYPE=BigQuery \
+		HSPEC_MATCH=NativeQueries \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		cabal run api-tests:exe:api-tests
+
+.PHONY: test-native-queries-postgres
+## test-native-queries-postgres: run all postgres tests for the Native Query feature
+test-native-queries-postgres:
+	cabal build exe:graphql-engine
+	docker compose up -d --wait postgres
+	HSPEC_MATCH=NativeQueries make test-unit
+	HASURA_TEST_BACKEND_TYPE=Postgres \
+		HSPEC_MATCH=NativeQueries \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		cabal run api-tests:exe:api-tests
+
+.PHONY: test-native-queries-sqlserver
+## test-native-queries-sqlserver: run all sqlserver tests for the Native Query feature
+test-native-queries-sqlserver:
+	cabal build exe:graphql-engine
+	docker compose up -d --wait postgres sqlserver-healthcheck
 	HASURA_TEST_BACKEND_TYPE=SQLServer \
-		HSPEC_MATCH=NativeQuery \
+		HSPEC_MATCH=NativeQueries \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		cabal run api-tests:exe:api-tests
+
+.PHONY: test-native-queries-bigquery
+## test-native-queries-bigquery: run all bigquery tests for the Native Query feature
+test-native-queries-bigquery:
+	cabal build exe:graphql-engine
+	docker compose up -d --wait postgres
+	HASURA_TEST_BACKEND_TYPE=BigQuery \
+		HSPEC_MATCH=NativeQueries \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		cabal run api-tests:exe:api-tests
 

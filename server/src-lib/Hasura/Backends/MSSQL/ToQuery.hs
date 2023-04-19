@@ -563,7 +563,16 @@ fromWith (With withSelects) =
   "WITH " <+> SepByPrinter ", " (map fromAliasedSelect (toList withSelects)) <+> NewlinePrinter
   where
     fromAliasedSelect (Aliased {..}) =
-      fromNameText aliasedAlias <+> " AS " <+> "( " <+> fromSelect aliasedThing <+> " )"
+      fromNameText aliasedAlias
+        <+> " AS "
+        <+> "( "
+        <+> ( case aliasedThing of
+                CTESelect select ->
+                  fromSelect select
+                CTEUnsafeRawSQL nativeQuery ->
+                  renderInterpolatedQuery nativeQuery <+> "\n"
+            )
+        <+> " )"
 
 renderInterpolatedQuery :: InterpolatedQuery Expression -> Printer
 renderInterpolatedQuery = foldr (<+>) "" . renderedParts

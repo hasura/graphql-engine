@@ -16,7 +16,7 @@ import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
-import Harness.Yaml (shouldAtLeastBe, shouldReturnYaml)
+import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
@@ -235,49 +235,3 @@ tests = do
               |]
 
       shouldReturnYaml testEnvironment actual expected
-
-    it "Runs a query that uses a built-in Stored Procedure" $ \testEnvironment -> do
-      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
-          source = BackendType.backendSourceName backendTypeMetadata
-
-          goodQuery = "EXEC sp_databases"
-
-          storedProcedureLogicalModel :: Schema.LogicalModel
-          storedProcedureLogicalModel =
-            (Schema.logicalModel "stored_procedure")
-              { Schema.logicalModelColumns =
-                  [ Schema.logicalModelScalar "database_name" Schema.TStr,
-                    Schema.logicalModelScalar "database_size" Schema.TInt,
-                    Schema.logicalModelScalar "remarks" Schema.TStr
-                  ]
-              }
-
-          useStoredProcedure :: Schema.NativeQuery
-          useStoredProcedure =
-            (Schema.nativeQuery "use_stored_procedure" goodQuery "stored_procedure")
-
-      Schema.trackLogicalModel source storedProcedureLogicalModel testEnvironment
-
-      Schema.trackNativeQuery source useStoredProcedure testEnvironment
-
-      -- making an assumption here that an SQLServer instance will always have
-      -- a `master` database
-      let expected =
-            [yaml|
-                data:
-                  use_stored_procedure:
-                    - database_name: "master"
-              |]
-
-      actual <-
-        GraphqlEngine.postGraphql
-          testEnvironment
-          [graphql|
-              query {
-                use_stored_procedure {
-                  database_name
-                }
-              }
-           |]
-
-      actual `shouldAtLeastBe` expected

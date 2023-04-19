@@ -227,7 +227,7 @@ buildUpsertTx tableName insert ifMatched queryTags = do
   Tx.unitQueryE mutationMSSQLTxErrorHandler (insertValuesIntoTempTableQuery `withQueryTags` queryTags)
 
   -- Run the MERGE query and store the mutated rows in #inserted temporary table
-  merge <- qwdQuery <$> runFromIr (toMerge tableName (_aiInsertObject $ _aiData insert) allTableColumns ifMatched)
+  merge <- qwdQuery <$> runFromIrDiscardCTEs (toMerge tableName (_aiInsertObject $ _aiData insert) allTableColumns ifMatched)
   let mergeQuery = toQueryFlat $ TQ.fromMerge merge
   Tx.unitQueryE mutationMSSQLTxErrorHandler (mergeQuery `withQueryTags` queryTags)
 
@@ -244,11 +244,11 @@ buildInsertResponseTx ::
   Tx.TxET QErr m (Text, Int)
 buildInsertResponseTx stringifyNum withAlias insert queryTags = do
   -- Generate a SQL SELECT statement which outputs the mutation response using the #inserted
-  mutationOutputSelect <- qwdQuery <$> runFromIr (mkMutationOutputSelect stringifyNum withAlias $ _aiOutput insert)
+  mutationOutputSelect <- qwdQuery <$> runFromIrUseCTEs (mkMutationOutputSelect stringifyNum withAlias $ _aiOutput insert)
 
   -- The check constraint is translated to boolean expression
   let checkCondition = fst $ _aiCheckCondition $ _aiData insert
-  checkBoolExp <- qwdQuery <$> runFromIr (runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias))
+  checkBoolExp <- qwdQuery <$> runFromIrDiscardCTEs (runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias))
 
   let withSelect =
         emptySelect
@@ -259,7 +259,7 @@ buildInsertResponseTx stringifyNum withAlias insert queryTags = do
       mutationOutputCheckConstraintSelect = selectMutationOutputAndCheckCondition withAlias mutationOutputSelect checkBoolExp
       -- WITH "with_alias" AS (<table_select>)
       -- SELECT (<mutation_output_select>) AS [mutation_response], (<check_constraint_select>) AS [check_constraint_select]
-      finalSelect = mutationOutputCheckConstraintSelect {selectWith = Just $ With $ pure $ Aliased withSelect withAlias}
+      finalSelect = mutationOutputCheckConstraintSelect {selectWith = Just $ With $ pure $ Aliased (CTESelect withSelect) withAlias}
 
   -- Execute SELECT query to fetch mutation response and check constraint result
   let selectQuery = toQueryFlat (TQ.fromSelect finalSelect)

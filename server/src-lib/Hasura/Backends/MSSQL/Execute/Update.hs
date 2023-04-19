@@ -82,15 +82,15 @@ buildUpdateTx updateOperation stringifyNum queryTags = do
   -- Create a temp table
   Tx.unitQueryE defaultMSSQLTxErrorHandler (createInsertedTempTableQuery `withQueryTags` queryTags)
   let updateQuery = TQ.fromUpdate <$> TSQL.fromUpdate updateOperation
-  updateQueryValidated <- toQueryFlat . qwdQuery <$> runFromIr updateQuery
+  updateQueryValidated <- toQueryFlat . qwdQuery <$> runFromIrDiscardCTEs updateQuery
 
   -- Execute UPDATE statement
   Tx.unitQueryE mutationMSSQLTxErrorHandler (updateQueryValidated `withQueryTags` queryTags)
-  mutationOutputSelect <- qwdQuery <$> runFromIr (mkMutationOutputSelect stringifyNum withAlias $ _auOutput updateOperation)
+  mutationOutputSelect <- qwdQuery <$> runFromIrUseCTEs (mkMutationOutputSelect stringifyNum withAlias $ _auOutput updateOperation)
   let checkCondition = _auCheck updateOperation
 
   -- The check constraint is translated to boolean expression
-  checkBoolExp <- qwdQuery <$> runFromIr (runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias))
+  checkBoolExp <- qwdQuery <$> runFromIrDiscardCTEs (runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias))
 
   let withSelect =
         emptySelect
@@ -98,7 +98,7 @@ buildUpdateTx updateOperation stringifyNum queryTags = do
             selectFrom = Just $ FromTempTable $ Aliased tempTableNameUpdated "updated_alias"
           }
       mutationOutputCheckConstraintSelect = selectMutationOutputAndCheckCondition withAlias mutationOutputSelect checkBoolExp
-      finalSelect = mutationOutputCheckConstraintSelect {selectWith = Just $ With $ pure $ Aliased withSelect withAlias}
+      finalSelect = mutationOutputCheckConstraintSelect {selectWith = Just $ With $ pure $ Aliased (CTESelect withSelect) withAlias}
 
   -- Execute SELECT query to fetch mutation response and check constraint result
   let finalSelectQuery = toQueryFlat $ TQ.fromSelect finalSelect

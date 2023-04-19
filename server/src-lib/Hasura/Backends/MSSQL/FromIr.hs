@@ -10,10 +10,13 @@
 module Hasura.Backends.MSSQL.FromIr
   ( -- * The central Monad
     FromIr,
-    runFromIr,
+    runFromIrDiscardCTEs,
+    runFromIrUseCTEs,
+    runFromIrUseCTEsT,
     Error (..),
     tellBefore,
     tellAfter,
+    tellCTE,
 
     -- * Name generation
     NameTemplate (..),
@@ -30,6 +33,7 @@ import Data.Text qualified as T
 import Hasura.Backends.MSSQL.Instances.Types ()
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Base.Error (QErr, throw500)
+import Hasura.NativeQuery.Metadata (InterpolatedQuery)
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.SQL.Backend
@@ -37,24 +41,29 @@ import Hasura.SQL.Backend
 -- | Allow the query process to emit extra setup / teardown steps
 data IRWriter = IRWriter
   { irwBefore :: [TempTableDDL],
-    irwAfter :: [TempTableDDL]
+    irwAfter :: [TempTableDDL],
+    irwCTEs :: Maybe With
   }
 
 instance Semigroup IRWriter where
-  (IRWriter a b) <> (IRWriter a' b') = IRWriter (a <> a') (b' <> b)
+  (IRWriter a b c) <> (IRWriter a' b' c') = IRWriter (a <> a') (b' <> b) (c <> c')
 
 instance Monoid IRWriter where
-  mempty = IRWriter mempty mempty
+  mempty = IRWriter mempty mempty Nothing
 
 -- | add a step to be run before the main query
 tellBefore :: TempTableDDL -> FromIr ()
 tellBefore step =
-  tell (IRWriter {irwBefore = [step], irwAfter = mempty})
+  tell (IRWriter {irwBefore = [step], irwAfter = mempty, irwCTEs = Nothing})
 
 -- | add a step to be run after the main query
 tellAfter :: TempTableDDL -> FromIr ()
 tellAfter step =
-  tell (IRWriter {irwBefore = mempty, irwAfter = [step]})
+  tell (IRWriter {irwBefore = mempty, irwAfter = [step], irwCTEs = Nothing})
+
+tellCTE :: Aliased (InterpolatedQuery Expression) -> FromIr ()
+tellCTE cte =
+  tell (IRWriter {irwBefore = mempty, irwAfter = mempty, irwCTEs = Just (With $ pure $ CTEUnsafeRawSQL <$> cte)})
 
 -- | The central Monad used throughout for all conversion functions.
 --
@@ -69,23 +78,53 @@ tellAfter step =
 --   See 'generateAlias'.
 newtype FromIr a = FromIr
   { unFromIr ::
-      StateT
-        (Map Text Int)
-        (WriterT IRWriter (Validate (NonEmpty Error)))
+      WriterT
+        IRWriter
+        ( StateT
+            (Map Text Int)
+            (Validate (NonEmpty Error))
+        )
         a
   }
   deriving (Functor, Applicative, Monad, MonadValidate (NonEmpty Error), MonadWriter IRWriter)
 
 -- | Run a 'FromIr' action, throwing errors that have been collected using the
 -- supplied action.
-runFromIr :: MonadError QErr m => FromIr a -> m (QueryWithDDL a)
-runFromIr =
-  fmap (\(result, IRWriter before after) -> QueryWithDDL before result after)
-    . flip onLeft (throw500 . tshow)
+runFromIr ::
+  (Traversable t, MonadError QErr m) =>
+  ((a, IRWriter) -> QueryWithDDL a) ->
+  t (FromIr a) ->
+  m (t (QueryWithDDL a))
+runFromIr toQueryWithDDL =
+  flip onLeft (throw500 . tshow)
     . V.runValidate
-    . runWriterT
     . flip evalStateT mempty
-    . unFromIr
+    . fmap (fmap toQueryWithDDL)
+    . traverse (runWriterT . unFromIr)
+
+-- | Run a 'FromIr' action, throwing errors that have been collected using the
+-- supplied action, and attach CTEs created from native queries to the select query.
+runFromIrUseCTEs :: MonadError QErr m => FromIr Select -> m (QueryWithDDL Select)
+runFromIrUseCTEs fromir = runIdentity <$> runFromIr attachCTEs (Identity fromir)
+
+-- | Run a 'FromIr' action, throwing errors that have been collected using the
+-- supplied action, and discard CTEs created from native queries to the select query.
+runFromIrDiscardCTEs :: MonadError QErr m => FromIr a -> m (QueryWithDDL a)
+runFromIrDiscardCTEs fromir = runIdentity <$> runFromIr discardCTEs (Identity fromir)
+
+-- | Run a 'FromIr' action, throwing errors that have been collected using the
+-- supplied action, and attach CTEs created from native queries to the select query.
+runFromIrUseCTEsT :: (Traversable t, MonadError QErr m) => t (FromIr Select) -> m (t (QueryWithDDL Select))
+runFromIrUseCTEsT = runFromIr attachCTEs
+
+attachCTEs :: (Select, IRWriter) -> QueryWithDDL Select
+attachCTEs (select, IRWriter before after ctes) =
+  QueryWithDDL before select {selectWith = ctes <> selectWith select} after
+
+discardCTEs :: (a, IRWriter) -> QueryWithDDL a
+discardCTEs (a, IRWriter before after _ctes) =
+  -- TODO: assert ctes is empty, or throw an error "not supported"
+  QueryWithDDL before a after
 
 -- | Errors that may happen during translation.
 data Error

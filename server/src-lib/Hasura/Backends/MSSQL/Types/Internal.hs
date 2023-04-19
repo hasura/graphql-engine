@@ -89,6 +89,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     Values (..),
     Where (..),
     With (..),
+    CTEBody (..),
     emptySelect,
     geoTypes,
     getGQLTableName,
@@ -379,7 +380,13 @@ newtype Where
   = Where [Expression]
 
 newtype With
-  = With (NonEmpty (Aliased Select))
+  = With (NonEmpty (Aliased CTEBody))
+  deriving (Semigroup)
+
+-- | Something that can appear in a CTE body.
+data CTEBody
+  = CTESelect Select
+  | CTEUnsafeRawSQL (InterpolatedQuery Expression)
 
 -- | Extra query steps that can be emitted from the main
 -- query to do things like setup temp tables

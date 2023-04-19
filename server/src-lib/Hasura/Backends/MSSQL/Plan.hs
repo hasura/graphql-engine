@@ -92,7 +92,7 @@ runIrWrappingRoot ::
   FromIr Select ->
   m (QueryWithDDL Select)
 runIrWrappingRoot selectAction =
-  runFromIr selectAction `onLeft` (throwError . overrideQErrStatus HTTP.status400 NotSupported)
+  runFromIrUseCTEs selectAction `onLeft` (throwError . overrideQErrStatus HTTP.status400 NotSupported)
 
 -- | Prepare a value without any query planning; we just execute the
 -- query with the values embedded.
@@ -138,7 +138,9 @@ planSubscription unpreparedMap sessionVariables = do
           unpreparedMap
       )
       emptyPrepareState
-  selectMap <- qwdQuery <$> runFromIr (traverse fromQueryRootField rootFieldMap)
+  let rootFields :: InsOrdHashMap G.Name (FromIr Select)
+      rootFields = fmap fromQueryRootField rootFieldMap
+  selectMap <- fmap qwdQuery <$> runFromIrUseCTEsT rootFields
   pure (collapseMap selectMap, prepareState)
 
 -- Plan a query without prepare/exec.
