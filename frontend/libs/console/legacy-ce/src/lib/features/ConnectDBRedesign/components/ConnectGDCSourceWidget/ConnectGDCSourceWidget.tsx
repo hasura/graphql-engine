@@ -17,9 +17,9 @@ import { adaptGraphQLCustomization } from '../GraphQLCustomization/utils/adaptRe
 import { generateGDCRequestPayload } from './utils/generateRequest';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
-import { capitaliseFirstLetter } from '../../../../components/Common/ConfigureTransformation/utils';
 import { Collapsible } from '../../../../new-components/Collapsible';
 import { DisplayToastErrorMessage } from '../Common/DisplayToastErrorMessage';
+import { useAvailableDrivers } from '../../../ConnectDB/hooks';
 
 interface ConnectGDCSourceWidgetProps {
   driver: string;
@@ -56,6 +56,10 @@ const useFormValidationSchema = (driver: string) => {
 export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
   const { driver, dataSourceName } = props;
   const [tab, setTab] = useState('connection_details');
+
+  const { data: drivers } = useAvailableDrivers();
+  const driverDisplayName =
+    drivers?.find(d => d.name === driver)?.displayName ?? driver;
 
   const { data: metadataSource } = useMetadata(m =>
     m.metadata.sources.find(source => source.name === dataSourceName)
@@ -135,8 +139,8 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
     <div>
       <div className="text-xl text-gray-600 font-semibold">
         {isEditMode
-          ? `Edit ${capitaliseFirstLetter(driver)} Connection`
-          : `Connect New ${capitaliseFirstLetter(driver)} Database`}
+          ? `Edit ${driverDisplayName} Connection`
+          : `Connect ${driverDisplayName} Database`}
       </div>
       <Form onSubmit={handleSubmit}>
         <Tabs

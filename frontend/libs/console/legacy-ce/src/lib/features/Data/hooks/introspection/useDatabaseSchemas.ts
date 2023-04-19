@@ -20,5 +20,6 @@ export function useGetDatabaseSchemas(dataSourceName: string) {
         return result;
       }
     },
+    refetchOnWindowFocus: false,
   });
 }
