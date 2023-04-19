@@ -5,7 +5,6 @@ import copy
 import graphql
 import json
 import jsondiff
-import jwt
 import os
 import pytest
 import queue
@@ -220,26 +219,9 @@ def test_forbidden_webhook(hge_ctx, conf):
         'request id': resp_hdrs.get('x-request-id')
     })
 
-def mk_claims_with_namespace_path(claims,hasura_claims,namespace_path):
-    if namespace_path is None:
-        claims['https://hasura.io/jwt/claims'] = hasura_claims
-    elif namespace_path == "$":
-        claims.update(hasura_claims)
-    elif namespace_path == "$.hasura_claims":
-        claims['hasura_claims'] = hasura_claims
-    elif namespace_path == "$.hasura['claims%']":
-        claims['hasura'] = {}
-        claims['hasura']['claims%'] = hasura_claims
-    else:
-        raise Exception(
-                '''claims_namespace_path should not be anything
-                other than $.hasura_claims, $.hasura['claims%'] or $ for testing. The
-                value of claims_namespace_path was {}'''.format(namespace_path))
-    return claims
-
 # Returns the response received and a bool indicating whether the test passed
 # or not (this will always be True unless we are `--accepting`)
-def check_query(hge_ctx: HGECtx, conf, transport='http', add_auth=True, claims_namespace_path=None, gqlws=False):
+def check_query(hge_ctx: HGECtx, conf, transport='http', add_auth=True, gqlws=False):
     headers = {}
     if 'headers' in conf:
         # Convert header values to strings, as the YAML parser might give us an internal class.
@@ -253,21 +235,6 @@ def check_query(hge_ctx: HGECtx, conf, transport='http', add_auth=True, claims_n
         headers['X-Hasura-Role'] = 'admin'
 
     if add_auth:
-        # Use the hasura role specified in the test case, and create a JWT token
-        if hge_ctx.hge_jwt_key is not None and len(headers) > 0 and 'X-Hasura-Role' in headers:
-            hClaims = dict()
-            hClaims['X-Hasura-Allowed-Roles'] = [headers['X-Hasura-Role']]
-            hClaims['X-Hasura-Default-Role'] = headers['X-Hasura-Role']
-            for key in headers:
-                if key != 'X-Hasura-Role':
-                    hClaims[key] = headers[key]
-            claim = {
-                "sub": "foo",
-                "name": "bar",
-            }
-            claim = mk_claims_with_namespace_path(claim, hClaims, claims_namespace_path)
-            headers['Authorization'] = 'Bearer ' + jwt.encode(claim, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
-
         # Use the hasura role specified in the test case, and create an authorization token which will be verified by webhook
         if hge_ctx.webhook and len(headers) > 0:
             if hge_ctx.webhook.tls_trust != TLSTrust.INSECURE:
@@ -275,14 +242,14 @@ def check_query(hge_ctx: HGECtx, conf, transport='http', add_auth=True, claims_n
                 test_forbidden_webhook(hge_ctx, conf)
             headers = authorize_for_webhook(headers)
 
-        # The case as admin with admin-secret and jwt/webhook
-        elif (hge_ctx.webhook or hge_ctx.hge_jwt_key is not None) \
+        # The case as admin with admin-secret and webhook
+        elif hge_ctx.webhook \
              and hge_ctx.hge_key is not None \
              and len(headers) == 0:
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
 
         # The case as admin with only admin-secret
-        elif hge_ctx.hge_key is not None and not hge_ctx.webhook and hge_ctx.hge_jwt_key is None:
+        elif hge_ctx.hge_key is not None and not hge_ctx.webhook:
             # Test whether it is forbidden when incorrect/no admin_secret is specified
             test_forbidden_when_admin_secret_reqd(hge_ctx, conf)
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
@@ -570,7 +537,7 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True, gqlws = False):
               if PytestConf.config.getoption("--port-to-haskell"):
                   add_spec(f + " [" + str(ix) + "]", sconf)
               else:
-                  actual_resp, matched = check_query(hge_ctx, sconf, transport, add_auth, None, gqlws)
+                  actual_resp, matched = check_query(hge_ctx, sconf, transport, add_auth, gqlws)
                   if PytestConf.config.getoption("--accept") and not matched:
                       conf[ix]['response'] = actual_resp
                       should_write_back = True
@@ -580,7 +547,7 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True, gqlws = False):
             else:
                 if conf['status'] != 200:
                     hge_ctx.may_skip_test_teardown = True
-                actual_resp, matched = check_query(hge_ctx, conf, transport, add_auth, None, gqlws)
+                actual_resp, matched = check_query(hge_ctx, conf, transport, add_auth, gqlws)
                 # If using `--accept` write the file back out with the new expected
                 # response set to the actual response we got:
                 if PytestConf.config.getoption("--accept") and not matched:

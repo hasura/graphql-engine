@@ -1,5 +1,6 @@
 import collections
 import http.server
+import json
 import inspect
 import os
 import pytest
@@ -16,6 +17,7 @@ import uuid
 import auth_webhook_server
 from context import ActionsWebhookServer, EvtsWebhookServer, GQLWsClient, GraphQLWSClient, HGECtx, HGECtxGQLServer, HGECtxWebhook, PytestConf
 import fixtures.hge
+import fixtures.jwt
 import fixtures.postgres
 import fixtures.tls
 import jwk_server
@@ -46,13 +48,6 @@ def pytest_addoption(parser):
 
     parser.addoption('--tls-ca-cert', help='The CA certificate used for helper services', required=False)
     parser.addoption('--tls-ca-key', help='The CA key used for helper services', required=False)
-
-    parser.addoption(
-        "--hge-jwt-key-file", metavar="HGE_JWT_KEY_FILE", help="File containing the private key used to encode jwt tokens using RS512 algorithm", required=False
-    )
-    parser.addoption(
-        "--hge-jwt-conf", metavar="HGE_JWT_CONF", help="The JWT conf", required=False
-    )
 
     parser.addoption(
         "--test-hge-scale-url",
@@ -113,18 +108,6 @@ This option may result in test failures if the schema has to change between the 
         metavar="<path>",
         required=False,
         help="When used along with collect-only, it will write the list of upgrade tests into the file specified"
-    )
-
-    parser.addoption(
-        "--test-unauthorized-role",
-        action="store_true",
-        help="Run testcases for unauthorized role",
-    )
-
-    parser.addoption(
-        "--test-no-cookie-and-unauth-role",
-        action="store_true",
-        help="Run testcases for no unauthorized role and no cookie jwt header set (cookie auth is set as part of jwt config upon engine startup)",
     )
 
     parser.addoption(
@@ -709,6 +692,35 @@ def ws_client_graphql_ws(hge_ctx):
     time.sleep(0.1)
     yield client
     client.teardown()
+
+@pytest.fixture(scope='class')
+@pytest.mark.early
+def jwt_configuration(
+    request: pytest.FixtureRequest,
+    tmp_path_factory: pytest.TempPathFactory,
+    hge_fixture_env: dict[str, str],
+) -> Optional[fixtures.jwt.JWTConfiguration]:
+    marker = request.node.get_closest_marker('jwt')
+    if not marker:
+        raise Exception('JWT configuration is required.')
+
+    algorithm = marker.args[0]
+    try:
+        configuration = marker.args[1]
+    except IndexError:
+        configuration = {}
+
+    tmp_path = tmp_path_factory.mktemp('jwt')
+    match algorithm:
+        case 'rsa':
+            configuration = fixtures.jwt.init_rsa(tmp_path, configuration)
+        case 'ed25519':
+            configuration = fixtures.jwt.init_ed25519(tmp_path, configuration)
+        case _:
+            raise Exception(f'Unsupported JWT configuration: {marker.args!r}')
+
+    hge_fixture_env['HASURA_GRAPHQL_JWT_SECRET'] = json.dumps(configuration.server_configuration)
+    return configuration
 
 @pytest.fixture(scope='class')
 @pytest.mark.early

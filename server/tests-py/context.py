@@ -838,18 +838,6 @@ class HGECtx:
         self.metadata_schema_url = metadata_schema_url
         self.hge_key = hge_key
         self.webhook = webhook
-        hge_jwt_key_file = config.getoption('--hge-jwt-key-file')
-        if hge_jwt_key_file is None:
-            self.hge_jwt_key = None
-        else:
-            with open(hge_jwt_key_file) as f:
-                self.hge_jwt_key = f.read()
-        self.hge_jwt_conf = config.getoption('--hge-jwt-conf')
-        if self.hge_jwt_conf is not None:
-            self.hge_jwt_conf_dict = json.loads(self.hge_jwt_conf)
-            self.hge_jwt_algo = self.hge_jwt_conf_dict["type"]
-            if self.hge_jwt_algo == "Ed25519":
-                self.hge_jwt_algo = "EdDSA"
         self.may_skip_test_teardown = False
 
         # This will be GC'd, but we also explicitly dispose() in teardown()
