@@ -237,12 +237,22 @@ auth-webhook is made after the time specified in those fields and a new websocke
 
 :::
 
-## Caching webhook session variables
+## Webhook Auth Caching
 
 <ProductBadge standard pro ee self />
 
-Webhook session variables can be cached in order to improve performance of the request. For caching, you need to return
-either:
+Session variables from a webhook token can be cached to improve the performance of the request.
+
+:::info Note
+
+- This feature is available for version `v2.22.0` and higher.
+- Webhook auth caching requires a [redis instance configured](deployment/graphql-engine-flags/reference.mdx#redis-url)
+  with the GraphQL Engine. If the redis instance is not configured or inaccessible, then the request goes through by
+  skipping the cache.
+
+:::
+
+For caching, you need to return either:
 
 - a `Cache-Control` variable, modeled on the
   [Cache-Control HTTP Header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control), to specify a
@@ -278,14 +288,15 @@ Content-Type: application/json
 
 :::tip Tip
 
-The cache key is based on the following parameters:
+The cache key is based on the information that is sent to the auth webhook, namely the following:
 
 - Client headers
 - Graphql request
 
-This means that the cache key will change if the graphql request changes. If you want to cache auth token based on
-client headers only, you can
-[omit the auth-hook request body](deployment/graphql-engine-flags/reference.mdx#send-request-body-to-auth-hook).
+Note that the cache key will change if the GraphQL request changes even if the client headers are same. If you want to
+cache auth token based on client headers only, you should disable sending GraphQL request to the auth webhook using
+[Send Request Body to Auth Hook](deployment/graphql-engine-flags/reference.mdx#send-request-body-to-auth-hook) server
+configuration.
 
 :::
 
