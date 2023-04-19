@@ -1,8 +1,7 @@
 import { useQuery } from 'react-query';
 import { useAllSuggestedRelationships } from '../../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useAllSuggestedRelationships';
 import { tableRelationships as getTableRelationships } from '../../../../DatabaseRelationships/utils/tableRelationships';
-import { exportMetadata } from '../../../../DataSource';
-import { useHttpClient } from '../../../../Network';
+import { useMetadata } from '../../../../hasura-metadata-api';
 
 export const getTrackedRelationshipsCacheKey = (dataSourceName: string) => [
   'tracked_relationships',
@@ -10,18 +9,16 @@ export const getTrackedRelationshipsCacheKey = (dataSourceName: string) => [
 ];
 
 export const useTrackedRelationships = (dataSourceName: string) => {
-  const httpClient = useHttpClient();
-
   const { suggestedRelationships } = useAllSuggestedRelationships({
     dataSourceName,
     isEnabled: true,
     omitTracked: false,
   });
 
-  const fetchRelationships = async () => {
-    const { metadata } = await exportMetadata({ httpClient });
+  const { data: metadata } = useMetadata(m => m.metadata);
 
-    const currentMetadataSource = metadata.sources?.find(
+  const fetchRelationships = async () => {
+    const currentMetadataSource = metadata?.sources?.find(
       source => source.name === dataSourceName
     );
 

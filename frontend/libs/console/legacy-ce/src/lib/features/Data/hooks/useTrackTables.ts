@@ -43,6 +43,7 @@ export const useTrackTables = ({
               args: {
                 table: trackableTable.table,
                 source: dataSourceName,
+                configuration: trackableTable.configuration,
               },
             })),
           },

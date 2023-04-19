@@ -14,7 +14,7 @@ type useDatabaseConnectDriversProps = {
 const SuperConnectorDrivers: readonly DriverInfo[] = [
   {
     name: 'mysqlgdc',
-    displayName: 'MySql',
+    displayName: 'MySQL',
     native: false,
     release: 'Alpha',
     enterprise: true,

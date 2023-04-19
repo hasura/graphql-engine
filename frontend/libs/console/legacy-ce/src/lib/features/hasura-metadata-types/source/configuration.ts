@@ -63,7 +63,7 @@ export interface MssqlConfiguration {
   connection_info: {
     connection_string: string | FromEnv;
     pool_settings?: {
-      total_max_connections?: number;
+      total_max_connections?: number | null;
       idle_timeout?: number;
     };
   };

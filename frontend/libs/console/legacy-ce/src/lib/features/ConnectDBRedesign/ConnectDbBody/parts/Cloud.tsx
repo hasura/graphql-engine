@@ -28,7 +28,7 @@ export const Cloud = ({
           <NeonConnect
             allDatabases={sourceNames ?? []}
             dispatch={dispatch}
-            connectDbUrl={'data/v2/manage/connect'}
+            connectDbUrl={'/data/v2/manage/connect'}
           />
         </div>
       )}

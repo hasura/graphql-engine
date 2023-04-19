@@ -35,7 +35,7 @@ export const MultipleJWTSecretsPage = () => {
         <MultipleJWTSecretsSvg />
         {isFeatureActive ? (
           <p className="mt-md text-muted">
-            <strong>Setup Multiple Admin Secrets</strong>
+            <strong>Setup Multiple JWT Secrets</strong>
             <br />
             <a
               className="font-bold text-secondary"
