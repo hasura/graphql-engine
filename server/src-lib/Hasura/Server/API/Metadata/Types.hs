@@ -7,8 +7,8 @@ module Hasura.Server.API.Metadata.Types
 where
 
 import GHC.Generics
-import Hasura.CustomReturnType.API qualified as CustomReturnType
 import Hasura.Function.API qualified as Functions
+import Hasura.LogicalModel.API qualified as LogicalModel
 import Hasura.NativeQuery.API qualified as NativeQueries
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
@@ -97,11 +97,11 @@ data RQLMetadataV1
   | RMTrackNativeQuery !(AnyBackend NativeQueries.TrackNativeQuery)
   | RMUntrackNativeQuery !(AnyBackend NativeQueries.UntrackNativeQuery)
   | -- Custom types
-    RMGetCustomReturnType !(AnyBackend CustomReturnType.GetCustomReturnType)
-  | RMTrackCustomReturnType !(AnyBackend CustomReturnType.TrackCustomReturnType)
-  | RMUntrackCustomReturnType !(AnyBackend CustomReturnType.UntrackCustomReturnType)
-  | RMCreateSelectCustomReturnTypePermission !(AnyBackend (CustomReturnType.CreateCustomReturnTypePermission SelPerm))
-  | RMDropSelectCustomReturnTypePermission !(AnyBackend CustomReturnType.DropCustomReturnTypePermission)
+    RMGetLogicalModel !(AnyBackend LogicalModel.GetLogicalModel)
+  | RMTrackLogicalModel !(AnyBackend LogicalModel.TrackLogicalModel)
+  | RMUntrackLogicalModel !(AnyBackend LogicalModel.UntrackLogicalModel)
+  | RMCreateSelectLogicalModelPermission !(AnyBackend (LogicalModel.CreateLogicalModelPermission SelPerm))
+  | RMDropSelectLogicalModelPermission !(AnyBackend LogicalModel.DropLogicalModelPermission)
   | -- Tables event triggers
     RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)

@@ -24,7 +24,7 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     TableBuildInput (TableBuildInput, _tbiName),
     TablePermissionInputs (..),
     addTableContext,
-    addCustomReturnTypeContext,
+    addLogicalModelContext,
     boActions,
     boCustomTypes,
     boBackendCache,
@@ -54,9 +54,9 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Types (CustomReturnTypeName)
 import Hasura.EncJSON
 import Hasura.Incremental qualified as Inc
+import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.Backend
@@ -427,5 +427,5 @@ buildInfoMapPreservingMetadataM extractKey mkMetadataObject buildInfo =
 addTableContext :: (Backend b) => TableName b -> Text -> Text
 addTableContext tableName e = "in table " <> tableName <<> ": " <> e
 
-addCustomReturnTypeContext :: CustomReturnTypeName -> Text -> Text
-addCustomReturnTypeContext customReturnTypeName e = "in custom return type " <> customReturnTypeName <<> ": " <> e
+addLogicalModelContext :: LogicalModelName -> Text -> Text
+addLogicalModelContext logicalModelName e = "in logical model " <> logicalModelName <<> ": " <> e

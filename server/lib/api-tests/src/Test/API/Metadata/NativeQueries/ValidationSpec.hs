@@ -60,20 +60,20 @@ tests = do
   let simpleQuery :: Text
       simpleQuery = "SELECT (thing / 2)::integer AS divided FROM stuff"
 
-      conflictingReturnType :: Schema.CustomReturnType
-      conflictingReturnType =
-        (Schema.customType "conflicting")
-          { Schema.customTypeColumns =
-              [ Schema.customReturnTypeScalar "thing" Schema.TInt,
-                Schema.customReturnTypeScalar "date" Schema.TUTCTime
+      conflictingLogicalModel :: Schema.LogicalModel
+      conflictingLogicalModel =
+        (Schema.logicalModel "conflicting")
+          { Schema.logicalModelColumns =
+              [ Schema.logicalModelScalar "thing" Schema.TInt,
+                Schema.logicalModelScalar "date" Schema.TUTCTime
               ]
           }
 
-      dividedReturnType :: Schema.CustomReturnType
-      dividedReturnType =
-        (Schema.customType "divided_stuff")
-          { Schema.customTypeColumns =
-              [ Schema.customReturnTypeScalar "divided" Schema.TInt
+      dividedLogicalModel :: Schema.LogicalModel
+      dividedLogicalModel =
+        (Schema.logicalModel "divided_stuff")
+          { Schema.logicalModelColumns =
+              [ Schema.logicalModelScalar "divided" Schema.TInt
               ]
           }
 
@@ -126,7 +126,7 @@ tests = do
                     ]
                 }
 
-        Schema.trackCustomReturnType sourceName dividedReturnType testEnvironment
+        Schema.trackLogicalModel sourceName dividedLogicalModel testEnvironment
 
         actual <-
           GraphqlEngine.postMetadataWithStatus
@@ -163,7 +163,7 @@ tests = do
                       status_code: "42P01"
               |]
 
-        Schema.trackCustomReturnType sourceName dividedReturnType testEnvironment
+        Schema.trackLogicalModel sourceName dividedLogicalModel testEnvironment
 
         actual <-
           GraphqlEngine.postMetadataWithStatus
@@ -193,7 +193,7 @@ tests = do
 
             expectedError = "Encountered conflicting definitions in the selection set for 'subscription_root' for field 'hasura_stuff' defined in [table hasura.stuff in source " <> sourceName <> ", native_query hasura_stuff in source " <> sourceName <> "]. Fields must not be defined more than once across all sources."
 
-        Schema.trackCustomReturnType sourceName conflictingReturnType testEnv
+        Schema.trackLogicalModel sourceName conflictingLogicalModel testEnv
 
         shouldReturnYaml
           testEnv
@@ -226,7 +226,7 @@ tests = do
                     ]
                 }
 
-        Schema.trackCustomReturnType source conflictingReturnType testEnv
+        Schema.trackLogicalModel source conflictingLogicalModel testEnv
 
         shouldReturnYaml
           testEnv
@@ -272,7 +272,7 @@ tests = do
                   error: Failed to validate query
                 |]
 
-        Schema.trackCustomReturnType sourceName dividedReturnType testEnvironment
+        Schema.trackLogicalModel sourceName dividedLogicalModel testEnvironment
 
         actual <-
           GraphqlEngine.postMetadataWithStatus
@@ -298,11 +298,11 @@ tests = do
 
             query = "SELECT {{text}} AS not_text"
 
-            brokenColumnsReturn :: Schema.CustomReturnType
+            brokenColumnsReturn :: Schema.LogicalModel
             brokenColumnsReturn =
-              (Schema.customType "failing")
-                { Schema.customTypeColumns =
-                    [ Schema.customReturnTypeScalar "text" Schema.TStr
+              (Schema.logicalModel "failing")
+                { Schema.logicalModelColumns =
+                    [ Schema.logicalModelScalar "text" Schema.TStr
                     ]
                 }
 
@@ -314,7 +314,7 @@ tests = do
                     ]
                 }
 
-        Schema.trackCustomReturnType sourceName brokenColumnsReturn testEnvironment
+        Schema.trackLogicalModel sourceName brokenColumnsReturn testEnvironment
 
         actual <-
           GraphqlEngine.postMetadataWithStatus
@@ -335,7 +335,7 @@ tests = do
             missingArgsNativeQuery =
               (Schema.nativeQuery "divided_falling" query "divided_stuff")
 
-        Schema.trackCustomReturnType sourceName dividedReturnType testEnvironment
+        Schema.trackLogicalModel sourceName dividedLogicalModel testEnvironment
 
         shouldReturnYaml
           testEnvironment
@@ -364,7 +364,7 @@ tests = do
                     ]
                 }
 
-        Schema.trackCustomReturnType sourceName dividedReturnType testEnvironment
+        Schema.trackLogicalModel sourceName dividedLogicalModel testEnvironment
 
         actual <-
           GraphqlEngine.postMetadataWithStatus
@@ -393,7 +393,7 @@ tests = do
                     ]
                 }
 
-        Schema.trackCustomReturnType sourceName dividedReturnType testEnvironment
+        Schema.trackLogicalModel sourceName dividedLogicalModel testEnvironment
 
         Schema.trackNativeQuery sourceName dividedStuffNativeQuery testEnvironment
 
@@ -415,6 +415,6 @@ tests = do
                     ]
                 }
 
-        Schema.trackCustomReturnType sourceName dividedReturnType testEnvironment
+        Schema.trackLogicalModel sourceName dividedLogicalModel testEnvironment
 
         Schema.trackNativeQuery sourceName dividedStuffNativeQuery testEnvironment

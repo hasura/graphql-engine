@@ -1,4 +1,4 @@
-module Hasura.CustomReturnType.Common
+module Hasura.LogicalModel.Common
   ( toFieldInfo,
     columnsFromFields,
   )
@@ -6,7 +6,7 @@ where
 
 import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.Text.Extended (ToTxt (toTxt))
-import Hasura.CustomReturnType.Types (CustomReturnTypeField (..))
+import Hasura.LogicalModel.Types (LogicalModelField (..))
 import Hasura.NativeQuery.Types (NullableScalarType (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend (..))
@@ -15,15 +15,15 @@ import Hasura.RQL.Types.Table (FieldInfo (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 
 columnsFromFields ::
-  InsOrd.InsOrdHashMap k (CustomReturnTypeField b) ->
+  InsOrd.InsOrdHashMap k (LogicalModelField b) ->
   InsOrd.InsOrdHashMap k (NullableScalarType b)
 columnsFromFields =
   InsOrd.mapMaybe
     ( \case
-        CustomReturnTypeScalarField
-          { crtfType = nstType,
-            crtfNullable = nstNullable,
-            crtfDescription = nstDescription
+        LogicalModelScalarField
+          { lmfType = nstType,
+            lmfNullable = nstNullable,
+            lmfDescription = nstDescription
           } ->
             Just (NullableScalarType {..})
         _ -> Nothing
@@ -32,14 +32,14 @@ columnsFromFields =
 toFieldInfo :: forall b. (Backend b) => InsOrd.InsOrdHashMap (Column b) (NullableScalarType b) -> Maybe [FieldInfo b]
 toFieldInfo fields =
   traverseWithIndex
-    (\i -> fmap FIColumn . customTypeToColumnInfo i)
+    (\i -> fmap FIColumn . logicalModelToColumnInfo i)
     (InsOrd.toList fields)
   where
     traverseWithIndex :: (Applicative m) => (Int -> aa -> m bb) -> [aa] -> m [bb]
     traverseWithIndex f = zipWithM f [0 ..]
 
-    customTypeToColumnInfo :: Int -> (Column b, NullableScalarType b) -> Maybe (ColumnInfo b)
-    customTypeToColumnInfo i (column, NullableScalarType {..}) = do
+    logicalModelToColumnInfo :: Int -> (Column b, NullableScalarType b) -> Maybe (ColumnInfo b)
+    logicalModelToColumnInfo i (column, NullableScalarType {..}) = do
       name <- G.mkName (toTxt column)
       pure $
         ColumnInfo

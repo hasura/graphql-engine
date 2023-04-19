@@ -14,7 +14,7 @@ module Hasura.RQL.Types.Metadata.Common
     ComputedFieldMetadata (..),
     ComputedFields,
     CronTriggers,
-    CustomReturnTypes,
+    LogicalModels,
     Endpoints,
     NativeQueries,
     EventTriggers,
@@ -44,7 +44,7 @@ module Hasura.RQL.Types.Metadata.Common
     smTables,
     smCustomization,
     smNativeQueries,
-    smCustomReturnTypes,
+    smLogicalModels,
     smHealthCheckConfig,
     sourcesCodec,
     tmArrayRelationships,
@@ -78,8 +78,8 @@ import Data.List.Extended qualified as L
 import Data.Maybe (fromJust)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
-import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata (..), CustomReturnTypeName)
 import Hasura.Function.Metadata (FunctionMetadata (..))
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..), LogicalModelName)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..), NativeQueryName)
 import Hasura.Prelude
@@ -347,7 +347,7 @@ type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 
 type NativeQueries b = InsOrdHashMap NativeQueryName (NativeQueryMetadata b)
 
-type CustomReturnTypes b = InsOrdHashMap CustomReturnTypeName (CustomReturnTypeMetadata b)
+type LogicalModels b = InsOrdHashMap LogicalModelName (LogicalModelMetadata b)
 
 type Endpoints = InsOrdHashMap EndpointName CreateEndpoint
 
@@ -364,7 +364,7 @@ data SourceMetadata b = SourceMetadata
     _smTables :: Tables b,
     _smFunctions :: Functions b,
     _smNativeQueries :: NativeQueries b,
-    _smCustomReturnTypes :: CustomReturnTypes b,
+    _smLogicalModels :: LogicalModels b,
     _smConfiguration :: SourceConnConfiguration b,
     _smQueryTags :: Maybe QueryTagsConfig,
     _smCustomization :: SourceCustomization,
@@ -384,7 +384,7 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadat
     _smTables <- oMapFromL _tmTable <$> o .: "tables"
     _smFunctions <- oMapFromL _fmFunction <$> o .:? "functions" .!= []
     _smNativeQueries <- oMapFromL _nqmRootFieldName <$> o .:? "native_queries" .!= []
-    _smCustomReturnTypes <- oMapFromL _crtmName <$> o .:? "custom_return_types" .!= []
+    _smLogicalModels <- oMapFromL _lmmName <$> o .:? "logical_models" .!= []
     _smConfiguration <- o .: "configuration"
     _smQueryTags <- o .:? "query_tags"
     _smCustomization <- o .:? "customization" .!= emptySourceCustomization
@@ -445,8 +445,8 @@ instance Backend b => HasCodec (SourceMetadata b) where
           .== _smFunctions
         <*> optionalFieldOrNullWithOmittedDefaultWith' "native_queries" (sortedElemsCodec _nqmRootFieldName) mempty
           .== _smNativeQueries
-        <*> optionalFieldOrNullWithOmittedDefaultWith' "custom_return_types" (sortedElemsCodec _crtmName) mempty
-          .== _smCustomReturnTypes
+        <*> optionalFieldOrNullWithOmittedDefaultWith' "logical_models" (sortedElemsCodec _lmmName) mempty
+          .== _smLogicalModels
         <*> requiredField' "configuration"
           .== _smConfiguration
         <*> optionalFieldOrNull' "query_tags"

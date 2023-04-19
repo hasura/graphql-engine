@@ -6,9 +6,8 @@ module Hasura.NativeQuery.Schema (defaultBuildNativeQueryRootFields) where
 import Data.Has (Has (getter))
 import Data.HashMap.Strict qualified as HM
 import Data.Monoid (Ap (Ap, getAp))
-import Hasura.CustomReturnType.Schema
 import Hasura.GraphQL.Schema.Backend
-  ( BackendCustomReturnTypeSelectSchema (..),
+  ( BackendLogicalModelSelectSchema (..),
     BackendSchema (columnParser),
     MonadBuildSchema,
   )
@@ -18,6 +17,7 @@ import Hasura.GraphQL.Schema.Common
   )
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
+import Hasura.LogicalModel.Schema
 import Hasura.NativeQuery.Cache (NativeQueryInfo (..))
 import Hasura.NativeQuery.IR (NativeQuery (..))
 import Hasura.NativeQuery.Metadata (InterpolatedQuery (..), NativeQueryArgumentName (..))
@@ -42,7 +42,7 @@ import Language.GraphQL.Draft.Syntax.QQ qualified as G
 defaultBuildNativeQueryRootFields ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
-    BackendCustomReturnTypeSelectSchema b
+    BackendLogicalModelSelectSchema b
   ) =>
   NativeQueryInfo b ->
   SchemaT
@@ -63,12 +63,12 @@ defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
 
   stringifyNumbers <- retrieve Options.soStringifyNumbers
 
-  customReturnTypePermissions <-
+  logicalModelPermissions <-
     MaybeT . fmap Just $
-      buildCustomReturnTypePermissions @b @r @m @n _nqiReturns
+      buildLogicalModelPermissions @b @r @m @n _nqiReturns
 
-  (selectionSetParser, customTypesArgsParser) <-
-    MaybeT $ buildCustomReturnTypeFields _nqiReturns
+  (selectionSetParser, logicalModelsArgsParser) <-
+    MaybeT $ buildLogicalModelFields _nqiReturns
 
   let interpolatedQuery nqArgs =
         InterpolatedQuery $
@@ -94,11 +94,11 @@ defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
         fieldName
         description
         ( (,)
-            <$> customTypesArgsParser
+            <$> logicalModelsArgsParser
             <*> nativeQueryArgsParser
         )
         selectionSetParser
-        <&> \((crtArgs, nqArgs), fields) ->
+        <&> \((lmArgs, nqArgs), fields) ->
           QDBMultipleRows $
             IR.AnnSelectG
               { IR._asnFields = fields,
@@ -108,10 +108,10 @@ defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
                       { nqRootFieldName = _nqiRootFieldName,
                         nqArgs,
                         nqInterpolatedQuery = interpolatedQuery nqArgs,
-                        nqReturnType = buildCustomReturnTypeIR _nqiReturns
+                        nqLogicalModel = buildLogicalModelIR _nqiReturns
                       },
-                IR._asnPerm = customReturnTypePermissions,
-                IR._asnArgs = crtArgs,
+                IR._asnPerm = logicalModelPermissions,
+                IR._asnArgs = lmArgs,
                 IR._asnStrfyNum = stringifyNumbers,
                 IR._asnNamingConvention = Just tCase
               }

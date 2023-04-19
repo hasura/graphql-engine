@@ -88,9 +88,9 @@ instance BackendTableSelectSchema 'BigQuery where
   selectTableAggregate = defaultSelectTableAggregate
   tableSelectionSet = defaultTableSelectionSet
 
-instance BackendCustomReturnTypeSelectSchema 'BigQuery where
-  customReturnTypeArguments = defaultCustomReturnTypeArgs
-  customReturnTypeSelectionSet = defaultCustomReturnTypeSelectionSet
+instance BackendLogicalModelSelectSchema 'BigQuery where
+  logicalModelArguments = defaultLogicalModelArgs
+  logicalModelSelectionSet = defaultLogicalModelSelectionSet
 
 ----------------------------------------------------------------
 -- Individual components

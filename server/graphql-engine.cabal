@@ -732,13 +732,13 @@ library
                      , Hasura.Server.Version
                      , Hasura.ShutdownLatch
 
-                     , Hasura.CustomReturnType.API
-                     , Hasura.CustomReturnType.Cache
-                     , Hasura.CustomReturnType.Common
-                     , Hasura.CustomReturnType.IR
-                     , Hasura.CustomReturnType.Metadata
-                     , Hasura.CustomReturnType.Schema
-                     , Hasura.CustomReturnType.Types
+                     , Hasura.LogicalModel.API
+                     , Hasura.LogicalModel.Cache
+                     , Hasura.LogicalModel.Common
+                     , Hasura.LogicalModel.IR
+                     , Hasura.LogicalModel.Metadata
+                     , Hasura.LogicalModel.Schema
+                     , Hasura.LogicalModel.Types
 
                      , Hasura.EncJSON
 

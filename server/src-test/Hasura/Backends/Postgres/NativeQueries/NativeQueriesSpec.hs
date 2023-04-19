@@ -12,7 +12,7 @@ import Data.HashMap.Strict qualified as HM
 import Hasura.Backends.Postgres.Instances.NativeQueries
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Metadata
+import Hasura.LogicalModel.Metadata
 import Hasura.NativeQuery.Metadata
 import Hasura.Prelude hiding (first)
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -66,19 +66,19 @@ spec = do
       parseInterpolatedQuery rawSQL `shouldBe` Left "Found '{{' without a matching closing '}}'"
 
   describe "Validation" do
-    let crtm =
-          CustomReturnTypeMetadata
-            { _crtmName = CustomReturnTypeName (G.unsafeMkName "custom_return_type_name"),
-              _crtmFields = mempty,
-              _crtmDescription = Nothing,
-              _crtmSelectPermissions = mempty
+    let lmm =
+          LogicalModelMetadata
+            { _lmmName = LogicalModelName (G.unsafeMkName "logical_model_name"),
+              _lmmFields = mempty,
+              _lmmDescription = Nothing,
+              _lmmSelectPermissions = mempty
             }
 
         nqm =
           NativeQueryMetadata
             { _nqmRootFieldName = NativeQueryName (G.unsafeMkName "root_field_name"),
               _nqmCode = InterpolatedQuery mempty,
-              _nqmReturns = CustomReturnTypeName (G.unsafeMkName "custom_return_type_name"),
+              _nqmReturns = LogicalModelName (G.unsafeMkName "logical_model_name"),
               _nqmArguments = mempty,
               _nqmArrayRelationships = mempty,
               _nqmDescription = mempty
@@ -86,7 +86,7 @@ spec = do
 
     it "Rejects undeclared variables" do
       let Right code = parseInterpolatedQuery "SELECT {{hey}}"
-      let actual :: Either QErr Text = fmap snd $ runExcept $ nativeQueryToPreparedStatement crtm nqm {_nqmCode = code}
+      let actual :: Either QErr Text = fmap snd $ runExcept $ nativeQueryToPreparedStatement lmm nqm {_nqmCode = code}
 
       (first showQErr actual) `shouldSatisfy` isLeft
       let Left err = actual
@@ -98,7 +98,7 @@ spec = do
             fmap snd $
               runExcept $
                 nativeQueryToPreparedStatement
-                  crtm
+                  lmm
                   nqm
                     { _nqmCode = code,
                       _nqmArguments =
@@ -118,7 +118,7 @@ spec = do
             fmap snd $
               runExcept $
                 nativeQueryToPreparedStatement
-                  crtm
+                  lmm
                   nqm
                     { _nqmCode = code,
                       _nqmArguments =

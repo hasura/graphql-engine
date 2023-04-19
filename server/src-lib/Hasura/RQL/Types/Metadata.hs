@@ -12,7 +12,7 @@ module Hasura.RQL.Types.Metadata
     dropEventTriggerInMetadata,
     dropFunctionInMetadata,
     dropPermissionInMetadata,
-    dropCustomReturnTypePermissionInMetadata,
+    dropLogicalModelPermissionInMetadata,
     dropRelationshipInMetadata,
     dropNativeQueryRelationshipInMetadata,
     dropRemoteRelationshipInMetadata,
@@ -23,7 +23,7 @@ module Hasura.RQL.Types.Metadata
     emptyMetadata,
     emptyMetadataDefaults,
     functionMetadataSetter,
-    customReturnTypeMetadataSetter,
+    logicalModelMetadataSetter,
     nativeQueryMetadataSetter,
     metaActions,
     metaAllowlist,
@@ -56,10 +56,10 @@ import Data.Aeson.TH
 import Data.Aeson.Types
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Monoid (Dual (..), Endo (..))
-import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata, CustomReturnTypeName, crtmSelectPermissions)
 import Hasura.Function.Cache
 import Hasura.Function.Metadata (FunctionMetadata (..))
 import Hasura.Incremental qualified as Inc
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata, LogicalModelName, lmmSelectPermissions)
 import Hasura.Metadata.DTO.MetadataV3 (MetadataV3 (..))
 import Hasura.NativeQuery.Metadata (NativeQueryMetadata, NativeQueryName, nqmArrayRelationships)
 import Hasura.Prelude
@@ -280,15 +280,15 @@ functionMetadataSetter ::
 functionMetadataSetter source function =
   metaSources . ix source . toSourceMetadata . smFunctions . ix function
 
--- | A lens setter for the metadata of a custom return type as identified by the
+-- | A lens setter for the metadata of a logical model as identified by the
 -- source name and root field name.
-customReturnTypeMetadataSetter ::
+logicalModelMetadataSetter ::
   (Backend b) =>
   SourceName ->
-  CustomReturnTypeName ->
-  ASetter' Metadata (CustomReturnTypeMetadata b)
-customReturnTypeMetadataSetter source name =
-  metaSources . ix source . toSourceMetadata . smCustomReturnTypes . ix name
+  LogicalModelName ->
+  ASetter' Metadata (LogicalModelMetadata b)
+logicalModelMetadataSetter source name =
+  metaSources . ix source . toSourceMetadata . smLogicalModels . ix name
 
 -- | A lens setter for the metadata of a native query as identified by the
 -- source name and root field name.
@@ -401,10 +401,10 @@ dropPermissionInMetadata rn = \case
   PTDelete -> tmDeletePermissions %~ OM.delete rn
   PTUpdate -> tmUpdatePermissions %~ OM.delete rn
 
-dropCustomReturnTypePermissionInMetadata ::
-  RoleName -> PermType -> CustomReturnTypeMetadata b -> CustomReturnTypeMetadata b
-dropCustomReturnTypePermissionInMetadata rn = \case
-  PTSelect -> crtmSelectPermissions %~ OM.delete rn
+dropLogicalModelPermissionInMetadata ::
+  RoleName -> PermType -> LogicalModelMetadata b -> LogicalModelMetadata b
+dropLogicalModelPermissionInMetadata rn = \case
+  PTSelect -> lmmSelectPermissions %~ OM.delete rn
   PTInsert -> error "Not implemented yet"
   PTDelete -> error "Not implemented yet"
   PTUpdate -> error "Not implemented yet"

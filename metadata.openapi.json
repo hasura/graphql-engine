@@ -662,39 +662,6 @@
                 ],
                 "type": "object"
             },
-            "BigqueryCustomReturnTypeMetadata": {
-                "description": "A return type.",
-                "properties": {
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    },
-                    "fields": {
-                        "description": "Return types for the custom return type",
-                        "items": {
-                            "additionalProperties": true,
-                            "description": "A scalar type or reference to another custom return type\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
-                        },
-                        "type": "array"
-                    },
-                    "name": {
-                        "description": "A name for a custom return type",
-                        "type": "string"
-                    },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/BigquerySelectPermDef"
-                        },
-                        "type": "array"
-                    }
-                },
-                "required": [
-                    "name",
-                    "fields"
-                ],
-                "type": "object"
-            },
             "BigqueryDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -807,6 +774,39 @@
                 "required": [
                     "role",
                     "permission"
+                ],
+                "type": "object"
+            },
+            "BigqueryLogicalModelMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the logical model",
+                        "items": {
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a logical model",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/BigquerySelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
                 ],
                 "type": "object"
             },
@@ -1038,14 +1038,6 @@
                     "configuration": {
                         "$ref": "#/components/schemas/BigQueryConnSourceConfig"
                     },
-                    "custom_return_types": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/BigqueryCustomReturnTypeMetadata"
-                        },
-                        "nullable": true,
-                        "type": "array"
-                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -1062,6 +1054,14 @@
                             "bigquery"
                         ],
                         "type": "string"
+                    },
+                    "logical_models": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/BigqueryLogicalModelMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "name": {
                         "type": "string"
@@ -1399,39 +1399,6 @@
                 ],
                 "type": "object"
             },
-            "CitusCustomReturnTypeMetadata": {
-                "description": "A return type.",
-                "properties": {
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    },
-                    "fields": {
-                        "description": "Return types for the custom return type",
-                        "items": {
-                            "additionalProperties": true,
-                            "description": "A scalar type or reference to another custom return type\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
-                        },
-                        "type": "array"
-                    },
-                    "name": {
-                        "description": "A name for a custom return type",
-                        "type": "string"
-                    },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/CitusSelectPermDef"
-                        },
-                        "type": "array"
-                    }
-                },
-                "required": [
-                    "name",
-                    "fields"
-                ],
-                "type": "object"
-            },
             "CitusDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -1647,6 +1614,39 @@
                 "required": [
                     "role",
                     "permission"
+                ],
+                "type": "object"
+            },
+            "CitusLogicalModelMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the logical model",
+                        "items": {
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a logical model",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CitusSelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
                 ],
                 "type": "object"
             },
@@ -1903,14 +1903,6 @@
                     "configuration": {
                         "$ref": "#/components/schemas/PostgresConnConfiguration"
                     },
-                    "custom_return_types": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/CitusCustomReturnTypeMetadata"
-                        },
-                        "nullable": true,
-                        "type": "array"
-                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -1930,6 +1922,14 @@
                             "citus"
                         ],
                         "type": "string"
+                    },
+                    "logical_models": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CitusLogicalModelMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "name": {
                         "type": "string"
@@ -2274,39 +2274,6 @@
                 ],
                 "type": "object"
             },
-            "CockroachCustomReturnTypeMetadata": {
-                "description": "A return type.",
-                "properties": {
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    },
-                    "fields": {
-                        "description": "Return types for the custom return type",
-                        "items": {
-                            "additionalProperties": true,
-                            "description": "A scalar type or reference to another custom return type\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
-                        },
-                        "type": "array"
-                    },
-                    "name": {
-                        "description": "A name for a custom return type",
-                        "type": "string"
-                    },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/CockroachSelectPermDef"
-                        },
-                        "type": "array"
-                    }
-                },
-                "required": [
-                    "name",
-                    "fields"
-                ],
-                "type": "object"
-            },
             "CockroachDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -2522,6 +2489,39 @@
                 "required": [
                     "role",
                     "permission"
+                ],
+                "type": "object"
+            },
+            "CockroachLogicalModelMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the logical model",
+                        "items": {
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a logical model",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CockroachSelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
                 ],
                 "type": "object"
             },
@@ -2778,14 +2778,6 @@
                     "configuration": {
                         "$ref": "#/components/schemas/PostgresConnConfiguration"
                     },
-                    "custom_return_types": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/CockroachCustomReturnTypeMetadata"
-                        },
-                        "nullable": true,
-                        "type": "array"
-                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -2805,6 +2797,14 @@
                             "cockroach"
                         ],
                         "type": "string"
+                    },
+                    "logical_models": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CockroachLogicalModelMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "name": {
                         "type": "string"
@@ -3403,39 +3403,6 @@
                 ],
                 "type": "object"
             },
-            "DataconnectorCustomReturnTypeMetadata": {
-                "description": "A return type.",
-                "properties": {
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    },
-                    "fields": {
-                        "description": "Return types for the custom return type",
-                        "items": {
-                            "additionalProperties": true,
-                            "description": "A scalar type or reference to another custom return type\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
-                        },
-                        "type": "array"
-                    },
-                    "name": {
-                        "description": "A name for a custom return type",
-                        "type": "string"
-                    },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/DataconnectorSelectPermDef"
-                        },
-                        "type": "array"
-                    }
-                },
-                "required": [
-                    "name",
-                    "fields"
-                ],
-                "type": "object"
-            },
             "DataconnectorDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -3552,6 +3519,39 @@
                 "required": [
                     "role",
                     "permission"
+                ],
+                "type": "object"
+            },
+            "DataconnectorLogicalModelMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the logical model",
+                        "items": {
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a logical model",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/DataconnectorSelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
                 ],
                 "type": "object"
             },
@@ -3800,14 +3800,6 @@
                             }
                         ]
                     },
-                    "custom_return_types": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/DataconnectorCustomReturnTypeMetadata"
-                        },
-                        "nullable": true,
-                        "type": "array"
-                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -3821,6 +3813,14 @@
                     },
                     "kind": {
                         "$ref": "#/components/schemas/GraphQLName"
+                    },
+                    "logical_models": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/DataconnectorLogicalModelMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "name": {
                         "type": "string"
@@ -4812,39 +4812,6 @@
                 ],
                 "type": "object"
             },
-            "MssqlCustomReturnTypeMetadata": {
-                "description": "A return type.",
-                "properties": {
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    },
-                    "fields": {
-                        "description": "Return types for the custom return type",
-                        "items": {
-                            "additionalProperties": true,
-                            "description": "A scalar type or reference to another custom return type\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
-                        },
-                        "type": "array"
-                    },
-                    "name": {
-                        "description": "A name for a custom return type",
-                        "type": "string"
-                    },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/MssqlSelectPermDef"
-                        },
-                        "type": "array"
-                    }
-                },
-                "required": [
-                    "name",
-                    "fields"
-                ],
-                "type": "object"
-            },
             "MssqlDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -5052,6 +5019,39 @@
                 "required": [
                     "role",
                     "permission"
+                ],
+                "type": "object"
+            },
+            "MssqlLogicalModelMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the logical model",
+                        "items": {
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a logical model",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MssqlSelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
                 ],
                 "type": "object"
             },
@@ -5307,14 +5307,6 @@
                     "configuration": {
                         "$ref": "#/components/schemas/MSSQLConnConfiguration"
                     },
-                    "custom_return_types": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/MssqlCustomReturnTypeMetadata"
-                        },
-                        "nullable": true,
-                        "type": "array"
-                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -5334,6 +5326,14 @@
                             "mssql"
                         ],
                         "type": "string"
+                    },
+                    "logical_models": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MssqlLogicalModelMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "name": {
                         "type": "string"
@@ -5744,39 +5744,6 @@
                 ],
                 "type": "object"
             },
-            "MysqlCustomReturnTypeMetadata": {
-                "description": "A return type.",
-                "properties": {
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    },
-                    "fields": {
-                        "description": "Return types for the custom return type",
-                        "items": {
-                            "additionalProperties": true,
-                            "description": "A scalar type or reference to another custom return type\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
-                        },
-                        "type": "array"
-                    },
-                    "name": {
-                        "description": "A name for a custom return type",
-                        "type": "string"
-                    },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/MysqlSelectPermDef"
-                        },
-                        "type": "array"
-                    }
-                },
-                "required": [
-                    "name",
-                    "fields"
-                ],
-                "type": "object"
-            },
             "MysqlDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -5890,6 +5857,39 @@
                 "required": [
                     "role",
                     "permission"
+                ],
+                "type": "object"
+            },
+            "MysqlLogicalModelMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the logical model",
+                        "items": {
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a logical model",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MysqlSelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
                 ],
                 "type": "object"
             },
@@ -6176,14 +6176,6 @@
                     "configuration": {
                         "$ref": "#/components/schemas/MySQLConnSourceConfig"
                     },
-                    "custom_return_types": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/MysqlCustomReturnTypeMetadata"
-                        },
-                        "nullable": true,
-                        "type": "array"
-                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -6200,6 +6192,14 @@
                             "mysql"
                         ],
                         "type": "string"
+                    },
+                    "logical_models": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MysqlLogicalModelMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "name": {
                         "type": "string"
@@ -6755,39 +6755,6 @@
                 ],
                 "type": "object"
             },
-            "PostgresCustomReturnTypeMetadata": {
-                "description": "A return type.",
-                "properties": {
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    },
-                    "fields": {
-                        "description": "Return types for the custom return type",
-                        "items": {
-                            "additionalProperties": true,
-                            "description": "A scalar type or reference to another custom return type\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
-                        },
-                        "type": "array"
-                    },
-                    "name": {
-                        "description": "A name for a custom return type",
-                        "type": "string"
-                    },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/PostgresSelectPermDef"
-                        },
-                        "type": "array"
-                    }
-                },
-                "required": [
-                    "name",
-                    "fields"
-                ],
-                "type": "object"
-            },
             "PostgresDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -7003,6 +6970,39 @@
                 "required": [
                     "role",
                     "permission"
+                ],
+                "type": "object"
+            },
+            "PostgresLogicalModelMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the logical model",
+                        "items": {
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a logical model",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/PostgresSelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
                 ],
                 "type": "object"
             },
@@ -7371,14 +7371,6 @@
                     "configuration": {
                         "$ref": "#/components/schemas/PostgresConnConfiguration"
                     },
-                    "custom_return_types": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/PostgresCustomReturnTypeMetadata"
-                        },
-                        "nullable": true,
-                        "type": "array"
-                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -7400,6 +7392,14 @@
                             "pg"
                         ],
                         "type": "string"
+                    },
+                    "logical_models": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/PostgresLogicalModelMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "name": {
                         "type": "string"

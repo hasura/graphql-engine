@@ -15,11 +15,11 @@ import Data.Text qualified as T
 import GHC.Generics.Extended (constrName)
 import Hasura.App.State
 import Hasura.Base.Error
-import Hasura.CustomReturnType.API qualified as CustomReturnType
 import Hasura.EncJSON
 import Hasura.Function.API qualified as Functions
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as L
+import Hasura.LogicalModel.API qualified as LogicalModel
 import Hasura.Metadata.Class
 import Hasura.NativeQuery.API qualified as NativeQueries
 import Hasura.Prelude hiding (first)
@@ -212,11 +212,11 @@ queryModifiesMetadata = \case
       RMGetNativeQuery _ -> False
       RMTrackNativeQuery _ -> True
       RMUntrackNativeQuery _ -> True
-      RMGetCustomReturnType _ -> False
-      RMTrackCustomReturnType _ -> True
-      RMUntrackCustomReturnType _ -> True
-      RMCreateSelectCustomReturnTypePermission _ -> True
-      RMDropSelectCustomReturnTypePermission _ -> True
+      RMGetLogicalModel _ -> False
+      RMTrackLogicalModel _ -> True
+      RMUntrackLogicalModel _ -> True
+      RMCreateSelectLogicalModelPermission _ -> True
+      RMDropSelectLogicalModelPermission _ -> True
       RMBulk qs -> any queryModifiesMetadata qs
       RMBulkKeepGoing qs -> any queryModifiesMetadata qs
       -- We used to assume that the fallthrough was True,
@@ -409,11 +409,11 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
   RMGetNativeQuery q -> dispatchMetadata NativeQueries.runGetNativeQuery q
   RMTrackNativeQuery q -> dispatchMetadata (NativeQueries.runTrackNativeQuery env) q
   RMUntrackNativeQuery q -> dispatchMetadata NativeQueries.runUntrackNativeQuery q
-  RMGetCustomReturnType q -> dispatchMetadata CustomReturnType.runGetCustomReturnType q
-  RMTrackCustomReturnType q -> dispatchMetadata CustomReturnType.runTrackCustomReturnType q
-  RMUntrackCustomReturnType q -> dispatchMetadata CustomReturnType.runUntrackCustomReturnType q
-  RMCreateSelectCustomReturnTypePermission q -> dispatchMetadata CustomReturnType.runCreateSelectCustomReturnTypePermission q
-  RMDropSelectCustomReturnTypePermission q -> dispatchMetadata CustomReturnType.runDropSelectCustomReturnTypePermission q
+  RMGetLogicalModel q -> dispatchMetadata LogicalModel.runGetLogicalModel q
+  RMTrackLogicalModel q -> dispatchMetadata LogicalModel.runTrackLogicalModel q
+  RMUntrackLogicalModel q -> dispatchMetadata LogicalModel.runUntrackLogicalModel q
+  RMCreateSelectLogicalModelPermission q -> dispatchMetadata LogicalModel.runCreateSelectLogicalModelPermission q
+  RMDropSelectLogicalModelPermission q -> dispatchMetadata LogicalModel.runDropSelectLogicalModelPermission q
   RMCreateEventTrigger q ->
     dispatchMetadataAndEventTrigger
       ( validateTransforms

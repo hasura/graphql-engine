@@ -34,8 +34,8 @@ import Hasura.Backends.MSSQL.FromIr.Constants
 import Hasura.Backends.MSSQL.FromIr.Expression
 import Hasura.Backends.MSSQL.Instances.Types ()
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
-import Hasura.CustomReturnType.Common (columnsFromFields)
-import Hasura.CustomReturnType.IR (CustomReturnType (..))
+import Hasura.LogicalModel.Common (columnsFromFields)
+import Hasura.LogicalModel.IR (LogicalModel (..))
 import Hasura.NativeQuery.IR qualified as IR
 import Hasura.NativeQuery.Types (NativeQueryName (..), NullableScalarType (..))
 import Hasura.Prelude
@@ -336,7 +336,7 @@ fromNativeQuery :: IR.NativeQuery 'MSSQL Expression -> FromIr TSQL.From
 fromNativeQuery nativeQuery = do
   let nativeQueryName = IR.nqRootFieldName nativeQuery
       nativeQuerySql = IR.nqInterpolatedQuery nativeQuery
-      nativeQueryReturnType = IR.nqReturnType nativeQuery
+      nativeQueryReturnType = IR.nqLogicalModel nativeQuery
 
       rawTempTableName = T.toTxt (getNativeQueryName nativeQueryName)
       aliasedTempTableName = Aliased (TempTableName rawTempTableName) rawTempTableName
@@ -348,7 +348,7 @@ fromNativeQuery nativeQuery = do
                 type' = (nstType ty)
               }
         )
-          <$> InsOrd.toList (columnsFromFields $ crtFields nativeQueryReturnType)
+          <$> InsOrd.toList (columnsFromFields $ lmFields nativeQueryReturnType)
 
   -- \| add create temp table to "the environment"
   tellBefore (CreateTemp (TempTableName rawTempTableName) columns)

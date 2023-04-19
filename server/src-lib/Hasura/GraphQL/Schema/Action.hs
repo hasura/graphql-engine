@@ -314,14 +314,14 @@ actionOutputFields outputType annotatedObject objectTypes = do
       --  where 'x' is the 'reference name' of a join field, i.e, how a join
       --         field is referenced in the remote relationships definition
       --  while 'y' is the join field.
-      --  In case of custom types, they are pretty much the same.
+      --  In case of logical models, they are pretty much the same.
       --  In case of databases, 'y' could be a computed field with session variables etc.
       let lhsJoinFields = Map.fromList [(FieldName $ G.unName k, k) | ObjectFieldName k <- Map.keys _atrFieldMapping]
           joinMapping = Map.fromList $ do
             (k, v) <- Map.toList _atrFieldMapping
             let scalarType = case ciType v of
                   ColumnScalar scalar -> scalar
-                  -- We don't currently allow enum types as fields of custom types so they should not appear here.
+                  -- We don't currently allow enum types as fields of logical models so they should not appear here.
                   -- If we do allow them in future then they would be represented in Postgres as Text.
                   ColumnEnumReference _ -> PGText
             pure (FieldName $ G.unName $ unObjectFieldName k, (scalarType, ciColumn v))

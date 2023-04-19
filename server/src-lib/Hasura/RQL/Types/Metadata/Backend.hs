@@ -9,11 +9,11 @@ import Data.Aeson
 import Data.Environment qualified as Env
 import Data.Has (Has)
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata)
 import Hasura.Function.Cache
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata)
 import Hasura.NativeQuery.Metadata (NativeQueryMetadata)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -202,7 +202,7 @@ class
     (MonadIO m, MonadError QErr m) =>
     Env.Environment ->
     SourceConnConfiguration b ->
-    CustomReturnTypeMetadata b ->
+    LogicalModelMetadata b ->
     NativeQueryMetadata b ->
     m ()
   validateNativeQuery _ _ _ _ =

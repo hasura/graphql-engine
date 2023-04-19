@@ -29,7 +29,7 @@ import Data.Bifunctor (first)
 import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
-import Hasura.CustomReturnType.Types
+import Hasura.LogicalModel.Types
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.NativeQuery.Types (NativeQueryName (..), NullableScalarType (..), nullableScalarTypeMapCodec)
 import Hasura.Prelude hiding (first)
@@ -130,7 +130,7 @@ instance NFData NativeQueryArgumentName
 data NativeQueryMetadata (b :: BackendType) = NativeQueryMetadata
   { _nqmRootFieldName :: NativeQueryName,
     _nqmCode :: InterpolatedQuery NativeQueryArgumentName,
-    _nqmReturns :: CustomReturnTypeName,
+    _nqmReturns :: LogicalModelName,
     _nqmArguments :: HashMap NativeQueryArgumentName (NullableScalarType b),
     _nqmArrayRelationships :: Relationships (RelDef (RelManualConfig b)),
     _nqmDescription :: Maybe Text

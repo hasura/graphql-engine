@@ -24,7 +24,7 @@ module Hasura.RQL.DDL.Permission
     runSetPermComment,
     PermInfo,
     buildPermInfo,
-    buildCustomReturnTypePermInfo,
+    buildLogicalModelPermInfo,
     addPermissionToMetadata,
     annBoolExp,
   )
@@ -40,8 +40,8 @@ import Data.HashSet qualified as HS
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Types (CustomReturnTypeName)
 import Hasura.EncJSON
+import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal
 import Hasura.RQL.IR.BoolExp
@@ -234,21 +234,21 @@ buildPermInfo x1 x2 x3 roleName = \case
   UpdPerm' p -> buildUpdPermInfo x1 x2 x3 p
   DelPerm' p -> buildDelPermInfo x1 x2 x3 p
 
--- | Given the custom return type's definition and the permissions as defined in the
--- custom return type's metadata, try to construct the permission definition.
-buildCustomReturnTypePermInfo ::
+-- | Given the logical model's definition and the permissions as defined in the
+-- logical model's metadata, try to construct the permission definition.
+buildLogicalModelPermInfo ::
   ( BackendMetadata b,
     QErrM m,
     TableCoreInfoRM b m,
     GetAggregationPredicatesDeps b
   ) =>
   SourceName ->
-  CustomReturnTypeName ->
+  LogicalModelName ->
   FieldInfoMap (FieldInfo b) ->
   PermDefPermission b perm ->
   m (WithDeps (PermInfo perm b))
-buildCustomReturnTypePermInfo sourceName customReturnTypeName fieldInfoMap = \case
-  SelPerm' p -> buildCustomReturnTypeSelPermInfo sourceName customReturnTypeName fieldInfoMap p
+buildLogicalModelPermInfo sourceName logicalModelName fieldInfoMap = \case
+  SelPerm' p -> buildLogicalModelSelPermInfo sourceName logicalModelName fieldInfoMap p
   InsPerm' _ -> error "Not implemented yet"
   UpdPerm' _ -> error "Not implemented yet"
   DelPerm' _ -> error "Not implemented yet"
@@ -421,7 +421,7 @@ validateAllowedRootFields sourceName tableName roleName SelPerm {..} = do
 -- | Given the native query's definition and the permissions as defined in the
 -- native query's metadata, try to construct the @SELECT@ permission
 -- definition.
-buildCustomReturnTypeSelPermInfo ::
+buildLogicalModelSelPermInfo ::
   forall b m.
   ( QErrM m,
     TableCoreInfoRM b m,
@@ -429,18 +429,18 @@ buildCustomReturnTypeSelPermInfo ::
     GetAggregationPredicatesDeps b
   ) =>
   SourceName ->
-  CustomReturnTypeName ->
+  LogicalModelName ->
   FieldInfoMap (FieldInfo b) ->
   SelPerm b ->
   m (WithDeps (SelPermInfo b))
-buildCustomReturnTypeSelPermInfo source customReturnTypeName fieldInfoMap sp = withPathK "permission" do
+buildLogicalModelSelPermInfo source logicalModelName fieldInfoMap sp = withPathK "permission" do
   let columns :: [Column b]
       columns = interpColSpec (ciColumn <$> getCols fieldInfoMap) (spColumns sp)
 
   -- Interpret the row permissions in the 'SelPerm' definition.
   (spiFilter, boolExpDeps) <-
     withPathK "filter" $
-      procCustomReturnTypeBoolExp source customReturnTypeName fieldInfoMap (spFilter sp)
+      procLogicalModelBoolExp source logicalModelName fieldInfoMap (spFilter sp)
 
   let -- What parts of the metadata are interesting when computing the
       -- permissions? These dependencies bubble all the way up to
@@ -449,9 +449,9 @@ buildCustomReturnTypeSelPermInfo source customReturnTypeName fieldInfoMap sp = w
       deps :: Seq SchemaDependency
       deps =
         mconcat
-          [ Seq.singleton (mkCustomReturnTypeParentDep @b source customReturnTypeName),
+          [ Seq.singleton (mkLogicalModelParentDep @b source logicalModelName),
             boolExpDeps,
-            fmap (mkCustomReturnTypeColDep @b DRUntyped source customReturnTypeName) $
+            fmap (mkLogicalModelColDep @b DRUntyped source logicalModelName) $
               Seq.fromList columns
           ]
 

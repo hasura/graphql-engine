@@ -114,7 +114,7 @@ nativeQueryColumn name colType =
 
 data NativeQuery = NativeQuery
   { nativeQueryName :: Text,
-    nativeQueryReturnType :: Text,
+    nativeQueryLogicalModel :: Text,
     nativeQueryQuery :: Text,
     nativeQueryArguments :: [NativeQueryColumn],
     nativeQueryArrayRelationships :: [Aeson.Value]
@@ -125,7 +125,7 @@ nativeQuery :: Text -> Text -> Text -> NativeQuery
 nativeQuery nativeQueryName query returnType =
   NativeQuery
     { nativeQueryName,
-      nativeQueryReturnType = returnType,
+      nativeQueryLogicalModel = returnType,
       nativeQueryQuery = query,
       nativeQueryArguments = mempty,
       nativeQueryArrayRelationships = mempty

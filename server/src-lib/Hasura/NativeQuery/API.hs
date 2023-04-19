@@ -21,9 +21,9 @@ import Data.Environment qualified as Env
 import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrd
 import Data.Text.Extended (toTxt, (<<>))
 import Hasura.Base.Error
-import Hasura.CustomReturnType.API (getCustomTypes)
-import Hasura.CustomReturnType.Metadata (CustomReturnTypeName)
 import Hasura.EncJSON
+import Hasura.LogicalModel.API (getCustomTypes)
+import Hasura.LogicalModel.Metadata (LogicalModelName)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.NativeQuery.Metadata (NativeQueryArgumentName, NativeQueryMetadata (..), parseInterpolatedQuery)
 import Hasura.NativeQuery.Types (NativeQueryName, NullableScalarType, nativeQueryArrayRelationshipsCodec)
@@ -54,7 +54,7 @@ data TrackNativeQuery (b :: BackendType) = TrackNativeQuery
     tnqArguments :: HashMap NativeQueryArgumentName (NullableScalarType b),
     tnqArrayRelationships :: InsOrd.InsOrdHashMap RelName (RelDef (RelManualConfig b)),
     tnqDescription :: Maybe Text,
-    tnqReturns :: CustomReturnTypeName
+    tnqReturns :: LogicalModelName
   }
 
 instance (Backend b) => HasCodec (TrackNativeQuery b) where
@@ -123,11 +123,11 @@ nativeQueryTrackToMetadata env sourceConnConfig TrackNativeQuery {..} = do
 
   metadata <- getMetadata
 
-  -- lookup custom return type in existing metadata
+  -- lookup logical model in existing metadata
   case metadata ^? getCustomTypes tnqSource . ix tnqReturns of
-    Just customReturnType ->
-      validateNativeQuery @b env sourceConnConfig customReturnType nativeQueryMetadata
-    Nothing -> throw400 NotFound ("Custom return type " <> tnqReturns <<> " not found.")
+    Just logicalModel ->
+      validateNativeQuery @b env sourceConnConfig logicalModel nativeQueryMetadata
+    Nothing -> throw400 NotFound ("Logical model " <> tnqReturns <<> " not found.")
 
   pure nativeQueryMetadata
 

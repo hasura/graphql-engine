@@ -4,7 +4,7 @@
 module Hasura.GraphQL.Schema.BoolExp
   ( AggregationPredicatesSchema (..),
     tableBoolExp,
-    customReturnTypeBoolExp,
+    logicalModelBoolExp,
     mkBoolOperator,
     equalityOperators,
     comparisonOperators,
@@ -16,9 +16,6 @@ import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Base.Error (throw500)
-import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo (..))
-import Hasura.CustomReturnType.Common
-import Hasura.CustomReturnType.Types (CustomReturnTypeName (..))
 import Hasura.Function.Cache
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
@@ -33,6 +30,9 @@ import Hasura.GraphQL.Schema.Parser
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename
+import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
+import Hasura.LogicalModel.Common
+import Hasura.LogicalModel.Types (LogicalModelName (..))
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -172,26 +172,26 @@ boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser = do
 -- >   column: type_comparison_exp
 -- >   ...
 -- > }
--- | Boolean expression for custom return types
-customReturnTypeBoolExp ::
+-- | Boolean expression for logical models
+logicalModelBoolExp ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
     AggregationPredicatesSchema b
   ) =>
-  CustomReturnTypeInfo b ->
+  LogicalModelInfo b ->
   SchemaT r m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
-customReturnTypeBoolExp customReturnType =
-  case toFieldInfo (columnsFromFields $ _crtiFields customReturnType) of
-    Nothing -> throw500 $ "Error creating fields for custom type " <> tshow (_crtiName customReturnType)
+logicalModelBoolExp logicalModel =
+  case toFieldInfo (columnsFromFields $ _lmiFields logicalModel) of
+    Nothing -> throw500 $ "Error creating fields for logical model " <> tshow (_lmiName logicalModel)
     Just fieldInfo -> do
-      let name = getCustomReturnTypeName (_crtiName customReturnType)
+      let name = getLogicalModelName (_lmiName logicalModel)
           gqlName = mkTableBoolExpTypeName (C.fromCustomName name)
 
           -- Aggregation parsers let us say things like, "select all authors
           -- with at least one article": they are predicates based on the
           -- object's relationship with some other entity.
           --
-          -- Currently, custom return types can't be defined to have
+          -- Currently, logical models can't be defined to have
           -- relationships to other entities, and so they don't support
           -- aggregation predicates.
           --
@@ -202,7 +202,7 @@ customReturnTypeBoolExp customReturnType =
           memoizeKey = name
           description =
             G.Description $
-              "Boolean expression to filter rows from the custom return type for "
+              "Boolean expression to filter rows from the logical model for "
                 <> name
                   <<> ". All fields are combined with a logical 'AND'."
        in boolExpInternal gqlName fieldInfo description memoizeKey mkAggPredParser

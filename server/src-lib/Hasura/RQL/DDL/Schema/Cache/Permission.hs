@@ -5,7 +5,7 @@ module Hasura.RQL.DDL.Schema.Cache.Permission
     _unOrderedRoles,
     mkBooleanPermissionMap,
     resolveCheckPermission,
-    buildCustomReturnTypePermissions,
+    buildLogicalModelPermissions,
   )
 where
 
@@ -16,8 +16,8 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Metadata (WithCustomReturnType (..))
-import Hasura.CustomReturnType.Types (CustomReturnTypeName)
+import Hasura.LogicalModel.Metadata (WithLogicalModel (..))
+import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -283,7 +283,7 @@ buildTablePermissions source tableCache tableFields tablePermissions orderedRole
 
 -- | Create the permission map for a native query based on the select
 -- permissions given in metadata. Compare with 'buildTablePermissions'.
-buildCustomReturnTypePermissions ::
+buildLogicalModelPermissions ::
   forall b m.
   ( MonadError QErr m,
     MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
@@ -292,12 +292,12 @@ buildCustomReturnTypePermissions ::
   ) =>
   SourceName ->
   TableCoreCache b ->
-  CustomReturnTypeName ->
+  LogicalModelName ->
   FieldInfoMap (FieldInfo b) ->
   InsOrdHashMap RoleName (SelPermDef b) ->
   OrderedRoles ->
   m (RolePermInfoMap b)
-buildCustomReturnTypePermissions sourceName tableCache customReturnTypeName customReturnTypeFields selectPermissions orderedRoles = do
+buildLogicalModelPermissions sourceName tableCache logicalModelName logicalModelFields selectPermissions orderedRoles = do
   let combineRolePermissions :: RolePermInfoMap b -> Role -> m (RolePermInfoMap b)
       combineRolePermissions acc (Role roleName (ParentRoles parentRoles)) = do
         -- This error will ideally never be thrown, but if it's thrown then
@@ -335,7 +335,7 @@ buildCustomReturnTypePermissions sourceName tableCache customReturnTypeName cust
 
         pure (M.insert roleName rolePermInfo acc)
 
-  -- At the moment, we only support select permissions for custom return types
+  -- At the moment, we only support select permissions for logical models
   metadataRolePermissions <-
     for (OMap.toHashMap selectPermissions) \selectPermission -> do
       let role :: RoleName
@@ -347,8 +347,8 @@ buildCustomReturnTypePermissions sourceName tableCache customReturnTypeName cust
           sourceObjId =
             MOSourceObjId sourceName $
               AB.mkAnyBackend $
-                SMOCustomReturnTypeObj @b customReturnTypeName $
-                  CRTMOPerm role PTSelect
+                SMOLogicalModelObj @b logicalModelName $
+                  LMMOPerm role PTSelect
 
           -- The object we're going to use to track the dependency and any
           -- potential cache inconsistencies.
@@ -356,10 +356,10 @@ buildCustomReturnTypePermissions sourceName tableCache customReturnTypeName cust
           metadataObject =
             MetadataObject sourceObjId $
               toJSON
-                WithCustomReturnType
-                  { _wcrtSource = sourceName,
-                    _wcrtName = customReturnTypeName,
-                    _wcrtInfo = selectPermission
+                WithLogicalModel
+                  { _wlmSource = sourceName,
+                    _wlmName = logicalModelName,
+                    _wlmInfo = selectPermission
                   }
 
           -- An identifier for this permission within the metadata structure.
@@ -367,12 +367,12 @@ buildCustomReturnTypePermissions sourceName tableCache customReturnTypeName cust
           schemaObject =
             SOSourceObj sourceName $
               AB.mkAnyBackend $
-                SOICustomReturnTypeObj @b customReturnTypeName $
-                  CRTOPerm role PTSelect
+                SOILogicalModelObj @b logicalModelName $
+                  LMOPerm role PTSelect
 
           modifyError :: ExceptT QErr m a -> ExceptT QErr m a
           modifyError = modifyErr \err ->
-            addCustomReturnTypeContext customReturnTypeName $
+            addLogicalModelContext logicalModelName $
               "in permission for role " <> role <<> ": " <> err
 
       select <- withRecordInconsistencyM metadataObject $ modifyError do
@@ -381,7 +381,7 @@ buildCustomReturnTypePermissions sourceName tableCache customReturnTypeName cust
 
         (permissionInformation, dependencies) <-
           flip runTableCoreCacheRT tableCache $
-            buildCustomReturnTypePermInfo sourceName customReturnTypeName customReturnTypeFields $
+            buildLogicalModelPermInfo sourceName logicalModelName logicalModelFields $
               _pdPermission selectPermission
 
         recordDependenciesM metadataObject schemaObject dependencies

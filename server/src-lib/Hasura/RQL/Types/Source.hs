@@ -14,7 +14,7 @@ module Hasura.RQL.Types.Source
     unsafeSourceTables,
     siConfiguration,
     siNativeQueries,
-    siCustomReturnTypes,
+    siLogicalModels,
     siFunctions,
     siName,
     siQueryTagsConfig,
@@ -49,9 +49,9 @@ import Data.Environment
 import Data.HashMap.Strict qualified as Map
 import Database.PG.Query qualified as PG
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Cache (CustomReturnTypeCache)
 import Hasura.Function.Cache
 import Hasura.Logging qualified as L
+import Hasura.LogicalModel.Cache (LogicalModelCache)
 import Hasura.NativeQuery.Cache (NativeQueryCache)
 import Hasura.Prelude
 import Hasura.QueryTags.Types
@@ -75,7 +75,7 @@ data SourceInfo b = SourceInfo
     _siTables :: TableCache b,
     _siFunctions :: FunctionCache b,
     _siNativeQueries :: NativeQueryCache b,
-    _siCustomReturnTypes :: CustomReturnTypeCache b,
+    _siLogicalModels :: LogicalModelCache b,
     _siConfiguration :: ~(SourceConfig b),
     _siQueryTagsConfig :: Maybe QueryTagsConfig,
     _siCustomization :: ResolvedSourceCustomization,

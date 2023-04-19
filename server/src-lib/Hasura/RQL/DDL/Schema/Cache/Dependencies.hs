@@ -14,8 +14,8 @@ import Data.List (nub)
 import Data.Monoid (First)
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Cache (crtiPermissions, _crtiFields)
 import Hasura.Function.Cache
+import Hasura.LogicalModel.Cache (lmiPermissions, _lmiFields)
 import Hasura.NativeQuery.Cache (nqiArrayRelationships)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal (permissionIsDefined)
@@ -163,24 +163,24 @@ pruneDanglingDependents cache =
               void $
                 M.lookup functionName (_siFunctions sourceInfo)
                   `onNothing` Left ("function " <> functionName <<> " is not tracked")
-            SOICustomReturnType customReturnTypeName -> do
-              void $ resolveCustomReturnType sourceInfo customReturnTypeName
-            SOICustomReturnTypeObj customReturnTypeName customReturnTypeObjId -> do
-              customReturnType <- resolveCustomReturnType sourceInfo customReturnTypeName
-              case customReturnTypeObjId of
-                CRTOPerm roleName permType -> do
+            SOILogicalModel logicalModelName -> do
+              void $ resolveLogicalModel sourceInfo logicalModelName
+            SOILogicalModelObj logicalModelName logicalModelObjId -> do
+              logicalModel <- resolveLogicalModel sourceInfo logicalModelName
+              case logicalModelObjId of
+                LMOPerm roleName permType -> do
                   let rolePermissions :: Maybe (RolePermInfo b)
-                      rolePermissions = customReturnType ^? crtiPermissions . ix roleName
+                      rolePermissions = logicalModel ^? lmiPermissions . ix roleName
 
                   unless (any (permissionIsDefined permType) rolePermissions) $
                     Left $
                       "no "
                         <> permTypeToCode permType
-                        <> " permission defined on custom return type "
-                        <> customReturnTypeName <<> " for role " <>> roleName
-                CRTOCol column ->
-                  unless (InsOrd.member column (_crtiFields customReturnType)) do
-                    Left ("Could not find column " <> column <<> " in custom return type " <>> customReturnTypeName)
+                        <> " permission defined on logical model "
+                        <> logicalModelName <<> " for role " <>> roleName
+                LMOCol column ->
+                  unless (InsOrd.member column (_lmiFields logicalModel)) do
+                    Left ("Could not find column " <> column <<> " in logical model " <>> logicalModelName)
             SOINativeQuery nativeQueryName -> do
               void $ resolveNativeQuery sourceInfo nativeQueryName
             SOITableObj tableName tableObjectId -> do
@@ -233,9 +233,9 @@ pruneDanglingDependents cache =
       M.lookup nativeQueryName (_siNativeQueries sourceInfo)
         `onNothing` Left ("native query " <> nativeQueryName <<> " is not tracked")
 
-    resolveCustomReturnType sourceInfo customReturnTypeName =
-      M.lookup customReturnTypeName (_siCustomReturnTypes sourceInfo)
-        `onNothing` Left ("custom return type " <> customReturnTypeName <<> " is not tracked")
+    resolveLogicalModel sourceInfo logicalModelName =
+      M.lookup logicalModelName (_siLogicalModels sourceInfo)
+        `onNothing` Left ("logical model " <> logicalModelName <<> " is not tracked")
 
     columnToFieldName :: forall b. (Backend b) => TableInfo b -> Column b -> FieldName
     columnToFieldName _ = fromCol @b
@@ -308,13 +308,13 @@ deleteMetadataObject = \case
       SMONativeQueryObj nativeQueryName nativeQueryObjId ->
         siNativeQueries . ix nativeQueryName %~ case nativeQueryObjId of
           NQMORel name _ -> nqiArrayRelationships %~ InsOrd.delete name
-      SMOCustomReturnType name -> siCustomReturnTypes %~ M.delete name
-      SMOCustomReturnTypeObj customReturnTypeName customReturnTypeObjectId ->
-        siCustomReturnTypes . ix customReturnTypeName %~ case customReturnTypeObjectId of
-          CRTMOPerm roleName PTSelect -> crtiPermissions . ix roleName . permSel .~ Nothing
-          CRTMOPerm roleName PTInsert -> crtiPermissions . ix roleName . permIns .~ Nothing
-          CRTMOPerm roleName PTUpdate -> crtiPermissions . ix roleName . permUpd .~ Nothing
-          CRTMOPerm roleName PTDelete -> crtiPermissions . ix roleName . permDel .~ Nothing
+      SMOLogicalModel name -> siLogicalModels %~ M.delete name
+      SMOLogicalModelObj logicalModelName logicalModelObjectId ->
+        siLogicalModels . ix logicalModelName %~ case logicalModelObjectId of
+          LMMOPerm roleName PTSelect -> lmiPermissions . ix roleName . permSel .~ Nothing
+          LMMOPerm roleName PTInsert -> lmiPermissions . ix roleName . permIns .~ Nothing
+          LMMOPerm roleName PTUpdate -> lmiPermissions . ix roleName . permUpd .~ Nothing
+          LMMOPerm roleName PTDelete -> lmiPermissions . ix roleName . permDel .~ Nothing
       SMOTableObj tableName tableObjectId ->
         siTables . ix tableName %~ case tableObjectId of
           MTORel name _ -> tiCoreInfo . tciFieldInfoMap %~ M.delete (fromRel name)

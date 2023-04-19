@@ -95,7 +95,7 @@
         "root_field_name": "quiz_answers"
        }
       ],
-      "custom_return_types": [
+      "logical_models": [
        {
         "name": "quiz_answer",
         "fields": {

@@ -88,14 +88,14 @@ tests = do
                       |]
 
   describe "Testing Native Queries" $ do
-    let articleWithExcerptReturnType :: Schema.CustomReturnType
-        articleWithExcerptReturnType =
-          (Schema.customType "article_with_excerpt")
-            { Schema.customTypeColumns =
-                [ Schema.customReturnTypeScalar "id" Schema.TInt,
-                  Schema.customReturnTypeScalar "title" Schema.TStr,
-                  Schema.customReturnTypeScalar "excerpt" Schema.TStr,
-                  Schema.customReturnTypeScalar "date" Schema.TUTCTime
+    let articleWithExcerptLogicalModel :: Schema.LogicalModel
+        articleWithExcerptLogicalModel =
+          (Schema.logicalModel "article_with_excerpt")
+            { Schema.logicalModelColumns =
+                [ Schema.logicalModelScalar "id" Schema.TInt,
+                  Schema.logicalModelScalar "title" Schema.TStr,
+                  Schema.logicalModelScalar "excerpt" Schema.TStr,
+                  Schema.logicalModelScalar "date" Schema.TUTCTime
                 ]
             }
 
@@ -111,7 +111,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-      Schema.trackCustomReturnType source articleWithExcerptReturnType testEnvironment
+      Schema.trackLogicalModel source articleWithExcerptLogicalModel testEnvironment
 
       Schema.trackNativeQuery
         source
@@ -149,7 +149,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-      Schema.trackCustomReturnType source articleWithExcerptReturnType testEnvironment
+      Schema.trackLogicalModel source articleWithExcerptLogicalModel testEnvironment
 
       Schema.trackNativeQuery
         source
@@ -191,7 +191,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-      Schema.trackCustomReturnType source articleWithExcerptReturnType testEnvironment
+      Schema.trackLogicalModel source articleWithExcerptLogicalModel testEnvironment
 
       Schema.trackNativeQuery
         source
@@ -228,7 +228,7 @@ tests = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
 
-      Schema.trackCustomReturnType source articleWithExcerptReturnType testEnvironment
+      Schema.trackLogicalModel source articleWithExcerptLogicalModel testEnvironment
 
       Schema.trackNativeQuery
         source
@@ -269,12 +269,12 @@ tests = do
           queryWithDuplicates :: Text
           queryWithDuplicates = "SELECT * FROM (VALUES ('hello', 'world'), ('hello', 'friend')) as t(\"one\", \"two\")"
 
-          helloWorldReturnType :: Schema.CustomReturnType
-          helloWorldReturnType =
-            (Schema.customType "hello_world_function")
-              { Schema.customTypeColumns =
-                  [ Schema.customReturnTypeScalar "one" Schema.TStr,
-                    Schema.customReturnTypeScalar "two" Schema.TStr
+          helloWorldLogicalModel :: Schema.LogicalModel
+          helloWorldLogicalModel =
+            (Schema.logicalModel "hello_world_function")
+              { Schema.logicalModelColumns =
+                  [ Schema.logicalModelScalar "one" Schema.TStr,
+                    Schema.logicalModelScalar "two" Schema.TStr
                   ]
               }
 
@@ -282,7 +282,7 @@ tests = do
           helloWorldNativeQueryWithDuplicates =
             (Schema.nativeQuery "hello_world_function" queryWithDuplicates "hello_world_function")
 
-      Schema.trackCustomReturnType source helloWorldReturnType testEnvironment
+      Schema.trackLogicalModel source helloWorldLogicalModel testEnvironment
 
       Schema.trackNativeQuery source helloWorldNativeQueryWithDuplicates testEnvironment
 

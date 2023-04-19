@@ -37,7 +37,7 @@
     },
     "timeout": 5
    },
-   "custom_return_types": [
+   "logical_models": [
     {
      "name": "quiz_answer",
      "fields": {

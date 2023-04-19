@@ -1,6 +1,6 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 
--- | Check the typechecking validation of native query's custom return types.
+-- | Check the typechecking validation of native query's logical models.
 module Test.API.Metadata.NativeQueries.TypeCheckingSpec where
 
 import Data.List.NonEmpty qualified as NE
@@ -53,8 +53,8 @@ spec = do
 
 -- ** Setup and teardown
 
-customType :: Text -> Schema.ScalarType
-customType txt =
+logicalModel :: Text -> Schema.ScalarType
+logicalModel txt =
   Schema.TCustomType
     Schema.defaultBackendScalarType
       { Schema.bstPostgres = Just txt,
@@ -66,23 +66,23 @@ schema :: [Schema.Table]
 schema =
   [ (Schema.table "stuff")
       { Schema.tableColumns =
-          (\t -> Schema.column t (customType t)) <$> types
+          (\t -> Schema.column t (logicalModel t)) <$> types
       }
   ]
     <> fmap
       ( \t ->
           (Schema.table ("stuff_" <> t))
             { Schema.tableColumns =
-                [Schema.column t (customType t)]
+                [Schema.column t (logicalModel t)]
             }
       )
       types
 
-allTypesReturnType :: Schema.CustomReturnType
-allTypesReturnType =
-  (Schema.customType "stuff_type")
-    { Schema.customTypeColumns =
-        (\t -> Schema.customReturnTypeScalar t (customType t)) <$> types
+allTypesLogicalModel :: Schema.LogicalModel
+allTypesLogicalModel =
+  (Schema.logicalModel "stuff_type")
+    { Schema.logicalModelColumns =
+        (\t -> Schema.logicalModelScalar t (logicalModel t)) <$> types
     }
 
 types :: [Text]
@@ -125,7 +125,7 @@ tests BackendDifferences {..} = do
             nativeQuery =
               (Schema.nativeQuery "typed_model" simpleQuery "stuff_type")
 
-        Schema.trackCustomReturnType sourceName allTypesReturnType testEnvironment
+        Schema.trackLogicalModel sourceName allTypesLogicalModel testEnvironment
 
         shouldReturnYaml
           testEnvironment
@@ -151,17 +151,17 @@ tests BackendDifferences {..} = do
               nativeQuery =
                 (Schema.nativeQuery ("typed_model_" <> customtypeType) wrongQuery ("stuff_type_" <> customtypeType))
 
-          -- Possible cleanup after last test that may have tracked this custom type
+          -- Possible cleanup after last test that may have tracked this logical model
           _ <- Schema.untrackNativeQuery sourceName nativeQuery testEnvironment `catch` \(_ :: SomeException) -> pure ()
-          _ <- Schema.untrackCustomReturnType sourceName (mkCustomReturnType customtypeType) testEnvironment `catch` \(_ :: SomeException) -> pure ()
-          Schema.trackCustomReturnType sourceName (mkCustomReturnType customtypeType) testEnvironment
+          _ <- Schema.untrackLogicalModel sourceName (mkLogicalModel customtypeType) testEnvironment `catch` \(_ :: SomeException) -> pure ()
+          Schema.trackLogicalModel sourceName (mkLogicalModel customtypeType) testEnvironment
 
           let message :: Text
               message =
                 "Return column '"
                   <> customtypeType
                   <> "' has a type mismatch. The expected type is '"
-                  <> customTypeNameMapping customtypeType
+                  <> logicalModelNameMapping customtypeType
                   <> "', but the actual type is '"
                   <> tableTypeNameMapping tableType
                   <> "'."
@@ -181,14 +181,14 @@ tests BackendDifferences {..} = do
 
 -- ** Utils
 
-mkCustomReturnType :: Text -> Schema.CustomReturnType
-mkCustomReturnType typ =
-  (Schema.customType ("stuff_type_" <> typ))
-    { Schema.customTypeColumns =
-        [Schema.customReturnTypeScalar typ (customType typ)]
+mkLogicalModel :: Text -> Schema.LogicalModel
+mkLogicalModel typ =
+  (Schema.logicalModel ("stuff_type_" <> typ))
+    { Schema.logicalModelColumns =
+        [Schema.logicalModelScalar typ (logicalModel typ)]
     }
 
--- | Match a column from a table type and the custom type.
+-- | Match a column from a table type and the logical model.
 data DifferentTypes = DifferentTypes {tableType :: Text, customtypeType :: Text}
   deriving (Show)
 
@@ -196,12 +196,12 @@ data DifferentTypes = DifferentTypes {tableType :: Text, customtypeType :: Text}
 data BackendDifferences = BackendDifferences
   { maxSuccesses :: Int,
     isDifferentTypeThan :: Text -> Text -> Bool,
-    customTypeNameMapping :: Text -> Text,
+    logicalModelNameMapping :: Text -> Text,
     tableTypeNameMapping :: Text -> Text
   }
 
 -- | Generator a pair of columns with a type mismatch.
---   One from the table, and another from the custom type.
+--   One from the table, and another from the logical model.
 generator :: (Text -> Text -> Bool) -> Gen DifferentTypes
 generator isDifferentTypeThan =
   uncurry DifferentTypes
@@ -213,7 +213,7 @@ postgresDifferences =
   BackendDifferences
     { maxSuccesses = 100,
       isDifferentTypeThan = isDifferentTypeThanPg,
-      customTypeNameMapping = tableTypeNameMapping postgresDifferences,
+      logicalModelNameMapping = tableTypeNameMapping postgresDifferences,
       tableTypeNameMapping = \case
         "bool" -> "boolean"
         "char" -> "bpchar"
@@ -235,7 +235,7 @@ cockroachDifferences =
   BackendDifferences
     { maxSuccesses = 30,
       isDifferentTypeThan = isDifferentTypeThanRoach,
-      customTypeNameMapping = \case
+      logicalModelNameMapping = \case
         "bool" -> "boolean"
         "char" -> "bpchar"
         "int2" -> "smallint"

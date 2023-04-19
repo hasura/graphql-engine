@@ -97,7 +97,7 @@ library
     Test.API.GraphQL.ContentLengthSpec
     Test.API.Metadata.BulkKeepGoingSpec
     Test.API.Metadata.ComputedFieldsSpec
-    Test.API.Metadata.CustomReturnTypeSpec
+    Test.API.Metadata.LogicalModelSpec
     Test.API.Metadata.InconsistentSpec
     Test.API.Metadata.NativeQueriesSpec
     Test.API.Metadata.NativeQueries.TypeCheckingSpec

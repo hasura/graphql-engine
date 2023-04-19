@@ -13,8 +13,8 @@ module Hasura.GraphQL.Schema.Select
     defaultSelectTableAggregate,
     defaultTableArgs,
     defaultTableSelectionSet,
-    defaultCustomReturnTypeArgs,
-    defaultCustomReturnTypeSelectionSet,
+    defaultLogicalModelArgs,
+    defaultLogicalModelSelectionSet,
     tableAggregationFields,
     tableConnectionArgs,
     tableConnectionSelectionSet,
@@ -25,7 +25,7 @@ module Hasura.GraphQL.Schema.Select
     tableOffsetArg,
     tablePermissionsInfo,
     tableSelectionList,
-    customReturnTypeSelectionList,
+    logicalModelSelectionList,
   )
 where
 
@@ -47,9 +47,6 @@ import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
-import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo (..))
-import Hasura.CustomReturnType.Common (columnsFromFields)
-import Hasura.CustomReturnType.Types (CustomReturnTypeName (..))
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Internal.Parser qualified as IP
 import Hasura.GraphQL.Schema.Backend
@@ -68,6 +65,9 @@ import Hasura.GraphQL.Schema.Parser
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename
+import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
+import Hasura.LogicalModel.Common (columnsFromFields)
+import Hasura.LogicalModel.Types (LogicalModelName (..))
 import Hasura.Name qualified as Name
 import Hasura.NativeQuery.Types (NullableScalarType (..))
 import Hasura.Prelude
@@ -476,30 +476,30 @@ tableSelectionList ::
 tableSelectionList tableInfo =
   fmap nonNullableObjectList <$> tableSelectionSet tableInfo
 
-customReturnTypeColumnsForRole ::
+logicalModelColumnsForRole ::
   RoleName ->
-  CustomReturnTypeInfo b ->
+  LogicalModelInfo b ->
   Maybe (Permission.PermColSpec b)
-customReturnTypeColumnsForRole role customReturnType =
+logicalModelColumnsForRole role logicalModel =
   if role == adminRoleName
     then -- if admin, assume all columns are OK
       pure Permission.PCStar
     else -- find list of columns we're allowed to access for this role
 
-      HM.lookup role (_crtiPermissions customReturnType)
+      HM.lookup role (_lmiPermissions logicalModel)
         >>= _permSel
         <&> Permission.PCCols . HM.keys . spiCols
 
-defaultCustomReturnTypeSelectionSet ::
+defaultLogicalModelSelectionSet ::
   forall b r m n.
   ( MonadBuildSchema b r m n
   ) =>
-  CustomReturnTypeInfo b ->
+  LogicalModelInfo b ->
   SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
-defaultCustomReturnTypeSelectionSet customReturnType = runMaybeT $ do
+defaultLogicalModelSelectionSet logicalModel = runMaybeT $ do
   roleName <- retrieve scRole
 
-  selectableColumns <- hoistMaybe $ customReturnTypeColumnsForRole roleName customReturnType
+  selectableColumns <- hoistMaybe $ logicalModelColumnsForRole roleName logicalModel
 
   let isSelectable column =
         case selectableColumns of
@@ -521,17 +521,17 @@ defaultCustomReturnTypeSelectionSet customReturnType = runMaybeT $ do
           P.selection columnName (G.Description <$> nstDescription) pathArg field
             <&> IR.mkAnnColumnField column columnType caseBoolExpUnpreparedValue
 
-  let fieldName = getCustomReturnTypeName (_crtiName customReturnType)
+  let fieldName = getLogicalModelName (_lmiName logicalModel)
 
   -- which columns are we allowed to access given permissions?
   let allowedColumns =
         filter
           (isSelectable . fst)
-          (InsOrd.toList (columnsFromFields $ _crtiFields customReturnType))
+          (InsOrd.toList (columnsFromFields $ _lmiFields logicalModel))
 
   parsers <- traverse parseField allowedColumns
 
-  let description = G.Description <$> _crtiDescription customReturnType
+  let description = G.Description <$> _lmiDescription logicalModel
 
       -- We entirely ignore Relay for now.
       implementsInterfaces = mempty
@@ -540,12 +540,12 @@ defaultCustomReturnTypeSelectionSet customReturnType = runMaybeT $ do
     P.selectionSetObject fieldName description parsers implementsInterfaces
       <&> parsedSelectionsToFields IR.AFExpression
 
-customReturnTypeSelectionList ::
-  (MonadBuildSchema b r m n, BackendCustomReturnTypeSelectSchema b) =>
-  CustomReturnTypeInfo b ->
+logicalModelSelectionList ::
+  (MonadBuildSchema b r m n, BackendLogicalModelSelectSchema b) =>
+  LogicalModelInfo b ->
   SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
-customReturnTypeSelectionList customReturnType =
-  fmap nonNullableObjectList <$> customReturnTypeSelectionSet customReturnType
+logicalModelSelectionList logicalModel =
+  fmap nonNullableObjectList <$> logicalModelSelectionSet logicalModel
 
 -- | Converts an output type parser from object_type to [object_type!]!
 nonNullableObjectList :: Parser 'Output m a -> Parser 'Output m a
@@ -692,15 +692,15 @@ defaultTableArgs tableInfo = do
 
 -- | Argument to filter rows returned from table selection
 -- > where: table_bool_exp
-customReturnTypeWhereArg ::
+logicalModelWhereArg ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
     AggregationPredicatesSchema b
   ) =>
-  CustomReturnTypeInfo b ->
+  LogicalModelInfo b ->
   SchemaT r m (InputFieldsParser n (Maybe (IR.AnnBoolExp b (IR.UnpreparedValue b))))
-customReturnTypeWhereArg customReturnType = do
-  boolExpParser <- customReturnTypeBoolExp customReturnType
+logicalModelWhereArg logicalModel = do
+  boolExpParser <- logicalModelBoolExp logicalModel
   pure $
     fmap join $
       P.fieldOptional whereName whereDesc $
@@ -711,15 +711,15 @@ customReturnTypeWhereArg customReturnType = do
 
 -- | Argument to sort rows returned from table selection
 -- > order_by: [table_order_by!]
-customReturnTypeOrderByArg ::
+logicalModelOrderByArg ::
   forall b r m n.
   ( MonadBuildSchema b r m n
   ) =>
-  CustomReturnTypeInfo b ->
+  LogicalModelInfo b ->
   SchemaT r m (InputFieldsParser n (Maybe (NonEmpty (IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)))))
-customReturnTypeOrderByArg customReturnType = do
+logicalModelOrderByArg logicalModel = do
   tCase <- retrieve $ _rscNamingConvention . _siCustomization @b
-  orderByParser <- customReturnTypeOrderByExp customReturnType
+  orderByParser <- logicalModelOrderByExp logicalModel
   let orderByName = applyFieldNameCaseCust tCase Name._order_by
       orderByDesc = Just $ G.Description "sort the rows by one or more columns"
   pure $ do
@@ -732,23 +732,23 @@ customReturnTypeOrderByArg customReturnType = do
 
 -- | Argument to distinct select on columns returned from table selection
 -- > distinct_on: [table_select_column!]
-customReturnTypeDistinctArg ::
+logicalModelDistinctArg ::
   forall b r m n.
   ( MonadBuildSchema b r m n
   ) =>
-  CustomReturnTypeInfo b ->
+  LogicalModelInfo b ->
   SchemaT r m (InputFieldsParser n (Maybe (NonEmpty (Column b))))
-customReturnTypeDistinctArg customReturnType = do
-  let name = getCustomReturnTypeName (_crtiName customReturnType)
+logicalModelDistinctArg logicalModel = do
+  let name = getLogicalModelName (_lmiName logicalModel)
 
   tCase <- retrieve $ _rscNamingConvention . _siCustomization @b
 
   let maybeColumnDefinitions =
-        traverse definitionFromTypeRow (InsOrd.keys (_crtiFields customReturnType))
+        traverse definitionFromTypeRow (InsOrd.keys (_lmiFields logicalModel))
           >>= NE.nonEmpty
 
   case (,) <$> G.mkName "_enum_name" <*> maybeColumnDefinitions of
-    Nothing -> throw500 $ "Error creating an enum name for custom type " <> tshow (_crtiName customReturnType)
+    Nothing -> throw500 $ "Error creating an enum name for logical model " <> tshow (_lmiName logicalModel)
     Just (enum', columnDefinitions) -> do
       let enumName = name <> enum'
           description = Nothing
@@ -1160,7 +1160,7 @@ tableAggregationFields tableInfo = do
        in P.subselection_ opFieldName Nothing subselectionParser
             <&> IR.AFOp . IR.AggregateOp opText
 
--- | shared implementation between tables and custom types
+-- | shared implementation between tables and logical models
 defaultArgsParser ::
   forall b r m n.
   ( MonadBuildSchema b r m n
@@ -1206,17 +1206,17 @@ defaultArgsParser whereParser orderByParser distinctParser = do
         parseError
           "\"distinct_on\" columns must match initial \"order_by\" columns"
 
-defaultCustomReturnTypeArgs ::
+defaultLogicalModelArgs ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
     AggregationPredicatesSchema b
   ) =>
-  CustomReturnTypeInfo b ->
+  LogicalModelInfo b ->
   SchemaT r m (InputFieldsParser n (SelectArgs b))
-defaultCustomReturnTypeArgs customReturnType = do
-  whereParser <- customReturnTypeWhereArg customReturnType
-  orderByParser <- customReturnTypeOrderByArg customReturnType
-  distinctParser <- customReturnTypeDistinctArg customReturnType
+defaultLogicalModelArgs logicalModel = do
+  whereParser <- logicalModelWhereArg logicalModel
+  orderByParser <- logicalModelOrderByArg logicalModel
+  distinctParser <- logicalModelDistinctArg logicalModel
 
   defaultArgsParser whereParser orderByParser distinctParser
 

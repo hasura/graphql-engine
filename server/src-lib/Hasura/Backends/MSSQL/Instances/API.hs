@@ -19,5 +19,5 @@ instance BackendAPI 'MSSQL where
         remoteRelationshipCommands @'MSSQL,
         eventTriggerCommands @'MSSQL,
         nativeQueriesCommands @'MSSQL,
-        customReturnTypesCommands @'MSSQL
+        logicalModelsCommands @'MSSQL
       ]

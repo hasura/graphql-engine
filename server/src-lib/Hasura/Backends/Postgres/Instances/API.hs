@@ -24,7 +24,7 @@ instance BackendAPI ('Postgres 'Vanilla) where
         eventTriggerCommands @('Postgres 'Vanilla),
         computedFieldCommands @('Postgres 'Vanilla),
         nativeQueriesCommands @('Postgres 'Vanilla),
-        customReturnTypesCommands @('Postgres 'Vanilla),
+        logicalModelsCommands @('Postgres 'Vanilla),
         [ commandParser
             "set_table_is_enum"
             ( RMPgSetTableIsEnum
@@ -46,7 +46,7 @@ instance BackendAPI ('Postgres 'Citus) where
         remoteRelationshipCommands @('Postgres 'Citus),
         connectionTemplateCommands @('Postgres 'Citus),
         nativeQueriesCommands @('Postgres 'Citus),
-        customReturnTypesCommands @('Postgres 'Citus)
+        logicalModelsCommands @('Postgres 'Citus)
       ]
 
 instance BackendAPI ('Postgres 'Cockroach) where
@@ -65,5 +65,5 @@ instance BackendAPI ('Postgres 'Cockroach) where
         ],
         connectionTemplateCommands @('Postgres 'Cockroach),
         nativeQueriesCommands @('Postgres 'Cockroach),
-        customReturnTypesCommands @('Postgres 'Cockroach)
+        logicalModelsCommands @('Postgres 'Cockroach)
       ]

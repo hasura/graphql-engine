@@ -26,8 +26,8 @@ import Hasura.Backends.Postgres.Connection.Connect (withPostgresDB)
 import Hasura.Backends.Postgres.Instances.Types ()
 import Hasura.Backends.Postgres.SQL.Types (PGScalarType (..), pgScalarTypeToText)
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Common (columnsFromFields)
-import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata (..))
+import Hasura.LogicalModel.Common (columnsFromFields)
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.NativeQuery.Metadata
   ( InterpolatedItem (..),
     InterpolatedQuery (..),
@@ -45,13 +45,13 @@ validateNativeQuery ::
   InsOrd.InsOrdHashMap PGScalarType PQ.Oid ->
   Env.Environment ->
   PG.PostgresConnConfiguration ->
-  CustomReturnTypeMetadata ('Postgres pgKind) ->
+  LogicalModelMetadata ('Postgres pgKind) ->
   NativeQueryMetadata ('Postgres pgKind) ->
   m ()
-validateNativeQuery pgTypeOidMapping env connConf customReturnType model = do
-  (prepname, preparedQuery) <- nativeQueryToPreparedStatement customReturnType model
+validateNativeQuery pgTypeOidMapping env connConf logicalModel model = do
+  (prepname, preparedQuery) <- nativeQueryToPreparedStatement logicalModel model
   description <- runCheck prepname (PG.fromText preparedQuery)
-  let returnColumns = bimap toTxt nstType <$> InsOrd.toList (columnsFromFields $ _crtmFields customReturnType)
+  let returnColumns = bimap toTxt nstType <$> InsOrd.toList (columnsFromFields $ _lmmFields logicalModel)
 
   for_ (toList returnColumns) (matchTypes description)
   where
@@ -201,10 +201,10 @@ renderIQ (InterpolatedQuery items) = foldMap printItem items
 nativeQueryToPreparedStatement ::
   forall m pgKind.
   MonadError QErr m =>
-  CustomReturnTypeMetadata ('Postgres pgKind) ->
+  LogicalModelMetadata ('Postgres pgKind) ->
   NativeQueryMetadata ('Postgres pgKind) ->
   m (BS.ByteString, Text)
-nativeQueryToPreparedStatement customReturnType model = do
+nativeQueryToPreparedStatement logicalModel model = do
   let (preparedIQ, argumentMapping) = renameIQ $ _nqmCode model
       logimoCode :: Text
       logimoCode = renderIQ preparedIQ
@@ -224,7 +224,7 @@ nativeQueryToPreparedStatement customReturnType model = do
 
       returnedColumnNames :: Text
       returnedColumnNames =
-        commaSeparated $ InsOrd.keys (columnsFromFields $ _crtmFields customReturnType)
+        commaSeparated $ InsOrd.keys (columnsFromFields $ _lmmFields logicalModel)
 
       wrapInCTE :: Text -> Text
       wrapInCTE query =

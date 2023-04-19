@@ -39,10 +39,10 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (dquote, dquoteList, (<<>))
 import Hasura.Base.Error
-import Hasura.CustomReturnType.API
 import Hasura.EncJSON
 import Hasura.Function.API
 import Hasura.Logging qualified as HL
+import Hasura.LogicalModel.API
 import Hasura.Metadata.Class
 import Hasura.NativeQuery.API
 import Hasura.Prelude hiding (first)
@@ -709,13 +709,13 @@ purgeMetadataObj = \case
           nativeQueryMetadataSetter @b source nativeQueryName
             %~ case nativeQueryMetadataObjId of
               NQMORel rn _ -> dropNativeQueryRelationshipInMetadata rn
-      SMOCustomReturnType crt -> dropCustomReturnTypeInMetadata @b source crt
-      SMOCustomReturnTypeObj customReturnTypeName customReturnTypeMetadataObjId ->
+      SMOLogicalModel lm -> dropLogicalModelInMetadata @b source lm
+      SMOLogicalModelObj logicalModelName logicalModelMetadataObjId ->
         MetadataModifier $
-          customReturnTypeMetadataSetter @b source customReturnTypeName
-            %~ case customReturnTypeMetadataObjId of
-              CRTMOPerm roleName permType ->
-                dropCustomReturnTypePermissionInMetadata roleName permType
+          logicalModelMetadataSetter @b source logicalModelName
+            %~ case logicalModelMetadataObjId of
+              LMMOPerm roleName permType ->
+                dropLogicalModelPermissionInMetadata roleName permType
       SMOTableObj qt tableObj ->
         MetadataModifier $
           tableMetadataSetter @b source qt %~ case tableObj of

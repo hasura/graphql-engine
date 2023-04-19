@@ -286,10 +286,10 @@ instance
   ( PostgresSchema pgKind,
     Backend ('Postgres pgKind)
   ) =>
-  BS.BackendCustomReturnTypeSelectSchema ('Postgres pgKind)
+  BS.BackendLogicalModelSelectSchema ('Postgres pgKind)
   where
-  customReturnTypeArguments = defaultCustomReturnTypeArgs
-  customReturnTypeSelectionSet = defaultCustomReturnTypeSelectionSet
+  logicalModelArguments = defaultLogicalModelArgs
+  logicalModelSelectionSet = defaultLogicalModelSelectionSet
 
 instance
   ( Backend ('Postgres pgKind),

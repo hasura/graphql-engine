@@ -1,8 +1,8 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# OPTIONS_GHC -Wno-incomplete-record-updates #-}
 
--- | Tests of the newly separated Custom Return Types feature
-module Test.API.Metadata.CustomReturnTypeSpec (spec) where
+-- | Tests of the newly separated Logical Models feature
+module Test.API.Metadata.LogicalModelSpec (spec) where
 
 import Control.Lens
 import Data.Aeson (Value)
@@ -54,19 +54,19 @@ schema = []
 
 testImplementation :: SpecWith TestEnvironment
 testImplementation = do
-  let myCustomReturnType :: Schema.CustomReturnType
-      myCustomReturnType =
-        (Schema.customType "nice")
-          { Schema.customTypeDescription = Just "hello",
-            Schema.customTypeColumns =
-              [ (Schema.customReturnTypeScalar "divided" Schema.TInt)
-                  { Schema.customReturnTypeColumnDescription = Just "a divided thing"
+  let myLogicalModel :: Schema.LogicalModel
+      myLogicalModel =
+        (Schema.logicalModel "nice")
+          { Schema.logicalModelDescription = Just "hello",
+            Schema.logicalModelColumns =
+              [ (Schema.logicalModelScalar "divided" Schema.TInt)
+                  { Schema.logicalModelColumnDescription = Just "a divided thing"
                   }
               ]
           }
 
   describe "When native queries are disabled" do
-    let customTypesMetadata =
+    let logicalModelsMetadata =
           [yaml|
                 fields:
                   - name: divided
@@ -75,67 +75,67 @@ testImplementation = do
                 name: divided_stuff
             |]
 
-    let metadataWithCustomReturnType :: Value -> Value
-        metadataWithCustomReturnType currentMetadata =
+    let metadataWithLogicalModel :: Value -> Value
+        metadataWithLogicalModel currentMetadata =
           currentMetadata
             & key "sources"
               . nth 0
-              . atKey "custom_return_types"
-              .~ Just [yaml| - *customTypesMetadata |]
+              . atKey "logical_models"
+              .~ Just [yaml| - *logicalModelsMetadata |]
 
     withHge emptyHgeConfig $ do
       withPostgresSource "default" $ do
-        it "`replace_metadata` preserves custom return types" $ \env -> do
+        it "`replace_metadata` preserves logical models" $ \env -> do
           currentMetadata <- export_metadata env
-          _ <- replace_metadata env (metadataWithCustomReturnType currentMetadata)
+          _ <- replace_metadata env (metadataWithLogicalModel currentMetadata)
           actual <- export_metadata env
-          actual `shouldBeYaml` (metadataWithCustomReturnType currentMetadata)
+          actual `shouldBeYaml` (metadataWithLogicalModel currentMetadata)
 
         it "`replace_metadata` reports inconsistent objects" $ \env -> do
           currentMetadata <- export_metadata env
-          actual <- replace_metadata env (metadataWithCustomReturnType currentMetadata)
+          actual <- replace_metadata env (metadataWithLogicalModel currentMetadata)
 
           actual
             `shouldBeYaml` [yaml|
               inconsistent_objects:
-                - definition: *customTypesMetadata
+                - definition: *logicalModelsMetadata
                   name: custom_type divided_stuff in source default
-                  reason: 'Inconsistent object: The Custom Return Type feature is disabled'
+                  reason: 'Inconsistent object: The Logical Model feature is disabled'
                   type: custom_type
               is_consistent: false
             |]
 
   describe "Implementation" $ do
-    it "Adds a simple custom type and returns a 200" $ \testEnvironment -> do
+    it "Adds a simple logical model and returns a 200" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
 
-      Schema.trackCustomReturnType sourceName myCustomReturnType testEnvironment
+      Schema.trackLogicalModel sourceName myLogicalModel testEnvironment
 
-    it "Adds a custom type with a nested custom type and returns a 200" $ \testEnvironment -> do
+    it "Adds a logical model with a nested logical model and returns a 200" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
 
-          nestedCustomReturnType :: Schema.CustomReturnType
-          nestedCustomReturnType =
-            (Schema.customType "nested")
-              { Schema.customTypeDescription = Just "hello",
-                Schema.customTypeColumns =
-                  [ Schema.customReturnTypeScalar "name" Schema.TStr,
-                    Schema.customReturnTypeReference "nices" "nice"
+          nestedLogicalModel :: Schema.LogicalModel
+          nestedLogicalModel =
+            (Schema.logicalModel "nested")
+              { Schema.logicalModelDescription = Just "hello",
+                Schema.logicalModelColumns =
+                  [ Schema.logicalModelScalar "name" Schema.TStr,
+                    Schema.logicalModelReference "nices" "nice"
                   ]
               }
 
-      Schema.trackCustomReturnType sourceName myCustomReturnType testEnvironment
-      Schema.trackCustomReturnType sourceName nestedCustomReturnType testEnvironment
+      Schema.trackLogicalModel sourceName myLogicalModel testEnvironment
+      Schema.trackLogicalModel sourceName nestedLogicalModel testEnvironment
 
-    it "Checks for the custom type" $ \testEnvironment -> do
+    it "Checks for the logical model" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
           backendType = BackendType.backendTypeString backendTypeMetadata
-          getRequestType = backendType <> "_get_custom_return_type"
+          getRequestType = backendType <> "_get_logical_model"
 
-      Schema.trackCustomReturnType sourceName myCustomReturnType testEnvironment
+      Schema.trackLogicalModel sourceName myLogicalModel testEnvironment
 
       shouldReturnYaml
         testEnvironment
@@ -157,15 +157,15 @@ testImplementation = do
                   description: "a divided thing"
         |]
 
-    it "Checks the custom type is deleted again" $ \testEnvironment -> do
+    it "Checks the logical model is deleted again" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
           backendType = BackendType.backendTypeString backendTypeMetadata
-          getRequestType = backendType <> "_get_custom_return_type"
+          getRequestType = backendType <> "_get_logical_model"
 
-      Schema.trackCustomReturnType sourceName myCustomReturnType testEnvironment
+      Schema.trackLogicalModel sourceName myLogicalModel testEnvironment
 
-      Schema.untrackCustomReturnType sourceName myCustomReturnType testEnvironment
+      Schema.untrackLogicalModel sourceName myLogicalModel testEnvironment
 
       shouldReturnYaml
         testEnvironment
@@ -181,7 +181,7 @@ testImplementation = do
           []
         |]
 
-    it "Can't delete a custom type that is in use" $ \testEnvironment -> do
+    it "Can't delete a logical model that is in use" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
 
@@ -189,13 +189,13 @@ testImplementation = do
           nativeQuery =
             (Schema.nativeQuery "native_query" "SELECT 1 as divided" "nice")
 
-      Schema.trackCustomReturnType sourceName myCustomReturnType testEnvironment
+      Schema.trackLogicalModel sourceName myLogicalModel testEnvironment
       Schema.trackNativeQuery sourceName nativeQuery testEnvironment
 
       shouldReturnYaml
         testEnvironment
         ( GraphqlEngine.postMetadataWithStatus 400 testEnvironment $
-            Schema.untrackCustomReturnTypeCommand sourceName backendTypeMetadata myCustomReturnType
+            Schema.untrackLogicalModelCommand sourceName backendTypeMetadata myLogicalModel
         )
         [yaml|
           code: constraint-violation
@@ -209,23 +209,23 @@ testImplementation = do
 
 testPermissions :: SpecWith TestEnvironment
 testPermissions = do
-  let customReturnType :: Schema.CustomReturnType
-      customReturnType =
-        (Schema.customType "divided_stuff")
-          { Schema.customTypeColumns =
-              [ (Schema.customReturnTypeScalar "divided" Schema.TInt)
-                  { Schema.customReturnTypeColumnDescription = Just "a divided thing"
+  let logicalModel :: Schema.LogicalModel
+      logicalModel =
+        (Schema.logicalModel "divided_stuff")
+          { Schema.logicalModelColumns =
+              [ (Schema.logicalModelScalar "divided" Schema.TInt)
+                  { Schema.logicalModelColumnDescription = Just "a divided thing"
                   }
               ]
           }
 
   describe "Permissions" do
-    it "Adds a custom return type with a select permission and returns a 200" $ \testEnvironment -> do
+    it "Adds a logical model with a select permission and returns a 200" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
           backendType = BackendType.backendTypeString backendTypeMetadata
 
-      Schema.trackCustomReturnType sourceName customReturnType testEnvironment
+      Schema.trackLogicalModel sourceName logicalModel testEnvironment
 
       shouldReturnYaml
         testEnvironment
@@ -234,7 +234,7 @@ testPermissions = do
             [interpolateYaml|
               type: bulk
               args:
-                - type: #{backendType}_create_custom_return_type_select_permission
+                - type: #{backendType}_create_logical_model_select_permission
                   args:
                     source: #{sourceName}
                     name: divided_stuff
@@ -254,7 +254,7 @@ testPermissions = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [interpolateYaml|
-              type: #{backendType}_get_custom_return_type
+              type: #{backendType}_get_logical_model
               args:
                 source: #{sourceName}
             |]
@@ -280,7 +280,7 @@ testPermissions = do
           sourceName = BackendType.backendSourceName backendTypeMetadata
           backendType = BackendType.backendTypeString backendTypeMetadata
 
-      Schema.trackCustomReturnType sourceName customReturnType testEnvironment
+      Schema.trackLogicalModel sourceName logicalModel testEnvironment
 
       shouldReturnYaml
         testEnvironment
@@ -289,7 +289,7 @@ testPermissions = do
             [interpolateYaml|
               type: bulk
               args:
-                - type: #{backendType}_create_custom_return_type_select_permission
+                - type: #{backendType}_create_logical_model_select_permission
                   args:
                     source: #{sourceName}
                     name: divided_stuff
@@ -298,7 +298,7 @@ testPermissions = do
                       columns:
                         - divided
                       filter: {}
-                - type: #{backendType}_drop_custom_return_type_select_permission
+                - type: #{backendType}_drop_logical_model_select_permission
                   args:
                     source: #{sourceName}
                     name: divided_stuff
@@ -315,7 +315,7 @@ testPermissions = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [interpolateYaml|
-              type: #{backendType}_get_custom_return_type
+              type: #{backendType}_get_logical_model
               args:
                 source: #{sourceName}
             |]
@@ -345,7 +345,7 @@ testPermissionFailures = do
             [interpolateYaml|
               type: bulk
               args:
-                - type: #{backendType}_create_custom_return_type_select_permission
+                - type: #{backendType}_create_logical_model_select_permission
                   args:
                     source: made_up_source
                     name: divided_stuff
@@ -362,7 +362,7 @@ testPermissionFailures = do
           path: "$.args[0].args"
         |]
 
-    it "Fails to adds a select permission to a nonexisting custom return type" $ \testEnvironment -> do
+    it "Fails to adds a select permission to a nonexisting logical model" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
           backendType = BackendType.backendTypeString backendTypeMetadata
@@ -375,10 +375,10 @@ testPermissionFailures = do
             [interpolateYaml|
               type: bulk
               args:
-                - type: #{backendType}_create_custom_return_type_select_permission
+                - type: #{backendType}_create_logical_model_select_permission
                   args:
                     source: #{sourceName}
-                    name: made_up_custom_return_type
+                    name: made_up_logical_model
                     role: "test"
                     permission:
                       columns:
@@ -388,7 +388,7 @@ testPermissionFailures = do
         )
         [interpolateYaml|
           code: "not-found"
-          error: Custom return type "made_up_custom_return_type" not found in source "#{sourceName}".
+          error: Logical model "made_up_logical_model" not found in source "#{sourceName}".
           path: "$.args[0].args"
         |]
 
@@ -402,10 +402,10 @@ testPermissionFailures = do
             400
             testEnvironment
             [interpolateYaml|
-              type: #{backendType}_drop_custom_return_type_select_permission
+              type: #{backendType}_drop_logical_model_select_permission
               args:
                 source: made_up_source
-                name: made_up_custom_return_type
+                name: made_up_logical_model
                 role: "test"
                 permission:
                   columns:
@@ -419,7 +419,7 @@ testPermissionFailures = do
           path: "$.args"
         |]
 
-    it "Fails to drop a select permission from a nonexisting custom return type" $ \testEnvironment -> do
+    it "Fails to drop a select permission from a nonexisting logical model" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
           backendType = BackendType.backendTypeString backendTypeMetadata
@@ -430,15 +430,15 @@ testPermissionFailures = do
             400
             testEnvironment
             [interpolateYaml|
-              type: #{backendType}_drop_custom_return_type_select_permission
+              type: #{backendType}_drop_logical_model_select_permission
               args:
                 source: #{sourceName}
-                name: made_up_custom_return_type
+                name: made_up_logical_model
                 role: "test"
             |]
         )
         [interpolateYaml|
           code: "not-found"
-          error: Custom return type "made_up_custom_return_type" not found in source "#{sourceName}".
+          error: Logical model "made_up_logical_model" not found in source "#{sourceName}".
           path: "$.args"
         |]

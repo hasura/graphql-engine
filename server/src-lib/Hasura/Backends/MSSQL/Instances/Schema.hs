@@ -100,9 +100,9 @@ instance BackendTableSelectSchema 'MSSQL where
   selectTableAggregate = defaultSelectTableAggregate
   tableSelectionSet = defaultTableSelectionSet
 
-instance BackendCustomReturnTypeSelectSchema 'MSSQL where
-  customReturnTypeArguments = defaultCustomReturnTypeArgs
-  customReturnTypeSelectionSet = defaultCustomReturnTypeSelectionSet
+instance BackendLogicalModelSelectSchema 'MSSQL where
+  logicalModelArguments = defaultLogicalModelArgs
+  logicalModelSelectionSet = defaultLogicalModelSelectionSet
 
 instance BackendUpdateOperatorsSchema 'MSSQL where
   type UpdateOperators 'MSSQL = UpdateOperator

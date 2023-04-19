@@ -37,7 +37,7 @@ module Harness.Schema
     getSchemaName,
     module Harness.Schema.Table,
     module Harness.Schema.Name,
-    module Harness.Schema.CustomReturnType,
+    module Harness.Schema.LogicalModel,
   )
 where
 
@@ -49,7 +49,7 @@ import Data.Vector qualified as V
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
-import Harness.Schema.CustomReturnType
+import Harness.Schema.LogicalModel
 import Harness.Schema.Name
 import Harness.Schema.Table
 import Harness.Test.BackendType (BackendTypeConfig)
@@ -420,7 +420,7 @@ addSource sourceName sourceConfig testEnvironment = do
       |]
 
 trackNativeQueryCommand :: String -> BackendTypeConfig -> NativeQuery -> Value
-trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryArrayRelationships, nativeQueryName, nativeQueryArguments, nativeQueryQuery, nativeQueryReturnType}) =
+trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryArrayRelationships, nativeQueryName, nativeQueryArguments, nativeQueryQuery, nativeQueryLogicalModel}) =
   -- arguments are a map from name to type details
   let argsToJson =
         Aeson.object
@@ -454,7 +454,7 @@ trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryAr
           code: *nativeQueryQuery
           arguments: *arguments
           array_relationships: *nativeQueryArrayRelationships
-          returns: *nativeQueryReturnType
+          returns: *nativeQueryLogicalModel
       |]
 
 trackNativeQuery :: HasCallStack => String -> NativeQuery -> TestEnvironment -> IO ()

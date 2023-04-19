@@ -16,7 +16,7 @@ where
 
 import Control.Lens (makeLenses)
 import Data.Aeson (ToJSON (toJSON), genericToJSON)
-import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo)
+import Hasura.LogicalModel.Cache (LogicalModelInfo)
 import Hasura.NativeQuery.Metadata (InterpolatedQuery, NativeQueryArgumentName, NativeQueryName)
 import Hasura.NativeQuery.Types (NullableScalarType)
 import Hasura.Prelude
@@ -33,7 +33,7 @@ type NativeQueryCache b = HashMap NativeQueryName (NativeQueryInfo b)
 data NativeQueryInfo (b :: BackendType) = NativeQueryInfo
   { _nqiRootFieldName :: NativeQueryName,
     _nqiCode :: InterpolatedQuery NativeQueryArgumentName,
-    _nqiReturns :: CustomReturnTypeInfo b,
+    _nqiReturns :: LogicalModelInfo b,
     _nqiArguments :: HashMap NativeQueryArgumentName (NullableScalarType b),
     _nqiArrayRelationships :: InsOrdHashMap RelName (RelInfo b),
     _nqiDescription :: Maybe Text

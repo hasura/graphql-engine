@@ -20,7 +20,6 @@ import Data.Text.NonEmpty qualified as NT
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
-import Hasura.CustomReturnType.Cache (_crtiPermissions)
 import Hasura.Function.Cache
 import Hasura.GraphQL.ApolloFederation
 import Hasura.GraphQL.Context
@@ -46,6 +45,7 @@ import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Schema.RemoteRelationship
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename (MkTypename (..))
+import Hasura.LogicalModel.Cache (_lmiPermissions)
 import Hasura.Name qualified as Name
 import Hasura.NativeQuery.Cache (NativeQueryCache, _nqiReturns)
 import Hasura.Prelude
@@ -136,8 +136,8 @@ buildGQLContext
               <> Set.fromList (bool mempty remoteSchemasRoles $ remoteSchemaPermissions == Options.EnableRemoteSchemaPermissions)
         allActionInfos = Map.elems allActions
         allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
-        allCustomReturnTypeRoles = Set.fromList $ getCustomReturnTypeRoles =<< Map.elems sources
-        allRoles = actionRoles <> allTableRoles <> allCustomReturnTypeRoles
+        allLogicalModelRoles = Set.fromList $ getLogicalModelRoles =<< Map.elems sources
+        allRoles = actionRoles <> allTableRoles <> allLogicalModelRoles
 
     contexts <-
       -- Buld role contexts in parallel. We'd prefer deterministic parallelism
@@ -730,7 +730,7 @@ buildNativeQueryFields sourceInfo nativeQueries = runMaybeTmempty $ do
     -- more granularly on columns and then rows)
     guard $
       roleName == adminRoleName
-        || roleName `Map.member` _crtiPermissions (_nqiReturns nativeQuery)
+        || roleName `Map.member` _lmiPermissions (_nqiReturns nativeQuery)
 
     lift (buildNativeQueryRootFields nativeQuery)
   where
