@@ -9,6 +9,7 @@ import {
   getFKRelationships,
   getTablesListAsTree,
   getSupportedOperators,
+  getIsTableView,
 } from './introspection';
 import { getTableRows } from './query';
 import { postgresCapabilities } from '../common/capabilities';
@@ -78,6 +79,7 @@ export const cockroach: Database = {
     getTablesListAsTree,
     getSupportedOperators,
     getDatabaseSchemas: async () => Feature.NotImplemented,
+    getIsTableView,
   },
   query: {
     getTableRows,

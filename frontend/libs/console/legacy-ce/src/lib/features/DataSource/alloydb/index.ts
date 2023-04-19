@@ -13,6 +13,7 @@ import {
 import { getTableRows } from '../postgres/query';
 import { runSQL } from '../api';
 import { postgresCapabilities } from '../common/capabilities';
+import { getIsTableView } from './introspection/getIsTableView';
 
 export type AlloyDbTable = { name: string; schema: string };
 
@@ -47,6 +48,7 @@ export const alloy: Database = {
     getTablesListAsTree,
     getSupportedOperators,
     getDatabaseSchemas,
+    getIsTableView,
   },
   query: {
     getTableRows,

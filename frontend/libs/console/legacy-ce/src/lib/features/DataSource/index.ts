@@ -23,6 +23,7 @@ import type {
   GetTablesListAsTreeProps,
   GetTrackableTablesProps,
   GetVersionProps,
+  GetIsTableViewProps,
   // Property,
   IntrospectedTable,
   Operator,
@@ -135,6 +136,9 @@ export type Database = {
     getDatabaseSchemas: (
       props: GetDatabaseSchemaProps
     ) => Promise<string[] | Feature.NotImplemented>;
+    getIsTableView: (
+      props: GetIsTableViewProps
+    ) => Promise<boolean | Feature.NotImplemented>;
   };
   query?: {
     getTableRows: (
@@ -549,5 +553,31 @@ export const DataSource = (httpClient: AxiosInstance) => ({
       throw new Error(`modify methods are not callable for ${dataSourceName}`);
 
     return database.modify;
+  },
+  getIsTableView: async ({
+    dataSourceName,
+    table,
+    httpClient,
+  }: {
+    dataSourceName: string;
+    table: Table;
+  } & NetworkArgs) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    if (!database) return false;
+
+    const introspection = database.introspection;
+
+    if (!introspection) return false;
+
+    const isView = await introspection.getIsTableView({
+      dataSourceName,
+      httpClient,
+      table,
+    });
+
+    if (isView === Feature.NotImplemented) return false;
+
+    return isView;
   },
 });

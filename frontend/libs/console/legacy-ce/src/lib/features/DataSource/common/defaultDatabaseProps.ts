@@ -17,6 +17,7 @@ export const defaultDatabaseProps: Database = {
     getTablesListAsTree: async () => Feature.NotImplemented,
     getSupportedOperators: async () => Feature.NotImplemented,
     getDatabaseSchemas: async () => Feature.NotImplemented,
+    getIsTableView: async () => Feature.NotImplemented,
   },
   query: {
     getTableRows: async () => Feature.NotImplemented,

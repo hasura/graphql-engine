@@ -178,3 +178,8 @@ export type ChangeDatabaseSchemaProps = {
   dataSourceName: string;
   schemaName: string;
 } & NetworkArgs;
+export type GetIsTableViewProps = {
+  dataSourceName: string;
+  table: Table;
+  httpClient: NetworkArgs['httpClient'];
+};

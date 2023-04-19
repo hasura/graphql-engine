@@ -38,6 +38,7 @@ export const bigquery: Database = {
     getTablesListAsTree,
     getSupportedOperators,
     getDatabaseSchemas: async () => Feature.NotImplemented,
+    getIsTableView: async () => Feature.NotImplemented,
   },
   query: {
     getTableRows,

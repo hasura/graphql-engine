@@ -16,6 +16,7 @@ import {
   getTableColumns,
   getTablesListAsTree,
   getTrackableTables,
+  getIsTableView,
 } from './introspection';
 import { getTableRows } from './query';
 
@@ -58,6 +59,7 @@ export const postgres: Database = {
     getTablesListAsTree,
     getSupportedOperators,
     getDatabaseSchemas,
+    getIsTableView,
   },
   query: {
     getTableRows,

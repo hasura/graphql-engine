@@ -15,6 +15,7 @@ import {
   getSupportedOperators,
   getTableColumns,
   getTablesListAsTree,
+  getIsTableView,
 } from './introspection';
 import { getTableRows } from './query';
 
@@ -81,6 +82,7 @@ export const mssql: Database = {
     getTablesListAsTree,
     getSupportedOperators,
     getDatabaseSchemas,
+    getIsTableView,
   },
   modify: {
     defaultQueryRoot: async () => Feature.NotImplemented,
