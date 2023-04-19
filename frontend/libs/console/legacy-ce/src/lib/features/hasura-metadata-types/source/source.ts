@@ -39,8 +39,8 @@ export type SourceCustomization = {
   naming_convention?: NamingConvention;
 };
 
-export type PGFunction = {
-  function: string | { name: string; schema: string };
+export type MetadataFunction = {
+  function: QualifiedFunction;
   configuration?: {
     custom_name?: string;
     custom_root_fields?: {
@@ -56,11 +56,11 @@ export type Source = {
   name: string;
   tables: MetadataTable[];
   customization?: SourceCustomization;
+  functions?: MetadataFunction[];
 } & (
   | {
       kind: 'postgres';
       configuration: PostgresConfiguration;
-      functions?: PGFunction[];
     }
   | {
       kind: 'mssql';
@@ -83,3 +83,5 @@ export type Source = {
       configuration: unknown;
     }
 );
+
+export type QualifiedFunction = unknown;

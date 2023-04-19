@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import produce from 'immer';
 
-export const useCheckRows = <T>(data: (T & { id: string })[]) => {
+export const useCheckRows = <T extends { id: string }>(data: T[]) => {
   const [checkedIds, setCheckedIds] = useState<string[]>([]);
 
   // Derived statuses

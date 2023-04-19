@@ -21,7 +21,9 @@ import type {
   GetTableColumnsProps,
   GetTableRowsProps,
   GetTablesListAsTreeProps,
+  GetTrackableFunctionProps,
   GetTrackableTablesProps,
+  IntrospectedFunction,
   GetVersionProps,
   GetIsTableViewProps,
   // Property,
@@ -133,6 +135,9 @@ export type Database = {
     getSupportedOperators: (
       props: GetSupportedOperatorsProps
     ) => Promise<Operator[] | Feature.NotImplemented>;
+    getTrackableFunctions: (
+      props: GetTrackableFunctionProps
+    ) => Promise<IntrospectedFunction[] | Feature.NotImplemented>;
     getDatabaseSchemas: (
       props: GetDatabaseSchemaProps
     ) => Promise<string[] | Feature.NotImplemented>;
@@ -530,6 +535,13 @@ export const DataSource = (httpClient: AxiosInstance) => ({
       httpClient,
       driver
     );
+  },
+  getTrackableFunctions: async (dataSourceName: string) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+    return database.introspection?.getTrackableFunctions({
+      dataSourceName,
+      httpClient,
+    });
   },
   getDatabaseSchemas: async ({
     dataSourceName,

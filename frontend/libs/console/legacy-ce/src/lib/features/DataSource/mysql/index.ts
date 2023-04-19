@@ -1,11 +1,15 @@
 import { Database, Feature } from '..';
-import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
+import {
+  defaultDatabaseProps,
+  defaultIntrospectionProps,
+} from '../common/defaultDatabaseProps';
 
 export type MySQLTable = { name: string };
 
 export const mysql: Database = {
   ...defaultDatabaseProps,
   introspection: {
+    ...defaultIntrospectionProps,
     getDriverInfo: async () => ({
       name: 'mysql',
       displayName: 'MySQL',

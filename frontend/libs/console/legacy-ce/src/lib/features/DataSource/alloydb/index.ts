@@ -1,6 +1,9 @@
 import { Table } from '../../hasura-metadata-types';
+import {
+  defaultDatabaseProps,
+  defaultIntrospectionProps,
+} from '../common/defaultDatabaseProps';
 import { Database, GetVersionProps } from '..';
-import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 import {
   getDatabaseConfiguration,
   getTrackableTables,
@@ -20,6 +23,7 @@ export type AlloyDbTable = { name: string; schema: string };
 export const alloy: Database = {
   ...defaultDatabaseProps,
   introspection: {
+    ...defaultIntrospectionProps,
     getVersion: async ({ dataSourceName, httpClient }: GetVersionProps) => {
       const result = await runSQL({
         source: {

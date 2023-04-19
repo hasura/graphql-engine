@@ -6,8 +6,11 @@ import {
 } from '..';
 import { Table } from '../../hasura-metadata-types';
 import { NetworkArgs, runSQL } from '../api';
+import {
+  defaultDatabaseProps,
+  defaultIntrospectionProps,
+} from '../common/defaultDatabaseProps';
 import { postgresCapabilities } from '../common/capabilities';
-import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 import { adaptIntrospectedTables } from '../common/utils';
 import {
   getDatabaseSchemas,
@@ -31,6 +34,7 @@ const getDropSchemaSql = (schema: string) => {
 export const mssql: Database = {
   ...defaultDatabaseProps,
   introspection: {
+    ...defaultIntrospectionProps,
     getVersion: async ({ dataSourceName, httpClient }: GetVersionProps) => {
       const result = await runSQL({
         source: {

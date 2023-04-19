@@ -1,5 +1,8 @@
 import { Table } from '../../hasura-metadata-types';
-import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
+import {
+  defaultDatabaseProps,
+  defaultIntrospectionProps,
+} from '../common/defaultDatabaseProps';
 import { Database, Feature } from '../index';
 import {
   getTablesListAsTree,
@@ -22,6 +25,7 @@ export type GDCTable = string[];
 export const gdc: Database = {
   ...defaultDatabaseProps,
   introspection: {
+    ...defaultIntrospectionProps,
     getDriverInfo: async () => Feature.NotImplemented,
     getDatabaseConfiguration,
     getDriverCapabilities,

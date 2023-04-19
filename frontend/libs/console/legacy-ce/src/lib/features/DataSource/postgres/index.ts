@@ -13,6 +13,7 @@ import {
   getDatabaseSchemas,
   getFKRelationships,
   getSupportedOperators,
+  getTrackableFunctions,
   getTableColumns,
   getTablesListAsTree,
   getTrackableTables,
@@ -31,6 +32,7 @@ const getCreateSchemaSql = (schemaName: string) =>
 export const postgres: Database = {
   ...defaultDatabaseProps,
   introspection: {
+    getTrackableFunctions,
     getVersion: async ({ dataSourceName, httpClient }: GetVersionProps) => {
       const result = await runSQL({
         source: {
