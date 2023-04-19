@@ -495,6 +495,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
             OMap.elems queryPlan >>= \case
               E.ExecStepDB _remoteHeaders _ remoteJoins ->
                 maybe [] (map RJ._rsjRemoteSchema . RJ.getRemoteSchemaJoins) remoteJoins
+              E.ExecStepRemote remoteSchemaInfo _ _ _ -> [remoteSchemaInfo]
               _ -> []
           actionsInfo =
             foldl getExecStepActionWithActionInfo [] $

@@ -576,6 +576,7 @@ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agen
             OMap.elems queryPlans >>= \case
               E.ExecStepDB _headers _dbAST remoteJoins -> do
                 maybe [] (map RJ._rsjRemoteSchema . RJ.getRemoteSchemaJoins) remoteJoins
+              E.ExecStepRemote remoteSchemaInfo _ _ _ -> [remoteSchemaInfo]
               _ -> []
           getExecStepActionWithActionInfo acc execStep = case execStep of
             EB.ExecStepAction _ actionInfo _remoteJoins -> (actionInfo : acc)
