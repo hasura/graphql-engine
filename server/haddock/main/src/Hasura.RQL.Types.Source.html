@@ -14,7 +14,7 @@
 </span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#unsafeSourceTables"><span class="hs-identifier">unsafeSourceTables</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#siConfiguration"><span class="hs-identifier">siConfiguration</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#siNativeQueries"><span class="hs-identifier">siNativeQueries</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#siCustomReturnTypes"><span class="hs-identifier">siCustomReturnTypes</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#siLogicalModels"><span class="hs-identifier">siLogicalModels</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-18"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#siFunctions"><span class="hs-identifier">siFunctions</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-19"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#siName"><span class="hs-identifier">siName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-20"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#siQueryTagsConfig"><span class="hs-identifier">siQueryTagsConfig</span></a></span><span class="hs-special">,</span><span>
@@ -49,9 +49,9 @@
 </span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
 </span><span id="line-50"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier">Database.PG.Query</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
 </span><span id="line-51"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
-</span><span id="line-52"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.CustomReturnType.Cache.html"><span class="hs-identifier">Hasura.CustomReturnType.Cache</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.CustomReturnType.Cache.html#CustomReturnTypeCache"><span class="hs-identifier">CustomReturnTypeCache</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-53"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Function.Cache.html"><span class="hs-identifier">Hasura.Function.Cache</span></a></span><span>
-</span><span id="line-54"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Function.Cache.html"><span class="hs-identifier">Hasura.Function.Cache</span></a></span><span>
+</span><span id="line-53"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-54"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Cache.html"><span class="hs-identifier">Hasura.LogicalModel.Cache</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Cache.html#LogicalModelCache"><span class="hs-identifier">LogicalModelCache</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-55"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Cache.html"><span class="hs-identifier">Hasura.NativeQuery.Cache</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Cache.html#NativeQueryCache"><span class="hs-identifier">NativeQueryCache</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-56"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-57"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.QueryTags.Types.html"><span class="hs-identifier">Hasura.QueryTags.Types</span></a></span><span>
@@ -79,8 +79,8 @@
 </span><a href="Hasura.RQL.Types.Source.html#_siFunctions"><span class="hs-identifier hs-var hs-var">_siFunctions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionCache"><span class="hs-identifier hs-type">FunctionCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690986661"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-77"></span><span>    </span><span id="_siNativeQueries"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceInfo b -&gt; NativeQueryCache b
 </span><a href="Hasura.RQL.Types.Source.html#_siNativeQueries"><span class="hs-identifier hs-var hs-var">_siNativeQueries</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Cache.html#NativeQueryCache"><span class="hs-identifier hs-type">NativeQueryCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690986661"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-78"></span><span>    </span><span id="_siCustomReturnTypes"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceInfo b -&gt; CustomReturnTypeCache b
-</span><a href="Hasura.RQL.Types.Source.html#_siCustomReturnTypes"><span class="hs-identifier hs-var hs-var">_siCustomReturnTypes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.CustomReturnType.Cache.html#CustomReturnTypeCache"><span class="hs-identifier hs-type">CustomReturnTypeCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690986661"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-78"></span><span>    </span><span id="_siLogicalModels"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceInfo b -&gt; LogicalModelCache b
+</span><a href="Hasura.RQL.Types.Source.html#_siLogicalModels"><span class="hs-identifier hs-var hs-var">_siLogicalModels</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Cache.html#LogicalModelCache"><span class="hs-identifier hs-type">LogicalModelCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690986661"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-79"></span><span>    </span><span id="_siConfiguration"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceInfo b -&gt; SourceConfig b
 </span><a href="Hasura.RQL.Types.Source.html#_siConfiguration"><span class="hs-identifier hs-var hs-var">_siConfiguration</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">~</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690986661"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-80"></span><span>    </span><span id="_siQueryTagsConfig"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceInfo b -&gt; Maybe QueryTagsConfig
@@ -107,7 +107,7 @@ SourceInfo b -&gt; ResolvedSourceCustomization
 TableCache b
 FunctionCache b
 NativeQueryCache b
-CustomReturnTypeCache b
+LogicalModelCache b
 SourceConfig b
 SourceName
 ResolvedSourceCustomization
@@ -116,7 +116,7 @@ _siDbObjectsIntrospection :: DBObjectsIntrospection b
 _siCustomization :: ResolvedSourceCustomization
 _siQueryTagsConfig :: Maybe QueryTagsConfig
 _siConfiguration :: SourceConfig b
-_siCustomReturnTypes :: CustomReturnTypeCache b
+_siLogicalModels :: LogicalModelCache b
 _siNativeQueries :: NativeQueryCache b
 _siFunctions :: FunctionCache b
 _siTables :: TableCache b
@@ -126,7 +126,7 @@ _siCustomization :: forall (b :: BackendType).
 SourceInfo b -&gt; ResolvedSourceCustomization
 _siQueryTagsConfig :: forall (b :: BackendType). SourceInfo b -&gt; Maybe QueryTagsConfig
 _siConfiguration :: forall (b :: BackendType). SourceInfo b -&gt; SourceConfig b
-_siCustomReturnTypes :: forall (b :: BackendType). SourceInfo b -&gt; CustomReturnTypeCache b
+_siLogicalModels :: forall (b :: BackendType). SourceInfo b -&gt; LogicalModelCache b
 _siNativeQueries :: forall (b :: BackendType). SourceInfo b -&gt; NativeQueryCache b
 _siFunctions :: forall (b :: BackendType). SourceInfo b -&gt; FunctionCache b
 _siTables :: forall (b :: BackendType). SourceInfo b -&gt; TableCache b
@@ -537,5 +537,5 @@ SourcePingInfo b -&gt; SourceConnConfiguration b
 </span><span id="line-233"></span><span>
 </span><span id="line-234"></span><span class="hs-keyword">type</span><span> </span><span id="SourcePingCache"><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourcePingCache"><span class="hs-identifier hs-var">SourcePingCache</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#BackendSourcePingInfo"><span class="hs-identifier hs-type">BackendSourcePingInfo</span></a></span><span>
 </span><span id="line-235"></span><span>
-</span><span id="line-236"></span><span class="hs-special">$</span><span id="siDbObjectsIntrospection"><span id="siCustomization"><span id="siTables"><span id="siQueryTagsConfig"><span id="siName"><span id="siFunctions"><span id="siCustomReturnTypes"><span id="siNativeQueries"><span id="siConfiguration"><span id="local-6989586621690986661"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SourceInfo</span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-236"></span><span class="hs-special">$</span><span id="siDbObjectsIntrospection"><span id="siCustomization"><span id="siTables"><span id="siQueryTagsConfig"><span id="siName"><span id="siFunctions"><span id="siLogicalModels"><span id="siNativeQueries"><span id="siConfiguration"><span id="local-6989586621690986661"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SourceInfo</span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span><span>
 </span><span id="line-237"></span></pre></body></html>

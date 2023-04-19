@@ -7266,46 +7266,45 @@ instance Data.Aeson.Types.FromJSON.FromJSONKey Hasura.NativeQuery.Types.NativeQu
 instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.NativeQuery.Types.NativeQueryName
 
 
--- | A name for a custom return type as it is recognized by the graphql
---   schema.
-module Hasura.CustomReturnType.Types
-newtype CustomReturnTypeName
-CustomReturnTypeName :: Name -> CustomReturnTypeName
-[getCustomReturnTypeName] :: CustomReturnTypeName -> Name
+-- | A name for a logical model as it is recognized by the graphql schema.
+module Hasura.LogicalModel.Types
+newtype LogicalModelName
+LogicalModelName :: Name -> LogicalModelName
+[getLogicalModelName] :: LogicalModelName -> Name
 
--- | either a scalar type or a reference to another custom return type
-data CustomReturnTypeField b
-CustomReturnTypeScalarField :: Column b -> ScalarType b -> Bool -> Maybe Text -> CustomReturnTypeField b
-[crtfName] :: CustomReturnTypeField b -> Column b
-[crtfType] :: CustomReturnTypeField b -> ScalarType b
-[crtfNullable] :: CustomReturnTypeField b -> Bool
-[crtfDescription] :: CustomReturnTypeField b -> Maybe Text
-CustomReturnTypeArrayReference :: Column b -> CustomReturnTypeName -> CustomReturnTypeField b
-[crtfName] :: CustomReturnTypeField b -> Column b
-[crtfCustomReturnType] :: CustomReturnTypeField b -> CustomReturnTypeName
-customReturnTypeFieldMapCodec :: forall b. Backend b => Codec Value (InsOrdHashMap (Column b) (CustomReturnTypeField b)) (InsOrdHashMap (Column b) (CustomReturnTypeField b))
-instance Language.Haskell.TH.Syntax.Lift Hasura.CustomReturnType.Types.CustomReturnTypeName
-instance GHC.Generics.Generic Hasura.CustomReturnType.Types.CustomReturnTypeName
-instance Data.Data.Data Hasura.CustomReturnType.Types.CustomReturnTypeName
-instance Data.Text.Extended.ToTxt Hasura.CustomReturnType.Types.CustomReturnTypeName
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.CustomReturnType.Types.CustomReturnTypeName
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.CustomReturnType.Types.CustomReturnTypeName
-instance Control.DeepSeq.NFData Hasura.CustomReturnType.Types.CustomReturnTypeName
-instance Data.Hashable.Class.Hashable Hasura.CustomReturnType.Types.CustomReturnTypeName
-instance GHC.Show.Show Hasura.CustomReturnType.Types.CustomReturnTypeName
-instance GHC.Classes.Ord Hasura.CustomReturnType.Types.CustomReturnTypeName
-instance GHC.Classes.Eq Hasura.CustomReturnType.Types.CustomReturnTypeName
-instance GHC.Generics.Generic (Hasura.CustomReturnType.Types.CustomReturnTypeField b)
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.CustomReturnType.Types.CustomReturnTypeField b)
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.CustomReturnType.Types.CustomReturnTypeField b)
-instance Hasura.RQL.Types.Backend.Backend b => Autodocodec.Class.HasCodec (Hasura.CustomReturnType.Types.CustomReturnTypeField b)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.CustomReturnType.Types.CustomReturnTypeField b)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.CustomReturnType.Types.CustomReturnTypeField b)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Hashable.Class.Hashable (Hasura.CustomReturnType.Types.CustomReturnTypeField b)
-instance Hasura.RQL.Types.Backend.Backend b => Control.DeepSeq.NFData (Hasura.CustomReturnType.Types.CustomReturnTypeField b)
-instance Autodocodec.Class.HasCodec Hasura.CustomReturnType.Types.CustomReturnTypeName
-instance Data.Aeson.Types.FromJSON.FromJSONKey Hasura.CustomReturnType.Types.CustomReturnTypeName
-instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.CustomReturnType.Types.CustomReturnTypeName
+-- | either a scalar type or a reference to another logical model
+data LogicalModelField b
+LogicalModelScalarField :: Column b -> ScalarType b -> Bool -> Maybe Text -> LogicalModelField b
+[lmfName] :: LogicalModelField b -> Column b
+[lmfType] :: LogicalModelField b -> ScalarType b
+[lmfNullable] :: LogicalModelField b -> Bool
+[lmfDescription] :: LogicalModelField b -> Maybe Text
+LogicalModelArrayReference :: Column b -> LogicalModelName -> LogicalModelField b
+[lmfName] :: LogicalModelField b -> Column b
+[lmfLogicalModel] :: LogicalModelField b -> LogicalModelName
+logicalModelFieldMapCodec :: forall b. Backend b => Codec Value (InsOrdHashMap (Column b) (LogicalModelField b)) (InsOrdHashMap (Column b) (LogicalModelField b))
+instance Language.Haskell.TH.Syntax.Lift Hasura.LogicalModel.Types.LogicalModelName
+instance GHC.Generics.Generic Hasura.LogicalModel.Types.LogicalModelName
+instance Data.Data.Data Hasura.LogicalModel.Types.LogicalModelName
+instance Data.Text.Extended.ToTxt Hasura.LogicalModel.Types.LogicalModelName
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.LogicalModel.Types.LogicalModelName
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.LogicalModel.Types.LogicalModelName
+instance Control.DeepSeq.NFData Hasura.LogicalModel.Types.LogicalModelName
+instance Data.Hashable.Class.Hashable Hasura.LogicalModel.Types.LogicalModelName
+instance GHC.Show.Show Hasura.LogicalModel.Types.LogicalModelName
+instance GHC.Classes.Ord Hasura.LogicalModel.Types.LogicalModelName
+instance GHC.Classes.Eq Hasura.LogicalModel.Types.LogicalModelName
+instance GHC.Generics.Generic (Hasura.LogicalModel.Types.LogicalModelField b)
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.LogicalModel.Types.LogicalModelField b)
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.LogicalModel.Types.LogicalModelField b)
+instance Hasura.RQL.Types.Backend.Backend b => Autodocodec.Class.HasCodec (Hasura.LogicalModel.Types.LogicalModelField b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.Types.LogicalModelField b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.Types.LogicalModelField b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Hashable.Class.Hashable (Hasura.LogicalModel.Types.LogicalModelField b)
+instance Hasura.RQL.Types.Backend.Backend b => Control.DeepSeq.NFData (Hasura.LogicalModel.Types.LogicalModelField b)
+instance Autodocodec.Class.HasCodec Hasura.LogicalModel.Types.LogicalModelName
+instance Data.Aeson.Types.FromJSON.FromJSONKey Hasura.LogicalModel.Types.LogicalModelName
+instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.LogicalModel.Types.LogicalModelName
 
 
 -- | Metadata representation of a native query in the metadata, as well as
@@ -7332,10 +7331,10 @@ NativeQueryArgumentName :: Text -> NativeQueryArgumentName
 
 -- | The representation of native queries within the metadata structure.
 data NativeQueryMetadata (b :: BackendType)
-NativeQueryMetadata :: NativeQueryName -> InterpolatedQuery NativeQueryArgumentName -> CustomReturnTypeName -> HashMap NativeQueryArgumentName (NullableScalarType b) -> Relationships (RelDef (RelManualConfig b)) -> Maybe Text -> NativeQueryMetadata (b :: BackendType)
+NativeQueryMetadata :: NativeQueryName -> InterpolatedQuery NativeQueryArgumentName -> LogicalModelName -> HashMap NativeQueryArgumentName (NullableScalarType b) -> Relationships (RelDef (RelManualConfig b)) -> Maybe Text -> NativeQueryMetadata (b :: BackendType)
 [_nqmRootFieldName] :: NativeQueryMetadata (b :: BackendType) -> NativeQueryName
 [_nqmCode] :: NativeQueryMetadata (b :: BackendType) -> InterpolatedQuery NativeQueryArgumentName
-[_nqmReturns] :: NativeQueryMetadata (b :: BackendType) -> CustomReturnTypeName
+[_nqmReturns] :: NativeQueryMetadata (b :: BackendType) -> LogicalModelName
 [_nqmArguments] :: NativeQueryMetadata (b :: BackendType) -> HashMap NativeQueryArgumentName (NullableScalarType b)
 [_nqmArrayRelationships] :: NativeQueryMetadata (b :: BackendType) -> Relationships (RelDef (RelManualConfig b))
 [_nqmDescription] :: NativeQueryMetadata (b :: BackendType) -> Maybe Text
@@ -7343,7 +7342,7 @@ NativeQueryMetadata :: NativeQueryName -> InterpolatedQuery NativeQueryArgumentN
 -- | extract all of the `{{ variable }}` inside our query string
 parseInterpolatedQuery :: Text -> Either Text (InterpolatedQuery NativeQueryArgumentName)
 nqmRootFieldName :: forall b_a9z6i. Lens' (NativeQueryMetadata b_a9z6i) NativeQueryName
-nqmReturns :: forall b_a9z6i. Lens' (NativeQueryMetadata b_a9z6i) CustomReturnTypeName
+nqmReturns :: forall b_a9z6i. Lens' (NativeQueryMetadata b_a9z6i) LogicalModelName
 nqmDescription :: forall b_a9z6i. Lens' (NativeQueryMetadata b_a9z6i) (Maybe Text)
 nqmCode :: forall b_a9z6i. Lens' (NativeQueryMetadata b_a9z6i) (InterpolatedQuery NativeQueryArgumentName)
 nqmArrayRelationships :: forall b_a9z6i. Lens' (NativeQueryMetadata b_a9z6i) (Relationships (RelDef (RelManualConfig b_a9z6i)))
@@ -7396,16 +7395,16 @@ instance Autodocodec.Class.HasCodec Hasura.NativeQuery.Metadata.NativeQueryArgum
 instance Control.DeepSeq.NFData Hasura.NativeQuery.Metadata.NativeQueryArgumentName
 instance Autodocodec.Class.HasCodec Hasura.NativeQuery.Metadata.RawQuery
 
-module Hasura.CustomReturnType.IR
+module Hasura.LogicalModel.IR
 
--- | Description of a custom return type for use in IR
-data CustomReturnType (b :: BackendType)
-CustomReturnType :: CustomReturnTypeName -> InsOrdHashMap (Column b) (CustomReturnTypeField b) -> CustomReturnType (b :: BackendType)
-[crtName] :: CustomReturnType (b :: BackendType) -> CustomReturnTypeName
-[crtFields] :: CustomReturnType (b :: BackendType) -> InsOrdHashMap (Column b) (CustomReturnTypeField b)
-instance GHC.Generics.Generic (Hasura.CustomReturnType.IR.CustomReturnType b)
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.CustomReturnType.IR.CustomReturnType b)
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.CustomReturnType.IR.CustomReturnType b)
+-- | Description of a logical model for use in IR
+data LogicalModel (b :: BackendType)
+LogicalModel :: LogicalModelName -> InsOrdHashMap (Column b) (LogicalModelField b) -> LogicalModel (b :: BackendType)
+[lmName] :: LogicalModel (b :: BackendType) -> LogicalModelName
+[lmFields] :: LogicalModel (b :: BackendType) -> InsOrdHashMap (Column b) (LogicalModelField b)
+instance GHC.Generics.Generic (Hasura.LogicalModel.IR.LogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.LogicalModel.IR.LogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.LogicalModel.IR.LogicalModel b)
 
 module Hasura.Backends.MySQL.Instances.Types
 instance Hasura.RQL.Types.Backend.Backend 'Hasura.SQL.Backend.MySQL
@@ -10159,7 +10158,7 @@ module Hasura.NativeQuery.IR
 
 -- | The RQL IR representation of an invocation of a native query.
 data NativeQuery b field
-NativeQuery :: NativeQueryName -> InterpolatedQuery field -> HashMap NativeQueryArgumentName (ColumnValue b) -> CustomReturnType b -> NativeQuery b field
+NativeQuery :: NativeQueryName -> InterpolatedQuery field -> HashMap NativeQueryArgumentName (ColumnValue b) -> LogicalModel b -> NativeQuery b field
 
 -- | The graphql name of the native query.
 [nqRootFieldName] :: NativeQuery b field -> NativeQueryName
@@ -10171,7 +10170,7 @@ NativeQuery :: NativeQueryName -> InterpolatedQuery field -> HashMap NativeQuery
 [nqArgs] :: NativeQuery b field -> HashMap NativeQueryArgumentName (ColumnValue b)
 
 -- | The return type of the native query
-[nqReturnType] :: NativeQuery b field -> CustomReturnType b
+[nqLogicalModel] :: NativeQuery b field -> LogicalModel b
 instance Data.Traversable.Traversable (Hasura.NativeQuery.IR.NativeQuery b)
 instance Data.Foldable.Foldable (Hasura.NativeQuery.IR.NativeQuery b)
 instance GHC.Base.Functor (Hasura.NativeQuery.IR.NativeQuery b)
@@ -10709,6 +10708,41 @@ instance GHC.Show.Show Hasura.RQL.Types.Permission.PermType
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.Types.Permission.PermType
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.Permission.PermType
 
+module Hasura.LogicalModel.Metadata
+
+-- | Description of a logical model for use in metadata (before schema
+--   cache)
+data LogicalModelMetadata (b :: BackendType)
+LogicalModelMetadata :: LogicalModelName -> InsOrdHashMap (Column b) (LogicalModelField b) -> Maybe Text -> InsOrdHashMap RoleName (SelPermDef b) -> LogicalModelMetadata (b :: BackendType)
+[_lmmName] :: LogicalModelMetadata (b :: BackendType) -> LogicalModelName
+[_lmmFields] :: LogicalModelMetadata (b :: BackendType) -> InsOrdHashMap (Column b) (LogicalModelField b)
+[_lmmDescription] :: LogicalModelMetadata (b :: BackendType) -> Maybe Text
+[_lmmSelectPermissions] :: LogicalModelMetadata (b :: BackendType) -> InsOrdHashMap RoleName (SelPermDef b)
+lmmSelectPermissions :: forall b_afzOW. Lens' (LogicalModelMetadata b_afzOW) (InsOrdHashMap RoleName (SelPermDef b_afzOW))
+lmmName :: forall b_afzOW. Lens' (LogicalModelMetadata b_afzOW) LogicalModelName
+lmmFields :: forall b_afzOW. Lens' (LogicalModelMetadata b_afzOW) (InsOrdHashMap (Column b_afzOW) (LogicalModelField b_afzOW))
+lmmDescription :: forall b_afzOW. Lens' (LogicalModelMetadata b_afzOW) (Maybe Text)
+
+-- | A wrapper to tie something to a particular native query. Specifically,
+--   it assumes the underlying <a>_wlmInfo</a> is represented as an object,
+--   and adds two keys to that object: <tt>source</tt> and
+--   <tt>root_field_name</tt>.
+data WithLogicalModel a
+WithLogicalModel :: SourceName -> LogicalModelName -> a -> WithLogicalModel a
+[_wlmSource] :: WithLogicalModel a -> SourceName
+[_wlmName] :: WithLogicalModel a -> LogicalModelName
+[_wlmInfo] :: WithLogicalModel a -> a
+instance GHC.Show.Show a => GHC.Show.Show (Hasura.LogicalModel.Metadata.WithLogicalModel a)
+instance GHC.Classes.Eq a => GHC.Classes.Eq (Hasura.LogicalModel.Metadata.WithLogicalModel a)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.Metadata.LogicalModelMetadata b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.Metadata.LogicalModelMetadata b)
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.LogicalModel.Metadata.LogicalModelMetadata b)
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.LogicalModel.Metadata.LogicalModelMetadata b)
+instance Data.Aeson.Types.FromJSON.FromJSON a => Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.Metadata.WithLogicalModel a)
+instance Hasura.RQL.Types.Common.ToAesonPairs a => Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.Metadata.WithLogicalModel a)
+instance Hasura.RQL.Types.Backend.Backend b => Autodocodec.Class.HasCodec (Hasura.LogicalModel.Metadata.LogicalModelMetadata b)
+instance GHC.Generics.Generic (Hasura.LogicalModel.Metadata.LogicalModelMetadata b)
+
 
 -- | Contains types that can be used by backends to structure updates to
 --   batches of rows in a table
@@ -10856,10 +10890,10 @@ ComputedFieldOrderBy :: XComputedField b -> ComputedFieldName -> FunctionName b 
 [$sel:_cfobFunction:ComputedFieldOrderBy] :: ComputedFieldOrderBy (b :: BackendType) v -> FunctionName b
 [$sel:_cfobFunctionArgsExp:ComputedFieldOrderBy] :: ComputedFieldOrderBy (b :: BackendType) v -> FunctionArgsExp b v
 [$sel:_cfobOrderByElement:ComputedFieldOrderBy] :: ComputedFieldOrderBy (b :: BackendType) v -> ComputedFieldOrderByElement b v
-_AOCComputedField :: forall b_afNvk v_afNvl. Prism' (AnnotatedOrderByElement b_afNvk v_afNvl) (ComputedFieldOrderBy b_afNvk v_afNvl)
-_AOCArrayAggregation :: forall b_afNvk v_afNvl. Prism' (AnnotatedOrderByElement b_afNvk v_afNvl) (RelInfo b_afNvk, AnnBoolExp b_afNvk v_afNvl, AnnotatedAggregateOrderBy b_afNvk)
-_AOCObjectRelation :: forall b_afNvk v_afNvl. Prism' (AnnotatedOrderByElement b_afNvk v_afNvl) (RelInfo b_afNvk, AnnBoolExp b_afNvk v_afNvl, AnnotatedOrderByElement b_afNvk v_afNvl)
-_AOCColumn :: forall b_afNvk v_afNvl. Prism' (AnnotatedOrderByElement b_afNvk v_afNvl) (ColumnInfo b_afNvk)
+_AOCComputedField :: forall b_afQWk v_afQWl. Prism' (AnnotatedOrderByElement b_afQWk v_afQWl) (ComputedFieldOrderBy b_afQWk v_afQWl)
+_AOCArrayAggregation :: forall b_afQWk v_afQWl. Prism' (AnnotatedOrderByElement b_afQWk v_afQWl) (RelInfo b_afQWk, AnnBoolExp b_afQWk v_afQWl, AnnotatedAggregateOrderBy b_afQWk)
+_AOCObjectRelation :: forall b_afQWk v_afQWl. Prism' (AnnotatedOrderByElement b_afQWk v_afQWl) (RelInfo b_afQWk, AnnBoolExp b_afQWk v_afQWl, AnnotatedOrderByElement b_afQWk v_afQWl)
+_AOCColumn :: forall b_afQWk v_afQWl. Prism' (AnnotatedOrderByElement b_afQWk v_afQWl) (ColumnInfo b_afQWk)
 instance GHC.Generics.Generic (Hasura.RQL.IR.Select.OrderBy.AnnotatedAggregateOrderBy b)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Traversable.Traversable (Hasura.RQL.IR.Select.OrderBy.ComputedFieldOrderByElement b)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Foldable.Foldable (Hasura.RQL.IR.Select.OrderBy.ComputedFieldOrderByElement b)
@@ -10924,11 +10958,11 @@ StreamCursorItem :: CursorOrdering -> ColumnInfo b -> ColumnValue b -> StreamCur
 
 -- | Initial value of the cursor item from where the streaming should start
 [$sel:_sciInitialValue:StreamCursorItem] :: StreamCursorItem (b :: BackendType) -> ColumnValue b
-saWhere :: forall b_afYIq v_afYIr. Lens' (SelectArgsG b_afYIq v_afYIr) (Maybe (AnnBoolExp b_afYIq v_afYIr))
-saOrderBy :: forall b_afYIq v_afYIr. Lens' (SelectArgsG b_afYIq v_afYIr) (Maybe (NonEmpty (AnnotatedOrderByItemG b_afYIq v_afYIr)))
-saOffset :: forall b_afYIq v_afYIr. Lens' (SelectArgsG b_afYIq v_afYIr) (Maybe Int64)
-saLimit :: forall b_afYIq v_afYIr. Lens' (SelectArgsG b_afYIq v_afYIr) (Maybe Int)
-saDistinct :: forall b_afYIq v_afYIr. Lens' (SelectArgsG b_afYIq v_afYIr) (Maybe (NonEmpty (Column b_afYIq)))
+saWhere :: forall b_ag29q v_ag29r. Lens' (SelectArgsG b_ag29q v_ag29r) (Maybe (AnnBoolExp b_ag29q v_ag29r))
+saOrderBy :: forall b_ag29q v_ag29r. Lens' (SelectArgsG b_ag29q v_ag29r) (Maybe (NonEmpty (AnnotatedOrderByItemG b_ag29q v_ag29r)))
+saOffset :: forall b_ag29q v_ag29r. Lens' (SelectArgsG b_ag29q v_ag29r) (Maybe Int64)
+saLimit :: forall b_ag29q v_ag29r. Lens' (SelectArgsG b_ag29q v_ag29r) (Maybe Int)
+saDistinct :: forall b_ag29q v_ag29r. Lens' (SelectArgsG b_ag29q v_ag29r) (Maybe (NonEmpty (Column b_ag29q)))
 instance Hasura.RQL.Types.Backend.Backend b => Data.Traversable.Traversable (Hasura.RQL.IR.Select.Args.SelectArgsG b)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Foldable.Foldable (Hasura.RQL.IR.Select.Args.SelectArgsG b)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Base.Functor (Hasura.RQL.IR.Select.Args.SelectArgsG b)
@@ -11373,12 +11407,12 @@ AnnSelectStreamG :: XStreamingSubscription b -> Fields (f v) -> SelectFromG b v 
 --   values.
 bifoldMapAnnSelectG :: (Backend b, Bifoldable (f b), Monoid m) => (r -> m) -> (v -> m) -> AnnSelectG b (f b r) v -> m
 bifoldMapAnnSelectStreamG :: (Backend b, Bifoldable (f b), Monoid m) => (r -> m) -> (v -> m) -> AnnSelectStreamG b (f b r) v -> m
-asnStrfyNum :: forall b_agReg f_agReh v_agRei. Lens' (AnnSelectG b_agReg f_agReh v_agRei) StringifyNumbers
-asnPerm :: forall b_agReg f_agReh v_agRei. Lens' (AnnSelectG b_agReg f_agReh v_agRei) (TablePermG b_agReg v_agRei)
-asnNamingConvention :: forall b_agReg f_agReh v_agRei. Lens' (AnnSelectG b_agReg f_agReh v_agRei) (Maybe NamingCase)
-asnFrom :: forall b_agReg f_agReh v_agRei. Lens' (AnnSelectG b_agReg f_agReh v_agRei) (SelectFromG b_agReg v_agRei)
-asnFields :: forall b_agReg f_agReh v_agRei f_agTvc. Lens (AnnSelectG b_agReg f_agReh v_agRei) (AnnSelectG b_agReg f_agTvc v_agRei) (Fields (f_agReh v_agRei)) (Fields (f_agTvc v_agRei))
-asnArgs :: forall b_agReg f_agReh v_agRei. Lens' (AnnSelectG b_agReg f_agReh v_agRei) (SelectArgsG b_agReg v_agRei)
+asnStrfyNum :: forall b_agUFg f_agUFh v_agUFi. Lens' (AnnSelectG b_agUFg f_agUFh v_agUFi) StringifyNumbers
+asnPerm :: forall b_agUFg f_agUFh v_agUFi. Lens' (AnnSelectG b_agUFg f_agUFh v_agUFi) (TablePermG b_agUFg v_agUFi)
+asnNamingConvention :: forall b_agUFg f_agUFh v_agUFi. Lens' (AnnSelectG b_agUFg f_agUFh v_agUFi) (Maybe NamingCase)
+asnFrom :: forall b_agUFg f_agUFh v_agUFi. Lens' (AnnSelectG b_agUFg f_agUFh v_agUFi) (SelectFromG b_agUFg v_agUFi)
+asnFields :: forall b_agUFg f_agUFh v_agUFi f_agWWa. Lens (AnnSelectG b_agUFg f_agUFh v_agUFi) (AnnSelectG b_agUFg f_agWWa v_agUFi) (Fields (f_agUFh v_agUFi)) (Fields (f_agWWa v_agUFi))
+asnArgs :: forall b_agUFg f_agUFh v_agUFi. Lens' (AnnSelectG b_agUFg f_agUFh v_agUFi) (SelectArgsG b_agUFg v_agUFi)
 instance (Hasura.RQL.Types.Backend.Backend b, Data.Traversable.Traversable f) => Data.Traversable.Traversable (Hasura.RQL.IR.Select.AnnSelectG.AnnSelectG b f)
 instance (Hasura.RQL.Types.Backend.Backend b, Data.Foldable.Foldable f) => Data.Foldable.Foldable (Hasura.RQL.IR.Select.AnnSelectG.AnnSelectG b f)
 instance (Hasura.RQL.Types.Backend.Backend b, GHC.Base.Functor f) => GHC.Base.Functor (Hasura.RQL.IR.Select.AnnSelectG.AnnSelectG b f)
@@ -12323,7 +12357,7 @@ module Hasura.GraphQL.Execute.Subscription.Plan
 newtype ValidatedVariables f
 ValidatedVariables :: f TxtEncodedVal -> ValidatedVariables f
 [_unValidatedVariables] :: ValidatedVariables f -> f TxtEncodedVal
-unValidatedVariables :: forall f_aiAUr f_aiB2y. Iso (ValidatedVariables f_aiAUr) (ValidatedVariables f_aiB2y) (f_aiAUr TxtEncodedVal) (f_aiB2y TxtEncodedVal)
+unValidatedVariables :: forall f_aiElp f_aiEtw. Iso (ValidatedVariables f_aiElp) (ValidatedVariables f_aiEtw) (f_aiElp TxtEncodedVal) (f_aiEtw TxtEncodedVal)
 type ValidatedQueryVariables = ValidatedVariables (HashMap Name)
 type ValidatedSyntheticVariables = ValidatedVariables []
 type ValidatedCursorVariables = ValidatedVariables (HashMap Name)
@@ -13642,41 +13676,6 @@ instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.BigQuery.Execute.BigQuer
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.BigQuery.Execute.ExecuteProblem
 instance Data.Hashable.Class.Hashable Hasura.Backends.BigQuery.Execute.OutputValue
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.BigQuery.Execute.OutputValue
-
-module Hasura.CustomReturnType.Metadata
-
--- | Description of a custom return type for use in metadata (before schema
---   cache)
-data CustomReturnTypeMetadata (b :: BackendType)
-CustomReturnTypeMetadata :: CustomReturnTypeName -> InsOrdHashMap (Column b) (CustomReturnTypeField b) -> Maybe Text -> InsOrdHashMap RoleName (SelPermDef b) -> CustomReturnTypeMetadata (b :: BackendType)
-[_crtmName] :: CustomReturnTypeMetadata (b :: BackendType) -> CustomReturnTypeName
-[_crtmFields] :: CustomReturnTypeMetadata (b :: BackendType) -> InsOrdHashMap (Column b) (CustomReturnTypeField b)
-[_crtmDescription] :: CustomReturnTypeMetadata (b :: BackendType) -> Maybe Text
-[_crtmSelectPermissions] :: CustomReturnTypeMetadata (b :: BackendType) -> InsOrdHashMap RoleName (SelPermDef b)
-crtmSelectPermissions :: forall b_am5FS. Lens' (CustomReturnTypeMetadata b_am5FS) (InsOrdHashMap RoleName (SelPermDef b_am5FS))
-crtmName :: forall b_am5FS. Lens' (CustomReturnTypeMetadata b_am5FS) CustomReturnTypeName
-crtmFields :: forall b_am5FS. Lens' (CustomReturnTypeMetadata b_am5FS) (InsOrdHashMap (Column b_am5FS) (CustomReturnTypeField b_am5FS))
-crtmDescription :: forall b_am5FS. Lens' (CustomReturnTypeMetadata b_am5FS) (Maybe Text)
-
--- | A wrapper to tie something to a particular native query. Specifically,
---   it assumes the underlying <tt>_wlmInfo</tt> is represented as an
---   object, and adds two keys to that object: <tt>source</tt> and
---   <tt>root_field_name</tt>.
-data WithCustomReturnType a
-WithCustomReturnType :: SourceName -> CustomReturnTypeName -> a -> WithCustomReturnType a
-[_wcrtSource] :: WithCustomReturnType a -> SourceName
-[_wcrtName] :: WithCustomReturnType a -> CustomReturnTypeName
-[_wcrtInfo] :: WithCustomReturnType a -> a
-instance GHC.Show.Show a => GHC.Show.Show (Hasura.CustomReturnType.Metadata.WithCustomReturnType a)
-instance GHC.Classes.Eq a => GHC.Classes.Eq (Hasura.CustomReturnType.Metadata.WithCustomReturnType a)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.CustomReturnType.Metadata.CustomReturnTypeMetadata b)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.CustomReturnType.Metadata.CustomReturnTypeMetadata b)
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.CustomReturnType.Metadata.CustomReturnTypeMetadata b)
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.CustomReturnType.Metadata.CustomReturnTypeMetadata b)
-instance Data.Aeson.Types.FromJSON.FromJSON a => Data.Aeson.Types.FromJSON.FromJSON (Hasura.CustomReturnType.Metadata.WithCustomReturnType a)
-instance Hasura.RQL.Types.Common.ToAesonPairs a => Data.Aeson.Types.ToJSON.ToJSON (Hasura.CustomReturnType.Metadata.WithCustomReturnType a)
-instance Hasura.RQL.Types.Backend.Backend b => Autodocodec.Class.HasCodec (Hasura.CustomReturnType.Metadata.CustomReturnTypeMetadata b)
-instance GHC.Generics.Generic (Hasura.CustomReturnType.Metadata.CustomReturnTypeMetadata b)
 
 module Hasura.Backends.Postgres.Execute.ConnectionTemplate
 
@@ -17463,8 +17462,8 @@ module Hasura.RQL.DDL.Schema.Enum
 --   </ol>
 resolveEnumReferences :: forall b. Backend b => HashMap (TableName b) (PrimaryKey b (Column b), TableConfig b, EnumValues) -> HashSet (ForeignKey b) -> HashMap (Column b) (NonEmpty (EnumReference b))
 
-module Hasura.CustomReturnType.Common
-columnsFromFields :: InsOrdHashMap k (CustomReturnTypeField b) -> InsOrdHashMap k (NullableScalarType b)
+module Hasura.LogicalModel.Common
+columnsFromFields :: InsOrdHashMap k (LogicalModelField b) -> InsOrdHashMap k (NullableScalarType b)
 toFieldInfo :: forall b. Backend b => InsOrdHashMap (Column b) (NullableScalarType b) -> Maybe [FieldInfo b]
 
 
@@ -17473,30 +17472,30 @@ module Hasura.Backends.Postgres.Instances.NativeQueries
 
 -- | Prepare a native query query against a postgres-like database to
 --   validate it.
-validateNativeQuery :: forall m pgKind. (MonadIO m, MonadError QErr m) => InsOrdHashMap PGScalarType Oid -> Environment -> PostgresConnConfiguration -> CustomReturnTypeMetadata ('Postgres pgKind) -> NativeQueryMetadata ('Postgres pgKind) -> m ()
+validateNativeQuery :: forall m pgKind. (MonadIO m, MonadError QErr m) => InsOrdHashMap PGScalarType Oid -> Environment -> PostgresConnConfiguration -> LogicalModelMetadata ('Postgres pgKind) -> NativeQueryMetadata ('Postgres pgKind) -> m ()
 
 -- | Convert a native query to a prepared statement to be validate.
 --   
 --   Used by <a>validateNativeQuery</a>. Exported for testing.
-nativeQueryToPreparedStatement :: forall m pgKind. MonadError QErr m => CustomReturnTypeMetadata ('Postgres pgKind) -> NativeQueryMetadata ('Postgres pgKind) -> m (ByteString, Text)
+nativeQueryToPreparedStatement :: forall m pgKind. MonadError QErr m => LogicalModelMetadata ('Postgres pgKind) -> NativeQueryMetadata ('Postgres pgKind) -> m (ByteString, Text)
 
-module Hasura.CustomReturnType.Cache
-type CustomReturnTypeCache b = HashMap CustomReturnTypeName (CustomReturnTypeInfo b)
+module Hasura.LogicalModel.Cache
+type LogicalModelCache b = HashMap LogicalModelName (LogicalModelInfo b)
 
--- | Description of a custom return type for use in metadata (after schema
+-- | Description of a logical model for use in metadata (after schema
 --   cache)
-data CustomReturnTypeInfo (b :: BackendType)
-CustomReturnTypeInfo :: CustomReturnTypeName -> InsOrdHashMap (Column b) (CustomReturnTypeField b) -> Maybe Text -> RolePermInfoMap b -> CustomReturnTypeInfo (b :: BackendType)
-[_crtiName] :: CustomReturnTypeInfo (b :: BackendType) -> CustomReturnTypeName
-[_crtiFields] :: CustomReturnTypeInfo (b :: BackendType) -> InsOrdHashMap (Column b) (CustomReturnTypeField b)
-[_crtiDescription] :: CustomReturnTypeInfo (b :: BackendType) -> Maybe Text
-[_crtiPermissions] :: CustomReturnTypeInfo (b :: BackendType) -> RolePermInfoMap b
-crtiPermissions :: forall b_as65I. Lens' (CustomReturnTypeInfo b_as65I) (RolePermInfoMap b_as65I)
-crtiName :: forall b_as65I. Lens' (CustomReturnTypeInfo b_as65I) CustomReturnTypeName
-crtiFields :: forall b_as65I. Lens' (CustomReturnTypeInfo b_as65I) (InsOrdHashMap (Column b_as65I) (CustomReturnTypeField b_as65I))
-crtiDescription :: forall b_as65I. Lens' (CustomReturnTypeInfo b_as65I) (Maybe Text)
-instance (Hasura.RQL.Types.Backend.Backend b, Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.Types.Table.RolePermInfoMap b)) => Data.Aeson.Types.ToJSON.ToJSON (Hasura.CustomReturnType.Cache.CustomReturnTypeInfo b)
-instance GHC.Generics.Generic (Hasura.CustomReturnType.Cache.CustomReturnTypeInfo b)
+data LogicalModelInfo (b :: BackendType)
+LogicalModelInfo :: LogicalModelName -> InsOrdHashMap (Column b) (LogicalModelField b) -> Maybe Text -> RolePermInfoMap b -> LogicalModelInfo (b :: BackendType)
+[_lmiName] :: LogicalModelInfo (b :: BackendType) -> LogicalModelName
+[_lmiFields] :: LogicalModelInfo (b :: BackendType) -> InsOrdHashMap (Column b) (LogicalModelField b)
+[_lmiDescription] :: LogicalModelInfo (b :: BackendType) -> Maybe Text
+[_lmiPermissions] :: LogicalModelInfo (b :: BackendType) -> RolePermInfoMap b
+lmiPermissions :: forall b_as65I. Lens' (LogicalModelInfo b_as65I) (RolePermInfoMap b_as65I)
+lmiName :: forall b_as65I. Lens' (LogicalModelInfo b_as65I) LogicalModelName
+lmiFields :: forall b_as65I. Lens' (LogicalModelInfo b_as65I) (InsOrdHashMap (Column b_as65I) (LogicalModelField b_as65I))
+lmiDescription :: forall b_as65I. Lens' (LogicalModelInfo b_as65I) (Maybe Text)
+instance (Hasura.RQL.Types.Backend.Backend b, Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.Types.Table.RolePermInfoMap b)) => Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.Cache.LogicalModelInfo b)
+instance GHC.Generics.Generic (Hasura.LogicalModel.Cache.LogicalModelInfo b)
 
 
 -- | The representation of native queries as derived from the schema cache.
@@ -17506,15 +17505,15 @@ type NativeQueryCache b = HashMap NativeQueryName (NativeQueryInfo b)
 -- | The type into which <tt>NativeQueryMetadata</tt> is resolved in
 --   'Hasura<i>RQL</i>DDL<i>Schema</i>Cache.buildSchemaCacheRule'.
 data NativeQueryInfo (b :: BackendType)
-NativeQueryInfo :: NativeQueryName -> InterpolatedQuery NativeQueryArgumentName -> CustomReturnTypeInfo b -> HashMap NativeQueryArgumentName (NullableScalarType b) -> InsOrdHashMap RelName (RelInfo b) -> Maybe Text -> NativeQueryInfo (b :: BackendType)
+NativeQueryInfo :: NativeQueryName -> InterpolatedQuery NativeQueryArgumentName -> LogicalModelInfo b -> HashMap NativeQueryArgumentName (NullableScalarType b) -> InsOrdHashMap RelName (RelInfo b) -> Maybe Text -> NativeQueryInfo (b :: BackendType)
 [_nqiRootFieldName] :: NativeQueryInfo (b :: BackendType) -> NativeQueryName
 [_nqiCode] :: NativeQueryInfo (b :: BackendType) -> InterpolatedQuery NativeQueryArgumentName
-[_nqiReturns] :: NativeQueryInfo (b :: BackendType) -> CustomReturnTypeInfo b
+[_nqiReturns] :: NativeQueryInfo (b :: BackendType) -> LogicalModelInfo b
 [_nqiArguments] :: NativeQueryInfo (b :: BackendType) -> HashMap NativeQueryArgumentName (NullableScalarType b)
 [_nqiArrayRelationships] :: NativeQueryInfo (b :: BackendType) -> InsOrdHashMap RelName (RelInfo b)
 [_nqiDescription] :: NativeQueryInfo (b :: BackendType) -> Maybe Text
 nqiRootFieldName :: forall b_as7nR. Lens' (NativeQueryInfo b_as7nR) NativeQueryName
-nqiReturns :: forall b_as7nR. Lens' (NativeQueryInfo b_as7nR) (CustomReturnTypeInfo b_as7nR)
+nqiReturns :: forall b_as7nR. Lens' (NativeQueryInfo b_as7nR) (LogicalModelInfo b_as7nR)
 nqiDescription :: forall b_as7nR. Lens' (NativeQueryInfo b_as7nR) (Maybe Text)
 nqiCode :: forall b_as7nR. Lens' (NativeQueryInfo b_as7nR) (InterpolatedQuery NativeQueryArgumentName)
 nqiArrayRelationships :: forall b_as7nR. Lens' (NativeQueryInfo b_as7nR) (InsOrdHashMap RelName (RelInfo b_as7nR))
@@ -17524,12 +17523,12 @@ instance (Hasura.RQL.Types.Backend.Backend b, Data.Aeson.Types.ToJSON.ToJSON (Ha
 
 module Hasura.RQL.Types.Source
 data SourceInfo b
-SourceInfo :: SourceName -> TableCache b -> FunctionCache b -> NativeQueryCache b -> CustomReturnTypeCache b -> ~SourceConfig b -> Maybe QueryTagsConfig -> ResolvedSourceCustomization -> DBObjectsIntrospection b -> SourceInfo b
+SourceInfo :: SourceName -> TableCache b -> FunctionCache b -> NativeQueryCache b -> LogicalModelCache b -> ~SourceConfig b -> Maybe QueryTagsConfig -> ResolvedSourceCustomization -> DBObjectsIntrospection b -> SourceInfo b
 [_siName] :: SourceInfo b -> SourceName
 [_siTables] :: SourceInfo b -> TableCache b
 [_siFunctions] :: SourceInfo b -> FunctionCache b
 [_siNativeQueries] :: SourceInfo b -> NativeQueryCache b
-[_siCustomReturnTypes] :: SourceInfo b -> CustomReturnTypeCache b
+[_siLogicalModels] :: SourceInfo b -> LogicalModelCache b
 [_siConfiguration] :: SourceInfo b -> ~SourceConfig b
 [_siQueryTagsConfig] :: SourceInfo b -> Maybe QueryTagsConfig
 [_siCustomization] :: SourceInfo b -> ResolvedSourceCustomization
@@ -17590,10 +17589,10 @@ siTables :: forall b_as97a. Lens' (SourceInfo b_as97a) (TableCache b_as97a)
 siQueryTagsConfig :: forall b_as97a. Lens' (SourceInfo b_as97a) (Maybe QueryTagsConfig)
 siNativeQueries :: forall b_as97a. Lens' (SourceInfo b_as97a) (NativeQueryCache b_as97a)
 siName :: forall b_as97a. Lens' (SourceInfo b_as97a) SourceName
+siLogicalModels :: forall b_as97a. Lens' (SourceInfo b_as97a) (LogicalModelCache b_as97a)
 siFunctions :: forall b_as97a. Lens' (SourceInfo b_as97a) (FunctionCache b_as97a)
 siDbObjectsIntrospection :: forall b_as97a. Lens' (SourceInfo b_as97a) (DBObjectsIntrospection b_as97a)
 siCustomization :: forall b_as97a. Lens' (SourceInfo b_as97a) ResolvedSourceCustomization
-siCustomReturnTypes :: forall b_as97a. Lens' (SourceInfo b_as97a) (CustomReturnTypeCache b_as97a)
 siConfiguration :: forall b_as97a. Lens' (SourceInfo b_as97a) (SourceConfig b_as97a)
 instance GHC.Base.Monoid (Hasura.RQL.Types.Source.ScalarMap b)
 instance GHC.Base.Semigroup (Hasura.RQL.Types.Source.ScalarMap b)
@@ -18288,12 +18287,11 @@ MTOPerm :: RoleName -> PermType -> TableMetadataObjId
 MTOTrigger :: TriggerName -> TableMetadataObjId
 MTORemoteRelationship :: RelName -> TableMetadataObjId
 
--- | Identifiers for custom return type elements within the metadata
---   structure.
-data CustomReturnTypeMetadataObjId
-CRTMOPerm :: RoleName -> PermType -> CustomReturnTypeMetadataObjId
+-- | Identifiers for logical model elements within the metadata structure.
+data LogicalModelMetadataObjId
+LMMOPerm :: RoleName -> PermType -> LogicalModelMetadataObjId
 
--- | the logical model should probably also link to its custom return type
+-- | the logical model should probably also link to its logical model
 data NativeQueryMetadataObjId
 NQMORel :: RelName -> RelType -> NativeQueryMetadataObjId
 data SourceMetadataObjId b
@@ -18303,8 +18301,8 @@ SMOFunctionPermission :: FunctionName b -> RoleName -> SourceMetadataObjId b
 SMOTableObj :: TableName b -> TableMetadataObjId -> SourceMetadataObjId b
 SMONativeQuery :: NativeQueryName -> SourceMetadataObjId b
 SMONativeQueryObj :: NativeQueryName -> NativeQueryMetadataObjId -> SourceMetadataObjId b
-SMOCustomReturnType :: CustomReturnTypeName -> SourceMetadataObjId b
-SMOCustomReturnTypeObj :: CustomReturnTypeName -> CustomReturnTypeMetadataObjId -> SourceMetadataObjId b
+SMOLogicalModel :: LogicalModelName -> SourceMetadataObjId b
+SMOLogicalModelObj :: LogicalModelName -> LogicalModelMetadataObjId -> SourceMetadataObjId b
 data MetadataObjId
 MOSource :: SourceName -> MetadataObjId
 MOSourceObjId :: SourceName -> AnyBackend SourceMetadataObjId -> MetadataObjId
@@ -18401,10 +18399,10 @@ instance GHC.Generics.Generic Hasura.RQL.Types.Metadata.Object.TableMetadataObjI
 instance GHC.Classes.Ord Hasura.RQL.Types.Metadata.Object.TableMetadataObjId
 instance GHC.Classes.Eq Hasura.RQL.Types.Metadata.Object.TableMetadataObjId
 instance GHC.Show.Show Hasura.RQL.Types.Metadata.Object.TableMetadataObjId
-instance GHC.Generics.Generic Hasura.RQL.Types.Metadata.Object.CustomReturnTypeMetadataObjId
-instance GHC.Classes.Ord Hasura.RQL.Types.Metadata.Object.CustomReturnTypeMetadataObjId
-instance GHC.Classes.Eq Hasura.RQL.Types.Metadata.Object.CustomReturnTypeMetadataObjId
-instance GHC.Show.Show Hasura.RQL.Types.Metadata.Object.CustomReturnTypeMetadataObjId
+instance GHC.Generics.Generic Hasura.RQL.Types.Metadata.Object.LogicalModelMetadataObjId
+instance GHC.Classes.Ord Hasura.RQL.Types.Metadata.Object.LogicalModelMetadataObjId
+instance GHC.Classes.Eq Hasura.RQL.Types.Metadata.Object.LogicalModelMetadataObjId
+instance GHC.Show.Show Hasura.RQL.Types.Metadata.Object.LogicalModelMetadataObjId
 instance GHC.Generics.Generic Hasura.RQL.Types.Metadata.Object.NativeQueryMetadataObjId
 instance GHC.Classes.Ord Hasura.RQL.Types.Metadata.Object.NativeQueryMetadataObjId
 instance GHC.Classes.Eq Hasura.RQL.Types.Metadata.Object.NativeQueryMetadataObjId
@@ -18419,7 +18417,7 @@ instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.RQL.Types.
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Ord (Hasura.RQL.Types.Metadata.Object.SourceMetadataObjId b)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Hashable.Class.Hashable (Hasura.RQL.Types.Metadata.Object.SourceMetadataObjId b)
 instance Data.Hashable.Class.Hashable Hasura.RQL.Types.Metadata.Object.NativeQueryMetadataObjId
-instance Data.Hashable.Class.Hashable Hasura.RQL.Types.Metadata.Object.CustomReturnTypeMetadataObjId
+instance Data.Hashable.Class.Hashable Hasura.RQL.Types.Metadata.Object.LogicalModelMetadataObjId
 instance Data.Hashable.Class.Hashable Hasura.RQL.Types.Metadata.Object.TableMetadataObjId
 
 
@@ -18699,7 +18697,7 @@ type RemoteSchemas = InsOrdHashMap RemoteSchemaName RemoteSchemaMetadata
 type Tables b = InsOrdHashMap (TableName b) (TableMetadata b)
 type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 type NativeQueries b = InsOrdHashMap NativeQueryName (NativeQueryMetadata b)
-type CustomReturnTypes b = InsOrdHashMap CustomReturnTypeName (CustomReturnTypeMetadata b)
+type LogicalModels b = InsOrdHashMap LogicalModelName (LogicalModelMetadata b)
 type Endpoints = InsOrdHashMap EndpointName CreateEndpoint
 type Actions = InsOrdHashMap ActionName ActionMetadata
 type CronTriggers = InsOrdHashMap TriggerName CronTriggerMetadata
@@ -18708,13 +18706,13 @@ type InheritedRoles = InsOrdHashMap RoleName InheritedRole
 -- | Source configuration for a source of backend type <tt>b</tt> as stored
 --   in the Metadata DB.
 data SourceMetadata b
-SourceMetadata :: SourceName -> BackendSourceKind b -> Tables b -> Functions b -> NativeQueries b -> CustomReturnTypes b -> SourceConnConfiguration b -> Maybe QueryTagsConfig -> SourceCustomization -> Maybe (HealthCheckConfig b) -> SourceMetadata b
+SourceMetadata :: SourceName -> BackendSourceKind b -> Tables b -> Functions b -> NativeQueries b -> LogicalModels b -> SourceConnConfiguration b -> Maybe QueryTagsConfig -> SourceCustomization -> Maybe (HealthCheckConfig b) -> SourceMetadata b
 [_smName] :: SourceMetadata b -> SourceName
 [_smKind] :: SourceMetadata b -> BackendSourceKind b
 [_smTables] :: SourceMetadata b -> Tables b
 [_smFunctions] :: SourceMetadata b -> Functions b
 [_smNativeQueries] :: SourceMetadata b -> NativeQueries b
-[_smCustomReturnTypes] :: SourceMetadata b -> CustomReturnTypes b
+[_smLogicalModels] :: SourceMetadata b -> LogicalModels b
 [_smConfiguration] :: SourceMetadata b -> SourceConnConfiguration b
 [_smQueryTags] :: SourceMetadata b -> Maybe QueryTagsConfig
 [_smCustomization] :: SourceMetadata b -> SourceCustomization
@@ -18723,11 +18721,11 @@ smTables :: forall b_au9zl. Lens' (SourceMetadata b_au9zl) (Tables b_au9zl)
 smQueryTags :: forall b_au9zl. Lens' (SourceMetadata b_au9zl) (Maybe QueryTagsConfig)
 smNativeQueries :: forall b_au9zl. Lens' (SourceMetadata b_au9zl) (NativeQueries b_au9zl)
 smName :: forall b_au9zl. Lens' (SourceMetadata b_au9zl) SourceName
+smLogicalModels :: forall b_au9zl. Lens' (SourceMetadata b_au9zl) (LogicalModels b_au9zl)
 smKind :: forall b_au9zl. Lens' (SourceMetadata b_au9zl) (BackendSourceKind b_au9zl)
 smHealthCheckConfig :: forall b_au9zl. Lens' (SourceMetadata b_au9zl) (Maybe (HealthCheckConfig b_au9zl))
 smFunctions :: forall b_au9zl. Lens' (SourceMetadata b_au9zl) (Functions b_au9zl)
 smCustomization :: forall b_au9zl. Lens' (SourceMetadata b_au9zl) SourceCustomization
-smCustomReturnTypes :: forall b_au9zl. Lens' (SourceMetadata b_au9zl) (CustomReturnTypes b_au9zl)
 smConfiguration :: forall b_au9zl. Lens' (SourceMetadata b_au9zl) (SourceConnConfiguration b_au9zl)
 backendSourceMetadataCodec :: JSONCodec BackendSourceMetadata
 mkSourceMetadata :: forall (b :: BackendType). Backend b => SourceName -> BackendSourceKind b -> SourceConnConfiguration b -> SourceCustomization -> Maybe (HealthCheckConfig b) -> BackendSourceMetadata
@@ -18929,9 +18927,9 @@ tableMetadataSetter :: Backend b => SourceName -> TableName b -> ASetter' Metada
 --   the source name and function name.
 functionMetadataSetter :: Backend b => SourceName -> FunctionName b -> ASetter' Metadata (FunctionMetadata b)
 
--- | A lens setter for the metadata of a custom return type as identified
---   by the source name and root field name.
-customReturnTypeMetadataSetter :: Backend b => SourceName -> CustomReturnTypeName -> ASetter' Metadata (CustomReturnTypeMetadata b)
+-- | A lens setter for the metadata of a logical model as identified by the
+--   source name and root field name.
+logicalModelMetadataSetter :: Backend b => SourceName -> LogicalModelName -> ASetter' Metadata (LogicalModelMetadata b)
 
 -- | A lens setter for the metadata of a native query as identified by the
 --   source name and root field name.
@@ -18959,7 +18957,7 @@ dropTableInMetadata :: forall b. Backend b => SourceName -> TableName b -> Metad
 dropRelationshipInMetadata :: RelName -> TableMetadata b -> TableMetadata b
 dropNativeQueryRelationshipInMetadata :: RelName -> NativeQueryMetadata b -> NativeQueryMetadata b
 dropPermissionInMetadata :: RoleName -> PermType -> TableMetadata b -> TableMetadata b
-dropCustomReturnTypePermissionInMetadata :: RoleName -> PermType -> CustomReturnTypeMetadata b -> CustomReturnTypeMetadata b
+dropLogicalModelPermissionInMetadata :: RoleName -> PermType -> LogicalModelMetadata b -> LogicalModelMetadata b
 dropComputedFieldInMetadata :: ComputedFieldName -> TableMetadata b -> TableMetadata b
 dropEventTriggerInMetadata :: TriggerName -> TableMetadata b -> TableMetadata b
 dropRemoteRelationshipInMetadata :: RelName -> TableMetadata b -> TableMetadata b
@@ -19028,19 +19026,19 @@ TOForeignKey :: ConstraintName b -> TableObjId (b :: BackendType)
 TOPerm :: RoleName -> PermType -> TableObjId (b :: BackendType)
 TOTrigger :: TriggerName -> TableObjId (b :: BackendType)
 
--- | Identifiers for components of custom return types within the metadata.
+-- | Identifiers for components of logical models within the metadata.
 --   These are used to track dependencies within the resolved schema (see
 --   <tt>SourceInfo</tt>).
-data CustomReturnTypeObjId (b :: BackendType)
-CRTOPerm :: RoleName -> PermType -> CustomReturnTypeObjId (b :: BackendType)
-CRTOCol :: Column b -> CustomReturnTypeObjId (b :: BackendType)
+data LogicalModelObjId (b :: BackendType)
+LMOPerm :: RoleName -> PermType -> LogicalModelObjId (b :: BackendType)
+LMOCol :: Column b -> LogicalModelObjId (b :: BackendType)
 data SourceObjId (b :: BackendType)
 SOITable :: TableName b -> SourceObjId (b :: BackendType)
 SOITableObj :: TableName b -> TableObjId b -> SourceObjId (b :: BackendType)
 SOIFunction :: FunctionName b -> SourceObjId (b :: BackendType)
 SOINativeQuery :: NativeQueryName -> SourceObjId (b :: BackendType)
-SOICustomReturnType :: CustomReturnTypeName -> SourceObjId (b :: BackendType)
-SOICustomReturnTypeObj :: CustomReturnTypeName -> CustomReturnTypeObjId b -> SourceObjId (b :: BackendType)
+SOILogicalModel :: LogicalModelName -> SourceObjId (b :: BackendType)
+SOILogicalModelObj :: LogicalModelName -> LogicalModelObjId b -> SourceObjId (b :: BackendType)
 data SchemaObjId
 SOSource :: SourceName -> SchemaObjId
 SOSourceObj :: SourceName -> AnyBackend SourceObjId -> SchemaObjId
@@ -19071,7 +19069,7 @@ DRParent :: DependencyReason
 DRRemoteSchema :: DependencyReason
 DRRemoteRelationship :: DependencyReason
 DRParentRole :: DependencyReason
-DRCustomReturnType :: DependencyReason
+DRLogicalModel :: DependencyReason
 reasonToTxt :: DependencyReason -> Text
 data SchemaDependency
 SchemaDependency :: SchemaObjId -> DependencyReason -> SchemaDependency
@@ -19115,7 +19113,7 @@ instance GHC.Base.Functor (Hasura.RQL.Types.SchemaCacheTypes.BoolExpM b)
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.SchemaCacheTypes.SchemaDependency
 instance Data.Hashable.Class.Hashable Hasura.RQL.Types.SchemaCacheTypes.SchemaDependency
 instance GHC.Generics.Generic (Hasura.RQL.Types.SchemaCacheTypes.TableObjId b)
-instance GHC.Generics.Generic (Hasura.RQL.Types.SchemaCacheTypes.CustomReturnTypeObjId b)
+instance GHC.Generics.Generic (Hasura.RQL.Types.SchemaCacheTypes.LogicalModelObjId b)
 instance GHC.Generics.Generic (Hasura.RQL.Types.SchemaCacheTypes.SourceObjId b)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.RQL.Types.SchemaCacheTypes.SourceObjId b)
 instance GHC.Generics.Generic Hasura.RQL.Types.SchemaCacheTypes.SchemaObjId
@@ -19127,7 +19125,7 @@ instance GHC.Generics.Generic Hasura.RQL.Types.SchemaCacheTypes.SchemaDependency
 instance GHC.Classes.Eq Hasura.RQL.Types.SchemaCacheTypes.SchemaDependency
 instance GHC.Show.Show Hasura.RQL.Types.SchemaCacheTypes.SchemaDependency
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.RQL.Types.SchemaCacheTypes.TableObjId b)
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.RQL.Types.SchemaCacheTypes.CustomReturnTypeObjId b)
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.RQL.Types.SchemaCacheTypes.LogicalModelObjId b)
 instance Data.Hashable.Class.Hashable Hasura.RQL.Types.SchemaCacheTypes.DependencyReason
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.SchemaCacheTypes.DependencyReason
 instance Data.Hashable.Class.Hashable Hasura.RQL.Types.SchemaCacheTypes.SchemaObjId
@@ -19135,7 +19133,7 @@ instance GHC.Show.Show Hasura.RQL.Types.SchemaCacheTypes.SchemaObjId
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.SchemaCacheTypes.SchemaObjId
 instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.RQL.Types.SchemaCacheTypes.SchemaObjId
 instance Hasura.RQL.Types.Backend.Backend b => Data.Hashable.Class.Hashable (Hasura.RQL.Types.SchemaCacheTypes.SourceObjId b)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Hashable.Class.Hashable (Hasura.RQL.Types.SchemaCacheTypes.CustomReturnTypeObjId b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Hashable.Class.Hashable (Hasura.RQL.Types.SchemaCacheTypes.LogicalModelObjId b)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Hashable.Class.Hashable (Hasura.RQL.Types.SchemaCacheTypes.TableObjId b)
 
 module Hasura.Backends.MySQL.Instances.SchemaCache
@@ -19644,15 +19642,14 @@ MetadataWithResourceVersion :: Metadata -> MetadataResourceVersion -> MetadataWi
 [_mwrvResourceVersion] :: MetadataWithResourceVersion -> MetadataResourceVersion
 mkParentDep :: forall b. Backend b => SourceName -> TableName b -> SchemaDependency
 
--- | When we depend on anything to do with custom return types, we also
---   declare that we depend on the custom return type as a whole. This is
---   the "parent" dependency in the dependency tree for a given custom
---   return type.
-mkCustomReturnTypeParentDep :: forall b. Backend b => SourceName -> CustomReturnTypeName -> SchemaDependency
+-- | When we depend on anything to do with logical models, we also declare
+--   that we depend on the logical model as a whole. This is the "parent"
+--   dependency in the dependency tree for a given logical model.
+mkLogicalModelParentDep :: forall b. Backend b => SourceName -> LogicalModelName -> SchemaDependency
 mkColDep :: forall b. Backend b => DependencyReason -> SourceName -> TableName b -> Column b -> SchemaDependency
 
--- | Declare a dependency on a particular column of a custom return type
-mkCustomReturnTypeColDep :: forall b. Backend b => DependencyReason -> SourceName -> CustomReturnTypeName -> Column b -> SchemaDependency
+-- | Declare a dependency on a particular column of a logical model
+mkLogicalModelColDep :: forall b. Backend b => DependencyReason -> SourceName -> LogicalModelName -> Column b -> SchemaDependency
 mkComputedFieldDep :: forall b. Backend b => DependencyReason -> SourceName -> TableName b -> ComputedFieldName -> SchemaDependency
 type WithDeps a = (a, Seq SchemaDependency)
 type RemoteSchemaRelationships = RemoteSchemaRelationshipsG (RemoteFieldInfo Name)
@@ -19848,13 +19845,13 @@ getDependentObjsWith :: (DependencyReason -> Bool) -> SchemaCache -> SchemaObjId
 --   corresponding <a>SourceObjId</a>
 getRemoteDependencies :: SchemaCache -> SourceName -> [SchemaObjId]
 
--- | What schema dependencies does a given row permission for a custom
---   return type have? This will almost certainly involve some number of
---   dependencies on custom return types, but may also involve dependencies
---   on tables. Although we can't relate tables and custom return types
---   yet, we can still declare permissions like, "you can only see this
---   custom return type if your user ID exists in this table".
-getCustomReturnTypeBoolExpDeps :: forall b. GetAggregationPredicatesDeps b => SourceName -> CustomReturnTypeName -> AnnBoolExpPartialSQL b -> [SchemaDependency]
+-- | What schema dependencies does a given row permission for a logical
+--   model have? This will almost certainly involve some number of
+--   dependencies on logical models, but may also involve dependencies on
+--   tables. Although we can't relate tables and logical models yet, we can
+--   still declare permissions like, "you can only see this logical model
+--   if your user ID exists in this table".
+getLogicalModelBoolExpDeps :: forall b. GetAggregationPredicatesDeps b => SourceName -> LogicalModelName -> AnnBoolExpPartialSQL b -> [SchemaDependency]
 
 -- | Discover the schema dependencies of an <tt>AnnBoolExpPartialSQL</tt>.
 getBoolExpDeps :: forall b. GetAggregationPredicatesDeps b => SourceName -> TableName b -> AnnBoolExpPartialSQL b -> [SchemaDependency]
@@ -20412,7 +20409,7 @@ RemoteSchemaParser :: [FieldParser n (NamespacedField (RemoteSchemaRootField (Re
 [piMutation] :: RemoteSchemaParser n -> Maybe [FieldParser n (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))]
 [piSubscription] :: RemoteSchemaParser n -> Maybe [FieldParser n (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))]
 getTableRoles :: BackendSourceInfo -> [RoleName]
-getCustomReturnTypeRoles :: BackendSourceInfo -> [RoleName]
+getLogicalModelRoles :: BackendSourceInfo -> [RoleName]
 
 -- | Looks up table information for the given table name. This function
 --   should never fail, since the schema cache construction process is
@@ -20712,9 +20709,9 @@ tableSelectionSet :: (BackendTableSelectSchema b, MonadBuildSourceSchema b r m n
 selectTable :: (BackendTableSelectSchema b, MonadBuildSourceSchema b r m n) => TableInfo b -> Name -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (SelectExp b)))
 selectTableAggregate :: (BackendTableSelectSchema b, MonadBuildSourceSchema b r m n) => TableInfo b -> Name -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (AggSelectExp b)))
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
-class Backend b => BackendCustomReturnTypeSelectSchema (b :: BackendType)
-customReturnTypeArguments :: (BackendCustomReturnTypeSelectSchema b, MonadBuildSourceSchema b r m n) => CustomReturnTypeInfo b -> SchemaT r m (InputFieldsParser n (SelectArgsG b (UnpreparedValue b)))
-customReturnTypeSelectionSet :: (BackendCustomReturnTypeSelectSchema b, MonadBuildSourceSchema b r m n) => CustomReturnTypeInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
+class Backend b => BackendLogicalModelSelectSchema (b :: BackendType)
+logicalModelArguments :: (BackendLogicalModelSelectSchema b, MonadBuildSourceSchema b r m n) => LogicalModelInfo b -> SchemaT r m (InputFieldsParser n (SelectArgsG b (UnpreparedValue b)))
+logicalModelSelectionSet :: (BackendLogicalModelSelectSchema b, MonadBuildSourceSchema b r m n) => LogicalModelInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 class Backend b => BackendUpdateOperatorsSchema (b :: BackendType) where {
     
     -- | Intermediate Representation of the set of update operators that act
@@ -20864,7 +20861,7 @@ module Hasura.GraphQL.Schema.OrderBy
 --     obj-rel: &lt;remote-table&gt;_order_by
 --   }
 --   </pre>
-customReturnTypeOrderByExp :: forall b r m n. MonadBuildSchema b r m n => CustomReturnTypeInfo b -> SchemaT r m (Parser 'Input n [AnnotatedOrderByItemG b (UnpreparedValue b)])
+logicalModelOrderByExp :: forall b r m n. MonadBuildSchema b r m n => LogicalModelInfo b -> SchemaT r m (Parser 'Input n [AnnotatedOrderByItemG b (UnpreparedValue b)])
 
 -- | Corresponds to an object type for an order by.
 --   
@@ -20904,8 +20901,8 @@ aggregationPredicatesParser :: forall r m n. (AggregationPredicatesSchema b, Mon
 --   }
 --   </pre>
 --   
---   | Boolean expression for custom return types
-customReturnTypeBoolExp :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b) => CustomReturnTypeInfo b -> SchemaT r m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
+--   | Boolean expression for logical models
+logicalModelBoolExp :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b) => LogicalModelInfo b -> SchemaT r m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
 
 -- | <pre>
 --   input type_bool_exp {
@@ -21015,8 +21012,8 @@ defaultTableSelectionSet :: forall b r m n. (AggregationPredicatesSchema b, Back
 -- | List of table fields object. Just a <tt><a>nonNullableObjectList</a>
 --   wrapper over </tt><a>tableSelectionSet</a>. &gt; table_name: [table!]!
 tableSelectionList :: (MonadBuildSchema b r m n, BackendTableSelectSchema b) => TableInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
-defaultCustomReturnTypeSelectionSet :: forall b r m n. MonadBuildSchema b r m n => CustomReturnTypeInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
-customReturnTypeSelectionList :: (MonadBuildSchema b r m n, BackendCustomReturnTypeSelectSchema b) => CustomReturnTypeInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
+defaultLogicalModelSelectionSet :: forall b r m n. MonadBuildSchema b r m n => LogicalModelInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
+logicalModelSelectionList :: (MonadBuildSchema b r m n, BackendLogicalModelSelectSchema b) => LogicalModelInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 
 -- | Connection fields of a table
 --   
@@ -21105,8 +21102,24 @@ tableConnectionArgs :: forall b r m n. (MonadBuildSchema b r m n, AggregationPre
 --   }
 --   </pre>
 tableAggregationFields :: forall b r m n. MonadBuildSchema b r m n => TableInfo b -> SchemaT r m (Parser 'Output n (AggregateFields b))
-defaultCustomReturnTypeArgs :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b) => CustomReturnTypeInfo b -> SchemaT r m (InputFieldsParser n (SelectArgs b))
+defaultLogicalModelArgs :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b) => LogicalModelInfo b -> SchemaT r m (InputFieldsParser n (SelectArgs b))
 tablePermissionsInfo :: Backend b => SelPermInfo b -> TablePerms b
+
+
+-- | Schema parsers for logical models
+module Hasura.LogicalModel.Schema
+
+-- | turn post-schema cache LogicalModelInfo into IR
+buildLogicalModelIR :: LogicalModelInfo b -> LogicalModel b
+
+-- | top-level select permissions for a logical model
+buildLogicalModelPermissions :: forall b r m n. MonadBuildSchema b r m n => LogicalModelInfo b -> SchemaT r m (TablePermG b (UnpreparedValue b))
+buildLogicalModelFields :: forall b r m n. (MonadBuildSchema b r m n, BackendLogicalModelSelectSchema b) => LogicalModelInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b), InputFieldsParser n (SelectArgsG b (UnpreparedValue b))))
+
+
+-- | Schema parsers for native queries.
+module Hasura.NativeQuery.Schema
+defaultBuildNativeQueryRootFields :: forall b r m n. (MonadBuildSchema b r m n, BackendLogicalModelSelectSchema b) => NativeQueryInfo b -> SchemaT r m (Maybe (FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 
 
 -- | Generate the GraphQL schema types related to streaming subscriptions.
@@ -21274,22 +21287,6 @@ ArgumentSignature :: ScalarType b -> Name -> ArgumentSignature (b :: BackendType
 [argName] :: ArgumentSignature (b :: BackendType) -> Name
 
 
--- | Schema parsers for custom return types
-module Hasura.CustomReturnType.Schema
-
--- | turn post-schema cache CustomReturnTypeInfo into IR
-buildCustomReturnTypeIR :: CustomReturnTypeInfo b -> CustomReturnType b
-
--- | top-level select permissions for a custom return type
-buildCustomReturnTypePermissions :: forall b r m n. MonadBuildSchema b r m n => CustomReturnTypeInfo b -> SchemaT r m (TablePermG b (UnpreparedValue b))
-buildCustomReturnTypeFields :: forall b r m n. (MonadBuildSchema b r m n, BackendCustomReturnTypeSelectSchema b) => CustomReturnTypeInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b), InputFieldsParser n (SelectArgsG b (UnpreparedValue b))))
-
-
--- | Schema parsers for native queries.
-module Hasura.NativeQuery.Schema
-defaultBuildNativeQueryRootFields :: forall b r m n. (MonadBuildSchema b r m n, BackendCustomReturnTypeSelectSchema b) => NativeQueryInfo b -> SchemaT r m (Maybe (FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
-
-
 -- | Postgres Schema OnConflict
 --   
 --   This module contains the building blocks for parsing
@@ -21353,7 +21350,7 @@ instance Hasura.GraphQL.Schema.Backend.BackendUpdateOperatorsSchema 'Hasura.SQL.
 module Hasura.Backends.BigQuery.Instances.Schema
 instance Hasura.GraphQL.Schema.Backend.BackendSchema 'Hasura.SQL.Backend.BigQuery
 instance Hasura.GraphQL.Schema.Backend.BackendTableSelectSchema 'Hasura.SQL.Backend.BigQuery
-instance Hasura.GraphQL.Schema.Backend.BackendCustomReturnTypeSelectSchema 'Hasura.SQL.Backend.BigQuery
+instance Hasura.GraphQL.Schema.Backend.BackendLogicalModelSelectSchema 'Hasura.SQL.Backend.BigQuery
 
 
 -- | Stuff gutted from Translate.Select.
@@ -21678,7 +21675,7 @@ instance Hasura.Backends.Postgres.Instances.Schema.PostgresSchema 'Hasura.SQL.Ba
 instance Hasura.Backends.Postgres.Instances.Schema.PostgresSchema 'Hasura.SQL.Backend.Citus
 instance Hasura.Backends.Postgres.Instances.Schema.PostgresSchema 'Hasura.SQL.Backend.Cockroach
 instance (Hasura.Backends.Postgres.Instances.Schema.PostgresSchema pgKind, Hasura.RQL.Types.Backend.Backend ('Hasura.SQL.Backend.Postgres pgKind)) => Hasura.GraphQL.Schema.Backend.BackendTableSelectSchema ('Hasura.SQL.Backend.Postgres pgKind)
-instance (Hasura.Backends.Postgres.Instances.Schema.PostgresSchema pgKind, Hasura.RQL.Types.Backend.Backend ('Hasura.SQL.Backend.Postgres pgKind)) => Hasura.GraphQL.Schema.Backend.BackendCustomReturnTypeSelectSchema ('Hasura.SQL.Backend.Postgres pgKind)
+instance (Hasura.Backends.Postgres.Instances.Schema.PostgresSchema pgKind, Hasura.RQL.Types.Backend.Backend ('Hasura.SQL.Backend.Postgres pgKind)) => Hasura.GraphQL.Schema.Backend.BackendLogicalModelSelectSchema ('Hasura.SQL.Backend.Postgres pgKind)
 instance (Hasura.RQL.Types.Backend.Backend ('Hasura.SQL.Backend.Postgres pgKind), Hasura.Backends.Postgres.Instances.Schema.PostgresSchema pgKind) => Hasura.GraphQL.Schema.Backend.BackendSchema ('Hasura.SQL.Backend.Postgres pgKind)
 instance Hasura.GraphQL.Schema.Backend.BackendSchema ('Hasura.SQL.Backend.Postgres pgKind) => Hasura.GraphQL.Schema.BoolExp.AggregationPredicatesSchema ('Hasura.SQL.Backend.Postgres pgKind)
 instance Hasura.RQL.Types.Backend.Backend ('Hasura.SQL.Backend.Postgres pgKind) => Hasura.GraphQL.Schema.Backend.BackendUpdateOperatorsSchema ('Hasura.SQL.Backend.Postgres pgKind)
@@ -21799,7 +21796,7 @@ planQuery :: MonadError QErr m => SessionVariables -> QueryDB 'MySQL Void (Unpre
 module Hasura.Backends.MSSQL.Instances.Schema
 instance Hasura.GraphQL.Schema.Backend.BackendSchema 'Hasura.SQL.Backend.MSSQL
 instance Hasura.GraphQL.Schema.Backend.BackendTableSelectSchema 'Hasura.SQL.Backend.MSSQL
-instance Hasura.GraphQL.Schema.Backend.BackendCustomReturnTypeSelectSchema 'Hasura.SQL.Backend.MSSQL
+instance Hasura.GraphQL.Schema.Backend.BackendLogicalModelSelectSchema 'Hasura.SQL.Backend.MSSQL
 instance Hasura.GraphQL.Schema.Backend.BackendUpdateOperatorsSchema 'Hasura.SQL.Backend.MSSQL
 
 module Hasura.GraphQL.Schema.Instances
@@ -23075,7 +23072,7 @@ prepareCatalog :: (BackendMetadata b, MonadIO m, MonadBaseControl IO m) => Sourc
 --   tracked by Hasura. Primarily useful for user interfaces to allow
 --   untracked tables to be tracked.
 listAllTables :: (BackendMetadata b, CacheRM m, MonadBaseControl IO m, MetadataM m, MonadError QErr m, MonadIO m, MonadReader r m, Has (Logger Hasura) r, ProvidesNetwork m) => SourceName -> m [TableName b]
-validateNativeQuery :: (BackendMetadata b, MonadIO m, MonadError QErr m) => Environment -> SourceConnConfiguration b -> CustomReturnTypeMetadata b -> NativeQueryMetadata b -> m ()
+validateNativeQuery :: (BackendMetadata b, MonadIO m, MonadError QErr m) => Environment -> SourceConnConfiguration b -> LogicalModelMetadata b -> NativeQueryMetadata b -> m ()
 
 -- | How to convert a column to a field. For backends that don't support
 --   nested objects or arrays the default implementation (i.e. wrapping the
@@ -23153,9 +23150,9 @@ procBoolExp :: (QErrM m, TableCoreInfoRM b m, BackendMetadata b, GetAggregationP
 -- | Interpret a <a>BoolExp</a> into an <a>AnnBoolExp</a>, collecting any
 --   dependencies as we go. At the moment, the only dependencies we're
 --   likely to encounter are independent dependencies on other tables. For
---   example, "this user can only select from this custom return type if
---   their ID is in the <tt>allowed_users</tt> table".
-procCustomReturnTypeBoolExp :: forall b m. (QErrM m, TableCoreInfoRM b m, BackendMetadata b, GetAggregationPredicatesDeps b) => SourceName -> CustomReturnTypeName -> FieldInfoMap (FieldInfo b) -> BoolExp b -> m (AnnBoolExpPartialSQL b, Seq SchemaDependency)
+--   example, "this user can only select from this logical model if their
+--   ID is in the <tt>allowed_users</tt> table".
+procLogicalModelBoolExp :: forall b m. (QErrM m, TableCoreInfoRM b m, BackendMetadata b, GetAggregationPredicatesDeps b) => SourceName -> LogicalModelName -> FieldInfoMap (FieldInfo b) -> BoolExp b -> m (AnnBoolExpPartialSQL b, Seq SchemaDependency)
 annBoolExp :: (QErrM m, TableCoreInfoRM b m, BackendMetadata b) => BoolExpRHSParser b m v -> FieldInfoMap (FieldInfo b) -> FieldInfoMap (FieldInfo b) -> GBoolExp b ColExp -> m (AnnBoolExp b v)
 getDepHeadersFromVal :: Value -> [Text]
 getDependentHeaders :: BoolExp b -> HashSet Text
@@ -23174,10 +23171,10 @@ type family PermInfo perm
 addPermissionToMetadata :: PermDef b a -> TableMetadata b -> TableMetadata b
 buildPermInfo :: (BackendMetadata b, QErrM m, TableCoreInfoRM b m, GetAggregationPredicatesDeps b) => SourceName -> TableName b -> FieldInfoMap (FieldInfo b) -> RoleName -> PermDefPermission b perm -> m (WithDeps (PermInfo perm b))
 
--- | Given the custom return type's definition and the permissions as
---   defined in the custom return type's metadata, try to construct the
---   permission definition.
-buildCustomReturnTypePermInfo :: (BackendMetadata b, QErrM m, TableCoreInfoRM b m, GetAggregationPredicatesDeps b) => SourceName -> CustomReturnTypeName -> FieldInfoMap (FieldInfo b) -> PermDefPermission b perm -> m (WithDeps (PermInfo perm b))
+-- | Given the logical model's definition and the permissions as defined in
+--   the logical model's metadata, try to construct the permission
+--   definition.
+buildLogicalModelPermInfo :: (BackendMetadata b, QErrM m, TableCoreInfoRM b m, GetAggregationPredicatesDeps b) => SourceName -> LogicalModelName -> FieldInfoMap (FieldInfo b) -> PermDefPermission b perm -> m (WithDeps (PermInfo perm b))
 runCreatePerm :: forall m b a. (UserInfoM m, CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b) => CreatePerm a b -> m EncJSON
 runDropPerm :: forall b m. (UserInfoM m, CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b) => PermType -> DropPerm b -> m EncJSON
 buildInsPermInfo :: forall b m. (QErrM m, TableCoreInfoRM b m, BackendMetadata b, GetAggregationPredicatesDeps b) => SourceName -> TableName b -> FieldInfoMap (FieldInfo b) -> InsPerm b -> m (WithDeps (InsPermInfo b))
@@ -23277,79 +23274,78 @@ instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSO
 
 
 -- | Define and handle v1/metadata API operations to track, untrack, and
---   get custom return types.
-module Hasura.CustomReturnType.API
+--   get logical models.
+module Hasura.LogicalModel.API
 
--- | Default implementation of the <tt>track_custom_return_type</tt>
---   request payload.
-data TrackCustomReturnType (b :: BackendType)
-TrackCustomReturnType :: SourceName -> CustomReturnTypeName -> Maybe Text -> InsOrdHashMap (Column b) (CustomReturnTypeField b) -> TrackCustomReturnType (b :: BackendType)
-[tctSource] :: TrackCustomReturnType (b :: BackendType) -> SourceName
-[tctName] :: TrackCustomReturnType (b :: BackendType) -> CustomReturnTypeName
-[tctDescription] :: TrackCustomReturnType (b :: BackendType) -> Maybe Text
-[tctFields] :: TrackCustomReturnType (b :: BackendType) -> InsOrdHashMap (Column b) (CustomReturnTypeField b)
+-- | Default implementation of the <tt>track_logical_model</tt> request
+--   payload.
+data TrackLogicalModel (b :: BackendType)
+TrackLogicalModel :: SourceName -> LogicalModelName -> Maybe Text -> InsOrdHashMap (Column b) (LogicalModelField b) -> TrackLogicalModel (b :: BackendType)
+[tlmSource] :: TrackLogicalModel (b :: BackendType) -> SourceName
+[tlmName] :: TrackLogicalModel (b :: BackendType) -> LogicalModelName
+[tlmDescription] :: TrackLogicalModel (b :: BackendType) -> Maybe Text
+[tlmFields] :: TrackLogicalModel (b :: BackendType) -> InsOrdHashMap (Column b) (LogicalModelField b)
 
--- | API payload for the <tt>get_custom_return_type</tt> endpoint.
-data GetCustomReturnType (b :: BackendType)
-GetCustomReturnType :: SourceName -> GetCustomReturnType (b :: BackendType)
-[gcrtSource] :: GetCustomReturnType (b :: BackendType) -> SourceName
+-- | API payload for the <tt>get_logical_model</tt> endpoint.
+data GetLogicalModel (b :: BackendType)
+GetLogicalModel :: SourceName -> GetLogicalModel (b :: BackendType)
+[glmSource] :: GetLogicalModel (b :: BackendType) -> SourceName
 
--- | Handler for the <tt>get_custom_return_type</tt> endpoint.
-runGetCustomReturnType :: forall b m. (BackendMetadata b, MetadataM m, HasFeatureFlagChecker m, MonadError QErr m) => GetCustomReturnType b -> m EncJSON
-getCustomTypes :: forall b. Backend b => SourceName -> Traversal' Metadata (CustomReturnTypes b)
+-- | Handler for the <tt>get_logical_model</tt> endpoint.
+runGetLogicalModel :: forall b m. (BackendMetadata b, MetadataM m, HasFeatureFlagChecker m, MonadError QErr m) => GetLogicalModel b -> m EncJSON
+getCustomTypes :: forall b. Backend b => SourceName -> Traversal' Metadata (LogicalModels b)
 
--- | Handler for the <tt>track_custom_return_type</tt> endpoint. The type
---   'TrackCustomReturnType b' (appearing here in wrapped as
---   'BackendTrackCustomReturnType b' for <tt>AnyBackend</tt>
---   compatibility) is defined in 'class CustomReturnTypeMetadata'.
-runTrackCustomReturnType :: forall b m. (BackendMetadata b, CacheRWM m, MetadataM m, MonadError QErr m, HasFeatureFlagChecker m) => TrackCustomReturnType b -> m EncJSON
+-- | Handler for the <tt>track_logical_model</tt> endpoint. The type
+--   'TrackLogicalModel b' (appearing here in wrapped as
+--   'BackendTrackLogicalModel b' for <tt>AnyBackend</tt> compatibility) is
+--   defined in 'class LogicalModelMetadata'.
+runTrackLogicalModel :: forall b m. (BackendMetadata b, CacheRWM m, MetadataM m, MonadError QErr m, HasFeatureFlagChecker m) => TrackLogicalModel b -> m EncJSON
 
--- | API payload for the <tt>untrack_custom_return_type</tt> endpoint.
-data UntrackCustomReturnType (b :: BackendType)
-UntrackCustomReturnType :: SourceName -> CustomReturnTypeName -> UntrackCustomReturnType (b :: BackendType)
-[utctSource] :: UntrackCustomReturnType (b :: BackendType) -> SourceName
-[utctName] :: UntrackCustomReturnType (b :: BackendType) -> CustomReturnTypeName
+-- | API payload for the <tt>untrack_logical_model</tt> endpoint.
+data UntrackLogicalModel (b :: BackendType)
+UntrackLogicalModel :: SourceName -> LogicalModelName -> UntrackLogicalModel (b :: BackendType)
+[utlmSource] :: UntrackLogicalModel (b :: BackendType) -> SourceName
+[utlmName] :: UntrackLogicalModel (b :: BackendType) -> LogicalModelName
 
--- | Handler for the <tt>untrack_custom_return_type</tt> endpoint.
-runUntrackCustomReturnType :: forall b m. (BackendMetadata b, MonadError QErr m, CacheRWM m, MetadataM m) => UntrackCustomReturnType b -> m EncJSON
+-- | Handler for the <tt>untrack_logical_model</tt> endpoint.
+runUntrackLogicalModel :: forall b m. (BackendMetadata b, MonadError QErr m, CacheRWM m, MetadataM m) => UntrackLogicalModel b -> m EncJSON
 
--- | A permission for custom return types is tied to a specific name and
---   source. This wrapper adds both of those things to the JSON object that
+-- | A permission for logical models is tied to a specific name and source.
+--   This wrapper adds both of those things to the JSON object that
 --   describes the permission.
-data CreateCustomReturnTypePermission a (b :: BackendType)
-CreateCustomReturnTypePermission :: SourceName -> CustomReturnTypeName -> PermDef b a -> CreateCustomReturnTypePermission a (b :: BackendType)
-[ccrtpSource] :: CreateCustomReturnTypePermission a (b :: BackendType) -> SourceName
-[ccrtpName] :: CreateCustomReturnTypePermission a (b :: BackendType) -> CustomReturnTypeName
-[ccrtpInfo] :: CreateCustomReturnTypePermission a (b :: BackendType) -> PermDef b a
-runCreateSelectCustomReturnTypePermission :: forall b m. (Backend b, CacheRWM m, MetadataM m, MonadError QErr m, HasFeatureFlagChecker m) => CreateCustomReturnTypePermission SelPerm b -> m EncJSON
+data CreateLogicalModelPermission a (b :: BackendType)
+CreateLogicalModelPermission :: SourceName -> LogicalModelName -> PermDef b a -> CreateLogicalModelPermission a (b :: BackendType)
+[clmpSource] :: CreateLogicalModelPermission a (b :: BackendType) -> SourceName
+[clmpName] :: CreateLogicalModelPermission a (b :: BackendType) -> LogicalModelName
+[clmpInfo] :: CreateLogicalModelPermission a (b :: BackendType) -> PermDef b a
+runCreateSelectLogicalModelPermission :: forall b m. (Backend b, CacheRWM m, MetadataM m, MonadError QErr m, HasFeatureFlagChecker m) => CreateLogicalModelPermission SelPerm b -> m EncJSON
 
 -- | To drop a permission, we need to know the source and name of the
---   custom return type, as well as the role whose permission we want to
---   drop.
-data DropCustomReturnTypePermission (b :: BackendType)
-DropCustomReturnTypePermission :: SourceName -> CustomReturnTypeName -> RoleName -> DropCustomReturnTypePermission (b :: BackendType)
-[dcrtpSource] :: DropCustomReturnTypePermission (b :: BackendType) -> SourceName
-[dcrtpName] :: DropCustomReturnTypePermission (b :: BackendType) -> CustomReturnTypeName
-[dcrtpRole] :: DropCustomReturnTypePermission (b :: BackendType) -> RoleName
-runDropSelectCustomReturnTypePermission :: forall b m. (Backend b, CacheRWM m, MetadataM m, MonadError QErr m, HasFeatureFlagChecker m) => DropCustomReturnTypePermission b -> m EncJSON
+--   logical model, as well as the role whose permission we want to drop.
+data DropLogicalModelPermission (b :: BackendType)
+DropLogicalModelPermission :: SourceName -> LogicalModelName -> RoleName -> DropLogicalModelPermission (b :: BackendType)
+[dlmpSource] :: DropLogicalModelPermission (b :: BackendType) -> SourceName
+[dlmpName] :: DropLogicalModelPermission (b :: BackendType) -> LogicalModelName
+[dlmpRole] :: DropLogicalModelPermission (b :: BackendType) -> RoleName
+runDropSelectLogicalModelPermission :: forall b m. (Backend b, CacheRWM m, MetadataM m, MonadError QErr m, HasFeatureFlagChecker m) => DropLogicalModelPermission b -> m EncJSON
 
 -- | TODO: should this cascade and also delete associated permissions?
-dropCustomReturnTypeInMetadata :: forall b. BackendMetadata b => SourceName -> CustomReturnTypeName -> MetadataModifier
-instance GHC.Generics.Generic (Hasura.CustomReturnType.API.CreateCustomReturnTypePermission a b)
-instance GHC.Generics.Generic (Hasura.CustomReturnType.API.DropCustomReturnTypePermission b)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.CustomReturnType.API.TrackCustomReturnType b)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.CustomReturnType.API.TrackCustomReturnType b)
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.CustomReturnType.API.GetCustomReturnType b)
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.CustomReturnType.API.GetCustomReturnType b)
-instance GHC.Show.Show (Hasura.CustomReturnType.API.UntrackCustomReturnType b)
-instance GHC.Classes.Eq (Hasura.CustomReturnType.API.UntrackCustomReturnType b)
-instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.CustomReturnType.API.DropCustomReturnTypePermission b)
-instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.Types.Permission.PermDef b a) => Data.Aeson.Types.FromJSON.FromJSON (Hasura.CustomReturnType.API.CreateCustomReturnTypePermission a b)
-instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.CustomReturnType.API.UntrackCustomReturnType b)
-instance Data.Aeson.Types.ToJSON.ToJSON (Hasura.CustomReturnType.API.UntrackCustomReturnType b)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.CustomReturnType.API.GetCustomReturnType b)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.CustomReturnType.API.GetCustomReturnType b)
-instance Hasura.RQL.Types.Backend.Backend b => Autodocodec.Class.HasCodec (Hasura.CustomReturnType.API.TrackCustomReturnType b)
+dropLogicalModelInMetadata :: forall b. BackendMetadata b => SourceName -> LogicalModelName -> MetadataModifier
+instance GHC.Generics.Generic (Hasura.LogicalModel.API.CreateLogicalModelPermission a b)
+instance GHC.Generics.Generic (Hasura.LogicalModel.API.DropLogicalModelPermission b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.API.TrackLogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.API.TrackLogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.LogicalModel.API.GetLogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.LogicalModel.API.GetLogicalModel b)
+instance GHC.Show.Show (Hasura.LogicalModel.API.UntrackLogicalModel b)
+instance GHC.Classes.Eq (Hasura.LogicalModel.API.UntrackLogicalModel b)
+instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.API.DropLogicalModelPermission b)
+instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.Types.Permission.PermDef b a) => Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.API.CreateLogicalModelPermission a b)
+instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.API.UntrackLogicalModel b)
+instance Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.API.UntrackLogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.LogicalModel.API.GetLogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.LogicalModel.API.GetLogicalModel b)
+instance Hasura.RQL.Types.Backend.Backend b => Autodocodec.Class.HasCodec (Hasura.LogicalModel.API.TrackLogicalModel b)
 
 
 -- | Define and handle v1/metadata API operations to track, untrack, and
@@ -23359,14 +23355,14 @@ module Hasura.NativeQuery.API
 -- | Default implementation of the <tt>track_native_query</tt> request
 --   payload.
 data TrackNativeQuery (b :: BackendType)
-TrackNativeQuery :: SourceName -> NativeQueryName -> Text -> HashMap NativeQueryArgumentName (NullableScalarType b) -> InsOrdHashMap RelName (RelDef (RelManualConfig b)) -> Maybe Text -> CustomReturnTypeName -> TrackNativeQuery (b :: BackendType)
+TrackNativeQuery :: SourceName -> NativeQueryName -> Text -> HashMap NativeQueryArgumentName (NullableScalarType b) -> InsOrdHashMap RelName (RelDef (RelManualConfig b)) -> Maybe Text -> LogicalModelName -> TrackNativeQuery (b :: BackendType)
 [tnqSource] :: TrackNativeQuery (b :: BackendType) -> SourceName
 [tnqRootFieldName] :: TrackNativeQuery (b :: BackendType) -> NativeQueryName
 [tnqCode] :: TrackNativeQuery (b :: BackendType) -> Text
 [tnqArguments] :: TrackNativeQuery (b :: BackendType) -> HashMap NativeQueryArgumentName (NullableScalarType b)
 [tnqArrayRelationships] :: TrackNativeQuery (b :: BackendType) -> InsOrdHashMap RelName (RelDef (RelManualConfig b))
 [tnqDescription] :: TrackNativeQuery (b :: BackendType) -> Maybe Text
-[tnqReturns] :: TrackNativeQuery (b :: BackendType) -> CustomReturnTypeName
+[tnqReturns] :: TrackNativeQuery (b :: BackendType) -> LogicalModelName
 
 -- | API payload for the <tt>get_native_query</tt> endpoint.
 data GetNativeQuery (b :: BackendType)
@@ -24557,7 +24553,7 @@ buildInfoMapM :: (MonadWriter (Seq (Either InconsistentMetadata md)) m, Hashable
 buildInfoMapPreservingMetadata :: (ArrowChoice arr, ArrowDistribute arr, ArrowWriter (Seq (Either InconsistentMetadata md)) arr, Hashable k) => (a -> k) -> (a -> MetadataObject) -> ((e, a) `arr` Maybe b) -> (e, [a]) `arr` HashMap k (b, MetadataObject)
 buildInfoMapPreservingMetadataM :: (MonadWriter (Seq (Either InconsistentMetadata md)) m, Hashable k) => (a -> k) -> (a -> MetadataObject) -> (a -> m (Maybe b)) -> [a] -> m (HashMap k (b, MetadataObject))
 addTableContext :: Backend b => TableName b -> Text -> Text
-addCustomReturnTypeContext :: CustomReturnTypeName -> Text -> Text
+addLogicalModelContext :: LogicalModelName -> Text -> Text
 instance Control.Monad.Trans.Control.MonadBaseControl GHC.Types.IO Hasura.RQL.DDL.Schema.Cache.Common.CacheBuild
 instance Control.Monad.Base.MonadBase GHC.Types.IO Hasura.RQL.DDL.Schema.Cache.Common.CacheBuild
 instance Control.Monad.IO.Class.MonadIO Hasura.RQL.DDL.Schema.Cache.Common.CacheBuild
@@ -24748,7 +24744,7 @@ buildTablePermissions :: forall b m. (MonadError QErr m, MonadWriter (Seq (Eithe
 -- | Create the permission map for a native query based on the select
 --   permissions given in metadata. Compare with
 --   <a>buildTablePermissions</a>.
-buildCustomReturnTypePermissions :: forall b m. (MonadError QErr m, MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m, BackendMetadata b, GetAggregationPredicatesDeps b) => SourceName -> TableCoreCache b -> CustomReturnTypeName -> FieldInfoMap (FieldInfo b) -> InsOrdHashMap RoleName (SelPermDef b) -> OrderedRoles -> m (RolePermInfoMap b)
+buildLogicalModelPermissions :: forall b m. (MonadError QErr m, MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m, BackendMetadata b, GetAggregationPredicatesDeps b) => SourceName -> TableCoreCache b -> LogicalModelName -> FieldInfoMap (FieldInfo b) -> InsOrdHashMap RoleName (SelPermDef b) -> OrderedRoles -> m (RolePermInfoMap b)
 instance GHC.Generics.Generic Hasura.RQL.DDL.Schema.Cache.Permission.OrderedRoles
 instance GHC.Classes.Eq Hasura.RQL.DDL.Schema.Cache.Permission.OrderedRoles
 
@@ -26887,11 +26883,11 @@ RMTestConnectionTemplate :: !AnyBackend TestConnectionTemplate -> RQLMetadataV1
 RMGetNativeQuery :: !AnyBackend GetNativeQuery -> RQLMetadataV1
 RMTrackNativeQuery :: !AnyBackend TrackNativeQuery -> RQLMetadataV1
 RMUntrackNativeQuery :: !AnyBackend UntrackNativeQuery -> RQLMetadataV1
-RMGetCustomReturnType :: !AnyBackend GetCustomReturnType -> RQLMetadataV1
-RMTrackCustomReturnType :: !AnyBackend TrackCustomReturnType -> RQLMetadataV1
-RMUntrackCustomReturnType :: !AnyBackend UntrackCustomReturnType -> RQLMetadataV1
-RMCreateSelectCustomReturnTypePermission :: !AnyBackend (CreateCustomReturnTypePermission SelPerm) -> RQLMetadataV1
-RMDropSelectCustomReturnTypePermission :: !AnyBackend DropCustomReturnTypePermission -> RQLMetadataV1
+RMGetLogicalModel :: !AnyBackend GetLogicalModel -> RQLMetadataV1
+RMTrackLogicalModel :: !AnyBackend TrackLogicalModel -> RQLMetadataV1
+RMUntrackLogicalModel :: !AnyBackend UntrackLogicalModel -> RQLMetadataV1
+RMCreateSelectLogicalModelPermission :: !AnyBackend (CreateLogicalModelPermission SelPerm) -> RQLMetadataV1
+RMDropSelectLogicalModelPermission :: !AnyBackend DropLogicalModelPermission -> RQLMetadataV1
 RMCreateEventTrigger :: !AnyBackend (Unvalidated1 CreateEventTriggerQuery) -> RQLMetadataV1
 RMDeleteEventTrigger :: !AnyBackend DeleteEventTriggerQuery -> RQLMetadataV1
 RMRedeliverEvent :: !AnyBackend RedeliverEventQuery -> RQLMetadataV1
@@ -26998,7 +26994,7 @@ eventTriggerCommands :: forall (b :: BackendType). Backend b => [CommandParser b
 computedFieldCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
 connectionTemplateCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
 nativeQueriesCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-customReturnTypesCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+logicalModelsCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
 
 module Hasura.Backends.MySQL.Instances.API
 instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.MySQL

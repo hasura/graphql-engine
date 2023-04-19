@@ -180,7 +180,7 @@ _mrsSql :: MSSQLRunSQL -&gt; Text
 TableCache 'MSSQL
 FunctionCache 'MSSQL
 NativeQueryCache 'MSSQL
-CustomReturnTypeCache 'MSSQL
+LogicalModelCache 'MSSQL
 SourceConfig 'MSSQL
 SourceName
 ResolvedSourceCustomization
@@ -190,7 +190,7 @@ _siCustomization :: forall (b :: BackendType).
 SourceInfo b -&gt; ResolvedSourceCustomization
 _siQueryTagsConfig :: forall (b :: BackendType). SourceInfo b -&gt; Maybe QueryTagsConfig
 _siConfiguration :: forall (b :: BackendType). SourceInfo b -&gt; SourceConfig b
-_siCustomReturnTypes :: forall (b :: BackendType). SourceInfo b -&gt; CustomReturnTypeCache b
+_siLogicalModels :: forall (b :: BackendType). SourceInfo b -&gt; LogicalModelCache b
 _siNativeQueries :: forall (b :: BackendType). SourceInfo b -&gt; NativeQueryCache b
 _siFunctions :: forall (b :: BackendType). SourceInfo b -&gt; FunctionCache b
 _siTables :: forall (b :: BackendType). SourceInfo b -&gt; TableCache b
@@ -199,7 +199,7 @@ _siDbObjectsIntrospection :: DBObjectsIntrospection 'MSSQL
 _siCustomization :: ResolvedSourceCustomization
 _siQueryTagsConfig :: Maybe QueryTagsConfig
 _siConfiguration :: SourceConfig 'MSSQL
-_siCustomReturnTypes :: CustomReturnTypeCache 'MSSQL
+_siLogicalModels :: LogicalModelCache 'MSSQL
 _siNativeQueries :: NativeQueryCache 'MSSQL
 _siFunctions :: FunctionCache 'MSSQL
 _siTables :: TableCache 'MSSQL

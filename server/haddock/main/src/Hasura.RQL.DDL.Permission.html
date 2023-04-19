@@ -24,7 +24,7 @@
 </span><span id="line-24"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.html#runSetPermComment"><span class="hs-identifier">runSetPermComment</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-25"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.html#PermInfo"><span class="hs-identifier">PermInfo</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-26"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.html#buildPermInfo"><span class="hs-identifier">buildPermInfo</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-27"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.html#buildCustomReturnTypePermInfo"><span class="hs-identifier">buildCustomReturnTypePermInfo</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.html#buildLogicalModelPermInfo"><span class="hs-identifier">buildLogicalModelPermInfo</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-28"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.html#addPermissionToMetadata"><span class="hs-identifier">addPermissionToMetadata</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-29"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#annBoolExp"><span class="hs-identifier">annBoolExp</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-special">)</span><span>
@@ -40,8 +40,8 @@
 </span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier">Data.Sequence</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Seq</span></span><span>
 </span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
 </span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
-</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.CustomReturnType.Types.html"><span class="hs-identifier">Hasura.CustomReturnType.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.CustomReturnType.Types.html#CustomReturnTypeName"><span class="hs-identifier">CustomReturnTypeName</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html"><span class="hs-identifier">Hasura.EncJSON</span></a></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html"><span class="hs-identifier">Hasura.EncJSON</span></a></span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html"><span class="hs-identifier">Hasura.LogicalModel.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier">LogicalModelName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html"><span class="hs-identifier">Hasura.RQL.DDL.Permission.Internal</span></a></span><span>
 </span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp</span></a></span><span>
@@ -448,43 +448,43 @@ SourceName
 </span><a href="#local-6989586621691087141"><span class="hs-identifier hs-var">x3</span></a></span><span> </span><span class="annot"><span class="annottext">DelPerm b
 </span><a href="#local-6989586621691087116"><span class="hs-identifier hs-var">p</span></a></span><span>
 </span><span id="line-236"></span><span>
-</span><span id="line-237"></span><span class="hs-comment">-- | Given the custom return type's definition and the permissions as defined in the</span><span>
-</span><span id="line-238"></span><span class="hs-comment">-- custom return type's metadata, try to construct the permission definition.</span><span>
-</span><span id="line-239"></span><span id="local-6989586621691087555"><span id="local-6989586621691087557"><span id="local-6989586621691087558"><span class="annot"><a href="Hasura.RQL.DDL.Permission.html#buildCustomReturnTypePermInfo"><span class="hs-identifier hs-type">buildCustomReturnTypePermInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-237"></span><span class="hs-comment">-- | Given the logical model's definition and the permissions as defined in the</span><span>
+</span><span id="line-238"></span><span class="hs-comment">-- logical model's metadata, try to construct the permission definition.</span><span>
+</span><span id="line-239"></span><span id="local-6989586621691087555"><span id="local-6989586621691087557"><span id="local-6989586621691087558"><span class="annot"><a href="Hasura.RQL.DDL.Permission.html#buildLogicalModelPermInfo"><span class="hs-identifier hs-type">buildLogicalModelPermInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-240"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691087558"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-241"></span><span>    </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691087557"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-242"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#TableCoreInfoRM"><span class="hs-identifier hs-type">TableCoreInfoRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691087558"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691087557"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-243"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#GetAggregationPredicatesDeps"><span class="hs-identifier hs-type">GetAggregationPredicatesDeps</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691087558"><span class="hs-identifier hs-type">b</span></a></span><span>
 </span><span id="line-244"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-245"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-246"></span><span>  </span><span class="annot"><a href="Hasura.CustomReturnType.Types.html#CustomReturnTypeName"><span class="hs-identifier hs-type">CustomReturnTypeName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-246"></span><span>  </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-247"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfoMap"><span class="hs-identifier hs-type">FieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691087558"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-248"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#PermDefPermission"><span class="hs-identifier hs-type">PermDefPermission</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691087558"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691087555"><span class="hs-identifier hs-type">perm</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-249"></span><span>  </span><span class="annot"><a href="#local-6989586621691087557"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#WithDeps"><span class="hs-identifier hs-type">WithDeps</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Permission.html#PermInfo"><span class="hs-identifier hs-type">PermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691087555"><span class="hs-identifier hs-type">perm</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691087558"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span><span>
-</span><span id="line-250"></span><span id="buildCustomReturnTypePermInfo"><span class="annot"><span class="annottext">buildCustomReturnTypePermInfo :: forall (b :: BackendType) (m :: * -&gt; *) (perm :: BackendType -&gt; *).
+</span><span id="line-250"></span><span id="buildLogicalModelPermInfo"><span class="annot"><span class="annottext">buildLogicalModelPermInfo :: forall (b :: BackendType) (m :: * -&gt; *) (perm :: BackendType -&gt; *).
 (BackendMetadata b, QErrM m, TableCoreInfoRM b m,
  GetAggregationPredicatesDeps b) =&gt;
 SourceName
--&gt; CustomReturnTypeName
+-&gt; LogicalModelName
 -&gt; FieldInfoMap (FieldInfo b)
 -&gt; PermDefPermission b perm
 -&gt; m (WithDeps (PermInfo perm b))
-</span><a href="Hasura.RQL.DDL.Permission.html#buildCustomReturnTypePermInfo"><span class="hs-identifier hs-var hs-var">buildCustomReturnTypePermInfo</span></a></span></span><span> </span><span id="local-6989586621691087111"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621691087111"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621691087110"><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621691087110"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span></span><span> </span><span id="local-6989586621691087109"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="Hasura.RQL.DDL.Permission.html#buildLogicalModelPermInfo"><span class="hs-identifier hs-var hs-var">buildLogicalModelPermInfo</span></a></span></span><span> </span><span id="local-6989586621691087111"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621691087111"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621691087110"><span class="annot"><span class="annottext">LogicalModelName
+</span><a href="#local-6989586621691087110"><span class="hs-identifier hs-var">logicalModelName</span></a></span></span><span> </span><span id="local-6989586621691087109"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
 </span><a href="#local-6989586621691087109"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-251"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#SelPerm%27"><span class="hs-identifier hs-type">SelPerm'</span></a></span><span> </span><span id="local-6989586621691087103"><span class="annot"><span class="annottext">SelPerm b
 </span><a href="#local-6989586621691087103"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *).
 (QErrM m, TableCoreInfoRM b m, BackendMetadata b,
  GetAggregationPredicatesDeps b) =&gt;
 SourceName
--&gt; CustomReturnTypeName
+-&gt; LogicalModelName
 -&gt; FieldInfoMap (FieldInfo b)
 -&gt; SelPerm b
 -&gt; m (WithDeps (SelPermInfo b))
-</span><a href="Hasura.RQL.DDL.Permission.html#buildCustomReturnTypeSelPermInfo"><span class="hs-identifier hs-var">buildCustomReturnTypeSelPermInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621691087111"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621691087110"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="Hasura.RQL.DDL.Permission.html#buildLogicalModelSelPermInfo"><span class="hs-identifier hs-var">buildLogicalModelSelPermInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621691087111"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
+</span><a href="#local-6989586621691087110"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
 </span><a href="#local-6989586621691087109"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">SelPerm b
 </span><a href="#local-6989586621691087103"><span class="hs-identifier hs-var">p</span></a></span><span>
 </span><span id="line-252"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#InsPerm%27"><span class="hs-identifier hs-type">InsPerm'</span></a></span><span> </span><span class="annot"><span class="annottext">InsPerm b
@@ -1175,7 +1175,7 @@ _tciName :: TableName b
 </span><span id="line-421"></span><span class="hs-comment">-- | Given the native query's definition and the permissions as defined in the</span><span>
 </span><span id="line-422"></span><span class="hs-comment">-- native query's metadata, try to construct the @SELECT@ permission</span><span>
 </span><span id="line-423"></span><span class="hs-comment">-- definition.</span><span>
-</span><span id="line-424"></span><span class="annot"><a href="Hasura.RQL.DDL.Permission.html#buildCustomReturnTypeSelPermInfo"><span class="hs-identifier hs-type">buildCustomReturnTypeSelPermInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-424"></span><span class="annot"><a href="Hasura.RQL.DDL.Permission.html#buildLogicalModelSelPermInfo"><span class="hs-identifier hs-type">buildLogicalModelSelPermInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-425"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621691087550"><span class="annot"><a href="#local-6989586621691087550"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621691087551"><span class="annot"><a href="#local-6989586621691087551"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
 </span><span id="line-426"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691087551"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-427"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#TableCoreInfoRM"><span class="hs-identifier hs-type">TableCoreInfoRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691087550"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691087551"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
@@ -1183,21 +1183,21 @@ _tciName :: TableName b
 </span><span id="line-429"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#GetAggregationPredicatesDeps"><span class="hs-identifier hs-type">GetAggregationPredicatesDeps</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691087550"><span class="hs-identifier hs-type">b</span></a></span><span>
 </span><span id="line-430"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-431"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-432"></span><span>  </span><span class="annot"><a href="Hasura.CustomReturnType.Types.html#CustomReturnTypeName"><span class="hs-identifier hs-type">CustomReturnTypeName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-432"></span><span>  </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-433"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfoMap"><span class="hs-identifier hs-type">FieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691087550"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-434"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#SelPerm"><span class="hs-identifier hs-type">SelPerm</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691087550"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-435"></span><span>  </span><span class="annot"><a href="#local-6989586621691087551"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#WithDeps"><span class="hs-identifier hs-type">WithDeps</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#SelPermInfo"><span class="hs-identifier hs-type">SelPermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691087550"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-436"></span><span id="buildCustomReturnTypeSelPermInfo"><span class="annot"><span class="annottext">buildCustomReturnTypeSelPermInfo :: forall (b :: BackendType) (m :: * -&gt; *).
+</span><span id="line-436"></span><span id="buildLogicalModelSelPermInfo"><span class="annot"><span class="annottext">buildLogicalModelSelPermInfo :: forall (b :: BackendType) (m :: * -&gt; *).
 (QErrM m, TableCoreInfoRM b m, BackendMetadata b,
  GetAggregationPredicatesDeps b) =&gt;
 SourceName
--&gt; CustomReturnTypeName
+-&gt; LogicalModelName
 -&gt; FieldInfoMap (FieldInfo b)
 -&gt; SelPerm b
 -&gt; m (WithDeps (SelPermInfo b))
-</span><a href="Hasura.RQL.DDL.Permission.html#buildCustomReturnTypeSelPermInfo"><span class="hs-identifier hs-var hs-var">buildCustomReturnTypeSelPermInfo</span></a></span></span><span> </span><span id="local-6989586621691086683"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621691086683"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621691086682"><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621691086682"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span></span><span> </span><span id="local-6989586621691086681"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="Hasura.RQL.DDL.Permission.html#buildLogicalModelSelPermInfo"><span class="hs-identifier hs-var hs-var">buildLogicalModelSelPermInfo</span></a></span></span><span> </span><span id="local-6989586621691086683"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621691086683"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621691086682"><span class="annot"><span class="annottext">LogicalModelName
+</span><a href="#local-6989586621691086682"><span class="hs-identifier hs-var">logicalModelName</span></a></span></span><span> </span><span id="local-6989586621691086681"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
 </span><a href="#local-6989586621691086681"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span></span><span> </span><span id="local-6989586621691086680"><span class="annot"><span class="annottext">SelPerm b
 </span><a href="#local-6989586621691086680"><span class="hs-identifier hs-var">sp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
 </span><a href="Hasura.Base.Error.html#withPathK"><span class="hs-identifier hs-var">withPathK</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -1227,13 +1227,13 @@ FieldInfoMap (FieldInfo backend) -&gt; [ColumnInfo backend]
 (QErrM m, TableCoreInfoRM b m, BackendMetadata b,
  GetAggregationPredicatesDeps b) =&gt;
 SourceName
--&gt; CustomReturnTypeName
+-&gt; LogicalModelName
 -&gt; FieldInfoMap (FieldInfo b)
 -&gt; BoolExp b
 -&gt; m (AnnBoolExpPartialSQL b, Seq SchemaDependency)
-</span><a href="Hasura.RQL.DDL.Permission.Internal.html#procCustomReturnTypeBoolExp"><span class="hs-identifier hs-var">procCustomReturnTypeBoolExp</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621691086683"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621691086682"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#procLogicalModelBoolExp"><span class="hs-identifier hs-var">procLogicalModelBoolExp</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621691086683"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
+</span><a href="#local-6989586621691086682"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
 </span><a href="#local-6989586621691086681"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). SelPerm b -&gt; BoolExp b
 </span><a href="Hasura.RQL.Types.Permission.html#spFilter"><span class="hs-identifier hs-var">spFilter</span></a></span><span> </span><span class="annot"><span class="annottext">SelPerm b
 </span><a href="#local-6989586621691086680"><span class="hs-identifier hs-var">sp</span></a></span><span class="hs-special">)</span><span>
@@ -1250,24 +1250,21 @@ SourceName
 </span><span id="line-452"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Seq a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier hs-var">Seq.singleton</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Backend b =&gt;
-SourceName -&gt; CustomReturnTypeName -&gt; SchemaDependency
-</span><a href="Hasura.RQL.Types.SchemaCache.html#mkCustomReturnTypeParentDep"><span class="hs-identifier hs-var">mkCustomReturnTypeParentDep</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691087550"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621691086683"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621691086682"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+SourceName -&gt; LogicalModelName -&gt; SchemaDependency
+</span><a href="Hasura.RQL.Types.SchemaCache.html#mkLogicalModelParentDep"><span class="hs-identifier hs-var">mkLogicalModelParentDep</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691087550"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621691086683"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
+</span><a href="#local-6989586621691086682"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-453"></span><span>            </span><span class="annot"><span class="annottext">Seq SchemaDependency
 </span><a href="#local-6989586621691086677"><span class="hs-identifier hs-var">boolExpDeps</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-454"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Backend b =&gt;
 DependencyReason
--&gt; SourceName
--&gt; CustomReturnTypeName
--&gt; Column b
--&gt; SchemaDependency
-</span><a href="Hasura.RQL.Types.SchemaCache.html#mkCustomReturnTypeColDep"><span class="hs-identifier hs-var">mkCustomReturnTypeColDep</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691087550"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">DependencyReason
+-&gt; SourceName -&gt; LogicalModelName -&gt; Column b -&gt; SchemaDependency
+</span><a href="Hasura.RQL.Types.SchemaCache.html#mkLogicalModelColDep"><span class="hs-identifier hs-var">mkLogicalModelColDep</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691087550"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">DependencyReason
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#DRUntyped"><span class="hs-identifier hs-var">DRUntyped</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621691086683"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
-</span><a href="#local-6989586621691086682"><span class="hs-identifier hs-var">customReturnTypeName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621691086683"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
+</span><a href="#local-6989586621691086682"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-455"></span><span>              </span><span class="annot"><span class="annottext">forall a. [a] -&gt; Seq a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier hs-var">Seq.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">[Column b]

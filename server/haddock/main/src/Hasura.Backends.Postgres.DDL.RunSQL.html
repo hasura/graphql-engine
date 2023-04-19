@@ -619,7 +619,7 @@ SQLGenCtx -&gt; SourceName -&gt; Bool -&gt; TxAccess -&gt; TxET QErr m a -&gt; m
 TableCache ('Postgres pgKind)
 FunctionCache ('Postgres pgKind)
 NativeQueryCache ('Postgres pgKind)
-CustomReturnTypeCache ('Postgres pgKind)
+LogicalModelCache ('Postgres pgKind)
 SourceConfig ('Postgres pgKind)
 SourceName
 ResolvedSourceCustomization
@@ -629,7 +629,7 @@ _siCustomization :: forall (b :: BackendType).
 SourceInfo b -&gt; ResolvedSourceCustomization
 _siQueryTagsConfig :: forall (b :: BackendType). SourceInfo b -&gt; Maybe QueryTagsConfig
 _siConfiguration :: forall (b :: BackendType). SourceInfo b -&gt; SourceConfig b
-_siCustomReturnTypes :: forall (b :: BackendType). SourceInfo b -&gt; CustomReturnTypeCache b
+_siLogicalModels :: forall (b :: BackendType). SourceInfo b -&gt; LogicalModelCache b
 _siNativeQueries :: forall (b :: BackendType). SourceInfo b -&gt; NativeQueryCache b
 _siFunctions :: forall (b :: BackendType). SourceInfo b -&gt; FunctionCache b
 _siTables :: forall (b :: BackendType). SourceInfo b -&gt; TableCache b
@@ -638,7 +638,7 @@ _siDbObjectsIntrospection :: DBObjectsIntrospection ('Postgres pgKind)
 _siCustomization :: ResolvedSourceCustomization
 _siQueryTagsConfig :: Maybe QueryTagsConfig
 _siConfiguration :: SourceConfig ('Postgres pgKind)
-_siCustomReturnTypes :: CustomReturnTypeCache ('Postgres pgKind)
+_siLogicalModels :: LogicalModelCache ('Postgres pgKind)
 _siNativeQueries :: NativeQueryCache ('Postgres pgKind)
 _siFunctions :: FunctionCache ('Postgres pgKind)
 _siTables :: TableCache ('Postgres pgKind)

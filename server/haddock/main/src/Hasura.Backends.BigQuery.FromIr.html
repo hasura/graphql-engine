@@ -2079,9 +2079,9 @@ Monad m =&gt;
 </span><a href="Hasura.Backends.BigQuery.FromIr.html#fromNativeQuery"><span class="hs-identifier hs-var hs-var">fromNativeQuery</span></a></span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.IR.html#NativeQuery"><span class="hs-identifier hs-type">NativeQuery</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691072684"><span id="local-6989586621691072685"><span id="local-6989586621691072686"><span id="local-6989586621691072687"><span class="annot"><span class="annottext">HashMap NativeQueryArgumentName (ColumnValue 'BigQuery)
 NativeQueryName
 InterpolatedQuery Expression
-CustomReturnType 'BigQuery
-nqReturnType :: forall (b :: BackendType) field.
-NativeQuery b field -&gt; CustomReturnType b
+LogicalModel 'BigQuery
+nqLogicalModel :: forall (b :: BackendType) field.
+NativeQuery b field -&gt; LogicalModel b
 nqArgs :: forall (b :: BackendType) field.
 NativeQuery b field
 -&gt; HashMap NativeQueryArgumentName (ColumnValue b)
@@ -2089,11 +2089,11 @@ nqInterpolatedQuery :: forall (b :: BackendType) field.
 NativeQuery b field -&gt; InterpolatedQuery field
 nqRootFieldName :: forall (b :: BackendType) field.
 NativeQuery b field -&gt; NativeQueryName
-nqReturnType :: CustomReturnType 'BigQuery
+nqLogicalModel :: LogicalModel 'BigQuery
 nqArgs :: HashMap NativeQueryArgumentName (ColumnValue 'BigQuery)
 nqInterpolatedQuery :: InterpolatedQuery Expression
 nqRootFieldName :: NativeQueryName
-</span><a href="Hasura.NativeQuery.IR.html#nqReturnType"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
+</span><a href="Hasura.NativeQuery.IR.html#nqLogicalModel"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
 ReaderT
   FromIrReader
   (StateT

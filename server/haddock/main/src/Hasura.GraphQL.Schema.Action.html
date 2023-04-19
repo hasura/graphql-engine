@@ -1215,7 +1215,7 @@ _atrName :: AnnotatedTypeRelationship -&gt; RelationshipName
 </span><span id="line-314"></span><span>      </span><span class="hs-comment">--  where 'x' is the 'reference name' of a join field, i.e, how a join</span><span>
 </span><span id="line-315"></span><span>      </span><span class="hs-comment">--         field is referenced in the remote relationships definition</span><span>
 </span><span id="line-316"></span><span>      </span><span class="hs-comment">--  while 'y' is the join field.</span><span>
-</span><span id="line-317"></span><span>      </span><span class="hs-comment">--  In case of custom types, they are pretty much the same.</span><span>
+</span><span id="line-317"></span><span>      </span><span class="hs-comment">--  In case of logical models, they are pretty much the same.</span><span>
 </span><span id="line-318"></span><span>      </span><span class="hs-comment">--  In case of databases, 'y' could be a computed field with session variables etc.</span><span>
 </span><span id="line-319"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691074799"><span class="annot"><span class="annottext">lhsJoinFields :: HashMap FieldName Name
 </span><a href="#local-6989586621691074799"><span class="hs-identifier hs-var hs-var">lhsJoinFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
@@ -1244,7 +1244,7 @@ _atrName :: AnnotatedTypeRelationship -&gt; RelationshipName
 </span><span id="line-323"></span><span>                  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-type">ColumnScalar</span></a></span><span> </span><span id="local-6989586621691074787"><span class="annot"><span class="annottext">ScalarType ('Postgres 'Vanilla)
 </span><a href="#local-6989586621691074787"><span class="hs-identifier hs-var">scalar</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType ('Postgres 'Vanilla)
 </span><a href="#local-6989586621691074787"><span class="hs-identifier hs-var">scalar</span></a></span><span>
-</span><span id="line-324"></span><span>                  </span><span class="hs-comment">-- We don't currently allow enum types as fields of custom types so they should not appear here.</span><span>
+</span><span id="line-324"></span><span>                  </span><span class="hs-comment">-- We don't currently allow enum types as fields of logical models so they should not appear here.</span><span>
 </span><span id="line-325"></span><span>                  </span><span class="hs-comment">-- If we do allow them in future then they would be represented in Postgres as Text.</span><span>
 </span><span id="line-326"></span><span>                  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnEnumReference"><span class="hs-identifier hs-type">ColumnEnumReference</span></a></span><span> </span><span class="annot"><span class="annottext">EnumReference ('Postgres 'Vanilla)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PGScalarType

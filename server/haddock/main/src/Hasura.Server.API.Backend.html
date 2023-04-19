@@ -23,7 +23,7 @@
 </span><span id="line-23"></span><span>    </span><span class="annot"><a href="Hasura.Server.API.Backend.html#computedFieldCommands"><span class="hs-identifier">computedFieldCommands</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-24"></span><span>    </span><span class="annot"><a href="Hasura.Server.API.Backend.html#connectionTemplateCommands"><span class="hs-identifier">connectionTemplateCommands</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-25"></span><span>    </span><span class="annot"><a href="Hasura.Server.API.Backend.html#nativeQueriesCommands"><span class="hs-identifier">nativeQueriesCommands</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-26"></span><span>    </span><span class="annot"><a href="Hasura.Server.API.Backend.html#customReturnTypesCommands"><span class="hs-identifier">customReturnTypesCommands</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><a href="Hasura.Server.API.Backend.html#logicalModelsCommands"><span class="hs-identifier">logicalModelsCommands</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-27"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-28"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-29"></span><span>
@@ -647,16 +647,16 @@ i b -&gt; AnyBackend i
 </span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691170342"><span class="hs-identifier hs-type">b</span></a></span><span>
 </span><span id="line-177"></span><span>  </span><span class="hs-special">]</span><span>
 </span><span id="line-178"></span><span>
-</span><span id="line-179"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#customReturnTypesCommands"><span class="hs-identifier hs-type">customReturnTypesCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691170324"><span class="annot"><a href="#local-6989586621691170324"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691170324"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691170324"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-180"></span><span id="customReturnTypesCommands"><span class="annot"><span class="annottext">customReturnTypesCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
-</span><a href="Hasura.Server.API.Backend.html#customReturnTypesCommands"><span class="hs-identifier hs-var hs-var">customReturnTypesCommands</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-179"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#logicalModelsCommands"><span class="hs-identifier hs-type">logicalModelsCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691170324"><span class="annot"><a href="#local-6989586621691170324"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691170324"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691170324"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-180"></span><span id="logicalModelsCommands"><span class="annot"><span class="annottext">logicalModelsCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
+</span><a href="Hasura.Server.API.Backend.html#logicalModelsCommands"><span class="hs-identifier hs-var hs-var">logicalModelsCommands</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-181"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;get_custom_return_type&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend GetCustomReturnType -&gt; RQLMetadataV1
-</span><a href="Hasura.Server.API.Metadata.Types.html#RMGetCustomReturnType"><span class="hs-identifier hs-var">RMGetCustomReturnType</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-string">&quot;get_logical_model&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend GetLogicalModel -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMGetLogicalModel"><span class="hs-identifier hs-var">RMGetLogicalModel</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
@@ -665,9 +665,9 @@ i b -&gt; AnyBackend i
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;track_custom_return_type&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend TrackCustomReturnType -&gt; RQLMetadataV1
-</span><a href="Hasura.Server.API.Metadata.Types.html#RMTrackCustomReturnType"><span class="hs-identifier hs-var">RMTrackCustomReturnType</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-string">&quot;track_logical_model&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend TrackLogicalModel -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMTrackLogicalModel"><span class="hs-identifier hs-var">RMTrackLogicalModel</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
@@ -676,9 +676,9 @@ i b -&gt; AnyBackend i
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;untrack_custom_return_type&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend UntrackCustomReturnType -&gt; RQLMetadataV1
-</span><a href="Hasura.Server.API.Metadata.Types.html#RMUntrackCustomReturnType"><span class="hs-identifier hs-var">RMUntrackCustomReturnType</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-string">&quot;untrack_logical_model&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend UntrackLogicalModel -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMUntrackLogicalModel"><span class="hs-identifier hs-var">RMUntrackLogicalModel</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
@@ -687,10 +687,9 @@ i b -&gt; AnyBackend i
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;create_custom_return_type_select_permission&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend (CreateCustomReturnTypePermission SelPerm)
--&gt; RQLMetadataV1
-</span><a href="Hasura.Server.API.Metadata.Types.html#RMCreateSelectCustomReturnTypePermission"><span class="hs-identifier hs-var">RMCreateSelectCustomReturnTypePermission</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-string">&quot;create_logical_model_select_permission&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend (CreateLogicalModelPermission SelPerm) -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMCreateSelectLogicalModelPermission"><span class="hs-identifier hs-var">RMCreateSelectLogicalModelPermission</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
@@ -699,9 +698,9 @@ i b -&gt; AnyBackend i
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;drop_custom_return_type_select_permission&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend DropCustomReturnTypePermission -&gt; RQLMetadataV1
-</span><a href="Hasura.Server.API.Metadata.Types.html#RMDropSelectCustomReturnTypePermission"><span class="hs-identifier hs-var">RMDropSelectCustomReturnTypePermission</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-string">&quot;drop_logical_model_select_permission&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend DropLogicalModelPermission -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMDropSelectLogicalModelPermission"><span class="hs-identifier hs-var">RMDropSelectLogicalModelPermission</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i

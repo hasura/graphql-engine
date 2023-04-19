@@ -199,12 +199,12 @@ SourceName -&gt; m [TableName]
 (MonadIO m, MonadError QErr m) =&gt;
 Environment
 -&gt; SourceConnConfiguration 'MSSQL
--&gt; CustomReturnTypeMetadata 'MSSQL
+-&gt; LogicalModelMetadata 'MSSQL
 -&gt; NativeQueryMetadata 'MSSQL
 -&gt; m ()
 </span><a href="Hasura.RQL.Types.Metadata.Backend.html#validateNativeQuery"><span class="hs-identifier hs-var hs-var hs-var hs-var">validateNativeQuery</span></a></span></span><span> </span><span class="annot"><span class="annottext">Environment
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceConnConfiguration 'MSSQL
-</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeMetadata 'MSSQL
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">LogicalModelMetadata 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">NativeQueryMetadata 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- for now, all queries are valid</span><span>

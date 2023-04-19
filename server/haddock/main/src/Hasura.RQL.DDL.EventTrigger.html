@@ -2267,7 +2267,7 @@ AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 TableCache b
 FunctionCache b
 NativeQueryCache b
-CustomReturnTypeCache b
+LogicalModelCache b
 SourceConfig b
 SourceName
 ResolvedSourceCustomization
@@ -2276,7 +2276,7 @@ _siDbObjectsIntrospection :: forall (b :: BackendType). SourceInfo b -&gt; DBObj
 _siCustomization :: forall (b :: BackendType).
 SourceInfo b -&gt; ResolvedSourceCustomization
 _siQueryTagsConfig :: forall (b :: BackendType). SourceInfo b -&gt; Maybe QueryTagsConfig
-_siCustomReturnTypes :: forall (b :: BackendType). SourceInfo b -&gt; CustomReturnTypeCache b
+_siLogicalModels :: forall (b :: BackendType). SourceInfo b -&gt; LogicalModelCache b
 _siNativeQueries :: forall (b :: BackendType). SourceInfo b -&gt; NativeQueryCache b
 _siFunctions :: forall (b :: BackendType). SourceInfo b -&gt; FunctionCache b
 _siTables :: forall (b :: BackendType). SourceInfo b -&gt; TableCache b
@@ -2285,7 +2285,7 @@ _siDbObjectsIntrospection :: DBObjectsIntrospection b
 _siCustomization :: ResolvedSourceCustomization
 _siQueryTagsConfig :: Maybe QueryTagsConfig
 _siConfiguration :: SourceConfig b
-_siCustomReturnTypes :: CustomReturnTypeCache b
+_siLogicalModels :: LogicalModelCache b
 _siNativeQueries :: NativeQueryCache b
 _siFunctions :: FunctionCache b
 _siTables :: TableCache b
@@ -2334,7 +2334,7 @@ AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 TableCache b
 FunctionCache b
 NativeQueryCache b
-CustomReturnTypeCache b
+LogicalModelCache b
 SourceConfig b
 SourceName
 ResolvedSourceCustomization
@@ -2343,7 +2343,7 @@ _siDbObjectsIntrospection :: DBObjectsIntrospection b
 _siCustomization :: ResolvedSourceCustomization
 _siQueryTagsConfig :: Maybe QueryTagsConfig
 _siConfiguration :: SourceConfig b
-_siCustomReturnTypes :: CustomReturnTypeCache b
+_siLogicalModels :: LogicalModelCache b
 _siNativeQueries :: NativeQueryCache b
 _siFunctions :: FunctionCache b
 _siTables :: TableCache b
@@ -2352,7 +2352,7 @@ _siDbObjectsIntrospection :: forall (b :: BackendType). SourceInfo b -&gt; DBObj
 _siCustomization :: forall (b :: BackendType).
 SourceInfo b -&gt; ResolvedSourceCustomization
 _siQueryTagsConfig :: forall (b :: BackendType). SourceInfo b -&gt; Maybe QueryTagsConfig
-_siCustomReturnTypes :: forall (b :: BackendType). SourceInfo b -&gt; CustomReturnTypeCache b
+_siLogicalModels :: forall (b :: BackendType). SourceInfo b -&gt; LogicalModelCache b
 _siNativeQueries :: forall (b :: BackendType). SourceInfo b -&gt; NativeQueryCache b
 _siFunctions :: forall (b :: BackendType). SourceInfo b -&gt; FunctionCache b
 _siTables :: forall (b :: BackendType). SourceInfo b -&gt; TableCache b

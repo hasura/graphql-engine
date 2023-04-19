@@ -265,8 +265,7 @@ NativeQueryInfo 'MSSQL
               (RemoteRelationshipField UnpreparedValue)
               (UnpreparedValue 'MSSQL))))
 </span><a href="Hasura.GraphQL.Schema.Backend.html#buildNativeQueryRootFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildNativeQueryRootFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
-(MonadBuildSchema b r m n,
- BackendCustomReturnTypeSelectSchema b) =&gt;
+(MonadBuildSchema b r m n, BackendLogicalModelSelectSchema b) =&gt;
 NativeQueryInfo b
 -&gt; SchemaT
      r
@@ -529,28 +528,28 @@ TableInfo b
 -&gt; SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 </span><a href="Hasura.GraphQL.Schema.Select.html#defaultTableSelectionSet"><span class="hs-identifier hs-var">defaultTableSelectionSet</span></a></span><span>
 </span><span id="line-102"></span><span>
-</span><span id="line-103"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendCustomReturnTypeSelectSchema"><span class="hs-identifier hs-type">BackendCustomReturnTypeSelectSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-104"></span><span>  </span><span id="local-6989586621691067241"><span class="annot"><span class="annottext">customReturnTypeArguments :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-103"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendLogicalModelSelectSchema"><span class="hs-identifier hs-type">BackendLogicalModelSelectSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-104"></span><span>  </span><span id="local-6989586621691067241"><span class="annot"><span class="annottext">logicalModelArguments :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSourceSchema 'MSSQL r m n =&gt;
-CustomReturnTypeInfo 'MSSQL
+LogicalModelInfo 'MSSQL
 -&gt; SchemaT
      r
      m
      (InputFieldsParser n (SelectArgsG 'MSSQL (UnpreparedValue 'MSSQL)))
-</span><a href="Hasura.GraphQL.Schema.Backend.html#customReturnTypeArguments"><span class="hs-identifier hs-var hs-var hs-var hs-var">customReturnTypeArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><a href="Hasura.GraphQL.Schema.Backend.html#logicalModelArguments"><span class="hs-identifier hs-var hs-var hs-var hs-var">logicalModelArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 (MonadBuildSchema b r m n, AggregationPredicatesSchema b) =&gt;
-CustomReturnTypeInfo b
+LogicalModelInfo b
 -&gt; SchemaT r m (InputFieldsParser n (SelectArgs b))
-</span><a href="Hasura.GraphQL.Schema.Select.html#defaultCustomReturnTypeArgs"><span class="hs-identifier hs-var">defaultCustomReturnTypeArgs</span></a></span><span>
-</span><span id="line-105"></span><span>  </span><span id="local-6989586621691067235"><span class="annot"><span class="annottext">customReturnTypeSelectionSet :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><a href="Hasura.GraphQL.Schema.Select.html#defaultLogicalModelArgs"><span class="hs-identifier hs-var">defaultLogicalModelArgs</span></a></span><span>
+</span><span id="line-105"></span><span>  </span><span id="local-6989586621691067235"><span class="annot"><span class="annottext">logicalModelSelectionSet :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSourceSchema 'MSSQL r m n =&gt;
-CustomReturnTypeInfo 'MSSQL
+LogicalModelInfo 'MSSQL
 -&gt; SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields 'MSSQL)))
-</span><a href="Hasura.GraphQL.Schema.Backend.html#customReturnTypeSelectionSet"><span class="hs-identifier hs-var hs-var hs-var hs-var">customReturnTypeSelectionSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><a href="Hasura.GraphQL.Schema.Backend.html#logicalModelSelectionSet"><span class="hs-identifier hs-var hs-var hs-var hs-var">logicalModelSelectionSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema b r m n =&gt;
-CustomReturnTypeInfo b
+LogicalModelInfo b
 -&gt; SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
-</span><a href="Hasura.GraphQL.Schema.Select.html#defaultCustomReturnTypeSelectionSet"><span class="hs-identifier hs-var">defaultCustomReturnTypeSelectionSet</span></a></span><span>
+</span><a href="Hasura.GraphQL.Schema.Select.html#defaultLogicalModelSelectionSet"><span class="hs-identifier hs-var">defaultLogicalModelSelectionSet</span></a></span><span>
 </span><span id="line-106"></span><span>
 </span><span id="line-107"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendUpdateOperatorsSchema"><span class="hs-identifier hs-type">BackendUpdateOperatorsSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-108"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="UpdateOperators"><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#UpdateOperators"><span class="hs-identifier hs-var">UpdateOperators</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Update.html#UpdateOperator"><span class="hs-identifier hs-type">UpdateOperator</span></a></span><span>

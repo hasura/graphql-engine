@@ -4,7 +4,7 @@
 </span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-5"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-6"></span><span>
-</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.CustomReturnType.IR.html"><span class="hs-identifier">Hasura.CustomReturnType.IR</span></a></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.IR.html"><span class="hs-identifier">Hasura.LogicalModel.IR</span></a></span><span>
 </span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html"><span class="hs-identifier">Hasura.NativeQuery.Metadata</span></a></span><span>
 </span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
@@ -26,9 +26,9 @@ NativeQuery b field
 -&gt; HashMap NativeQueryArgumentName (ColumnValue b)
 </span><a href="Hasura.NativeQuery.IR.html#nqArgs"><span class="hs-identifier hs-var hs-var">nqArgs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier hs-type">NativeQueryArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">ColumnValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690881432"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-21"></span><span>    </span><span class="hs-comment">-- | The return type of the native query</span><span>
-</span><span id="line-22"></span><span>    </span><span id="nqReturnType"><span class="annot"><span class="annottext">forall (b :: BackendType) field.
-NativeQuery b field -&gt; CustomReturnType b
-</span><a href="Hasura.NativeQuery.IR.html#nqReturnType"><span class="hs-identifier hs-var hs-var">nqReturnType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.CustomReturnType.IR.html#CustomReturnType"><span class="hs-identifier hs-type">CustomReturnType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690881432"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-22"></span><span>    </span><span id="nqLogicalModel"><span class="annot"><span class="annottext">forall (b :: BackendType) field.
+NativeQuery b field -&gt; LogicalModel b
+</span><a href="Hasura.NativeQuery.IR.html#nqLogicalModel"><span class="hs-identifier hs-var hs-var">nqLogicalModel</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.IR.html#LogicalModel"><span class="hs-identifier hs-type">LogicalModel</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690881432"><span class="hs-identifier hs-type">b</span></a></span><span>
 </span><span id="line-23"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690881301"><span id="local-6989586621690881305"><span class="annot"><span class="annottext">forall a b. a -&gt; NativeQuery b b -&gt; NativeQuery b a
 forall a b. (a -&gt; b) -&gt; NativeQuery b a -&gt; NativeQuery b b

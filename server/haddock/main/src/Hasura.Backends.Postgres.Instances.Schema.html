@@ -843,11 +843,11 @@ TableInfo b
 </span><span id="line-286"></span><span>  </span><span id="local-6989586621691062782"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.Schema.html#PostgresSchema"><span class="hs-identifier hs-type">PostgresSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691062782"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-287"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691062782"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-288"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-289"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendCustomReturnTypeSelectSchema"><span class="hs-identifier hs-type">BS.BackendCustomReturnTypeSelectSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691062782"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-289"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendLogicalModelSelectSchema"><span class="hs-identifier hs-type">BS.BackendLogicalModelSelectSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691062782"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-290"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-291"></span><span>  </span><span id="local-6989586621691061852"><span class="annot"><span class="annottext">customReturnTypeArguments :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-291"></span><span>  </span><span id="local-6989586621691061852"><span class="annot"><span class="annottext">logicalModelArguments :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSourceSchema ('Postgres pgKind) r m n =&gt;
-CustomReturnTypeInfo ('Postgres pgKind)
+LogicalModelInfo ('Postgres pgKind)
 -&gt; SchemaT
      r
      m
@@ -855,21 +855,21 @@ CustomReturnTypeInfo ('Postgres pgKind)
         n
         (SelectArgsG
            ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
-</span><a href="Hasura.GraphQL.Schema.Backend.html#customReturnTypeArguments"><span class="hs-identifier hs-var hs-var hs-var hs-var">customReturnTypeArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><a href="Hasura.GraphQL.Schema.Backend.html#logicalModelArguments"><span class="hs-identifier hs-var hs-var hs-var hs-var">logicalModelArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 (MonadBuildSchema b r m n, AggregationPredicatesSchema b) =&gt;
-CustomReturnTypeInfo b
+LogicalModelInfo b
 -&gt; SchemaT r m (InputFieldsParser n (SelectArgs b))
-</span><a href="Hasura.GraphQL.Schema.Select.html#defaultCustomReturnTypeArgs"><span class="hs-identifier hs-var">defaultCustomReturnTypeArgs</span></a></span><span>
-</span><span id="line-292"></span><span>  </span><span id="local-6989586621691061846"><span class="annot"><span class="annottext">customReturnTypeSelectionSet :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><a href="Hasura.GraphQL.Schema.Select.html#defaultLogicalModelArgs"><span class="hs-identifier hs-var">defaultLogicalModelArgs</span></a></span><span>
+</span><span id="line-292"></span><span>  </span><span id="local-6989586621691061846"><span class="annot"><span class="annottext">logicalModelSelectionSet :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSourceSchema ('Postgres pgKind) r m n =&gt;
-CustomReturnTypeInfo ('Postgres pgKind)
+LogicalModelInfo ('Postgres pgKind)
 -&gt; SchemaT
      r m (Maybe (Parser 'Output n (AnnotatedFields ('Postgres pgKind))))
-</span><a href="Hasura.GraphQL.Schema.Backend.html#customReturnTypeSelectionSet"><span class="hs-identifier hs-var hs-var hs-var hs-var">customReturnTypeSelectionSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><a href="Hasura.GraphQL.Schema.Backend.html#logicalModelSelectionSet"><span class="hs-identifier hs-var hs-var hs-var hs-var">logicalModelSelectionSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema b r m n =&gt;
-CustomReturnTypeInfo b
+LogicalModelInfo b
 -&gt; SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
-</span><a href="Hasura.GraphQL.Schema.Select.html#defaultCustomReturnTypeSelectionSet"><span class="hs-identifier hs-var">defaultCustomReturnTypeSelectionSet</span></a></span><span>
+</span><a href="Hasura.GraphQL.Schema.Select.html#defaultLogicalModelSelectionSet"><span class="hs-identifier hs-var">defaultLogicalModelSelectionSet</span></a></span><span>
 </span><span id="line-293"></span><span>
 </span><span id="line-294"></span><span class="hs-keyword">instance</span><span>
 </span><span id="line-295"></span><span>  </span><span id="local-6989586621691062853"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691062853"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
@@ -1208,8 +1208,7 @@ NativeQueryInfo ('Postgres pgKind)
               (RemoteRelationshipField UnpreparedValue)
               (UnpreparedValue ('Postgres pgKind)))))
 </span><a href="Hasura.GraphQL.Schema.Backend.html#buildNativeQueryRootFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildNativeQueryRootFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
-(MonadBuildSchema b r m n,
- BackendCustomReturnTypeSelectSchema b) =&gt;
+(MonadBuildSchema b r m n, BackendLogicalModelSelectSchema b) =&gt;
 NativeQueryInfo b
 -&gt; SchemaT
      r

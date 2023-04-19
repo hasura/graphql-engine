@@ -761,7 +761,7 @@ BoolExpResolver ('Postgres pgKind) m v
 (MonadIO m, MonadError QErr m) =&gt;
 Environment
 -&gt; SourceConnConfiguration ('Postgres pgKind)
--&gt; CustomReturnTypeMetadata ('Postgres pgKind)
+-&gt; LogicalModelMetadata ('Postgres pgKind)
 -&gt; NativeQueryMetadata ('Postgres pgKind)
 -&gt; m ()
 </span><a href="Hasura.RQL.Types.Metadata.Backend.html#validateNativeQuery"><span class="hs-identifier hs-var hs-var hs-var hs-var">validateNativeQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (pgKind :: PostgresKind).
@@ -769,7 +769,7 @@ Environment
 InsOrdHashMap PGScalarType Oid
 -&gt; Environment
 -&gt; PostgresConnConfiguration
--&gt; CustomReturnTypeMetadata ('Postgres pgKind)
+-&gt; LogicalModelMetadata ('Postgres pgKind)
 -&gt; NativeQueryMetadata ('Postgres pgKind)
 -&gt; m ()
 </span><a href="Hasura.Backends.Postgres.Instances.NativeQueries.html#validateNativeQuery"><span class="hs-identifier hs-var">Postgres.validateNativeQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind).

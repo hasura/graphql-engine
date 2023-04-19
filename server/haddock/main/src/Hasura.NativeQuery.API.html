@@ -21,9 +21,9 @@
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.HashMap.Strict.InsOrd.Extended.html"><span class="hs-identifier">Data.HashMap.Strict.InsOrd.Extended</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">InsOrd</span></span><span>
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier">toTxt</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator">(&lt;&lt;&gt;)</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
-</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.CustomReturnType.API.html"><span class="hs-identifier">Hasura.CustomReturnType.API</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.CustomReturnType.API.html#getCustomTypes"><span class="hs-identifier">getCustomTypes</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.CustomReturnType.Metadata.html"><span class="hs-identifier">Hasura.CustomReturnType.Metadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.CustomReturnType.Types.html#CustomReturnTypeName"><span class="hs-identifier">CustomReturnTypeName</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html"><span class="hs-identifier">Hasura.EncJSON</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html"><span class="hs-identifier">Hasura.EncJSON</span></a></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.API.html"><span class="hs-identifier">Hasura.LogicalModel.API</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.API.html#getCustomTypes"><span class="hs-identifier">getCustomTypes</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html"><span class="hs-identifier">Hasura.LogicalModel.Metadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier">LogicalModelName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Utils.html"><span class="hs-identifier">Hasura.Metadata.DTO.Utils</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.Utils.html#codecNamePrefix"><span class="hs-identifier">codecNamePrefix</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html"><span class="hs-identifier">Hasura.NativeQuery.Metadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier">NativeQueryArgumentName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryMetadata"><span class="hs-identifier">NativeQueryMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#parseInterpolatedQuery"><span class="hs-identifier">parseInterpolatedQuery</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html"><span class="hs-identifier">Hasura.NativeQuery.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier">NativeQueryName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NullableScalarType"><span class="hs-identifier">NullableScalarType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#nativeQueryArrayRelationshipsCodec"><span class="hs-identifier">nativeQueryArrayRelationshipsCodec</span></a></span><span class="hs-special">)</span><span>
@@ -64,9 +64,8 @@ TrackNativeQuery b
 </span><a href="Hasura.NativeQuery.API.html#tnqArrayRelationships"><span class="hs-identifier hs-var hs-var">tnqArrayRelationships</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">InsOrd.InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RelName"><span class="hs-identifier hs-type">RelName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelDef"><span class="hs-identifier hs-type">RelDef</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelManualConfig"><span class="hs-identifier hs-type">RelManualConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691092813"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-56"></span><span>    </span><span id="tnqDescription"><span class="annot"><span class="annottext">forall (b :: BackendType). TrackNativeQuery b -&gt; Maybe Text
 </span><a href="Hasura.NativeQuery.API.html#tnqDescription"><span class="hs-identifier hs-var hs-var">tnqDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
-</span><span id="line-57"></span><span>    </span><span id="tnqReturns"><span class="annot"><span class="annottext">forall (b :: BackendType).
-TrackNativeQuery b -&gt; CustomReturnTypeName
-</span><a href="Hasura.NativeQuery.API.html#tnqReturns"><span class="hs-identifier hs-var hs-var">tnqReturns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.CustomReturnType.Types.html#CustomReturnTypeName"><span class="hs-identifier hs-type">CustomReturnTypeName</span></a></span><span>
+</span><span id="line-57"></span><span>    </span><span id="tnqReturns"><span class="annot"><span class="annottext">forall (b :: BackendType). TrackNativeQuery b -&gt; LogicalModelName
+</span><a href="Hasura.NativeQuery.API.html#tnqReturns"><span class="hs-identifier hs-var hs-var">tnqReturns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span><span>
 </span><span id="line-58"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-59"></span><span>
 </span><span id="line-60"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691092513"><span id="local-6989586621691092792"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691092792"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.API.html#TrackNativeQuery"><span class="hs-identifier hs-type">TrackNativeQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691092792"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
@@ -92,7 +91,7 @@ SourceName
 -&gt; HashMap NativeQueryArgumentName (NullableScalarType b)
 -&gt; InsOrdHashMap RelName (RelDef (RelManualConfig b))
 -&gt; Maybe Text
--&gt; CustomReturnTypeName
+-&gt; LogicalModelName
 -&gt; TrackNativeQuery b
 </span><a href="Hasura.NativeQuery.API.html#TrackNativeQuery"><span class="hs-identifier hs-var">TrackNativeQuery</span></a></span><span>
 </span><span id="line-66"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -189,8 +188,7 @@ Text -&gt; Text -&gt; ObjectCodec output output
 </span><span id="line-79"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
-TrackNativeQuery b -&gt; CustomReturnTypeName
+</span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). TrackNativeQuery b -&gt; LogicalModelName
 </span><a href="Hasura.NativeQuery.API.html#tnqReturns"><span class="hs-identifier hs-var">tnqReturns</span></a></span><span>
 </span><span id="line-80"></span><span>    </span><span class="hs-keyword">where</span><span>
 </span><span id="line-81"></span><span>      </span><span id="local-6989586621691092446"><span class="annot"><span class="annottext">arrayRelationshipsDoc :: Text
@@ -251,16 +249,15 @@ HashMap NativeQueryArgumentName (NullableScalarType b)
 InsOrdHashMap RelName (RelDef (RelManualConfig b))
 SourceName
 NativeQueryName
-CustomReturnTypeName
-tnqReturns :: CustomReturnTypeName
+LogicalModelName
+tnqReturns :: LogicalModelName
 tnqDescription :: Maybe Text
 tnqArrayRelationships :: InsOrdHashMap RelName (RelDef (RelManualConfig b))
 tnqArguments :: HashMap NativeQueryArgumentName (NullableScalarType b)
 tnqCode :: Text
 tnqRootFieldName :: NativeQueryName
 tnqSource :: SourceName
-tnqReturns :: forall (b :: BackendType).
-TrackNativeQuery b -&gt; CustomReturnTypeName
+tnqReturns :: forall (b :: BackendType). TrackNativeQuery b -&gt; LogicalModelName
 tnqDescription :: forall (b :: BackendType). TrackNativeQuery b -&gt; Maybe Text
 tnqArrayRelationships :: forall (b :: BackendType).
 TrackNativeQuery b
@@ -293,8 +290,8 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><span id="line-117"></span><span>            </span><span class="annot"><span class="annottext">_nqmCode :: InterpolatedQuery NativeQueryArgumentName
 </span><a href="Hasura.NativeQuery.Metadata.html#_nqmCode"><span class="hs-identifier hs-var">_nqmCode</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InterpolatedQuery NativeQueryArgumentName
 </span><a href="#local-6989586621691092349"><span class="hs-identifier hs-var">code</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-118"></span><span>            </span><span class="annot"><span class="annottext">_nqmReturns :: CustomReturnTypeName
-</span><a href="Hasura.NativeQuery.Metadata.html#_nqmReturns"><span class="hs-identifier hs-var">_nqmReturns</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
+</span><span id="line-118"></span><span>            </span><span class="annot"><span class="annottext">_nqmReturns :: LogicalModelName
+</span><a href="Hasura.NativeQuery.Metadata.html#_nqmReturns"><span class="hs-identifier hs-var">_nqmReturns</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogicalModelName
 </span><a href="#local-6989586621691092350"><span class="hs-identifier hs-var">tnqReturns</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-119"></span><span>            </span><span class="annot"><span class="annottext">_nqmArguments :: HashMap NativeQueryArgumentName (NullableScalarType b)
 </span><a href="Hasura.NativeQuery.Metadata.html#_nqmArguments"><span class="hs-identifier hs-var">_nqmArguments</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap NativeQueryArgumentName (NullableScalarType b)
@@ -311,37 +308,37 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="#local-6989586621691092336"><span class="hs-identifier hs-var">metadata</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MetadataM m =&gt; m Metadata
 </span><a href="Hasura.RQL.Types.Metadata.html#getMetadata"><span class="hs-identifier hs-var">getMetadata</span></a></span><span>
 </span><span id="line-125"></span><span>
-</span><span id="line-126"></span><span>  </span><span class="hs-comment">-- lookup custom return type in existing metadata</span><span>
+</span><span id="line-126"></span><span>  </span><span class="hs-comment">-- lookup logical model in existing metadata</span><span>
 </span><span id="line-127"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Metadata
 </span><a href="#local-6989586621691092336"><span class="hs-identifier hs-var">metadata</span></a></span><span> </span><span class="annot"><span class="annottext">forall s a. s -&gt; Getting (First a) s a -&gt; Maybe a
 </span><span class="hs-operator hs-var">^?</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Backend b =&gt;
-SourceName -&gt; Traversal' Metadata (CustomReturnTypes b)
-</span><a href="Hasura.CustomReturnType.API.html#getCustomTypes"><span class="hs-identifier hs-var">getCustomTypes</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+SourceName -&gt; Traversal' Metadata (LogicalModels b)
+</span><a href="Hasura.LogicalModel.API.html#getCustomTypes"><span class="hs-identifier hs-var">getCustomTypes</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621691092356"><span class="hs-identifier hs-var">tnqSource</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall m. Ixed m =&gt; Index m -&gt; Traversal' m (IxValue m)
-</span><span class="hs-identifier hs-var">ix</span></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
+</span><span class="hs-identifier hs-var">ix</span></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
 </span><a href="#local-6989586621691092350"><span class="hs-identifier hs-var">tnqReturns</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-128"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621691092332"><span class="annot"><span class="annottext">CustomReturnTypeMetadata b
-</span><a href="#local-6989586621691092332"><span class="hs-identifier hs-var">customReturnType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-128"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621691092332"><span class="annot"><span class="annottext">LogicalModelMetadata b
+</span><a href="#local-6989586621691092332"><span class="hs-identifier hs-var">logicalModel</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-129"></span><span>      </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *).
 (BackendMetadata b, MonadIO m, MonadError QErr m) =&gt;
 Environment
 -&gt; SourceConnConfiguration b
--&gt; CustomReturnTypeMetadata b
+-&gt; LogicalModelMetadata b
 -&gt; NativeQueryMetadata b
 -&gt; m ()
 </span><a href="Hasura.RQL.Types.Metadata.Backend.html#validateNativeQuery"><span class="hs-identifier hs-var">validateNativeQuery</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691092736"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
 </span><a href="#local-6989586621691092358"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConnConfiguration b
-</span><a href="#local-6989586621691092357"><span class="hs-identifier hs-var">sourceConnConfig</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeMetadata b
-</span><a href="#local-6989586621691092332"><span class="hs-identifier hs-var">customReturnType</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueryMetadata b
+</span><a href="#local-6989586621691092357"><span class="hs-identifier hs-var">sourceConnConfig</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelMetadata b
+</span><a href="#local-6989586621691092332"><span class="hs-identifier hs-var">logicalModel</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueryMetadata b
 </span><a href="#local-6989586621691092344"><span class="hs-identifier hs-var">nativeQueryMetadata</span></a></span><span>
-</span><span id="line-130"></span><span>    </span><span class="annot"><span class="annottext">Maybe (CustomReturnTypeMetadata b)
+</span><span id="line-130"></span><span>    </span><span class="annot"><span class="annottext">Maybe (LogicalModelMetadata b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotFound"><span class="hs-identifier hs-var">NotFound</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Custom return type &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">CustomReturnTypeName
+</span><span class="hs-string">&quot;Logical model &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
 </span><a href="#local-6989586621691092350"><span class="hs-identifier hs-var">tnqReturns</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; not found.&quot;</span></span><span class="hs-special">)</span><span>
