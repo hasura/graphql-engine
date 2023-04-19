@@ -43,6 +43,8 @@ import Data.Aeson (FromJSON, ToJSON (..), (.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as Aeson
 import Data.Bifunctor (first)
 import Data.Environment (Environment)
+import Data.Map.Strict (Map)
+import Data.Map.Strict qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as Text
@@ -341,7 +343,12 @@ data OtelExporterInfo = OtelExporterInfo
     _oteleiTracesBaseRequest :: Request,
     -- | Attributes to send as the resource attributes of an export request. We
     -- currently only support string-valued attributes.
-    _oteleiResourceAttributes :: [(Text, Text)]
+    --
+    -- Using Data.Map.Strict over Data.Hashmap.Strict because currently the
+    -- only operations on data are (1) folding and (2) union with a small
+    -- map of default attributes, and Map should be is faster than HashMap for
+    -- the latter.
+    _oteleiResourceAttributes :: Map Text Text
   }
 
 -- | Smart constructor for 'OtelExporterInfo'.
@@ -381,15 +388,16 @@ parseOtelExporterConfig otelStatus env OtelExporterConfig {..} = do
                   { requestHeaders = headers ++ requestHeaders uriRequest
                   },
               _oteleiResourceAttributes =
-                map
-                  (\NameValue {nv_name, nv_value} -> (nv_name, nv_value))
-                  _oecResourceAttributes
+                Map.fromList $
+                  map
+                    (\NameValue {nv_name, nv_value} -> (nv_name, nv_value))
+                    _oecResourceAttributes
             }
 
 getOtelExporterTracesBaseRequest :: OtelExporterInfo -> Request
 getOtelExporterTracesBaseRequest = _oteleiTracesBaseRequest
 
-getOtelExporterResourceAttributes :: OtelExporterInfo -> [(Text, Text)]
+getOtelExporterResourceAttributes :: OtelExporterInfo -> Map Text Text
 getOtelExporterResourceAttributes = _oteleiResourceAttributes
 
 data OtelBatchSpanProcessorInfo = OtelBatchSpanProcessorInfo
