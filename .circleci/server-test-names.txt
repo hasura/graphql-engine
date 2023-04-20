@@ -54,5 +54,5 @@
 # apollo-federation
 # allowlist-queries
 # jwk-url
-horizontal-scaling
+# horizontal-scaling
 # developer-api-tests
