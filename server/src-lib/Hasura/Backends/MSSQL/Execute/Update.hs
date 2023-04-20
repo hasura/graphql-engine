@@ -82,15 +82,15 @@ buildUpdateTx updateOperation stringifyNum queryTags = do
   -- Create a temp table
   Tx.unitQueryE defaultMSSQLTxErrorHandler (createInsertedTempTableQuery `withQueryTags` queryTags)
   let updateQuery = TQ.fromUpdate <$> TSQL.fromUpdate updateOperation
-  updateQueryValidated <- toQueryFlat . qwdQuery <$> runFromIrDiscardCTEs updateQuery
+  updateQueryValidated <- toQueryFlat <$> runFromIrDiscardCTEs updateQuery
 
   -- Execute UPDATE statement
   Tx.unitQueryE mutationMSSQLTxErrorHandler (updateQueryValidated `withQueryTags` queryTags)
-  mutationOutputSelect <- qwdQuery <$> runFromIrUseCTEs (mkMutationOutputSelect stringifyNum withAlias $ _auOutput updateOperation)
+  mutationOutputSelect <- runFromIrUseCTEs (mkMutationOutputSelect stringifyNum withAlias $ _auOutput updateOperation)
   let checkCondition = _auCheck updateOperation
 
   -- The check constraint is translated to boolean expression
-  checkBoolExp <- qwdQuery <$> runFromIrDiscardCTEs (runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias))
+  checkBoolExp <- runFromIrDiscardCTEs (runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias))
 
   let withSelect =
         emptySelect
