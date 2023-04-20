@@ -1,6 +1,8 @@
 .hasura-con-banner {
+  //hiding 2022 banner, will add new one for 2023 when the promotions start
+  display: none;
+  //display: grid;
   margin: 40px 0;
-  display: grid;
   grid-template-columns: 110px 1fr;
   grid-gap: 32px;
   padding: 20px 60px;
