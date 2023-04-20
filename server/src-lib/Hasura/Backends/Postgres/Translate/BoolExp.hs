@@ -108,8 +108,16 @@ translateBoolExp = \case
     return $ foldr (S.BEBin S.OrOp) (S.BELit False) sqlBExps
   BoolNot notExp -> S.BENot <$> translateBoolExp notExp
   BoolExists (GExists currTableReference wh) -> do
-    whereExp <- withCurrentTable (S.QualTable currTableReference) (translateBoolExp wh)
-    return $ S.mkExists (S.FISimple currTableReference Nothing) whereExp
+    fresh <- state \identifier -> (identifier, identifier + 1)
+
+    let alias :: S.TableAlias
+        alias = S.toTableAlias (Identifier ("_exists_table_" <> tshow fresh))
+
+        identifier :: TableIdentifier
+        identifier = S.tableAliasToIdentifier alias
+
+    whereExp <- withCurrentTable (S.QualifiedIdentifier identifier Nothing) (translateBoolExp wh)
+    return $ S.mkExists (S.FISimple currTableReference (Just alias)) whereExp
   BoolField boolExp -> case boolExp of
     AVColumn colInfo opExps -> do
       BoolExpCtx {rootReference, currTableReference} <- ask

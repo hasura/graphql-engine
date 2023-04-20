@@ -214,6 +214,7 @@ library
     Test.Regression.NullsOrderParsing8780Spec
     Test.Regression.ObjectRelationshipsLimit7936Spec
     Test.Regression.RemoteRelationshipStringifyNum8387Spec
+    Test.Regression.RootExistElementAliasing9457Spec
     Test.Regression.StreamConflictSpec
     Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
     Test.Regression.SqlServerIdentifierQuotingSpec
