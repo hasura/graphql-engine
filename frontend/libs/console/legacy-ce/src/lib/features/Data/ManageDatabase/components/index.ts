@@ -1,2 +1,1 @@
-export { BreadCrumbs } from './BreadCrumbs';
-export { SourceName } from './SourceName';
+export { TrackableResourceTabs } from './TrackableResourceTabs';

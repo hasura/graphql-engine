@@ -1,8 +1,8 @@
 import React from 'react';
-import { useTableDefinition } from './hooks';
-import { ManageDatabase } from './ManageDatabase/ManageDatabase';
+import { useTableDefinition } from '../hooks';
+import { ManageDatabase } from './ManageDatabase';
 
-export const ManageDatabaseContainer = () => {
+export const ManageDatabaseRoute = () => {
   const urlData = useTableDefinition(window.location);
 
   if (urlData.querystringParseResult === 'error')

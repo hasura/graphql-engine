@@ -3,18 +3,18 @@ import { BsDatabaseFillGear } from 'react-icons/bs';
 import { FaRegTrashAlt } from 'react-icons/fa';
 import { GrTableAdd } from 'react-icons/gr';
 import { MdOutlineCreateNewFolder } from 'react-icons/md';
-import { DropDown } from '../../../../../new-components/AdvancedDropDown';
+import { DropDown } from '../../../../new-components/AdvancedDropDown';
 import {
   useDestructiveAlert,
   useHasuraAlert,
-} from '../../../../../new-components/Alert';
-import { Button } from '../../../../../new-components/Button';
-import { usePushRoute } from '../../../../ConnectDBRedesign/hooks/usePushRoute';
+} from '../../../../new-components/Alert';
+import { Button } from '../../../../new-components/Button';
+import { usePushRoute } from '../../../ConnectDBRedesign/hooks/usePushRoute';
 import {
   useCreateDatabaseSchema,
   useDeleteDatabaseSchema,
-} from '../../../hooks/modify';
-import { addMutateAsyncTuple, handleRunSqlError } from '../../../hooks/utils';
+} from '../../hooks/modify';
+import { addMutateAsyncTuple, handleRunSqlError } from '../../hooks/utils';
 
 type SchemaDropdownProps = {
   schemas: string[];

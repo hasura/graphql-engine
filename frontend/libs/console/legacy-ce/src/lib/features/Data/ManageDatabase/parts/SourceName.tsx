@@ -1,6 +1,6 @@
-import { useGetDatabaseSchemas } from '../../../Data/hooks/introspection/useDatabaseSchemas';
+import { useGetDatabaseSchemas } from '../../hooks/introspection/useDatabaseSchemas';
 import { ManageDatabaseProps } from '../ManageDatabase';
-import { SchemaDropdown } from './parts/SchemaDropdown';
+import { SchemaDropdown } from './SchemaDropdown';
 
 export function SourceName({ dataSourceName }: ManageDatabaseProps) {
   const { data } = useGetDatabaseSchemas(dataSourceName);

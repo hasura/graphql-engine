@@ -1,11 +1,11 @@
-import { ComponentStory, ComponentMeta } from '@storybook/react';
-import { userEvent, within } from '@storybook/testing-library';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { expect } from '@storybook/jest';
+import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { within } from '@storybook/testing-library';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 
-import { ManageTrackedRelationships } from '../components/ManageTrackedRelationships';
-import { SuggestedRelationshipWithName } from '../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useSuggestedRelationships';
 import { Relationship } from '../../../DatabaseRelationships';
+import { SuggestedRelationshipWithName } from '../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useSuggestedRelationships';
+import { ManageTrackedRelationships } from '../components/ManageTrackedRelationships';
 
 export default {
   title: 'Data/Components/ManageTrackedRelationships',
@@ -28,9 +28,6 @@ export const Base: ComponentStory<typeof ManageTrackedRelationships> = () => (
 
 Base.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
-  // Reset initial metadata to make sure tests start from a clean slate everytime
-
-  userEvent.click(await canvas.findByText('Foreign Key Relationships'));
 
   await expect(
     canvas.getByText('No untracked relationships found')

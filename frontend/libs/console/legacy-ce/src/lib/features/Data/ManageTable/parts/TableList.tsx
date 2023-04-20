@@ -15,6 +15,7 @@ import { TrackableTable } from '../types';
 import { paginate, search } from '../utils';
 import { SearchBar } from './SearchBar';
 import { TableRow } from './TableRow';
+import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
 import { useTrackTables } from '../../hooks/useTrackTables';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { APIError } from '../../../../hooks/error';
@@ -93,6 +94,8 @@ export const TableList = (props: TableListProps) => {
     onTrackedTable?.();
     reset();
   };
+
+  const pushRoute = usePushRoute();
 
   if (!tables.length) {
     return (
@@ -182,6 +185,17 @@ export const TableList = (props: TableListProps) => {
               checked={checkedIds.includes(table.id)}
               reset={reset}
               onChange={() => onCheck(table.id)}
+              onTableNameClick={
+                mode === 'track'
+                  ? () => {
+                      pushRoute(
+                        `data/v2/manage/table/browse?database=${dataSourceName}&table=${encodeURIComponent(
+                          JSON.stringify(table.table)
+                        )}`
+                      );
+                    }
+                  : undefined
+              }
             />
           ))}
         </CardedTable.TableBody>

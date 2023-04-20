@@ -1,14 +1,14 @@
-import { CustomFieldNames } from '../..';
-import { MetadataTable } from '../../../hasura-metadata-types';
-import { Button } from '../../../../new-components/Button';
-import { CardedTable } from '../../../../new-components/CardedTable';
 import React from 'react';
 import { FiSettings } from 'react-icons/fi';
-import { useTrackTables } from '../../hooks/useTrackTables';
-import { TrackableTable } from '../../TrackResources/types';
-import { hasuraToast } from '../../../../new-components/Toasts';
+import { CustomFieldNames } from '../..';
 import { APIError } from '../../../../hooks/error';
+import { Button } from '../../../../new-components/Button';
+import { CardedTable } from '../../../../new-components/CardedTable';
+import { hasuraToast } from '../../../../new-components/Toasts';
+import { MetadataTable } from '../../../hasura-metadata-types';
+import { useTrackTables } from '../../hooks/useTrackTables';
 import { TableDisplayName } from '../components/TableDisplayName';
+import { TrackableTable } from '../types';
 
 interface TableRowProps {
   dataSourceName: string;
@@ -16,10 +16,18 @@ interface TableRowProps {
   checked: boolean;
   reset: () => void;
   onChange: () => void;
+  onTableNameClick?: () => void;
 }
 
 export const TableRow = React.memo(
-  ({ checked, dataSourceName, table, reset, onChange }: TableRowProps) => {
+  ({
+    checked,
+    dataSourceName,
+    table,
+    reset,
+    onChange,
+    onTableNameClick,
+  }: TableRowProps) => {
     const [showCustomModal, setShowCustomModal] = React.useState(false);
     const { trackTables, untrackTables, isLoading } = useTrackTables({
       dataSourceName,
@@ -89,7 +97,7 @@ export const TableRow = React.memo(
           />
         </td>
         <CardedTable.TableBodyCell>
-          <TableDisplayName table={table.table} />
+          <TableDisplayName onClick={onTableNameClick} table={table.table} />
         </CardedTable.TableBodyCell>
         <CardedTable.TableBodyCell>{table.type}</CardedTable.TableBodyCell>
         <CardedTable.TableBodyCell>
