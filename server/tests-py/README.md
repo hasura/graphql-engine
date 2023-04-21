@@ -9,21 +9,21 @@ information on how to update test dependencies.
 
 ## Running tests
 
-Tests can be run using `run-new.sh`, `dev.sh` or directly using `pytest`.
+Tests can be run using `run.sh`, `dev.sh` or directly using `pytest`.
 
 Please note that running the `BigQuery` tests requires a few manual steps.
 
-### Run and test via `run-new.sh`
+### Run and test via `run.sh`
 
-The `run-new.sh` scripts are an active work in progress, and will eventually replace the `dev.sh` option below.
+The `run.sh` scripts are an active work in progress, and will eventually replace the `dev.sh` option below.
 
 The easiest way to run the test suite is to:
 
-Run the Python integration tests with `./server/tests-py/run-new.sh`.
+Run the Python integration tests with `./server/tests-py/run.sh`.
 
-Filter on specific test files with `./server/tests-py/run-new.sh -- create_async_action_with_nested_output_and_relation.py`
+Filter on specific test files with `./server/tests-py/run.sh -- create_async_action_with_nested_output_and_relation.py`
 
-If you have any issues with `run-new.sh`, please create a [GitHub issue](https://github.com/hasura/graphql-engine/issues/new/choose) and run and test via `dev.sh` instead.
+If you have any issues with `run.sh`, please create a [GitHub issue](https://github.com/hasura/graphql-engine/issues/new/choose) and run and test via `dev.sh` instead.
 
 ### Running tests via dev.sh
 
