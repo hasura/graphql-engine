@@ -286,6 +286,7 @@ common lib-depends
                      , fast-logger
                      , free
                      , hashable
+                     , hasura-base
                      , hasura-extras
                      , hasura-prelude
                      , http-client-tls
@@ -505,9 +506,6 @@ library
 
                      , Hasura.App
                      , Hasura.Metadata.Class
-
-                     , Hasura.Base.Error
-                     , Hasura.Base.Instances
 
                      , Hasura.App.State
                      , Hasura.Backends.BigQuery.Connection

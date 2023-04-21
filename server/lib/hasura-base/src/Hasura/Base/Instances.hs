@@ -9,8 +9,6 @@ import Autodocodec qualified as AC
 import Control.Monad.Fix
 import Data.Aeson qualified as J
 import Data.Fixed (Fixed (..))
-import Data.Functor.Product (Product (Pair))
-import "dependent-sum" Data.GADT.Compare (GCompare (gcompare), GOrdering (GEQ, GGT, GLT))
 import Data.OpenApi.Declare as D
 import Data.Text qualified as T
 import Data.Time (NominalDiffTime)
@@ -92,18 +90,6 @@ $(TH.deriveLift ''NominalDiffTime)
 deriving instance TH.Lift Milliseconds
 
 deriving instance TH.Lift Seconds
-
---------------------------------------------------------------------------------
--- GADT
-
-instance (GCompare f, GCompare g) => GCompare (Product f g) where
-  Pair a1 a2 `gcompare` Pair b1 b2 = case gcompare a1 b1 of
-    GLT -> GLT
-    GEQ -> case gcompare a2 b2 of
-      GLT -> GLT
-      GEQ -> GEQ
-      GGT -> GGT
-    GGT -> GGT
 
 --------------------------------------------------------------------------------
 -- HasCodec

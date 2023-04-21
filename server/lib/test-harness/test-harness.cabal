@@ -23,6 +23,7 @@ library
     , graphql-engine
     , graphql-parser
     , haskell-src-meta
+    , hasura-base
     , hasura-extras
     , hasura-prelude
     , hedgehog
