@@ -26,6 +26,9 @@ args:
       type: http
       definition:
         handler: http://www.somedomain.com/validateArticle
+        headers:
+        - name: X-Handler-API-Key
+          value_from_env: VALIDATION_HOOK_API_KEY
 ```
 
 The `type` determines the interface for the input validation, which initially only supports `http` webhook handler.
@@ -65,8 +68,51 @@ When an insert mutation comes in with a role, the following steps are performed:
 
 1. First "collect" all the tables that the mutation targets (because there could be more than one table involved via nested inserts)
 1. If there is a `validate_input` permission on a table, then any arguments targeting that table are sent to the `handler`. This is done for all tables.
-1. If all handlers return success (HTTP status 200), then the request proceeds. A transaction with the database will only be started after the validation is over.
-1. If any handler returns error (HTTP status 4xx), then the request aborts. An `error` message from the handler can also be forwarded to the client.
+1. If all handlers validates the insert data, then the request proceeds. A transaction with the database will only be started after the validation is over.
+1. If any handler invalidates the insert data, then the request aborts. An `error` message from the handler can also be forwarded to the client.
+
+## Webhook specification
+
+### Request
+
+When an insert mutation on a table with `validate_input` configuration is executed, before making a database transaction Hasura sends the insert data to
+the validation HTTP webhook using a `POST` request.
+
+The request payload is of the format:
+```json
+{
+    "role": "<role-name>",
+    "data": [
+        {"column_1": "column_1_value", "column_2": "column_2_value", "relationship": [{"relationship_column_1": "column_value"}]},
+        {"column_1": "column_1_value", "column_2": "column_2_value", "relationship": [{"relationship_column_1": "column_value"}]}
+    ]
+}
+```
+The `data` field contains the list of rows specified in the `objects` field of insert mutation. Also includes nested insert data of relationships.
+
+### Response
+
+The HTTP handler should always return the JSON object with `200` status code. The object should contain `is_valid` field
+whose value is a boolean and an optional `error` field with a message forwarded to client when `is_valid` is `false`.
+
+```http
+200 OK
+
+{
+    "is_valid": true
+}
+```
+or
+```http
+200 OK
+
+{
+    "is_valid": false,
+    "error": "Phone number is invalid"
+}
+```
+
+When response with status other than `200` is received, Hasura raises internal exception.
 
 ## Examples
 
