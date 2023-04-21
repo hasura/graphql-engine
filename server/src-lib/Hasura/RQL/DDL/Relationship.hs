@@ -9,6 +9,7 @@ module Hasura.RQL.DDL.Relationship
     dropRelationshipInMetadata,
     SetRelComment,
     runSetRelComment,
+    nativeQueryArrayRelationshipSetup,
   )
 where
 
@@ -23,6 +24,7 @@ import Data.Text.Extended
 import Data.Tuple (swap)
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.NativeQuery.Types (NativeQueryName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission
 import Hasura.RQL.Types.Backend
@@ -146,6 +148,46 @@ objRelP2Setup source qt foreignKeys (RelDef rn ru _) = case ru of
     pure (RelInfo rn ObjRel (NEHashMap.toHashMap colMap) foreignTable False BeforeParent, dependencies)
   RUFKeyOn (RemoteTable remoteTable remoteCols) ->
     mkFkeyRel ObjRel AfterParent source rn qt remoteTable remoteCols foreignKeys
+
+-- | set up an array relationship from a Native Query onto another data source
+-- currently we can only connect to other tables but this will expand in future
+-- we only do RelManualConfig as we don't have any notion of ForeignKey from a
+-- Native Query
+nativeQueryArrayRelationshipSetup ::
+  forall b m.
+  (QErrM m, Backend b) =>
+  SourceName ->
+  NativeQueryName ->
+  RelDef (RelManualConfig b) ->
+  m (RelInfo b, Seq SchemaDependency)
+nativeQueryArrayRelationshipSetup sourceName nativeQueryName (RelDef relName manualConfig _) = do
+  let refqt = rmTable manualConfig
+      (lCols, rCols) = unzip $ Map.toList $ rmColumns manualConfig
+      deps =
+        ( fmap
+            ( \c ->
+                SchemaDependency
+                  ( SOSourceObj sourceName $
+                      AB.mkAnyBackend $
+                        SOINativeQueryObj @b nativeQueryName $
+                          NQOCol @b c
+                  )
+                  DRLeftColumn
+            )
+            (Seq.fromList lCols)
+        )
+          <> fmap
+            ( \c ->
+                SchemaDependency
+                  ( SOSourceObj sourceName $
+                      AB.mkAnyBackend $
+                        SOITableObj @b refqt $
+                          TOCol @b c
+                  )
+                  DRRightColumn
+            )
+            (Seq.fromList rCols)
+  pure (RelInfo relName ArrRel (rmColumns manualConfig) refqt True AfterParent, deps)
 
 arrRelP2Setup ::
   forall b m.

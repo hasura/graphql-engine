@@ -15,8 +15,8 @@ import Data.Monoid (First)
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.Function.Cache
-import Hasura.LogicalModel.Cache (lmiPermissions, _lmiFields)
-import Hasura.NativeQuery.Cache (nqiArrayRelationships)
+import Hasura.LogicalModel.Cache (LogicalModelInfo (..), lmiPermissions)
+import Hasura.NativeQuery.Cache (NativeQueryInfo (_nqiReturns), nqiArrayRelationships)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal (permissionIsDefined)
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -157,13 +157,13 @@ pruneDanglingDependents cache =
         AB.dispatchAnyBackend @Backend exists $ \(sourceObjId :: SourceObjId b) -> do
           sourceInfo <- castSourceInfo source sourceObjId
           case sourceObjId of
-            SOITable tableName -> do
+            SOITable tableName ->
               void $ resolveTable sourceInfo tableName
             SOIFunction functionName ->
               void $
                 M.lookup functionName (_siFunctions sourceInfo)
                   `onNothing` Left ("function " <> functionName <<> " is not tracked")
-            SOILogicalModel logicalModelName -> do
+            SOILogicalModel logicalModelName ->
               void $ resolveLogicalModel sourceInfo logicalModelName
             SOILogicalModelObj logicalModelName logicalModelObjId -> do
               logicalModel <- resolveLogicalModel sourceInfo logicalModelName
@@ -183,6 +183,13 @@ pruneDanglingDependents cache =
                     Left ("Could not find column " <> column <<> " in logical model " <>> logicalModelName)
             SOINativeQuery nativeQueryName -> do
               void $ resolveNativeQuery sourceInfo nativeQueryName
+            SOINativeQueryObj nativeQueryName nativeQueryObjId -> do
+              nativeQueryInfo <- resolveNativeQuery sourceInfo nativeQueryName
+              case nativeQueryObjId of
+                NQOCol colName ->
+                  unless (InsOrd.member colName (_lmiFields (_nqiReturns nativeQueryInfo))) $
+                    Left
+                      ("native query " <> nativeQueryName <<> " has no field named " <>> colName)
             SOITableObj tableName tableObjectId -> do
               tableInfo <- resolveTable sourceInfo tableName
               case tableObjectId of

@@ -58,6 +58,7 @@ import Hasura.RQL.DDL.ApiLimit (MonadGetApiTimeLimit (..))
 import Hasura.RQL.DDL.CustomTypes
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..), buildEventTriggerInfo)
 import Hasura.RQL.DDL.InheritedRoles (resolveInheritedRole)
+import Hasura.RQL.DDL.Relationship
 import Hasura.RQL.DDL.RemoteRelationship (CreateRemoteSchemaRemoteRelationship (..), PartiallyResolvedSource (..), buildRemoteFieldInfo, getRemoteSchemaEntityJoinColumns)
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -760,14 +761,14 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                   Nothing -> pure mempty
                   Just fields -> pure (mapFromL fieldInfoName fields)
 
-                customTypePermissions <-
+                logicalModelPermissions <-
                   buildLogicalModelPermissions sourceName tableCoreInfos _lmmName fieldInfoMap _lmmSelectPermissions orderedRoles
 
                 pure
                   LogicalModelInfo
                     { _lmiName = _lmmName,
                       _lmiFields = _lmmFields,
-                      _lmiPermissions = customTypePermissions,
+                      _lmiPermissions = logicalModelPermissions,
                       _lmiDescription = _lmmDescription
                     }
 
@@ -816,13 +817,25 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                 recordDependenciesM metadataObject schemaObjId $
                   Seq.singleton dependency
 
+                arrayRelationships <-
+                  traverse
+                    (nativeQueryArrayRelationshipSetup sourceName _nqmRootFieldName)
+                    _nqmArrayRelationships
+
+                let sourceObject =
+                      SOSourceObj sourceName $
+                        AB.mkAnyBackend $
+                          SOINativeQuery @b _nqmRootFieldName
+
+                recordDependenciesM metadataObject sourceObject (mconcat $ snd <$> OMap.elems arrayRelationships)
+
                 pure
                   NativeQueryInfo
                     { _nqiRootFieldName = _nqmRootFieldName,
                       _nqiCode = _nqmCode,
                       _nqiReturns = logicalModel,
                       _nqiArguments = _nqmArguments,
-                      _nqiArrayRelationships = mempty,
+                      _nqiArrayRelationships = fst <$> arrayRelationships,
                       _nqiDescription = _nqmDescription
                     }
 

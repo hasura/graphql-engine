@@ -68,7 +68,7 @@ defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
       buildLogicalModelPermissions @b @r @m @n _nqiReturns
 
   (selectionSetParser, logicalModelsArgsParser) <-
-    MaybeT $ buildLogicalModelFields _nqiReturns
+    MaybeT $ buildLogicalModelFields _nqiArrayRelationships _nqiReturns
 
   let interpolatedQuery nqArgs =
         InterpolatedQuery $

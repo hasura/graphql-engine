@@ -34,6 +34,7 @@ module Hasura.GraphQL.Schema.Common
     getTableRoles,
     getLogicalModelRoles,
     askTableInfo,
+    askLogicalModelInfo,
     comparisonAggOperators,
     mapField,
     mkDescriptionWith,
@@ -75,6 +76,7 @@ import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Typename
 import Hasura.LogicalModel.Cache (LogicalModelInfo (_lmiPermissions))
+import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.NativeQuery.Cache (NativeQueryCache)
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
@@ -345,6 +347,20 @@ askTableInfo tableName = do
   SourceInfo {..} <- asks getter
   Map.lookup tableName _siTables
     `onNothing` throw500 ("askTableInfo: no info for table " <> dquote tableName <> " in source " <> dquote _siName)
+
+-- | Looks up custom return type information for the given custom return type name. This function
+-- should never fail, since the schema cache construction process is
+-- supposed to ensure all dependencies are resolved.
+-- TODO: deduplicate this with `CacheRM`.
+askLogicalModelInfo ::
+  forall b r m.
+  (MonadError QErr m, MonadReader r m, Has (SourceInfo b) r) =>
+  LogicalModelName ->
+  m (LogicalModelInfo b)
+askLogicalModelInfo logicalModelName = do
+  SourceInfo {..} <- asks getter
+  Map.lookup logicalModelName _siLogicalModels
+    `onNothing` throw500 ("askLogicalModelInfo: no info for logical model " <> dquote logicalModelName <> " in source " <> dquote _siName)
 
 -- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
 data Scenario = Backend | Frontend deriving (Enum, Show, Eq)

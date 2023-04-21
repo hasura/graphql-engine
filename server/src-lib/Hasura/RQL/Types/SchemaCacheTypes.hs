@@ -11,6 +11,7 @@ module Hasura.RQL.Types.SchemaCacheTypes
     SourceObjId (..),
     TableObjId (..),
     LogicalModelObjId (..),
+    NativeQueryObjId (..),
     purgeDependentObject,
     purgeSourceAndSchemaDependencies,
     reasonToTxt,
@@ -72,11 +73,24 @@ deriving stock instance (Backend b) => Eq (LogicalModelObjId b)
 
 instance (Backend b) => Hashable (LogicalModelObjId b)
 
+-- | Identifier for component of Native Queries within the metadata. These are
+-- used to track dependencies between items in the resolved schema. For
+-- instance, we use `NQOCol` along with `TOCol` from `TableObjId` to ensure
+-- that the two columns that join an array relationship actually exist.
+newtype NativeQueryObjId (b :: BackendType)
+  = NQOCol (Column b)
+  deriving (Generic)
+
+deriving instance Backend b => Eq (NativeQueryObjId b)
+
+instance (Backend b) => Hashable (NativeQueryObjId b)
+
 data SourceObjId (b :: BackendType)
   = SOITable (TableName b)
   | SOITableObj (TableName b) (TableObjId b)
   | SOIFunction (FunctionName b)
   | SOINativeQuery NativeQueryName
+  | SOINativeQueryObj NativeQueryName (NativeQueryObjId b)
   | SOILogicalModel LogicalModelName
   | SOILogicalModelObj LogicalModelName (LogicalModelObjId b)
   deriving (Eq, Generic)
@@ -108,6 +122,8 @@ reportSchemaObj = \case
         SOITable tn -> "table " <> toTxt tn
         SOIFunction fn -> "function " <> toTxt fn
         SOINativeQuery lmn -> "native query " <> toTxt lmn
+        SOINativeQueryObj nqn (NQOCol cn) ->
+          "column " <> toTxt nqn <> "." <> toTxt cn
         SOILogicalModel lm -> "logical model " <> toTxt lm
         SOILogicalModelObj lm (LMOCol cn) ->
           "logical model column " <> toTxt lm <> "." <> toTxt cn

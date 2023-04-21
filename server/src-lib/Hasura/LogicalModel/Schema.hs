@@ -29,6 +29,8 @@ import Hasura.RQL.IR.BoolExp (gBoolExpTrue)
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend (Backend)
+import Hasura.RQL.Types.Common (RelName)
+import Hasura.RQL.Types.Relationships.Local (RelInfo)
 import Hasura.RQL.Types.Table (SelPermInfo (..), _permSel)
 import Hasura.Session (RoleName, adminRoleName)
 
@@ -78,11 +80,15 @@ buildLogicalModelPermissions logicalModel = do
 
   pure $ logicalModelPermissions logicalModel roleName
 
+-- in order to construct meaningful IR, we can only parse a Logical Model
+-- in the context of it's use, therefore we must pass in any information on
+-- relationships (and then,
 buildLogicalModelFields ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
     BackendLogicalModelSelectSchema b
   ) =>
+  InsOrdHashMap RelName (RelInfo b) ->
   LogicalModelInfo b ->
   SchemaT
     r
@@ -92,8 +98,8 @@ buildLogicalModelFields ::
           P.InputFieldsParser n (IR.SelectArgsG b (IR.UnpreparedValue b))
         )
     )
-buildLogicalModelFields logicalModel = runMaybeT $ do
-  selectionSetParser <- MaybeT $ logicalModelSelectionList @b @r @m @n logicalModel
+buildLogicalModelFields relationshipInfo logicalModel = runMaybeT $ do
+  selectionSetParser <- MaybeT $ logicalModelSelectionList @b @r @m @n relationshipInfo logicalModel
   logicalModelsArgsParser <- lift $ logicalModelArguments @b @r @m @n logicalModel
 
   pure (selectionSetParser, logicalModelsArgsParser)

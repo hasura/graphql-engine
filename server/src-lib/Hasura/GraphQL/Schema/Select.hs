@@ -44,6 +44,7 @@ import Data.Text qualified as T
 import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
+import Data.Text.NonEmpty (mkNonEmptyText)
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
@@ -66,10 +67,8 @@ import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename
 import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
-import Hasura.LogicalModel.Common (columnsFromFields)
-import Hasura.LogicalModel.Types (LogicalModelName (..))
+import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelName (..))
 import Hasura.Name qualified as Name
-import Hasura.NativeQuery.Types (NullableScalarType (..))
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp
@@ -490,13 +489,21 @@ logicalModelColumnsForRole role logicalModel =
         >>= _permSel
         <&> Permission.PCCols . HM.keys . spiCols
 
+-- | this seems like it works on luck, ie that everything is really just Text
+-- underneath
+columnToRelName :: forall b. Backend b => Column b -> Maybe RelName
+columnToRelName column =
+  RelName <$> mkNonEmptyText (toTxt column)
+
 defaultLogicalModelSelectionSet ::
   forall b r m n.
-  ( MonadBuildSchema b r m n
+  ( MonadBuildSchema b r m n,
+    BackendTableSelectSchema b
   ) =>
+  InsOrdHashMap RelName (RelInfo b) ->
   LogicalModelInfo b ->
   SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
-defaultLogicalModelSelectionSet logicalModel = runMaybeT $ do
+defaultLogicalModelSelectionSet relationshipInfo logicalModel = runMaybeT $ do
   roleName <- retrieve scRole
 
   selectableColumns <- hoistMaybe $ logicalModelColumnsForRole roleName logicalModel
@@ -506,20 +513,36 @@ defaultLogicalModelSelectionSet logicalModel = runMaybeT $ do
           Permission.PCStar -> True
           Permission.PCCols cols -> column `elem` cols
 
-  let parseField (column, NullableScalarType {..}) = do
-        let -- We have not yet worked out what providing permissions here enables
-            caseBoolExpUnpreparedValue = Nothing
-
-            columnType = ColumnScalar nstType
-            pathArg = scalarSelectionArgumentsParser columnType
-
+  let parseField ::
+        Column b ->
+        LogicalModelField b ->
+        MaybeT (SchemaT r m) (IP.FieldParser MetadataObjId n (AnnotatedField b))
+      parseField column inputField = do
         columnName <- hoistMaybe (G.mkName (toTxt column))
 
-        field <- lift $ columnParser columnType (G.Nullability nstNullable)
+        -- We have not yet worked out what providing permissions here enables
+        let caseBoolExpUnpreparedValue = Nothing
 
-        pure $!
-          P.selection columnName (G.Description <$> nstDescription) pathArg field
-            <&> IR.mkAnnColumnField column columnType caseBoolExpUnpreparedValue
+        case inputField of
+          LogicalModelScalarField {..} -> do
+            let columnType = ColumnScalar lmfType
+                pathArg = scalarSelectionArgumentsParser columnType
+
+            field <- lift $ columnParser columnType (G.Nullability lmfNullable)
+
+            pure $!
+              P.selection columnName (G.Description <$> lmfDescription) pathArg field
+                <&> IR.mkAnnColumnField column columnType caseBoolExpUnpreparedValue
+          LogicalModelArrayReference {..} -> do
+            relName <- hoistMaybe $ columnToRelName @b column
+            -- fetch the nested custom return type for comparison purposes
+            _nestedLogicalModel <- lift $ askLogicalModelInfo @b lmfLogicalModel
+            -- lookup the reference in the data source
+            relationship <- hoistMaybe $ InsOrd.lookup relName relationshipInfo
+            -- check the types match
+            -- return IR for the actual data source lookup (ie, the table
+            -- lookup for a relationship)
+            logicalModelRelationshipField @b @r @m @n relationship
 
   let fieldName = getLogicalModelName (_lmiName logicalModel)
 
@@ -527,9 +550,9 @@ defaultLogicalModelSelectionSet logicalModel = runMaybeT $ do
   let allowedColumns =
         filter
           (isSelectable . fst)
-          (InsOrd.toList (columnsFromFields $ _lmiFields logicalModel))
+          (InsOrd.toList (_lmiFields logicalModel))
 
-  parsers <- traverse parseField allowedColumns
+  parsers <- traverse (uncurry parseField) allowedColumns
 
   let description = G.Description <$> _lmiDescription logicalModel
 
@@ -542,10 +565,11 @@ defaultLogicalModelSelectionSet logicalModel = runMaybeT $ do
 
 logicalModelSelectionList ::
   (MonadBuildSchema b r m n, BackendLogicalModelSelectSchema b) =>
+  InsOrdHashMap RelName (RelInfo b) ->
   LogicalModelInfo b ->
   SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
-logicalModelSelectionList logicalModel =
-  fmap nonNullableObjectList <$> logicalModelSelectionSet logicalModel
+logicalModelSelectionList relationshipInfo logicalModel =
+  fmap nonNullableObjectList <$> logicalModelSelectionSet relationshipInfo logicalModel
 
 -- | Converts an output type parser from object_type to [object_type!]!
 nonNullableObjectList :: Parser 'Output m a -> Parser 'Output m a
@@ -1569,3 +1593,26 @@ tablePermissionsInfo selectPermissions =
     { IR._tpFilter = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions,
       IR._tpLimit = spiLimit selectPermissions
     }
+
+-- | Field parsers for a logical model relationship
+logicalModelRelationshipField ::
+  forall b r m n.
+  ( BackendTableSelectSchema b,
+    MonadBuildSchema b r m n
+  ) =>
+  RelInfo b ->
+  MaybeT (SchemaT r m) (FieldParser n (AnnotatedField b))
+logicalModelRelationshipField ri = do
+  otherTableInfo <- lift $ askTableInfo $ riRTable ri
+  relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
+  case riType ri of
+    ObjRel -> do
+      throw500 "Object relationships on logical models are not implemented"
+    ArrRel -> do
+      let arrayRelDesc = Just $ G.Description "An array relationship"
+      otherTableParser <- MaybeT $ selectTable otherTableInfo relFieldName arrayRelDesc
+      pure $
+        otherTableParser <&> \selectExp ->
+          IR.AFArrayRelation $
+            IR.ASSimple $
+              IR.AnnRelationSelectG (riName ri) (riMapping ri) selectExp

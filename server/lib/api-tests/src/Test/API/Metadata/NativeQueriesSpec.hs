@@ -88,7 +88,7 @@ schema =
             Schema.column "date" Schema.TUTCTime
           ]
       },
-    (Schema.table "articles")
+    (Schema.table "article")
       { Schema.tableColumns =
           [ Schema.column "id" Schema.TInt,
             Schema.column "author_id" Schema.TInt,
@@ -194,7 +194,7 @@ testAdminAccess = do
           |]
 
 -------------------------
--- Test relationshis --
+-- Test relationships --
 -------------------------
 
 testRelationships :: SpecWith TestEnvironment
@@ -230,7 +230,7 @@ testRelationships = do
         Schema.nativeQuery "relationship_test" query "author"
 
   describe "Relationships" $ do
-    it "Adding a logical model with a valid array relationship returns a 200" $ \testEnvironment -> do
+    it "Adding a native query with a valid array relationship returns a 200" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           sourceName = BackendType.backendSourceName backendTypeMetadata
           schemaName = Schema.getSchemaName testEnvironment
@@ -240,9 +240,10 @@ testRelationships = do
 
           arrayRel =
             [interpolateYaml|
-                name: model_to_articles
+                name: articles
                 using:
-                  column_mapping: {}
+                  column_mapping:
+                    id: author_id
                   insertion_order: null
                   remote_table:
                     name: article
