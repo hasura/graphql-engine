@@ -227,7 +227,7 @@ buildUpsertTx tableName insert ifMatched queryTags = do
   Tx.unitQueryE mutationMSSQLTxErrorHandler (insertValuesIntoTempTableQuery `withQueryTags` queryTags)
 
   -- Run the MERGE query and store the mutated rows in #inserted temporary table
-  merge <- runFromIrDiscardCTEs (toMerge tableName (_aiInsertObject $ _aiData insert) allTableColumns ifMatched)
+  merge <- runFromIrErrorOnCTEs (toMerge tableName (_aiInsertObject $ _aiData insert) allTableColumns ifMatched)
   let mergeQuery = toQueryFlat $ TQ.fromMerge merge
   Tx.unitQueryE mutationMSSQLTxErrorHandler (mergeQuery `withQueryTags` queryTags)
 
@@ -248,7 +248,7 @@ buildInsertResponseTx stringifyNum withAlias insert queryTags = do
 
   -- The check constraint is translated to boolean expression
   let checkCondition = fst $ _aiCheckCondition $ _aiData insert
-  checkBoolExp <- runFromIrDiscardCTEs (runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias))
+  checkBoolExp <- runFromIrErrorOnCTEs (runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias))
 
   let withSelect =
         emptySelect

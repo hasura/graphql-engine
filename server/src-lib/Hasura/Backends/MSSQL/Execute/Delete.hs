@@ -77,7 +77,7 @@ buildDeleteTx deleteOperation stringifyNum queryTags = do
   -- Create a temp table
   Tx.unitQueryE defaultMSSQLTxErrorHandler (createInsertedTempTableQuery `withQueryTags` queryTags)
   let deleteQuery = TQ.fromDelete <$> TSQL.fromDelete deleteOperation
-  deleteQueryValidated <- toQueryFlat <$> runFromIrDiscardCTEs deleteQuery
+  deleteQueryValidated <- toQueryFlat <$> runFromIrErrorOnCTEs deleteQuery
 
   -- Execute DELETE statement
   Tx.unitQueryE mutationMSSQLTxErrorHandler (deleteQueryValidated `withQueryTags` queryTags)

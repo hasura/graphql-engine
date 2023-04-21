@@ -166,7 +166,7 @@ test-native-queries-postgres:
 
 .PHONY: test-native-queries-sqlserver
 ## test-native-queries-sqlserver: run all sqlserver tests for the Native Query feature
-test-native-queries-sqlserver:
+test-native-queries-sqlserver: remove-tix-file
 	cabal build exe:graphql-engine
 	docker compose up -d --wait postgres sqlserver-healthcheck
 	HASURA_TEST_BACKEND_TYPE=SQLServer \
@@ -176,7 +176,7 @@ test-native-queries-sqlserver:
 
 .PHONY: test-native-queries-bigquery
 ## test-native-queries-bigquery: run all bigquery tests for the Native Query feature
-test-native-queries-bigquery:
+test-native-queries-bigquery: remove-tix-file
 	cabal build exe:graphql-engine
 	docker compose up -d --wait postgres
 	HASURA_TEST_BACKEND_TYPE=BigQuery \
