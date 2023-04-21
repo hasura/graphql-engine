@@ -11,8 +11,10 @@ import Data.Aeson qualified as J
 import Data.Fixed (Fixed (..))
 import Data.OpenApi.Declare as D
 import Data.Text qualified as T
+import Data.Text.Extended (ToTxt (toTxt))
 import Data.Time (NominalDiffTime)
 import Data.URL.Template qualified as UT
+import Database.ODBC.SQLServer qualified as ODBC
 import Database.PG.Query qualified as PG
 import Hasura.Prelude
 import Kriti qualified
@@ -111,6 +113,12 @@ instance J.ToJSON C.CronSchedule where
   toJSON = J.String . C.serializeCronSchedule
 
 instance J.ToJSONKey Void
+
+--------------------------------------------------------------------------------
+-- ODBC
+
+instance ToTxt ODBC.Query where
+  toTxt = ODBC.renderQuery
 
 --------------------------------------------------------------------------------
 -- Postgres

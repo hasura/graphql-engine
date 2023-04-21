@@ -37,13 +37,14 @@ library
     -Wno-unused-type-patterns
 
   build-depends:
-      QuickCheck
+    , QuickCheck
     , aeson
     , attoparsec
     , autodocodec
     , base
     , base64-bytestring
     , bytestring
+    , case-insensitive
     , containers
     , deepseq
     , graphql-parser
@@ -52,8 +53,10 @@ library
     , insert-ordered-containers
     , kriti-lang
     , mtl
-    , odbc
     , pg-client
+    , refined
+    , scientific
+    , servant-client
     , template-haskell
     , text
     , text-builder
@@ -74,6 +77,7 @@ library
     TypeFamilies
 
   exposed-modules:
+    Autodocodec.Extended
     Data.Aeson.Extended
     Data.Environment
     Data.HashMap.Strict.Extended

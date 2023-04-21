@@ -67,6 +67,7 @@ library
     extra,
     graphql-parser,
     hashable,
+    hasura-extras,
     insert-ordered-containers,
     lens,
     lens-aeson,
@@ -79,7 +80,6 @@ library
     http-media
 
   exposed-modules:
-    Autodocodec.Extended
     Hasura.Backends.DataConnector.API
     Hasura.Backends.DataConnector.API.V0
     Hasura.Backends.DataConnector.API.V0.Aggregate

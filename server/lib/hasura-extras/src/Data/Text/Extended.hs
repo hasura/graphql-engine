@@ -14,7 +14,6 @@ module Data.Text.Extended
 where
 
 import Data.Text as DT
-import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Prelude
 import Language.GraphQL.Draft.Printer qualified as G
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -43,9 +42,6 @@ instance ToTxt Void where
 
 instance ToTxt (G.Value Void) where
   toTxt = TB.run . G.value
-
-instance ToTxt ODBC.Query where
-  toTxt = ODBC.renderQuery
 
 bquote :: ToTxt t => t -> Text
 bquote t = DT.singleton '`' <> toTxt t <> DT.singleton '`'

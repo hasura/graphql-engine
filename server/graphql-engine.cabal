@@ -489,8 +489,7 @@ common lib-depends
 library
   import: common-all, lib-depends
   hs-source-dirs:      src-lib
-  exposed-modules:     Autodocodec.Extended
-                     , Control.Concurrent.Extended
+  exposed-modules:     Control.Concurrent.Extended
                      , Control.Monad.Circular
                      , Control.Monad.Memoize
                      , Control.Monad.Stateless
