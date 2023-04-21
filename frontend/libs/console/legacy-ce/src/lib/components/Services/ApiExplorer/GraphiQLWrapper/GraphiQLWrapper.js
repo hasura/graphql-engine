@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import GraphiQL from 'graphiql';
 import { connect } from 'react-redux';
-import { FaCheckCircle } from 'react-icons/fa';
+import { FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 import PropTypes from 'prop-types';
 import GraphiQLErrorBoundary from './GraphiQLErrorBoundary';
 import OneGraphExplorer from '../OneGraphExplorer/OneGraphExplorer';
@@ -94,8 +94,13 @@ class GraphiQLWrapper extends Component {
     } = this.props;
     const { codeExporterOpen, requestTrackingId } = this.state;
     const graphqlNetworkData = this.props.data;
-    const { responseTime, responseSize, isResponseCached, responseTrackingId } =
-      this.props.response;
+    const {
+      responseTime,
+      responseSize,
+      isResponseCached,
+      responseTrackingId,
+      cacheWarning,
+    } = this.props.response;
 
     const graphQLFetcher = graphQLParams => {
       if (headerFocus) {
@@ -234,6 +239,20 @@ class GraphiQLWrapper extends Component {
                   tooltipStyle="text-[#777] ml-sm mr-xs"
                 />
                 <FaCheckCircle className="text-[#008000]" />
+              </>
+            )}
+            {!isResponseCached && cacheWarning && (
+              <>
+                <span className="text-xs text-[#777777] font-semibold uppercase">
+                  Not Cached
+                </span>
+                <ToolTip
+                  message={`Response not cached due to: "${cacheWarning}"`}
+                  placement="top"
+                  tooltipStyle="text-yellow-600"
+                >
+                  <FaExclamationTriangle className="text-yellow-600 mb-1" />
+                </ToolTip>
               </>
             )}
           </div>
