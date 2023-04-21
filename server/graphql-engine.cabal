@@ -286,6 +286,7 @@ common lib-depends
                      , fast-logger
                      , free
                      , hashable
+                     , hasura-extras
                      , hasura-prelude
                      , http-client-tls
                      , http-conduit
@@ -494,25 +495,8 @@ library
                      , Control.Monad.Stateless
                      , Control.Monad.Trans.Extended
                      , Control.Monad.Trans.Managed
-                     , Data.Aeson.Extended
                      , Data.Aeson.Kriti.Functions
-                     , Data.Environment
-                     , Data.HashMap.Strict.Extended
-                     , Data.HashMap.Strict.InsOrd.Autodocodec
-                     , Data.HashMap.Strict.InsOrd.Extended
-                     , Data.HashMap.Strict.Multi
-                     , Data.HashMap.Strict.NonEmpty
-                     , Data.List.Extended
-                     , Data.Parser.CacheControl
-                     , Data.Parser.Expires
-                     , Data.Parser.JSONPath
-                     , Data.SerializableBlob
                      , Data.SqlCommenter
-                     , Data.Text.Casing
-                     , Data.Text.Extended
-                     , Data.Text.NonEmpty
-                     , Data.Trie
-                     , Data.URL.Template
                      , Database.MSSQL.Transaction
                      , Database.MSSQL.Pool
                      , GHC.AssertNF.CPP
@@ -1056,6 +1040,7 @@ executable graphql-engine
                    , bytestring
                    , ekg-core
                    , ekg-prometheus
+                   , hasura-extras
                    , hasura-prelude
                    , kan-extensions
                    , pg-client

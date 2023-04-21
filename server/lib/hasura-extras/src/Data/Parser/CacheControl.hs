@@ -19,9 +19,9 @@ module Data.Parser.CacheControl
 where
 
 import Data.Attoparsec.Text qualified as AT
+import Data.Bifunctor (first)
 import Data.Text qualified as T
-import Hasura.Prelude
-import Hasura.Server.Utils (fmapL)
+import Hasura.Prelude hiding (first)
 
 type CacheControl = [CacheControlDirective]
 
@@ -40,7 +40,7 @@ parseMaxAge t =
 findMaxAge :: Integral a => CacheControl -> Either String (Maybe a)
 findMaxAge cacheControl = do
   case findCCDTokenWithVal checkMaxAgeToken cacheControl of
-    Just (_, val) -> Just <$> fmapL parseErr (AT.parseOnly AT.decimal val)
+    Just (_, val) -> Just <$> first parseErr (AT.parseOnly AT.decimal val)
     Nothing -> Right Nothing
   where
     parseErr _ = "could not parse max-age/s-maxage value"

@@ -1,0 +1,93 @@
+cabal-version: 3.6
+name: hasura-extras
+version: 1.0.0
+build-type: Simple
+copyright: Hasura Inc.
+
+library
+  hs-source-dirs: src
+  default-language: GHC2021
+
+  ghc-options:
+    -foptimal-applicative-do
+    -- This is just to keep compile-times in check and might be adjusted later (See mono #2610):
+    -fmax-simplifier-iterations=2
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missing-import-lists
+    -Wno-missed-specialisations
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
+    -- We want these warnings, but the code doesn't satisfy them yet:
+    -Wno-missing-deriving-strategies
+    -Wno-unused-packages
+    -Wno-deriving-typeable
+    -Wno-prepositive-qualified-module
+    -Wno-implicit-lift
+    -Wno-identities
+    -Wno-operator-whitespace
+    -Wno-partial-fields
+    -Wno-redundant-bang-patterns
+    -Wno-unused-type-patterns
+
+  build-depends:
+      QuickCheck
+    , aeson
+    , attoparsec
+    , autodocodec
+    , base
+    , base64-bytestring
+    , bytestring
+    , containers
+    , deepseq
+    , graphql-parser
+    , hashable
+    , hasura-prelude
+    , insert-ordered-containers
+    , kriti-lang
+    , mtl
+    , odbc
+    , pg-client
+    , template-haskell
+    , text
+    , text-builder
+    , text-conversions
+    , time
+    , unordered-containers
+    , uri-encode
+    , witherable
+
+  default-extensions:
+    DerivingStrategies
+    FunctionalDependencies
+    ImportQualifiedPost
+    LambdaCase
+    NoImplicitPrelude
+    QuasiQuotes
+    OverloadedStrings
+    TypeFamilies
+
+  exposed-modules:
+    Data.Aeson.Extended
+    Data.Environment
+    Data.HashMap.Strict.Extended
+    Data.HashMap.Strict.InsOrd.Autodocodec
+    Data.HashMap.Strict.InsOrd.Extended
+    Data.HashMap.Strict.Multi
+    Data.HashMap.Strict.NonEmpty
+    Data.List.Extended
+    Data.Parser.CacheControl
+    Data.Parser.Expires
+    Data.Parser.JSONPath
+    Data.SerializableBlob
+    Data.Text.Casing
+    Data.Text.Extended
+    Data.Text.NonEmpty
+    Data.Trie
+    Data.URL.Template

@@ -65,6 +65,7 @@ library
     , filepath
     , graphql-engine
     , graphql-parser
+    , hasura-extras
     , hasura-prelude
     , hspec
     , hspec-core
@@ -351,6 +352,7 @@ executable produce-feature-matrix
     , fast-logger
     , feature-matrix
     , filepath
+    , hasura-extras
     , hasura-prelude
     , hspec
     , optparse-generic
