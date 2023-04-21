@@ -56,11 +56,27 @@ export const TableList = (props: TableListProps) => {
     if (mode === 'track') {
       untrackTables({
         tablesToBeTracked: tables,
-        onSuccess: () => {
+        onSuccess: response => {
+          response.forEach(result => {
+            if ('error' in result) {
+              hasuraToast({
+                type: 'error',
+                title: 'Error while untracking table',
+                children: result.error,
+              });
+            }
+          });
+
+          const successfullyUntrackedCounter = response.filter(
+            result => 'message' in result && result.message === 'success'
+          ).length;
+
+          const plural = successfullyUntrackedCounter > 1 ? 's' : '';
+
           hasuraToast({
             type: 'success',
             title: 'Successfully untracked',
-            message: `${tables.length} objects untracked`,
+            message: `${successfullyUntrackedCounter} object${plural} untracked`,
           });
         },
         onError: err => {
@@ -74,11 +90,26 @@ export const TableList = (props: TableListProps) => {
     } else {
       trackTables({
         tablesToBeTracked: tables,
-        onSuccess: () => {
+        onSuccess: response => {
+          response.forEach(result => {
+            if ('error' in result) {
+              hasuraToast({
+                type: 'error',
+                title: 'Error while tracking table',
+                children: result.error,
+              });
+            }
+          });
+
+          const successfulTrackingsCounter = response.filter(
+            result => 'message' in result && result.message === 'success'
+          ).length;
+          const plural = successfulTrackingsCounter > 1 ? 's' : '';
+
           hasuraToast({
             type: 'success',
-            title: 'Successfully tracked',
-            message: `${tables.length} objects tracked`,
+            title: 'Successfully untracked',
+            message: `${successfulTrackingsCounter} object${plural} tracked`,
           });
         },
         onError: err => {

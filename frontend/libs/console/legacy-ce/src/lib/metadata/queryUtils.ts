@@ -88,6 +88,7 @@ export const metadataQueryTypes = [
   'set_custom_types',
   'dump_internal_state',
   'bulk',
+  'bulk_keep_going',
   'get_catalog_state',
   'set_catalog_state',
   'set_table_customization',

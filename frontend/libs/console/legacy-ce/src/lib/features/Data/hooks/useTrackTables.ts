@@ -7,6 +7,7 @@ import {
 } from '../../hasura-metadata-api';
 import type { TrackableTable } from '../TrackResources/types';
 import { MetadataMigrationOptions } from '../../MetadataAPI/hooks/useMetadataMigration';
+import { BulkKeepGoingResponse } from '../../hasura-metadata-types';
 
 export const useTrackTables = ({
   dataSourceName,
@@ -19,7 +20,7 @@ export const useTrackTables = ({
 
   const invalidateMetadata = useInvalidateMetadata();
 
-  const { mutate, ...rest } = useMetadataMigration({
+  const { mutate, ...rest } = useMetadataMigration<BulkKeepGoingResponse>({
     ...globalMutateOptions,
     onSuccess: (data, variables, ctx) => {
       invalidateMetadata();
@@ -31,11 +32,13 @@ export const useTrackTables = ({
     ({
       tablesToBeTracked,
       ...mutateOptions
-    }: { tablesToBeTracked: TrackableTable[] } & MetadataMigrationOptions) => {
+    }: {
+      tablesToBeTracked: TrackableTable[];
+    } & MetadataMigrationOptions<BulkKeepGoingResponse>) => {
       mutate(
         {
           query: {
-            type: 'bulk',
+            type: 'bulk_keep_going',
             source: dataSourceName,
             resource_version,
             args: tablesToBeTracked.map(trackableTable => ({
@@ -58,11 +61,13 @@ export const useTrackTables = ({
     ({
       tablesToBeTracked,
       ...mutateOptions
-    }: { tablesToBeTracked: TrackableTable[] } & MetadataMigrationOptions) => {
+    }: {
+      tablesToBeTracked: TrackableTable[];
+    } & MetadataMigrationOptions<BulkKeepGoingResponse>) => {
       mutate(
         {
           query: {
-            type: 'bulk',
+            type: 'bulk_keep_going',
             source: dataSourceName,
             resource_version,
             args: tablesToBeTracked.map(trackableTable => ({

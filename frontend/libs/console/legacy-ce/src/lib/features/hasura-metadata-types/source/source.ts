@@ -85,3 +85,14 @@ export type Source = {
 );
 
 export type QualifiedFunction = unknown;
+
+export type BulkKeepGoingResponse = [
+  | {
+      message: 'success';
+    }
+  | {
+      code: string;
+      error: string;
+      path: string;
+    }
+];
