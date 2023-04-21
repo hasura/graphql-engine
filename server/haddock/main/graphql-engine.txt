@@ -21213,7 +21213,13 @@ tellCTE :: Aliased (InterpolatedQuery Expression) -> FromIr ()
 --   the translation output retain a resemblance with source names without
 --   the translation process needing to be bothered about potential name
 --   shadowing. See <a>generateAlias</a>.</li>
+--   <li>It has a writer part for reporting native queries that need to be
+--   wrapped in a CTE</li>
 --   </ul>
+--   
+--   The Inner part <a>FromIrInner</a> containing the state and validate
+--   are extracted to a different type so we can peel the writer for
+--   queries and report errors in the process if needed.
 data FromIr a
 
 -- | Run a <a>FromIr</a> action, throwing errors that have been collected
@@ -21222,19 +21228,23 @@ data FromIr a
 runFromIrUseCTEs :: MonadError QErr m => FromIr Select -> m Select
 
 -- | Run a <a>FromIr</a> action, throwing errors that have been collected
---   using the supplied action, and discard CTEs created from native
---   queries to the select query.
-runFromIrDiscardCTEs :: MonadError QErr m => FromIr a -> m a
-
--- | Run a <a>FromIr</a> action, throwing errors that have been collected
 --   using the supplied action, and attach CTEs created from native queries
 --   to the select query.
 runFromIrUseCTEsT :: (Traversable t, MonadError QErr m) => t (FromIr Select) -> m (t Select)
+
+-- | Run a <a>FromIr</a> action, throwing errors that have been collected
+--   using the supplied action, and discard CTEs created from native
+--   queries to the select query.
+--   
+--   If CTEs were reported, we throw an error, since we don't support
+--   native queries in this context yet.
+runFromIrErrorOnCTEs :: MonadError QErr m => FromIr a -> m a
 
 -- | Errors that may happen during translation.
 data Error
 UnsupportedOpExpG :: OpExpG 'MSSQL Expression -> Error
 FunctionNotSupported :: Error
+NativeQueriesNotSupported :: Error
 
 -- | Hints about the type of entity that <a>generateAlias</a> is producing
 --   an alias for.
@@ -23376,22 +23386,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aEbWX. Lens' (CreateEventTriggerQuery b_aEbWX) TriggerOnReplication
-cteqCleanupConfig :: forall b_aEbWX. Lens' (CreateEventTriggerQuery b_aEbWX) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aEbWX. Lens' (CreateEventTriggerQuery b_aEbWX) (Maybe Text)
-cetqWebhook :: forall b_aEbWX. Lens' (CreateEventTriggerQuery b_aEbWX) (Maybe InputWebhook)
-cetqUpdate :: forall b_aEbWX. Lens' (CreateEventTriggerQuery b_aEbWX) (Maybe (SubscribeOpSpec b_aEbWX))
-cetqTable :: forall b_aEbWX. Lens' (CreateEventTriggerQuery b_aEbWX) (TableName b_aEbWX)
-cetqSource :: forall b_aEbWX. Lens' (CreateEventTriggerQuery b_aEbWX) SourceName
-cetqRetryConf :: forall b_aEbWX. Lens' (CreateEventTriggerQuery b_aEbWX) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aEbWX. Lens' (CreateEventTriggerQuery b_aEbWX) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aEbWX. Lens' (CreateEventTriggerQuery b_aEbWX) (Maybe RequestTransform)
-cetqReplace :: forall b_aEbWX. Lens' (CreateEventTriggerQuery b_aEbWX) Bool
-cetqName :: forall b_aEbWX. Lens' (CreateEventTriggerQuery b_aEbWX) TriggerName
-cetqInsert :: forall b_aEbWX. Lens' (CreateEventTriggerQuery b_aEbWX) (Maybe (SubscribeOpSpec b_aEbWX))
-cetqHeaders :: forall b_aEbWX. Lens' (CreateEventTriggerQuery b_aEbWX) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aEbWX. Lens' (CreateEventTriggerQuery b_aEbWX) (Maybe Bool)
-cetqDelete :: forall b_aEbWX. Lens' (CreateEventTriggerQuery b_aEbWX) (Maybe (SubscribeOpSpec b_aEbWX))
+cteqTriggerOnReplication :: forall b_aEceV. Lens' (CreateEventTriggerQuery b_aEceV) TriggerOnReplication
+cteqCleanupConfig :: forall b_aEceV. Lens' (CreateEventTriggerQuery b_aEceV) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aEceV. Lens' (CreateEventTriggerQuery b_aEceV) (Maybe Text)
+cetqWebhook :: forall b_aEceV. Lens' (CreateEventTriggerQuery b_aEceV) (Maybe InputWebhook)
+cetqUpdate :: forall b_aEceV. Lens' (CreateEventTriggerQuery b_aEceV) (Maybe (SubscribeOpSpec b_aEceV))
+cetqTable :: forall b_aEceV. Lens' (CreateEventTriggerQuery b_aEceV) (TableName b_aEceV)
+cetqSource :: forall b_aEceV. Lens' (CreateEventTriggerQuery b_aEceV) SourceName
+cetqRetryConf :: forall b_aEceV. Lens' (CreateEventTriggerQuery b_aEceV) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aEceV. Lens' (CreateEventTriggerQuery b_aEceV) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aEceV. Lens' (CreateEventTriggerQuery b_aEceV) (Maybe RequestTransform)
+cetqReplace :: forall b_aEceV. Lens' (CreateEventTriggerQuery b_aEceV) Bool
+cetqName :: forall b_aEceV. Lens' (CreateEventTriggerQuery b_aEceV) TriggerName
+cetqInsert :: forall b_aEceV. Lens' (CreateEventTriggerQuery b_aEceV) (Maybe (SubscribeOpSpec b_aEceV))
+cetqHeaders :: forall b_aEceV. Lens' (CreateEventTriggerQuery b_aEceV) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aEceV. Lens' (CreateEventTriggerQuery b_aEceV) (Maybe Bool)
+cetqDelete :: forall b_aEceV. Lens' (CreateEventTriggerQuery b_aEceV) (Maybe (SubscribeOpSpec b_aEceV))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
