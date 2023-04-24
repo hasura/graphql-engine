@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Hasura.SQL.Tag
+module Hasura.RQL.Types.BackendTag
   ( BackendTag (..),
     HasTag (..),
     reify,

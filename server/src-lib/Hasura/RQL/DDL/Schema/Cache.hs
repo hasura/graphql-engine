@@ -70,6 +70,7 @@ import Hasura.RQL.DDL.Schema.Table
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
@@ -97,7 +98,6 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
-import Hasura.SQL.Tag
 import Hasura.Server.Init.FeatureFlag qualified as FF
 import Hasura.Server.Migrate.Version
 import Hasura.Server.Types

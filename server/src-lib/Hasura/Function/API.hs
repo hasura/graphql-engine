@@ -32,6 +32,7 @@ import Hasura.Function.Cache
 import Hasura.Function.Metadata (FunctionMetadata (..), fmConfiguration, fmPermissions)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
@@ -42,7 +43,6 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
-import Hasura.SQL.Tag
 
 newtype TrackFunction b = TrackFunction {tfName :: FunctionName b}
 

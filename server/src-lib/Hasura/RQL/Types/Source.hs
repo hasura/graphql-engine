@@ -57,6 +57,7 @@ import Hasura.NativeQuery.Cache (NativeQueryCache)
 import Hasura.Prelude
 import Hasura.QueryTags.Types
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.Instances ()
@@ -64,7 +65,6 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
-import Hasura.SQL.Tag
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 

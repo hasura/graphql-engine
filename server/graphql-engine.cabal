@@ -790,6 +790,7 @@ library
                      , Hasura.RQL.Types.Allowlist
                      , Hasura.RQL.Types.ApiLimit
                      , Hasura.RQL.Types.Backend
+                     , Hasura.RQL.Types.BackendTag
                      , Hasura.RQL.Types.BoolExp
                      , Hasura.RQL.Types.Column
                      , Hasura.RQL.Types.Common
@@ -997,7 +998,6 @@ library
                      , Hasura.SQL.AnyBackend
                      , Hasura.SQL.Backend
                      , Hasura.SQL.BackendMap
-                     , Hasura.SQL.Tag
                      , Hasura.SQL.GeoJSON
                      , Hasura.SQL.Time
                      , Hasura.SQL.Types

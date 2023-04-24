@@ -41,6 +41,7 @@ import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist (AllowlistEntry (..), MetadataAllowlist)
 import Hasura.RQL.Types.ApiLimit (ApiLimit, emptyApiLimit)
 import Hasura.RQL.Types.Backend (Backend, defaultTriggerOnReplication)
+import Hasura.RQL.Types.BackendTag (HasTag (backendTag), reify)
 import Hasura.RQL.Types.Column (ColumnValues)
 import Hasura.RQL.Types.Common (Comment, MetricsConfig, RemoteRelationshipG (..), commentToMaybeText, defaultActionTimeoutSecs, emptyMetricsConfig)
 import Hasura.RQL.Types.CustomTypes
@@ -103,7 +104,6 @@ import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
-import Hasura.SQL.Tag (HasTag (backendTag), reify)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.Types.Extended (Network, emptyNetwork)
 

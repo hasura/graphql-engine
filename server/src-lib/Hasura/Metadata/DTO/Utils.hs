@@ -15,7 +15,7 @@ import Data.Scientific (Scientific)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
 import Hasura.Prelude
-import Hasura.SQL.Tag (HasTag (backendTag), reify)
+import Hasura.RQL.Types.BackendTag (HasTag (backendTag), reify)
 
 -- | Map a fixed set of two values to boolean values when serializing. The first
 -- argument is the value to map to @True@, the second is the value to map to

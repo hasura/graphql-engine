@@ -10,8 +10,8 @@ import Autodocodec (HasCodec)
 import Data.Aeson.Extended
 import Data.Kind (Type)
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendTag
 import Hasura.SQL.Backend
-import Hasura.SQL.Tag
 
 type Representable a = (Show a, Eq a, Hashable a, NFData a)
 

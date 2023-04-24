@@ -53,6 +53,7 @@ import Hasura.QueryTags.Types
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (HasTag)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata.Object
@@ -66,7 +67,6 @@ import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Tag (HasTag)
 import Hasura.Server.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
