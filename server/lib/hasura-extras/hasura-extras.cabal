@@ -52,6 +52,7 @@ library
     , data-default-class
     , deepseq
     , exceptions
+    , ghc-heap-view
     , graphql-parser
     , hashable
     , hasura-prelude
@@ -105,6 +106,7 @@ library
 
   exposed-modules:
     Autodocodec.Extended
+
     Data.Aeson.Extended
     Data.Environment
     Data.HashMap.Strict.Extended
@@ -122,6 +124,11 @@ library
     Data.Text.NonEmpty
     Data.Trie
     Data.URL.Template
+
+    GHC.AssertNF.CPP
+    GHC.Stats.Extended
+    GHC.Generics.Extended
+
     Network.HTTP.Client.Blocklisting
     Network.HTTP.Client.CreateManager
     Network.HTTP.Client.DynamicTlsPermissions
