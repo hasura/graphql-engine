@@ -20094,7 +20094,6 @@ buildOpenAPI :: (MonadError QErr m, MonadFix m) => SchemaCache -> m OpenApi
 --   from metadata information stored in the <tt>hdb_catalog</tt> schema in
 --   Postgres.
 module Hasura.RQL.Types.SchemaCache.Build
-recordInconsistency :: ArrowWriter (Seq (Either InconsistentMetadata md)) arr => ((Maybe Value, MetadataObject), Text) `arr` ()
 recordInconsistencyM :: MonadWriter (Seq (Either InconsistentMetadata md)) m => Maybe Value -> MetadataObject -> Text -> m ()
 recordInconsistenciesM :: MonadWriter (Seq (Either InconsistentMetadata md)) m => [MetadataObject] -> Text -> m ()
 data MetadataDependency
@@ -20107,6 +20106,7 @@ withRecordInconsistencyM :: MonadWriter (Seq (Either InconsistentMetadata md)) m
 
 -- | Record any errors resulting from a computation as inconsistencies
 withRecordInconsistency :: (ArrowChoice arr, ArrowWriter (Seq (Either InconsistentMetadata md)) arr) => ErrorA QErr arr (e, s) a -> arr (e, (MetadataObject, s)) (Maybe a)
+withRecordInconsistencies :: (ArrowChoice arr, ArrowWriter (Seq (Either InconsistentMetadata md)) arr) => ErrorA QErr arr (e, s) a -> arr (e, ([MetadataObject], s)) (Maybe a)
 class (CacheRM m) => CacheRWM m
 buildSchemaCacheWithOptions :: CacheRWM m => BuildReason -> CacheInvalidations -> Metadata -> m ()
 setMetadataResourceVersionInSchemaCache :: CacheRWM m => MetadataResourceVersion -> m ()
@@ -23877,22 +23877,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aEJZo. Lens' (CreateEventTriggerQuery b_aEJZo) TriggerOnReplication
-cteqCleanupConfig :: forall b_aEJZo. Lens' (CreateEventTriggerQuery b_aEJZo) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aEJZo. Lens' (CreateEventTriggerQuery b_aEJZo) (Maybe Text)
-cetqWebhook :: forall b_aEJZo. Lens' (CreateEventTriggerQuery b_aEJZo) (Maybe InputWebhook)
-cetqUpdate :: forall b_aEJZo. Lens' (CreateEventTriggerQuery b_aEJZo) (Maybe (SubscribeOpSpec b_aEJZo))
-cetqTable :: forall b_aEJZo. Lens' (CreateEventTriggerQuery b_aEJZo) (TableName b_aEJZo)
-cetqSource :: forall b_aEJZo. Lens' (CreateEventTriggerQuery b_aEJZo) SourceName
-cetqRetryConf :: forall b_aEJZo. Lens' (CreateEventTriggerQuery b_aEJZo) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aEJZo. Lens' (CreateEventTriggerQuery b_aEJZo) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aEJZo. Lens' (CreateEventTriggerQuery b_aEJZo) (Maybe RequestTransform)
-cetqReplace :: forall b_aEJZo. Lens' (CreateEventTriggerQuery b_aEJZo) Bool
-cetqName :: forall b_aEJZo. Lens' (CreateEventTriggerQuery b_aEJZo) TriggerName
-cetqInsert :: forall b_aEJZo. Lens' (CreateEventTriggerQuery b_aEJZo) (Maybe (SubscribeOpSpec b_aEJZo))
-cetqHeaders :: forall b_aEJZo. Lens' (CreateEventTriggerQuery b_aEJZo) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aEJZo. Lens' (CreateEventTriggerQuery b_aEJZo) (Maybe Bool)
-cetqDelete :: forall b_aEJZo. Lens' (CreateEventTriggerQuery b_aEJZo) (Maybe (SubscribeOpSpec b_aEJZo))
+cteqTriggerOnReplication :: forall b_aEKb7. Lens' (CreateEventTriggerQuery b_aEKb7) TriggerOnReplication
+cteqCleanupConfig :: forall b_aEKb7. Lens' (CreateEventTriggerQuery b_aEKb7) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aEKb7. Lens' (CreateEventTriggerQuery b_aEKb7) (Maybe Text)
+cetqWebhook :: forall b_aEKb7. Lens' (CreateEventTriggerQuery b_aEKb7) (Maybe InputWebhook)
+cetqUpdate :: forall b_aEKb7. Lens' (CreateEventTriggerQuery b_aEKb7) (Maybe (SubscribeOpSpec b_aEKb7))
+cetqTable :: forall b_aEKb7. Lens' (CreateEventTriggerQuery b_aEKb7) (TableName b_aEKb7)
+cetqSource :: forall b_aEKb7. Lens' (CreateEventTriggerQuery b_aEKb7) SourceName
+cetqRetryConf :: forall b_aEKb7. Lens' (CreateEventTriggerQuery b_aEKb7) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aEKb7. Lens' (CreateEventTriggerQuery b_aEKb7) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aEKb7. Lens' (CreateEventTriggerQuery b_aEKb7) (Maybe RequestTransform)
+cetqReplace :: forall b_aEKb7. Lens' (CreateEventTriggerQuery b_aEKb7) Bool
+cetqName :: forall b_aEKb7. Lens' (CreateEventTriggerQuery b_aEKb7) TriggerName
+cetqInsert :: forall b_aEKb7. Lens' (CreateEventTriggerQuery b_aEKb7) (Maybe (SubscribeOpSpec b_aEKb7))
+cetqHeaders :: forall b_aEKb7. Lens' (CreateEventTriggerQuery b_aEKb7) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aEKb7. Lens' (CreateEventTriggerQuery b_aEKb7) (Maybe Bool)
+cetqDelete :: forall b_aEKb7. Lens' (CreateEventTriggerQuery b_aEKb7) (Maybe (SubscribeOpSpec b_aEKb7))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
