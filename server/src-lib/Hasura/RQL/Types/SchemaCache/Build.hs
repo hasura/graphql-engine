@@ -7,13 +7,13 @@
 -- stored in the @hdb_catalog@ schema in Postgres.
 module Hasura.RQL.Types.SchemaCache.Build
   ( MetadataDependency (..),
-    recordInconsistency,
     recordInconsistencyM,
     recordInconsistenciesM,
     recordDependencies,
     recordDependenciesM,
     withRecordInconsistency,
     withRecordInconsistencyM,
+    withRecordInconsistencies,
     CacheRWM (..),
     BuildReason (..),
     CacheInvalidations (..),
@@ -68,10 +68,10 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 -- * Inconsistencies
 
-recordInconsistency ::
-  (ArrowWriter (Seq (Either InconsistentMetadata md)) arr) => ((Maybe Value, MetadataObject), Text) `arr` ()
-recordInconsistency = proc ((val, mo), reason) ->
-  tellA -< Seq.singleton $ Left $ InconsistentObject reason val mo
+recordInconsistencies ::
+  (ArrowWriter (Seq (Either InconsistentMetadata md)) arr, Functor f, Foldable f) => ((Maybe Value, f MetadataObject), Text) `arr` ()
+recordInconsistencies = proc ((val, mo), reason) ->
+  tellA -< Seq.fromList $ toList $ fmap (Left . InconsistentObject reason val) mo
 
 recordInconsistencyM ::
   (MonadWriter (Seq (Either InconsistentMetadata md)) m) => Maybe Value -> MetadataObject -> Text -> m ()
@@ -139,12 +139,12 @@ withRecordInconsistencyM metadataObject f = do
       return Nothing
     Right v -> return $ Just v
 
--- | Record any errors resulting from a computation as inconsistencies
-withRecordInconsistency ::
+recordInconsistenciesWith ::
   (ArrowChoice arr, ArrowWriter (Seq (Either InconsistentMetadata md)) arr) =>
+  ((ArrowWriter (Seq (Either InconsistentMetadata md)) arr) => ((Maybe Value, mo), Text) `arr` ()) ->
   ErrorA QErr arr (e, s) a ->
-  arr (e, (MetadataObject, s)) (Maybe a)
-withRecordInconsistency f = proc (e, (metadataObject, s)) -> do
+  arr (e, (mo, s)) (Maybe a)
+recordInconsistenciesWith recordInconsistency' f = proc (e, (metadataObject, s)) -> do
   result <- runErrorA f -< (e, s)
   case result of
     Left err -> do
@@ -154,16 +154,32 @@ withRecordInconsistency f = proc (e, (metadataObject, s)) -> do
           -- from an action webhook (ExtraExtensions) or an internal error thrown somewhere within graphql-engine.
           --
           -- if we do have an error here, it should be an internal error and hence never be of the former case:
-          recordInconsistency -< ((Just (toJSON exts), metadataObject), "withRecordInconsistency: unexpected ExtraExtensions")
+          recordInconsistency' -< ((Just (toJSON exts), metadataObject), "withRecordInconsistency: unexpected ExtraExtensions")
         Just (ExtraInternal internal) ->
-          recordInconsistency -< ((Just (toJSON internal), metadataObject), qeError err)
+          recordInconsistency' -< ((Just (toJSON internal), metadataObject), qeError err)
         Just HideInconsistencies ->
           returnA -< ()
         Nothing ->
-          recordInconsistency -< ((Nothing, metadataObject), qeError err)
+          recordInconsistency' -< ((Nothing, metadataObject), qeError err)
       returnA -< Nothing
     Right v -> returnA -< Just v
+{-# INLINEABLE recordInconsistenciesWith #-}
+
+-- | Record any errors resulting from a computation as inconsistencies
+withRecordInconsistency ::
+  (ArrowChoice arr, ArrowWriter (Seq (Either InconsistentMetadata md)) arr) =>
+  ErrorA QErr arr (e, s) a ->
+  arr (e, (MetadataObject, s)) (Maybe a)
+withRecordInconsistency err = proc (e, (mo, s)) ->
+  recordInconsistenciesWith recordInconsistencies err -< (e, ((Identity mo), s))
 {-# INLINEABLE withRecordInconsistency #-}
+
+withRecordInconsistencies ::
+  (ArrowChoice arr, ArrowWriter (Seq (Either InconsistentMetadata md)) arr) =>
+  ErrorA QErr arr (e, s) a ->
+  arr (e, ([MetadataObject], s)) (Maybe a)
+withRecordInconsistencies = recordInconsistenciesWith recordInconsistencies
+{-# INLINEABLE withRecordInconsistencies #-}
 
 -- ----------------------------------------------------------------------------
 -- operations for triggering a schema cache rebuild

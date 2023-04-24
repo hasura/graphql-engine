@@ -590,48 +590,58 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
       forall b arr m.
       ( ArrowChoice arr,
         Inc.ArrowCache m arr,
+        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadIO m,
         BackendMetadata b,
-        MonadError QErr m,
         MonadBaseControl IO m,
         HasCacheStaticConfig m
       ) =>
-      (Proxy b, Bool, SourceConfig b) `arr` (RecreateEventTriggers, SourceCatalogMigrationState)
-    initCatalogIfNeeded = Inc.cache proc (Proxy, atleastOneTrigger, sourceConfig) -> do
-      bindA
-        -< do
-          if atleastOneTrigger
-            then do
-              cacheStaticConfig <- askCacheStaticConfig
-              let maintenanceMode = _cscMaintenanceMode cacheStaticConfig
-                  eventingMode = _cscEventingMode cacheStaticConfig
-                  readOnlyMode = _cscReadOnlyMode cacheStaticConfig
+      (Proxy b, [(TableName b, [EventTriggerConf b])], SourceConfig b, SourceName) `arr` (RecreateEventTriggers, SourceCatalogMigrationState)
+    initCatalogIfNeeded = Inc.cache proc (Proxy, eventTriggers, sourceConfig, sourceName) -> do
+      res <-
+        (|
+          withRecordInconsistencies
+            ( bindErrorA
+                -< do
+                  if sum (map (length . snd) eventTriggers) > 0
+                    then do
+                      cacheStaticConfig <- askCacheStaticConfig
+                      let maintenanceMode = _cscMaintenanceMode cacheStaticConfig
+                          eventingMode = _cscEventingMode cacheStaticConfig
+                          readOnlyMode = _cscReadOnlyMode cacheStaticConfig
 
-              if
-                  -- when safe mode is enabled, don't perform any migrations
-                  | readOnlyMode == ReadOnlyModeEnabled -> pure (RETDoNothing, SCMSMigrationOnHold "read-only mode enabled")
-                  -- when eventing mode is disabled, don't perform any migrations
-                  | eventingMode == EventingDisabled -> pure (RETDoNothing, SCMSMigrationOnHold "eventing mode disabled")
-                  -- when maintenance mode is enabled, don't perform any migrations
-                  | maintenanceMode == (MaintenanceModeEnabled ()) -> pure (RETDoNothing, SCMSMigrationOnHold "maintenance mode enabled")
-                  | otherwise -> do
-                      -- The `initCatalogForSource` action is retried here because
-                      -- in cloud there will be multiple workers (graphql-engine instances)
-                      -- trying to migrate the source catalog, when needed. This introduces
-                      -- a race condition as both the workers try to migrate the source catalog
-                      -- concurrently and when one of them succeeds the other ones will fail
-                      -- and be in an inconsistent state. To avoid the inconsistency, we retry
-                      -- migrating the catalog on error and in the retry `initCatalogForSource`
-                      -- will see that the catalog is already migrated, so it won't attempt the
-                      -- migration again
-                      liftEither
-                        =<< Retry.retrying
-                          ( Retry.constantDelay (fromIntegral $ diffTimeToMicroSeconds $ seconds $ Seconds 10)
-                              <> Retry.limitRetries 3
-                          )
-                          (const $ return . isLeft)
-                          (const $ runExceptT $ prepareCatalog @b sourceConfig)
-            else pure (RETDoNothing, SCMSUninitializedSource)
+                      if
+                          -- when safe mode is enabled, don't perform any migrations
+                          | readOnlyMode == ReadOnlyModeEnabled -> pure (RETDoNothing, SCMSMigrationOnHold "read-only mode enabled")
+                          -- when eventing mode is disabled, don't perform any migrations
+                          | eventingMode == EventingDisabled -> pure (RETDoNothing, SCMSMigrationOnHold "eventing mode disabled")
+                          -- when maintenance mode is enabled, don't perform any migrations
+                          | maintenanceMode == (MaintenanceModeEnabled ()) -> pure (RETDoNothing, SCMSMigrationOnHold "maintenance mode enabled")
+                          | otherwise -> do
+                              -- The `initCatalogForSource` action is retried here because
+                              -- in cloud there will be multiple workers (graphql-engine instances)
+                              -- trying to migrate the source catalog, when needed. This introduces
+                              -- a race condition as both the workers try to migrate the source catalog
+                              -- concurrently and when one of them succeeds the other ones will fail
+                              -- and be in an inconsistent state. To avoid the inconsistency, we retry
+                              -- migrating the catalog on error and in the retry `initCatalogForSource`
+                              -- will see that the catalog is already migrated, so it won't attempt the
+                              -- migration again
+                              liftEither
+                                =<< Retry.retrying
+                                  ( Retry.constantDelay (fromIntegral $ diffTimeToMicroSeconds $ seconds $ Seconds 10)
+                                      <> Retry.limitRetries 3
+                                  )
+                                  (const $ return . isLeft)
+                                  (const $ runExceptT $ prepareCatalog @b sourceConfig)
+                    else pure (RETDoNothing, SCMSUninitializedSource)
+            )
+          |) (concatMap (\(tableName, events) -> map (mkEventTriggerMetadataObject' sourceName tableName) events) eventTriggers)
+
+      case res of
+        Nothing ->
+          returnA -< (RETDoNothing, SCMSUninitializedSource)
+        Just (recreateEventTriggers, catalogMigrationState) -> returnA -< (recreateEventTriggers, catalogMigrationState)
 
     buildSource ::
       forall b arr m.
@@ -937,9 +947,8 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
 
                           let tablesMetadata = OMap.elems $ _smTables sourceMetadata
                               eventTriggers = map (_tmTable &&& OMap.elems . _tmEventTriggers) tablesMetadata
-                              numEventTriggers = sum $ map (length . snd) eventTriggers
 
-                          (recreateEventTriggers, sourceCatalogMigrationState) <- initCatalogIfNeeded -< (Proxy :: Proxy b, numEventTriggers > 0, sourceConfig)
+                          (recreateEventTriggers, sourceCatalogMigrationState) <- initCatalogIfNeeded -< (Proxy :: Proxy b, eventTriggers, sourceConfig, sourceName)
 
                           bindA -< unLogger logger (sourceName, sourceCatalogMigrationState)
 
@@ -1134,6 +1143,16 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
       (CacheDynamicConfig, a, SourceName, c, TableName b, RecreateEventTriggers, EventTriggerConf b) ->
       MetadataObject
     mkEventTriggerMetadataObject (_, _, source, _, table, _, eventTriggerConf) =
+      mkEventTriggerMetadataObject' source table eventTriggerConf
+
+    mkEventTriggerMetadataObject' ::
+      forall b.
+      Backend b =>
+      SourceName ->
+      TableName b ->
+      EventTriggerConf b ->
+      MetadataObject
+    mkEventTriggerMetadataObject' source table eventTriggerConf =
       let objectId =
             MOSourceObjId source $
               AB.mkAnyBackend $
@@ -1162,7 +1181,6 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
         ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         Inc.ArrowCache m arr,
         MonadIO m,
-        MonadError QErr m,
         MonadBaseControl IO m,
         MonadReader BuildReason m,
         BackendMetadata b,
@@ -1183,10 +1201,10 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
         -<
           (tableInfo, map (dynamicConfig,metadataInvalidationKey,sourceName,sourceConfig,_tciName tableInfo,migrationRecreateEventTriggers,) eventTriggerConfs)
       where
-        buildEventTrigger = proc (tableInfo, (dynamicConfig, metadataInvalidationKey, source, sourceConfig, table, migrationRecreateEventTriggers, eventTriggerConf)) -> do
+        buildEventTrigger = proc (tableInfo, (dynamicConfig, _metadataInvalidationKey, source, sourceConfig, table, migrationRecreateEventTriggers, eventTriggerConf)) -> do
           let triggerName = etcName eventTriggerConf
               triggerOnReplication = etcTriggerOnReplication eventTriggerConf
-              metadataObject = mkEventTriggerMetadataObject @b (dynamicConfig, metadataInvalidationKey, source, sourceConfig, table, migrationRecreateEventTriggers, eventTriggerConf)
+              metadataObject = mkEventTriggerMetadataObject' @b source table eventTriggerConf
               schemaObjectId =
                 SOSourceObj source $
                   AB.mkAnyBackend $
@@ -1213,12 +1231,13 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                          && _cscReadOnlyMode staticConfig == ReadOnlyModeDisabled
                      )
                     then do
-                      bindA
+                      bindErrorA
                         -<
                           when (reloadMetadataRecreateEventTrigger == RETRecreate) $
                             -- This is the case when the user sets `recreate_event_triggers`
                             -- to `true` in `reload_metadata`, in this case, we recreate
                             -- the SQL trigger by force, even if it may not be necessary
+                            -- TODO: Should we also mark the event trigger as inconsistent here?
                             liftEitherM $
                               createTableEventTrigger
                                 @b
@@ -1246,7 +1265,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                           -- We check if the SQL triggers for the event triggers
                           -- are present. If any SQL triggers are missing, those are
                           -- created.
-                          bindA
+                          bindErrorA
                             -<
                               createMissingSQLTriggers
                                 (_cdcSQLGenCtx dynamicConfig)
@@ -1279,7 +1298,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                 primaryKey
                 )
             -> do
-              bindA
+              bindErrorA
                 -< do
                   liftEitherM $
                     createTableEventTrigger @b
