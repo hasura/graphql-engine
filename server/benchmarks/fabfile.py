@@ -307,7 +307,8 @@ def run_benchmark_set(benchmark_set, use_spot=True):
             post_setup_sleep = 90 if benchmark_set == 'huge_schema' else 0
             # NOTE: it seems like K6 is what requires pty here:
             # NOTE: add hide='both' here if we decide to suppress output
-            bench_result = c.run(f"./bench.sh {benchmark_set} {hasura_docker_image_name} {post_setup_sleep}", pty=True)
+            lkey = os.environ['HASURA_GRAPHQL_EE_LICENSE_KEY']
+            bench_result = c.run(f"HASURA_GRAPHQL_EE_LICENSE_KEY={lkey} ./bench.sh {benchmark_set} {hasura_docker_image_name} {post_setup_sleep}", pty=True)
 
         with tempfile.TemporaryDirectory("-hasura-benchmarks") as tmp:
             filename = f"{benchmark_set}.json"
@@ -520,7 +521,7 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
     f = open(output_filename, "w")
     def out(s): f.write(s+"\n")
 
-    out(f"## Benchmark Results") # NOTE: We use this header to identify benchmark reports in `hide-benchmark-reports.sh`
+    out(f"## Benchmark Results (graphql-engine-pro)") # NOTE: We use this header to identify benchmark reports in `hide-benchmark-reports.sh`
     out(f"<details closed><summary>Click for detailed reports, and help docs</summary>")
     out(f"")
     out((f"The regression report below shows, for each benchmark, the **percent change** for "
