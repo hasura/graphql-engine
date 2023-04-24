@@ -32,8 +32,10 @@ import Hasura.RQL.Types.Common (SourceName)
 import Hasura.RQL.Types.Subscription (SubscriptionType (..))
 import Hasura.SQL.Backend (BackendType (..), PostgresKind (Vanilla))
 import Hasura.SQL.Tag (backendTag, reify)
+import Hasura.Server.Prometheus (PrometheusMetrics (..), SubscriptionMetrics (..))
 import Hasura.Session
 import Refined (unrefine)
+import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
 
 pushResultToCohort ::
   GQResult BS.ByteString ->
@@ -75,6 +77,7 @@ pollLiveQuery ::
   forall b.
   BackendTransport b =>
   PollerId ->
+  STM.TVar PollerResponseState ->
   SubscriptionsOptions ->
   (SourceName, SourceConfig b) ->
   RoleName ->
@@ -82,9 +85,10 @@ pollLiveQuery ::
   MultiplexedQuery b ->
   CohortMap 'LiveQuery ->
   SubscriptionPostPollHook ->
+  PrometheusMetrics ->
   ResolvedConnectionTemplate b ->
   IO ()
-pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook resolvedConnectionTemplate = do
+pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook prometheusMetrics resolvedConnectionTemplate = do
   (totalTime, (snapshotTime, batchesDetails)) <- withElapsedTime $ do
     -- snapshot the current cohorts and split them into batches
     (snapshotTime, cohortBatches) <- withElapsedTime $ do
@@ -100,6 +104,18 @@ pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQ
     -- concurrently process each batch
     batchesDetails <- A.forConcurrently cohortBatches $ \(batchId, cohorts) -> do
       (queryExecutionTime, mxRes) <- runDBSubscription @b sourceConfig query (over (each . _2) C._csVariables cohorts) resolvedConnectionTemplate
+
+      previousPollerResponseState <- STM.readTVarIO pollerResponseState
+
+      case mxRes of
+        Left _ -> do
+          when (previousPollerResponseState == PRSSuccess) $ do
+            Prometheus.Gauge.inc $ submActiveLiveQueryPollersInError $ pmSubscriptionMetrics prometheusMetrics
+            STM.atomically $ STM.writeTVar pollerResponseState PRSError
+        Right _ -> do
+          when (previousPollerResponseState == PRSError) $ do
+            Prometheus.Gauge.dec $ submActiveLiveQueryPollersInError $ pmSubscriptionMetrics prometheusMetrics
+            STM.atomically $ STM.writeTVar pollerResponseState PRSSuccess
 
       let lqMeta = SubscriptionMetadata $ convertDuration queryExecutionTime
           operations = getCohortOperations cohorts mxRes

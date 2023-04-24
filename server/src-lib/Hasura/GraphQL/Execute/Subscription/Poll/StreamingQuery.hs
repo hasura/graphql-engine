@@ -37,9 +37,11 @@ import Hasura.RQL.Types.Subscription (SubscriptionType (..))
 import Hasura.SQL.Backend (BackendType (..), PostgresKind (Vanilla))
 import Hasura.SQL.Tag (backendTag, reify)
 import Hasura.SQL.Value (TxtEncodedVal (..))
+import Hasura.Server.Prometheus (PrometheusMetrics (..), SubscriptionMetrics (..))
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import Refined (unrefine)
+import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
 import Text.Shakespeare.Text (st)
 
 {- Note [Streaming subscriptions rebuilding cohort map]
@@ -237,6 +239,7 @@ pollStreamingQuery ::
   forall b.
   BackendTransport b =>
   PollerId ->
+  STM.TVar PollerResponseState ->
   SubscriptionsOptions ->
   (SourceName, SourceConfig b) ->
   RoleName ->
@@ -246,9 +249,10 @@ pollStreamingQuery ::
   G.Name ->
   SubscriptionPostPollHook ->
   Maybe (IO ()) -> -- Optional IO action to make this function (pollStreamingQuery) testable
+  PrometheusMetrics ->
   ResolvedConnectionTemplate b ->
   IO ()
-pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap rootFieldName postPollHook testActionMaybe resolvedConnectionTemplate = do
+pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap rootFieldName postPollHook testActionMaybe prometheusMetrics resolvedConnectionTemplate = do
   (totalTime, (snapshotTime, batchesDetailsAndProcessedCohorts)) <- withElapsedTime $ do
     -- snapshot the current cohorts and split them into batches
     -- This STM transaction is a read only transaction i.e. it doesn't mutate any state
@@ -272,7 +276,20 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
           query
           (over (each . _2) C._csVariables $ fmap (fmap fst) cohorts)
           resolvedConnectionTemplate
-      let lqMeta = SubscriptionMetadata $ convertDuration queryExecutionTime
+
+      previousPollerResponseState <- STM.readTVarIO pollerResponseState
+
+      case mxRes of
+        Left _ -> do
+          when (previousPollerResponseState == PRSSuccess) $ do
+            Prometheus.Gauge.inc $ submActiveStreamingPollersInError $ pmSubscriptionMetrics prometheusMetrics
+            STM.atomically $ STM.writeTVar pollerResponseState PRSError
+        Right _ -> do
+          when (previousPollerResponseState == PRSError) $ do
+            Prometheus.Gauge.dec $ submActiveStreamingPollersInError $ pmSubscriptionMetrics prometheusMetrics
+            STM.atomically $ STM.writeTVar pollerResponseState PRSSuccess
+
+      let subscriptionMeta = SubscriptionMetadata $ convertDuration queryExecutionTime
           operations = getCohortOperations cohorts mxRes
           -- batch response size is the sum of the response sizes of the cohorts
           batchResponseSize =
@@ -288,7 +305,7 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
                       Just currentPollCursorValue -> mergeOldAndNewCursorValues prevCursorVariableValue currentPollCursorValue
           (pushedSubscribers, ignoredSubscribers) <-
             -- Push the result to the subscribers present in the cohorts
-            pushResultToCohort res (fst <$> respData) lqMeta latestCursorValue rootFieldName (snapshot, cohort)
+            pushResultToCohort res (fst <$> respData) subscriptionMeta latestCursorValue rootFieldName (snapshot, cohort)
           let currentCohortKey = C._csVariables snapshot
               updatedCohortKey = modifyCursorCohortVariables (mkUnsafeValidateVariables updatedCursorVarVal) $ C._csVariables snapshot
               snapshottedNewSubs = C._csNewSubscribers snapshot
@@ -330,7 +347,7 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
             _pdGeneratedSql = toTxt query,
             _pdSnapshotTime = snapshotTime,
             _pdBatches = fst <$> batchesDetailsAndProcessedCohorts,
-            _pdLiveQueryOptions = lqOpts,
+            _pdLiveQueryOptions = streamingQueryOpts,
             _pdTotalTime = totalTime,
             _pdSource = sourceName,
             _pdRole = roleName,
@@ -411,7 +428,7 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
     TMap.replace cohortMap updatedCohortsMap
   postPollHook pollDetails
   where
-    SubscriptionsOptions batchSize _ = lqOpts
+    SubscriptionsOptions batchSize _ = streamingQueryOpts
 
     updateCohortSubscribers (C.Cohort _id _respRef curOpsTV newOpsTV _) snapshottedNewSubs = do
       allNewOpsL <- TMap.toList newOpsTV

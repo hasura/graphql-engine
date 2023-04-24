@@ -132,6 +132,7 @@ streamingSubscriptionPollingSpec srcConfig = do
   runIO setup
 
   pollerId <- runIO $ PollerId <$> UUID.nextRandom
+  pollerResponseState <- runIO $ STM.newTVarIO PRSSuccess
   let defaultSubscriptionOptions = mkSubscriptionsOptions Nothing Nothing -- use default values
       paramQueryHash = mkUnsafeParameterizedQueryHash "random"
       -- hardcoded multiplexed query which is generated for the following GraphQL query:
@@ -150,10 +151,12 @@ streamingSubscriptionPollingSpec srcConfig = do
               ORDER BY "root.pg.id" ASC   ) AS "_2_root"      ) AS "numbers_stream"      )
               AS "_fld_resp" ON ('true')
         |]
+  dummyPrometheusMetrics <- runIO makeDummyPrometheusMetrics
   let pollingAction cohortMap testSyncAction =
         pollStreamingQuery
           @('Postgres 'Vanilla)
           pollerId
+          pollerResponseState
           defaultSubscriptionOptions
           (SNDefault, srcConfig)
           (mkRoleNameE "random")
@@ -163,6 +166,7 @@ streamingSubscriptionPollingSpec srcConfig = do
           [G.name|randomRootField|]
           (const $ pure ())
           testSyncAction
+          dummyPrometheusMetrics
 
       mkSubscriber sId =
         let wsId = maybe (error "Invalid UUID") WS.mkUnsafeWSId $ UUID.fromString "ec981f92-8d5a-47ab-a306-80af7cfb1113"
@@ -399,7 +403,7 @@ streamingSubscriptionPollingSpec srcConfig = do
 
         streamQueryMapEntries <- STM.atomically $ ListT.toList $ STMMap.listT streamQueryMap
         length streamQueryMapEntries `shouldBe` 1
-        let (pollerKey, (Poller currentCohortMap ioState)) = head streamQueryMapEntries
+        let (pollerKey, (Poller currentCohortMap _ ioState)) = head streamQueryMapEntries
         cohorts <- STM.atomically $ TMap.toList currentCohortMap
         length cohorts `shouldBe` 1
         let (_cohortKey, Cohort _ _ curSubsTV newSubsTV _) = head cohorts

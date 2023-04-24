@@ -206,6 +206,27 @@ curl 'http://127.0.0.1:8080/v1/metrics' -H 'Authorization: Bearer <secret>'
     which could be optimized for better performance.
     </td>
 </tr>
+<tr>
+  <td>
+    <code>hasura_active_subscription_pollers_in_error_state</code>
+  </td>
+  <td>Current number of active subscription pollers that are in the error state.
+      A subscription poller <a href="https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md#idea-3-batch-multiple-live-queries-into-one-sql-query">multiplexes </a>
+      similar subscriptions together.
+ </td>
+  <td>Gauge</td>
+  <td>
+    &#8226; "subscription_kind": streaming|live-query
+    <br />
+  </td>
+  <td>
+    A non-zero value of this metric indicates that there are runtime errors in atleast one of the subscription pollers that are running
+    in Hasura. In most of the cases, runtime errors in subscriptions are caused due to the changes at the data model layer and fixing the
+    issue at the data model layer should automatically fix the runtime errors.
+    </td>
+</tr>
+
+
 
 </table>
 

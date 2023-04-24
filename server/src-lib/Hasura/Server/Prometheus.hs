@@ -84,7 +84,9 @@ data ScheduledTriggerMetrics = ScheduledTriggerMetrics
 
 data SubscriptionMetrics = SubscriptionMetrics
   { submActiveLiveQueryPollers :: Gauge,
-    submActiveStreamingPollers :: Gauge
+    submActiveStreamingPollers :: Gauge,
+    submActiveLiveQueryPollersInError :: Gauge,
+    submActiveStreamingPollersInError :: Gauge
   }
 
 -- | Create dummy mutable references without associating them to a metrics
@@ -147,6 +149,8 @@ makeDummySubscriptionMetrics :: IO SubscriptionMetrics
 makeDummySubscriptionMetrics = do
   submActiveLiveQueryPollers <- Gauge.new
   submActiveStreamingPollers <- Gauge.new
+  submActiveLiveQueryPollersInError <- Gauge.new
+  submActiveStreamingPollersInError <- Gauge.new
   pure SubscriptionMetrics {..}
 
 --------------------------------------------------------------------------------

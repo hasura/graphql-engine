@@ -13,6 +13,7 @@ module Hasura.GraphQL.Execute.Subscription.Poll.Common
     CohortExecutionDetails (..),
     SubscriptionPostPollHook,
     defaultSubscriptionPostPollHook,
+    PollerResponseState (..),
 
     -- * Cohorts
     Cohort (..),
@@ -124,6 +125,11 @@ type OnChange = SubscriptionGQResponse -> IO ()
 
 type SubscriberMap = TMap.TMap SubscriberId Subscriber
 
+data PollerResponseState
+  = PRSSuccess
+  | PRSError
+  deriving (Eq)
+
 -- -------------------------------------------------------------------------------------------------
 -- Cohorts
 
@@ -137,19 +143,19 @@ type SubscriberMap = TMap.TMap SubscriberId Subscriber
 -- See also 'CohortMap'.
 data Cohort streamCursorVars = Cohort
   { -- | a unique identifier used to identify the cohort in the generated query
-    _cCohortId :: !CohortId,
-    -- | a hash of the previous query result, if any, used to determine if we need to push an updated
-    -- result to the subscribers or not
-    _cPreviousResponse :: !(STM.TVar (Maybe ResponseHash)),
-    -- | the subscribers we’ve already pushed a result to; we push new results to them iff the
+    _cCohortId :: CohortId,
+    -- | Contains a hash of the previous poll's DB query result, if any, used to determine
+    --   if we need to push an updated result to the subscribers or not.
+    _cPreviousResponse :: STM.TVar (Maybe ResponseHash),
+    -- | the subscribers we’ve already pushed a result to; we push new results to them if the
     -- response changes
-    _cExistingSubscribers :: !SubscriberMap,
+    _cExistingSubscribers :: SubscriberMap,
     -- | subscribers we haven’t yet pushed any results to; we push results to them regardless if the
     -- result changed, then merge them in the map of existing subscribers
-    _cNewSubscribers :: !SubscriberMap,
+    _cNewSubscribers :: SubscriberMap,
     -- | a mutable type which holds the latest value of the subscription stream cursor. In case
     --   of live query subscription, this field is ignored by setting `streamCursorVars` to `()`
-    _cStreamCursorVariables :: !streamCursorVars
+    _cStreamCursorVariables :: streamCursorVars
   }
 
 -- | The @BatchId@ is a number based ID to uniquely identify a batch in a single poll and
@@ -212,10 +218,10 @@ dumpCohortMap cohortMap = do
             ]
 
 data CohortSnapshot = CohortSnapshot
-  { _csVariables :: !CohortVariables,
-    _csPreviousResponse :: !(STM.TVar (Maybe ResponseHash)),
-    _csExistingSubscribers :: ![Subscriber],
-    _csNewSubscribers :: ![Subscriber]
+  { _csVariables :: CohortVariables,
+    _csPreviousResponse :: STM.TVar (Maybe ResponseHash),
+    _csExistingSubscribers :: [Subscriber],
+    _csNewSubscribers :: [Subscriber]
   }
 
 -- -----------------------------------------------------------------------------
@@ -229,7 +235,8 @@ data CohortSnapshot = CohortSnapshot
 -- practice, 'Poller's with large numbers of 'Cohort's are batched into
 -- multiple concurrent queries for performance reasons.
 data Poller streamCursor = Poller
-  { _pCohorts :: !(CohortMap streamCursor),
+  { _pCohorts :: CohortMap streamCursor,
+    _pPollerState :: STM.TVar PollerResponseState,
     -- | This is in a separate 'STM.TMVar' because it’s important that we are
     -- able to construct 'Poller' values in 'STM.STM' --- we need the insertion
     -- into the 'PollerMap' to be atomic to ensure that we don’t accidentally
@@ -240,7 +247,7 @@ data Poller streamCursor = Poller
     -- This var is "write once", moving monotonically from empty to full.
     -- TODO this could probably be tightened up to something like
     -- 'STM PollerIOState'
-    _pIOState :: !(STM.TMVar PollerIOState)
+    _pIOState :: STM.TMVar PollerIOState
   }
 
 data PollerIOState = PollerIOState
@@ -284,7 +291,7 @@ dumpPollerMap :: Bool -> PollerMap streamCursor -> IO J.Value
 dumpPollerMap extended pollerMap =
   fmap J.toJSON $ do
     entries <- STM.atomically $ ListT.toList $ STMMap.listT pollerMap
-    forM entries $ \(pollerKey, Poller cohortsMap ioState) ->
+    forM entries $ \(pollerKey, Poller cohortsMap _responseState ioState) ->
       AB.dispatchAnyBackend @Backend (unBackendPollerKey pollerKey) $ \(PollerKey source role query _connectionKey) -> do
         PollerIOState threadId pollerId <- STM.atomically $ STM.readTMVar ioState
         cohortsJ <-
