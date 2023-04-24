@@ -52,6 +52,7 @@ import Hasura.RQL.IR
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column hiding (EnumValueInfo)
 import Hasura.RQL.Types.Column qualified as Column
 import Hasura.RQL.Types.Common (RelName)
@@ -60,7 +61,6 @@ import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization (MkRootFieldName)
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Bag of constraints available to the methods of @BackendSchema@.

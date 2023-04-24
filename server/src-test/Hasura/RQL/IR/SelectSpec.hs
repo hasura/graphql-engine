@@ -5,7 +5,7 @@ import Hasura.Backends.Postgres.RQLGenerator
 import Hasura.Generator.Common (defaultRange)
 import Hasura.Prelude
 import Hasura.RQL.IR.Select (AnnSelectG (..), bifoldMapAnnSelectG)
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
 import Hedgehog
 import Hedgehog.Gen (int)
 import Test.Hspec

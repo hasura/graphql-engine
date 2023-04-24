@@ -65,6 +65,7 @@ import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType (BackendType (..))
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
@@ -81,7 +82,6 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source (unsafeSourceInfo)
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend (BackendType (..))
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.Logging (MetadataLog (..))
 import Network.HTTP.Client.Transformable qualified as HTTP

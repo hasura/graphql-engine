@@ -23,8 +23,8 @@ import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
 import Hasura.Logging (Hasura, Logger, nullLogger)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (ResolvedConnectionTemplate)
+import Hasura.RQL.Types.BackendType (BackendType (DataConnector))
 import Hasura.SQL.AnyBackend (AnyBackend)
-import Hasura.SQL.Backend (BackendType (DataConnector))
 import Hasura.Server.Types (RequestId)
 import Hasura.Session (UserInfo)
 import Hasura.Tracing qualified as Tracing

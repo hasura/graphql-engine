@@ -32,10 +32,10 @@ import Hasura.NativeQuery.Metadata (InterpolatedQuery)
 import Hasura.NativeQuery.Types (NativeQueryName (..))
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as Ir
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as Rql
 import Hasura.RQL.Types.Common qualified as Rql
 import Hasura.RQL.Types.Relationships.Local qualified as Rql
-import Hasura.SQL.Backend
 
 --------------------------------------------------------------------------------
 -- Types

@@ -36,7 +36,7 @@ import Hasura.NativeQuery.Metadata
   )
 import Hasura.NativeQuery.Types (NullableScalarType (nstType))
 import Hasura.Prelude
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
 
 -- | Prepare a native query query against a postgres-like database to validate it.
 validateNativeQuery ::

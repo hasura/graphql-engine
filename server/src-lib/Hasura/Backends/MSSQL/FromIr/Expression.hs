@@ -21,9 +21,9 @@ import Hasura.Backends.MSSQL.Instances.Types ()
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as IR
 import Hasura.RQL.Types.Relationships.Local qualified as IR
-import Hasura.SQL.Backend
 
 -- | Translate boolean expressions into TSQL 'Expression's.
 --

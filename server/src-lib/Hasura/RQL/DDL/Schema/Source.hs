@@ -58,6 +58,8 @@ import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Backend qualified as RQL.Types
+import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.BackendType qualified as Backend
 import Hasura.RQL.Types.Column (ColumnMutability (..), RawColumnInfo (..))
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Common qualified as Common
@@ -76,8 +78,6 @@ import Hasura.RQL.Types.Table (Constraint (..), DBTableMetadata (..), ForeignKey
 import Hasura.SQL.AnyBackend (AnyBackend)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.AnyBackend qualified as AnyBackend
-import Hasura.SQL.Backend
-import Hasura.SQL.Backend qualified as Backend
 import Hasura.Server.Logging (MetadataLog (..))
 import Hasura.Services
 import Language.GraphQL.Draft.Syntax qualified as G

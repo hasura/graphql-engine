@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Hasura.SQL.Backend
+module Hasura.RQL.Types.BackendType
   ( PostgresKind (..),
     BackendType (..),
     BackendSourceKind (..),
@@ -20,8 +20,8 @@ import Data.Aeson.Types (Parser)
 import Data.Text (unpack)
 import Data.Text.Extended
 import Data.Text.NonEmpty (NonEmptyText, nonEmptyTextQQ)
-import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName (..), mkDataConnectorName)
 import Hasura.Prelude
+import Hasura.RQL.Types.DataConnector (DataConnectorName (..), mkDataConnectorName)
 import Language.GraphQL.Draft.Syntax qualified as GQL
 import Witch qualified
 

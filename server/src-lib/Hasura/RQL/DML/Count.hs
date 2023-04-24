@@ -23,11 +23,11 @@ import Hasura.Prelude
 import Hasura.RQL.DML.Internal
 import Hasura.RQL.DML.Types
 import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing

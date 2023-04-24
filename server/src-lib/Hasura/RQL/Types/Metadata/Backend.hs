@@ -18,6 +18,7 @@ import Hasura.NativeQuery.Metadata (NativeQueryMetadata)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.BoolExp
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
@@ -30,7 +31,6 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Server.Migrate.Version
 import Hasura.Services.Network

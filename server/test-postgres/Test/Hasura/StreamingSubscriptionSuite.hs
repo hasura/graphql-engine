@@ -35,10 +35,10 @@ import Hasura.Logging
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ResizePool (ResizePoolStrategy (..))
 import Hasura.RQL.Types.Roles (RoleName, mkRoleName)
-import Hasura.SQL.Backend
 import Hasura.Server.Init (considerEnv, databaseUrlOption, runWithEnv, _envVar)
 import Hasura.Server.Metrics (createServerMetrics)
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)

@@ -38,8 +38,8 @@ import CI qualified
 import Data.Aeson qualified as A
 import Data.Aeson.TH qualified as A
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType (BackendType)
 import Hasura.RQL.Types.Metadata.Instances ()
-import Hasura.SQL.Backend (BackendType)
 import Hasura.Server.Telemetry.Counters
 import Hasura.Server.Types
 import Hasura.Server.Version

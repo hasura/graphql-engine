@@ -6,7 +6,7 @@
 module Hasura.Backends.MSSQL.Instances.API () where
 
 import Hasura.Prelude
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.Server.API.Backend
 
 instance BackendAPI 'MSSQL where

@@ -22,12 +22,12 @@ import Hasura.Function.Cache
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseCust)
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Server.Utils
 import Language.GraphQL.Draft.Syntax qualified as G
 

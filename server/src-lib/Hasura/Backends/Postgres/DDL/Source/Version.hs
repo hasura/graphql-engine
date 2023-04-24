@@ -18,7 +18,7 @@ import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
 import Hasura.Prelude
-import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind)
+import Hasura.RQL.Types.BackendType (BackendType (Postgres), PostgresKind)
 import Hasura.Server.Migrate.Version qualified as Version
 
 type SourceCatalogVersion (pgKind :: PostgresKind) = Version.SourceCatalogVersion ('Postgres pgKind)

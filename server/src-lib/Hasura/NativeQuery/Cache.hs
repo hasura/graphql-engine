@@ -21,10 +21,10 @@ import Hasura.NativeQuery.Metadata (InterpolatedQuery, NativeQueryArgumentName, 
 import Hasura.NativeQuery.Types (NullableScalarType)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend)
+import Hasura.RQL.Types.BackendType (BackendType)
 import Hasura.RQL.Types.Common (RelName)
 import Hasura.RQL.Types.Relationships.Local (RelInfo)
 import Hasura.RQL.Types.Table (RolePermInfoMap)
-import Hasura.SQL.Backend (BackendType)
 
 type NativeQueryCache b = HashMap NativeQueryName (NativeQueryInfo b)
 

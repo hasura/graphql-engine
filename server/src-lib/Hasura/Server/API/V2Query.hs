@@ -41,12 +41,12 @@ import Hasura.RQL.DML.Types
     UpdateQuery,
   )
 import Hasura.RQL.DML.Update
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.SchemaCache (MetadataWithResourceVersion (MetadataWithResourceVersion))
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
-import Hasura.SQL.Backend
 import Hasura.Server.Types
 import Hasura.Services
 import Hasura.Session

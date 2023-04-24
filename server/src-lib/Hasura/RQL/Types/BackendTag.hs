@@ -8,7 +8,7 @@ module Hasura.RQL.Types.BackendTag
 where
 
 import Data.GADT.Compare.TH
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
 
 -- | A singleton-like GADT that associates a tag to each backend.
 data BackendTag (b :: BackendType) where

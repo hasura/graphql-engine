@@ -10,8 +10,8 @@ import Data.List (isPrefixOf)
 import Data.Text.Extended
 import Hasura.Logging (Hasura, LogLevel (..), ToEngineLog (..))
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType (BackendType)
 import Hasura.RQL.Types.Common (SourceName)
-import Hasura.SQL.Backend (BackendType)
 import Hasura.Server.Logging (StartupLog (..))
 import Language.Haskell.TH.Lift (Lift)
 

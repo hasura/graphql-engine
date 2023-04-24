@@ -21,9 +21,9 @@ import Hasura.Base.Error (QErr)
 import Hasura.Base.Error.TestInstances ()
 import Hasura.GraphQL.Parser.Variable (VariableInfo (..))
 import Hasura.RQL.IR.Value (Provenance (..), UnpreparedValue (..))
+import Hasura.RQL.Types.BackendType (BackendType (..), PostgresKind (..))
 import Hasura.RQL.Types.Column (ColumnType (..), ColumnValue (..))
 import Hasura.RQL.Types.Roles (mkRoleNameSafe)
-import Hasura.SQL.Backend (BackendType (..), PostgresKind (..))
 import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Session
   ( BackendOnlyFieldAccess (..),

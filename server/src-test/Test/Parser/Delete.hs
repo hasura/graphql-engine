@@ -10,9 +10,9 @@ import Hasura.RQL.IR.BoolExp (GBoolExp (..), OpExpG)
 import Hasura.RQL.IR.Delete (AnnDelG (..))
 import Hasura.RQL.IR.Returning (MutationOutputG (..))
 import Hasura.RQL.IR.Value (UnpreparedValue)
+import Hasura.RQL.Types.BackendType (BackendType (Postgres), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Column (ColumnInfo)
 import Hasura.RQL.Types.Instances ()
-import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))
 import Test.Parser.Expectation qualified as E
 
 type PG = 'Postgres 'Vanilla

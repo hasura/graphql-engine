@@ -17,8 +17,8 @@ import Hasura.Backends.BigQuery.Types
 import Hasura.Base.Error qualified as E
 import Hasura.Prelude
 import Hasura.RQL.IR
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as RQL
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Session
 

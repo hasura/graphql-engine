@@ -28,8 +28,8 @@ import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Schema.Options qualified as Options
-import Hasura.SQL.Backend
 import Hasura.Session
 
 -- | Executes a Delete IR AST and return results as JSON.

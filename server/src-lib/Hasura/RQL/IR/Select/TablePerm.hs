@@ -13,7 +13,7 @@ where
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
 
 -- Permissions
 

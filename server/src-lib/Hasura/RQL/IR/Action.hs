@@ -51,6 +51,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Action qualified as RQL
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (EnvRecord, FieldName, Fields, ResolvedWebhook, SourceName, Timeout)
 import Hasura.RQL.Types.CustomTypes
   ( AnnotatedObjectType (..),
@@ -61,7 +62,6 @@ import Hasura.RQL.Types.CustomTypes
   )
 import Hasura.RQL.Types.Headers
 import Hasura.RQL.Types.Schema.Options (StringifyNumbers)
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Internal representation for a selection of fields on the result of an action.

@@ -125,6 +125,7 @@ import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.DDL.Schema.Catalog
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.Metadata
@@ -134,7 +135,6 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Server.API.Query (requiresAdmin)
 import Hasura.Server.App
 import Hasura.Server.AppStateRef

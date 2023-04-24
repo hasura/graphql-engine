@@ -47,12 +47,12 @@ import Hasura.RQL.IR.OrderBy
   )
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Schema.Options qualified as Options
-import Hasura.SQL.Backend
 
 {- Note [Optimizing queries using limit/offset]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

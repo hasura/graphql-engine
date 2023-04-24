@@ -23,10 +23,10 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Relationships.Local
-import Hasura.SQL.Backend
 
 data AnnotatedOrderByElement (b :: BackendType) v
   = AOCColumn (ColumnInfo b)

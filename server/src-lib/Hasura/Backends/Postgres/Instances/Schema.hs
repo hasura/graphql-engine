@@ -78,12 +78,12 @@ import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend (Backend (..))
+import Hasura.RQL.Types.BackendType (BackendType (Postgres), PostgresKind (Citus, Cockroach, Vanilla))
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table (TableInfo (..), UpdPermInfo (..))
-import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Citus, Cockroach, Vanilla))
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G

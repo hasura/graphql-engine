@@ -47,10 +47,10 @@ import Hasura.GraphQL.Parser.Names
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Subscription
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G

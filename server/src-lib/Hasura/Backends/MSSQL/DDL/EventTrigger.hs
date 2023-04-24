@@ -55,13 +55,13 @@ import Hasura.Backends.MSSQL.Types.Internal (columnNameText, geoTypes)
 import Hasura.Base.Error
 import Hasura.Eventing.Common
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing (EventId (..), OpVar (..))
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table (PrimaryKey (..))
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Server.Types
 import Hasura.Session

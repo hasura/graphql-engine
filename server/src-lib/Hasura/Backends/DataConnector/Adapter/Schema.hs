@@ -39,12 +39,12 @@ import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend qualified as RQL
+import Hasura.RQL.Types.BackendType (BackendType (..))
 import Hasura.RQL.Types.Column qualified as RQL
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source qualified as RQL
 import Hasura.RQL.Types.SourceCustomization qualified as RQL
 import Hasura.RQL.Types.Table qualified as RQL
-import Hasura.SQL.Backend (BackendType (..))
 import Language.GraphQL.Draft.Syntax qualified as GQL
 
 --------------------------------------------------------------------------------

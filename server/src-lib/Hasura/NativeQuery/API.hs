@@ -30,6 +30,7 @@ import Hasura.NativeQuery.Types (NativeQueryName, NullableScalarType, nativeQuer
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend, SourceConnConfiguration)
 import Hasura.RQL.Types.BackendTag
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
   ( RelName,
     SourceName,
@@ -42,7 +43,6 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Relationships.Local (RelDef, RelManualConfig)
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker (..))
 import Hasura.Server.Init.FeatureFlag qualified as FF
 

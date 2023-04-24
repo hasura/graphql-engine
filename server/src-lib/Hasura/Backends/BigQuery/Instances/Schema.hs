@@ -40,6 +40,7 @@ import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
@@ -47,7 +48,6 @@ import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 ----------------------------------------------------------------

@@ -44,6 +44,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Diff qualified as Diff
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
@@ -58,7 +59,6 @@ import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Server.Utils (quoteRegex)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing

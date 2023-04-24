@@ -31,10 +31,10 @@ import Hasura.Base.Error qualified as Error
 import Hasura.EncJSON (EncJSON)
 import Hasura.EncJSON qualified as EncJSON
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType qualified as Backend
 import Hasura.RQL.Types.Metadata qualified as Metadata
 import Hasura.RQL.Types.SchemaCache qualified as SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend qualified as Backend
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Language.GraphQL.Draft.Syntax qualified as GQL
 

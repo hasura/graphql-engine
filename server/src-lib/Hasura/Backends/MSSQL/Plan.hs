@@ -37,9 +37,9 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Parser qualified as GraphQL
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.IR
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as RQL
 import Hasura.RQL.Types.Common qualified as RQL
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G

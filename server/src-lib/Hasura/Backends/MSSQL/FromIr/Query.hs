@@ -36,10 +36,10 @@ import Hasura.NativeQuery.IR qualified as IR
 import Hasura.NativeQuery.Types (NativeQueryName (..))
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as IR
 import Hasura.RQL.Types.Common qualified as IR
 import Hasura.RQL.Types.Relationships.Local qualified as IR
-import Hasura.SQL.Backend
 
 -- | This is the top-level entry point for translation of Query root fields.
 fromQueryRootField :: IR.QueryDB 'MSSQL Void Expression -> FromIr Select

@@ -133,6 +133,7 @@ import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
@@ -142,7 +143,6 @@ import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.SQL.AnyBackend (runBackend)
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Parser qualified as GParse
 import Language.GraphQL.Draft.Printer qualified as GPrint
 import Language.GraphQL.Draft.Syntax qualified as G

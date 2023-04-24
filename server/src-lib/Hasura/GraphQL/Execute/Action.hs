@@ -67,6 +67,7 @@ import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Select qualified as RS
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
@@ -76,7 +77,6 @@ import Hasura.RQL.Types.Headers (HeaderConf)
 import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
-import Hasura.SQL.Backend
 import Hasura.Server.Init.Config (OptionalInterval (..))
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Utils

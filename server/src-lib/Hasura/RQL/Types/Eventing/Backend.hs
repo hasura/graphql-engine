@@ -12,13 +12,13 @@ import Hasura.Backends.Postgres.DDL.EventTrigger qualified as Postgres
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column (ColumnInfo)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table (PrimaryKey)
-import Hasura.SQL.Backend
 import Hasura.Server.Types (MaintenanceMode)
 import Hasura.Session (UserInfo)
 import Hasura.Tracing qualified as Tracing

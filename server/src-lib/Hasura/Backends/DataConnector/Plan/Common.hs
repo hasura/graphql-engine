@@ -43,10 +43,10 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Backend (SessionVarType)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Relationships.Local (RelInfo (..))
-import Hasura.SQL.Backend
 import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Session
 import Witch qualified

@@ -89,6 +89,7 @@ import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendTag (BackendTag, HasTag (backendTag))
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.CustomTypes
@@ -106,7 +107,6 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 
 -- | Parse a list of objects into a map from a derived key,
 -- failing if the list has duplicates.

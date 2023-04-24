@@ -29,11 +29,11 @@ import Hasura.RQL.IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value qualified as IR (Provenance (Unknown))
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP

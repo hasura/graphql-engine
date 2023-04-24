@@ -21,8 +21,8 @@ import Hasura.RQL.IR.Select
     ConnectionSelect (_csSelect),
   )
 import Hasura.RQL.Types.Backend (Backend)
+import Hasura.RQL.Types.BackendType (BackendType (Postgres))
 import Hasura.RQL.Types.Common (FieldName (FieldName))
-import Hasura.SQL.Backend (BackendType (Postgres))
 
 -- | Translates IR to Postgres queries for "connection" queries (used for Relay).
 --

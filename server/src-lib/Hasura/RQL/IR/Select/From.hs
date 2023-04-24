@@ -15,7 +15,7 @@ import Hasura.Function.Cache
 import Hasura.NativeQuery.IR (NativeQuery)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
 
 data SelectFromG (b :: BackendType) v
   = FromTable (TableName b)

@@ -12,8 +12,8 @@ where
 import Hasura.GraphQL.Parser.Variable
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
-import Hasura.SQL.Backend
 import Hasura.Session (SessionVariable)
 
 -- | Where did this variable come from?

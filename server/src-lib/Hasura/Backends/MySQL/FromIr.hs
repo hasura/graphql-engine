@@ -21,10 +21,10 @@ import Hasura.Backends.MySQL.Instances.Types ()
 import Hasura.Backends.MySQL.Types
 import Hasura.Prelude hiding (GT)
 import Hasura.RQL.IR qualified as IR
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as IR
 import Hasura.RQL.Types.Common qualified as IR
 import Hasura.RQL.Types.Relationships.Local qualified as IR
-import Hasura.SQL.Backend
 
 data FieldSource
   = ExpressionFieldSource (Aliased Expression)

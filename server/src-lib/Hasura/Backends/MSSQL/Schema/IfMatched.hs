@@ -34,12 +34,12 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Field-parser for:

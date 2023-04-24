@@ -50,12 +50,12 @@ import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Subscription
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Server.Init qualified as Init
 import Hasura.Server.Prometheus (PrometheusMetrics)
 import Hasura.Server.Types (ReadOnlyMode (..), RequestId (..))

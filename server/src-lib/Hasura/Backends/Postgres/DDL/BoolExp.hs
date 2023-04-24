@@ -23,12 +23,12 @@ import Hasura.Function.Cache
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.BoolExp
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 
 parseBoolExpOperations ::

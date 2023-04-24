@@ -65,6 +65,7 @@ import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
@@ -79,7 +80,6 @@ import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Session
 import Hasura.Tracing (TraceT)
 import Hasura.Tracing qualified as Tracing

@@ -33,6 +33,7 @@ import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp.AggregationPredicates
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Backend qualified as B
+import Hasura.RQL.Types.BackendType (BackendType)
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common (relNameToTxt)
 import Hasura.RQL.Types.Relationships.Local
@@ -42,7 +43,6 @@ import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source (SourceInfo (..))
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend (BackendType)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | This function is meant to serve as the default schema for Aggregation

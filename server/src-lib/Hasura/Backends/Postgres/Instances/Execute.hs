@@ -78,6 +78,7 @@ import Hasura.RQL.IR.Returning qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
   ( ColumnType (..),
     ColumnValue (..),
@@ -90,7 +91,6 @@ import Hasura.RQL.Types.Common
   )
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Session (UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G

@@ -45,6 +45,7 @@ import Hasura.NativeQuery.Cache (NativeQueryInfo (_nqiArguments))
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.BackendTag
+import Hasura.RQL.Types.BackendType (BackendType, backendTypeFromBackendSourceKind)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata.Instances ()
@@ -54,7 +55,6 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as Any
-import Hasura.SQL.Backend (BackendType, backendTypeFromBackendSourceKind)
 import Hasura.Server.AppStateRef qualified as HGE
 import Hasura.Server.Init.Config
 import Hasura.Server.Telemetry.Counters (dumpServiceTimingMetrics)

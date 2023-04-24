@@ -72,9 +72,9 @@ import Data.Text.Extended
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Roles (RoleName)
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.Haskell.TH.Syntax
 

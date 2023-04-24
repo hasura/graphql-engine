@@ -35,11 +35,11 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp qualified as IR
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Parser for a field name @on_conflict@ of type @tablename_on_conflict@.

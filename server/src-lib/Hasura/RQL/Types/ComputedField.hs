@@ -29,8 +29,8 @@ import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName, TableName)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax (Name)
 
 newtype ComputedFieldName = ComputedFieldName {unComputedFieldName :: NonEmptyText}

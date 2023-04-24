@@ -17,8 +17,8 @@ import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Hasura.LogicalModel.Types (LogicalModelField, LogicalModelName)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend (Backend (..))
+import Hasura.RQL.Types.BackendType (BackendType)
 import Hasura.RQL.Types.Table (RolePermInfoMap)
-import Hasura.SQL.Backend (BackendType)
 
 type LogicalModelCache b = HashMap LogicalModelName (LogicalModelInfo b)
 

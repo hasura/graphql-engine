@@ -21,10 +21,10 @@ import Database.MySQL.Simple.Result (Result, ResultError (..), convert)
 import Hasura.Backends.MySQL.Instances.Types ()
 import Hasura.Backends.MySQL.Types
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 getMetadata :: ConnSourceConfig -> Connection -> IO (DBTablesMetadata 'MySQL)

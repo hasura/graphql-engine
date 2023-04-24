@@ -35,9 +35,9 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.SQL.Backend
 
 newtype OrderByExp = OrderByExp {getOrderByItems :: [OrderByItem ('Postgres 'Vanilla)]}
   deriving (Show, Eq)

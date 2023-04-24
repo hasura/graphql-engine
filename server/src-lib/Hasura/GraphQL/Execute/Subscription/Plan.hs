@@ -127,8 +127,8 @@ import Database.PG.Query.PTI qualified as PTI
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Roles (RoleName)
-import Hasura.SQL.Backend
 import Hasura.Session (SessionVariable, SessionVariables, filterSessionVariables)
 import Language.GraphQL.Draft.Syntax qualified as G
 import PostgreSQL.Binary.Encoding qualified as PE

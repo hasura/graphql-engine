@@ -45,6 +45,7 @@ import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.LegacyCatalog
 import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata
@@ -52,7 +53,6 @@ import Hasura.RQL.Types.OpenTelemetry (emptyOpenTelemetryConfig)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Server.Init (DowngradeOptions (..), databaseUrlOption, _envVar)
 import Hasura.Server.Logging (StartupLog (..))
 import Hasura.Server.Migrate.Internal

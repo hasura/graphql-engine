@@ -6,9 +6,9 @@ import Hasura.Backends.BigQuery.DDL qualified as BigQuery
 import Hasura.Backends.BigQuery.Schema.Introspection qualified as BigQuery (listAllTables)
 import Hasura.Base.Error (Code (UnexpectedPayload), throw400)
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (RETDoNothing))
 import Hasura.RQL.Types.Metadata.Backend
-import Hasura.SQL.Backend
 import Hasura.Server.Migrate.Version (SourceCatalogMigrationState (SCMSNotSupported))
 
 instance BackendMetadata 'BigQuery where

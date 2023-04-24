@@ -34,9 +34,9 @@ import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.NativeQuery.Types (NativeQueryName (..), NullableScalarType (..), nullableScalarTypeMapCodec)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (RelName)
 import Hasura.RQL.Types.Relationships.Local (RelDef (..), RelManualConfig (..))
-import Hasura.SQL.Backend
 import Language.Haskell.TH.Syntax (Lift)
 
 -- | copy pasta'd from Hasura.RQL.Types.Metadata.Common, forgive me Padre i did

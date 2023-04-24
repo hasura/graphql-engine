@@ -26,6 +26,7 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (GBoolExp (..), OpExpG (AEQ))
 import Hasura.RQL.IR.BoolExp.AggregationPredicates
 import Hasura.RQL.IR.Value (Provenance (Unknown), UnpreparedValue (UVParameter))
+import Hasura.RQL.Types.BackendType (BackendSourceKind (PostgresVanillaKind), BackendType (Postgres), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Column (ColumnType (ColumnScalar), ColumnValue (..))
 import Hasura.RQL.Types.Common (InsertOrder (..), RelName (..), RelType (..), SourceName (..))
 import Hasura.RQL.Types.Relationships.Local (RelInfo (..))
@@ -36,7 +37,6 @@ import Hasura.RQL.Types.Table
   ( TableCoreInfoG (_tciName),
     TableInfo (_tiCoreInfo),
   )
-import Hasura.SQL.Backend (BackendSourceKind (PostgresVanillaKind), BackendType (Postgres), PostgresKind (Vanilla))
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.Aeson.Expectation (shouldBeSubsetOf)

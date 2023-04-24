@@ -61,11 +61,11 @@ import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 --------------------------------------------------------------------------------

@@ -20,6 +20,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
@@ -29,7 +30,6 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Language.GraphQL.Draft.Syntax qualified as G

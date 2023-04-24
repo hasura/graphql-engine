@@ -27,11 +27,11 @@ import Hasura.Base.ToErrorValue
 import Hasura.EncJSON (EncJSON)
 import Hasura.Prelude
 import Hasura.RQL.Types.BackendTag
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation)
 import Hasura.RQL.Types.ResizePool (ServerReplicas, SourceResizePoolSummary)
 import Hasura.RQL.Types.SourceConfiguration
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 

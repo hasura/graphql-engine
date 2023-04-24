@@ -66,6 +66,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.CustomTypes
@@ -79,7 +80,6 @@ import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Tracing (TraceT)

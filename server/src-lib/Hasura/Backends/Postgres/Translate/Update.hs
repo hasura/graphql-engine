@@ -19,8 +19,8 @@ import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Update
 import Hasura.RQL.IR.Update.Batch
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 
 data UpdateCTE

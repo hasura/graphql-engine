@@ -76,13 +76,13 @@ import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Prometheus (EventTriggerMetrics (..))
 import Hasura.Server.Types

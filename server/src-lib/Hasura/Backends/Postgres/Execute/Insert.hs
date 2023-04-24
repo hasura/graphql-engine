@@ -36,11 +36,11 @@ import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Returning qualified as IR
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Schema.Options qualified as Options
-import Hasura.SQL.Backend
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 

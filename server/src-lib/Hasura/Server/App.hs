@@ -74,11 +74,11 @@ import Hasura.RQL.DDL.ApiLimit (MonadGetApiTimeLimit)
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup)
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Cache.Config
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Endpoint as EP
 import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
-import Hasura.SQL.Backend
 import Hasura.Server.API.Config (runGetConfig)
 import Hasura.Server.API.Metadata
 import Hasura.Server.API.PGDump qualified as PGD

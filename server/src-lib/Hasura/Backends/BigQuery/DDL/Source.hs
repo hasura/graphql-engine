@@ -24,11 +24,11 @@ import Hasura.Base.Error
 import Hasura.Function.Cache (FunctionOverloads (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (BackendConfig)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 
 defaultGlobalSelectLimit :: Int.Int64
 defaultGlobalSelectLimit = 1000

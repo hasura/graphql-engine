@@ -6,7 +6,7 @@
 module Hasura.Backends.BigQuery.Instances.SchemaCache () where
 
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType (BackendType (BigQuery))
 import Hasura.RQL.Types.SchemaCacheTypes (GetAggregationPredicatesDeps)
-import Hasura.SQL.Backend (BackendType (BigQuery))
 
 instance (Backend 'BigQuery) => GetAggregationPredicatesDeps 'BigQuery

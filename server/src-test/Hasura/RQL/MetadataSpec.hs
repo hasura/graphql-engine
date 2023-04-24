@@ -27,8 +27,8 @@ import Hasura.Prelude hiding ((%~))
 import Hasura.RQL.DDL.RemoteRelationship
   ( CreateFromSourceRelationship,
   )
+import Hasura.RQL.Types.BackendType (BackendType (BigQuery, MSSQL, Postgres), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Metadata (Metadata)
-import Hasura.SQL.Backend (BackendType (BigQuery, MSSQL, Postgres), PostgresKind (Vanilla))
 import Hasura.Server.API.Metadata (RQLMetadataV1)
 import Hasura.Server.API.Query qualified as V1 (RQLQuery)
 import Hedgehog (MonadTest, evalEither, tripping)

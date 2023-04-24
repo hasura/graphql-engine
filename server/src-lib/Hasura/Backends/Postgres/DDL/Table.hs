@@ -23,9 +23,9 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Server.Utils
 import Language.GraphQL.Draft.Syntax qualified as G

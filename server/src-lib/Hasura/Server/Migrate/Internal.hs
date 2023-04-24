@@ -15,9 +15,9 @@ import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (InputWebhook, TriggerOnReplication (..))
 import Hasura.RQL.Types.EventTrigger
-import Hasura.SQL.Backend
 import Hasura.Server.Migrate.Version
 
 -- | The old 0.8 catalog version is non-integral, so the version has always been

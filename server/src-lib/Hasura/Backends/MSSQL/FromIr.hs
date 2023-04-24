@@ -34,7 +34,7 @@ import Hasura.Base.Error (QErr, throw500)
 import Hasura.NativeQuery.Metadata (InterpolatedQuery)
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
 
 -- | Allow the query process to emit extra setup / teardown steps
 newtype IRWriter = IRWriter

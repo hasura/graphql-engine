@@ -18,8 +18,8 @@ import Hasura.Backends.MSSQL.Types.Insert (IfMatched (..))
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as IR
-import Hasura.SQL.Backend
 
 fromInsert :: IR.AnnotatedInsert 'MSSQL Void Expression -> Insert
 fromInsert IR.AnnotatedInsert {..} =

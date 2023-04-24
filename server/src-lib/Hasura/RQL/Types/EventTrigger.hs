@@ -55,10 +55,10 @@ import Hasura.Metadata.DTO.Utils (boolConstCodec, codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (EnvRecord, InputWebhook, ResolvedWebhook, SourceName (..), TriggerOnReplication (..))
 import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Headers (HeaderConf (..))
-import Hasura.SQL.Backend
 import System.Cron (CronSchedule)
 import Text.Regex.TDFA qualified as TDFA
 

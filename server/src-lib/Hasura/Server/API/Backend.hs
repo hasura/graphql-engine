@@ -34,8 +34,8 @@ import Data.Aeson.Types qualified as J
 import Data.Text qualified as T
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.SQL.AnyBackend
-import Hasura.SQL.Backend
 import Hasura.Server.API.Metadata.Types
 
 -- API class

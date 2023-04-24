@@ -19,8 +19,8 @@ import Hasura.Backends.Postgres.Translate.Types (CustomSQLCTEs, MultiRowSelectNo
 import Hasura.Prelude
 import Hasura.RQL.IR.Select (AnnAggregateSelect, AnnSelectG (_asnStrfyNum))
 import Hasura.RQL.Types.Backend (Backend)
+import Hasura.RQL.Types.BackendType (BackendType (Postgres))
 import Hasura.RQL.Types.Common (FieldName (FieldName))
-import Hasura.SQL.Backend (BackendType (Postgres))
 
 -- | Translates IR to Postgres queries for aggregated SELECTs.
 --

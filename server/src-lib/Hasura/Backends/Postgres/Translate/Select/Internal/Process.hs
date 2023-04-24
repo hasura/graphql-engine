@@ -86,11 +86,11 @@ import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy (OrderByItemG (OrderByItemG, obiColumn))
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Schema.Options qualified as Options
-import Hasura.SQL.Backend
 
 processSelectParams ::
   forall pgKind m.

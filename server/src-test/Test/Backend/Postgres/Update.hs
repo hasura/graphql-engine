@@ -17,8 +17,8 @@ import Hasura.Backends.Postgres.Translate.Update qualified as Update
 import Hasura.Prelude
 import Hasura.RQL.IR.Returning (MutationOutputG (..))
 import Hasura.RQL.IR.Value (UnpreparedValue (..))
+import Hasura.RQL.Types.BackendType (PostgresKind (Vanilla))
 import Hasura.RQL.Types.Column (ColumnInfo)
-import Hasura.SQL.Backend (PostgresKind (Vanilla))
 import Hasura.SQL.Types (toSQLTxt)
 import Test.Backend.Postgres.Misc
 import Test.HUnit.Base (assertFailure)

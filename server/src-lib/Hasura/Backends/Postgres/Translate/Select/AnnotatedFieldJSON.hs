@@ -8,8 +8,8 @@ import Data.Text qualified as T
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (withJsonBuildObj)
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType (PostgresKind (..))
 import Hasura.RQL.Types.Common (FieldName (getFieldNameTxt))
-import Hasura.SQL.Backend (PostgresKind (..))
 
 class PostgresAnnotatedFieldJSON (pgKind :: PostgresKind) where
   annRowToJson :: FieldName -> [(FieldName, S.SQLExp)] -> (S.ColumnAlias, S.SQLExp)

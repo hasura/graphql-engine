@@ -138,6 +138,7 @@ import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendTag (HasTag (backendTag), reify)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
@@ -158,7 +159,6 @@ import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Session (UserInfoM)

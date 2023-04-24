@@ -133,13 +133,13 @@ import Hasura.RQL.IR.Select.OrderBy
 import Hasura.RQL.IR.Select.RelationSelect
 import Hasura.RQL.IR.Select.TablePerm
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Schema.Options (StringifyNumbers)
-import Hasura.SQL.Backend
 
 -- Root selection
 

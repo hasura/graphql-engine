@@ -33,6 +33,7 @@ import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend (..))
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (SourceName, defaultSource, sourceNameToText, successMsg)
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
@@ -41,7 +42,6 @@ import Hasura.RQL.Types.Permission (PermDef (_pdRole), SelPerm)
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker (..))
 import Hasura.Server.Init.FeatureFlag qualified as FF
 

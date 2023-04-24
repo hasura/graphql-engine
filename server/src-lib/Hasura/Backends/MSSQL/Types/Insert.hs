@@ -14,7 +14,7 @@ import Hasura.Backends.MSSQL.Types.Internal
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnBoolExp)
 import Hasura.RQL.Types.Backend (Backend)
-import Hasura.SQL.Backend (BackendType (MSSQL))
+import Hasura.RQL.Types.BackendType (BackendType (MSSQL))
 
 -- | Defines the part in insert mutation that is unique for MSSQL the @if_matched@ clause.
 data BackendInsert v = BackendInsert

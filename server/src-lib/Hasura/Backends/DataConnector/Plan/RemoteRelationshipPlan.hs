@@ -23,8 +23,8 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Value
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
-import Hasura.SQL.Backend
 import Hasura.Session
 import Witch qualified
 

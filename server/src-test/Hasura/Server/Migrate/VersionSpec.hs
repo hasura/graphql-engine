@@ -2,7 +2,7 @@ module Hasura.Server.Migrate.VersionSpec (spec) where
 
 import Data.Either (isLeft)
 import Hasura.Prelude
-import Hasura.SQL.Backend (BackendType (MSSQL))
+import Hasura.RQL.Types.BackendType (BackendType (MSSQL))
 import Hasura.Server.Migrate.Version (MetadataCatalogVersion (..))
 import Hasura.Server.Migrate.Version qualified as Version
 import Hedgehog.Gen qualified as Gen

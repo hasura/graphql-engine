@@ -22,6 +22,7 @@ import Hasura.RQL.DDL.Permission.Internal (permissionIsDefined)
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
@@ -35,7 +36,6 @@ import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.SchemaCache (rscPermissions, rscRemoteRelationships)
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Language.GraphQL.Draft.Syntax qualified as G
 

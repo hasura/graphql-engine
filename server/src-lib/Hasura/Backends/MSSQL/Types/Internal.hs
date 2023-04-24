@@ -114,7 +114,7 @@ import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.NativeQuery.Metadata (InterpolatedQuery)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.SQL.GeoJSON qualified as Geo
 import Hasura.SQL.WKT qualified as WKT
 import Language.GraphQL.Draft.Syntax qualified as G

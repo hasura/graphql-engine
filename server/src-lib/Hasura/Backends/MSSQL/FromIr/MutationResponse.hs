@@ -14,9 +14,9 @@ import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.Returning (MutationOutputG)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common qualified as IR
 import Hasura.RQL.Types.Schema.Options qualified as Options
-import Hasura.SQL.Backend
 
 -- | Generate a SQL SELECT statement which outputs the mutation response
 --

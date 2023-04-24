@@ -11,8 +11,8 @@ import Data.Aeson.Types qualified as A
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
 import Hasura.Prelude hiding (first)
+import Hasura.RQL.Types.BackendType
 import Hasura.SQL.AnyBackend
-import Hasura.SQL.Backend
 import Hasura.Server.API.Backend
 import Hasura.Server.API.Instances ()
 import Hasura.Server.API.Metadata.Types

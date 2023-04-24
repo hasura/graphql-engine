@@ -10,9 +10,9 @@ import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.SchemaCache
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 
 parseBoolExpOperations ::

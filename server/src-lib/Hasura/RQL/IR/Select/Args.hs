@@ -26,9 +26,9 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Select.OrderBy
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Subscription
-import Hasura.SQL.Backend
 
 -- Select arguments
 

@@ -33,8 +33,8 @@ import Data.Typeable (Typeable)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
-import Hasura.SQL.Backend
 
 data RelDef a = RelDef
   { _rdName :: RelName,

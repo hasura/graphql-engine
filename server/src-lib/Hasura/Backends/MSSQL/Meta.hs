@@ -28,10 +28,10 @@ import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Backends.MSSQL.Types.Internal
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common (OID (..))
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 
 --------------------------------------------------------------------------------
 

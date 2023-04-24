@@ -26,13 +26,13 @@ import Hasura.RQL.IR.BoolExp (AnnBoolExpFld (..), GBoolExp (..), PartialSQLExp (
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Update (AnnotatedUpdateG (..))
 import Hasura.RQL.IR.Value (UnpreparedValue (..))
+import Hasura.RQL.Types.BackendType (BackendType (Postgres), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnType (..))
 import Hasura.RQL.Types.Common (Comment (..), FieldName (..), OID (..))
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Permission (AllowedRootFields (..))
 import Hasura.RQL.Types.Relationships.Local (RelInfo (..), fromRel)
 import Hasura.RQL.Types.Table (Constraint (..), CustomRootField (..), FieldInfo (..), PrimaryKey (..), RolePermInfo (..), SelPermInfo (..), TableConfig (..), TableCoreInfoG (..), TableCustomRootFields (..), TableInfo (..), UpdPermInfo (..))
-import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))
 import Language.GraphQL.Draft.Syntax (unsafeMkName)
 import Test.Parser.Monad
 

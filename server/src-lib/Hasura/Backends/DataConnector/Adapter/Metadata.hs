@@ -31,6 +31,7 @@ import Hasura.Incremental.Select qualified as Inc
 import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (OpExpG (..), PartialSQLExp (..), RootOrCurrent (..), RootOrCurrentColumn (..))
+import Hasura.RQL.Types.BackendType (BackendSourceKind (..), BackendType (..))
 import Hasura.RQL.Types.Column qualified as RQL.T.C
 import Hasura.RQL.Types.Common (OID (..), SourceName)
 import Hasura.RQL.Types.CustomTypes (GraphQLType (..))
@@ -43,7 +44,6 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source (DBObjectsIntrospection (..))
 import Hasura.RQL.Types.Table (ForeignKey (_fkConstraint))
 import Hasura.RQL.Types.Table qualified as RQL.T.T
-import Hasura.SQL.Backend (BackendSourceKind (..), BackendType (..))
 import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Server.Migrate.Version (SourceCatalogMigrationState (..))
 import Hasura.Server.Utils qualified as HSU

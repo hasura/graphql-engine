@@ -29,10 +29,10 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Schema (runCacheRWT)
 import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.DDL.Schema.Catalog
+import Hasura.RQL.Types.BackendType (BackendType (..))
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
-import Hasura.SQL.Backend (BackendType (..))
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.AppStateRef
   ( AppStateRef,

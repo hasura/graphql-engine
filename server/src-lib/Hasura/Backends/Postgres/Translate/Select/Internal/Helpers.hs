@@ -47,8 +47,8 @@ import Hasura.NativeQuery.IR (NativeQuery (..))
 import Hasura.NativeQuery.Metadata (NativeQueryName (..))
 import Hasura.Prelude
 import Hasura.RQL.IR
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (FieldName)
-import Hasura.SQL.Backend
 import Hasura.SQL.Types (ToSQL (toSQL))
 
 -- | First element extractor expression from given record set

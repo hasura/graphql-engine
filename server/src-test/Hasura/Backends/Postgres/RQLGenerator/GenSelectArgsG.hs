@@ -25,7 +25,7 @@ import Hasura.RQL.IR.Generator
   )
 import Hasura.RQL.IR.Select (AnnotatedOrderByItemG, SelectArgsG (..))
 import Hasura.RQL.Types.Backend
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
 import Hedgehog (MonadGen)
 import Hedgehog.Gen qualified as Gen
 

@@ -789,11 +789,13 @@ library
                      , Hasura.RQL.Types.ApiLimit
                      , Hasura.RQL.Types.Backend
                      , Hasura.RQL.Types.BackendTag
+                     , Hasura.RQL.Types.BackendType
                      , Hasura.RQL.Types.BoolExp
                      , Hasura.RQL.Types.Column
                      , Hasura.RQL.Types.Common
                      , Hasura.RQL.Types.ComputedField
                      , Hasura.RQL.Types.CustomTypes
+                     , Hasura.RQL.Types.DataConnector
                      , Hasura.RQL.Types.EECredentials
                      , Hasura.RQL.Types.Endpoint
                      , Hasura.RQL.Types.Endpoint.Trie
@@ -995,7 +997,6 @@ library
                      , Hasura.Eventing.ScheduledTrigger.Types
                      , Hasura.Name
                      , Hasura.SQL.AnyBackend
-                     , Hasura.SQL.Backend
                      , Hasura.SQL.BackendMap
                      , Hasura.SQL.GeoJSON
                      , Hasura.SQL.Time

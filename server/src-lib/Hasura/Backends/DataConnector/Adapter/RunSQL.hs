@@ -14,10 +14,10 @@ import Hasura.Base.Error (Code (DataConnectorError), QErr (qeInternal), QErrExtr
 import Hasura.EncJSON (EncJSON, encJFromJValue)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema (RunSQLRes (..))
+import Hasura.RQL.Types.BackendType (BackendType (DataConnector))
 import Hasura.RQL.Types.Common (SourceName (), sourceNameToText)
 import Hasura.RQL.Types.SchemaCache (askSourceConfig)
 import Hasura.RQL.Types.SchemaCache.Build (CacheRWM, MetadataM)
-import Hasura.SQL.Backend (BackendType (DataConnector))
 import Servant.Client (mkClientEnv, runClientM, (//))
 import Servant.Client.Generic (genericClient)
 import Witch qualified

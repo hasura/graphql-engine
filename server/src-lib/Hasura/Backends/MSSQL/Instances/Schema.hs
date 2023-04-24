@@ -40,12 +40,12 @@ import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types.Backend hiding (BackendInsert)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 ----------------------------------------------------------------

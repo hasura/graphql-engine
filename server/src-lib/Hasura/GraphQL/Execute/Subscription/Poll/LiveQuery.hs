@@ -29,10 +29,10 @@ import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendTag (backendTag, reify)
+import Hasura.RQL.Types.BackendType (BackendType (..), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Common (SourceName)
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Subscription (SubscriptionType (..))
-import Hasura.SQL.Backend (BackendType (..), PostgresKind (Vanilla))
 import Hasura.Server.Prometheus (PrometheusMetrics (..), SubscriptionMetrics (..))
 import Refined (unrefine)
 import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge

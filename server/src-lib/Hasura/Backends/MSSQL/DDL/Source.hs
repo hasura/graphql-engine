@@ -36,11 +36,11 @@ import Hasura.Backends.MSSQL.Types
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (BackendConfig)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (..))
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Hasura.Server.Migrate.Version (SourceCatalogMigrationState (..))
 import Hasura.Server.Migrate.Version qualified as Version
 import Language.Haskell.TH.Lib qualified as TH

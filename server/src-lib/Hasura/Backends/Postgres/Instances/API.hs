@@ -6,8 +6,8 @@
 module Hasura.Backends.Postgres.Instances.API () where
 
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType
 import Hasura.SQL.AnyBackend (mkAnyBackend)
-import Hasura.SQL.Backend
 import Hasura.Server.API.Backend
 import Hasura.Server.API.Metadata.Types
 

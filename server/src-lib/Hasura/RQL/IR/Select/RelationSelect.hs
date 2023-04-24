@@ -16,8 +16,8 @@ where
 import Control.Lens.TH (makeLenses)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
-import Hasura.SQL.Backend
 
 -- Local relationship
 

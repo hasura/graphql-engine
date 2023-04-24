@@ -31,10 +31,10 @@ import Hasura.EncJSON qualified as EncJSON
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.DDL.SourceKinds
+import Hasura.RQL.Types.BackendType qualified as Backend
 import Hasura.RQL.Types.Common qualified as Common
 import Hasura.RQL.Types.Metadata qualified as Metadata
 import Hasura.RQL.Types.SchemaCache.Build qualified as SC.Build
-import Hasura.SQL.Backend qualified as Backend
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Services.Network
 import Hasura.Tracing (ignoreTraceT)

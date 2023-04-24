@@ -36,6 +36,7 @@ import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.EventTrigger
@@ -47,7 +48,6 @@ import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RemoteSchema.Metadata
-import Hasura.SQL.Backend
 
 saveMetadataToHdbTables ::
   (MonadTx m, MonadReader SystemDefined m) => MetadataNoSources -> m ()

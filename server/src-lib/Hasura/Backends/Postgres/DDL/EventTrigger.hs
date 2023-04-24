@@ -53,6 +53,7 @@ import Hasura.Base.Error
 import Hasura.Eventing.Common
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend, SourceConfig, TableName)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
@@ -60,7 +61,6 @@ import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.ScheduledTrigger (formatTime')
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table (PrimaryKey)
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Server.Migrate.Internal
 import Hasura.Server.Migrate.LatestVersion

@@ -18,9 +18,9 @@ import Hasura.Backends.BigQuery.Types
 import Hasura.Base.Error
 import Hasura.Function.Cache
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.SQL.Backend
 import Hasura.Server.Utils
 import Language.GraphQL.Draft.Syntax qualified as G
 

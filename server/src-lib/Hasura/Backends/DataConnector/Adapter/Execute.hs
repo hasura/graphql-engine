@@ -26,9 +26,9 @@ import Hasura.EncJSON (EncJSON, encJFromBuilder, encJFromJValue)
 import Hasura.GraphQL.Execute.Backend (BackendExecute (..), DBStepInfo (..), ExplainPlan (..), OnBaseMonad (..), withNoStatistics)
 import Hasura.GraphQL.Namespace qualified as GQL
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType (BackendType (DataConnector))
 import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.SQL.AnyBackend (mkAnyBackend)
-import Hasura.SQL.Backend (BackendType (DataConnector))
 import Hasura.Session
 import Hasura.Tracing (MonadTrace)
 import Servant.Client.Core.HasClient ((//))
