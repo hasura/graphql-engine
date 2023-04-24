@@ -52,11 +52,24 @@ export type MetadataFunction = {
   };
 };
 
+export type LogicalModel = {
+  fields: { name: string; nullable: boolean; type: string }[];
+  name: string;
+};
+export type NativeQuery = {
+  arguments: Record<string, any>;
+  code: string;
+  returns: string;
+  root_field_name: string;
+};
+
 export type Source = {
   name: string;
   tables: MetadataTable[];
   customization?: SourceCustomization;
   functions?: MetadataFunction[];
+  logical_models?: LogicalModel[];
+  native_queries?: NativeQuery[];
 } & (
   | {
       kind: 'postgres';
@@ -81,6 +94,8 @@ export type Source = {
        */
       kind: Exclude<SupportedDrivers, NativeDrivers>;
       configuration: unknown;
+      logical_models?: never;
+      native_queries?: never;
     }
 );
 
