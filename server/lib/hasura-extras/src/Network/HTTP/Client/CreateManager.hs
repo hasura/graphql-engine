@@ -4,11 +4,11 @@ module Network.HTTP.Client.CreateManager
 where
 
 import Hasura.Prelude
-import Hasura.RQL.Types.Network (TlsAllow)
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.Blocklisting (Blocklist, block)
 import Network.HTTP.Client.DynamicTlsPermissions qualified as HTTP
 import Network.HTTP.Client.Restricted qualified as Restricted
+import Network.Types.Extended (TlsAllow)
 
 -- | This mkHttpManager function takes a mechanism for finding the current allowlist,
 -- | Thus allowing it to be coupled from any ref type such as AppStateRef.

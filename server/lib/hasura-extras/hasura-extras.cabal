@@ -43,16 +43,33 @@ library
     , autodocodec
     , base
     , base64-bytestring
+    , byteorder
     , bytestring
     , case-insensitive
+    , connection
     , containers
+    , data-default
+    , data-default-class
     , deepseq
+    , exceptions
     , graphql-parser
     , hashable
     , hasura-prelude
+    , http-client
+    , http-client-tls
+    , http-conduit
+    , http-types
     , insert-ordered-containers
     , kriti-lang
+    , lens
     , mtl
+    , network
+    , network-bsd
+    , network-uri
+    , odbc
+    , pg-client
+    , refined
+    , safe-exceptions
     , pg-client
     , refined
     , scientific
@@ -62,11 +79,21 @@ library
     , text-builder
     , text-conversions
     , time
+    , tls
     , unordered-containers
     , uri-encode
+    , wai
+    , websockets
+    , wide-word
     , witherable
+    , x509
+    , x509-store
+    , x509-system
+    , x509-validation
+
 
   default-extensions:
+    BlockArguments
     DerivingStrategies
     FunctionalDependencies
     ImportQualifiedPost
@@ -74,6 +101,7 @@ library
     NoImplicitPrelude
     QuasiQuotes
     OverloadedStrings
+    RecordWildCards
     TypeFamilies
 
   exposed-modules:
@@ -95,3 +123,17 @@ library
     Data.Text.NonEmpty
     Data.Trie
     Data.URL.Template
+    Network.HTTP.Client.Blocklisting
+    Network.HTTP.Client.CreateManager
+    Network.HTTP.Client.DynamicTlsPermissions
+    Network.HTTP.Client.Restricted
+    Network.HTTP.Client.Transformable
+    Network.Types.Extended
+    Network.URI.Extended
+    Network.Wai.Extended
+    Network.Wai.Handler.WebSockets.Custom
+
+    -- Our vendored bits of the 'ip' package, to avoid dependencies and ease 9.2 migration
+    -- We might see if maintainer is willing to split their package up so we can remove these:
+    Net.IPv4
+    Net.IPv6

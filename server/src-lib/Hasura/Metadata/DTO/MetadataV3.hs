@@ -26,13 +26,13 @@ import Hasura.RQL.Types.CustomTypes (CustomTypes, emptyCustomTypes)
 import Hasura.RQL.Types.Endpoint (_ceName)
 import Hasura.RQL.Types.GraphqlSchemaIntrospection (SetGraphqlIntrospectionOptions)
 import Hasura.RQL.Types.Metadata.Common (Actions, BackendConfigWrapper, CronTriggers, Endpoints, InheritedRoles, QueryCollections, RemoteSchemas, Sources, sourcesCodec)
-import Hasura.RQL.Types.Network (Network, emptyNetwork)
 import Hasura.RQL.Types.OpenTelemetry (OpenTelemetryConfig, emptyOpenTelemetryConfig)
 import Hasura.RQL.Types.QueryCollection qualified as QC
 import Hasura.RQL.Types.Roles (Role (_rRoleName))
 import Hasura.RQL.Types.ScheduledTrigger (CronTriggerMetadata (ctName))
 import Hasura.RemoteSchema.Metadata.Core (RemoteSchemaMetadataG (_rsmName))
 import Hasura.SQL.BackendMap (BackendMap)
+import Network.Types.Extended (Network, emptyNetwork)
 
 -- | Revision 3 of the Metadata export format. Note that values of the types,
 -- 'PlaceholderArray' and 'PlaceholderObject' will eventually be expanded to represent more detail.

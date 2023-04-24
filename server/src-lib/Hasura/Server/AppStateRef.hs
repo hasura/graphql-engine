@@ -37,10 +37,10 @@ import Hasura.Prelude hiding (get, put)
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.Types.Common (MetricsConfig)
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.Logging
 import Hasura.Server.Metrics
+import Network.Types.Extended
 import System.Metrics.Gauge (Gauge)
 import System.Metrics.Gauge qualified as Gauge
 

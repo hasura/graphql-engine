@@ -73,7 +73,6 @@ import Hasura.RQL.Types.Eventing.Backend (BackendEventTrigger (..))
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.ScheduledTrigger
@@ -86,6 +85,7 @@ import Hasura.SQL.Backend (BackendType (..))
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.Logging (MetadataLog (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
+import Network.Types.Extended
 
 -- | Helper function to run the post drop source hook
 postDropSourceHookHelper ::

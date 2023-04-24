@@ -3,6 +3,7 @@
 
 module Autodocodec.Extended
   ( baseUrlCodec,
+    boundedEnumCodec,
     caseInsensitiveHashMapCodec,
     caseInsensitiveTextCodec,
     graphQLEnumValueCodec,
@@ -40,6 +41,7 @@ import Data.CaseInsensitive qualified as CI
 import Data.Char (isAlphaNum)
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as HashSet
+import Data.List.NonEmpty qualified as NE
 import Data.Maybe (fromJust)
 import Data.Scientific (Scientific (base10Exponent), floatingOrInteger)
 import Data.Scientific qualified as Scientific
@@ -345,3 +347,26 @@ disjointMatchChoicesNECodec l = go l
         disjointMatchChoiceCodec c (go l') $ \i -> case m i of
           Just j -> Left j
           Nothing -> Right i
+
+-- | A codec for a 'Bounded' 'Enum' that maps to literal strings using
+-- a provided function.
+--
+--
+-- === Example usage
+--
+-- >>> data Fruit = FruitApple | FruitOrange deriving (Show, Eq, Enum, Bounded)
+-- >>> let c = boundedEnumCodec (snakeCase . drop 5)
+-- >>> toJSONVia c Apple
+-- String "apple"
+-- >>> JSON.parseMaybe (parseJSONVia c) (String "orange") :: Maybe Fruit
+-- Just Orange
+boundedEnumCodec ::
+  forall enum.
+  (Eq enum, Enum enum, Bounded enum) =>
+  (enum -> String) ->
+  JSONCodec enum
+boundedEnumCodec display =
+  let ls = [minBound .. maxBound]
+   in case NE.nonEmpty ls of
+        Nothing -> error "0 enum values ?!"
+        Just ne -> stringConstCodec (NE.map (\v -> (v, T.pack (display v))) ne)

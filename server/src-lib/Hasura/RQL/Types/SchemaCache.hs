@@ -145,7 +145,6 @@ import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.Network (TlsAllow)
 import Hasura.RQL.Types.OpenTelemetry (OpenTelemetryInfo)
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Relationships.Local
@@ -165,6 +164,7 @@ import Hasura.SQL.Tag (HasTag (backendTag), reify)
 import Hasura.Session (UserInfoM)
 import Hasura.Tracing (TraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
+import Network.Types.Extended (TlsAllow)
 import System.Cron.Types
 
 newtype MetadataResourceVersion = MetadataResourceVersion

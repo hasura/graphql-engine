@@ -11,10 +11,10 @@ import Data.X509.CertificateStore qualified as HTTP
 import Data.X509.Validation qualified as HTTP
 import GHC.Exception (Exception (displayException))
 import Hasura.Prelude
-import Hasura.RQL.Types.Network (TlsAllow (TlsAllow), TlsPermission (SelfSigned))
 import Network.Connection qualified as HTTP
 import Network.TLS qualified as HTTP
 import Network.TLS.Extra qualified as TLS
+import Network.Types.Extended (TlsAllow (TlsAllow), TlsPermission (SelfSigned))
 import System.X509 qualified as HTTP
 
 newtype TlsServiceDefinitionError = TlsServiceDefinitionError

@@ -74,7 +74,6 @@ import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Metadata.Common
 import Hasura.RQL.Types.Metadata.Serialization
-import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Roles (RoleName)
@@ -85,6 +84,7 @@ import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Tracing (TraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
+import Network.Types.Extended
 
 -- | Versioning the @'Metadata' JSON structure to track backwards incompatible changes.
 -- This value is included in the metadata JSON object at top level 'version' key.

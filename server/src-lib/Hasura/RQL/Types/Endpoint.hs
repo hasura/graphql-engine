@@ -30,7 +30,7 @@ where
 
 import Autodocodec (HasCodec (codec), dimapCodec, optionalField', requiredField')
 import Autodocodec qualified as AC
-import Autodocodec.Extended (typeableName)
+import Autodocodec.Extended (boundedEnumCodec, typeableName)
 import Control.Lens
 import Data.Aeson
 import Data.Aeson.Casing
@@ -41,7 +41,6 @@ import Data.Text.Extended
 import Data.Text.NonEmpty
 import Data.Trie qualified as T
 import Data.Typeable (Typeable)
-import Hasura.Metadata.DTO.Utils (boundedEnumCodec)
 import Hasura.Prelude
 import Hasura.RQL.Types.Endpoint.Trie as Trie
 import Hasura.RQL.Types.QueryCollection (CollectionName, QueryName)

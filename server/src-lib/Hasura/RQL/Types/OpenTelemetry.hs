@@ -38,6 +38,7 @@ where
 
 import Autodocodec (HasCodec, optionalField, optionalFieldWithDefault, optionalFieldWithDefault', requiredField', (<?>))
 import Autodocodec qualified as AC
+import Autodocodec.Extended (boundedEnumCodec)
 import Control.Lens.TH (makeLenses)
 import Data.Aeson (FromJSON, ToJSON (..), (.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as Aeson
@@ -50,7 +51,6 @@ import Data.Set qualified as Set
 import Data.Text qualified as Text
 import GHC.Generics
 import Hasura.Base.Error (Code (InvalidParams), QErr, err400)
-import Hasura.Metadata.DTO.Utils (boundedEnumCodec)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Headers
 import Language.Haskell.TH.Syntax (Lift)

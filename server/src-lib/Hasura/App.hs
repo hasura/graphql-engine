@@ -128,7 +128,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EECredentials
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.Metadata
-import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.ResizePool
 import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.SchemaCache
@@ -161,6 +160,7 @@ import Hasura.ShutdownLatch
 import Hasura.Tracing
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.CreateManager (mkHttpManager)
+import Network.Types.Extended
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp qualified as Warp
 import Options.Applicative

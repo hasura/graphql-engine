@@ -48,7 +48,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata
-import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.OpenTelemetry (emptyOpenTelemetryConfig)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SourceCustomization
@@ -62,6 +61,7 @@ import Hasura.Server.Migrate.Version
 import Hasura.Server.Types (MaintenanceMode (..))
 import Language.Haskell.TH.Lib qualified as TH
 import Language.Haskell.TH.Syntax qualified as TH
+import Network.Types.Extended
 import System.Directory (doesFileExist)
 
 data MigrationResult

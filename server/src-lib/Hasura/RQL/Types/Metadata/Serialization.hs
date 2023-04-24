@@ -72,7 +72,6 @@ import Hasura.RQL.Types.Metadata.Common
     TableMetadata (..),
     getSourceName,
   )
-import Hasura.RQL.Types.Network (Network, emptyNetwork)
 import Hasura.RQL.Types.OpenTelemetry
   ( OpenTelemetryConfig (..),
     emptyOpenTelemetryConfig,
@@ -106,6 +105,7 @@ import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.SQL.Tag (HasTag (backendTag), reify)
 import Language.GraphQL.Draft.Syntax qualified as G
+import Network.Types.Extended (Network, emptyNetwork)
 
 sourcesToOrdJSONList :: Sources -> AO.Array
 sourcesToOrdJSONList sources =
