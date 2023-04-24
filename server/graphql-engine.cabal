@@ -721,6 +721,7 @@ library
                      , Hasura.LogicalModel.Schema
                      , Hasura.LogicalModel.Types
 
+                     , Hasura.ClientCredentials
                      , Hasura.EncJSON
 
                      , Hasura.Function.API
