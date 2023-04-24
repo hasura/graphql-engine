@@ -143,7 +143,6 @@ import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.SQL.AnyBackend (runBackend)
 import Hasura.SQL.Backend
-import Hasura.Server.Utils (englishList)
 import Language.GraphQL.Draft.Parser qualified as GParse
 import Language.GraphQL.Draft.Printer qualified as GPrint
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -310,6 +309,14 @@ instance FromJSON TableCustomRootFields where
           <> englishList "and" (toTxt <$> duplicatedFields)
 
     pure tableCustomRootFields
+    where
+      englishList :: Text -> NonEmpty Text -> Text
+      englishList joiner = \case
+        one :| [] -> one
+        one :| [two] -> one <> " " <> joiner <> " " <> two
+        several ->
+          let final :| initials = NE.reverse several
+           in commaSeparated (reverse initials) <> ", " <> joiner <> " " <> final
 
 emptyCustomRootFields :: TableCustomRootFields
 emptyCustomRootFields =
