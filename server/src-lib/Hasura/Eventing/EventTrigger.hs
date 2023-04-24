@@ -74,7 +74,6 @@ import Hasura.Eventing.HTTP
 import Hasura.HTTP (getHTTPExceptionStatus)
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common

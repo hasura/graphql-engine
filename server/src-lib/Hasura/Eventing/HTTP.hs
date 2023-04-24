@@ -65,11 +65,11 @@ import Data.Text.Encoding.Error qualified as TE
 import Hasura.HTTP
 import Hasura.Logging
 import Hasura.Prelude
-import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform qualified as Transform
 import Hasura.RQL.Types.Common (ResolvedWebhook (..))
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
+import Hasura.RQL.Types.Headers
 import Hasura.Session (SessionVariables)
 import Hasura.Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP

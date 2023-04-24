@@ -152,7 +152,6 @@ import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.EventTrigger (ResolveHeaderError, getHeaderInfosFromConfEither)
-import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger

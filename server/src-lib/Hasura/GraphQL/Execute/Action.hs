@@ -60,7 +60,7 @@ import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Name qualified as Name
 import Hasura.Prelude
-import Hasura.RQL.DDL.Headers
+import Hasura.RQL.DDL.Headers (makeHeadersFromConf, toHeadersConf)
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.IR.Action qualified as IR
 import Hasura.RQL.IR.BoolExp
@@ -72,6 +72,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Eventing
+import Hasura.RQL.Types.Headers (HeaderConf)
 import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache

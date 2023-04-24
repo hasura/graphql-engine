@@ -63,13 +63,13 @@ import Hasura.EncJSON
 import Hasura.Eventing.EventTrigger (logQErr)
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Eventing.Backend
+import Hasura.RQL.Types.Headers (HeaderValue (..))
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object

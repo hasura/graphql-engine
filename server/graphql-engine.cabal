@@ -803,6 +803,7 @@ library
                      , Hasura.RQL.Types.EventTrigger
                      , Hasura.RQL.Types.Eventing
                      , Hasura.RQL.Types.Eventing.Backend
+                     , Hasura.RQL.Types.Headers
                      , Hasura.RQL.Types.HealthCheck
                      , Hasura.RQL.Types.HealthCheckImplementation
                      , Hasura.RQL.Types.GraphqlSchemaIntrospection

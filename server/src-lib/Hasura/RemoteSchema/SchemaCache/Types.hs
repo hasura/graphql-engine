@@ -63,8 +63,8 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Variable
 import Hasura.GraphQL.Schema.Typename
 import Hasura.Prelude
-import Hasura.RQL.DDL.Headers (HeaderConf (..))
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Headers (HeaderConf (..))
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RemoteSchema.Metadata
 import Hasura.Session (SessionVariable)

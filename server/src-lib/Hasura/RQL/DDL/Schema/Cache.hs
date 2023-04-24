@@ -58,6 +58,7 @@ import Hasura.RQL.DDL.ApiLimit (MonadGetApiTimeLimit (..))
 import Hasura.RQL.DDL.CustomTypes
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..), buildEventTriggerInfo)
 import Hasura.RQL.DDL.InheritedRoles (resolveInheritedRole)
+import Hasura.RQL.DDL.OpenTelemetry (parseOtelBatchSpanProcessorConfig, parseOtelExporterConfig)
 import Hasura.RQL.DDL.Relationship
 import Hasura.RQL.DDL.RemoteRelationship (CreateRemoteSchemaRemoteRelationship (..), PartiallyResolvedSource (..), buildRemoteFieldInfo, getRemoteSchemaEntityJoinColumns)
 import Hasura.RQL.DDL.ScheduledTrigger
