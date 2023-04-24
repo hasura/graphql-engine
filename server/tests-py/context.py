@@ -845,7 +845,6 @@ class HGECtx:
         self.meta = sqlalchemy.schema.MetaData()
 
         self.hge_scale_url = config.getoption('--test-hge-scale-url')
-        self.avoid_err_msg_checks = config.getoption('--avoid-error-message-checks')
         self.pro_tests = config.getoption('--pro-tests')
 
         self.ws_client = GQLWsClient(self, '/v1/graphql')
@@ -865,7 +864,7 @@ class HGECtx:
             result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
             self.version = result.stdout.decode('utf-8').strip()
         # TODO: remove once parallelization work is completed
-        if clear_dbs and self.is_default_backend and (not enabled_apis or 'metadata' in enabled_apis) and not config.getoption('--skip-schema-setup'):
+        if clear_dbs and self.is_default_backend and (not enabled_apis or 'metadata' in enabled_apis):
           try:
               self.v2q_f("queries/" + self.backend_suffix("clear_db")+ ".yaml")
           except requests.exceptions.RequestException as e:

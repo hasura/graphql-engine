@@ -71,44 +71,6 @@ def pytest_addoption(parser):
         required=False,
         help="Accept any failing test cases from YAML files as correct, and write the new files out to disk."
     )
-    parser.addoption(
-        "--skip-schema-teardown",
-        action="store_true",
-        default=False,
-        required=False,
-        help="""
-Skip tearing down the schema/Hasura metadata after tests. This option may result in test failures if the schema
-has to change between the list of tests to be run
-"""
-    )
-    parser.addoption(
-        "--skip-schema-setup",
-        action="store_true",
-        default=False,
-        required=False,
-        help="""
-Skip setting up schema/Hasura metadata before tests.
-This option may result in test failures if the schema has to change between the list of tests to be run
-"""
-    )
-
-    parser.addoption(
-        "--avoid-error-message-checks",
-        action="store_true",
-        default=False,
-        required=False,
-        help="""
-    This option when set will ignore disparity in error messages between expected and response outputs.
-    Used basically in version upgrade/downgrade tests where the error messages may change
-    """
-    )
-
-    parser.addoption(
-        "--collect-upgrade-tests-to-file",
-        metavar="<path>",
-        required=False,
-        help="When used along with collect-only, it will write the list of upgrade tests into the file specified"
-    )
 
     parser.addoption(
         "--redis-url",
@@ -168,42 +130,6 @@ def pytest_configure(config):
             xdist_threads = config.getoption('-n')
             assert config.getoption('--hge-bin') or xdist_threads <= len(config.hge_url_list), "Not enough hge_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.hge_url_list))
             assert xdist_threads <= len(config.pg_url_list), "Not enough pg_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.pg_url_list))
-
-@pytest.hookimpl()
-def pytest_report_collectionfinish(config, startdir, items):
-    """
-    Collect server upgrade tests to the given file
-    """
-    tests_file = config.getoption('--collect-upgrade-tests-to-file')
-    tests = collections.OrderedDict()
-    if tests_file:
-        def is_upgrade_test(item):
-            # Check if allow_server_upgrade_tests marker are present
-            # skip_server_upgrade_tests marker is not present
-            return item.get_closest_marker('allow_server_upgrade_test') \
-                and not item.get_closest_marker('skip_server_upgrade_test')
-        with open(tests_file,'w') as f:
-            upgrade_items = filter(is_upgrade_test, items)
-            for item in upgrade_items:
-                # This test should be run separately,
-                # since its schema setup has function scope
-                if 'per_method_tests_db_state' in item.fixturenames:
-                    tests[item.nodeid] = True
-                elif any([ (x in item.fixturenames)
-                    for x in
-                    [ 'per_class_tests_db_state',
-                      'per_class_db_schema_for_mutation_tests'
-                    ]
-                ]):
-                    # For this test, schema setup has class scope
-                    # We can run a class of these tests at a time
-                    tests[item.parent.nodeid] = True
-                # Assume tests can only be run separately
-                else:
-                    tests[item.nodeid] = True
-            for test in tests.keys():
-                f.write(test + '\n')
-    return ''
 
 @pytest.hookimpl(optionalhook=True)
 def pytest_configure_node(node):
@@ -861,7 +787,6 @@ def per_method_db_data_for_mutation_tests(request, hge_ctx, per_class_db_schema_
         request, hge_ctx,
         'values_setup_files', values_setup,
         'values_teardown_files', values_teardown,
-        skip_setup=False, skip_teardown=False
     )
 
 def db_state_context(request, hge_ctx):
@@ -910,15 +835,10 @@ def db_context_with_schema_common(
     setup_files_attr, setup_default_file,
     teardown_files_attr, teardown_default_file,
 ):
-    (skip_setup, skip_teardown) = [
-        request.config.getoption('--' + x)
-        for x in ['skip-schema-setup', 'skip-schema-teardown']
-    ]
     yield from db_context_common(
         request, hge_ctx,
         setup_files_attr, setup_default_file,
         teardown_files_attr, teardown_default_file,
-        skip_setup, skip_teardown
     )
 
 def db_context_with_schema_common_new(
@@ -928,23 +848,17 @@ def db_context_with_schema_common_new(
     setup_sql_file, teardown_sql_file,
     pre_setup_file, post_teardown_file,
 ):
-    (skip_setup, skip_teardown) = [
-        request.config.getoption('--' + x)
-        for x in ['skip-schema-setup', 'skip-schema-teardown']
-    ]
     yield from db_context_common_new(
         request, hge_ctx,
         setup_files_attr, setup_default_file, setup_sql_file,
         teardown_files_attr, teardown_default_file, teardown_sql_file,
         pre_setup_file, post_teardown_file,
-        skip_setup, skip_teardown
     )
 
 def db_context_common(
         request, hge_ctx,
         setup_files_attr, setup_default_file,
         teardown_files_attr, teardown_default_file,
-        skip_setup=True, skip_teardown=True
 ):
     def get_files(attr, default_file):
         files = getattr(request.cls, attr, None)
@@ -957,13 +871,11 @@ def db_context_common(
         yield from setup_and_teardown_v1q(
             request, hge_ctx,
             setup, teardown,
-            skip_setup, skip_teardown
         )
     else:
         yield from setup_and_teardown_v2q(
             request, hge_ctx,
             setup, teardown,
-            skip_setup, skip_teardown
         )
 
 
@@ -972,7 +884,6 @@ def db_context_common_new(
         setup_files_attr, setup_default_file, setup_default_sql_file,
         teardown_files_attr, teardown_default_file, teardown_default_sql_file,
         pre_setup_file, post_teardown_file,
-        skip_setup=True, skip_teardown=True
 ):
     def get_files(attr, default_file):
         files = getattr(request.cls, attr, None)
@@ -990,13 +901,11 @@ def db_context_common_new(
         setup, teardown,
         setup_default_sql_file, teardown_default_sql_file,
         pre_setup_default_file, post_teardown_default_file,
-        skip_setup, skip_teardown
     )
 
 def setup_and_teardown_v1q(
     request, hge_ctx,
     setup_files, teardown_files,
-    skip_setup=False, skip_teardown=False
 ):
     if PytestConf.config.getoption("--port-to-haskell"):
       backend = hge_ctx.backend.title()
@@ -1015,17 +924,13 @@ def setup_and_teardown_v1q(
         if os.path.isfile(filepath):
             return hge_ctx.v1q_f(filepath)
 
-    if not skip_setup:
-        run_on_elem_or_list(v1q_f, setup_files)
+    run_on_elem_or_list(v1q_f, setup_files)
     yield
-    # Teardown anyway if any of the tests have failed
-    if request.session.testsfailed > 0 or not skip_teardown:
-        run_on_elem_or_list(v1q_f, teardown_files)
+    run_on_elem_or_list(v1q_f, teardown_files)
 
 def setup_and_teardown_v2q(
     request, hge_ctx,
     setup_files, teardown_files,
-    skip_setup=False, skip_teardown=False
 ):
     if PytestConf.config.getoption("--port-to-haskell"):
       backend = hge_ctx.backend.title()
@@ -1044,19 +949,15 @@ def setup_and_teardown_v2q(
         if os.path.isfile(filepath):
             return hge_ctx.v2q_f(filepath)
 
-    if not skip_setup:
-        run_on_elem_or_list(v2q_f, setup_files)
+    run_on_elem_or_list(v2q_f, setup_files)
     yield
-    # Teardown anyway if any of the tests have failed
-    if request.session.testsfailed > 0 or not skip_teardown:
-        run_on_elem_or_list(v2q_f, teardown_files)
+    run_on_elem_or_list(v2q_f, teardown_files)
 
 def setup_and_teardown(
     request, hge_ctx,
     setup_files, teardown_files,
     sql_schema_setup_file, sql_schema_teardown_file,
     pre_setup_file, post_teardown_file,
-    skip_setup=False, skip_teardown=False
 ):
     if PytestConf.config.getoption("--port-to-haskell"):
       backend = hge_ctx.backend.title()
@@ -1101,16 +1002,13 @@ def setup_and_teardown(
       def pre_post_metadataq_f(f):
           if os.path.isfile(f):
               hge_ctx.v1metadataq_f(f)
-      if not skip_setup:
-          run_on_elem_or_list(pre_post_metadataq_f, pre_setup_file)
-          run_on_elem_or_list(v2q_f, sql_schema_setup_file)
-          run_on_elem_or_list(metadataq_f, setup_files)
+      run_on_elem_or_list(pre_post_metadataq_f, pre_setup_file)
+      run_on_elem_or_list(v2q_f, sql_schema_setup_file)
+      run_on_elem_or_list(metadataq_f, setup_files)
       yield
-      # Teardown anyway if any of the tests have failed
-      if request.session.testsfailed > 0 or not skip_teardown:
-          run_on_elem_or_list(metadataq_f, teardown_files)
-          run_on_elem_or_list(v2q_f, sql_schema_teardown_file)
-          run_on_elem_or_list(pre_post_metadataq_f, post_teardown_file)
+      run_on_elem_or_list(metadataq_f, teardown_files)
+      run_on_elem_or_list(v2q_f, sql_schema_teardown_file)
+      run_on_elem_or_list(pre_post_metadataq_f, post_teardown_file)
 
 def run_on_elem_or_list(f, x):
     if isinstance(x, str):

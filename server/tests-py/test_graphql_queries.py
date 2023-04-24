@@ -1,5 +1,4 @@
 import json
-import os
 import pytest
 import ruamel.yaml as yaml
 import textwrap
@@ -7,9 +6,6 @@ import warnings
 
 from context import PytestConf
 from validate import assert_response_code, check_query_f, get_conf_f
-
-# Mark that all tests in this module can be run as server upgrade tests
-pytestmark = pytest.mark.allow_server_upgrade_test
 
 usefixtures = pytest.mark.usefixtures
 
@@ -152,8 +148,6 @@ class TestGraphQLQueryBasicMSSQL:
 @pytest.mark.backend('postgres')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicPostgres:
-    # Can't run server upgrade tests, as this test has a schema change
-    @pytest.mark.skip_server_upgrade_test
     def test_select_various_postgres_types(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_test_types_postgres.yaml', transport)
 
@@ -989,13 +983,9 @@ class TestGraphQLExplainPostgresMSSQL:
     def test_limit_orderby_column_query(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_orderby_column_query.yaml')
 
-    @pytest.mark.skip_server_upgrade_test
-    # skipping due to https://github.com/hasura/graphql-engine/issues/7936
     def test_limit_orderby_relationship_query(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_orderby_relationship_query.yaml')
 
-    @pytest.mark.skip_server_upgrade_test
-    # skipping due to https://github.com/hasura/graphql-engine/issues/7936
     def test_limit_offset_orderby_relationship_query(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_offset_orderby_relationship_query.yaml')
 
@@ -1241,7 +1231,6 @@ class TestGraphQLQueryBoolExpLtree:
 @pytest.mark.backend('mssql')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpSpatialMSSQL:
-    @pytest.mark.skip_server_upgrade_test
     def test_select_spatial_mssql_types(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_mssql.yaml', transport)
 

@@ -345,7 +345,7 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
         resp_done = next(query_resp)
         assert resp_done['type'] == 'complete'
 
-    return assert_graphql_resp_expected(resp['payload'], exp_http_response, query, skip_if_err_msg=hge_ctx.avoid_err_msg_checks)
+    return assert_graphql_resp_expected(resp['payload'], exp_http_response, query)
 
 def assert_response_code(url, query, code, exp_code, resp, body=None):
     assert code == exp_code, \
@@ -368,7 +368,7 @@ def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response, exp
     assert_response_code(url, query, code, exp_code, resp, body)
 
     if exp_response:
-        return assert_graphql_resp_expected(resp, exp_response, query, resp_hdrs, hge_ctx.avoid_err_msg_checks, exp_resp_hdrs=exp_resp_hdrs)
+        return assert_graphql_resp_expected(resp, exp_response, query, resp_hdrs, exp_resp_hdrs=exp_resp_hdrs)
     else:
         return resp, True
 
@@ -384,7 +384,7 @@ def validate_http_anyq_with_allowed_responses(hge_ctx, url, query, headers, exp_
             dict_resp = json.loads(json.dumps(response))
             exp_resp = dict_resp['response']
             exp_resp_hdrs = dict_resp.get('resp_headers')
-            resp_result, pass_test = assert_graphql_resp_expected(resp, exp_resp, query, resp_hdrs, hge_ctx.avoid_err_msg_checks, True, exp_resp_hdrs)
+            resp_result, pass_test = assert_graphql_resp_expected(resp, exp_resp, query, resp_hdrs, True, exp_resp_hdrs)
             if pass_test == True:
                 test_passed = True
                 resp_res = resp_result
@@ -404,7 +404,7 @@ def validate_http_anyq_with_allowed_responses(hge_ctx, url, query, headers, exp_
 #
 # Returns 'resp' and a bool indicating whether the test passed or not (this
 # will always be True unless we are `--accepting`)
-def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs={}, skip_if_err_msg=False, skip_assertion=False, exp_resp_hdrs={}):
+def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs={}, skip_assertion=False, exp_resp_hdrs={}):
     print('Reponse Headers: ', resp_hdrs)
     print(exp_resp_hdrs)
 
@@ -440,12 +440,7 @@ def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs=
                 'diff': (stringify_keys(jsondiff.diff(exp_resp_hdrs, diff_hdrs)))
             }
         yml.dump(test_output, stream=dump_str)
-        if not skip_if_err_msg:
-            if skip_assertion:
-                return resp, matched
-            else:
-                assert matched, '\n' + dump_str.getvalue()
-        elif matched:
+        if matched:
             return resp, matched
         else:
             def is_err_msg(msg):

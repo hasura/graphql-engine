@@ -1,15 +1,9 @@
-import os
 import pytest
 import sqlalchemy
-from typing import Optional
-import urllib.parse
 
-from context import HGECtx, PytestConf
+from context import HGECtx
 import fixtures.postgres
 from validate import check_query_f
-
-# Mark that all tests in this module can be run as server upgrade tests
-pytestmark = pytest.mark.allow_server_upgrade_test
 
 usefixtures = pytest.mark.usefixtures
 
