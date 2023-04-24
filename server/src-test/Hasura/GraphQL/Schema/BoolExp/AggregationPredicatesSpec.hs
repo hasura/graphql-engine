@@ -36,7 +36,7 @@ import Hasura.RQL.Types.Table
   ( TableCoreInfoG (_tciName),
     TableInfo (_tiCoreInfo),
   )
-import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))
+import Hasura.SQL.Backend (BackendSourceKind (PostgresVanillaKind), BackendType (Postgres), PostgresKind (Vanilla))
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.Aeson.Expectation (shouldBeSubsetOf)
@@ -318,6 +318,7 @@ spec = do
     sourceInfo =
       SourceInfo
         { _siName = SNDefault,
+          _siSourceKind = PostgresVanillaKind,
           _siTables = makeTableCache [albumTableInfo, trackTableInfo],
           _siFunctions = mempty,
           _siNativeQueries = mempty,

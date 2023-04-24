@@ -17,6 +17,7 @@ module Hasura.RQL.Types.Source
     siLogicalModels,
     siFunctions,
     siName,
+    siSourceKind,
     siQueryTagsConfig,
     siTables,
     siCustomization,
@@ -72,6 +73,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 data SourceInfo b = SourceInfo
   { _siName :: SourceName,
+    _siSourceKind :: BackendSourceKind b,
     _siTables :: TableCache b,
     _siFunctions :: FunctionCache b,
     _siNativeQueries :: NativeQueryCache b,
