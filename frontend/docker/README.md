@@ -27,6 +27,32 @@ After `run-initialization.sh` attempts to execute `docker/DataSources/mssql/mssq
 
 To force it to re-run, just delete `/DataSources/mssql/REMOVE_ME_TO_RERUN_SETUP.txt` and restart your container. Because `/DataSources/mssql` is mounted as a volume, it uses the local filesystem.
 
+## MongoDB
+
+The Docker compose file starts a Mongo database with a single collection called `mycollection`. This collection is defined with a json schema file, since for the moment the Mongo agent can only track collections with a schema.
+
+### Database
+
+The docker-compose file will start a Mongo database. You can connect to it with the following command:
+
+```bash
+mongosh "mongodb://host.docker.internal:27017"
+```
+
+For now the agent only works with databases without authentication, so keep that in mind if you're planning to use a different Mongo database than the one provided in `docker-compose.yml`
+
+### Agent
+
+For the moment we don't have a docker image for the Mongo agent, but you can start it locally with the following steps:
+
+- Install cabal (Haskell build tools)
+- Go to the `pro/dc-agents/mongodb` directory
+- `cabal build`
+- `cabal update`
+- `cabal run`
+- Add an agent. Set URL to `http://host.docker.internal:8888`
+- Add a Mongo database. Set URL to `host.docker.internal:27017`
+
 ## Using Different HGE Images
 
 You may need to replace the `image:` in the compose file with a different image. You can do this by downloading an image, and running `docker load -i <the new image>`. Once it's loaded copy the image name into the compose. Here's an example using a CI built image:

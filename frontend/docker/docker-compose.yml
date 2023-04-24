@@ -50,6 +50,16 @@ services:
       ACCEPT_EULA: 'Y'
       SA_PASSWORD: 'Password!'
       MSSQL_SA_PASSWORD: 'Password!'
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: sample
+    volumes:
+      - ./DataSources/mongo/init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    ports:
+      - '27017:27017'
+    command: mongod --setParameter enableLocalhostAuthBypass=0 --dbpath=/data/db --bind_ip_all --port 27017
 
   # sqlcmd (tools) are not included in the arm64 image
   mssql-tools:

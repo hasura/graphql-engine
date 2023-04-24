@@ -9,6 +9,7 @@ import defaultDbLogo from './default.svg';
 import mysqlLogo from './mysql.webp';
 import sqliteLogo from './sqlite.webp';
 import mariadbLogo from './mariadb.webp';
+import mongodbLogo from './mongodb.svg';
 
 const dbLogos: Record<string, string> = {
   pg: postgresLogo,
@@ -24,6 +25,7 @@ const dbLogos: Record<string, string> = {
   mysqlgdc: mysqlLogo,
   sqlite: sqliteLogo,
   mariadb: mariadbLogo,
+  Mongo: mongodbLogo,
 };
 
 export default dbLogos;
