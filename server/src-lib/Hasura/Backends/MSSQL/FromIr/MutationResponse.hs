@@ -11,11 +11,11 @@ import Hasura.Backends.MSSQL.FromIr (FromIr)
 import Hasura.Backends.MSSQL.FromIr.Query (fromSelect)
 import Hasura.Backends.MSSQL.Instances.Types ()
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.Returning (MutationOutputG)
 import Hasura.RQL.Types.Common qualified as IR
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.Backend
 
 -- | Generate a SQL SELECT statement which outputs the mutation response

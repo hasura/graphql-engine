@@ -26,7 +26,6 @@ import Hasura.App
 import Hasura.Backends.Postgres.Connection.Settings
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Base.Error
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache
@@ -35,6 +34,7 @@ import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata (emptyMetadataDefaults)
 import Hasura.RQL.Types.ResizePool
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.Server.Init

@@ -54,7 +54,6 @@ import Hasura.Eventing.Common
 import Hasura.Function.Cache
 import Hasura.GraphQL.Execute.Action.Types as Types
 import Hasura.GraphQL.Parser.Name qualified as GName
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import Hasura.HTTP
 import Hasura.Logging qualified as L
@@ -74,6 +73,7 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Roles (adminRoleName)
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Backend
 import Hasura.Server.Init.Config (OptionalInterval (..))

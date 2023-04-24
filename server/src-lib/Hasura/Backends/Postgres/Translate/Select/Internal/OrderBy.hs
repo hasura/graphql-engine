@@ -41,7 +41,6 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree
     withWriteObjectRelation,
   )
 import Hasura.Backends.Postgres.Translate.Types
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.IR.OrderBy
   ( OrderByItemG (OrderByItemG, obiColumn),
@@ -52,6 +51,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.Backend
 
 {- Note [Optimizing queries using limit/offset]

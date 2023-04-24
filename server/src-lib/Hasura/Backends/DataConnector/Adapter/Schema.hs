@@ -25,7 +25,6 @@ import Hasura.GraphQL.Schema.BoolExp qualified as GS.BE
 import Hasura.GraphQL.Schema.Build qualified as GS.B
 import Hasura.GraphQL.Schema.Common qualified as GS.C
 import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select qualified as GS.S
 import Hasura.GraphQL.Schema.Update qualified as GS.U
@@ -41,6 +40,7 @@ import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend qualified as RQL
 import Hasura.RQL.Types.Column qualified as RQL
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source qualified as RQL
 import Hasura.RQL.Types.SourceCustomization qualified as RQL
 import Hasura.RQL.Types.Table qualified as RQL

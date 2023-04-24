@@ -123,7 +123,6 @@ import Data.Kind (Type)
 import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
 import Hasura.Function.Cache
-import Hasura.GraphQL.Schema.Options (StringifyNumbers)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy
@@ -139,6 +138,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Schema.Options (StringifyNumbers)
 import Hasura.SQL.Backend
 
 -- Root selection

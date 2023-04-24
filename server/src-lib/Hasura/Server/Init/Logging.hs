@@ -23,9 +23,9 @@ import Data.HashSet qualified as HashSet
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text.Encoding
 import Database.PG.Query qualified as Query
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Init.Config qualified as Config
 import Hasura.Server.Logging qualified as Server.Logging

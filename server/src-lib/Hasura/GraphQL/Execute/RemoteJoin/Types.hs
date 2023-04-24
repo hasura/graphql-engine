@@ -34,7 +34,6 @@ import Data.Aeson.Ordered qualified as AO
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.IR.RemoteSchema qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
@@ -42,6 +41,7 @@ import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ResultCustomization
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax qualified as G

@@ -1,6 +1,6 @@
 -- |
 -- Definitions for schema building configuration.
-module Hasura.GraphQL.Schema.Options
+module Hasura.RQL.Types.Schema.Options
   ( SchemaOptions (..),
     StringifyNumbers (..),
     DangerouslyCollapseBooleans (..),

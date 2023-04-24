@@ -17,7 +17,6 @@ import Hasura.App.State
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Function.API qualified as Functions
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as L
 import Hasura.LogicalModel.API qualified as LogicalModel
 import Hasura.Metadata.Class
@@ -57,6 +56,7 @@ import Hasura.RQL.Types.Metadata (emptyMetadataDefaults)
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.ScheduledTrigger
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source

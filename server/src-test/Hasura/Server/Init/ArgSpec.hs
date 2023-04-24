@@ -16,11 +16,11 @@ import Data.URL.Template qualified as Template
 import Database.PG.Query qualified as PG
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.NamingCase qualified as NC
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata (Metadata, MetadataDefaults (..), overrideMetadataDefaults, _metaBackendConfigs)
 import Hasura.RQL.Types.Roles qualified as Roles
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors

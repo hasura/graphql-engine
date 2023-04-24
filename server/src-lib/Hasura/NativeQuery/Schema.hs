@@ -15,7 +15,6 @@ import Hasura.GraphQL.Schema.Common
   ( SchemaT,
     retrieve,
   )
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.LogicalModel.Schema
 import Hasura.NativeQuery.Cache (NativeQueryInfo (..))
@@ -29,6 +28,7 @@ import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value (Provenance (FromInternal), UnpreparedValue (UVParameter), openValueOrigin)
 import Hasura.RQL.Types.Column qualified as Column
 import Hasura.RQL.Types.Metadata.Object qualified as MO
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source
   ( SourceInfo (_siCustomization, _siName),
   )

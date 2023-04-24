@@ -34,7 +34,6 @@ import Hasura.Backends.Postgres.Translate.Update
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Schema.NamingCase (NamingCase)
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.IR.BoolExp
@@ -46,6 +45,7 @@ import Hasura.RQL.IR.Update
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.Backend
 import Hasura.Session
 

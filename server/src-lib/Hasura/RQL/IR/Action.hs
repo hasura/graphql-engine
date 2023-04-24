@@ -47,7 +47,6 @@ import Control.Lens (makeLenses, makePrisms)
 import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as Map
 import Data.Kind (Type)
-import Hasura.GraphQL.Schema.Options (StringifyNumbers)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
@@ -61,6 +60,7 @@ import Hasura.RQL.Types.CustomTypes
     ObjectFieldDefinition (..),
     ObjectFieldName (..),
   )
+import Hasura.RQL.Types.Schema.Options (StringifyNumbers)
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 

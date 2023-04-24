@@ -85,10 +85,10 @@ import Hasura.Base.Error
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
 import Hasura.EncJSON
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Metadata.DTO.Utils (boolConstCodec, fromEnvCodec)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers ()
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.Haskell.TH.Syntax qualified as TH
 import Network.URI

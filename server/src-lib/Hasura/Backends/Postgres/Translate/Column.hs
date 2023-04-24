@@ -12,9 +12,9 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.Backend
 
 toTxtValue :: ColumnValue ('Postgres pgKind) -> SQLExp

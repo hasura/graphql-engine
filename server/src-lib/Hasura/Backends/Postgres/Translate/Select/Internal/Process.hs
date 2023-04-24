@@ -80,7 +80,6 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.OrderBy (processOrderB
 import Hasura.Backends.Postgres.Translate.Types
 import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Node (currentNodeIdVersion, nodeIdVersionInt)
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.NativeQuery.IR (NativeQuery (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -90,6 +89,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.Backend
 
 processSelectParams ::
