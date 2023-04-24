@@ -1,4 +1,4 @@
-This note is in [Hasura.RemoteSchema.SchemaCache.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RemoteSchema/SchemaCache/Permission.hs#L241).
+This note is in [Hasura.RemoteSchema.SchemaCache.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RemoteSchema/SchemaCache/Permission.hs#L242).
 
 # Remote Schema Permissions Architecture
 
