@@ -103,18 +103,19 @@ postDropSourceHookHelper ::
 postDropSourceHookHelper oldSchemaCache sourceName sourceMetadataBackend = do
   logger :: (HL.Logger HL.Hasura) <- asks getter
 
-  AB.dispatchAnyBackend @BackendMetadata sourceMetadataBackend \(_ :: SourceMetadata b) -> do
+  AB.dispatchAnyBackend @BackendMetadata sourceMetadataBackend \(oldSourceMetadata :: SourceMetadata b) -> do
     let sourceInfoMaybe = unsafeSourceInfo @b =<< HM.lookup sourceName (scSources oldSchemaCache)
     case sourceInfoMaybe of
       Nothing -> do
-        let message =
-              "Could not cleanup the source '"
-                <> sourceName
-                  <<> "' while dropping it from the graphql-engine as it is inconsistent."
-                <> " Please consider cleaning the resources created by the graphql engine,"
-                <> " refer https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-footprints-manually"
-        HL.unLogger logger $ MetadataLog HL.LevelWarn message J.Null
-        warn $ MetadataWarning WCSourceCleanupFailed (MOSource sourceName) message
+        unless (null (getTriggersMap oldSourceMetadata)) do
+          let message =
+                "Could not cleanup the source '"
+                  <> sourceName
+                    <<> "' while dropping it from the graphql-engine as it is inconsistent."
+                  <> " Please consider cleaning the resources created by the graphql engine,"
+                  <> " refer https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-footprints-manually"
+          HL.unLogger logger $ MetadataLog HL.LevelWarn message J.Null
+          warn $ MetadataWarning WCSourceCleanupFailed (MOSource sourceName) message
       Just sourceInfo -> runPostDropSourceHook defaultSource sourceInfo
 
 runClearMetadata ::
@@ -475,18 +476,18 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
                 flip catchError catcher do
                   sourceConfigMaybe <- askSourceConfigMaybe @b source
                   case sourceConfigMaybe of
-                    Nothing -> do
-                      -- TODO: Add user facing docs on how to drop triggers manually. Issue #7104
-                      let message =
-                            "Could not drop SQL triggers present in the source '"
-                              <> source
-                                <<> "' as it is inconsistent."
-                              <> " While creating an event trigger, Hasura creates SQL triggers on the table."
-                              <> " Please refer https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-up-event-trigger-footprints-manually "
-                              <> " to delete the sql triggers from the database manually."
-                              <> " For more details, please refer https://hasura.io/docs/latest/graphql/core/event-triggers/index.html "
-                      warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
-                      logger $ MetadataLog HL.LevelWarn message J.Null
+                    Nothing ->
+                      unless (null oldTriggersMap) do
+                        let message =
+                              "Could not drop SQL triggers present in the source '"
+                                <> source
+                                  <<> "' as it is inconsistent."
+                                <> " While creating an event trigger, Hasura creates SQL triggers on the table."
+                                <> " Please refer https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-up-event-trigger-footprints-manually "
+                                <> " to delete the sql triggers from the database manually."
+                                <> " For more details, please refer https://hasura.io/docs/latest/graphql/core/event-triggers/index.html "
+                        warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
+                        logger $ MetadataLog HL.LevelWarn message J.Null
                     Just sourceConfig -> do
                       for_ droppedEventTriggers \triggerName -> do
                         -- TODO: The `tableName` parameter could be computed while building
