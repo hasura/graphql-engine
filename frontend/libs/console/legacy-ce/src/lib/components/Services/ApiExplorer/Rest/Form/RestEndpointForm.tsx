@@ -11,6 +11,7 @@ import {
   useConsoleForm,
 } from '../../../../../new-components/Form';
 import { Button } from '../../../../../new-components/Button';
+import globals from '../../../../../Globals';
 
 type RestEndpointFormProps = {
   /**
@@ -86,6 +87,8 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
     setFocus('name');
   }, []);
 
+  const prependLabel = `${globals.dataApiUrl}/api/rest/`.replace(/\/\//, '/');
+
   return (
     <Form onSubmit={onSubmit} className="p-9">
       <div className="space-y-2 w-full max-w-xl">
@@ -102,8 +105,8 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
           name="url"
           label="Location *"
           placeholder="Location"
-          description="This is the location of your endpoint (must be unique). Any parameterized variables (eg. http://localhost:8080/api/rest/example/:id will be made available to your request."
-          prependLabel="http://localhost:8080/api/rest/"
+          description={`This is the location of your endpoint (must be unique). Any parameterized variables (eg. ${prependLabel}example/:id will be made available to your request.`}
+          prependLabel={prependLabel}
         />
         <CheckboxesField
           name="methods"
