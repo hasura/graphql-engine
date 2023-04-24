@@ -41,9 +41,9 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
-import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | actionExecute is used to execute either a query action or a synchronous

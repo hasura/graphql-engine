@@ -42,6 +42,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache (MetadataResourceVersion)
 import Hasura.Server.Auth
 import Hasura.Server.Cors qualified as Cors
@@ -50,7 +51,6 @@ import Hasura.Server.Logging
 import Hasura.Server.Metrics
 import Hasura.Server.Prometheus
 import Hasura.Server.Types
-import Hasura.Session
 import Hasura.ShutdownLatch
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as HTTP

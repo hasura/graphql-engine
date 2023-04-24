@@ -80,7 +80,6 @@ import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Services
-import Hasura.Session
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 newtype BackendInvalidationKeysWrapper (b :: BackendType) = BackendInvalidationKeysWrapper

@@ -90,6 +90,7 @@ import Hasura.Base.Error
 import Hasura.HTTP
 import Hasura.Logging (Hasura, LogLevel (..), Logger (..))
 import Hasura.Prelude
+import Hasura.RQL.Types.Roles (RoleName, mkRoleName)
 import Hasura.Server.Auth.JWT.Internal (parseEdDSAKey, parseHmacKey, parseRsaKey)
 import Hasura.Server.Auth.JWT.Logging
 import Hasura.Server.Utils
@@ -98,7 +99,7 @@ import Hasura.Server.Utils
     isSessionVariable,
     userRoleHeader,
   )
-import Hasura.Session
+import Hasura.Session (SessionVariable, SessionVariableValue, UserAdminSecret (..), UserInfo, UserRoleBuild (..), mkSessionVariable, mkSessionVariablesHeaders, mkSessionVariablesText, mkUserInfo, sessionVariableToText)
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.HTTP.Types as N
 import Network.URI (URI)

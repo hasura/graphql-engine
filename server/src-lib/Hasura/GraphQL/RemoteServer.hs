@@ -33,11 +33,12 @@ import Hasura.HTTP
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (makeHeadersFromConf)
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.Server.Utils
 import Hasura.Services.Network
-import Hasura.Session
+import Hasura.Session (UserInfo, adminUserInfo, sessionVariablesToHeaders, _uiSession)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Parser qualified as G
 import Language.GraphQL.Draft.Syntax qualified as G

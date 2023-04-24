@@ -18,10 +18,11 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Transport.HTTP.Protocol (ReqsText)
 import Hasura.Logging (Logger (..))
 import Hasura.Prelude
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName, mkRoleName)
 import Hasura.Server.Auth hiding (getUserInfoWithExpTime, processJwt)
 import Hasura.Server.Auth.JWT hiding (processJwt)
 import Hasura.Server.Utils
-import Hasura.Session
+import Hasura.Session (UserAdminSecret (..), UserInfo (..), UserRoleBuild (..), mkSessionVariable, mkSessionVariablesHeaders, mkUserInfo, sessionVariableToText)
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Test.Hspec

@@ -67,10 +67,10 @@ import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common (SourceName)
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Subscription (SubscriptionType)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (RequestId)
-import Hasura.Session
 import ListT qualified
 import StmContainers.Map qualified as STMMap
 

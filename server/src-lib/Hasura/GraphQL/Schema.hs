@@ -58,6 +58,7 @@ import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName, mkRoleNameSafe)
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization as SC
@@ -67,7 +68,6 @@ import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Tag (HasTag)
 import Hasura.Server.Types
-import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -------------------------------------------------------------------------------

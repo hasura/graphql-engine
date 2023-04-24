@@ -31,8 +31,9 @@ import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.IR.Root
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RemoteSchema.SchemaCache
-import Hasura.Session
+import Hasura.Session (BackendOnlyFieldAccess (..), SessionVariables, UserInfo (..), mkSessionVariable)
 import Language.GraphQL.Draft.Parser qualified as G
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G

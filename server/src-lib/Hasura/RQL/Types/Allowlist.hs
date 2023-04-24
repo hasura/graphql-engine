@@ -31,7 +31,7 @@ import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Metadata.DTO.Utils (discriminatorBoolField)
 import Hasura.Prelude
 import Hasura.RQL.Types.QueryCollection
-import Hasura.Session (RoleName)
+import Hasura.RQL.Types.Roles (RoleName)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 newtype DropCollectionFromAllowlist = DropCollectionFromAllowlist

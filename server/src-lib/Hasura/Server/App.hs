@@ -75,6 +75,7 @@ import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup)
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.Endpoint as EP
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.SQL.Backend
@@ -102,7 +103,7 @@ import Hasura.Server.Types
 import Hasura.Server.Utils
 import Hasura.Server.Version
 import Hasura.Services
-import Hasura.Session
+import Hasura.Session (ExtraUserInfo (..), UserInfo (..), UserInfoM, askUserInfo)
 import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Types qualified as HTTP

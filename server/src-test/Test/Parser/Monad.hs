@@ -26,11 +26,11 @@ import Hasura.GraphQL.Schema.Options (SchemaOptions (..))
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Typename
 import Hasura.Prelude
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.Source (SourceInfo)
 import Hasura.RQL.Types.SourceCustomization (MkRootFieldName)
 import Hasura.RemoteSchema.SchemaCache (CustomizeRemoteFieldName)
 import Hasura.SQL.Backend
-import Hasura.Session (adminRoleName)
 import Language.Haskell.TH.Syntax qualified as TH
 import Test.HUnit.Lang (assertFailure)
 

@@ -38,8 +38,8 @@ import Data.Text qualified as T
 import Data.Text.Extended (ToTxt (..))
 import Data.Typeable (Typeable)
 import Hasura.Prelude
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.Server.Utils (isSessionVariable)
-import Hasura.Session (RoleName)
 
 data ApiLimit = ApiLimit
   { _alRateLimit :: Maybe RateLimit,

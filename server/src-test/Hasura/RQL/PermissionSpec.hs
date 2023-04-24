@@ -7,7 +7,6 @@ import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Permission
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Roles
-import Hasura.Session
 import Test.Hspec
 
 spec :: Spec

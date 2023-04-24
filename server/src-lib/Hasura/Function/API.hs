@@ -37,12 +37,12 @@ import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
-import Hasura.Session
 
 newtype TrackFunction b = TrackFunction {tfName :: FunctionName b}
 

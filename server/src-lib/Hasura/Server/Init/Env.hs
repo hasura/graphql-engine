@@ -40,13 +40,13 @@ import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata (Metadata, MetadataDefaults (..))
+import Hasura.RQL.Types.Roles (RoleName, mkRoleName)
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init.Config qualified as Config
 import Hasura.Server.Logging qualified as Server.Logging
 import Hasura.Server.Types qualified as Server.Types
 import Hasura.Server.Utils qualified as Utils
-import Hasura.Session qualified as Session
 import Network.Wai.Handler.Warp qualified as Warp
 import Refined (NonNegative, Positive, Refined, refineFail, unrefine)
 
@@ -200,9 +200,9 @@ instance FromEnv Integer where
 instance FromEnv Auth.AdminSecretHash where
   fromEnv = Right . Auth.hashAdminSecret . Text.pack
 
-instance FromEnv Session.RoleName where
+instance FromEnv RoleName where
   fromEnv string =
-    case Session.mkRoleName (Text.pack string) of
+    case mkRoleName (Text.pack string) of
       Nothing -> Left "empty string not allowed"
       Just roleName -> Right roleName
 

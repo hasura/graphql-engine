@@ -28,13 +28,13 @@ import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Relationships.ToSource
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
-import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data RenameItem (b :: BackendType) a = RenameItem

@@ -65,8 +65,9 @@ import Hasura.GraphQL.Schema.Typename
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (HeaderConf (..))
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RemoteSchema.Metadata
-import Hasura.Session
+import Hasura.Session (SessionVariable)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.URI.Extended qualified as N
 import Witherable (Filterable (..))

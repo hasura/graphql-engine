@@ -1,12 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Session
-  ( RoleName,
-    mkRoleName,
-    mkRoleNameSafe,
-    adminRoleName,
-    roleNameToTxt,
-    SessionVariable,
+  ( SessionVariable,
     mkSessionVariable,
     SessionVariables,
     filterSessionVariables,
@@ -32,7 +27,6 @@ module Hasura.Session
   )
 where
 
-import Autodocodec (HasCodec (codec), dimapCodec)
 import Data.Aeson
 import Data.Aeson.TH qualified as J
 import Data.Aeson.Types (Parser, toJSONKeyText)
@@ -41,48 +35,13 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.Text qualified as T
 import Data.Text.Extended
-import Data.Text.NonEmpty
-import Database.PG.Query qualified as PG
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName, mkRoleName, roleNameToTxt)
 import Hasura.Server.Utils
 import Hasura.Tracing (TraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
-
-newtype RoleName = RoleName {getRoleTxt :: NonEmptyText}
-  deriving
-    ( Show,
-      Eq,
-      Ord,
-      Hashable,
-      FromJSONKey,
-      ToJSONKey,
-      FromJSON,
-      ToJSON,
-      PG.FromCol,
-      PG.ToPrepArg,
-      Generic,
-      NFData
-    )
-
-instance HasCodec RoleName where
-  codec = dimapCodec RoleName getRoleTxt nonEmptyTextCodec
-
-roleNameToTxt :: RoleName -> Text
-roleNameToTxt = unNonEmptyText . getRoleTxt
-
-instance ToTxt RoleName where
-  toTxt = roleNameToTxt
-
-mkRoleName :: Text -> Maybe RoleName
-mkRoleName = fmap RoleName . mkNonEmptyText
-
-mkRoleNameSafe :: NonEmptyText -> RoleName
-mkRoleNameSafe = RoleName
-
-adminRoleName :: RoleName
-adminRoleName = RoleName $ mkNonEmptyTextUnsafe "admin"
 
 newtype SessionVariable = SessionVariable {unSessionVariable :: CI.CI Text}
   deriving (Show, Eq, Hashable, IsString, Data, NFData, Ord)

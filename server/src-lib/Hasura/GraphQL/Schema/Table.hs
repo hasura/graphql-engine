@@ -34,11 +34,11 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
-import Hasura.Session (RoleName)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Helper function to get the table GraphQL name. A table may have a

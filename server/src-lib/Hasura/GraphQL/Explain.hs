@@ -33,9 +33,10 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.IR
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Session
+import Hasura.Session (UserAdminSecret (..), UserInfo, UserRoleBuild (..), mkSessionVariablesText, mkUserInfo)
 import Hasura.Tracing (MonadTrace)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP

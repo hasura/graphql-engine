@@ -22,12 +22,12 @@ import Hasura.Base.Error.TestInstances ()
 import Hasura.GraphQL.Parser.Variable (VariableInfo (..))
 import Hasura.RQL.IR.Value (Provenance (..), UnpreparedValue (..))
 import Hasura.RQL.Types.Column (ColumnType (..), ColumnValue (..))
+import Hasura.RQL.Types.Roles (mkRoleNameSafe)
 import Hasura.SQL.Backend (BackendType (..), PostgresKind (..))
 import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Session
   ( BackendOnlyFieldAccess (..),
     UserInfo (..),
-    mkRoleNameSafe,
     mkSessionVariablesText,
   )
 import Language.GraphQL.Draft.Syntax.QQ qualified as G

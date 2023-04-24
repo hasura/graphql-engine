@@ -77,12 +77,12 @@ import Hasura.RQL.Types.Metadata.Serialization
 import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.Permission
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
-import Hasura.Session
 import Hasura.Tracing (TraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
 

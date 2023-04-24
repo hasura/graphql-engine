@@ -73,6 +73,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Eventing
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Backend
 import Hasura.Server.Init.Config (OptionalInterval (..))
@@ -81,7 +82,7 @@ import Hasura.Server.Utils
   ( mkClientHeadersForward,
     mkSetCookieHeaders,
   )
-import Hasura.Session
+import Hasura.Session (SessionVariables, UserInfo, _uiRole, _uiSession)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client.Transformable qualified as HTTP

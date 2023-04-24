@@ -107,7 +107,6 @@ import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag (BackendTag, HasTag (backendTag))
-import Hasura.Session
 
 -- | Parse a list of objects into a map from a derived key,
 -- failing if the list has duplicates.

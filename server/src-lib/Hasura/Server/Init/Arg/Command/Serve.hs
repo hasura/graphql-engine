@@ -80,6 +80,8 @@ import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata (MetadataDefaults, emptyMetadataDefaults)
+import Hasura.RQL.Types.Roles (RoleName)
+import Hasura.RQL.Types.Roles qualified as Roles
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init.Arg.PrettyPrinter qualified as PP
@@ -87,7 +89,6 @@ import Hasura.Server.Init.Config qualified as Config
 import Hasura.Server.Init.Env qualified as Env
 import Hasura.Server.Logging qualified as Server.Logging
 import Hasura.Server.Types qualified as Types
-import Hasura.Session qualified as Session
 import Network.Wai.Handler.Warp qualified as Warp
 import Network.WebSockets qualified as WebSockets
 import Options.Applicative qualified as Opt
@@ -434,7 +435,7 @@ jwtSecretOption =
           <> "`{\"type\": \"RS256\", \"key\": \"<your-PEM-RSA-public-key>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}`"
     }
 
-parseUnAuthRole :: Opt.Parser (Maybe Session.RoleName)
+parseUnAuthRole :: Opt.Parser (Maybe RoleName)
 parseUnAuthRole =
   fmap mkRoleName $
     Opt.optional $
@@ -444,7 +445,7 @@ parseUnAuthRole =
             <> Opt.help (Config._helpMessage unAuthRoleOption)
         )
   where
-    mkRoleName mText = mText >>= Session.mkRoleName
+    mkRoleName mText = mText >>= Roles.mkRoleName
 
 unAuthRoleOption :: Config.Option ()
 unAuthRoleOption =

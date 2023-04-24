@@ -24,6 +24,7 @@ import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Common (FieldName, RelType (..), relNameToTxt)
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.ResultCustomization
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
@@ -31,7 +32,6 @@ import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.RemoteSchema.SchemaCache qualified as Remote
 import Hasura.SQL.AnyBackend
-import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Remote relationship field parsers

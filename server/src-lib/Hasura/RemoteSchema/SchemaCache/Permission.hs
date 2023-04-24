@@ -49,11 +49,12 @@ import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata.Instances ()
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RemoteSchema.Metadata (RemoteSchemaName)
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.Server.Utils (englishList, isSessionVariable)
-import Hasura.Session
+import Hasura.Session (mkSessionVariable)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data FieldDefinitionType

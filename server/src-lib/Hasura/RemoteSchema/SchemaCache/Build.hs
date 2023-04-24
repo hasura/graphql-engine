@@ -29,7 +29,6 @@ import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Permission (resolveRoleBasedRemoteSchema)
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.Services
-import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 
 -- Resolves a user specified `RemoteSchemaMetadata` into information rich `RemoteSchemaCtx`

@@ -38,12 +38,12 @@ import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission (PermDef (_pdRole), SelPerm)
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker (..))
 import Hasura.Server.Init.FeatureFlag qualified as FF
-import Hasura.Session (RoleName)
 
 -- | Default implementation of the 'track_logical_model' request payload.
 data TrackLogicalModel (b :: BackendType) = TrackLogicalModel

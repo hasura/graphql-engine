@@ -150,6 +150,7 @@ import Hasura.RQL.Types.OpenTelemetry (OpenTelemetryInfo)
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
@@ -161,7 +162,7 @@ import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.SQL.Tag (HasTag (backendTag), reify)
-import Hasura.Session
+import Hasura.Session (UserInfoM)
 import Hasura.Tracing (TraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
 import System.Cron.Types

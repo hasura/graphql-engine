@@ -48,6 +48,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
@@ -60,7 +61,6 @@ import Hasura.Server.Telemetry.Counters (dumpServiceTimingMetrics)
 import Hasura.Server.Telemetry.Types
 import Hasura.Server.Types
 import Hasura.Server.Version
-import Hasura.Session
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Network.Wreq qualified as Wreq

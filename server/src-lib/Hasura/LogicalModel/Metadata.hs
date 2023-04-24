@@ -25,8 +25,8 @@ import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Common (SourceName, ToAesonPairs (toAesonPairs), defaultSource)
 import Hasura.RQL.Types.Permission (SelPermDef, _pdRole)
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.SQL.Backend (BackendType)
-import Hasura.Session (RoleName)
 
 -- | Description of a logical model for use in metadata (before schema cache)
 data LogicalModelMetadata (b :: BackendType) = LogicalModelMetadata

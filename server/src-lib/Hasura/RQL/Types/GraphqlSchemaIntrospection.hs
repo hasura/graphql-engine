@@ -10,7 +10,7 @@ import Autodocodec.Extended (hashSetCodec)
 import Data.Aeson.TH
 import Data.HashSet qualified as Set
 import Hasura.Prelude
-import Hasura.Session
+import Hasura.RQL.Types.Roles (RoleName)
 
 newtype SetGraphqlIntrospectionOptions = SetGraphqlIntrospectionOptions {_idrDisabledForRoles :: (Set.HashSet RoleName)}
   deriving (Show, Eq, Generic, Semigroup, Monoid)

@@ -51,11 +51,12 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
-import Hasura.Session
+import Hasura.Session (SessionVariable, UserInfoM, askCurRole, askUserInfo, getSessionVariables, sessionVariableToText, _uiSession)
 
 newtype DMLP1T m a = DMLP1T {unDMLP1T :: StateT (DS.Seq PG.PrepArg) m a}
   deriving

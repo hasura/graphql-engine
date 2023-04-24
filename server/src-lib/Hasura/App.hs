@@ -130,6 +130,7 @@ import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.ResizePool
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source

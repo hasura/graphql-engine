@@ -5,6 +5,11 @@ module Hasura.RQL.Types.Roles
     InheritedRole,
     ParentRoles (..),
     Role (..),
+    RoleName,
+    mkRoleName,
+    mkRoleNameSafe,
+    adminRoleName,
+    roleNameToTxt,
   )
 where
 
@@ -14,8 +19,44 @@ import Autodocodec.Extended (hashSetCodec)
 import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.TH
+import Data.Text.Extended (ToTxt (toTxt))
+import Data.Text.NonEmpty (NonEmptyText, mkNonEmptyText, mkNonEmptyTextUnsafe, nonEmptyTextCodec, unNonEmptyText)
+import Database.PG.Query qualified as PG
 import Hasura.Prelude
-import Hasura.Session
+
+newtype RoleName = RoleName {getRoleTxt :: NonEmptyText}
+  deriving
+    ( Show,
+      Eq,
+      Ord,
+      Hashable,
+      FromJSONKey,
+      ToJSONKey,
+      FromJSON,
+      ToJSON,
+      PG.FromCol,
+      PG.ToPrepArg,
+      Generic,
+      NFData
+    )
+
+instance HasCodec RoleName where
+  codec = dimapCodec RoleName getRoleTxt nonEmptyTextCodec
+
+roleNameToTxt :: RoleName -> Text
+roleNameToTxt = unNonEmptyText . getRoleTxt
+
+instance ToTxt RoleName where
+  toTxt = roleNameToTxt
+
+mkRoleName :: Text -> Maybe RoleName
+mkRoleName = fmap RoleName . mkNonEmptyText
+
+mkRoleNameSafe :: NonEmptyText -> RoleName
+mkRoleNameSafe = RoleName
+
+adminRoleName :: RoleName
+adminRoleName = RoleName $ mkNonEmptyTextUnsafe "admin"
 
 newtype ParentRoles = ParentRoles {_unParentRoles :: HashSet RoleName}
   deriving (Show, Eq, ToJSON, FromJSON, Generic)

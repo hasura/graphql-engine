@@ -42,11 +42,11 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.SQL.BackendMap (BackendMap)
-import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 getActionInfo ::

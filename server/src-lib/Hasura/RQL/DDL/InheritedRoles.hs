@@ -19,7 +19,6 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
-import Hasura.Session
 
 runAddInheritedRole ::
   ( MonadError QErr m,

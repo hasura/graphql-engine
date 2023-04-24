@@ -11,7 +11,7 @@ import Autodocodec.Extended (graphQLSchemaDocumentCodec)
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
 import Hasura.Prelude
-import Hasura.Session
+import Hasura.RQL.Types.Roles (RoleName)
 import Language.GraphQL.Draft.Printer qualified as G
 import Language.GraphQL.Draft.Syntax qualified as G
 import Text.Builder qualified as TB

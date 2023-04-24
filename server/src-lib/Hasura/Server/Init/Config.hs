@@ -94,11 +94,11 @@ import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as Common
 import Hasura.RQL.Types.Metadata (MetadataDefaults)
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Logging qualified as Server.Logging
 import Hasura.Server.Types qualified as Server.Types
-import Hasura.Session qualified as Session
 import Network.Wai.Handler.Warp qualified as Warp
 import Network.WebSockets qualified as WebSockets
 import Refined (NonNegative, Positive, Refined, unrefine)
@@ -281,7 +281,7 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoAdminSecret :: Maybe Auth.AdminSecretHash,
     rsoAuthHook :: AuthHookRaw,
     rsoJwtSecret :: Maybe Auth.JWTConfig,
-    rsoUnAuthRole :: Maybe Session.RoleName,
+    rsoUnAuthRole :: Maybe RoleName,
     rsoCorsConfig :: Maybe Cors.CorsConfig,
     rsoConsoleStatus :: ConsoleStatus,
     rsoConsoleAssetsDir :: Maybe Text,
@@ -581,7 +581,7 @@ data ServeOptions impl = ServeOptions
     soAdminSecret :: HashSet Auth.AdminSecretHash,
     soAuthHook :: Maybe Auth.AuthHook,
     soJwtSecret :: [Auth.JWTConfig],
-    soUnAuthRole :: Maybe Session.RoleName,
+    soUnAuthRole :: Maybe RoleName,
     soCorsConfig :: Cors.CorsConfig,
     soConsoleStatus :: ConsoleStatus,
     soConsoleAssetsDir :: Maybe Text,
@@ -632,10 +632,10 @@ data ResponseInternalErrorsConfig
   | InternalErrorsDisabled
   deriving (Show, Eq)
 
-shouldIncludeInternal :: Session.RoleName -> ResponseInternalErrorsConfig -> Bool
+shouldIncludeInternal :: RoleName -> ResponseInternalErrorsConfig -> Bool
 shouldIncludeInternal role = \case
   InternalErrorsAllRequests -> True
-  InternalErrorsAdminOnly -> role == Session.adminRoleName
+  InternalErrorsAdminOnly -> role == adminRoleName
   InternalErrorsDisabled -> False
 
 --------------------------------------------------------------------------------

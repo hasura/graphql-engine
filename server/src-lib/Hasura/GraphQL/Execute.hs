@@ -51,6 +51,7 @@ import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Subscription
 import Hasura.SQL.AnyBackend qualified as AB
@@ -59,7 +60,7 @@ import Hasura.Server.Init qualified as Init
 import Hasura.Server.Prometheus (PrometheusMetrics)
 import Hasura.Server.Types (ReadOnlyMode (..), RequestId (..))
 import Hasura.Services
-import Hasura.Session
+import Hasura.Session (BackendOnlyFieldAccess (..), UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP

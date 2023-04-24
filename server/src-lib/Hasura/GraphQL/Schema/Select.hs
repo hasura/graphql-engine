@@ -81,13 +81,13 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission qualified as Permission
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Utils (executeJSONPath)
-import Hasura.Session (RoleName, adminRoleName)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 --------------------------------------------------------------------------------

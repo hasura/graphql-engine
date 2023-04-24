@@ -41,10 +41,10 @@ import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Permission
+import Hasura.RQL.Types.Roles (RoleName, roleNameToTxt)
 import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
-import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data TableObjId (b :: BackendType)

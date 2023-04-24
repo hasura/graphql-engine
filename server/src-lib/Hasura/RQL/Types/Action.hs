@@ -77,7 +77,8 @@ import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTrans
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Eventing (EventId (..))
-import Hasura.Session
+import Hasura.RQL.Types.Roles (RoleName)
+import Hasura.Session (SessionVariables)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
 import PostgreSQL.Binary.Encoding qualified as PE

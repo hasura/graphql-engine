@@ -74,6 +74,7 @@ import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ResultCustomization
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
@@ -90,7 +91,7 @@ import Hasura.Server.Prometheus
 import Hasura.Server.Telemetry.Counters qualified as Telem
 import Hasura.Server.Types (ReadOnlyMode (..), RequestId (..))
 import Hasura.Services
-import Hasura.Session
+import Hasura.Session (SessionVariable, SessionVariableValue, SessionVariables, UserInfo (..), filterSessionVariables)
 import Hasura.Tracing (MonadTrace, TraceT, newSpan)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP

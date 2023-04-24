@@ -19,11 +19,11 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Permission
-import Hasura.Session
 
 data AddRemoteSchemaPermission = AddRemoteSchemaPermission
   { _arspRemoteSchema :: RemoteSchemaName,

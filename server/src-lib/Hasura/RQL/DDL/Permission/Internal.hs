@@ -33,11 +33,11 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Table
 import Hasura.Server.Utils
-import Hasura.Session
 
 -- | Intrepet a 'PermColSpec' column specification, which can either refer to a
 -- list of named columns or all columns.

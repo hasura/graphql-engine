@@ -140,10 +140,10 @@ import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Permission (AllowedRootFields (..), QueryRootFieldType (..), SubscriptionRootFieldType (..))
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.SQL.AnyBackend (runBackend)
 import Hasura.SQL.Backend
 import Hasura.Server.Utils (englishList)
-import Hasura.Session
 import Language.GraphQL.Draft.Parser qualified as GParse
 import Language.GraphQL.Draft.Printer qualified as GPrint
 import Language.GraphQL.Draft.Syntax qualified as G

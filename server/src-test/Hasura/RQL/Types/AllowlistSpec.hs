@@ -15,7 +15,7 @@ import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
 import Hasura.Prelude
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.QueryCollection
-import Hasura.Session (mkRoleName)
+import Hasura.RQL.Types.Roles (mkRoleName)
 import Test.Hspec
 
 spec :: Spec
