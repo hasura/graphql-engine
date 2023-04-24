@@ -33,10 +33,10 @@
 </span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Hasura.Base.Error</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Error</span></span><span>
 </span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html"><span class="hs-identifier">Hasura.GraphQL.ApolloFederation</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#getApolloFederationStatus"><span class="hs-identifier">getApolloFederationStatus</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html"><span class="hs-identifier">Hasura.GraphQL.Execute.Subscription.Options</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Subscription.Options</span></span><span>
-</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Options</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Options</span></span><span>
-</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Logging</span></span><span>
-</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
-</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Common</span></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Logging</span></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Common</span></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Schema.Options.html"><span class="hs-identifier">Hasura.RQL.Types.Schema.Options</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Options</span></span><span>
 </span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html"><span class="hs-identifier">Hasura.Server.Auth</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Auth</span></span><span>
 </span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html"><span class="hs-identifier">Hasura.Server.Cors</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Cors</span></span><span>
 </span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Arg.html"><span class="hs-identifier">Hasura.Server.Init.Arg</span></a></span><span>
@@ -287,10 +287,10 @@ Maybe (Refined NonNegative Milliseconds)
 Maybe (Refined Positive Int)
 Maybe RefetchInterval
 Maybe BatchSize
-Maybe InferFunctionPermissions
-Maybe DangerouslyCollapseBooleans
 Maybe LogLevel
 Maybe RoleName
+Maybe InferFunctionPermissions
+Maybe DangerouslyCollapseBooleans
 Maybe ExtensionsSchema
 Maybe ApolloFederationStatus
 Maybe NamingCase
@@ -517,7 +517,7 @@ Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><span id="line-166"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
 </span><a href="#local-6989586621690838319"><span class="hs-identifier hs-var">rsoStringifyNum</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-167"></span><span>      </span><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="Hasura.GraphQL.Schema.Options.html#Don%27tStringifyNumbers"><span class="hs-identifier hs-var">Options.Don'tStringifyNumbers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><a href="Hasura.RQL.Types.Schema.Options.html#Don%27tStringifyNumbers"><span class="hs-identifier hs-var">Options.Don'tStringifyNumbers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
@@ -662,7 +662,7 @@ Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><span id="line-188"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
 </span><a href="#local-6989586621690838304"><span class="hs-identifier hs-var">rsoEnableRemoteSchemaPermissions</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-189"></span><span>      </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
-</span><a href="Hasura.GraphQL.Schema.Options.html#DisableRemoteSchemaPermissions"><span class="hs-identifier hs-var">Options.DisableRemoteSchemaPermissions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><a href="Hasura.RQL.Types.Schema.Options.html#DisableRemoteSchemaPermissions"><span class="hs-identifier hs-var">Options.DisableRemoteSchemaPermissions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
@@ -828,11 +828,11 @@ Refined NonNegative Seconds
 Refined NonNegative Milliseconds
 Refined Positive Int
 SubscriptionsOptions
+LogLevel
 RemoteSchemaPermissions
 InferFunctionPermissions
 DangerouslyCollapseBooleans
 StringifyNumbers
-LogLevel
 ExtensionsSchema
 ApolloFederationStatus
 EventingMode
@@ -1153,10 +1153,10 @@ Maybe (Refined NonNegative Milliseconds)
 Maybe (Refined Positive Int)
 Maybe RefetchInterval
 Maybe BatchSize
-Maybe InferFunctionPermissions
-Maybe DangerouslyCollapseBooleans
 Maybe LogLevel
 Maybe RoleName
+Maybe InferFunctionPermissions
+Maybe DangerouslyCollapseBooleans
 Maybe ExtensionsSchema
 Maybe ApolloFederationStatus
 Maybe NamingCase

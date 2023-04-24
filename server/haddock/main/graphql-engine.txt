@@ -1303,107 +1303,6 @@ instance GHC.Show.Show Hasura.GraphQL.Execute.Types.GraphQLQueryType
 instance Data.Hashable.Class.Hashable Hasura.GraphQL.Execute.Types.GraphQLQueryType
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Types.GraphQLQueryType
 
-
--- | Definitions for schema building configuration.
-module Hasura.GraphQL.Schema.Options
-
--- | The record of options required to build the schema. This includes
---   options that can be enabled with <a>ExperimentalFeature</a> flags.
-data SchemaOptions
-SchemaOptions :: StringifyNumbers -> DangerouslyCollapseBooleans -> InferFunctionPermissions -> OptimizePermissionFilters -> IncludeUpdateManyFields -> IncludeAggregationPredicates -> IncludeStreamFields -> BigQueryStringNumericInput -> SchemaOptions
-[soStringifyNumbers] :: SchemaOptions -> StringifyNumbers
-[soDangerousBooleanCollapse] :: SchemaOptions -> DangerouslyCollapseBooleans
-[soInferFunctionPermissions] :: SchemaOptions -> InferFunctionPermissions
-[soOptimizePermissionFilters] :: SchemaOptions -> OptimizePermissionFilters
-[soIncludeUpdateManyFields] :: SchemaOptions -> IncludeUpdateManyFields
-[soIncludeAggregationPredicates] :: SchemaOptions -> IncludeAggregationPredicates
-[soIncludeStreamFields] :: SchemaOptions -> IncludeStreamFields
-[soBigQueryStringNumericInput] :: SchemaOptions -> BigQueryStringNumericInput
-
--- | Should we represent numbers in our responses as numbers, or strings?
---   Some backends can return numbers that exceed the bounds of JSON's own
---   number type. In these cases, we can use stringified versions of these
---   numbers to avoid this problem.
-data StringifyNumbers
-StringifyNumbers :: StringifyNumbers
-Don'tStringifyNumbers :: StringifyNumbers
-
--- | Should we include <tt>TABLE_updates</tt> fields in schemas This is a
---   toggle so that users can opt-in, and so that we can rename any tables
---   that this may conflict with if needed
-data IncludeUpdateManyFields
-IncludeUpdateManyFields :: IncludeUpdateManyFields
-Don'tIncludeUpdateManyFields :: IncludeUpdateManyFields
-
--- | Should we include <tt>TABLE_stream</tt> fields in schemas This is a
---   toggle so that users can opt-in, and so that we can rename any tables
---   that this may conflict with if needed
-data IncludeStreamFields
-IncludeStreamFields :: IncludeStreamFields
-Don'tIncludeStreamFields :: IncludeStreamFields
-
--- | Should we include aggregation functions in where clauses? Because this
---   has the potential to cause naming conflicts in graphql schema types,
---   this flag allows users to toggle the feature off if it an upgrade
---   breaks their setup.
-data IncludeAggregationPredicates
-IncludeAggregationPredicates :: IncludeAggregationPredicates
-Don'tIncludeAggregationPredicates :: IncludeAggregationPredicates
-
--- | Should Boolean fields be collapsed to <a>True</a> when a null value is
---   given? This was the behaviour of Hasura V1, and is now discouraged.
-data DangerouslyCollapseBooleans
-DangerouslyCollapseBooleans :: DangerouslyCollapseBooleans
-Don'tDangerouslyCollapseBooleans :: DangerouslyCollapseBooleans
-
--- | Should we infer function permissions? If this flag is set to
---   <a>InferFunctionPermissions</a>, we may fail to build expression
---   parsers in <tt>buildQueryAndSubscriptionFields</tt> for users with
---   unrecognised roles.
-data InferFunctionPermissions
-InferFunctionPermissions :: InferFunctionPermissions
-Don'tInferFunctionPermissions :: InferFunctionPermissions
-
--- | Should we enable remote schema permissions? If so, these permissions
---   will influence <a>buildGQLContext</a>.
-data RemoteSchemaPermissions
-EnableRemoteSchemaPermissions :: RemoteSchemaPermissions
-DisableRemoteSchemaPermissions :: RemoteSchemaPermissions
-
--- | Should we attempt to deduplicate permission filters? This flag is used
---   in <a>relationshipField</a> to determine whether certain row-level
---   permission filters can be dropped in certain cases.
-data OptimizePermissionFilters
-OptimizePermissionFilters :: OptimizePermissionFilters
-Don'tOptimizePermissionFilters :: OptimizePermissionFilters
-
--- | Should we enable string-accepting scalar parsers for BigQuery sources
-data BigQueryStringNumericInput
-EnableBigQueryStringNumericInput :: BigQueryStringNumericInput
-DisableBigQueryStringNumericInput :: BigQueryStringNumericInput
-instance GHC.Show.Show Hasura.GraphQL.Schema.Options.StringifyNumbers
-instance GHC.Classes.Eq Hasura.GraphQL.Schema.Options.StringifyNumbers
-instance GHC.Show.Show Hasura.GraphQL.Schema.Options.IncludeUpdateManyFields
-instance GHC.Classes.Eq Hasura.GraphQL.Schema.Options.IncludeUpdateManyFields
-instance GHC.Show.Show Hasura.GraphQL.Schema.Options.IncludeStreamFields
-instance GHC.Classes.Eq Hasura.GraphQL.Schema.Options.IncludeStreamFields
-instance GHC.Show.Show Hasura.GraphQL.Schema.Options.DangerouslyCollapseBooleans
-instance GHC.Classes.Eq Hasura.GraphQL.Schema.Options.DangerouslyCollapseBooleans
-instance GHC.Show.Show Hasura.GraphQL.Schema.Options.InferFunctionPermissions
-instance GHC.Classes.Eq Hasura.GraphQL.Schema.Options.InferFunctionPermissions
-instance GHC.Show.Show Hasura.GraphQL.Schema.Options.RemoteSchemaPermissions
-instance GHC.Classes.Eq Hasura.GraphQL.Schema.Options.RemoteSchemaPermissions
-instance GHC.Show.Show Hasura.GraphQL.Schema.Options.OptimizePermissionFilters
-instance GHC.Classes.Eq Hasura.GraphQL.Schema.Options.OptimizePermissionFilters
-instance GHC.Show.Show Hasura.GraphQL.Schema.Options.BigQueryStringNumericInput
-instance GHC.Classes.Eq Hasura.GraphQL.Schema.Options.BigQueryStringNumericInput
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.GraphQL.Schema.Options.RemoteSchemaPermissions
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Schema.Options.RemoteSchemaPermissions
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.GraphQL.Schema.Options.InferFunctionPermissions
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Schema.Options.InferFunctionPermissions
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.GraphQL.Schema.Options.DangerouslyCollapseBooleans
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Schema.Options.DangerouslyCollapseBooleans
-
 module Hasura.GraphQL.Schema.Typename
 
 -- | Type name customization
@@ -2960,7 +2859,7 @@ qrCollectionName :: Lens' QueryReference CollectionName
 data EndpointDef query
 EndpointDef :: query -> EndpointDef query
 [_edQuery] :: EndpointDef query -> query
-edQuery :: forall query_a4vkT query_a4vyU. Iso (EndpointDef query_a4vkT) (EndpointDef query_a4vyU) query_a4vkT query_a4vyU
+edQuery :: forall query_a4spb query_a4sDc. Iso (EndpointDef query_a4spb) (EndpointDef query_a4sDc) query_a4spb query_a4sDc
 type EndpointTrie query = MultiMapPathTrie Text EndpointMethod (EndpointMetadata query)
 buildEndpointsTrie :: Ord query => [EndpointMetadata query] -> EndpointTrie query
 
@@ -2976,11 +2875,11 @@ EndpointMetadata :: EndpointName -> EndpointUrl -> NonEmpty EndpointMethod -> En
 [_ceMethods] :: EndpointMetadata query -> NonEmpty EndpointMethod
 [_ceDefinition] :: EndpointMetadata query -> EndpointDef query
 [_ceComment] :: EndpointMetadata query -> Maybe Text
-ceUrl :: forall query_a4vz8. Lens' (EndpointMetadata query_a4vz8) EndpointUrl
-ceName :: forall query_a4vz8. Lens' (EndpointMetadata query_a4vz8) EndpointName
-ceMethods :: forall query_a4vz8. Lens' (EndpointMetadata query_a4vz8) (NonEmpty EndpointMethod)
-ceDefinition :: forall query_a4vz8 query_a4vZK. Lens (EndpointMetadata query_a4vz8) (EndpointMetadata query_a4vZK) (EndpointDef query_a4vz8) (EndpointDef query_a4vZK)
-ceComment :: forall query_a4vz8. Lens' (EndpointMetadata query_a4vz8) (Maybe Text)
+ceUrl :: forall query_a4sDq. Lens' (EndpointMetadata query_a4sDq) EndpointUrl
+ceName :: forall query_a4sDq. Lens' (EndpointMetadata query_a4sDq) EndpointName
+ceMethods :: forall query_a4sDq. Lens' (EndpointMetadata query_a4sDq) (NonEmpty EndpointMethod)
+ceDefinition :: forall query_a4sDq query_a4t42. Lens (EndpointMetadata query_a4sDq) (EndpointMetadata query_a4t42) (EndpointDef query_a4sDq) (EndpointDef query_a4t42)
+ceComment :: forall query_a4sDq. Lens' (EndpointMetadata query_a4sDq) (Maybe Text)
 data DropEndpoint
 DropEndpoint :: EndpointName -> DropEndpoint
 [_deName] :: DropEndpoint -> EndpointName
@@ -3298,6 +3197,107 @@ instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.Types.ApiLimit.UniquePara
 instance (Autodocodec.Class.HasCodec a, Data.Typeable.Internal.Typeable a) => Autodocodec.Class.HasCodec (Hasura.RQL.Types.ApiLimit.Limit a)
 instance Data.Aeson.Types.FromJSON.FromJSON a => Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.Types.ApiLimit.Limit a)
 instance Data.Aeson.Types.ToJSON.ToJSON a => Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.Types.ApiLimit.Limit a)
+
+
+-- | Definitions for schema building configuration.
+module Hasura.RQL.Types.Schema.Options
+
+-- | The record of options required to build the schema. This includes
+--   options that can be enabled with <a>ExperimentalFeature</a> flags.
+data SchemaOptions
+SchemaOptions :: StringifyNumbers -> DangerouslyCollapseBooleans -> InferFunctionPermissions -> OptimizePermissionFilters -> IncludeUpdateManyFields -> IncludeAggregationPredicates -> IncludeStreamFields -> BigQueryStringNumericInput -> SchemaOptions
+[soStringifyNumbers] :: SchemaOptions -> StringifyNumbers
+[soDangerousBooleanCollapse] :: SchemaOptions -> DangerouslyCollapseBooleans
+[soInferFunctionPermissions] :: SchemaOptions -> InferFunctionPermissions
+[soOptimizePermissionFilters] :: SchemaOptions -> OptimizePermissionFilters
+[soIncludeUpdateManyFields] :: SchemaOptions -> IncludeUpdateManyFields
+[soIncludeAggregationPredicates] :: SchemaOptions -> IncludeAggregationPredicates
+[soIncludeStreamFields] :: SchemaOptions -> IncludeStreamFields
+[soBigQueryStringNumericInput] :: SchemaOptions -> BigQueryStringNumericInput
+
+-- | Should we represent numbers in our responses as numbers, or strings?
+--   Some backends can return numbers that exceed the bounds of JSON's own
+--   number type. In these cases, we can use stringified versions of these
+--   numbers to avoid this problem.
+data StringifyNumbers
+StringifyNumbers :: StringifyNumbers
+Don'tStringifyNumbers :: StringifyNumbers
+
+-- | Should we include <tt>TABLE_updates</tt> fields in schemas This is a
+--   toggle so that users can opt-in, and so that we can rename any tables
+--   that this may conflict with if needed
+data IncludeUpdateManyFields
+IncludeUpdateManyFields :: IncludeUpdateManyFields
+Don'tIncludeUpdateManyFields :: IncludeUpdateManyFields
+
+-- | Should we include <tt>TABLE_stream</tt> fields in schemas This is a
+--   toggle so that users can opt-in, and so that we can rename any tables
+--   that this may conflict with if needed
+data IncludeStreamFields
+IncludeStreamFields :: IncludeStreamFields
+Don'tIncludeStreamFields :: IncludeStreamFields
+
+-- | Should we include aggregation functions in where clauses? Because this
+--   has the potential to cause naming conflicts in graphql schema types,
+--   this flag allows users to toggle the feature off if it an upgrade
+--   breaks their setup.
+data IncludeAggregationPredicates
+IncludeAggregationPredicates :: IncludeAggregationPredicates
+Don'tIncludeAggregationPredicates :: IncludeAggregationPredicates
+
+-- | Should Boolean fields be collapsed to <a>True</a> when a null value is
+--   given? This was the behaviour of Hasura V1, and is now discouraged.
+data DangerouslyCollapseBooleans
+DangerouslyCollapseBooleans :: DangerouslyCollapseBooleans
+Don'tDangerouslyCollapseBooleans :: DangerouslyCollapseBooleans
+
+-- | Should we infer function permissions? If this flag is set to
+--   <a>InferFunctionPermissions</a>, we may fail to build expression
+--   parsers in <tt>buildQueryAndSubscriptionFields</tt> for users with
+--   unrecognised roles.
+data InferFunctionPermissions
+InferFunctionPermissions :: InferFunctionPermissions
+Don'tInferFunctionPermissions :: InferFunctionPermissions
+
+-- | Should we enable remote schema permissions? If so, these permissions
+--   will influence <a>buildGQLContext</a>.
+data RemoteSchemaPermissions
+EnableRemoteSchemaPermissions :: RemoteSchemaPermissions
+DisableRemoteSchemaPermissions :: RemoteSchemaPermissions
+
+-- | Should we attempt to deduplicate permission filters? This flag is used
+--   in <a>relationshipField</a> to determine whether certain row-level
+--   permission filters can be dropped in certain cases.
+data OptimizePermissionFilters
+OptimizePermissionFilters :: OptimizePermissionFilters
+Don'tOptimizePermissionFilters :: OptimizePermissionFilters
+
+-- | Should we enable string-accepting scalar parsers for BigQuery sources
+data BigQueryStringNumericInput
+EnableBigQueryStringNumericInput :: BigQueryStringNumericInput
+DisableBigQueryStringNumericInput :: BigQueryStringNumericInput
+instance GHC.Show.Show Hasura.RQL.Types.Schema.Options.StringifyNumbers
+instance GHC.Classes.Eq Hasura.RQL.Types.Schema.Options.StringifyNumbers
+instance GHC.Show.Show Hasura.RQL.Types.Schema.Options.IncludeUpdateManyFields
+instance GHC.Classes.Eq Hasura.RQL.Types.Schema.Options.IncludeUpdateManyFields
+instance GHC.Show.Show Hasura.RQL.Types.Schema.Options.IncludeStreamFields
+instance GHC.Classes.Eq Hasura.RQL.Types.Schema.Options.IncludeStreamFields
+instance GHC.Show.Show Hasura.RQL.Types.Schema.Options.DangerouslyCollapseBooleans
+instance GHC.Classes.Eq Hasura.RQL.Types.Schema.Options.DangerouslyCollapseBooleans
+instance GHC.Show.Show Hasura.RQL.Types.Schema.Options.InferFunctionPermissions
+instance GHC.Classes.Eq Hasura.RQL.Types.Schema.Options.InferFunctionPermissions
+instance GHC.Show.Show Hasura.RQL.Types.Schema.Options.RemoteSchemaPermissions
+instance GHC.Classes.Eq Hasura.RQL.Types.Schema.Options.RemoteSchemaPermissions
+instance GHC.Show.Show Hasura.RQL.Types.Schema.Options.OptimizePermissionFilters
+instance GHC.Classes.Eq Hasura.RQL.Types.Schema.Options.OptimizePermissionFilters
+instance GHC.Show.Show Hasura.RQL.Types.Schema.Options.BigQueryStringNumericInput
+instance GHC.Classes.Eq Hasura.RQL.Types.Schema.Options.BigQueryStringNumericInput
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.Types.Schema.Options.RemoteSchemaPermissions
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.Schema.Options.RemoteSchemaPermissions
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.Types.Schema.Options.InferFunctionPermissions
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.Schema.Options.InferFunctionPermissions
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.Types.Schema.Options.DangerouslyCollapseBooleans
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.Schema.Options.DangerouslyCollapseBooleans
 
 module Hasura.RQL.Types.Subscription
 
@@ -19517,10 +19517,10 @@ instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Init.Config.WsReadCookieSt
 instance Hasura.Server.Init.Env.FromEnv Data.Aeson.Types.Internal.Value
 instance Hasura.Server.Init.Env.FromEnv Hasura.RQL.Types.Metadata.MetadataDefaults
 instance Hasura.Server.Init.Env.FromEnv Hasura.RQL.Types.Metadata.Metadata
-instance Hasura.Server.Init.Env.FromEnv Hasura.GraphQL.Schema.Options.StringifyNumbers
-instance Hasura.Server.Init.Env.FromEnv Hasura.GraphQL.Schema.Options.RemoteSchemaPermissions
-instance Hasura.Server.Init.Env.FromEnv Hasura.GraphQL.Schema.Options.DangerouslyCollapseBooleans
-instance Hasura.Server.Init.Env.FromEnv Hasura.GraphQL.Schema.Options.InferFunctionPermissions
+instance Hasura.Server.Init.Env.FromEnv Hasura.RQL.Types.Schema.Options.StringifyNumbers
+instance Hasura.Server.Init.Env.FromEnv Hasura.RQL.Types.Schema.Options.RemoteSchemaPermissions
+instance Hasura.Server.Init.Env.FromEnv Hasura.RQL.Types.Schema.Options.DangerouslyCollapseBooleans
+instance Hasura.Server.Init.Env.FromEnv Hasura.RQL.Types.Schema.Options.InferFunctionPermissions
 instance Hasura.Server.Init.Env.FromEnv (Hasura.Server.Types.MaintenanceMode ())
 instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Logging.MetadataQueryLoggingMode
 instance Hasura.Server.Init.Env.FromEnv Database.PG.Query.Transaction.TxIsolation
