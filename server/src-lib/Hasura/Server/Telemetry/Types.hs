@@ -110,7 +110,8 @@ $(A.deriveToJSON hasuraJSON ''Metrics)
 
 data SourceMetadata = SourceMetadata
   { _smDbUid :: Maybe DbUid,
-    _smDbKind :: BackendType,
+    _smBackendType :: BackendType,
+    _smDbKind :: Text,
     _smDbVersion :: Maybe DbVersion
   }
   deriving (Show, Eq)

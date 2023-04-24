@@ -34,7 +34,7 @@ import Hasura.RQL.Types.Common (SourceName (..))
 import Hasura.RQL.Types.Source (DBObjectsIntrospection (..), SourceInfo (..))
 import Hasura.RQL.Types.SourceCustomization (ResolvedSourceCustomization (..))
 import Hasura.RQL.Types.Table (TableInfo (..))
-import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))
+import Hasura.SQL.Backend (BackendSourceKind (PostgresVanillaKind), BackendType (Postgres), PostgresKind (Vanilla))
 import Language.GraphQL.Draft.Syntax qualified as Syntax
 import Test.Hspec
 import Test.Parser.Internal
@@ -96,6 +96,7 @@ runUpdateFieldTest UpdateTestSetup {..} =
     sourceInfo =
       SourceInfo
         { _siName = SNDefault,
+          _siSourceKind = PostgresVanillaKind,
           _siTables = HM.singleton table tableInfo,
           _siFunctions = mempty,
           _siNativeQueries = mempty,

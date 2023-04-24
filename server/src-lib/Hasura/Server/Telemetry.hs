@@ -37,6 +37,7 @@ import Data.List qualified as L
 import Data.List.Extended qualified as L
 import Data.Text qualified as T
 import Data.Text.Conversions (UTF8 (..), decodeText)
+import Data.Text.Extended (toTxt)
 import Hasura.App.State qualified as State
 import Hasura.HTTP
 import Hasura.Logging
@@ -51,7 +52,7 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as Any
-import Hasura.SQL.Backend (BackendType)
+import Hasura.SQL.Backend (BackendType, backendTypeFromBackendSourceKind)
 import Hasura.SQL.Tag
 import Hasura.Server.AppStateRef qualified as HGE
 import Hasura.Server.Init.Config
@@ -152,7 +153,7 @@ runTelemetry (Logger logger) appStateRef metadataDbUid pgVersion = do
         experimentalFeatures <- State.acExperimentalFeatures <$> HGE.getAppContext appStateRef
         ci <- CI.getCI
         -- Creates a telemetry payload for a specific backend.
-        let telemetryForSource :: forall (b :: BackendType). HasTag b => SourceInfo b -> TelemetryPayload
+        let telemetryForSource :: forall (b :: BackendType). SourceInfo b -> TelemetryPayload
             telemetryForSource =
               mkTelemetryPayload
                 metadataDbUid
@@ -198,7 +199,6 @@ runTelemetry (Logger logger) appStateRef metadataDbUid pgVersion = do
 --   only with the default source.
 mkTelemetryPayload ::
   forall (b :: BackendType).
-  HasTag b =>
   MetadataDbId ->
   InstanceId ->
   Version ->
@@ -215,7 +215,8 @@ mkTelemetryPayload metadataDbId instanceId version pgVersion ci serviceTimings r
       sourceMetadata =
         SourceMetadata
           { _smDbUid = forDefaultSource (mdDbIdToDbUid metadataDbId),
-            _smDbKind = reify $ backendTag @b,
+            _smBackendType = backendTypeFromBackendSourceKind $ _siSourceKind sourceInfo,
+            _smDbKind = toTxt (_siSourceKind sourceInfo),
             _smDbVersion = forDefaultSource (pgToDbVersion pgVersion)
           }
       -- We use this function to attach additional information that is not associated

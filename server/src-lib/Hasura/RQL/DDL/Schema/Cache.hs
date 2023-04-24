@@ -655,7 +655,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
         `arr` (SourceInfo b)
     buildSource = proc (dynamicConfig, allSources, sourceMetadata, sourceConfig, tablesRawInfo, eventTriggerInfoMaps, dbObjectsIntrospection, remoteSchemaMap, orderedRoles) -> do
       let DBObjectsIntrospection _dbTables dbFunctions _scalars = dbObjectsIntrospection
-          SourceMetadata sourceName _backendKind tables functions nativeQueries logicalModels _ queryTagsConfig sourceCustomization _healthCheckConfig = sourceMetadata
+          SourceMetadata sourceName backendSourceKind tables functions nativeQueries logicalModels _ queryTagsConfig sourceCustomization _healthCheckConfig = sourceMetadata
           tablesMetadata = OMap.elems tables
           (_, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
           alignTableMap :: HashMap (TableName b) a -> HashMap (TableName b) c -> HashMap (TableName b) (a, c)
@@ -842,7 +842,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
       let nativeQueryCache :: NativeQueryCache b
           nativeQueryCache = mapFromL _nqiRootFieldName (catMaybes nativeQueryCacheMaybes)
 
-      returnA -< SourceInfo sourceName tableCache functionCache nativeQueryCache logicalModelsCache sourceConfig queryTagsConfig resolvedCustomization dbObjectsIntrospection
+      returnA -< SourceInfo sourceName backendSourceKind tableCache functionCache nativeQueryCache logicalModelsCache sourceConfig queryTagsConfig resolvedCustomization dbObjectsIntrospection
 
     buildAndCollectInfo ::
       forall arr m.
