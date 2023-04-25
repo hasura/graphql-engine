@@ -40,6 +40,13 @@ const SuperConnectorDrivers: readonly DriverInfo[] = [
     release: 'Beta',
     enterprise: true,
   },
+  {
+    name: 'oracle',
+    displayName: 'Oracle',
+    native: false,
+    release: 'Beta',
+    enterprise: true,
+  },
 ] as const;
 
 // this is a wrapper around useAvailableDrivers
@@ -67,6 +74,7 @@ export const useDatabaseConnectDrivers = ({
         <DatabaseLogo
           title={d.displayName}
           image={dbLogos[d.name] || dbLogos.default}
+          releaseName={d.release}
         />
       ),
     }));

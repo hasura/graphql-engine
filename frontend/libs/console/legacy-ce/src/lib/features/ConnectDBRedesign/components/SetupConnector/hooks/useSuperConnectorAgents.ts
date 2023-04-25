@@ -7,6 +7,7 @@ export const agentPaths: Record<SuperConnectorDrivers, string> = {
   athena: '/api/v1/athena',
   mysqlgdc: '/api/v1/mysql',
   mariadb: '/api/v1/mariadb',
+  oracle: '/api/v1/oracle',
 };
 
 function ensure<T>(
