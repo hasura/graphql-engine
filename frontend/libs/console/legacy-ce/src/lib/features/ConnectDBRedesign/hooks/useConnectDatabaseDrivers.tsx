@@ -41,6 +41,13 @@ const SuperConnectorDrivers: readonly DriverInfo[] = [
     enterprise: true,
   },
   {
+    name: 'oracle',
+    displayName: 'Oracle',
+    native: false,
+    release: 'Beta',
+    enterprise: true,
+  },
+  {
     name: 'Mongo',
     displayName: 'MongoDB',
     native: false,
@@ -74,6 +81,7 @@ export const useDatabaseConnectDrivers = ({
         <DatabaseLogo
           title={d.displayName}
           image={dbLogos[d.name] || dbLogos.default}
+          releaseName={d.release}
         />
       ),
     }));
