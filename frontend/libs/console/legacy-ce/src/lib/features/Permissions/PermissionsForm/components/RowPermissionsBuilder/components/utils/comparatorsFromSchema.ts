@@ -1,8 +1,5 @@
 import { GraphQLSchema, isInputObjectType } from 'graphql';
-import {
-  columnOperatorsInfo,
-  boolOperatorsInfo,
-} from '../../../../../../../components/Services/Data/TablePermissions/PermissionBuilder/utils';
+import { columnOperatorsInfo } from '../../../../../../../components/Services/Data/TablePermissions/PermissionBuilder/utils';
 import lowerCase from 'lodash/lowerCase';
 import { tableContext } from '../TableProvider';
 import { Columns, Comparators, Tables, Operator } from '../types';
@@ -29,31 +26,7 @@ function columnOperators(): Array<Operator> {
   }, [] as Array<Operator>);
 }
 
-function boolOperators(): Array<Operator> {
-  return Object.keys(boolOperatorsInfo).reduce((acc, key) => {
-    const operator = (
-      boolOperatorsInfo as Record<string, Omit<Operator, 'name'>>
-    )[key];
-    return [
-      ...acc,
-      {
-        name: key,
-        inputStructure: operator.inputStructure,
-        inputType: operator.inputType,
-        type: operator.type,
-      },
-    ];
-  }, [] as Array<Operator>);
-}
-
-export const allOperators: Array<Operator> = [
-  ...columnOperators(),
-  ...boolOperators(),
-  {
-    name: '_exists',
-    type: 'comparision',
-  },
-];
+export const allOperators: Array<Operator> = [...columnOperators()];
 
 const columnComparators = [
   {

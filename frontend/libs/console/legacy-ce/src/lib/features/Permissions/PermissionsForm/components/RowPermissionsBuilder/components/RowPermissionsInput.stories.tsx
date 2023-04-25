@@ -551,7 +551,8 @@ SetNotPermission.play = async ({ canvasElement }) => {
 
   await userEvent.selectOptions(canvas.getByTestId('-operator'), '_not');
 
-  await userEvent.selectOptions(canvas.getByTestId('_not-operator'), 'Period');
+  const all = await canvas.getAllByTestId('_not-operator');
+  await userEvent.selectOptions(all[all?.length - 1], 'Period');
 
   const element = await canvas.getByLabelText('_not.Period._eq-comparator');
   await expect(element.getAttribute('id')).toEqual(
@@ -785,4 +786,37 @@ StringObjectType.play = async ({ canvasElement }) => {
   expect(input).toHaveValue(
     '{"distance":100000,"from":{"coordinates":[1.4,2.5],"type":"Point"},"use_spheroid":false}'
   );
+};
+
+export const OperatorDropdownHandling: ComponentStory<
+  typeof RowPermissionsInput
+> = args => (
+  <RowPermissionsInput
+    onPermissionsChange={action('onPermissionsChange')}
+    table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
+    tables={tables}
+    comparators={comparators}
+    permissions={{
+      _not: { STATUS: { _eq: 'X-Hasura-User-Id' } },
+    }}
+  />
+);
+
+OperatorDropdownHandling.play = async ({ canvasElement, args }) => {
+  const canvas = within(canvasElement);
+
+  await userEvent.selectOptions(canvas.getByTestId('_not-operator'), '_or');
+
+  await userEvent.selectOptions(canvas.getByTestId('_or-operator'), '_exists');
+
+  await userEvent.selectOptions(canvas.getByTestId('_exists-operator'), '_and');
+
+  await userEvent.selectOptions(
+    canvas.getByTestId('_and.1-operator'),
+    'Period'
+  );
+
+  await userEvent.selectOptions(canvas.getByTestId('_and-operator'), '_or');
+
+  await userEvent.selectOptions(canvas.getByTestId('_or.1-operator'), 'Period');
 };
