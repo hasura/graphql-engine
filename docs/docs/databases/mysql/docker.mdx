@@ -19,7 +19,7 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 <div className="badge-container">
   <ProductBadge self />
-  <div className="badge badge-gray heading-badge">Alpha</div>
+  <div className="badge badge-gray heading-badge">Beta</div>
 </div>
 
 ## Introduction
@@ -37,7 +37,7 @@ MySQL GraphQL Data Connector.
 
 :::
 
-:::tip Alpha version supported features
+:::tip Supported features
 
 Hasura currently supports queries, mutations (INSERT, UPDATE, DELETE), table relationships, remote relationships and permissions on MySQL.
 
@@ -53,10 +53,9 @@ schema.
 
 This tutorial assumes that the following prerequisites have been met:
 
-- To deploy Hasura Enterprise Edition, you will need a license key. Please
-  [contact Hasura Sales](mailto:sales@hasura.io) if you do not already have one.
 - You have [Docker](https://docs.docker.com/install/) and [Docker Compose](https://docs.docker.com/compose/install/)
   working on your machine.
+- To deploy Hasura Enterprise Edition, you will either need to sign up for the [Hasura Enterprise Edition free trial](/latest/enterprise/try-hasura-enterprise-edition/) or you will need to [contact Hasura Sales](mailto:sales@hasura.io) for a license key.
 - You have access to a MySQL database for which you would like to create an API.
 
 ### Step 1: Get the Docker Compose file
@@ -129,7 +128,7 @@ From the Console, click the `Data` tab:
 
 <Thumbnail src="/img/getting-started/connect-db-console.png" alt="Connect database" width="1000px" />
 
-Select the MySQL (Alpha) data source driver, enter in a display name for the database and set the JDBC Connection URL
+Select the MySQL (Beta) data source driver, enter in a display name for the database and set the JDBC Connection URL
 for your MySQL instance.
 
 The JDBC connection URL should look like this:
