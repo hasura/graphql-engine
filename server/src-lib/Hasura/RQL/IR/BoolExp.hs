@@ -60,9 +60,9 @@ import Data.HashMap.Strict qualified as M
 import Data.Monoid
 import Data.Text.Extended
 import Hasura.Function.Cache
-import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (backendPrefix)
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
@@ -204,7 +204,7 @@ newtype BoolExp (b :: BackendType) = BoolExp {unBoolExp :: GBoolExp b ColExp}
 -- Autodocodec to gain support for expressing an object type with "additional
 -- properties" for fields.
 instance Backend b => HasCodec (BoolExp b) where
-  codec = CommentCodec doc $ named (codecNamePrefix @b <> "BoolExp") $ dimapCodec BoolExp unBoolExp jsonCodec
+  codec = CommentCodec doc $ named (backendPrefix @b <> "BoolExp") $ dimapCodec BoolExp unBoolExp jsonCodec
     where
       jsonCodec :: JSONCodec (GBoolExp b ColExp)
       jsonCodec = bimapCodec (parseEither parseJSON) toJSON valueCodec

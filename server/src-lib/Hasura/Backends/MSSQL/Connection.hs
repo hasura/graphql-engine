@@ -27,6 +27,7 @@ where
 
 import Autodocodec (HasCodec (codec), dimapCodec, disjointEitherCodec, optionalFieldOrNull', optionalFieldWithDefault', requiredField')
 import Autodocodec qualified as AC
+import Autodocodec.Extended (fromEnvCodec)
 import Control.Monad.Morph (hoist)
 import Control.Monad.Trans.Control
 import Data.Aeson
@@ -40,7 +41,6 @@ import Database.MSSQL.Transaction qualified as MSTx
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Base.Error
-import Hasura.Metadata.DTO.Utils (fromEnvCodec)
 import Hasura.Prelude
 import Hasura.RQL.Types.ResizePool
 

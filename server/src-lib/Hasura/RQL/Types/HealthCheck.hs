@@ -14,9 +14,9 @@ import Autodocodec hiding (object, (.=))
 import Autodocodec qualified as AC
 import Data.Aeson.Extended
 import Data.Aeson.Types (parseFail)
-import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (backendPrefix)
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation (HealthCheckImplementation, _hciDefaultTest, _hciTestCodec))
 
 newtype HealthCheckTestSql = HealthCheckTestSql
@@ -103,7 +103,7 @@ healthCheckConfigCodec ::
   HealthCheckImplementation (HealthCheckTest b) ->
   JSONCodec (HealthCheckConfig b)
 healthCheckConfigCodec (HealthCheckImplementation {..}) =
-  AC.object (codecNamePrefix @b <> "HealthCheckConfig") $
+  AC.object (backendPrefix @b <> "HealthCheckConfig") $
     HealthCheckConfig
       <$> optionalFieldWithOmittedDefaultWith' "test" _hciTestCodec _hciDefaultTest AC..= _hccTest
       <*> requiredField' "interval" AC..= _hccInterval

@@ -80,7 +80,6 @@ import Data.Text qualified as T
 import Data.Text.Extended qualified as T
 import Hasura.Function.Metadata (FunctionMetadata (..))
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..), LogicalModelName)
-import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..), NativeQueryName)
 import Hasura.Prelude
 import Hasura.QueryTags.Types
@@ -88,7 +87,7 @@ import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.BackendTag (BackendTag, HasTag (backendTag))
+import Hasura.RQL.Types.BackendTag (BackendTag, HasTag (backendTag), backendPrefix)
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
@@ -141,7 +140,7 @@ deriving instance (Backend b) => Eq (ComputedFieldMetadata b)
 
 instance Backend b => HasCodec (ComputedFieldMetadata b) where
   codec =
-    AC.object (codecNamePrefix @b <> "ComputedFieldMetadata") $
+    AC.object (backendPrefix @b <> "ComputedFieldMetadata") $
       ComputedFieldMetadata
         <$> requiredField' "name" AC..= _cfmName
         <*> requiredField' "definition" AC..= _cfmDefinition
@@ -203,7 +202,7 @@ instance (Backend b) => ToJSON (TableMetadata b) where
 instance (Backend b) => HasCodec (TableMetadata b) where
   codec =
     CommentCodec "Representation of a table in metadata, 'tables.yaml' and 'metadata.json'" $
-      AC.object (codecNamePrefix @b <> "TableMetadata") $
+      AC.object (backendPrefix @b <> "TableMetadata") $
         TableMetadata
           <$> requiredField' "table"
             .== _tmTable
@@ -432,7 +431,7 @@ anySourceMetadataCodec = dimapCodec dec enc
 
 instance Backend b => HasCodec (SourceMetadata b) where
   codec =
-    AC.object (codecNamePrefix @b <> "SourceMetadata") $
+    AC.object (backendPrefix @b <> "SourceMetadata") $
       SourceMetadata
         <$> requiredField' "name"
           .== _smName

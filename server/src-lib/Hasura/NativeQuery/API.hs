@@ -24,7 +24,6 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.LogicalModel.API (getCustomTypes)
 import Hasura.LogicalModel.Metadata (LogicalModelName)
-import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.NativeQuery.Metadata (NativeQueryArgumentName, NativeQueryMetadata (..), parseInterpolatedQuery)
 import Hasura.NativeQuery.Types (NativeQueryName, NullableScalarType, nativeQueryArrayRelationshipsCodec)
 import Hasura.Prelude
@@ -61,7 +60,7 @@ instance (Backend b) => HasCodec (TrackNativeQuery b) where
   codec =
     AC.CommentCodec
       ("A request to track a native query")
-      $ AC.object (codecNamePrefix @b <> "TrackNativeQuery")
+      $ AC.object (backendPrefix @b <> "TrackNativeQuery")
       $ TrackNativeQuery
         <$> AC.requiredField "source" sourceDoc
           AC..= tnqSource

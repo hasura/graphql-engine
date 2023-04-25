@@ -128,11 +128,11 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres (PGDescription)
 import Hasura.Base.Error
-import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (backendPrefix)
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
@@ -806,7 +806,7 @@ emptyTableConfig =
 
 instance (Backend b) => HasCodec (TableConfig b) where
   codec =
-    AC.object (codecNamePrefix @b <> "TableConfig") $
+    AC.object (backendPrefix @b <> "TableConfig") $
       TableConfig
         <$> optionalFieldWithDefault' "custom_root_fields" emptyCustomRootFields AC..= _tcCustomRootFields
         <*> columnConfigCodec AC..= _tcColumnConfig

@@ -40,6 +40,7 @@ where
 
 import Autodocodec (HasCodec, codec, dimapCodec, disjointEitherCodec, listCodec, literalTextCodec, optionalField', optionalFieldWithDefault', optionalFieldWithOmittedDefault', requiredField')
 import Autodocodec qualified as AC
+import Autodocodec.Extended (boolConstCodec)
 import Data.Aeson
 import Data.Aeson.Extended ((.=?))
 import Data.Aeson.TH
@@ -51,10 +52,10 @@ import Data.Text.Extended
 import Data.Text.NonEmpty
 import Data.Time.Clock qualified as Time
 import Database.PG.Query qualified as PG
-import Hasura.Metadata.DTO.Utils (boolConstCodec, codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (backendPrefix)
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (EnvRecord, InputWebhook, ResolvedWebhook, SourceName (..), TriggerOnReplication (..))
 import Hasura.RQL.Types.Eventing
@@ -136,7 +137,7 @@ instance (Backend b) => NFData (SubscribeOpSpec b)
 
 instance Backend b => HasCodec (SubscribeOpSpec b) where
   codec =
-    AC.object (codecNamePrefix @b <> "SubscribeOpSpec") $
+    AC.object (backendPrefix @b <> "SubscribeOpSpec") $
       SubscribeOpSpec
         <$> requiredField' "columns" AC..= sosColumns
         <*> optionalField' "payload" AC..= sosPayload
@@ -228,7 +229,7 @@ instance Backend b => NFData (TriggerOpsDef b)
 
 instance Backend b => HasCodec (TriggerOpsDef b) where
   codec =
-    AC.object (codecNamePrefix @b <> "TriggerOpsDef") $
+    AC.object (backendPrefix @b <> "TriggerOpsDef") $
       TriggerOpsDef
         <$> optionalField' "insert" AC..= tdInsert
         <*> optionalField' "update" AC..= tdUpdate
@@ -405,7 +406,7 @@ data EventTriggerConf (b :: BackendType) = EventTriggerConf
 
 instance (Backend b) => HasCodec (EventTriggerConf b) where
   codec =
-    AC.object (codecNamePrefix @b <> "EventTriggerConfEventTriggerConf") $
+    AC.object (backendPrefix @b <> "EventTriggerConfEventTriggerConf") $
       EventTriggerConf
         <$> requiredField' "name" AC..= etcName
         <*> requiredField' "definition" AC..= etcDefinition

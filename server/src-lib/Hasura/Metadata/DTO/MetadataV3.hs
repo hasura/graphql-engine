@@ -12,11 +12,11 @@ import Autodocodec
     requiredFieldWith,
     (.=),
   )
+import Autodocodec.Extended (versionField)
 import Autodocodec.OpenAPI ()
 import Data.Aeson (FromJSON, ToJSON)
 import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec)
 import Data.OpenApi qualified as OpenApi
-import Hasura.Metadata.DTO.Utils (versionField)
 import Hasura.Prelude
 import Hasura.RQL.Types.Action (ActionMetadata (_amName))
 import Hasura.RQL.Types.Allowlist (AllowlistEntry (aeCollection), MetadataAllowlist)

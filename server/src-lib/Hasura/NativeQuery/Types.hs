@@ -12,9 +12,9 @@ import Autodocodec qualified as AC
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, Value)
 import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.Text.Extended (ToTxt)
-import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend (Backend (..))
+import Hasura.RQL.Types.BackendTag (backendPrefix)
 import Hasura.RQL.Types.Common (RelName)
 import Hasura.RQL.Types.Relationships.Local (RelDef, RelManualConfig)
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -44,7 +44,7 @@ instance (Backend b) => HasCodec (NullableScalarType b) where
   codec =
     AC.CommentCodec
       ("A scalar type that can be nullable with an optional description")
-      $ AC.object (codecNamePrefix @b <> "NullableScalarType")
+      $ AC.object (backendPrefix @b <> "NullableScalarType")
       $ AC.objectCodec
 
 instance (Backend b) => HasObjectCodec (NullableScalarType b) where

@@ -4,10 +4,14 @@ module Hasura.RQL.Types.BackendTag
   ( BackendTag (..),
     HasTag (..),
     reify,
+    backendPrefix,
   )
 where
 
 import Data.GADT.Compare.TH
+import Data.Text qualified as T
+import Data.Text.Extended qualified as T (toTxt)
+import Hasura.Prelude
 import Hasura.RQL.Types.BackendType
 
 -- | A singleton-like GADT that associates a tag to each backend.
@@ -60,3 +64,8 @@ reify MSSQLTag = MSSQL
 reify BigQueryTag = BigQuery
 reify MySQLTag = MySQL
 reify DataConnectorTag = DataConnector
+
+-- | Provides a title-cased name for a database kind, inferring the appropriate
+-- database kind from type context.
+backendPrefix :: forall b. (HasTag b) => Text
+backendPrefix = T.toTitle $ T.toTxt $ reify $ backendTag @b

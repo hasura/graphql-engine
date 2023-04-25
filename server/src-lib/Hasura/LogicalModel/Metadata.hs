@@ -20,9 +20,9 @@ import Data.Aeson qualified as Aeson
 import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec)
 import Hasura.LogicalModel.Types
-import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend (Backend (..))
+import Hasura.RQL.Types.BackendTag (backendPrefix)
 import Hasura.RQL.Types.BackendType (BackendType)
 import Hasura.RQL.Types.Common (SourceName, ToAesonPairs (toAesonPairs), defaultSource)
 import Hasura.RQL.Types.Permission (SelPermDef, _pdRole)
@@ -43,7 +43,7 @@ instance (Backend b) => HasCodec (LogicalModelMetadata b) where
   codec =
     AC.CommentCodec
       ("A return type.")
-      $ AC.object (codecNamePrefix @b <> "LogicalModelMetadata")
+      $ AC.object (backendPrefix @b <> "LogicalModelMetadata")
       $ LogicalModelMetadata
         <$> AC.requiredField "name" nameDoc
           AC..= _lmmName

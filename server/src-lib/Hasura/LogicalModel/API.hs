@@ -29,10 +29,10 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..), lmmSelectPermissions)
 import Hasura.LogicalModel.Types (LogicalModelField, LogicalModelName, logicalModelFieldMapCodec)
-import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend (..))
+import Hasura.RQL.Types.BackendTag (backendPrefix)
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (SourceName, defaultSource, sourceNameToText, successMsg)
 import Hasura.RQL.Types.Metadata
@@ -57,7 +57,7 @@ instance (Backend b) => HasCodec (TrackLogicalModel b) where
   codec =
     AC.CommentCodec
       ("A request to track a logical model")
-      $ AC.object (codecNamePrefix @b <> "TrackLogicalModel")
+      $ AC.object (backendPrefix @b <> "TrackLogicalModel")
       $ TrackLogicalModel
         <$> AC.requiredField "source" sourceDoc
           AC..= tlmSource

@@ -57,7 +57,7 @@ where
 
 import Autodocodec (HasCodec, dimapCodec, disjointEitherCodec, optionalField', optionalFieldWith', optionalFieldWithDefault', optionalFieldWithOmittedDefault', requiredField')
 import Autodocodec qualified as AC
-import Autodocodec.Extended (boundedEnumCodec, graphQLFieldDescriptionCodec, graphQLFieldNameCodec, typeableName)
+import Autodocodec.Extended (boundedEnumCodec, discriminatorField, graphQLFieldDescriptionCodec, graphQLFieldNameCodec, typeableName)
 import Control.Lens (makeLenses)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
@@ -70,7 +70,6 @@ import Data.UUID qualified as UUID
 import Database.PG.Query qualified as PG
 import Database.PG.Query.PTI qualified as PTI
 import Hasura.Base.Error
-import Hasura.Metadata.DTO.Utils (discriminatorField)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Common

@@ -30,10 +30,10 @@ import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
 import Hasura.LogicalModel.Types
-import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.NativeQuery.Types (NativeQueryName (..), NullableScalarType (..), nullableScalarTypeMapCodec)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (backendPrefix)
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (RelName)
 import Hasura.RQL.Types.Relationships.Local (RelDef (..), RelManualConfig (..))
@@ -145,7 +145,7 @@ instance (Backend b) => HasCodec (NativeQueryMetadata b) where
   codec =
     CommentCodec
       ("A native query as represented in metadata.")
-      $ AC.object (codecNamePrefix @b <> "NativeQueryMetadata")
+      $ AC.object (backendPrefix @b <> "NativeQueryMetadata")
       $ NativeQueryMetadata
         <$> requiredField "root_field_name" fieldNameDoc
           AC..= _nqmRootFieldName

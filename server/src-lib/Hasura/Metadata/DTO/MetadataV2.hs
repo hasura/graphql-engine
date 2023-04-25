@@ -1,11 +1,11 @@
 module Hasura.Metadata.DTO.MetadataV2 (MetadataV2 (..)) where
 
 import Autodocodec (Autodocodec (Autodocodec), HasCodec (codec), object, optionalField, requiredField, (.=))
+import Autodocodec.Extended (versionField)
 import Autodocodec.OpenAPI ()
 import Data.Aeson (FromJSON, ToJSON)
 import Data.OpenApi qualified as OpenApi
 import Hasura.Metadata.DTO.Placeholder (PlaceholderArray, PlaceholderObject)
-import Hasura.Metadata.DTO.Utils (versionField)
 import Hasura.Prelude
 
 -- | Revision 2 of the Metadata export format. Note that values of the types,

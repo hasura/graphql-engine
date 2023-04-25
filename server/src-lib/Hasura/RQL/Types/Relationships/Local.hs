@@ -30,9 +30,9 @@ import Data.Aeson.TH
 import Data.Aeson.Types
 import Data.Text qualified as T
 import Data.Typeable (Typeable)
-import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (backendPrefix)
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 
@@ -79,7 +79,7 @@ deriving instance Backend b => Show (RelManualConfig b)
 
 instance (Backend b) => HasCodec (RelManualConfig b) where
   codec =
-    AC.object (codecNamePrefix @b <> "RelManualConfig") $
+    AC.object (backendPrefix @b <> "RelManualConfig") $
       RelManualConfig
         <$> requiredField' "remote_table" AC..= rmTable
         <*> requiredField' "column_mapping" AC..= rmColumns
@@ -115,7 +115,7 @@ instance (Backend b, HasCodec a, Typeable a) => HasCodec (RelUsing b a) where
           requiredField' "foreign_key_constraint_on"
 
       manualCodec =
-        AC.object (codecNamePrefix @b <> "RUManual") $
+        AC.object (backendPrefix @b <> "RUManual") $
           requiredField' "manual_configuration"
 
       dec = either RUFKeyOn RUManual
@@ -193,7 +193,7 @@ instance (Backend b) => HasCodec (ObjRelUsingChoice b) where
       remoteTableCodec :: AC.JSONCodec (Either (TableName b, Column b) (TableName b, NonEmpty (Column b)))
       remoteTableCodec =
         singleOrMultipleRelColumnsCodec @b $
-          codecNamePrefix @b <> "ObjRelRemoteTable"
+          backendPrefix @b <> "ObjRelRemoteTable"
 
       dec = \case
         Left (Left col) -> SameTable $ pure col
@@ -266,7 +266,7 @@ instance (Backend b) => FromJSON (ObjRelUsingChoice b) where
 instance Backend b => HasCodec (ArrRelUsingFKeyOn b) where
   codec =
     dimapCodec dec enc $
-      singleOrMultipleRelColumnsCodec @b (codecNamePrefix @b <> "ArrRelUsingFKeyOn")
+      singleOrMultipleRelColumnsCodec @b (backendPrefix @b <> "ArrRelUsingFKeyOn")
     where
       dec :: (Either (TableName b, Column b) (TableName b, NonEmpty (Column b))) -> ArrRelUsingFKeyOn b
       dec = \case

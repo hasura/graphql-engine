@@ -988,7 +988,6 @@ library
                      , Hasura.Metadata.DTO.MetadataV2
                      , Hasura.Metadata.DTO.MetadataV3
                      , Hasura.Metadata.DTO.Placeholder
-                     , Hasura.Metadata.DTO.Utils
 
                      , Hasura.Eventing.Common
                      , Hasura.Eventing.EventTrigger

@@ -60,6 +60,7 @@ where
 
 import Autodocodec (HasCodec, dimapCodec, disjointEitherCodec, optionalField', optionalFieldWithDefault')
 import Autodocodec qualified as AC
+import Autodocodec.Extended (optionalVersionField, versionField)
 import Control.Lens (Lens', lens, preview, set, traverseOf, view)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson.Extended ((.!=), (.:?), (.=), (.=?))
@@ -70,7 +71,6 @@ import Data.Functor.Barbie (AllBF, ApplicativeB, ConstraintsB, FunctorB, Travers
 import Data.Functor.Barbie qualified as B
 import Data.Text.Encoding qualified as TE
 import Data.Validation qualified as V
-import Hasura.Metadata.DTO.Utils (optionalVersionField, versionField)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Webhook.Transform.Body (Body (..), BodyTransformFn, TransformFn (BodyTransformFn_))
 import Hasura.RQL.DDL.Webhook.Transform.Body qualified as Body

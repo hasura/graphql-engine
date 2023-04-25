@@ -3,7 +3,6 @@
 
 module Autodocodec.Extended
   ( baseUrlCodec,
-    boundedEnumCodec,
     caseInsensitiveHashMapCodec,
     caseInsensitiveTextCodec,
     graphQLEnumValueCodec,
@@ -31,6 +30,13 @@ module Autodocodec.Extended
     unitCodec,
     DisjunctCodec (..),
     disjointMatchChoicesNECodec,
+    boolConstCodec,
+    boundedEnumCodec,
+    discriminatorField,
+    discriminatorBoolField,
+    fromEnvCodec,
+    optionalVersionField,
+    versionField,
     module Autodocodec,
   )
 where
@@ -348,6 +354,16 @@ disjointMatchChoicesNECodec l = go l
           Just j -> Left j
           Nothing -> Right i
 
+-- | Map a fixed set of two values to boolean values when serializing. The first
+-- argument is the value to map to @True@, the second is the value to map to
+-- @False@.
+boolConstCodec :: Eq a => a -> a -> JSONCodec a
+boolConstCodec trueCase falseCase =
+  dimapCodec
+    (bool trueCase falseCase)
+    (== trueCase)
+    $ codec @Bool
+
 -- | A codec for a 'Bounded' 'Enum' that maps to literal strings using
 -- a provided function.
 --
@@ -370,3 +386,48 @@ boundedEnumCodec display =
    in case NE.nonEmpty ls of
         Nothing -> error "0 enum values ?!"
         Just ne -> stringConstCodec (NE.map (\v -> (v, T.pack (display v))) ne)
+
+-- | Defines a required object field named @version@ that must have the given
+-- integer value. On serialization the field will have the given value
+-- automatically. On deserialization parsing will fail unless the field has the
+-- exact given value.
+versionField :: Integer -> ObjectCodec a Scientific
+versionField v = requiredFieldWith' "version" (EqCodec n scientificCodec) .= const n
+  where
+    n = fromInteger v
+
+-- | Defines an optional object field named @version@ that must have the given
+-- integer value if the field is present. On serialization the field will have
+-- the given value automatically. On deserialization parsing will fail unless
+-- the field has the exact given value, or is absent.
+optionalVersionField :: Integer -> ObjectCodec a (Maybe Scientific)
+optionalVersionField v =
+  optionalFieldWith' "version" (EqCodec n scientificCodec) .= const (Just n)
+  where
+    n = fromInteger v
+
+-- | Useful in an object codec for a field that indicates the type of the
+-- object within a union. This version assumes that the type of the
+-- discriminator field is @Text@.
+discriminatorField :: Text -> Text -> ObjectCodec a ()
+discriminatorField name value =
+  dimapCodec (const ()) (const value) $
+    requiredFieldWith' name (literalTextCodec value)
+
+-- | Useful in an object codec for a field that indicates the type of the
+-- object within a union. This version assumes that the type of the
+-- discriminator field is @Bool@.
+discriminatorBoolField :: Text -> Bool -> ObjectCodec a ()
+discriminatorBoolField name value =
+  dimapCodec (const ()) (const value) $
+    requiredFieldWith' name (EqCodec value boolCodec)
+
+-- | Represents a text field wrapped in an object with a single property
+-- named @from_env@.
+--
+-- Objects of this form appear in many places in the Metadata API. If we
+-- reproduced this codec in each use case the OpenAPI document would have many
+-- identical object definitions. Using a shared codec allows a single shared
+-- reference.
+fromEnvCodec :: JSONCodec Text
+fromEnvCodec = object "FromEnv" $ requiredField' "from_env"

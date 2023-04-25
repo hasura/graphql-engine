@@ -21,6 +21,7 @@ where
 
 import Autodocodec (HasCodec, bimapCodec, disjointEitherCodec, optionalFieldWithDefault', requiredField')
 import Autodocodec qualified as AC
+import Autodocodec.Extended (discriminatorBoolField)
 import Data.Aeson
 import Data.Aeson.TH (deriveJSON, deriveToJSON)
 import Data.HashMap.Strict.Extended qualified as M
@@ -28,7 +29,6 @@ import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.HashSet qualified as S
 import Data.Text.Extended ((<<>))
 import Hasura.GraphQL.Parser.Name qualified as GName
-import Hasura.Metadata.DTO.Utils (discriminatorBoolField)
 import Hasura.Prelude
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Roles (RoleName)
