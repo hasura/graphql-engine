@@ -125,6 +125,7 @@ export const LS_KEYS = {
   notificationsLastSeen: 'notifications:lastSeen',
   authState: 'AUTH_STATE',
   useCaseExperimentOnboarding: 'onboarding:useCaseExperiment',
+  showUseCaseOverviewPopup: 'onboarding:showUseCaseOverviewPopup',
 };
 
 export const clearGraphiqlLS = () => {

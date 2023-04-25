@@ -92,6 +92,7 @@ import logoutIcon from './images/log-out.svg';
 import EELogo from './images/hasura-ee-mono-light.svg';
 import { isHasuraCollaboratorUser } from '../Login/utils';
 import { ConsoleDevTools } from '@hasura/console-legacy-ce';
+import ExploreUseCasePopup from './ExploreUseCasePopup';
 
 const { Plan, Project_Entitlement_Types_Enum } = ControlPlane;
 class Main extends React.Component {
@@ -725,6 +726,7 @@ class Main extends React.Component {
                 metadata={metadata?.metadataObject}
               />
             ) : null}
+            <ExploreUseCasePopup />
           </div>
           <CloudOnboarding />
         </div>
