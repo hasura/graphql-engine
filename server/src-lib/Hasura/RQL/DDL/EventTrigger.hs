@@ -42,6 +42,9 @@ module Hasura.RQL.DDL.EventTrigger
     MonadEventLogCleanup (..),
     getAllEventTriggersWithCleanupConfig,
     getAllETWithCleanupConfigInTableMetadata,
+    runGetEventLogs,
+    runGetEventInvocationLogs,
+    runGetEventById,
   )
 where
 
@@ -450,6 +453,21 @@ askEventTriggerInfo sourceName triggerName = do
   where
     errMsg = "event trigger " <> triggerName <<> " does not exist"
 
+checkIfTriggerNameExists ::
+  forall b m.
+  (Backend b, CacheRM m) =>
+  SourceName ->
+  TriggerName ->
+  m (Bool)
+checkIfTriggerNameExists sourceName triggerName = do
+  schemaCache <- askSchemaCache
+  -- TODO: The name getTabInfoFromSchemaCache is misleading here.
+  -- There is a JIRA ticket that addresses this (https://hasurahq.atlassian.net/browse/GS-535)
+  let tableInfoMaybe = getTabInfoFromSchemaCache @b schemaCache sourceName triggerName
+  case tableInfoMaybe of
+    Nothing -> pure False
+    _ -> pure True
+
 -- This change helps us create functions for the event triggers
 -- without the function name being truncated by PG, since PG allows
 -- for only 63 chars for identifiers.
@@ -751,3 +769,44 @@ getAllETWithCleanupConfigInTableMetadata tMetadata =
     )
     $ OMap.toList
     $ _tmEventTriggers tMetadata
+
+runGetEventLogs ::
+  forall b m.
+  (MonadIO m, CacheRM m, MonadError QErr m, BackendEventTrigger b, MetadataM m) =>
+  GetEventLogs b ->
+  m EncJSON
+runGetEventLogs getEventLogs = do
+  sourceConfig <- askSourceConfig @b sourceName
+  doesTriggerExists <- checkIfTriggerNameExists @b sourceName triggerName
+  if not doesTriggerExists
+    then throw400 NotExists $ "event trigger " <> triggerName <<> " does not exist"
+    else encJFromJValue <$> fetchEventLogs sourceConfig getEventLogs
+  where
+    sourceName = _gelSourceName getEventLogs
+    triggerName = _gelName getEventLogs
+
+runGetEventInvocationLogs ::
+  forall b m.
+  (MonadIO m, CacheRM m, MonadError QErr m, BackendEventTrigger b, MetadataM m) =>
+  GetEventInvocations b ->
+  m EncJSON
+runGetEventInvocationLogs getEventInvocations = do
+  sourceConfig <- askSourceConfig @b sourceName
+  doesTriggerExists <- checkIfTriggerNameExists @b sourceName triggerName
+  if not doesTriggerExists
+    then throw400 NotExists $ "event trigger " <> triggerName <<> " does not exist"
+    else encJFromJValue <$> fetchEventInvocationLogs sourceConfig getEventInvocations
+  where
+    sourceName = _geiSourceName getEventInvocations
+    triggerName = _geiName getEventInvocations
+
+runGetEventById ::
+  forall b m.
+  (MonadIO m, CacheRM m, MonadError QErr m, BackendEventTrigger b, MetadataM m) =>
+  GetEventById b ->
+  m EncJSON
+runGetEventById getEventById = do
+  sourceConfig <- askSourceConfig @b sourceName
+  encJFromJValue <$> fetchEventById sourceConfig getEventById
+  where
+    sourceName = _gebiSourceName getEventById

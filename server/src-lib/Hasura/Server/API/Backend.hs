@@ -155,7 +155,10 @@ eventTriggerCommands =
   [ commandParser "invoke_event_trigger" $ RMInvokeEventTrigger . mkAnyBackend @b,
     commandParser "create_event_trigger" $ RMCreateEventTrigger . mkAnyBackend @b,
     commandParser "delete_event_trigger" $ RMDeleteEventTrigger . mkAnyBackend @b,
-    commandParser "redeliver_event" $ RMRedeliverEvent . mkAnyBackend @b
+    commandParser "redeliver_event" $ RMRedeliverEvent . mkAnyBackend @b,
+    commandParser "get_event_logs" $ RMGetEventLogs . mkAnyBackend @b,
+    commandParser "get_event_invocation_logs" $ RMGetEventInvocationLogs . mkAnyBackend @b,
+    commandParser "get_event_by_id" $ RMGetEventById . mkAnyBackend @b
   ]
 
 computedFieldCommands :: forall (b :: BackendType). Backend b => [CommandParser b]

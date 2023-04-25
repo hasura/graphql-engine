@@ -191,6 +191,9 @@ queryModifiesMetadata = \case
     case q of
       RMRedeliverEvent _ -> False
       RMInvokeEventTrigger _ -> False
+      RMGetEventLogs _ -> False
+      RMGetEventInvocationLogs _ -> False
+      RMGetEventById _ -> False
       RMGetInconsistentMetadata _ -> False
       RMIntrospectRemoteSchema _ -> False
       RMDumpInternalState _ -> False
@@ -428,6 +431,9 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
   RMCleanupEventTriggerLog q -> runCleanupEventTriggerLog q
   RMResumeEventTriggerCleanup q -> runEventTriggerResumeCleanup q
   RMPauseEventTriggerCleanup q -> runEventTriggerPauseCleanup q
+  RMGetEventLogs q -> dispatchEventTrigger runGetEventLogs q
+  RMGetEventInvocationLogs q -> dispatchEventTrigger runGetEventInvocationLogs q
+  RMGetEventById q -> dispatchEventTrigger runGetEventById q
   RMAddRemoteSchema q -> runAddRemoteSchema env q
   RMUpdateRemoteSchema q -> runUpdateRemoteSchema env q
   RMRemoveRemoteSchema q -> runRemoveRemoteSchema q

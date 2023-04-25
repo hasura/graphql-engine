@@ -35,6 +35,13 @@ module Hasura.RQL.Types.EventTrigger
     TriggerLogCleanupToggleConfig (..),
     updateCleanupConfig,
     isIllegalTriggerName,
+    EventLogStatus (..),
+    GetEventLogs (..),
+    EventLog (..),
+    GetEventInvocations (..),
+    EventInvocationLog (..),
+    GetEventById (..),
+    EventLogWithInvocations (..),
   )
 where
 
@@ -551,3 +558,136 @@ data DeletedEventLogStats = DeletedEventLogStats
     deletedInvocationLogs :: Int
   }
   deriving (Show, Eq)
+
+data EventLogStatus
+  = Processed
+  | Pending
+  | All
+  deriving (Show, Eq)
+
+instance ToJSON EventLogStatus where
+  toJSON Processed = String "processed"
+  toJSON Pending = String "pending"
+  toJSON All = String "all"
+
+instance FromJSON EventLogStatus where
+  parseJSON (String "processed") = pure Processed
+  parseJSON (String "pending") = pure Pending
+  parseJSON _ = fail "event logs status can only be one of the following: processed or pending"
+
+data GetEventLogs (b :: BackendType) = GetEventLogs
+  { _gelName :: TriggerName,
+    _gelSourceName :: SourceName,
+    _gelLimit :: Int,
+    _gelOffset :: Int,
+    _gelStatus :: EventLogStatus
+  }
+  deriving (Show)
+
+instance ToJSON (GetEventLogs b) where
+  toJSON GetEventLogs {..} =
+    object $
+      [ "name" .= _gelName,
+        "source" .= _gelSourceName,
+        "limit" .= _gelLimit,
+        "offset" .= _gelOffset,
+        "status" .= _gelStatus
+      ]
+
+instance FromJSON (GetEventLogs b) where
+  parseJSON = withObject "GetEventLogs" $ \o ->
+    GetEventLogs
+      <$> o .: "name"
+      <*> o .:? "source" .!= SNDefault
+      <*> o .:? "limit" .!= 100
+      <*> o .:? "offset" .!= 0
+      <*> o .:? "status" .!= All
+
+data EventLog = EventLog
+  { elId :: EventId,
+    elSchemaName :: Text,
+    elTableName :: Text,
+    elTriggerName :: TriggerName,
+    elPayload :: Value,
+    elDelivered :: Bool,
+    elError :: Bool,
+    elTries :: Int,
+    elCreatedAt :: Time.UTCTime,
+    elLocked :: Maybe Time.UTCTime,
+    elNextRetryAt :: Maybe Time.UTCTime,
+    elArchived :: Bool
+  }
+  deriving (Eq, Generic)
+
+$(deriveToJSON hasuraJSON ''EventLog)
+
+data GetEventInvocations (b :: BackendType) = GetEventInvocations
+  { _geiName :: TriggerName,
+    _geiSourceName :: SourceName,
+    _geiLimit :: Int,
+    _geiOffset :: Int
+  }
+  deriving (Show)
+
+instance ToJSON (GetEventInvocations b) where
+  toJSON GetEventInvocations {..} =
+    object $
+      [ "name" .= _geiName,
+        "source" .= _geiSourceName,
+        "limit" .= _geiLimit,
+        "offset" .= _geiOffset
+      ]
+
+instance FromJSON (GetEventInvocations b) where
+  parseJSON = withObject "GetEventInvocations" $ \o ->
+    GetEventInvocations
+      <$> o .: "name"
+      <*> o .:? "source" .!= SNDefault
+      <*> o .:? "limit" .!= 100
+      <*> o .:? "offset" .!= 0
+
+data EventInvocationLog = EventInvocationLog
+  { eilId :: Text,
+    eilTriggerName :: TriggerName,
+    eilEventId :: EventId,
+    eilHttpStatus :: Maybe Int,
+    eilRequest :: Value,
+    eilResponse :: Value,
+    eilCreatedAt :: Time.UTCTime
+  }
+  deriving (Generic)
+
+$(deriveToJSON hasuraJSON ''EventInvocationLog)
+
+data GetEventById (b :: BackendType) = GetEventById
+  { _gebiSourceName :: SourceName,
+    _gebiEventId :: EventId,
+    _gebiInvocationLogLimit :: Int,
+    _gebiInvocationLogOffset :: Int
+  }
+  deriving (Show)
+
+instance ToJSON (GetEventById b) where
+  toJSON GetEventById {..} =
+    object $
+      [ "source" .= _gebiSourceName,
+        "event_id" .= _gebiEventId,
+        "invocation_log_limit" .= _gebiInvocationLogLimit,
+        "invocation_log_offset" .= _gebiInvocationLogOffset
+      ]
+
+instance FromJSON (GetEventById b) where
+  parseJSON = withObject "GetEventById" $ \o ->
+    GetEventById
+      <$> o .:? "source" .!= SNDefault
+      <*> o .: "event_id"
+      <*> o .:? "invocation_log_limit" .!= 100
+      <*> o .:? "invocation_log_offset" .!= 0
+
+data EventLogWithInvocations = EventLogWithInvocations
+  { elwiEvent :: Maybe EventLog,
+    elwiInvocations :: [EventInvocationLog]
+  }
+  deriving (Generic)
+
+$(deriveToJSON hasuraJSON ''EventLogWithInvocations)

@@ -290,6 +290,27 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     IO (Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus)) ->
     m DeletedEventLogStats
 
+  -- | @fetchEventLogs fetches event logs from the source for a given event trigger.
+  fetchEventLogs ::
+    (MonadIO m, MonadError QErr m) =>
+    SourceConfig b ->
+    GetEventLogs b ->
+    m [EventLog]
+
+  -- | @fetchEventInvocationLogs fetches invocation logs from the source for a given event trigger.
+  fetchEventInvocationLogs ::
+    (MonadIO m, MonadError QErr m) =>
+    SourceConfig b ->
+    GetEventInvocations b ->
+    m [EventInvocationLog]
+
+  -- | @fetchEventById fetches the event and it's invocation logs from the source for a given EventId.
+  fetchEventById ::
+    (MonadIO m, MonadError QErr m) =>
+    SourceConfig b ->
+    GetEventById b ->
+    m (EventLogWithInvocations)
+
 --------------------------------------------------------------------------------
 -- TODO: move those instances to 'Backend/*/Instances/Eventing' and create a
 -- corresponding 'Instances.hs' file in this directory to import them, similarly
@@ -319,6 +340,9 @@ instance BackendEventTrigger ('Postgres 'Vanilla) where
   updateCleanupEventStatusToPaused = Postgres.updateCleanupEventStatusToPaused
   updateCleanupEventStatusToCompleted = Postgres.updateCleanupEventStatusToCompleted
   deleteEventTriggerLogs = Postgres.deleteEventTriggerLogs
+  fetchEventLogs = Postgres.fetchEventLogs
+  fetchEventInvocationLogs = Postgres.fetchEventInvocationLogs
+  fetchEventById = Postgres.fetchEventById
 
 instance BackendEventTrigger ('Postgres 'Citus) where
   insertManualEvent _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
@@ -342,6 +366,9 @@ instance BackendEventTrigger ('Postgres 'Citus) where
   updateCleanupEventStatusToPaused _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
   updateCleanupEventStatusToCompleted _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
   deleteEventTriggerLogs _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
+  fetchEventLogs _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
+  fetchEventInvocationLogs _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
+  fetchEventById _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
 
 instance BackendEventTrigger ('Postgres 'Cockroach) where
   insertManualEvent = Postgres.insertManualEvent
@@ -365,6 +392,9 @@ instance BackendEventTrigger ('Postgres 'Cockroach) where
   updateCleanupEventStatusToPaused = Postgres.updateCleanupEventStatusToPaused
   updateCleanupEventStatusToCompleted = Postgres.updateCleanupEventStatusToCompleted
   deleteEventTriggerLogs = Postgres.deleteEventTriggerLogs
+  fetchEventLogs = Postgres.fetchEventLogs
+  fetchEventInvocationLogs = Postgres.fetchEventInvocationLogs
+  fetchEventById = Postgres.fetchEventById
 
 instance BackendEventTrigger 'MSSQL where
   insertManualEvent = MSSQL.insertManualEvent
@@ -388,6 +418,9 @@ instance BackendEventTrigger 'MSSQL where
   updateCleanupEventStatusToPaused = MSSQL.updateCleanupEventStatusToPaused
   updateCleanupEventStatusToCompleted = MSSQL.updateCleanupEventStatusToCompleted
   deleteEventTriggerLogs = MSSQL.deleteEventTriggerLogs
+  fetchEventInvocationLogs = MSSQL.fetchEventInvocationLogs
+  fetchEventLogs = MSSQL.fetchEventLogs
+  fetchEventById = MSSQL.fetchEventById
 
 instance BackendEventTrigger 'BigQuery where
   insertManualEvent _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
@@ -411,6 +444,9 @@ instance BackendEventTrigger 'BigQuery where
   updateCleanupEventStatusToPaused _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
   updateCleanupEventStatusToCompleted _ _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
   deleteEventTriggerLogs _ _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
+  fetchEventLogs _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
+  fetchEventInvocationLogs _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
+  fetchEventById _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
 
 instance BackendEventTrigger 'MySQL where
   insertManualEvent _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
@@ -434,6 +470,9 @@ instance BackendEventTrigger 'MySQL where
   updateCleanupEventStatusToPaused _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
   updateCleanupEventStatusToCompleted _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
   deleteEventTriggerLogs _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
+  fetchEventLogs _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
+  fetchEventInvocationLogs _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
+  fetchEventById _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
 
 --------------------------------------------------------------------------------
 
@@ -475,3 +514,6 @@ instance BackendEventTrigger 'DataConnector where
   updateCleanupEventStatusToPaused _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector sources"
   updateCleanupEventStatusToCompleted _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector sources"
   deleteEventTriggerLogs _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector sources"
+  fetchEventLogs _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector sources"
+  fetchEventInvocationLogs _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector sources"
+  fetchEventById _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector sources"

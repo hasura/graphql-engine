@@ -31,6 +31,9 @@ module Hasura.Backends.Postgres.DDL.EventTrigger
     updateCleanupEventStatusToPaused,
     updateCleanupEventStatusToCompleted,
     deleteEventTriggerLogs,
+    fetchEventLogs,
+    fetchEventInvocationLogs,
+    fetchEventById,
   )
 where
 
@@ -1149,3 +1152,171 @@ deleteEventTriggerLogs ::
 deleteEventTriggerLogs sourceConfig oldCleanupConfig getLatestCleanupConfig = do
   deleteEventTriggerLogsInBatchesWith getLatestCleanupConfig oldCleanupConfig $ \cleanupConfig -> do
     runPgSourceWriteTx sourceConfig InternalRawQuery $ deleteEventTriggerLogsTx cleanupConfig
+
+fetchEventLogs ::
+  (MonadError QErr m, MonadIO m) =>
+  PGSourceConfig ->
+  GetEventLogs b ->
+  m [EventLog]
+fetchEventLogs sourceConfig getEventLogs = do
+  liftIO (runPgSourceReadTx sourceConfig $ fetchEventLogsTxE getEventLogs)
+    `onLeftM` (throwError . prefixQErr "unexpected error while fetching event logs: ")
+
+fetchEventLogsTxE :: GetEventLogs b -> PG.TxE QErr [EventLog]
+fetchEventLogsTxE GetEventLogs {..} = do
+  case status of
+    Pending -> do
+      map uncurryEventLog
+        <$> PG.withQE
+          defaultTxErrorHandler
+          [PG.sql|
+            SELECT *
+              FROM hdb_catalog.event_log
+              WHERE trigger_name = $1 
+              AND delivered=false AND error=false AND archived=false ORDER BY created_at DESC LIMIT $2 OFFSET $3;
+            |]
+          (triggerName, limit, offset)
+          True
+    Processed -> do
+      map uncurryEventLog
+        <$> PG.withQE
+          defaultTxErrorHandler
+          [PG.sql|
+            SELECT *
+              FROM hdb_catalog.event_log
+              WHERE trigger_name = $1 
+              AND (delivered=true OR error=true) AND archived=false ORDER BY created_at DESC LIMIT $2 OFFSET $3;
+            |]
+          (triggerName, limit, offset)
+          True
+    All -> do
+      map uncurryEventLog
+        <$> PG.withQE
+          defaultTxErrorHandler
+          [PG.sql|
+            SELECT *
+              FROM hdb_catalog.event_log
+              WHERE trigger_name = $1 
+              ORDER BY created_at DESC LIMIT $2 OFFSET $3;
+            |]
+          (triggerName, limit, offset)
+          True
+  where
+    triggerName = triggerNameToTxt _gelName
+    status = _gelStatus
+    limit :: Int64 = fromIntegral $ _gelLimit
+    offset :: Int64 = fromIntegral $ _gelOffset
+
+fetchEventInvocationLogs ::
+  (MonadError QErr m, MonadIO m) =>
+  PGSourceConfig ->
+  GetEventInvocations b ->
+  m [EventInvocationLog]
+fetchEventInvocationLogs sourceConfig getEventInvocationLogs = do
+  liftIO (runPgSourceReadTx sourceConfig $ fetchEventInvocationLogsTxE getEventInvocationLogs)
+    `onLeftM` (throwError . prefixQErr "unexpected error while fetching invocation logs: ")
+
+fetchEventInvocationLogsTxE :: GetEventInvocations b -> PG.TxE QErr [EventInvocationLog]
+fetchEventInvocationLogsTxE GetEventInvocations {..} = do
+  map uncurryEventInvocationLog
+    <$> PG.withQE
+      defaultTxErrorHandler
+      [PG.sql|
+        SELECT *
+          FROM hdb_catalog.event_invocation_logs
+          WHERE trigger_name = $1 
+          ORDER BY created_at DESC LIMIT $2 OFFSET $3;
+        |]
+      (triggerName, limit, offset)
+      True
+  where
+    triggerName = triggerNameToTxt _geiName
+    limit :: Int64 = fromIntegral $ _geiLimit
+    offset :: Int64 = fromIntegral $ _geiOffset
+
+fetchEventById ::
+  (MonadError QErr m, MonadIO m) =>
+  PGSourceConfig ->
+  GetEventById b ->
+  m (EventLogWithInvocations)
+fetchEventById sourceConfig getEventById = do
+  fetchEventByIdTxE' <- liftIO $ runPgSourceReadTx sourceConfig $ fetchEventByIdTxE getEventById
+  case fetchEventByIdTxE' of
+    Left err ->
+      throwError $
+        prefixQErr ("unexpected error while fetching event with id " <> eventId <> ": ") err
+    Right eventLogWithInvocations -> do
+      if isNothing (elwiEvent eventLogWithInvocations)
+        then throw400 NotExists errMsg
+        else return eventLogWithInvocations
+  where
+    eventId = unEventId $ _gebiEventId getEventById
+    errMsg = "event id " <> eventId <> " does not exist"
+
+fetchEventByIdTxE :: GetEventById b -> PG.TxE QErr (EventLogWithInvocations)
+fetchEventByIdTxE GetEventById {..} = do
+  events <-
+    map uncurryEventLog
+      <$> PG.withQE
+        defaultTxErrorHandler
+        [PG.sql|
+          SELECT *
+            FROM hdb_catalog.event_log
+            WHERE id = $1;
+          |]
+        (Identity eventId)
+        True
+  case events of
+    [] -> return $ EventLogWithInvocations Nothing []
+    [event] -> do
+      invocations <-
+        map uncurryEventInvocationLog
+          <$> PG.withQE
+            defaultTxErrorHandler
+            [PG.sql|
+              SELECT *
+                FROM hdb_catalog.event_invocation_logs
+                WHERE event_id = $1
+                ORDER BY created_at DESC LIMIT $2 OFFSET $3;
+              |]
+            (eventId, limit, offset)
+            True
+      pure $ EventLogWithInvocations (Just event) invocations
+    _ -> throw500 $ "Unexpected error: Multiple events present with event id " <> eventId
+  where
+    eventId = unEventId _gebiEventId
+    limit :: Int64 = fromIntegral $ _gebiInvocationLogLimit
+    offset :: Int64 = fromIntegral $ _gebiInvocationLogOffset
+
+uncurryEventLog ::
+  (EventId, Text, Text, TriggerName, PG.ViaJSON Value, Bool, Bool, Int, Time.UTCTime, Maybe Time.UTCTime, Maybe Time.UTCTime, Bool) ->
+  EventLog
+uncurryEventLog (eventId, schemaName, tableName, triggerName, PG.ViaJSON payload, delivered, isError, tries, createdAt, locked, nextRetryAt, archived) =
+  EventLog
+    { elId = eventId,
+      elSchemaName = schemaName,
+      elTableName = tableName,
+      elTriggerName = triggerName,
+      elPayload = payload,
+      elDelivered = delivered,
+      elError = isError,
+      elTries = tries,
+      elCreatedAt = createdAt,
+      elLocked = locked,
+      elNextRetryAt = nextRetryAt,
+      elArchived = archived
+    }
+
+uncurryEventInvocationLog ::
+  (Text, TriggerName, EventId, Maybe Int, PG.ViaJSON Value, PG.ViaJSON Value, Time.UTCTime) ->
+  EventInvocationLog
+uncurryEventInvocationLog (invocationId, triggerName, eventId, status, PG.ViaJSON request, PG.ViaJSON response, createdAt) =
+  EventInvocationLog
+    { eilId = invocationId,
+      eilTriggerName = triggerName,
+      eilEventId = eventId,
+      eilHttpStatus = status,
+      eilRequest = request,
+      eilResponse = response,
+      eilCreatedAt = createdAt
+    }
