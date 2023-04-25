@@ -111,6 +111,41 @@ test-backends-pro: build-pro start-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		cabal run api-tests-pro:exe:api-tests-pro
 
+.PHONY: test-postgres-pro
+## test-postgres-pro: run tests for HGE pro for postgres
+test-postgres-pro: build-pro start-backends remove-tix-file
+	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		HASURA_TEST_BACKEND_TYPE=Postgres \
+		cabal run api-tests-pro:exe:api-tests-pro
+
+.PHONY: test-citus-pro
+## test-citus-pro: run tests for HGE pro for citus
+test-citus-pro: build-pro start-backends remove-tix-file
+	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		HASURA_TEST_BACKEND_TYPE=Citus \
+		cabal run api-tests-pro:exe:api-tests-pro -- --match "Citus"
+
+.PHONY: test-cockroach-pro
+## test-cockroach-pro: run tests for HGE pro for Cockroach
+test-cockroach-pro: build-pro start-backends remove-tix-file
+	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		HASURA_TEST_BACKEND_TYPE=Cockroach \
+		cabal run api-tests-pro:exe:api-tests-pro -- --match "Cockroach"
+
+.PHONY: test-sqlserver-pro
+## test-sqlserver-pro: run tests for HGE pro for SQLServer
+test-sqlserver-pro: build-pro start-backends remove-tix-file
+	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		HASURA_TEST_BACKEND_TYPE=SQLServer \
+		cabal run api-tests-pro:exe:api-tests-pro -- --match "SQLServer"
+
+.PHONY: test-bigquery-pro
+## test-bigquery-pro: run tests for HGE pro for BigQuery
+test-bigquery-pro: build-pro start-backends remove-tix-file
+	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		HASURA_TEST_BACKEND_TYPE=BigQuery \
+		cabal run api-tests-pro:exe:api-tests-pro -- --match "BigQuery"
+
 .PHONY: test-unit
 ## test-unit: run unit tests from main suite
 test-unit: remove-tix-file
