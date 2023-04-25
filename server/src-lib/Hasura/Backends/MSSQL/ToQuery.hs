@@ -16,6 +16,7 @@ module Hasura.Backends.MSSQL.ToQuery
     toQueryPretty,
     fromInsert,
     fromMerge,
+    fromTempTableDDL,
     fromSetIdentityInsert,
     fromDelete,
     fromUpdate,
@@ -436,6 +437,32 @@ fromUpdateSet setColumns =
     fromUpdateOperator = \case
       UpdateSet p -> " = " <+> p
       UpdateInc p -> " += " <+> p
+
+fromTempTableDDL :: TempTableDDL -> Printer
+fromTempTableDDL = \case
+  CreateTemp tempTableName tempColumns ->
+    "CREATE TABLE "
+      <+> fromTempTableName tempTableName
+      <+> " ( "
+      <+> columns
+      <+> " ) "
+    where
+      columns =
+        SepByPrinter
+          ("," <+> NewlinePrinter)
+          (map columnNameAndType tempColumns)
+      columnNameAndType (UnifiedColumn name ty) =
+        fromColumnName name
+          <+> " "
+          <+> fromString (T.unpack (scalarTypeDBName DataLengthMax ty))
+  InsertTemp tempTableName interpolatedQuery ->
+    "INSERT INTO "
+      <+> fromTempTableName tempTableName
+      <+> " "
+      <+> renderInterpolatedQuery interpolatedQuery
+  DropTemp tempTableName ->
+    "DROP TABLE "
+      <+> fromTempTableName tempTableName
 
 -- | Converts `SelectIntoTempTable`.
 --

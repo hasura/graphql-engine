@@ -14,6 +14,8 @@ module Hasura.Backends.MSSQL.FromIr
     runFromIrUseCTEs,
     runFromIrUseCTEsT,
     Error (..),
+    tellBefore,
+    tellAfter,
     tellCTE,
 
     -- * Name generation
@@ -37,17 +39,31 @@ import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.BackendType
 
 -- | Allow the query process to emit extra setup / teardown steps
-newtype IRWriter = IRWriter
-  { irwCTEs :: Maybe With
+data IRWriter = IRWriter
+  { irwBefore :: [TempTableDDL],
+    irwAfter :: [TempTableDDL],
+    irwCTEs :: Maybe With
   }
-  deriving (Semigroup) via (Maybe With)
+
+instance Semigroup IRWriter where
+  (IRWriter a b c) <> (IRWriter a' b' c') = IRWriter (a <> a') (b' <> b) (c <> c')
 
 instance Monoid IRWriter where
-  mempty = IRWriter Nothing
+  mempty = IRWriter mempty mempty Nothing
+
+-- | add a step to be run before the main query
+tellBefore :: TempTableDDL -> FromIr ()
+tellBefore step =
+  tell (IRWriter {irwBefore = [step], irwAfter = mempty, irwCTEs = Nothing})
+
+-- | add a step to be run after the main query
+tellAfter :: TempTableDDL -> FromIr ()
+tellAfter step =
+  tell (IRWriter {irwBefore = mempty, irwAfter = [step], irwCTEs = Nothing})
 
 tellCTE :: Aliased (InterpolatedQuery Expression) -> FromIr ()
 tellCTE cte =
-  tell (IRWriter {irwCTEs = Just (With $ pure $ CTEUnsafeRawSQL <$> cte)})
+  tell (IRWriter {irwBefore = mempty, irwAfter = mempty, irwCTEs = Just (With $ pure $ CTEUnsafeRawSQL <$> cte)})
 
 -- | The central Monad used throughout for all conversion functions.
 --
@@ -76,12 +92,12 @@ type FromIrInner = StateT (Map Text Int) (Validate (NonEmpty Error))
 
 -- | Run a 'FromIr' action, throwing errors that have been collected using the
 -- supplied action, and attach CTEs created from native queries to the select query.
-runFromIrUseCTEs :: MonadError QErr m => FromIr Select -> m Select
+runFromIrUseCTEs :: MonadError QErr m => FromIr Select -> m (QueryWithDDL Select)
 runFromIrUseCTEs fromir = runIdentity <$> runFromIr attachCTEs (Identity fromir)
 
 -- | Run a 'FromIr' action, throwing errors that have been collected using the
 -- supplied action, and attach CTEs created from native queries to the select query.
-runFromIrUseCTEsT :: (Traversable t, MonadError QErr m) => t (FromIr Select) -> m (t Select)
+runFromIrUseCTEsT :: (Traversable t, MonadError QErr m) => t (FromIr Select) -> m (t (QueryWithDDL Select))
 runFromIrUseCTEsT = runFromIr attachCTEs
 
 -- | Run a 'FromIr' action, throwing errors that have been collected using the
@@ -89,11 +105,11 @@ runFromIrUseCTEsT = runFromIr attachCTEs
 --
 -- If CTEs were reported, we throw an error, since we don't support native queries
 -- in this context yet.
-runFromIrErrorOnCTEs :: MonadError QErr m => FromIr a -> m a
+runFromIrErrorOnCTEs :: MonadError QErr m => FromIr a -> m (QueryWithDDL a)
 runFromIrErrorOnCTEs fromir = runIdentity <$> runFromIr errorOnCTEs (Identity fromir)
 
 -- | Run a 'FromIr' action, throwing errors that have been collected using the supplied action.
-runFromIr :: (Traversable t, MonadError QErr m) => ((a, IRWriter) -> FromIrInner a) -> t (FromIr a) -> m (t a)
+runFromIr :: (Traversable t, MonadError QErr m) => ((a, IRWriter) -> FromIrInner (QueryWithDDL a)) -> t (FromIr a) -> m (t (QueryWithDDL a))
 runFromIr toResult =
   flip onLeft (throw500 . tshow)
     . V.runValidate
@@ -102,15 +118,27 @@ runFromIr toResult =
     . traverse (runWriterT . unFromIr)
 
 -- | attach CTEs created from native queries to the select query.
-attachCTEs :: MonadValidate (NonEmpty Error) m => (Select, IRWriter) -> m Select
-attachCTEs (select, IRWriter ctes) = pure $ select {selectWith = ctes <> selectWith select}
+attachCTEs :: MonadValidate (NonEmpty Error) m => (Select, IRWriter) -> m (QueryWithDDL Select)
+attachCTEs (select, IRWriter before after ctes) =
+  pure $
+    QueryWithDDL
+      { qwdBeforeSteps = before,
+        qwdQuery = select {selectWith = ctes <> selectWith select},
+        qwdAfterSteps = after
+      }
 
 -- | If CTEs were reported, we throw an error, since we don't support native queries
 --   in this context yet.
-errorOnCTEs :: MonadValidate (NonEmpty Error) m => (a, IRWriter) -> m a
-errorOnCTEs (result, IRWriter ctes) =
-  case ctes of
-    Nothing -> pure result
+errorOnCTEs :: MonadValidate (NonEmpty Error) m => (a, IRWriter) -> m (QueryWithDDL a)
+errorOnCTEs (result, IRWriter {irwBefore, irwAfter, irwCTEs}) =
+  case irwCTEs of
+    Nothing ->
+      pure $
+        QueryWithDDL
+          { qwdBeforeSteps = irwBefore,
+            qwdQuery = result,
+            qwdAfterSteps = irwAfter
+          }
     Just _ -> refute $ pure NativeQueriesNotSupported
 
 -- | Errors that may happen during translation.

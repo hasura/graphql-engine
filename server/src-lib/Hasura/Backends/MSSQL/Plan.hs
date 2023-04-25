@@ -52,7 +52,7 @@ planQuery ::
   MonadError QErr m =>
   SessionVariables ->
   QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->
-  m Select
+  m (QueryWithDDL Select)
 planQuery sessionVariables queryDB = do
   rootField <- traverse (prepareValueQuery sessionVariables) queryDB
   runIrWrappingRoot $ fromQueryRootField rootField
@@ -78,18 +78,19 @@ planSourceRelationship
       traverseSourceRelationshipSelection
         (fmap Const . prepareValueQuery sessionVariables)
         sourceRelationshipRaw
-    runIrWrappingRoot
-      ( fromSourceRelationship
-          lhs
-          lhsSchema
-          argumentId
-          (relationshipName, sourceRelationship)
-      )
+    qwdQuery
+      <$> runIrWrappingRoot
+        ( fromSourceRelationship
+            lhs
+            lhsSchema
+            argumentId
+            (relationshipName, sourceRelationship)
+        )
 
 runIrWrappingRoot ::
   MonadError QErr m =>
   FromIr Select ->
-  m Select
+  m (QueryWithDDL Select)
 runIrWrappingRoot selectAction =
   runFromIrUseCTEs selectAction `onLeft` (throwError . overrideQErrStatus HTTP.status400 NotSupported)
 
@@ -139,7 +140,7 @@ planSubscription unpreparedMap sessionVariables = do
       emptyPrepareState
   let rootFields :: InsOrdHashMap G.Name (FromIr Select)
       rootFields = fmap fromQueryRootField rootFieldMap
-  selectMap <- runFromIrUseCTEsT rootFields
+  selectMap <- fmap qwdQuery <$> runFromIrUseCTEsT rootFields
   pure (collapseMap selectMap, prepareState)
 
 -- Plan a query without prepare/exec.
