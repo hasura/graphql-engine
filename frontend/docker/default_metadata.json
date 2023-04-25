@@ -20,7 +20,7 @@
       },
       {
         "name": "mysql",
-        "kind": "mysqlgdc",
+        "kind": "mysql8",
         "tables": [],
         "configuration": {
           "template": null,
@@ -91,7 +91,7 @@
     ],
     "backend_configs": {
       "dataconnector": {
-        "mysqlgdc": {
+        "mysql8": {
           "uri": "http://data-connector-agent:8081/api/v1/mysql"
         },
         "sqlite": {

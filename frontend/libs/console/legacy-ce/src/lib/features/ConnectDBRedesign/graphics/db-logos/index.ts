@@ -22,7 +22,7 @@ const dbLogos: Record<string, string> = {
   snowflake: snowflakeLogo,
   athena: amazonLogo,
   default: defaultDbLogo,
-  mysqlgdc: mysqlLogo,
+  mysql8: mysqlLogo,
   sqlite: sqliteLogo,
   mariadb: mariadbLogo,
   oracle: oracleLogo,
