@@ -41,7 +41,8 @@ import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.LogicalModel.Types (LogicalModelName)
+import Hasura.LogicalModel.Common (logicalModelFieldsToFieldInfo)
+import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal
 import Hasura.RQL.IR.BoolExp
@@ -245,7 +246,7 @@ buildLogicalModelPermInfo ::
   ) =>
   SourceName ->
   LogicalModelName ->
-  FieldInfoMap (FieldInfo b) ->
+  OMap.InsOrdHashMap (Column b) (LogicalModelField b) ->
   PermDefPermission b perm ->
   m (WithDeps (PermInfo perm b))
 buildLogicalModelPermInfo sourceName logicalModelName fieldInfoMap = \case
@@ -431,17 +432,19 @@ buildLogicalModelSelPermInfo ::
   ) =>
   SourceName ->
   LogicalModelName ->
-  FieldInfoMap (FieldInfo b) ->
+  OMap.InsOrdHashMap (Column b) (LogicalModelField b) ->
   SelPerm b ->
   m (WithDeps (SelPermInfo b))
-buildLogicalModelSelPermInfo source logicalModelName fieldInfoMap sp = withPathK "permission" do
+buildLogicalModelSelPermInfo source logicalModelName logicalModelFieldMap sp = withPathK "permission" do
   let columns :: [Column b]
-      columns = interpColSpec (ciColumn <$> getCols fieldInfoMap) (spColumns sp)
+      columns = interpColSpec (lmfName <$> OMap.elems logicalModelFieldMap) (spColumns sp)
 
   -- Interpret the row permissions in the 'SelPerm' definition.
+  -- TODO: do row permisions work on non-scalar fields? Going to assume not and
+  -- filter out the non-scalars.
   (spiFilter, boolExpDeps) <-
     withPathK "filter" $
-      procLogicalModelBoolExp source logicalModelName fieldInfoMap (spFilter sp)
+      procLogicalModelBoolExp source logicalModelName (logicalModelFieldsToFieldInfo logicalModelFieldMap) (spFilter sp)
 
   let -- What parts of the metadata are interesting when computing the
       -- permissions? These dependencies bubble all the way up to

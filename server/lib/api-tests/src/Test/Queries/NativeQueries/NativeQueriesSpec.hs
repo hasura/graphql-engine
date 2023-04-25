@@ -786,6 +786,69 @@ tests = do
 
       shouldReturnYaml testEnvironment actual expected
 
+    it "Adding a native query with a valid array relationship returns table data along with results when permissions are sufficient" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          sourceName = BackendType.backendSourceName backendTypeMetadata
+          schemaName = Schema.getSchemaName testEnvironment
+          backendType = BackendType.backendTypeString backendTypeMetadata
+
+          schemaKeyword :: String
+          schemaKeyword = Key.toString $ Fixture.backendSchemaKeyword backendTypeMetadata
+
+      Schema.trackLogicalModel sourceName articleLogicalModel testEnvironment
+      Schema.trackLogicalModel sourceName authorLogicalModel testEnvironment
+      Schema.trackNativeQuery sourceName (nativeQueryWithRelationship schemaKeyword schemaName) testEnvironment
+
+      void $
+        GraphqlEngine.postMetadata
+          testEnvironment
+          [interpolateYaml|
+              type: bulk
+              args:
+                - type: #{backendType}_create_logical_model_select_permission
+                  args:
+                    source: #{sourceName}
+                    name: author
+                    role: "sufficient"
+                    permission:
+                      columns: "*"
+                      filter: {}
+            |]
+
+      let expected =
+            [yaml|
+                data:
+                  relationship_test:
+                    - id: 1
+                      name: "Marenghi"
+                      articles:
+                        - title: "Fright Knight"
+                    - id: 2
+                      name: "Learner"
+                      articles:
+                        - title: "Man to Man"
+              |]
+
+          actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphqlWithHeaders
+              testEnvironment
+              [ ("X-Hasura-Role", "sufficient")
+              ]
+              [graphql|
+              query {
+                relationship_test {
+                  id
+                  name
+                  articles {
+                    title
+                  }
+                }
+              }
+           |]
+
+      shouldReturnYaml testEnvironment actual expected
+
     -- I don't think this is the test we want - ideally checks of this kind
     -- would happen before the resolve the schema
     -- however for now let's just check that doing a stupid thing is not

@@ -46,7 +46,6 @@ import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging
 import Hasura.LogicalModel.Cache (LogicalModelCache, LogicalModelInfo (..))
-import Hasura.LogicalModel.Common (columnsFromFields, toFieldInfo)
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.Metadata.Class
 import Hasura.NativeQuery.Cache (NativeQueryCache, NativeQueryInfo (..))
@@ -768,12 +767,8 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                 unless (_cdcAreNativeQueriesEnabled dynamicConfig) $
                   throw400 InvalidConfiguration "The Logical Model feature is disabled"
 
-                fieldInfoMap <- case toFieldInfo (columnsFromFields _lmmFields) of
-                  Nothing -> pure mempty
-                  Just fields -> pure (mapFromL fieldInfoName fields)
-
                 logicalModelPermissions <-
-                  buildLogicalModelPermissions sourceName tableCoreInfos _lmmName fieldInfoMap _lmmSelectPermissions orderedRoles
+                  buildLogicalModelPermissions sourceName tableCoreInfos _lmmName _lmmFields _lmmSelectPermissions orderedRoles
 
                 pure
                   LogicalModelInfo

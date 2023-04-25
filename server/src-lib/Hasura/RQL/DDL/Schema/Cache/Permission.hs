@@ -17,7 +17,7 @@ import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.LogicalModel.Metadata (WithLogicalModel (..))
-import Hasura.LogicalModel.Types (LogicalModelName)
+import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -292,7 +292,7 @@ buildLogicalModelPermissions ::
   SourceName ->
   TableCoreCache b ->
   LogicalModelName ->
-  FieldInfoMap (FieldInfo b) ->
+  InsOrdHashMap (Column b) (LogicalModelField b) ->
   InsOrdHashMap RoleName (SelPermDef b) ->
   OrderedRoles ->
   m (RolePermInfoMap b)
