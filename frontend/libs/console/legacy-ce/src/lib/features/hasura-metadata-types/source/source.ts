@@ -6,6 +6,8 @@ import {
   PostgresConfiguration,
 } from './configuration';
 import { MetadataTable } from './table';
+import { LogicalModel } from './logicalModel';
+import { NativeQuery } from './nativeQuery';
 
 export type NativeDrivers =
   | 'postgres'
@@ -52,17 +54,6 @@ export type MetadataFunction = {
   };
 };
 
-export type LogicalModel = {
-  fields: { name: string; nullable: boolean; type: string }[];
-  name: string;
-};
-export type NativeQuery = {
-  arguments: Record<string, any>;
-  code: string;
-  returns: string;
-  root_field_name: string;
-};
-
 export type Source = {
   name: string;
   tables: MetadataTable[];
@@ -100,6 +91,8 @@ export type Source = {
 );
 
 export type QualifiedFunction = unknown;
+export type { LogicalModel, LogicalModelField } from './logicalModel';
+export type { NativeQuery, NativeQueryArgument } from './nativeQuery';
 
 export type BulkKeepGoingResponse = [
   | {

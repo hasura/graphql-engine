@@ -1,6 +1,6 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 
-import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { handlers } from '../mocks';
 import { ListNativeQueries } from './ListNativeQueries';
 

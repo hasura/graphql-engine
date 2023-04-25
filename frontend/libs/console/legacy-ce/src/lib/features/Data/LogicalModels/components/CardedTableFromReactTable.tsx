@@ -1,6 +1,6 @@
 import { Table, flexRender } from '@tanstack/react-table';
 import React from 'react';
-import { CardedTable } from '../../../new-components/CardedTable';
+import { CardedTable } from '../../../../new-components/CardedTable';
 
 export function CardedTableFromReactTable<T>({ table }: { table: Table<T> }) {
   return (

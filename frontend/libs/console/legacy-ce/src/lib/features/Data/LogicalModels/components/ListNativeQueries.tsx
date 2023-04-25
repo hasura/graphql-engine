@@ -5,9 +5,9 @@ import {
 } from '@tanstack/react-table';
 import React from 'react';
 import Skeleton from 'react-loading-skeleton';
-import { Button } from '../../../new-components/Button';
-import { useMetadata } from '../../hasura-metadata-api';
-import { NativeQuery } from '../../hasura-metadata-types';
+import { Button } from '../../../../new-components/Button';
+import { useMetadata } from '../../../hasura-metadata-api';
+import { NativeQuery } from '../../../hasura-metadata-types';
 import { CardedTableFromReactTable } from './CardedTableFromReactTable';
 
 const columnHelper = createColumnHelper<NativeQuery>();
