@@ -102,13 +102,13 @@ def pytest_addoption(parser):
 
 
 #By default,
-#1) Set test grouping to by class (--dist=loadfile)
+#1) Set test grouping to by class (--dist=loadscope)
 #2) Set default parallelism to one
 def pytest_cmdline_preparse(config, args):
     worker = os.environ.get('PYTEST_XDIST_WORKER')
     if 'xdist' in sys.modules and not worker:  # pytest-xdist plugin
         num = 1
-        args[:] = ['--dist=loadfile', f'-n{num}'] + args
+        args[:] = ['--dist=loadscope', f'-n{num}'] + args
 
 def pytest_configure(config):
     # Pytest has removed the global pytest.config
@@ -315,8 +315,8 @@ def hge_bin(request: pytest.FixtureRequest) -> Optional[str]:
     return request.config.getoption('--hge-bin')  # type: ignore
 
 @pytest.fixture(scope='class')
-def hge_port() -> int:
-    return fixtures.hge.hge_port()
+def hge_port(worker_id: str) -> int:
+    return fixtures.hge.hge_port(worker_id)
 
 @pytest.fixture(scope='class')
 def hge_url(request: pytest.FixtureRequest, hge_bin: Optional[str], hge_port: int) -> str:

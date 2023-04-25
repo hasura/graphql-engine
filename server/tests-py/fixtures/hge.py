@@ -22,8 +22,8 @@ _PASS_THROUGH_ENV_VARS = set([
 ])
 
 
-def hge_port() -> int:
-    return ports.find_free_port()
+def hge_port(worker_id: str) -> int:
+    return ports.find_free_port(worker_id)
 
 
 def hge_server(

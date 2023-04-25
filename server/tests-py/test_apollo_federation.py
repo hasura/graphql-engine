@@ -22,8 +22,8 @@ class TestApolloFederation:
         return 'queries/apollo_federation'
 
     @pytest.fixture
-    def federated_server_with_hge_only(self, hge_url: str, hge_key: str):
-        server = NodeGraphQL(["node", "remote_schemas/nodejs/apollo_federated_server_with_hge_only.js"], env={
+    def federated_server_with_hge_only(self, worker_id: str, hge_url: str, hge_key: str):
+        server = NodeGraphQL(worker_id, 'remote_schemas/nodejs/apollo_federated_server_with_hge_only.js', env={
             'HGE_URL': hge_url,
             'HASURA_GRAPHQL_ADMIN_SECRET': hge_key,
         })
@@ -32,8 +32,8 @@ class TestApolloFederation:
         server.stop()
 
     @pytest.fixture
-    def server_1(self, hge_url: str):
-        server = NodeGraphQL(["node", "remote_schemas/nodejs/apollo_server_1.js"], env={
+    def server_1(self, worker_id: str, hge_url: str):
+        server = NodeGraphQL(worker_id, 'remote_schemas/nodejs/apollo_server_1.js', env={
             'HGE_URL': hge_url,
         })
         server.start()
@@ -41,8 +41,8 @@ class TestApolloFederation:
         server.stop()
 
     @pytest.fixture
-    def federated_server_with_hge_and_server1(self, hge_url: str, hge_key: str, server_1):
-        server = NodeGraphQL(["node", "remote_schemas/nodejs/apollo_federated_server_with_hge_and_server1.js"], env={
+    def federated_server_with_hge_and_server1(self, worker_id: str, hge_url: str, hge_key: str, server_1):
+        server = NodeGraphQL(worker_id, 'remote_schemas/nodejs/apollo_federated_server_with_hge_and_server1.js', env={
             'HGE_URL': hge_url,
             'OTHER_URL': server_1.url,
             'HASURA_GRAPHQL_ADMIN_SECRET': hge_key,
