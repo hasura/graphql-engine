@@ -34,7 +34,7 @@ describe('mysql gdc format dates', () => {
     'Given a "$dataType" path, then returns $expected',
     ({ dataType, expected }) => {
       expect(
-        getFormatDateFn(dataType, 'mysqlgdc')(new Date('2022-04-12T12:01:01'))
+        getFormatDateFn(dataType, 'mysql8')(new Date('2022-04-12T12:01:01'))
       ).toBe(expected);
     }
   );

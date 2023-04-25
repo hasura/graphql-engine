@@ -215,7 +215,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
       const knownEnterpriseDrivers = [
         'athena',
         'snowflake',
-        'mysqlgdc',
+        'mysql8',
         'mariadb',
         'oracle',
       ];

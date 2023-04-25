@@ -21,7 +21,7 @@ type DataTypeFormat =
   | 'time';
 
 const formats: Record<SupportedDrivers, Record<DataTypeFormat, string>> = {
-  mysqlgdc: {
+  mysql8: {
     datetime: MYSQL_DATETIME_FORMAT,
     time_with_time_zone: DEFAULT_TIME_WITH_TIME_ZONE_FORMAT,
     timestamp_without_time_zone: DEFAULT_TIMESTAMP_WITHOUT_TIME_ZONE_FORMAT,

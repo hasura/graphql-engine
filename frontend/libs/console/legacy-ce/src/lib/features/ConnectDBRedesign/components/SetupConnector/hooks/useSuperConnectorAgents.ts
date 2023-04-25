@@ -5,7 +5,7 @@ import { SuperConnectorDrivers } from '../../../../hasura-metadata-types';
 export const agentPaths: Record<SuperConnectorDrivers, string> = {
   snowflake: '/api/v1/snowflake',
   athena: '/api/v1/athena',
-  mysqlgdc: '/api/v1/mysql',
+  mysql8: '/api/v1/mysql',
   mariadb: '/api/v1/mariadb',
   oracle: '/api/v1/oracle',
 };

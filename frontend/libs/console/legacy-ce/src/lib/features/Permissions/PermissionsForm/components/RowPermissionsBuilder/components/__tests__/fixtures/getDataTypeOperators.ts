@@ -978,7 +978,7 @@ export const mssqlRealColumnTypeInput = {
         { name: '_clte', operator: '_clte' },
       ],
     },
-    integer_mysqlgdc: {
+    integer_mysql8: {
       operators: [
         {
           type: 'comparision',
@@ -1052,7 +1052,7 @@ export const mssqlRealColumnTypeInput = {
         { name: '_clte', operator: '_clte' },
       ],
     },
-    string_mysqlgdc: {
+    string_mysql8: {
       operators: [
         {
           type: 'comparision',

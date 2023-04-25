@@ -128,7 +128,7 @@ Playground2.args = Template.args;
 //   ).not.toBeInTheDocument();
 //   await expect(c.queryByTestId('fancy-radio-athena')).not.toBeInTheDocument();
 //   await expect(c.queryByTestId('fancy-radio-sqlite')).toBeInTheDocument();
-//   await expect(c.queryByTestId('fancy-radio-mysqlgdc')).toBeInTheDocument();
+//   await expect(c.queryByTestId('fancy-radio-mysql8')).toBeInTheDocument();
 // };
 
 // export const License_Inactive = Template.bind({});
@@ -145,7 +145,7 @@ Playground2.args = Template.args;
 //   await expect(c.queryByTestId('fancy-radio-snowflake')).toBeInTheDocument();
 //   await expect(c.queryByTestId('fancy-radio-athena')).toBeInTheDocument();
 //   await expect(c.queryByTestId('fancy-radio-sqlite')).toBeInTheDocument();
-//   await expect(c.queryByTestId('fancy-radio-mysqlgdc')).toBeInTheDocument();
+//   await expect(c.queryByTestId('fancy-radio-mysql8')).toBeInTheDocument();
 
 //   await userEvent.click(await c.findByTestId('fancy-label-snowflake'));
 
@@ -174,7 +174,7 @@ Playground2.args = Template.args;
 //   await expect(c.queryByTestId('fancy-radio-snowflake')).toBeInTheDocument();
 //   await expect(c.queryByTestId('fancy-radio-athena')).toBeInTheDocument();
 //   await expect(c.queryByTestId('fancy-radio-sqlite')).toBeInTheDocument();
-//   await expect(c.queryByTestId('fancy-radio-mysqlgdc')).toBeInTheDocument();
+//   await expect(c.queryByTestId('fancy-radio-mysql8')).toBeInTheDocument();
 
 //   await userEvent.click(await c.findByTestId('fancy-label-snowflake'));
 
@@ -206,7 +206,7 @@ Playground2.args = Template.args;
 //   await expect(c.queryByTestId('fancy-radio-snowflake')).toBeInTheDocument();
 //   await expect(c.queryByTestId('fancy-radio-athena')).toBeInTheDocument();
 //   await expect(c.queryByTestId('fancy-radio-sqlite')).toBeInTheDocument();
-//   await expect(c.queryByTestId('fancy-radio-mysqlgdc')).toBeInTheDocument();
+//   await expect(c.queryByTestId('fancy-radio-mysql8')).toBeInTheDocument();
 
 //   await userEvent.click(await c.findByTestId('fancy-label-snowflake'));
 
@@ -231,7 +231,7 @@ Playground2.args = Template.args;
 //   await expect(c.queryByTestId('fancy-radio-snowflake')).toBeInTheDocument();
 //   await expect(c.queryByTestId('fancy-radio-athena')).toBeInTheDocument();
 //   await expect(c.queryByTestId('fancy-radio-sqlite')).toBeInTheDocument();
-//   await expect(c.queryByTestId('fancy-radio-mysqlgdc')).toBeInTheDocument();
+//   await expect(c.queryByTestId('fancy-radio-mysql8')).toBeInTheDocument();
 //   await userEvent.click(await c.findByTestId('fancy-label-snowflake'));
 //   await expect(
 //     await c.findByTestId('license-expired-card')
@@ -270,7 +270,7 @@ Playground2.args = Template.args;
 //   await expect(c.queryByTestId('fancy-radio-snowflake')).toBeInTheDocument();
 //   await expect(c.queryByTestId('fancy-radio-athena')).toBeInTheDocument();
 //   await expect(c.queryByTestId('fancy-radio-sqlite')).toBeInTheDocument();
-//   await expect(c.queryByTestId('fancy-radio-mysqlgdc')).toBeInTheDocument();
+//   await expect(c.queryByTestId('fancy-radio-mysql8')).toBeInTheDocument();
 //   await userEvent.click(await c.findByTestId('fancy-label-snowflake'));
 //   await expect(
 //     await c.queryByTestId('cloud-driver-not-available')
@@ -299,7 +299,7 @@ Playground2.args = Template.args;
 //   await expect(c.queryByTestId('fancy-radio-snowflake')).toBeInTheDocument();
 //   await expect(c.queryByTestId('fancy-radio-athena')).toBeInTheDocument();
 //   await expect(c.queryByTestId('fancy-radio-sqlite')).toBeInTheDocument();
-//   await expect(c.queryByTestId('fancy-radio-mysqlgdc')).toBeInTheDocument();
+//   await expect(c.queryByTestId('fancy-radio-mysql8')).toBeInTheDocument();
 //   await userEvent.click(await c.findByTestId('fancy-label-snowflake'));
 //   await expect(
 //     await c.findByTestId('cloud-driver-not-available')

@@ -18,11 +18,7 @@ export type NativeDrivers =
   | 'citus'
   | 'cockroach';
 
-export type SuperConnectorDrivers =
-  | 'snowflake'
-  | 'athena'
-  | 'mysqlgdc'
-  | string;
+export type SuperConnectorDrivers = 'snowflake' | 'athena' | 'mysql8' | string;
 
 export type SupportedDrivers = Driver | SuperConnectorDrivers;
 
