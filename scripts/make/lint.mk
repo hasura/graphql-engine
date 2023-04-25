@@ -123,14 +123,26 @@ check-format-changed: check-format-hs-changed check-format-nix check-format-fron
 ## lint-hs: lint Haskell code using `hlint`
 lint-hs: check-hlint-version
 	@echo running hlint
-	@$(HLINT) $(HS_FILES)
+	@output=$$(mktemp); \
+	trap 'rm $$output' EXIT; \
+	$(HLINT) --no-exit-code $(HS_FILES) | tee "$$output"; \
+	if grep -E '^[^ ]+: (Error|Warning):' "$$output" > /dev/null; then \
+		echo 'Errors or warnings found.'; \
+		exit 1; \
+	fi
 
 .PHONY: lint-hs-changed
 ## lint-hs-changed: lint Haskell code using `hlint` (changed files only)
 lint-hs-changed: check-hlint-version
 	@echo running hlint
-	@if [ -n "$(CHANGED_HS_FILES)" ]; then \
-		$(HLINT) $(CHANGED_HS_FILES); \
+	@if [[ -n "$(CHANGED_HS_FILES)" ]]; then \
+		output=$$(mktemp); \
+		trap 'rm $$output' EXIT; \
+		$(HLINT) --no-exit-code $(CHANGED_HS_FILES) | tee "$$output"; \
+		if grep -E '^[^ ]+: (Error|Warning):' "$$output" > /dev/null; then \
+			echo 'Errors or warnings found.'; \
+			exit 1; \
+		fi; \
 	fi
 
 .PHONY: lint-hs-fix

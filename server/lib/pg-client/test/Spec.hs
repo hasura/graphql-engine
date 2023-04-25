@@ -26,6 +26,10 @@ import Prelude
 
 -------------------------------------------------------------------------------
 
+{-# ANN module ("HLint: ignore avoid Control.Concurrent.forkIO" :: String) #-}
+
+{-# ANN module ("HLint: ignore avoid Control.Concurrent.threadDelay" :: String) #-}
+
 {- Note [Running tests]
 ~~~~~~~~~~~~~~~~~~~~~~~
 The tests in this module expect a postgres instance running. No setup is

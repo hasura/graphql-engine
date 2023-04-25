@@ -13,7 +13,7 @@ import Network.WebSockets qualified as WS
 responseListener :: WS.Connection -> (Text -> Text -> Value -> IO r) -> IO r
 responseListener connection yield = do
   message <- WS.receiveData connection
-  decoded <- either fail pure (eitherDecode @Value message)
+  decoded <- eitherDecode @Value message `onLeft` fail
 
   fromMaybe (responseListener connection yield) do
     identifier <- decoded ^? key "id" . _String

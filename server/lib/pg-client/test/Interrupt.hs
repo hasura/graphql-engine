@@ -2,9 +2,7 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
-{-# HLINT ignore "Use sleep" #-}
 module Interrupt (specInterrupt) where
 
 -------------------------------------------------------------------------------
@@ -28,6 +26,8 @@ import Test.Hspec (Spec, describe, it, shouldBe, shouldThrow)
 import Prelude hiding (log)
 
 -------------------------------------------------------------------------------
+
+{-# ANN module ("HLint: ignore avoid Control.Concurrent.threadDelay" :: String) #-}
 
 specInterrupt :: Spec
 specInterrupt = do

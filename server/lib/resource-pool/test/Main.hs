@@ -1,10 +1,6 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE NumericUnderscores #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-
-{-# HLINT ignore "Use sleep" #-}
-{-# HLINT ignore "Use withAsync" #-}
 
 module Main (main) where
 
@@ -19,6 +15,10 @@ import Data.Pool
 import Data.Time (NominalDiffTime, nominalDiffTimeToSeconds)
 import Debug.Trace (traceShow)
 import Test.Hspec
+
+{-# ANN module ("HLint: ignore avoid Control.Concurrent.forkIO" :: String) #-}
+
+{-# ANN module ("HLint: ignore avoid Control.Concurrent.threadDelay" :: String) #-}
 
 main :: IO ()
 main = hspec do

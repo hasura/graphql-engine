@@ -98,8 +98,7 @@ runFromIr toResult =
   flip onLeft (throw500 . tshow)
     . V.runValidate
     . flip evalStateT mempty
-    . join
-    . fmap (traverse toResult)
+    . (traverse toResult =<<)
     . traverse (runWriterT . unFromIr)
 
 -- | attach CTEs created from native queries to the select query.

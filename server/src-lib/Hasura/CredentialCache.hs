@@ -1,5 +1,3 @@
-{-# LANGUAGE NumericUnderscores #-}
-
 -- | Interface for a service for maintaining short-lived credentials, such as
 -- access tokens or JWTs.
 module Hasura.CredentialCache
