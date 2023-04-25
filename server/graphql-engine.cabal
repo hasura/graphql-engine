@@ -288,6 +288,7 @@ common lib-depends
                      , hashable
                      , hasura-base
                      , hasura-extras
+                     , hasura-json-encoding
                      , hasura-prelude
                      , http-client-tls
                      , http-conduit
@@ -719,7 +720,6 @@ library
                      , Hasura.LogicalModel.Types
 
                      , Hasura.ClientCredentials
-                     , Hasura.EncJSON
 
                      , Hasura.Function.API
                      , Hasura.Function.Cache
