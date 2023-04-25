@@ -69,6 +69,7 @@ import Data.Time.Clock
 import Data.Time.Clock qualified as Time
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Base.Error
+import Hasura.Eventing.Backend
 import Hasura.Eventing.Common
 import Hasura.Eventing.HTTP
 import Hasura.HTTP (getHTTPExceptionStatus)
@@ -79,7 +80,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as AB

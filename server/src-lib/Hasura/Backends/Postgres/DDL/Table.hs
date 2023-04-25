@@ -2,7 +2,7 @@
 --
 -- Used to fill up the enum values field of 'Hasura.RQL.Types.Table.TableCoreInfoG'.
 --
--- See 'Hasura.RQL.Types.Eventing.Backend'.
+-- See 'Hasura.Eventing.Backend'.
 module Hasura.Backends.Postgres.DDL.Table
   ( fetchAndValidateEnumValues,
   )

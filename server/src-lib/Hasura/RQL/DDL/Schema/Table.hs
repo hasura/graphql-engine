@@ -40,6 +40,7 @@ import Data.These (These (..))
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..), QualifiedTable)
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.Eventing.Backend (BackendEventTrigger, dropTriggerAndArchiveEvents)
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser.Name qualified as GName
@@ -54,7 +55,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Eventing.Backend (BackendEventTrigger, dropTriggerAndArchiveEvents)
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object

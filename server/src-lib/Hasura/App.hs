@@ -91,6 +91,7 @@ import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
 import Hasura.ClientCredentials (getEEClientCredentialsTx, setEEClientCredentialsTx)
+import Hasura.Eventing.Backend
 import Hasura.Eventing.Common
 import Hasura.Eventing.EventTrigger
 import Hasura.Eventing.ScheduledTrigger
@@ -127,7 +128,6 @@ import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.ResizePool
 import Hasura.RQL.Types.Roles (adminRoleName)

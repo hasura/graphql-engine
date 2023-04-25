@@ -40,6 +40,7 @@ import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (dquote, dquoteList, (<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.Eventing.Backend (BackendEventTrigger (..))
 import Hasura.Function.API
 import Hasura.Logging qualified as HL
 import Hasura.LogicalModel.API
@@ -70,7 +71,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.EventTrigger qualified as ET
-import Hasura.RQL.Types.Eventing.Backend (BackendEventTrigger (..))
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object

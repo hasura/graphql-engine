@@ -5,7 +5,7 @@
 --
 -- Used for creating event triggers for metadata changes.
 --
--- See 'Hasura.RQL.DDL.Schema.Cache' and 'Hasura.RQL.Types.Eventing.Backend'.
+-- See 'Hasura.Eventing.Backend'.
 module Hasura.Backends.Postgres.DDL.EventTrigger
   ( insertManualEvent,
     redeliverEvent,

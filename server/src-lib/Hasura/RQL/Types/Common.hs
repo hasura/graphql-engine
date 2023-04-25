@@ -83,10 +83,10 @@ import Data.URL.Template
 import Database.PG.Query qualified as PG
 import Hasura.Base.Error
 import Hasura.Base.ErrorValue qualified as ErrorValue
+import Hasura.Base.Instances ()
 import Hasura.Base.ToErrorValue
 import Hasura.EncJSON
 import Hasura.Prelude
-import Hasura.RQL.DDL.Headers ()
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.Haskell.TH.Syntax qualified as TH

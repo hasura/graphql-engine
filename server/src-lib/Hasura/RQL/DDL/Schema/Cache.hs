@@ -38,6 +38,7 @@ import Data.Set qualified as S
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.Eventing.Backend
 import Hasura.Function.API
 import Hasura.Function.Cache
 import Hasura.Function.Metadata (FunctionMetadata (..))
@@ -77,7 +78,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.Metadata hiding (tmTable)
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object

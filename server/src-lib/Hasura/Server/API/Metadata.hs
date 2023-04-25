@@ -16,6 +16,7 @@ import GHC.Generics.Extended (constrName)
 import Hasura.App.State
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.Eventing.Backend
 import Hasura.Function.API qualified as Functions
 import Hasura.Logging qualified as L
 import Hasura.LogicalModel.API qualified as LogicalModel
@@ -51,7 +52,6 @@ import Hasura.RQL.DDL.SourceKinds
 import Hasura.RQL.DDL.Webhook.Transform.Validation
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.Metadata (emptyMetadataDefaults)
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Permission

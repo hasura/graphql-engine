@@ -63,6 +63,7 @@ import Data.Text.Extended
 import Data.URL.Template (printURLTemplate)
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.Eventing.Backend
 import Hasura.Eventing.EventTrigger (logQErr)
 import Hasura.Logging qualified as L
 import Hasura.Prelude
@@ -72,7 +73,6 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
-import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.Headers (HeaderValue (..))
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend

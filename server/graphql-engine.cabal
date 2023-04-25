@@ -801,7 +801,6 @@ library
                      , Hasura.RQL.Types.Endpoint.Trie
                      , Hasura.RQL.Types.EventTrigger
                      , Hasura.RQL.Types.Eventing
-                     , Hasura.RQL.Types.Eventing.Backend
                      , Hasura.RQL.Types.Headers
                      , Hasura.RQL.Types.HealthCheck
                      , Hasura.RQL.Types.HealthCheckImplementation
@@ -990,6 +989,7 @@ library
                      , Hasura.Metadata.DTO.MetadataV3
                      , Hasura.Metadata.DTO.Placeholder
 
+                     , Hasura.Eventing.Backend
                      , Hasura.Eventing.Common
                      , Hasura.Eventing.EventTrigger
                      , Hasura.Eventing.HTTP

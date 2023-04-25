@@ -1,4 +1,4 @@
-module Hasura.RQL.Types.Eventing.Backend
+module Hasura.Eventing.Backend
   ( BackendEventTrigger (..),
   )
 where
