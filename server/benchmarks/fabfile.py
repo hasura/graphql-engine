@@ -531,6 +531,7 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
          f"(https://github.com/hasura/graphql-engine-mono/blob/main/server/benchmarks/README.md)."))
     out(f"")
     out(f"More significant regressions or improvements will be colored with `#b31d28` or `#22863a`, respectively.")
+    out(f"NOTE: throughput benchmarks are quite variable for now, and have a looser threshold for highlighting.")
     out(f"")
     out(f"You can view graphs of the full reports here:")
     for benchmark_set_name, _ in results.items():
@@ -545,7 +546,7 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
     out(f"")
 
     # Return what should be the first few chars of the line, which will detemine its styling:
-    def col(val=None):
+    def highlight_sensitive(val=None):
         if val == None:        return "#   "  # GRAY
         elif abs(val) <= 2.0:  return "#   "  # GRAY
         elif abs(val) <= 3.5:  return "*   "  # NORMAL
@@ -556,6 +557,17 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
         elif -15.0 <= val < 0: return "+   "  # GREEN
         elif -25.0 <= val < 0: return "++  "  # GREEN
         else:                  return "+++ "  # GREEN
+    # For noisier benchmarks (tuned for throughput benchmarks, for now)
+    def highlight_lax(val=None):
+        if val == None:        return "#   "  # GRAY
+        elif abs(val) <= 8.0:  return "#   "  # GRAY
+        elif abs(val) <= 12.0: return "*   "  # NORMAL
+        elif 0 < val <= 20.0:  return "-   "  # RED
+        elif 0 < val <= 35.0:  return "--  "  # RED
+        elif 0 < val:          return "--- "  # RED
+        elif -20.0 <= val < 0: return "+   "  # GREEN
+        elif -35.0 <= val < 0: return "++  "  # GREEN
+        else:                  return "+++ "  # GREEN
 
     out(f"``` diff")  # START DIFF SYNTAX
     for benchmark_set_name, (mem_in_use_before_diff, live_bytes_before_diff, mem_in_use_after_diff, live_bytes_after_diff, benchmarks) in results.items():
@@ -565,15 +577,20 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
         u0 = mem_in_use_before_diff
         # u1 = mem_in_use_after_diff
 
+        col = highlight_sensitive
         out(        f"{col(u0)} {benchmark_set_name[:-5]+'  ':─<21s}{'┤ MEMORY RESIDENCY (from RTS)': <30}{'mem_in_use (BEFORE benchmarks)': >38}{u0:>12.1f} ┐")
         out(        f"{col(l0)} {                        '  ': <21s}{'│'                            : <30}{'live_bytes (BEFORE benchmarks)': >38}{l0:>12.1f} │")
         out(        f"{col(l1)} {                        '  ': <21s}{'│'                              }{'   live_bytes  (AFTER benchmarks)':_>67}{l1:>12.1f} ┘")
         for bench_name, metrics in benchmarks:
             bench_name_pretty = bench_name.replace('-k6-custom','').replace('_',' ') # need at least 40 chars
+            if "throughput" in benchmark_set_name:
+                col = highlight_lax
+            else:
+                col = highlight_sensitive
+
             for metric_name, d in metrics.items():
-              if len(list(metrics.items())) == 1:  # need to waste a line if only one metric:
-                out(f"{col(d )} {                        '  ': <21s}{'│ '+bench_name_pretty         : <40}{                     metric_name: >28}{d :>12.1f} ┐")
-                out(f"{col(  )} {                        '  ': <21s}{'│'                                 }{                              '':_>67}{''  :>12s} ┘")
+              if len(list(metrics.items())) == 1:  # if only one metric:
+                out(f"{col(d )} {                        '  ': <21s}{'│_'+bench_name_pretty+' '     :_<40}{                     metric_name:_>28}{d :>12.1f}  ")
               elif metric_name == list(metrics.items())[0][0]:  # first:
                 out(f"{col(d )} {                        '  ': <21s}{'│ '+bench_name_pretty         : <40}{                     metric_name: >28}{d :>12.1f} ┐")
               elif metric_name == list(metrics.items())[-1][0]:  # last:
