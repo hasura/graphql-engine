@@ -1,11 +1,12 @@
+import clsx from 'clsx';
 import React, { ReactElement } from 'react';
 import { CgSpinner } from 'react-icons/cg';
-import clsx from 'clsx';
 
 type ButtonModes = 'default' | 'destructive' | 'primary' | 'success';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
-export interface ButtonProps extends React.ComponentProps<'button'> {
+export interface ButtonProps
+  extends Omit<React.ComponentProps<'button'>, 'ref'> {
   /**
    * Flag indicating whether the button is disabled
    */
@@ -66,84 +67,86 @@ export const twButtonStyles = {
 
 const fullWidth = 'w-full';
 
-export const Button = (props: ButtonProps) => {
-  const {
-    mode = 'default',
-    type = 'button',
-    size = 'md',
-    children,
-    icon,
-    iconPosition = 'start',
-    isLoading,
-    loadingText,
-    disabled,
-    full,
-    ...otherHtmlAttributes
-  } = props;
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  (props, forwardedRef) => {
+    const {
+      mode = 'default',
+      type = 'button',
+      size = 'md',
+      children,
+      icon,
+      iconPosition = 'start',
+      isLoading,
+      loadingText,
+      disabled,
+      full,
+      ...otherHtmlAttributes
+    } = props;
 
-  const isDisabled = disabled || isLoading;
+    const isDisabled = disabled || isLoading;
 
-  const styles = twButtonStyles;
+    const styles = twButtonStyles;
 
-  const buttonAttributes = {
-    type,
-    ...otherHtmlAttributes,
-    disabled: isDisabled,
-    className: clsx(
-      styles.all,
-      styles[mode],
-      buttonSizing[size],
-      isDisabled ? 'cursor-not-allowed' : '',
-      full && fullWidth,
-      otherHtmlAttributes?.className
-    ),
-  };
+    const buttonAttributes = {
+      type,
+      ...otherHtmlAttributes,
+      disabled: isDisabled,
+      className: clsx(
+        styles.all,
+        styles[mode],
+        buttonSizing[size],
+        isDisabled ? 'cursor-not-allowed' : '',
+        full && fullWidth,
+        otherHtmlAttributes?.className
+      ),
+    };
 
-  if (isLoading) {
+    if (isLoading) {
+      return (
+        <button {...buttonAttributes} ref={forwardedRef}>
+          {!!loadingText && (
+            <span className="whitespace-nowrap mr-2">{loadingText}</span>
+          )}
+          <CgSpinner
+            className={`animate-spin ${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'}`}
+          />
+        </button>
+      );
+    }
+
+    if (!icon) {
+      return (
+        <button {...buttonAttributes} ref={forwardedRef}>
+          <span className="whitespace-nowrap max-w-full">{children}</span>
+        </button>
+      );
+    }
+
     return (
-      <button {...buttonAttributes}>
-        {!!loadingText && (
-          <span className="whitespace-nowrap mr-2">{loadingText}</span>
+      <button {...buttonAttributes} ref={forwardedRef}>
+        {iconPosition === 'start' && (
+          <ButtonIcon
+            icon={icon}
+            size={size}
+            iconPosition={iconPosition}
+            buttonHasChildren={!!children}
+          />
         )}
-        <CgSpinner
-          className={`animate-spin ${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'}`}
-        />
-      </button>
-    );
-  }
 
-  if (!icon) {
-    return (
-      <button {...buttonAttributes}>
         <span className="whitespace-nowrap max-w-full">{children}</span>
+
+        {iconPosition === 'end' && (
+          <ButtonIcon
+            icon={icon}
+            size={size}
+            iconPosition={iconPosition}
+            buttonHasChildren={!!children}
+          />
+        )}
       </button>
     );
   }
-
-  return (
-    <button {...buttonAttributes}>
-      {iconPosition === 'start' && (
-        <ButtonIcon
-          icon={icon}
-          size={size}
-          iconPosition={iconPosition}
-          buttonHasChildren={!!children}
-        />
-      )}
-
-      <span className="whitespace-nowrap max-w-full">{children}</span>
-
-      {iconPosition === 'end' && (
-        <ButtonIcon
-          icon={icon}
-          size={size}
-          iconPosition={iconPosition}
-          buttonHasChildren={!!children}
-        />
-      )}
-    </button>
-  );
-};
+);
 
 function ButtonIcon(props: {
   size?: ButtonSize;

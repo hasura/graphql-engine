@@ -146,15 +146,32 @@ export const AlertProvider: React.FC = ({ children }) => {
         setShowAlert(true);
       }, 0);
     },
-    [closeAndCleanup, dismissAlert]
+    [closeAndCleanup, dismissAlert, handleUnhandledError]
+  );
+
+  const hasuraAlert = React.useCallback(
+    params => fireAlert({ ...params, mode: 'alert' }),
+    [fireAlert]
+  );
+  const hasuraConfirm = React.useCallback(
+    params => fireAlert({ ...params, mode: 'confirm' }),
+    [fireAlert]
+  );
+  const hasuraPrompt = React.useCallback(
+    params => fireAlert({ ...params, mode: 'prompt' }),
+    [fireAlert]
   );
 
   return (
     <AlertContext.Provider
       value={{
-        hasuraAlert: params => fireAlert({ ...params, mode: 'alert' }),
-        hasuraConfirm: params => fireAlert({ ...params, mode: 'confirm' }),
-        hasuraPrompt: params => fireAlert({ ...params, mode: 'prompt' }),
+        hasuraAlert,
+        hasuraConfirm,
+        hasuraPrompt,
+        //use these to test instable references:
+        //   hasuraAlert: params => fireAlert({ ...params, mode: 'alert' }),
+        //   hasuraConfirm: params => fireAlert({ ...params, mode: 'confirm' }),
+        //   hasuraPrompt: params => fireAlert({ ...params, mode: 'prompt' }),
       }}
     >
       {children}
@@ -186,88 +203,33 @@ export const AlertProvider: React.FC = ({ children }) => {
 
 const useDestructiveConfirm = () => {
   const { hasuraConfirm } = useHasuraAlert();
-  return ({
-    resourceName,
-    resourceType,
-    destroyTerm = 'remove',
-    onConfirm,
-  }: {
-    resourceName: string;
-    resourceType: string;
-    destroyTerm?: 'delete' | 'remove';
-    onConfirm: () => Promise<boolean>;
-  }) => {
-    if (!onConfirm) throw new Error('onCloseAsync() is required.');
+  return React.useCallback(
+    ({
+      resourceName,
+      resourceType,
+      destroyTerm = 'remove',
+      onConfirm,
+    }: {
+      resourceName: string;
+      resourceType: string;
+      destroyTerm?: 'delete' | 'remove';
+      onConfirm: () => Promise<boolean>;
+    }) => {
+      if (!onConfirm) throw new Error('onCloseAsync() is required.');
 
-    hasuraConfirm({
-      title: `${capitalize(destroyTerm)} ${resourceType}`,
-      message: (
-        <div>
-          Are you sure you want to {destroyTerm} {resourceType}:{' '}
-          <strong>{resourceName}</strong>?
-        </div>
-      ),
-      confirmText: 'Remove',
-      destructive: true,
-      onCloseAsync: async ({ confirmed }) => {
-        if (!confirmed) return;
+      hasuraConfirm({
+        title: `${capitalize(destroyTerm)} ${resourceType}`,
+        message: (
+          <div>
+            Are you sure you want to {destroyTerm} {resourceType}:{' '}
+            <strong>{resourceName}</strong>?
+          </div>
+        ),
+        confirmText: 'Remove',
+        destructive: true,
+        onCloseAsync: async ({ confirmed }) => {
+          if (!confirmed) return;
 
-        const success = await onConfirm();
-
-        if (success) {
-          return {
-            withSuccess: success,
-            successText: `${capitalize(destroyTerm)}d ${resourceName}`,
-          };
-        } else {
-          return;
-        }
-      },
-    });
-  };
-};
-
-const useDestructivePrompt = () => {
-  const { hasuraPrompt } = useHasuraAlert();
-
-  return ({
-    resourceName,
-    resourceType,
-    destroyTerm = 'remove',
-    onConfirm,
-  }: {
-    resourceName: string;
-    resourceType: string;
-    destroyTerm?: 'delete' | 'remove';
-    onConfirm: () => Promise<boolean>;
-  }) => {
-    if (!onConfirm) throw new Error('onCloseAsync() is required.');
-
-    hasuraPrompt({
-      title: `${capitalize(destroyTerm)} ${resourceType}`,
-      message: (
-        <div>
-          Are you sure you want to {destroyTerm} {resourceType}:{' '}
-          <strong>{resourceName}</strong>?
-        </div>
-      ),
-      confirmText: 'Remove',
-      destructive: true,
-      promptLabel: (
-        <div>
-          Type <strong>{resourceName}</strong> to confirm this action.
-        </div>
-      ),
-      onCloseAsync: async result => {
-        if (!result.confirmed) return;
-        if (result.promptValue !== resourceName) {
-          hasuraToast({
-            type: 'error',
-            title: `Entry Not Matching`,
-            message: `Your entry "${result.promptValue}" does not match "${resourceName}".`,
-          });
-          return;
-        } else {
           const success = await onConfirm();
 
           if (success) {
@@ -278,10 +240,71 @@ const useDestructivePrompt = () => {
           } else {
             return;
           }
-        }
-      },
-    });
-  };
+        },
+      });
+    },
+    [hasuraConfirm]
+  );
+};
+
+const useDestructivePrompt = () => {
+  const { hasuraPrompt } = useHasuraAlert();
+
+  return React.useCallback(
+    ({
+      resourceName,
+      resourceType,
+      destroyTerm = 'remove',
+      onConfirm,
+    }: {
+      resourceName: string;
+      resourceType: string;
+      destroyTerm?: 'delete' | 'remove';
+      onConfirm: () => Promise<boolean>;
+    }) => {
+      if (!onConfirm) throw new Error('onCloseAsync() is required.');
+
+      hasuraPrompt({
+        title: `${capitalize(destroyTerm)} ${resourceType}`,
+        message: (
+          <div>
+            Are you sure you want to {destroyTerm} {resourceType}:{' '}
+            <strong>{resourceName}</strong>?
+          </div>
+        ),
+        confirmText: 'Remove',
+        destructive: true,
+        promptLabel: (
+          <div>
+            Type <strong>{resourceName}</strong> to confirm this action.
+          </div>
+        ),
+        onCloseAsync: async result => {
+          if (!result.confirmed) return;
+          if (result.promptValue !== resourceName) {
+            hasuraToast({
+              type: 'error',
+              title: `Entry Not Matching`,
+              message: `Your entry "${result.promptValue}" does not match "${resourceName}".`,
+            });
+            return;
+          } else {
+            const success = await onConfirm();
+
+            if (success) {
+              return {
+                withSuccess: success,
+                successText: `${capitalize(destroyTerm)}d ${resourceName}`,
+              };
+            } else {
+              return;
+            }
+          }
+        },
+      });
+    },
+    [hasuraPrompt]
+  );
 };
 
 export const useDestructiveAlert = () => {

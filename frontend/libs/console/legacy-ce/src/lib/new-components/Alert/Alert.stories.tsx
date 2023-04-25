@@ -1,9 +1,10 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react';
-import React from 'react';
+import React, { useReducer } from 'react';
 
-import { expect } from '@storybook/jest';
+import { expect, jest } from '@storybook/jest';
 import { screen, userEvent, within } from '@storybook/testing-library';
 import { useHasuraAlert } from '.';
+import useUpdateEffect from '../../hooks/useUpdateEffect';
 import { Button } from '../Button';
 import { useDestructiveAlert } from './AlertProvider';
 
@@ -619,4 +620,172 @@ DestructivePrompt.parameters = {
 - When needing a prompt to delete a resource, this hook standardizes the UI/UX and language.`,
     },
   },
+};
+
+const logger = {
+  log: (x: string) => {
+    console.log(x);
+  },
+};
+
+export const ReferenceStability: ComponentStory<any> = () => {
+  const { hasuraAlert, hasuraConfirm, hasuraPrompt } = useHasuraAlert();
+
+  const { destructiveConfirm, destructivePrompt } = useDestructiveAlert();
+
+  const [, forceUpdate] = useReducer(x => x + 1, 0);
+
+  useUpdateEffect(() => {
+    logger.log('hasuraAlert reference changed');
+  }, [hasuraAlert]);
+
+  useUpdateEffect(() => {
+    logger.log('hasuraConfirm reference changed');
+  }, [hasuraConfirm]);
+
+  useUpdateEffect(() => {
+    logger.log('hasuraPrompt reference changed');
+  }, [hasuraPrompt]);
+
+  useUpdateEffect(() => {
+    logger.log('destructiveConfirm reference changed');
+  }, [destructiveConfirm]);
+
+  useUpdateEffect(() => {
+    logger.log('destructivePrompt reference changed');
+  }, [destructivePrompt]);
+
+  React.useEffect(() => {
+    console.log('expected render 👍');
+  });
+
+  const twButtonStyles =
+    'border-gray-900 bg-slate-100 border-solid border rounded p-2 active:bg-slate-300';
+
+  return (
+    <div className="w-full">
+      <ul>
+        <li>This story will automatically test referential stability.</li>
+        <li>Any referential changes will be logged to the console.</li>
+        <li>
+          To test manually, try pressing the buttons and checking for logs in
+          the console.
+        </li>
+      </ul>
+      <div className="space-y-2 gap-2 flex flex-row">
+        <button
+          data-testid="force-update"
+          className={twButtonStyles}
+          onClick={() => {
+            forceUpdate();
+          }}
+        >
+          force render
+        </button>
+        <button
+          data-testid="alert"
+          className={twButtonStyles}
+          onClick={() => {
+            hasuraAlert({ title: 'Test', message: 'test' });
+          }}
+        >
+          open alert
+        </button>
+        <button
+          data-testid="confirm"
+          className={twButtonStyles}
+          onClick={() => {
+            hasuraConfirm({
+              title: 'Test',
+              message: 'test',
+              onClose: () => {},
+            });
+          }}
+        >
+          open confirm
+        </button>
+        <button
+          data-testid="prompt"
+          className={twButtonStyles}
+          onClick={() => {
+            hasuraPrompt({ title: 'Test', message: 'test', onClose: () => {} });
+          }}
+        >
+          open prompt
+        </button>
+        <button
+          data-testid="destructive-confirm"
+          className={twButtonStyles}
+          onClick={() => {
+            destructiveConfirm({
+              resourceName: 'test',
+              resourceType: 'test',
+              onConfirm: async () => true,
+            });
+          }}
+        >
+          open destructive confirm
+        </button>
+        <button
+          data-testid="destructive-prompt"
+          className={twButtonStyles}
+          onClick={() => {
+            destructivePrompt({
+              resourceName: 'test',
+              resourceType: 'test',
+              onConfirm: async () => true,
+            });
+          }}
+        >
+          open destructive prompt
+        </button>
+      </div>
+    </div>
+  );
+};
+
+ReferenceStability.play = async ({ canvasElement }) => {
+  const logSpy = jest.spyOn(logger, 'log');
+
+  const canvas = within(canvasElement);
+
+  //test a force render
+  await userEvent.click(canvas.getByTestId('force-update'));
+
+  await expect(logSpy).not.toHaveBeenCalled();
+
+  //test alert call
+  await userEvent.click(canvas.getByTestId('alert'));
+
+  await userEvent.click(await screen.findByText('Ok'));
+
+  await expect(logSpy).not.toHaveBeenCalled();
+
+  //test confirm call
+  await userEvent.click(canvas.getByTestId('confirm'));
+
+  await userEvent.click(await screen.findByText('Ok'));
+
+  await expect(logSpy).not.toHaveBeenCalled();
+
+  //test prompt call
+  await userEvent.click(canvas.getByTestId('prompt'));
+
+  await userEvent.click(await screen.findByText('Ok'));
+
+  await expect(logSpy).not.toHaveBeenCalled();
+
+  //test destructive confirm
+  await userEvent.click(canvas.getByTestId('destructive-confirm'));
+
+  await userEvent.click(await screen.findByText('Cancel'));
+
+  await expect(logSpy).not.toHaveBeenCalled();
+
+  //test destructive prompt
+  await userEvent.click(canvas.getByTestId('destructive-prompt'));
+
+  await userEvent.click(await screen.findByText('Cancel'));
+
+  await expect(logSpy).not.toHaveBeenCalled();
 };
