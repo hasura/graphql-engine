@@ -47,13 +47,13 @@ const SuperConnectorDrivers: readonly DriverInfo[] = [
     release: 'Beta',
     enterprise: true,
   },
-  {
-    name: 'Mongo',
-    displayName: 'MongoDB',
-    native: false,
-    release: 'Alpha',
-    enterprise: true,
-  },
+  // {
+  //   name: 'Mongo',
+  //   displayName: 'MongoDB',
+  //   native: false,
+  //   release: 'Alpha',
+  //   enterprise: true,
+  // },
 ] as const;
 
 // this is a wrapper around useAvailableDrivers
