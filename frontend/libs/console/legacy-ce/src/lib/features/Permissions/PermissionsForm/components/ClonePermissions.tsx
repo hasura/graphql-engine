@@ -94,9 +94,9 @@ export const ClonePermissionsRow: React.FC<ClonePermissionsRowProps> = ({
           ))}
         </select>
       </div>
-      {watched.tableName !== '' &&
-        watched.queryType !== '' &&
-        watched.roleName !== '' && (
+      {watched?.tableName !== '' &&
+        watched?.queryType !== '' &&
+        watched?.roleName !== '' && (
           <div className="flex items-center">
             <Button type="button" size="sm" mode="destructive" onClick={remove}>
               Delete

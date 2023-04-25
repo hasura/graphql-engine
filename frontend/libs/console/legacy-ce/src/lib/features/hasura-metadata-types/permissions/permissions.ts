@@ -13,6 +13,7 @@ export interface InsertPermission extends BasePermission {
 }
 export interface InsertPermissionDefinition {
   check?: Record<string, unknown>;
+  filter?: Record<string, unknown>;
   set?: Record<string, unknown>;
   columns?: string[];
   backend_only?: boolean;

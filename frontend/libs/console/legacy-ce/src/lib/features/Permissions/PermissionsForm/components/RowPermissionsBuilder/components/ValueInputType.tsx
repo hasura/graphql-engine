@@ -7,7 +7,7 @@ import { ObjectValueInput } from './ObjectValueInput';
 import { BooleanValueInput } from './BooleanValueInput';
 import { Operator } from './types';
 
-const checkUseObjectInput = (
+export const checkUseObjectInput = (
   comparatorName: string,
   operator: Operator | undefined
 ) => {
@@ -24,7 +24,6 @@ const checkUseObjectInput = (
     comparatorName === '_st_crosses'
   )
     return true;
-  if (operator?.inputStructure === 'object') return true;
 
   return false;
 };
@@ -64,6 +63,7 @@ export const ValueInputType = ({
       />
     );
   }
+
   return (
     <input
       data-testid={componentLevelId}

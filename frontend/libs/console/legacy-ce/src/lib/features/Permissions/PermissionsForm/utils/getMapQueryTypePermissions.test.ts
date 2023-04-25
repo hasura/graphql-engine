@@ -3,6 +3,7 @@ import {
   partiallyAppliedPermissionsData,
   fullyAppliedPermissionsData,
   noAppliedPermissionsData,
+  alreadyExistingInsertPermissions,
 } from './getMapQueryTypePermissions.mocks';
 
 describe('getMapQueryTypePermissions should', () => {
@@ -67,5 +68,28 @@ describe('getMapQueryTypePermissions should', () => {
     );
 
     expect(result).toEqual([]);
+  });
+
+  test('returns filters values for select permissions cloning', () => {
+    const result = getNonSelectedQueryTypePermissions(
+      alreadyExistingInsertPermissions,
+      'select',
+      'user'
+    );
+
+    expect(result).toEqual([
+      {
+        queryType: 'insert',
+        data: {
+          check: { ArtistId: { _eq: 'X-Hasura-User-Id' } },
+          columns: {},
+          filter: { ArtistId: { _eq: 'X-Hasura-User-Id' } },
+        },
+      },
+      {
+        queryType: 'delete',
+        data: { filter: { ArtistId: { _eq: 1 }, columns: [] }, columns: {} },
+      },
+    ]);
   });
 });

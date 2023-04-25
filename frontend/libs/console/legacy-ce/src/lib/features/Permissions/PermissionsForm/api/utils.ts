@@ -220,8 +220,16 @@ const getPermissionsWithMappedRowPermissions = (
   permissionsObject: any,
   mainQueryType: QueryType,
   clonedQueryType: string
-): { filter?: Record<string, any>; check?: Record<string, any> } => {
-  const clone: { filter?: Record<string, any>; check?: Record<string, any> } = {
+): {
+  filter?: Record<string, any>;
+  check?: Record<string, any>;
+  columns?: string[];
+} => {
+  const clone: {
+    filter?: Record<string, any>;
+    check?: Record<string, any>;
+    columns?: string[];
+  } = {
     filter: permissionsObject.filter,
     check: permissionsObject.check,
   };
@@ -245,7 +253,10 @@ const getPermissionsWithMappedRowPermissions = (
     clone.filter = permissionsObject.check;
   }
 
-  return { filter: clone.filter, check: clone.check };
+  if (mainQueryType === 'delete')
+    clone.columns = permissionsObject.columns || [];
+
+  return { filter: clone.filter, check: clone.check, columns: clone.columns };
 };
 
 /**
@@ -329,6 +340,7 @@ export const createInsertArgs = ({
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             d.check = newValues.check;
+            d.columns = newValues.columns;
           }
         );
 
