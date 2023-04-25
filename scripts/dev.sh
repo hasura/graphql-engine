@@ -3,6 +3,8 @@
 
 set -euo pipefail
 shopt -s globstar
+# for extended case patterns:
+shopt -s extglob
 
 # A development swiss army knife script. The goals are to:
 #
@@ -93,7 +95,25 @@ try_jq() {
 }
 
 case "${1-}" in
-  graphql-engine)
+  graphql-engine?(-pro) )
+    ## The differences between OSS and Enterprise/pro defined here:
+    EDITION_NAME="${1-}"
+    if [ "$EDITION_NAME" = "graphql-engine-pro" ];then
+      EDITION_ABBREV=ee
+      if [ -z "${HASURA_GRAPHQL_EE_LICENSE_KEY-}" ]; then
+          echo_error "You need to have the HASURA_GRAPHQL_EE_LICENSE_KEY environment variable defined." 
+          echo_error "Ask a pro developer for the dev key."
+          exit 1
+      fi
+      # This is required for pro with EE license available:
+      if [ -z "${HASURA_GRAPHQL_ADMIN_SECRET-}" ]; then
+        # This should match benchmarks and other dev utilities:
+        export HASURA_GRAPHQL_ADMIN_SECRET=my-secret
+      fi
+    else
+      EDITION_ABBREV=ce
+    fi
+
     # pass arguments after '--' directly to engine:
     GRAPHQL_ENGINE_EXTRA_ARGS=()
     case "${2-}" in
@@ -104,11 +124,11 @@ case "${1-}" in
       ;;
 
       --prof-ticky)
-      echo_warn "This will delete any 'graphql-engine.ticky' and perform significant recompilation. Ok?"
+      echo_warn "This will delete any '$EDITION_NAME.ticky' and perform significant recompilation. Ok?"
       echo_warn  "Press enter to continue [will proceed in 10s]"
       read -r -t10 || true
       # Avoid confusion:
-      rm -f graphql-engine.ticky
+      rm -f "$EDITION_NAME.ticky"
       CABAL_PROJECT_FILE=cabal/dev-sh-prof-ticky.project
       HASURA_PROF_MODE=ticky
       GRAPHQL_ENGINE_EXTRA_ARGS+=( +RTS -r -RTS )
@@ -120,12 +140,12 @@ case "${1-}" in
       ;;
 
       --prof-heap-infomap)
-      echo_warn "This will delete any 'graphql-engine.eventlog' and 'graphql-engine.eventlog.html' and perform significant recompilation. Ok?"
+      echo_warn "This will delete any '$EDITION_NAME.eventlog' and '$EDITION_NAME.eventlog.html' and perform significant recompilation. Ok?"
       echo_warn  "Press enter to continue [will proceed in 10s]"
       read -r -t10 || true
       # Avoid confusion:
-      rm -f graphql-engine.eventlog
-      rm -f graphql-engine.eventlog.html
+      rm -f "$EDITION_NAME.eventlog"
+      rm -f "$EDITION_NAME.eventlog.html"
       CABAL_PROJECT_FILE=cabal/dev-sh-prof-heap-infomap.project
       HASURA_PROF_MODE=heap-infomap
       GRAPHQL_ENGINE_EXTRA_ARGS+=( +RTS -hi -l-agu -RTS )
@@ -158,11 +178,11 @@ case "${1-}" in
 
       --prof-time)
       die_usage  # NOT YET IMPLEMENTED
-      echo_warn "This will delete any graphql-engine.prof and perform significant recompilation."
+      echo_warn "This will delete any $EDITION_NAME.prof and perform significant recompilation."
       echo_warn  "Press enter to continue [will proceed in 10s]"
       read -r -t10 || true
-      rm -f graphql-engine.prof
-      rm -f graphql-engine.profiterole.html
+      rm -f "$EDITION_NAME.prof"
+      rm -f "$EDITION_NAME.profiterole.html"
       CABAL_PROJECT_FILE=cabal/dev-sh-prof-time.project
       HASURA_PROF_MODE="time"
       GRAPHQL_ENGINE_EXTRA_ARGS+=( +RTS -P -RTS )
@@ -358,10 +378,10 @@ function start_dbs() {
 ###     Graphql-engine        ###
 #################################
 
-if [ "$MODE" = "graphql-engine" ]; then
+if [ "$MODE" = "graphql-engine" ] || [ "$MODE" = "graphql-engine-pro" ]; then
   cd "$PROJECT_ROOT"
   # Existing tix files for a different hge binary will cause issues:
-  rm -f graphql-engine.tix
+  rm -f "$EDITION_NAME.tix"
 
   # Attempt to run this after a CTRL-C:
   function cleanup {
@@ -369,7 +389,7 @@ if [ "$MODE" = "graphql-engine" ]; then
     ### Run analysis or visualization tools, if we ran in one of the profiling modes
     case "${HASURA_PROF_MODE-}" in
         ticky)
-          echo_warn "Done. View the ticky report at: graphql-engine.ticky"
+          echo_warn "Done. View the ticky report at: $EDITION_NAME.ticky"
           echo_warn "See: https://downloads.haskell.org/ghc/latest/docs/users_guide/profiling.html#using-ticky-ticky-profiling-for-implementors"
           echo_warn "Lookup referenced STG names dumped to their respective module files:  dist-newstyle/**/*.dump-stg-final"
           # TODO some analysis utilities:
@@ -378,9 +398,9 @@ if [ "$MODE" = "graphql-engine" ]; then
         ;;
         heap-infomap)
           if command -v eventlog2html >/dev/null ; then
-            echo_warn "Running eventlog2html against the event log we just generated:  graphql-engine.eventlog"
-            eventlog2html --bands 100 graphql-engine.eventlog
-            echo_warn "Done. View the report at: graphql-engine.eventlog.html"
+            echo_warn "Running eventlog2html against the event log we just generated:  $EDITION_NAME.eventlog"
+            eventlog2html --bands 100 "$EDITION_NAME.eventlog"
+            echo_warn "Done. View the report at: $EDITION_NAME.eventlog.html"
             echo_warn "Lookup referenced STG names dumped to their respective module files:  dist-newstyle/**/*.dump-stg-final"
           else
             echo_warn "Please install eventlog2html"
@@ -392,10 +412,10 @@ if [ "$MODE" = "graphql-engine" ]; then
         time)
           if command -v profiterole >/dev/null ; then
             echo_warn "Running profiterole..."
-            profiterole graphql-engine.prof
+            profiterole "$EDITION_NAME.prof"
             echo_warn "Done. Check out..."
-            echo_warn "  - graphql-engine.prof              ...for the top-down report"
-            echo_warn "  - graphql-engine.profiterole.html  ...for the top-down report"
+            echo_warn "  - $EDITION_NAME.prof              ...for the top-down report"
+            echo_warn "  - $EDITION_NAME.profiterole.html  ...for the top-down report"
             echo_warn "Lookup referenced STG names dumped to their respective module files:  dist-newstyle/**/*.dump-stg-final"
           else
             echo_warn "Please install profiterole"
@@ -411,6 +431,7 @@ if [ "$MODE" = "graphql-engine" ]; then
 
     ### Generate coverage, which can be useful for debugging or understanding
     if command -v hpc >/dev/null && command -v jq >/dev/null ; then
+      # FIXME: this was broken some time ago
       # Get the appropriate mix dir (the newest one); this way this hopefully
       # works when 'cabal/dev-sh.project.local' is edited to turn on
       # optimizations.
@@ -456,17 +477,17 @@ if [ "$MODE" = "graphql-engine" ]; then
   echo_pretty ""
 
   RUN_INVOCATION=(cabal new-run --project-file="$CABAL_PROJECT_FILE" --RTS --
-    exe:graphql-engine +RTS -N -T -s -RTS serve
-    --enable-console --console-assets-dir "$PROJECT_ROOT/frontend/dist/apps/server-assets-console-ce"
+    "exe:$EDITION_NAME" +RTS -N -T -s -RTS serve
+    --enable-console --console-assets-dir "$PROJECT_ROOT/frontend/dist/apps/server-assets-console-$EDITION_ABBREV"
     "${GRAPHQL_ENGINE_EXTRA_ARGS[@]}"
     )
 
   echo_pretty 'About to do:'
-  echo_pretty "    $ cabal new-build --project-file=$CABAL_PROJECT_FILE exe:graphql-engine"
+  echo_pretty "    $ cabal new-build --project-file=$CABAL_PROJECT_FILE exe:$EDITION_NAME"
   echo_pretty "    $ ${RUN_INVOCATION[*]}"
   echo_pretty ''
 
-  cabal new-build --project-file="$CABAL_PROJECT_FILE" exe:graphql-engine
+  cabal new-build --project-file="$CABAL_PROJECT_FILE" "exe:$EDITION_NAME"
 
   # We assume a PG is *already running*, and therefore bypass the
   # cleanup mechanism previously set.
@@ -478,9 +499,9 @@ if [ "$MODE" = "graphql-engine" ]; then
       sleep 0.2
     done
     sleep 1
-    echo_pretty "▲▲▲ graphql-engine startup logs above ▲▲▲"
+    echo_pretty "▲▲▲ $EDITION_NAME startup logs above ▲▲▲"
     echo_pretty ""
-    echo_pretty "You can set additional environment vars to tailor 'graphql-engine' next time you"
+    echo_pretty "You can set additional environment vars to tailor '$EDITION_NAME' next time you"
     echo_pretty "invoke this script, e.g.:"
     echo_pretty "    # Keep polling statements out of logs"
     echo_pretty "    HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL=3000000"
@@ -490,16 +511,22 @@ if [ "$MODE" = "graphql-engine" ]; then
     echo_pretty ""
     echo_pretty "  If the console was modified since your last build (re)build assets with:"
     echo_pretty "      $ cd \"$PROJECT_ROOT/frontend\""
-    echo_pretty "      $ npm ci && npm run server-build:ce"
+    echo_pretty "      $ npm ci && npm run server-build:$EDITION_ABBREV"
     echo_pretty ""
-    echo_pretty "Useful endpoints when compiling with 'graphql-engine:developer' and running with '+RTS -T'"
+    echo_pretty "Useful endpoints when compiling with '$EDITION_NAME:developer' and running with '+RTS -T'"
     echo_pretty "   http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/dev/subscriptions"
     echo_pretty "   http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/dev/plan_cache"
     echo_pretty ""
     echo_pretty "To view realtime GC stats and other info open in your browser:"
     echo_pretty "    file://$PROJECT_ROOT/scripts/ekg/ekg.html#$HASURA_GRAPHQL_SERVER_PORT"
     echo_pretty ""
-    echo_pretty "▼▼▼ additional graphql-engine logs will appear below: ▼▼▼"
+    if [ "$EDITION_NAME" = "graphql-engine-pro" ]; then
+    echo_pretty "If you want to observe traces, you can run jaeger all-in-oner:"
+    echo_pretty "    $ docker run -d --name jaeger -e COLLECTOR_ZIPKIN_HOST_PORT=:9411 -e COLLECTOR_OTLP_ENABLED=true -p 6831:6831/udp -p 6832:6832/udp -p 5778:5778 -p 16686:16686 -p 4317:4317 -p 4318:4318 -p 14250:14250 -p 14268:14268 -p 14269:14269 -p 9411:9411 jaegertracing/all-in-one:1.44"
+    echo_pretty "...then configure http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/console/settings/opentelemetry"
+    echo_pretty "...setting 'Endpoint' to: http://localhost:4318/v1/traces"
+    fi
+    echo_pretty "▼▼▼ additional $EDITION_NAME logs will appear below: ▼▼▼"
   } &
 
   # Logs printed until CTRL-C:
@@ -527,7 +554,7 @@ elif [ "$MODE" = "postgres" ]; then
   echo_pretty "    $PG_DB_URL"
   echo_pretty ""
   echo_pretty "If you want to launch a 'graphql-engine' that works with this database:"
-  echo_pretty "    $ $0 graphql-engine"
+  echo_pretty "    $ $0 graphql-engine  # or graphql-engine-pro"
   docker logs -f --tail=0 "$PG_CONTAINER_NAME"
 
 
