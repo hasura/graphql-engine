@@ -34,3 +34,4 @@ frontend/node_modules: frontend/package-lock.json
 # Cleanly install node_modules if package.json changes
 frontend/package-lock.json: frontend/package.json
 	cd frontend && npm ci
+	touch $@
