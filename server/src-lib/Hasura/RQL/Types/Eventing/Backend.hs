@@ -17,10 +17,10 @@ import Hasura.RQL.Types.Column (ColumnInfo)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
+import Hasura.RQL.Types.Session (UserInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table (PrimaryKey)
 import Hasura.Server.Types (MaintenanceMode)
-import Hasura.Session (UserInfo)
 import Hasura.Tracing qualified as Tracing
 
 -- | The @BackendEventTrigger@ type class contains functions which interacts

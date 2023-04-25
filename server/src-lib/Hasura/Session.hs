@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.Session
   ( SessionVariable,
     mkSessionVariable,
@@ -27,33 +25,17 @@ module Hasura.Session
   )
 where
 
-import Data.Aeson
-import Data.Aeson.TH qualified as J
-import Data.Aeson.Types (Parser, toJSONKeyText)
 import Data.CaseInsensitive qualified as CI
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.Text qualified as T
-import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Roles (RoleName, adminRoleName, mkRoleName, roleNameToTxt)
+import Hasura.RQL.Types.Session (BackendOnlyFieldAccess (..), ExtraUserInfo (..), SessionVariable (..), SessionVariableValue, SessionVariables (..), UserInfo (..), UserInfoM (..), UserRoleBuild (..), mkSessionVariable, mkSessionVariablesText, sessionVariableToText)
 import Hasura.Server.Utils
-import Hasura.Tracing (TraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
-
-newtype SessionVariable = SessionVariable {unSessionVariable :: CI.CI Text}
-  deriving (Show, Eq, Hashable, IsString, Data, NFData, Ord)
-
-instance ToJSON SessionVariable where
-  toJSON = toJSON . CI.original . unSessionVariable
-
-instance ToJSONKey SessionVariable where
-  toJSONKey = toJSONKeyText sessionVariableToText
-
-instance ToTxt SessionVariable where
-  toTxt = sessionVariableToText
 
 -- | Converts a `SessionVariable` value to a GraphQL name.
 -- This will fail if the session variable contains characters that are not valid
@@ -62,44 +44,11 @@ instance ToTxt SessionVariable where
 sessionVariableToGraphQLName :: SessionVariable -> Maybe G.Name
 sessionVariableToGraphQLName = G.mkName . T.replace "-" "_" . sessionVariableToText
 
-parseSessionVariable :: Text -> Parser SessionVariable
-parseSessionVariable t =
-  if isSessionVariable t
-    then pure $ mkSessionVariable t
-    else fail $ show t <> " is not a Hasura session variable"
-
-instance FromJSON SessionVariable where
-  parseJSON = withText "String" parseSessionVariable
-
-instance FromJSONKey SessionVariable where
-  fromJSONKey = FromJSONKeyTextParser parseSessionVariable
-
-sessionVariableToText :: SessionVariable -> Text
-sessionVariableToText = T.toLower . CI.original . unSessionVariable
-
-mkSessionVariable :: Text -> SessionVariable
-mkSessionVariable = SessionVariable . CI.mk
-
-type SessionVariableValue = Text
-
-newtype SessionVariables = SessionVariables {unSessionVariables :: Map.HashMap SessionVariable SessionVariableValue}
-  deriving (Show, Eq, Hashable, Semigroup, Monoid)
-
 filterSessionVariables ::
   (SessionVariable -> SessionVariableValue -> Bool) ->
   SessionVariables ->
   SessionVariables
 filterSessionVariables f = SessionVariables . Map.filterWithKey f . unSessionVariables
-
-instance ToJSON SessionVariables where
-  toJSON (SessionVariables varMap) =
-    toJSON $ mapKeys sessionVariableToText varMap
-
-instance FromJSON SessionVariables where
-  parseJSON v = mkSessionVariablesText <$> parseJSON v
-
-mkSessionVariablesText :: Map.HashMap Text Text -> SessionVariables
-mkSessionVariablesText = SessionVariables . mapKeys mkSessionVariable
 
 mkSessionVariablesHeaders :: [HTTP.Header] -> SessionVariables
 mkSessionVariablesHeaders =
@@ -132,60 +81,8 @@ data UserAdminSecret
   | UAuthNotSet
   deriving (Show, Eq)
 
--- | Represents the 'X-Hasura-Use-Backend-Only-Permissions' session variable
--- and request made with 'X-Hasura-Admin-Secret' if any auth configured.
--- For more details see Note [Backend only permissions]
-data BackendOnlyFieldAccess
-  = BOFAAllowed
-  | BOFADisallowed
-  deriving (Show, Eq, Generic)
-
-$(J.deriveJSON hasuraJSON ''BackendOnlyFieldAccess)
-
-instance Hashable BackendOnlyFieldAccess
-
-data UserInfo = UserInfo
-  { _uiRole :: !RoleName,
-    _uiSession :: !SessionVariables,
-    _uiBackendOnlyFieldAccess :: !BackendOnlyFieldAccess
-  }
-  deriving (Show, Eq, Generic)
-
-instance Hashable UserInfo
-
-$(J.deriveJSON hasuraJSON ''UserInfo)
-
-class (Monad m) => UserInfoM m where
-  askUserInfo :: m UserInfo
-
-instance (UserInfoM m) => UserInfoM (ReaderT r m) where
-  askUserInfo = lift askUserInfo
-
-instance (UserInfoM m) => UserInfoM (ExceptT r m) where
-  askUserInfo = lift askUserInfo
-
-instance (UserInfoM m) => UserInfoM (StateT s m) where
-  askUserInfo = lift askUserInfo
-
-instance (UserInfoM m) => UserInfoM (TraceT m) where
-  askUserInfo = lift askUserInfo
-
--- | extra information used to identify a Hasura User
-data ExtraUserInfo = ExtraUserInfo {_euiUserId :: Maybe Text}
-  deriving (Show, Eq, Generic)
-
 askCurRole :: (UserInfoM m) => m RoleName
 askCurRole = _uiRole <$> askUserInfo
-
--- | Represents how to build a role from the session variables
-data UserRoleBuild
-  = -- | Look for `x-hasura-role` session variable value and absence will raise an exception
-    URBFromSessionVariables
-  | -- | Look for `x-hasura-role` session variable value, if absent fall back to given role
-    URBFromSessionVariablesFallback !RoleName
-  | -- | Use only the pre-determined role
-    URBPreDetermined !RoleName
-  deriving (Show, Eq)
 
 -- | Build @'UserInfo' from @'SessionVariables'
 mkUserInfo ::

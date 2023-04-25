@@ -830,6 +830,7 @@ library
                      , Hasura.RQL.Types.SchemaCache.Instances
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.Schema.Options
+                     , Hasura.RQL.Types.Session
                      , Hasura.RQL.Types.Source
                      , Hasura.RQL.Types.SourceConfiguration
                      , Hasura.RQL.Types.SourceCustomization

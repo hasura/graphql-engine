@@ -77,7 +77,7 @@ import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Eventing (EventId (..))
 import Hasura.RQL.Types.Headers (HeaderConf)
 import Hasura.RQL.Types.Roles (RoleName)
-import Hasura.Session (SessionVariables)
+import Hasura.RQL.Types.Session (SessionVariables)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
 import PostgreSQL.Binary.Encoding qualified as PE

@@ -154,6 +154,7 @@ import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCacheTypes
+import Hasura.RQL.Types.Session (UserInfoM)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.Metadata
@@ -161,7 +162,6 @@ import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
-import Hasura.Session (UserInfoM)
 import Hasura.Tracing (TraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.Types.Extended (TlsAllow)

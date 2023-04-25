@@ -39,12 +39,7 @@ import Data.Text.Extended (ToTxt (..))
 import Data.Typeable (Typeable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Roles (RoleName)
-
-sessionVariablePrefix :: Text
-sessionVariablePrefix = "x-hasura-"
-
-isSessionVariable :: Text -> Bool
-isSessionVariable = T.isPrefixOf sessionVariablePrefix . T.toLower
+import Hasura.RQL.Types.Session (isSessionVariable)
 
 data ApiLimit = ApiLimit
   { _alRateLimit :: Maybe RateLimit,

@@ -58,10 +58,10 @@ import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Session
 import Hasura.RemoteSchema.Metadata (RemoteSchemaName)
 import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker)
 import Hasura.Services.Network
-import Hasura.Session
 import Hasura.Tracing (TraceT)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
