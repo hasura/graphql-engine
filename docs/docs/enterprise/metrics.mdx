@@ -73,9 +73,9 @@ curl 'http://127.0.0.1:8080/v1/metrics' -H 'Authorization: Bearer <secret>'
   </tr>
   <tr>
     <td><code>hasura_graphql_requests_total</code></td>
-    <td>Number of GraphQL requests received (excluding subscriptions)</td>
+    <td>Number of GraphQL requests received </td>
     <td>Counter</td>
-    <td>&#8226; "operation_type": query|mutation|unknown <br/>
+    <td>&#8226; "operation_type": query|mutation|subscription|unknown <br/>
       &#8226; The "unknown" operation type will be returned for queries that fail authorization, parsing, or certain
       validations<br/>
       &#8226; "response_status": success|failed

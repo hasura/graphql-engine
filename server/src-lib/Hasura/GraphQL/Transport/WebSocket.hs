@@ -38,6 +38,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.String
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
+import Data.Time.Clock
 import Data.Time.Clock qualified as TC
 import Data.Word (Word16)
 import GHC.AssertNF.CPP
@@ -223,9 +224,10 @@ logWSEvent (L.Logger logger) wsConn wsEv = do
         ODCompleted -> False
         ODStopped -> False
 
-sendMsg :: (MonadIO m) => WSConn -> ServerMsg -> m ()
-sendMsg wsConn msg =
-  liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse (encodeServerMsg msg) Nothing
+sendMsg :: MonadIO m => WSConn -> ServerMsg -> m ()
+sendMsg wsConn msg = liftIO do
+  timer <- startTimer
+  WS.sendMsg wsConn $ WS.WSQueueResponse (encodeServerMsg msg) Nothing timer
 
 -- sendCloseWithMsg closes the websocket server with an error code that can be supplied as (Maybe Word16),
 -- if there is `Nothing`, the server will be closed with an error code derived from ServerErrorCode
@@ -268,7 +270,9 @@ sendMsgWithMetadata ::
   ES.SubscriptionMetadata ->
   m ()
 sendMsgWithMetadata wsConn msg opName paramQueryHash (ES.SubscriptionMetadata execTime) =
-  liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse bs wsInfo
+  liftIO do
+    timer <- startTimer
+    WS.sendMsg wsConn $ WS.WSQueueResponse bs wsInfo timer
   where
     bs = encodeServerMsg msg
     (msgType, operationId) = case msg of
@@ -712,6 +716,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
         E.SEOnSourceDB (E.SSStreaming rootFieldName streamQueryBuilder) -> do
           liftIO $ startStreamingQuery rootFieldName streamQueryBuilder parameterizedQueryHash requestId
 
+      liftIO $ Prometheus.Counter.inc (gqlRequestsSubscriptionSuccess gqlMetrics)
       liftIO $ logOpEv ODStarted (Just requestId) (Just parameterizedQueryHash)
   where
     sendDataMsg = WS._wsaGetDataMessageType onMessageActions
@@ -997,8 +1002,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
         G.OperationTypeMutation ->
           liftIO $ Prometheus.Counter.inc (gqlRequestsMutationFailure gqlMetrics)
         G.OperationTypeSubscription ->
-          -- We do not collect metrics for subscriptions at the request level.
-          pure ()
+          liftIO $ Prometheus.Counter.inc (gqlRequestsSubscriptionFailure gqlMetrics)
 
     -- Tally and record execution times for successful GraphQL requests.
     recordGQLQuerySuccess :: DiffTime -> G.OperationType -> IO ()
