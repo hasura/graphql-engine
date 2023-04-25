@@ -24,7 +24,7 @@ services:
     restart: always
     environment:
       ## add your license key below
-      HASURA_GRAPHQL_EE_LICENSE_KEY: ''
+      # HASURA_GRAPHQL_EE_LICENSE_KEY: ''
       HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
       ## The metadata database for this Hasura GraphQL project. Can be changed to a managed postgres instance
       HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
