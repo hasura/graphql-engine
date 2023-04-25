@@ -4,6 +4,7 @@
   - [MemoizeT requires MonadIO](memoizet-requires-monadio.md)
   - [Hasura Application State](hasura-application-state.md)
   - [Update Event Trigger MSSQL Spec](update-event-trigger-mssql-spec.md)
+  - [Encode Event Trigger Payload to JSON in SQL Server](encode-event-trigger-payload-to-json-in-sql-server.md)
   - [Checking metadata consistency in run_sql](checking-metadata-consistency-in-runsql.md)
   - [Postgres identifier length limitations](postgres-identifier-length-limitations.md)
   - [About identifier types](about-identifier-types.md)
