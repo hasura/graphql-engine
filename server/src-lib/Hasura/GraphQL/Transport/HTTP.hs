@@ -92,7 +92,7 @@ import Hasura.Server.Telemetry.Counters qualified as Telem
 import Hasura.Server.Types (ReadOnlyMode (..), RequestId (..))
 import Hasura.Services
 import Hasura.Session (SessionVariable, SessionVariableValue, SessionVariables, UserInfo (..), filterSessionVariables)
-import Hasura.Tracing (MonadTrace, TraceT, newSpan)
+import Hasura.Tracing (MonadTrace, TraceT, attachMetadata)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
 import Network.Wai.Extended qualified as Wai
@@ -358,6 +358,9 @@ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agen
     observeGQLQueryError gqlMetrics (Just gqlOpType) $ do
       -- 3. Construct the remainder of the execution plan.
       let maybeOperationName = _unOperationName <$> _grOperationName reqParsed
+      for_ maybeOperationName $ \nm ->
+        -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
+        attachMetadata [("graphql.operation.name", G.unName nm)]
       (parameterizedQueryHash, execPlan) <-
         E.getResolvedExecPlan
           env
@@ -404,7 +407,9 @@ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agen
       E.ResolvedExecutionPlan ->
       m AnnotatedResponse
     executePlan reqParsed runLimits execPlan = case execPlan of
-      E.QueryExecutionPlan queryPlans asts dirMap -> newSpan "Query" $ do
+      E.QueryExecutionPlan queryPlans asts dirMap -> do
+        -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
+        attachMetadata [("graphql.operation.type", "query")]
         -- Attempt to lookup a cached response in the query cache.
         -- 'keyedLookup' is a monadic action possibly returning a cache hit.
         -- 'keyedStore' is a function to write a new response to the cache.
@@ -441,6 +446,8 @@ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agen
              in -- 4. Return the response.
                 pure $ result {arResponse = addHttpResponseHeaders headers response}
       E.MutationExecutionPlan mutationPlans -> runLimits $ do
+        -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
+        attachMetadata [("graphql.operation.type", "mutation")]
         {- Note [Backwards-compatible transaction optimisation]
 
            For backwards compatibility, we perform the following optimisation: if all mutation steps

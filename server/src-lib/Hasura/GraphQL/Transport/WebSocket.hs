@@ -471,6 +471,9 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
   queryParts <- onLeft queryPartsE (withComplete . preExecErr requestId Nothing)
   let gqlOpType = G._todType queryParts
       maybeOperationName = _unOperationName <$> _grOperationName reqParsed
+  for_ maybeOperationName $ \nm ->
+    -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
+    Tracing.attachMetadata [("graphql.operation.name", unName nm)]
   execPlanE <-
     runExceptT $
       E.getResolvedExecPlan
@@ -492,7 +495,9 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
   (parameterizedQueryHash, execPlan) <- onLeft execPlanE (withComplete . preExecErr requestId (Just gqlOpType))
 
   case execPlan of
-    E.QueryExecutionPlan queryPlan asts dirMap -> Tracing.newSpan "Query" $ do
+    E.QueryExecutionPlan queryPlan asts dirMap -> do
+      -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
+      Tracing.attachMetadata [("graphql.operation.type", "query")]
       let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
           cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
           remoteSchemas =
@@ -578,6 +583,8 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
 
       liftIO $ sendCompleted (Just requestId) (Just parameterizedQueryHash)
     E.MutationExecutionPlan mutationPlan -> do
+      -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
+      Tracing.attachMetadata [("graphql.operation.type", "mutation")]
       -- See Note [Backwards-compatible transaction optimisation]
       case coalescePostgresMutations mutationPlan of
         -- we are in the aforementioned case; we circumvent the normal process
@@ -647,6 +654,8 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
           sendResultFromFragments Telem.Query timerTot requestId conclusion opName parameterizedQueryHash gqlOpType
       liftIO $ sendCompleted (Just requestId) (Just parameterizedQueryHash)
     E.SubscriptionExecutionPlan subExec -> do
+      -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
+      Tracing.attachMetadata [("graphql.operation.type", "subscription")]
       case subExec of
         E.SEAsyncActionsWithNoRelationships actions -> do
           logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction

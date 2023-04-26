@@ -512,9 +512,10 @@ mkCurPlanTx userInfo ps@(PreparedSql q prepMap) =
       -- WARNING: this quietly assumes the intmap keys are contiguous
       prepArgs = fst <$> IntMap.elems args
    in (,Just ps) $ OnBaseMonad do
-        Tracing.newSpan "Postgres" $
-          runIdentity . PG.getRow
-            <$> PG.rawQE dmlTxErrorHandler q prepArgs True
+        -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/database/#connection-level-attributes
+        Tracing.attachMetadata [("db.system", "postgresql")]
+        runIdentity . PG.getRow
+          <$> PG.rawQE dmlTxErrorHandler q prepArgs True
 
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan ::

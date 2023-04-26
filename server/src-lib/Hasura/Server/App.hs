@@ -76,7 +76,7 @@ import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Endpoint as EP
-import Hasura.RQL.Types.Roles (adminRoleName)
+import Hasura.RQL.Types.Roles (adminRoleName, roleNameToTxt)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.Server.API.Config (runGetConfig)
@@ -376,6 +376,9 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
         res <- lift $ runHandler handlerState $ handler parsedReq
         pure (res, userInfo, authHeaders, includeInternal, Just queryJSON, extraUserInfo)
 
+    -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/span-general/#general-identity-attributes
+    lift $ Tracing.attachMetadata [("enduser.role", roleNameToTxt $ _uiRole userInfo)]
+
     -- apply the error modifier
     let modResult = fmapL qErrModifier result
 
@@ -404,6 +407,8 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
           jsonResponse = J.encode $ qErrEncoder includeInternal qErr
           contentLength = ("Content-Length", B8.toStrict $ BB.toLazyByteString $ BB.int64Dec $ BL.length jsonResponse)
           allHeaders = [contentLength, jsonHeader]
+      -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/http/#common-attributes
+      lift $ Tracing.attachMetadata [("http.response_content_length", bsToTxt $ snd contentLength)]
       lift $ logHttpError (_lsLogger appEnvLoggers) appEnvLoggingSettings userInfo reqId waiReq req qErr headers httpLogMetadata
       mapM_ setHeader allHeaders
       Spock.setStatus $ qeStatus qErr
@@ -419,6 +424,8 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
           reqIdHeader = (requestIdHeader, txtToBs $ unRequestId reqId)
           contentLength = ("Content-Length", B8.toStrict $ BB.toLazyByteString $ BB.int64Dec $ BL.length compressedResp)
           allRespHeaders = [reqIdHeader, contentLength] <> encodingHeader <> respHeaders <> authHdrs
+      -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/http/#common-attributes
+      lift $ Tracing.attachMetadata [("http.response_content_length", bsToTxt $ snd contentLength)]
       lift $ logHttpSuccess (_lsLogger appEnvLoggers) appEnvLoggingSettings userInfo reqId waiReq req respBytes compressedResp qTime encodingType reqHeaders httpLoggingMetadata
       mapM_ setHeader allRespHeaders
       Spock.lazyBytes compressedResp

@@ -363,6 +363,7 @@ getResolvedExecPlan
               (scSetGraphqlIntrospectionOptions sc)
               reqId
               maybeOperationName
+          Tracing.attachMetadata [("parameterized_query_hash", bsToTxt $ unParamQueryHash parameterizedQueryHash)]
           pure (parameterizedQueryHash, QueryExecutionPlan executionPlan queryRootFields dirMap)
         G.TypedOperationDefinition G.OperationTypeMutation _ varDefs directives inlinedSelSet -> do
           when (readOnlyMode == ReadOnlyModeEnabled) $
