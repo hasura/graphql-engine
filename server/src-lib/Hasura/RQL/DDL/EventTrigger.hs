@@ -53,8 +53,7 @@ import Data.Aeson
 import Data.Either.Combinators
 import Data.Environment qualified as Env
 import Data.Has (Has)
-import Data.HashMap.Strict qualified as HM
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.Sequence qualified as Seq
@@ -438,7 +437,7 @@ getTabInfoFromSchemaCache ::
   Maybe (TableInfo b)
 getTabInfoFromSchemaCache schemaCache sourceName triggerName = do
   tableCache <- unsafeTableCache sourceName $ scSources schemaCache
-  find (isJust . HM.lookup triggerName . _tiEventTriggerInfoMap) (HM.elems tableCache)
+  find (isJust . HashMap.lookup triggerName . _tiEventTriggerInfoMap) (HashMap.elems tableCache)
 
 askEventTriggerInfo ::
   forall b m.
@@ -449,7 +448,7 @@ askEventTriggerInfo ::
 askEventTriggerInfo sourceName triggerName = do
   triggerInfo <- askTabInfoFromTrigger @b sourceName triggerName
   let eventTriggerInfoMap = _tiEventTriggerInfoMap triggerInfo
-  HM.lookup triggerName eventTriggerInfoMap `onNothing` throw400 NotExists errMsg
+  HashMap.lookup triggerName eventTriggerInfoMap `onNothing` throw400 NotExists errMsg
   where
     errMsg = "event trigger " <> triggerName <<> " does not exist"
 
@@ -697,7 +696,7 @@ toggleEventTriggerCleanupAction conf cleanupSwitch = do
         TriggerSource sourceNameLst -> do
           forM_ sourceNameLst $ \sourceName -> do
             backendSourceInfo <-
-              HM.lookup sourceName (scSources schemaCache)
+              HashMap.lookup sourceName (scSources schemaCache)
                 `onNothing` throw400 NotExists ("source with name " <> sourceNameToText sourceName <> " does not exists")
 
             AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo {..} :: SourceInfo b) -> do
@@ -708,7 +707,7 @@ toggleEventTriggerCleanupAction conf cleanupSwitch = do
             triggerNames = _etqEventTriggers qualifier
 
         backendSourceInfo <-
-          HM.lookup sourceName (scSources schemaCache)
+          HashMap.lookup sourceName (scSources schemaCache)
             `onNothing` throw400 NotExists ("source with name " <> sourceNameToText sourceName <> " does not exists")
 
         AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo {} :: SourceInfo b) -> do
@@ -752,7 +751,7 @@ runEventTriggerPauseCleanup conf = toggleEventTriggerCleanupAction conf ETCSPaus
 
 -- | Collects and returns all the event triggers with cleanup config
 getAllEventTriggersWithCleanupConfig :: TableInfo b -> [(TriggerName, AutoTriggerLogCleanupConfig)]
-getAllEventTriggersWithCleanupConfig tInfo = mapMaybe (\(triggerName, triggerInfo) -> (triggerName,) <$> etiCleanupConfig triggerInfo) $ Map.toList $ _tiEventTriggerInfoMap tInfo
+getAllEventTriggersWithCleanupConfig tInfo = mapMaybe (\(triggerName, triggerInfo) -> (triggerName,) <$> etiCleanupConfig triggerInfo) $ HashMap.toList $ _tiEventTriggerInfoMap tInfo
 
 hasCleanupCronScheduleUpdated :: Maybe AutoTriggerLogCleanupConfig -> Maybe AutoTriggerLogCleanupConfig -> Bool
 hasCleanupCronScheduleUpdated Nothing _ = False

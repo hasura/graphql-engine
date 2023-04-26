@@ -33,7 +33,7 @@ import Data.Dependent.Sum (DSum (..))
 import Data.Foldable (for_)
 import Data.Functor.Identity (Identity (..))
 import Data.GADT.Compare.Extended
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as S
 import Data.List qualified as L
 import Data.Traversable (for)
@@ -155,7 +155,7 @@ parseDirectives directiveParsers location givenDirectives = do
       G.DLTypeSystem G.TSDLENUM_VALUE -> "an enum value definition"
       G.DLTypeSystem G.TSDLINPUT_OBJECT -> "an input object definition"
       G.DLTypeSystem G.TSDLINPUT_FIELD_DEFINITION -> "an input field definition"
-    duplicates = S.fromList . M.keys . M.filter (> 1) . M.fromListWith (+) . map (,1 :: Int)
+    duplicates = S.fromList . HashMap.keys . HashMap.filter (> 1) . HashMap.fromListWith (+) . map (,1 :: Int)
 
 withDirective ::
   DirectiveMap ->
@@ -285,7 +285,7 @@ mkDirective name description advertised location argsParser =
     { dDefinition = DirectiveInfo name description (ifDefinitions argsParser) location,
       dAdvertised = advertised,
       dParser = \(G.Directive _name arguments) -> withKey (Key $ K.fromText $ G.unName name) $ do
-        for_ (M.keys arguments) \argumentName ->
+        for_ (HashMap.keys arguments) \argumentName ->
           unless (argumentName `S.member` argumentNames) $
             parseError $
               toErrorValue name <> " has no argument named " <> toErrorValue argumentName

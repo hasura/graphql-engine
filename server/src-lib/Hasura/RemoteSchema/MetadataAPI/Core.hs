@@ -16,7 +16,7 @@ where
 
 import Data.Aeson.TH qualified as J
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as S
 import Data.Text.Extended
@@ -112,7 +112,7 @@ removeRemoteSchemaP1 rsn = do
   sc <- askSchemaCache
   let rmSchemas = scRemoteSchemas sc
   void $
-    onNothing (Map.lookup rsn rmSchemas) $
+    onNothing (HashMap.lookup rsn rmSchemas) $
       throw400 NotExists "no such remote schema"
   let depObjs = getDependentObjs sc remoteSchemaDepId
       roles = mapMaybe getRole depObjs
@@ -157,7 +157,7 @@ runIntrospectRemoteSchema ::
 runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
   sc <- askSchemaCache
   RemoteSchemaCtx {..} <-
-    Map.lookup rsName (scRemoteSchemas sc) `onNothing` throw400 NotExists ("remote schema: " <> rsName <<> " not found")
+    HashMap.lookup rsName (scRemoteSchemas sc) `onNothing` throw400 NotExists ("remote schema: " <> rsName <<> " not found")
   pure $ encJFromLBS _rscRawIntrospectionResult
 
 runUpdateRemoteSchema ::

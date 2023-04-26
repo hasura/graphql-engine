@@ -11,7 +11,7 @@ where
 import Data.Aeson qualified as A
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.Int (Int64)
 import Data.Scientific (toBoundedInteger)
 import Data.Traversable (for)
@@ -59,7 +59,7 @@ jsonToGraphQL = \case
     Nothing -> Right $ G.VFloat val
   A.Array vals -> G.VList <$> traverse jsonToGraphQL (V.toList vals)
   A.Object vals ->
-    G.VObject . M.fromList <$> for (KM.toList vals) \(key, val) -> do
+    G.VObject . HashMap.fromList <$> for (KM.toList vals) \(key, val) -> do
       graphQLName <- maybe (invalidName key) Right $ G.mkName (K.toText key)
       (graphQLName,) <$> jsonToGraphQL val
   where

@@ -77,7 +77,7 @@ import Data.ByteString.Lazy qualified as BL
 import Data.ByteString.Lazy.Char8 qualified as BLC
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.Set.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Time.Clock (UTCTime)
@@ -1152,7 +1152,7 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
         AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo {..} :: SourceInfo b) -> do
           let sourceNameText = sourceNameToText _siName
           logger $ mkGenericLog LevelInfo "event_triggers" $ "unlocking events of source: " <> sourceNameText
-          for_ (HM.lookup _siName lockedEvents) $ \sourceLockedEvents -> do
+          for_ (HashMap.lookup _siName lockedEvents) $ \sourceLockedEvents -> do
             -- No need to execute unlockEventsTx when events are not present
             for_ (NE.nonEmptySet sourceLockedEvents) $ \nonEmptyLockedEvents -> do
               res <- Retry.retrying Retry.retryPolicyDefault isRetryRequired (return $ unlockEventsInSource @b _siConfiguration nonEmptyLockedEvents)
@@ -1221,7 +1221,7 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
     startEventTriggerPollerThread logger lockedEventsCtx = do
       AppEnv {..} <- lift askAppEnv
       schemaCache <- liftIO $ getSchemaCache appStateRef
-      let allSources = HM.elems $ scSources schemaCache
+      let allSources = HashMap.elems $ scSources schemaCache
       activeEventProcessingThreads <- liftIO $ newTVarIO 0
 
       -- Initialise the event processing thread

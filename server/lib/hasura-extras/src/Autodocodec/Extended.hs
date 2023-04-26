@@ -45,7 +45,7 @@ import Autodocodec
 import Data.Aeson (FromJSONKey, ToJSONKey)
 import Data.CaseInsensitive qualified as CI
 import Data.Char (isAlphaNum)
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HashSet
 import Data.List.NonEmpty qualified as NE
 import Data.Maybe (fromJust)
@@ -81,7 +81,7 @@ caseInsensitiveHashMapCodec ::
   forall k a.
   (CI.FoldCase k, Hashable k, FromJSONKey k, ToJSONKey k) =>
   JSONCodec a ->
-  JSONCodec (M.HashMap (CI.CI k) a)
+  JSONCodec (HashMap.HashMap (CI.CI k) a)
 caseInsensitiveHashMapCodec elemCodec =
   dimapCodec
     (mapKeys CI.mk)

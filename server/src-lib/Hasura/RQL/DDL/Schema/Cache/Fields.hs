@@ -2,7 +2,7 @@ module Hasura.RQL.DDL.Schema.Cache.Fields (addNonColumnFields) where
 
 import Data.Aeson
 import Data.Align (align)
-import Data.HashMap.Strict.Extended qualified as M
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
@@ -66,15 +66,15 @@ addNonColumnFields allSources sourceName sourceConfig customObjectTypes rawTable
     buildInfoMapPreservingMetadataM
       _cfmName
       (mkComputedFieldMetadataObject sourceName _nctiTable)
-      (buildComputedField (HS.fromList $ M.keys rawTableInfos) (HS.fromList $ map ciColumn $ M.elems columns) sourceName pgFunctions _nctiTable)
+      (buildComputedField (HS.fromList $ HashMap.keys rawTableInfos) (HS.fromList $ map ciColumn $ HashMap.elems columns) sourceName pgFunctions _nctiTable)
       _nctiComputedFields
   -- the fields that can be used for defining join conditions to other sources/remote schemas:
   -- 1. all columns
   -- 2. computed fields which don't expect arguments other than the table row and user session
   let lhsJoinFields =
         let columnFields = columns <&> \columnInfo -> JoinColumn (ciColumn columnInfo) (ciType columnInfo)
-            computedFields = M.fromList $
-              flip mapMaybe (M.toList computedFieldInfos) $
+            computedFields = HashMap.fromList $
+              flip mapMaybe (HashMap.toList computedFieldInfos) $
                 \(cfName, (ComputedFieldInfo {..}, _)) -> do
                   scalarType <- case computedFieldReturnType @b _cfiReturnType of
                     ReturnsScalar ty -> pure ty
@@ -93,7 +93,7 @@ addNonColumnFields allSources sourceName sourceConfig customObjectTypes rawTable
                               _cffComputedFieldImplicitArgs
                               scalarType
                     _ -> Nothing
-         in M.union columnFields computedFields
+         in HashMap.union columnFields computedFields
 
   rawRemoteRelationshipInfos <-
     buildInfoMapPreservingMetadataM
@@ -111,10 +111,10 @@ addNonColumnFields allSources sourceName sourceConfig customObjectTypes rawTable
   -- First, check for conflicts between non-column fields, since we can raise a better error
   -- message in terms of the two metadata objects that define them.
   let relationshipAndComputedFields = align relationshipFields computedFieldFields
-  step1 <- M.traverseWithKey (noFieldConflicts FIRelationship FIComputedField) relationshipAndComputedFields
+  step1 <- HashMap.traverseWithKey (noFieldConflicts FIRelationship FIComputedField) relationshipAndComputedFields
   -- Second, align with remote relationship fields
   let nonColumnFields = align (catMaybes step1) remoteRelationshipFields
-  step2 <- M.traverseWithKey (noFieldConflicts id FIRemoteRelationship) nonColumnFields
+  step2 <- HashMap.traverseWithKey (noFieldConflicts id FIRemoteRelationship) nonColumnFields
   -- Next, check for conflicts with custom field names. This is easiest to do before merging with
   -- the column info itself because we have access to the information separately, and custom field
   -- names are not currently stored as a separate map (but maybe should be!).
@@ -136,10 +136,10 @@ addNonColumnFields allSources sourceName sourceConfig customObjectTypes rawTable
         pure Nothing
 
     noCustomFieldConflicts nonColumnFields = do
-      let columnsByGQLName = mapFromL ciName $ M.elems columns
+      let columnsByGQLName = mapFromL ciName $ HashMap.elems columns
       for nonColumnFields \(fieldInfo, metadata) -> withRecordInconsistencyM metadata do
         for_ (fieldInfoGraphQLNames fieldInfo) \fieldGQLName ->
-          case M.lookup fieldGQLName columnsByGQLName of
+          case HashMap.lookup fieldGQLName columnsByGQLName of
             -- Only raise an error if the GQL name isn’t the same as the Postgres column name.
             -- If they are the same, `noColumnConflicts` will catch it, and it will produce a
             -- more useful error message.
@@ -265,7 +265,7 @@ buildComputedField trackedTableNames tableColumns source pgFunctions table cf@Co
     modifyErr (addTableContext @b table . addComputedFieldContext) $ do
       funcDefs <-
         onNothing
-          (M.lookup function pgFunctions)
+          (HashMap.lookup function pgFunctions)
           (throw400 NotExists $ "no such function exists: " <>> function)
 
       rawfi <- getSingleUniqueFunctionOverload @b (computedFieldFunction @b _cfmDefinition) funcDefs
@@ -297,7 +297,7 @@ buildRemoteRelationship ::
     BackendMetadata b
   ) =>
   HashMap SourceName (AB.AnyBackend PartiallyResolvedSource) ->
-  M.HashMap FieldName (DBJoinField b) ->
+  HashMap.HashMap FieldName (DBJoinField b) ->
   PartiallyResolvedRemoteSchemaMap ->
   SourceName ->
   TableName b ->
@@ -320,7 +320,7 @@ buildRemoteRelationship allSources allColumns remoteSchemaMap source table rr@Re
             SchemaDependency (SOSourceObj source $ AB.mkAnyBackend $ SOITable @b table) DRTable
               -- the relationship is also dependent on all the lhs
               -- columns that are used in the join condition
-              : flip map (M.elems $ _rfiLHS remoteField) \case
+              : flip map (HashMap.elems $ _rfiLHS remoteField) \case
                 JoinColumn column _ ->
                   -- TODO: shouldn't this be DRColumn??
                   mkColDep @b DRRemoteRelationship source table column

@@ -17,7 +17,7 @@ where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson.Extended qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
@@ -347,7 +347,7 @@ validateVariables sourceConfig sessionVariableValues prepState = do
         map
           ( \(n, v) -> Aliased (ValueExpression (RQLColumn.cvValue v)) (G.unName n)
           )
-          $ Map.toList
+          $ HashMap.toList
           $ namedArguments
 
       -- For positional args we need to be a bit careful not to capture names

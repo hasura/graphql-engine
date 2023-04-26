@@ -23,7 +23,7 @@ import Data.Foldable (for_, toList)
 import Data.Function ((&))
 import Data.Functor ((<&>))
 import Data.HashMap.Strict (HashMap)
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as S
 import Data.Hashable (Hashable)
@@ -195,9 +195,9 @@ safeSelectionSet name description fields =
     printedDuplicates -> throwError $ "Encountered conflicting definitions in the selection set for " <> toErrorValue name <> " for fields: " <> toErrorValue printedDuplicates <> ". Fields must not be defined more than once across all sources."
   where
     namesOrigins :: HashMap Name [Maybe origin]
-    namesOrigins = M.fromListWith (<>) $ (dName &&& (pure . dOrigin)) . fDefinition <$> fields
+    namesOrigins = HashMap.fromListWith (<>) $ (dName &&& (pure . dOrigin)) . fDefinition <$> fields
     duplicates :: HashMap Name [Maybe origin]
-    duplicates = M.filter ((> 1) . length) namesOrigins
+    duplicates = HashMap.filter ((> 1) . length) namesOrigins
     uniques = S.toList . S.fromList
     printEntry (fieldName, originsM) =
       let origins = uniques $ catMaybes originsM
@@ -207,7 +207,7 @@ safeSelectionSet name description fields =
                   toErrorValue fieldName <> " defined in " <> toErrorValue origins <> " and of unknown origin"
               | otherwise ->
                   toErrorValue fieldName <> " defined in " <> toErrorValue origins
-    duplicatesList = printEntry <$> M.toList duplicates
+    duplicatesList = printEntry <$> HashMap.toList duplicates
 
 -- Should this rather take a non-empty `FieldParser` list?
 -- See also Note [Selectability of tables].
@@ -256,7 +256,7 @@ selectionSetObject name description parsers implementsInterfaces =
             if
                 | _fName == $$(litName "__typename") ->
                     pure $ SelectTypename $ getName name
-                | Just parser <- M.lookup _fName parserMap ->
+                | Just parser <- HashMap.lookup _fName parserMap ->
                     withKey (Key (K.fromText (unName _fName))) $
                       SelectField <$> parser selectionField
                 | otherwise ->
@@ -271,7 +271,7 @@ selectionSetObject name description parsers implementsInterfaces =
     parserMap =
       parsers
         & map (\FieldParser {fDefinition, fParser} -> (getName fDefinition, fParser))
-        & M.fromList
+        & HashMap.fromList
     interfaces = mapMaybe (getInterfaceInfo . pType) implementsInterfaces
     parsedInterfaceNames = fmap getName interfaces
 
@@ -369,7 +369,7 @@ rawSelection name description argumentsParser resultParser =
           parseError "unexpected subselection set for non-object field"
         -- check for extraneous arguments here, since the InputFieldsParser just
         -- handles parsing the fields it cares about
-        for_ (M.keys _fArguments) \argumentName ->
+        for_ (HashMap.keys _fArguments) \argumentName ->
           unless (argumentName `S.member` argumentNames) $
             parseError $
               toErrorValue name <> " has no argument named " <> toErrorValue argumentName
@@ -426,7 +426,7 @@ rawSubselection name description argumentsParser bodyParser =
       fParser = \Field {_fAlias, _fArguments, _fSelectionSet} -> do
         -- check for extraneous arguments here, since the InputFieldsParser just
         -- handles parsing the fields it cares about
-        for_ (M.keys _fArguments) \argumentName ->
+        for_ (HashMap.keys _fArguments) \argumentName ->
           unless (argumentName `S.member` argumentNames) $
             parseError $
               toErrorValue name <> " has no argument named " <> toErrorValue argumentName

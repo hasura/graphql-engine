@@ -22,7 +22,7 @@ import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Data (Data)
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.Hashable (Hashable)
 import Data.OpenApi (ToSchema)
 import Data.Text (Text)
@@ -33,7 +33,7 @@ import Prelude
 
 data TableRelationships = TableRelationships
   { _trSourceTable :: API.V0.TableName,
-    _trRelationships :: M.HashMap RelationshipName Relationship
+    _trRelationships :: HashMap.HashMap RelationshipName Relationship
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec TableRelationships
@@ -48,7 +48,7 @@ instance HasCodec TableRelationships where
 data Relationship = Relationship
   { _rTargetTable :: API.V0.TableName,
     _rRelationshipType :: RelationshipType,
-    _rColumnMapping :: M.HashMap SourceColumnName TargetColumnName
+    _rColumnMapping :: HashMap.HashMap SourceColumnName TargetColumnName
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Relationship

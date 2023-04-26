@@ -19,7 +19,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Containers.ListUtils (nubOrd)
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as HS
 import Data.Tagged qualified as Tagged
@@ -72,7 +72,7 @@ makeGQLContext ::
   ET.GraphQLQueryType ->
   C.GQLContext
 makeGQLContext userInfo sc queryType =
-  case Map.lookup role contextMap of
+  case HashMap.lookup role contextMap of
     Nothing -> defaultContext
     Just (C.RoleContext frontend backend) ->
       case _uiBackendOnlyFieldAccess userInfo of
@@ -170,7 +170,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders oper
                           Left (actionId, (srcConfig, dbExecution)) -> do
                             let sourceName = EA._aaqseSource dbExecution
                             actionLogResponse <-
-                              Map.lookup actionId actionLogMap
+                              HashMap.lookup actionId actionLogMap
                                 `onNothing` throw500 "unexpected: cannot lookup action_id in the map"
                             let selectAST = EA._aaqseSelectBuilder dbExecution $ actionLogResponse
                                 queryDB = case EA._aaqseJsonAggSelect dbExecution of

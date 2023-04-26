@@ -25,7 +25,7 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Types qualified as A
 import Data.Foldable (for_)
 import Data.HashMap.Strict (HashMap)
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as S
 import Data.List.NonEmpty (NonEmpty)
 import Data.List.NonEmpty qualified as NonEmpty
@@ -255,7 +255,7 @@ field name description parser =
     { ifDefinitions = [Definition name description Nothing [] $ InputFieldInfo (pType parser) Nothing],
       ifParser = \values -> withKey (A.Key (K.fromText (unName name))) do
         value <-
-          maybe (parseError ("missing required field " <> toErrorValue name)) pure $ M.lookup name values <|> nullableDefault
+          maybe (parseError ("missing required field " <> toErrorValue name)) pure $ HashMap.lookup name values <|> nullableDefault
         pInputParser parser value
     }
   where
@@ -286,7 +286,7 @@ fieldOptional name description parser =
             InputFieldInfo (nullableType $ pType parser) Nothing
         ],
       ifParser =
-        M.lookup name
+        HashMap.lookup name
           >>> withKey (A.Key (K.fromText (unName name)))
             . traverse (pInputParser parser <=< peelVariable expectedType)
     }
@@ -309,7 +309,7 @@ fieldWithDefault name description defaultValue parser =
   InputFieldsParser
     { ifDefinitions = [Definition name description Nothing [] $ InputFieldInfo (pType parser) (Just defaultValue)],
       ifParser =
-        M.lookup name
+        HashMap.lookup name
           >>> withKey (A.Key (K.fromText (unName name))) . \case
             Just value -> peelVariableWith True expectedType value >>= pInputParser parser
             Nothing -> pInputParser parser $ GraphQLValue $ literal defaultValue
@@ -338,9 +338,9 @@ enum name description values =
     }
   where
     schemaType = TNamed NonNullable $ Definition name description Nothing [] $ TIEnum (fst <$> values)
-    valuesMap = M.fromList $ over (traverse . _1) dName $ NonEmpty.toList values
+    valuesMap = HashMap.fromList $ over (traverse . _1) dName $ NonEmpty.toList values
     validate value =
-      maybe invalidType pure $ M.lookup value valuesMap
+      maybe invalidType pure $ HashMap.lookup value valuesMap
       where
         invalidType =
           parseError $
@@ -373,7 +373,7 @@ object name description parser =
           GraphQLValue (VObject fields) -> parseFields $ GraphQLValue <$> fields
           JSONValue (A.Object fields) -> do
             translatedFields <-
-              M.fromList <$> for (KM.toList fields) \(K.toText -> key, val) -> do
+              HashMap.fromList <$> for (KM.toList fields) \(K.toText -> key, val) -> do
                 name' <- maybe (invalidName key) pure $ mkName key
                 pure (name', JSONValue val)
             parseFields translatedFields
@@ -388,7 +388,7 @@ object name description parser =
     parseFields fields = do
       -- check for extraneous fields here, since the InputFieldsParser just
       -- handles parsing the fields it cares about
-      for_ (M.keys fields) \fieldName ->
+      for_ (HashMap.keys fields) \fieldName ->
         unless (fieldName `S.member` fieldNames) $
           withKey (A.Key (K.fromText (unName fieldName))) $
             parseError $

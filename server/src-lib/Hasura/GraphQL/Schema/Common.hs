@@ -58,7 +58,7 @@ where
 
 import Data.Either (isRight)
 import Data.Has
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.List (uncons)
 import Data.Text qualified as T
@@ -327,12 +327,12 @@ data RemoteSchemaParser n = RemoteSchemaParser
 getTableRoles :: BackendSourceInfo -> [RoleName]
 getTableRoles bsi = AB.dispatchAnyBackend @Backend bsi go
   where
-    go si = Map.keys . _tiRolePermInfoMap =<< Map.elems (_siTables si)
+    go si = HashMap.keys . _tiRolePermInfoMap =<< HashMap.elems (_siTables si)
 
 getLogicalModelRoles :: BackendSourceInfo -> [RoleName]
 getLogicalModelRoles bsi = AB.dispatchAnyBackend @Backend bsi go
   where
-    go si = Map.keys . _lmiPermissions =<< Map.elems (_siLogicalModels si)
+    go si = HashMap.keys . _lmiPermissions =<< HashMap.elems (_siLogicalModels si)
 
 -- | Looks up table information for the given table name. This function
 -- should never fail, since the schema cache construction process is
@@ -345,7 +345,7 @@ askTableInfo ::
   m (TableInfo b)
 askTableInfo tableName = do
   SourceInfo {..} <- asks getter
-  Map.lookup tableName _siTables
+  HashMap.lookup tableName _siTables
     `onNothing` throw500 ("askTableInfo: no info for table " <> dquote tableName <> " in source " <> dquote _siName)
 
 -- | Looks up custom return type information for the given custom return type name. This function
@@ -359,7 +359,7 @@ askLogicalModelInfo ::
   m (LogicalModelInfo b)
 askLogicalModelInfo logicalModelName = do
   SourceInfo {..} <- asks getter
-  Map.lookup logicalModelName _siLogicalModels
+  HashMap.lookup logicalModelName _siLogicalModels
     `onNothing` throw500 ("askLogicalModelInfo: no info for logical model " <> dquote logicalModelName <> " in source " <> dquote _siName)
 
 -- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
@@ -442,7 +442,7 @@ mkDescriptionWith descM defaultTxt = G.Description $ case descM of
 --        got removed in PDV. OTOH, I’m not sure how prevalent this feature
 --        actually is
 takeValidTables :: forall b. Backend b => TableCache b -> TableCache b
-takeValidTables = Map.filterWithKey graphQLTableFilter
+takeValidTables = HashMap.filterWithKey graphQLTableFilter
   where
     graphQLTableFilter tableName tableInfo =
       -- either the table name should be GraphQL compliant
@@ -452,7 +452,7 @@ takeValidTables = Map.filterWithKey graphQLTableFilter
 
 -- TODO and what about graphql-compliant function names here too?
 takeValidFunctions :: forall b. FunctionCache b -> FunctionCache b
-takeValidFunctions = Map.filter functionFilter
+takeValidFunctions = HashMap.filter functionFilter
   where
     functionFilter = not . isSystemDefined . _fiSystemDefined
 
@@ -512,4 +512,4 @@ getIntrospectionResult remoteSchemaPermsCtx role remoteSchemaContext =
           pure $ _rscIntroOriginal remoteSchemaContext
       | -- otherwise, look the role up in the map; if we find nothing, then the role doesn't have access
         otherwise ->
-          Map.lookup role (_rscPermissions remoteSchemaContext)
+          HashMap.lookup role (_rscPermissions remoteSchemaContext)

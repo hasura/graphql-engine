@@ -9,7 +9,7 @@ module Hasura.Backends.MSSQL.Execute.Insert
   )
 where
 
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Database.MSSQL.Transaction qualified as Tx
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Execute.QueryTags (withQueryTags)
@@ -208,7 +208,7 @@ buildUpsertTx ::
 buildUpsertTx tableName insert ifMatched queryTags = do
   let presets = _aiPresetValues $ _aiData insert
       insertColumnNames =
-        concatMap (map fst . getInsertColumns) (_aiInsertObject $ _aiData insert) <> HM.keys presets
+        concatMap (map fst . getInsertColumns) (_aiInsertObject $ _aiData insert) <> HashMap.keys presets
       allTableColumns = _aiTableColumns $ _aiData insert
       insertColumns = filter (\c -> ciColumn c `elem` insertColumnNames) allTableColumns
       createValuesTempTableQuery =

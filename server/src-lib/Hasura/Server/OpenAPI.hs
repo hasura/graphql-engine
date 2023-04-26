@@ -7,7 +7,7 @@ module Hasura.Server.OpenAPI (buildOpenAPI) where
 import Control.Lens
 import Control.Monad.Circular
 import Data.Aeson qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashMap.Strict.Multi qualified as MMap
 import Data.Monoid (Any (..))
@@ -122,7 +122,7 @@ buildEndpoint schemaTypes method EndpointMetadata {..} = do
 -- We expect one optional parameter per known scalar variable.
 collectParams :: Structure -> EndpointUrl -> [Referenced Param]
 collectParams (Structure _ vars) eURL = do
-  (G.unName -> varName, VariableInfo {..}) <- Map.toList vars
+  (G.unName -> varName, VariableInfo {..}) <- HashMap.toList vars
   case _viTypeInfo of
     -- we do not allow input objects or enums in parameters
     InputFieldObjectInfo _ -> empty
@@ -172,7 +172,7 @@ buildRequestBody ::
   Structure ->
   DeclareM m (Maybe (Referenced RequestBody))
 buildRequestBody Structure {..} = do
-  let vars = Map.toList _stVariables
+  let vars = HashMap.toList _stVariables
   if null vars
     then pure Nothing
     else do
@@ -260,7 +260,7 @@ buildInputFieldSchema gType = \case
   InputFieldObjectInfo InputObjectInfo {..} ->
     applyModifiers gType \typeName nullability -> withCircular (typeName, nullability) do
       fields <-
-        for (Map.toList _ioiFields) \(fieldName, (fieldType, fieldTypeInfo)) -> do
+        for (HashMap.toList _ioiFields) \(fieldName, (fieldType, fieldTypeInfo)) -> do
           fieldSchema <- buildInputFieldSchema fieldType fieldTypeInfo
           pure (G.unName fieldName, fieldSchema)
       let objectSchema =
@@ -283,7 +283,7 @@ buildResponse ::
   Text ->
   DeclareM m Response
 buildResponse (Structure fields _) endpointMethod endpointURL = do
-  fs <- buildSelectionSchema $ Map.toList fields
+  fs <- buildSelectionSchema $ HashMap.toList fields
   pure $
     mempty
       & content .~ OMap.singleton ("application" // "json") (mempty & schema ?~ Inline fs)
@@ -312,7 +312,7 @@ buildFieldSchema = \case
   FieldEnumInfo gType scalarInfo -> applyModifiers gType $ buildEnumSchema scalarInfo
   -- this output field is an object: we inline it
   FieldObjectInfo gType ObjectInfo {..} -> applyModifiers gType $ \typeName nullability -> do
-    objectSchema <- buildSelectionSchema $ Map.toList _oiSelection
+    objectSchema <- buildSelectionSchema $ HashMap.toList _oiSelection
     pure $
       Inline $
         objectSchema

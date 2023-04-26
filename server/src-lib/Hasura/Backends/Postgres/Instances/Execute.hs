@@ -15,7 +15,7 @@ where
 
 import Control.Monad.Trans.Control qualified as MT
 import Data.Aeson qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.IntMap qualified as IntMap
 import Data.Sequence qualified as Seq
@@ -475,7 +475,7 @@ pgDBStreamingSubscriptionPlan userInfo _sourceName sourceConfig (rootFieldAlias,
         QDBStreamMultipleRows (IR.AnnSelectStreamG () _ _ _ args _) ->
           let cursorArg = IR._ssaCursorArg args
               colInfo = IR._sciColInfo cursorArg
-           in Map.singleton (ciName colInfo) (IR._sciInitialValue cursorArg)
+           in HashMap.singleton (ciName colInfo) (IR._sciInitialValue cursorArg)
         _ -> mempty
 
 -- | Test a multiplexed query in a transaction.
@@ -597,7 +597,7 @@ pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
     jsonToRecordSet :: IR.SelectFromG ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
 
     recordSetDefinitionList =
-      (coerceToColumn argumentId, Postgres.PGBigInt) : Map.toList (fmap snd joinColumnMapping)
+      (coerceToColumn argumentId, Postgres.PGBigInt) : HashMap.toList (fmap snd joinColumnMapping)
     jsonToRecordSet =
       IR.FromFunction
         (Postgres.QualifiedObject "pg_catalog" $ Postgres.FunctionName "jsonb_to_recordset")

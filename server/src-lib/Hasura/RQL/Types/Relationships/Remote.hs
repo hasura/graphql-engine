@@ -31,7 +31,7 @@ import Autodocodec.Extended (hashSetCodec)
 import Control.Lens (makePrisms)
 import Data.Aeson
 import Data.Aeson.Types (Parser)
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended (ToTxt (toTxt))
 import GHC.TypeLits (ErrorMessage (..), TypeError)
 import Hasura.Prelude
@@ -248,7 +248,7 @@ instance ToJSON RemoteRelationshipDefinition where
 
 -- | Resolved remote relationship, as stored in the schema cache.
 data RemoteFieldInfo lhsJoinField = RemoteFieldInfo
-  { _rfiLHS :: HM.HashMap FieldName lhsJoinField,
+  { _rfiLHS :: HashMap.HashMap FieldName lhsJoinField,
     _rfiRHS :: RemoteFieldInfoRHS
   }
   deriving (Generic, Eq)

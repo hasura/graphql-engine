@@ -25,7 +25,7 @@ import Control.Lens (view, _2, _3)
 import Data.Aeson qualified as A
 import Data.Aeson.Ordered qualified as AO
 import Data.ByteString.Lazy qualified as BL
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.IntMap.Strict qualified as IntMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
@@ -109,8 +109,8 @@ buildRemoteSchemaCall RemoteSchemaJoin {..} arguments userInfo = do
   -- for each join argument, we generate a unique field, with the alias
   -- "f" <> argumentId
   fields <- flip IntMap.traverseWithKey arguments $ \argumentId (JoinArgument argument) -> do
-    graphqlArgs <- fmap Map.fromList $
-      for (Map.toList argument) \(FieldName columnName, value) -> do
+    graphqlArgs <- fmap HashMap.fromList $
+      for (HashMap.toList argument) \(FieldName columnName, value) -> do
         graphQLName <- parseGraphQLName columnName
         graphQLValue <- ordJSONValueToGValue value
         pure (graphQLName, graphQLValue)
@@ -140,9 +140,9 @@ fieldCallsToField ::
   forall m.
   MonadError QErr m =>
   -- | user input arguments to the remote join field
-  Map.HashMap G.Name (P.InputValue RemoteSchemaVariable) ->
+  HashMap.HashMap G.Name (P.InputValue RemoteSchemaVariable) ->
   -- | Contains the values of the variables that have been defined in the remote join definition
-  Map.HashMap G.Name (G.Value Void) ->
+  HashMap.HashMap G.Name (G.Value Void) ->
   -- | Inserted at leaf of nested FieldCalls
   G.SelectionSet G.NoFragments RemoteSchemaVariable ->
   -- | Top-level name to set for this Field
@@ -163,7 +163,7 @@ fieldCallsToField rrArguments variables finalSelSet topAlias =
           pure (templatedArguments, [G.SelectionField s])
         Nothing -> do
           arguments <-
-            Map.unionWithM
+            HashMap.unionWithM
               combineValues
               graphQLarguments
               -- converting (G.Value Void) -> (G.Value Variable) to merge the
@@ -172,7 +172,7 @@ fieldCallsToField rrArguments variables finalSelSet topAlias =
           pure (arguments, finalSelSet)
       pure $ G.Field Nothing name args [] selSet
 
-    convert :: Map.HashMap G.Name (G.Value Void) -> Map.HashMap G.Name (G.Value RemoteSchemaVariable)
+    convert :: HashMap.HashMap G.Name (G.Value Void) -> HashMap.HashMap G.Name (G.Value RemoteSchemaVariable)
     convert = fmap G.literal
 
     peel :: P.InputValue RemoteSchemaVariable -> m (G.Value RemoteSchemaVariable)
@@ -188,7 +188,7 @@ fieldCallsToField rrArguments variables finalSelSet topAlias =
 -- | Create an argument map using the inputs taken from the left hand side.
 createArguments ::
   (MonadError QErr m) =>
-  Map.HashMap G.Name (G.Value Void) ->
+  HashMap.HashMap G.Name (G.Value Void) ->
   RemoteArguments ->
   m (HashMap G.Name (G.Value Void))
 createArguments variables (RemoteArguments arguments) =
@@ -197,7 +197,7 @@ createArguments variables (RemoteArguments arguments) =
   where
     substituteVariables = \case
       G.VVariable variableName ->
-        Map.lookup variableName variables
+        HashMap.lookup variableName variables
           `onNothing` Failure ["Value for variable " <> variableName <<> " not provided"]
       G.VList listValue ->
         fmap G.VList (traverse substituteVariables listValue)
@@ -225,7 +225,7 @@ combineValues ::
   G.Value RemoteSchemaVariable ->
   m (G.Value RemoteSchemaVariable)
 combineValues name v1 v2 = case (v1, v2) of
-  (G.VObject l, G.VObject r) -> G.VObject <$> Map.unionWithM combineValues l r
+  (G.VObject l, G.VObject r) -> G.VObject <$> HashMap.unionWithM combineValues l r
   (G.VList l, G.VList r) -> pure $ G.VList $ l <> r
   (l, r) ->
     throw500 $
@@ -243,7 +243,7 @@ fieldsToRequest gFields =
   GQLReq
     { _grOperationName = Nothing,
       _grVariables =
-        if Map.null variableInfos
+        if HashMap.null variableInfos
           then Nothing
           else Just $ mapKeys G._vdName variableInfos,
       _grQuery =
@@ -251,7 +251,7 @@ fieldsToRequest gFields =
           { G._todSelectionSet =
               -- convert from Field Variable to Field Name
               NE.toList $ G.SelectionField . fmap P.getName <$> gFields,
-            G._todVariableDefinitions = Map.keys variableInfos,
+            G._todVariableDefinitions = HashMap.keys variableInfos,
             G._todType = G.OperationTypeQuery,
             G._todName = Nothing,
             G._todDirectives = []
@@ -259,7 +259,7 @@ fieldsToRequest gFields =
     }
   where
     variableInfos :: HashMap G.VariableDefinition A.Value
-    variableInfos = Map.fromList $ concatMap (foldMap getVariableInfo) gFields
+    variableInfos = HashMap.fromList $ concatMap (foldMap getVariableInfo) gFields
     getVariableInfo :: P.Variable -> [(G.VariableDefinition, A.Value)]
     getVariableInfo = pure . fmap snd . getVariableDefinitionAndValue
 

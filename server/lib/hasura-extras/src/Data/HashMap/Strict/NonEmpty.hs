@@ -33,8 +33,7 @@ where
 import Control.DeepSeq (NFData)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.HashMap.Strict (HashMap)
-import Data.HashMap.Strict qualified as M
-import Data.HashMap.Strict.Extended qualified as Extended
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Hashable (Hashable)
 import Data.List.NonEmpty (NonEmpty)
 import Data.List.NonEmpty qualified as NE
@@ -53,13 +52,13 @@ newtype NEHashMap k v = NEHashMap {unNEHashMap :: HashMap k v}
 
 -- | Construct a non-empty map with a single element.
 singleton :: Hashable k => k -> v -> NEHashMap k v
-singleton k v = NEHashMap $ M.singleton k v
+singleton k v = NEHashMap $ HashMap.singleton k v
 
 -- | Construct a non-empty map with the supplied mappings.
 -- Returns 'Nothing' if the provided 'HashMap' is empty.
 fromHashMap :: HashMap k v -> Maybe (NEHashMap k v)
 fromHashMap m
-  | M.null m = Nothing
+  | HashMap.null m = Nothing
   | otherwise = Just $ NEHashMap m
 
 -- | Construct a non-empty map with the supplied mappings as follows:
@@ -69,11 +68,11 @@ fromHashMap m
 -- * if the provided list is empty, returns 'Nothing'.
 fromList :: Hashable k => [(k, v)] -> Maybe (NEHashMap k v)
 fromList [] = Nothing
-fromList v = Just $ NEHashMap $ M.fromList v
+fromList v = Just $ NEHashMap $ HashMap.fromList v
 
 -- | A variant of 'fromList' that uses 'NonEmpty' inputs.
 fromNonEmpty :: Hashable k => NonEmpty (k, v) -> NEHashMap k v
-fromNonEmpty (x NE.:| xs) = NEHashMap (M.fromList (x : xs))
+fromNonEmpty (x NE.:| xs) = NEHashMap (HashMap.fromList (x : xs))
 
 -- | Convert a non-empty map to a 'HashMap'.
 toHashMap :: NEHashMap k v -> HashMap k v
@@ -82,18 +81,18 @@ toHashMap = unNEHashMap
 -- | Convert a non-empty map to a non-empty list of key/value pairs. The closed
 -- operations of 'NEHashMap' guarantee that this operation won't fail.
 toNonEmpty :: NEHashMap k v -> NonEmpty (k, v)
-toNonEmpty = NE.fromList . M.toList . unNEHashMap
+toNonEmpty = NE.fromList . HashMap.toList . unNEHashMap
 
 -- | Convert a non-empty map to a list of key/value pairs.
 toList :: NEHashMap k v -> [(k, v)]
-toList = M.toList . unNEHashMap
+toList = HashMap.toList . unNEHashMap
 
 -------------------------------------------------------------------------------
 
 -- | Return the value to which the specified key is mapped, or 'Nothing' if
 -- this map contains no mapping for the key.
 lookup :: Hashable k => k -> NEHashMap k v -> Maybe v
-lookup k (NEHashMap m) = M.lookup k m
+lookup k (NEHashMap m) = HashMap.lookup k m
 
 -- | Return the value to which the specified key is mapped, or 'Nothing' if
 -- this map contains no mapping for the key.
@@ -104,11 +103,11 @@ lookup k (NEHashMap m) = M.lookup k m
 
 -- | Return a list of this map's keys.
 keys :: NEHashMap k v -> [k]
-keys = M.keys . unNEHashMap
+keys = HashMap.keys . unNEHashMap
 
 -- | Return a list of this map's set of values
 elems :: NEHashMap k v -> [v]
-elems = M.elems . unNEHashMap
+elems = HashMap.elems . unNEHashMap
 
 -------------------------------------------------------------------------------
 
@@ -117,14 +116,14 @@ elems = M.elems . unNEHashMap
 -- If a key occurs in both maps, the left map @m1@ (first argument) will be
 -- preferred.
 union :: Hashable k => NEHashMap k v -> NEHashMap k v -> NEHashMap k v
-union (NEHashMap m1) (NEHashMap m2) = NEHashMap $ M.union m1 m2
+union (NEHashMap m1) (NEHashMap m2) = NEHashMap $ HashMap.union m1 m2
 
 -- | The union of two maps using a given value-wise union function.
 --
 -- If a key occurs in both maps, the provided function (first argument) will be
 -- used to compute the result.
 unionWith :: Hashable k => (v -> v -> v) -> NEHashMap k v -> NEHashMap k v -> NEHashMap k v
-unionWith fun (NEHashMap m1) (NEHashMap m2) = NEHashMap $ M.unionWith fun m1 m2
+unionWith fun (NEHashMap m1) (NEHashMap m2) = NEHashMap $ HashMap.unionWith fun m1 m2
 
 -------------------------------------------------------------------------------
 
@@ -134,7 +133,7 @@ unionWith fun (NEHashMap m1) (NEHashMap m2) = NEHashMap $ M.unionWith fun m1 m2
 -- the same new key. In this case there is no guarantee which of the associated
 -- values is chosen for the conflicting key.
 mapKeys :: Hashable k2 => (k1 -> k2) -> NEHashMap k1 v -> NEHashMap k2 v
-mapKeys fun (NEHashMap m) = NEHashMap $ M.mapKeys fun m
+mapKeys fun (NEHashMap m) = NEHashMap $ HashMap.mapKeys fun m
 
 -------------------------------------------------------------------------------
 
@@ -146,4 +145,4 @@ mapKeys fun (NEHashMap m) = NEHashMap $ M.mapKeys fun m
 -- 2. @∀ key ∈ B. B[key] ∈  A ∧ A[B[key]] == key@
 isInverseOf ::
   (Hashable k, Hashable v) => NEHashMap k v -> NEHashMap v k -> Bool
-lhs `isInverseOf` rhs = toHashMap lhs `Extended.isInverseOf` toHashMap rhs
+lhs `isInverseOf` rhs = toHashMap lhs `HashMap.isInverseOf` toHashMap rhs

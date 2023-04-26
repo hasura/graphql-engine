@@ -270,6 +270,15 @@
 
 
 ################################################################################
+# Import conventions
+
+- modules:
+  - name:
+    - Data.HashMap.Strict
+    - Data.HashMap.Strict.Extended
+    as: HashMap
+
+################################################################################
 # Import restrictions
 
 # We limit the place where the module `Hasura.RQL.Types.Instances` can be

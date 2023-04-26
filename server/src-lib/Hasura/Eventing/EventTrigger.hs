@@ -58,7 +58,7 @@ import Data.Aeson.KeyMap qualified as KeyMap
 import Data.Aeson.Lens qualified as JL
 import Data.Aeson.TH
 import Data.Has
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.SerializableBlob qualified as SB
 import Data.Set qualified as Set
 import Data.String
@@ -191,9 +191,9 @@ saveLockedEventTriggerEvents sourceName eventIds lockedEvents =
   liftIO $
     atomically $ do
       lockedEventsVals <- readTVar lockedEvents
-      case M.lookup sourceName lockedEventsVals of
-        Nothing -> writeTVar lockedEvents $! M.singleton sourceName (Set.fromList eventIds)
-        Just _ -> writeTVar lockedEvents $! M.insertWith Set.union sourceName (Set.fromList eventIds) lockedEventsVals
+      case HashMap.lookup sourceName lockedEventsVals of
+        Nothing -> writeTVar lockedEvents $! HashMap.singleton sourceName (Set.fromList eventIds)
+        Just _ -> writeTVar lockedEvents $! HashMap.insertWith Set.union sourceName (Set.fromList eventIds) lockedEventsVals
 
 removeEventTriggerEventFromLockedEvents ::
   MonadIO m => SourceName -> EventId -> TVar (HashMap SourceName (Set.Set EventId)) -> m ()
@@ -201,7 +201,7 @@ removeEventTriggerEventFromLockedEvents sourceName eventId lockedEvents =
   liftIO $
     atomically $ do
       lockedEventsVals <- readTVar lockedEvents
-      writeTVar lockedEvents $! M.adjust (Set.delete eventId) sourceName lockedEventsVals
+      writeTVar lockedEvents $! HashMap.adjust (Set.delete eventId) sourceName lockedEventsVals
 
 type BackendEventWithSource = AB.AnyBackend EventWithSource
 
@@ -215,11 +215,11 @@ newtype NumEventsFetchedPerSource = NumEventsFetchedPerSource {unNumEventsFetche
 
 instance J.ToJSON NumEventsFetchedPerSource where
   toJSON (NumEventsFetchedPerSource m) =
-    J.Object $ KeyMap.fromList $ map ((Key.fromText . sourceNameToText) *** J.toJSON) $ M.toList m
+    J.Object $ KeyMap.fromList $ map ((Key.fromText . sourceNameToText) *** J.toJSON) $ HashMap.toList m
 
 instance Semigroup NumEventsFetchedPerSource where
   (NumEventsFetchedPerSource lMap) <> (NumEventsFetchedPerSource rMap) =
-    NumEventsFetchedPerSource $ M.unionWith (+) lMap rMap
+    NumEventsFetchedPerSource $ HashMap.unionWith (+) lMap rMap
 
 instance Monoid NumEventsFetchedPerSource where
   mempty = NumEventsFetchedPerSource mempty
@@ -266,7 +266,7 @@ logFetchedEventsStatistics logger backendEvents =
     numEventsFetchedPerSource =
       let sourceNames = flip map backendEvents $
             \backendEvent -> AB.dispatchAnyBackend @Backend backendEvent _ewsSourceName
-       in NumEventsFetchedPerSource $ M.fromListWith (+) [(sourceName, 1) | sourceName <- sourceNames]
+       in NumEventsFetchedPerSource $ HashMap.fromListWith (+) [(sourceName, 1) | sourceName <- sourceNames]
 
 {-# ANN processEventQueue ("HLint: ignore Use withAsync" :: String) #-}
 
@@ -324,12 +324,12 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
       fetchBatchSize <- unrefine . _eeCtxFetchSize <$> liftIO getEventEngineCtx
       events <- liftIO . fmap concat $
         -- fetch pending events across all the sources asynchronously
-        LA.forConcurrently (M.toList allSources) \(sourceName, sourceCache) ->
+        LA.forConcurrently (HashMap.toList allSources) \(sourceName, sourceCache) ->
           AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo {..} :: SourceInfo b) -> do
-            let tables = M.elems _siTables
+            let tables = HashMap.elems _siTables
                 triggerMap = _tiEventTriggerInfoMap <$> tables
-                eventTriggerCount = sum (M.size <$> triggerMap)
-                triggerNames = concatMap M.keys triggerMap
+                eventTriggerCount = sum (HashMap.size <$> triggerMap)
+                triggerNames = concatMap HashMap.keys triggerMap
 
             -- only process events for this source if at least one event trigger exists
             if eventTriggerCount > 0
@@ -716,7 +716,7 @@ getEventTriggerInfoFromEvent sc e = do
       mTableInfo = unsafeTableInfo @b (eSource e) table $ scSources sc
   tableInfo <- onNothing mTableInfo $ Left ("table '" <> table <<> "' not found")
   let triggerName = tmName $ eTrigger e
-      mEventTriggerInfo = M.lookup triggerName (_tiEventTriggerInfoMap tableInfo)
+      mEventTriggerInfo = HashMap.lookup triggerName (_tiEventTriggerInfoMap tableInfo)
   onNothing mEventTriggerInfo $
     Left
       ( "event trigger '"

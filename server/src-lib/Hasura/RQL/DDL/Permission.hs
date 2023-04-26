@@ -34,7 +34,7 @@ import Control.Lens (Lens', (.~), (^?))
 import Data.Aeson
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as HS
 import Data.Sequence qualified as Seq
@@ -183,14 +183,14 @@ procSetObj ::
 procSetObj source tn fieldInfoMap mObj = do
   (setColTups, deps) <- withPathK "set" $
     fmap unzip $
-      forM (HM.toList setObj) $ \(pgCol, val) -> do
+      forM (HashMap.toList setObj) $ \(pgCol, val) -> do
         ty <-
           askColumnType fieldInfoMap pgCol $
             "column " <> pgCol <<> " not found in table " <>> tn
         sqlExp <- parseCollectableType (CollectableTypeScalar ty) val
         let dep = mkColDep @b (getDepReason sqlExp) source tn pgCol
         return ((pgCol, sqlExp), dep)
-  return (HM.fromList setColTups, depHeaders, Seq.fromList deps)
+  return (HashMap.fromList setColTups, depHeaders, Seq.fromList deps)
   where
     setObj = fromMaybe mempty mObj
     depHeaders =
@@ -198,7 +198,7 @@ procSetObj source tn fieldInfoMap mObj = do
         Object $
           KM.fromList $
             map (first (K.fromText . toTxt)) $
-              HM.toList setObj
+              HashMap.toList setObj
 
     getDepReason = bool DRSessionVariable DROnType . isStaticValue
 
@@ -352,7 +352,7 @@ buildInsPermInfo source tn fieldInfoMap (InsPerm checkCond set mCols backendOnly
         reqHdrs = fltrHeaders `HS.union` (HS.fromList setHdrs)
         insColDeps = mkColDep @b DRUntyped source tn <$> insCols
         deps = mkParentDep @b source tn Seq.:<| beDeps <> setColDeps <> Seq.fromList insColDeps
-        insColsWithoutPresets = HS.fromList insCols `HS.difference` HM.keysSet setColsSQL
+        insColsWithoutPresets = HS.fromList insCols `HS.difference` HashMap.keysSet setColsSQL
 
     return (InsPermInfo insColsWithoutPresets be setColsSQL backendOnly reqHdrs, deps)
   where
@@ -475,7 +475,7 @@ buildLogicalModelSelPermInfo source logicalModelName logicalModelFieldMap sp = w
       -- TODO: do we care about inherited roles? We don't seem to set this to
       -- anything other than 'Nothing' for in 'buildSelPermInfo' either.
       spiCols :: HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))
-      spiCols = HM.fromList (map (,Nothing) columns)
+      spiCols = HashMap.fromList (map (,Nothing) columns)
 
       -- Native queries don't have computed fields.
       spiComputedFields :: HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
@@ -550,7 +550,7 @@ buildSelPermInfo source tableName fieldInfoMap roleName sp = withPathK "permissi
     when (value < 0) $
       throw400 NotSupported "unexpected negative value"
 
-  let spiCols = HM.fromList $ map (,Nothing) pgCols
+  let spiCols = HashMap.fromList $ map (,Nothing) pgCols
       spiComputedFields = HS.toMap (HS.fromList validComputedFields) $> Nothing
 
   (spiAllowedQueryRootFields, spiAllowedSubscriptionRootFields) <-
@@ -602,7 +602,7 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check backendO
       deps = mkParentDep @b source tn Seq.:<| beDeps <> maybe mempty snd checkExpr <> Seq.fromList updColDeps <> setColDeps
       depHeaders = getDependentHeaders fltr
       reqHeaders = depHeaders `HS.union` (HS.fromList setHeaders)
-      updColsWithoutPreSets = HS.fromList updCols `HS.difference` HM.keysSet setColsSQL
+      updColsWithoutPreSets = HS.fromList updCols `HS.difference` HashMap.keysSet setColsSQL
 
   return (UpdPermInfo updColsWithoutPreSets tn be (fst <$> checkExpr) setColsSQL backendOnly reqHeaders, deps)
   where

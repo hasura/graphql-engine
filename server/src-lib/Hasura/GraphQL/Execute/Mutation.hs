@@ -4,7 +4,7 @@ module Hasura.GraphQL.Execute.Mutation
 where
 
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Tagged qualified as Tagged
 import Hasura.Base.Error
@@ -110,7 +110,7 @@ convertMutationSelectionSet
       onNothing (gqlMutationParser gqlContext) $
         throw400 ValidationFailed "no mutations exist"
 
-    (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe Map.empty (GH._grVariables gqlUnparsed)) directives fields
+    (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe HashMap.empty (GH._grVariables gqlUnparsed)) directives fields
     -- Parse the GraphQL query into the RQL AST
     unpreparedQueries ::
       RootFieldMap (MutationRootField UnpreparedValue) <-

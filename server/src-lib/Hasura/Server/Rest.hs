@@ -9,7 +9,7 @@ import Data.Aeson hiding (json)
 import Data.Aeson qualified as J
 import Data.Align qualified as Align
 import Data.Environment qualified as Env
-import Data.HashMap.Strict.Extended qualified as M
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Data.Text.Extended
@@ -56,8 +56,8 @@ parseVariableNames queryx =
 alignVars :: [G.VariableDefinition] -> [(Text, Either Text Value)] -> HashMap G.Name (These G.VariableDefinition (Either Text Value))
 alignVars defVars parseVars =
   Align.align
-    (M.fromList (map (\v -> (G._vdName v, v)) defVars))
-    (M.fromList (mapMaybe (\(k, v) -> (,v) <$> G.mkName k) parseVars))
+    (HashMap.fromList (map (\v -> (G._vdName v, v)) defVars))
+    (HashMap.fromList (mapMaybe (\(k, v) -> (,v) <$> G.mkName k) parseVars))
 
 -- | `resolveVar` is responsible for decoding variables sent via REST request.
 -- These can either be via body (represented by Right) or via query-param or URL param (represented by Left).
@@ -148,7 +148,7 @@ runCustomEndpoint env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics
               -- If there is a mismatch, throw an error. Also, check that the provided
               -- values are compatible with the expected types.
               let expectedVariables = G._todVariableDefinitions typedDef
-              let joinedVars = M.traverseWithKey resolveVar (alignVars expectedVariables (reqArgs ++ zip (parseVariableNames queryx) (map Left matches)))
+              let joinedVars = HashMap.traverseWithKey resolveVar (alignVars expectedVariables (reqArgs ++ zip (parseVariableNames queryx) (map Left matches)))
 
               resolvedVariablesMaybe <- joinedVars `onLeft` throw400 BadRequest
 

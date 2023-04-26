@@ -11,7 +11,7 @@ import Control.Immortal qualified as Immortal
 import Control.Lens ((.~))
 import Data.Aeson qualified as A
 import Data.ByteString.Lazy.UTF8 qualified as LBS
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import Data.UUID qualified as UUID
@@ -190,7 +190,7 @@ streamingSubscriptionPollingSpec srcConfig = do
     (subscriberId1, subscriberId2) <- runIO $ (,) <$> newSubscriberId <*> newSubscriberId
     let subscriber1 = mkSubscriber subscriberId1
         subscriber2 = mkSubscriber subscriberId2
-    let initialCursorValue = Map.singleton Name._id (TELit "1")
+    let initialCursorValue = HashMap.singleton Name._id (TELit "1")
     cohort1 <- runIO $
       liftIO $
         STM.atomically $ do
@@ -222,11 +222,11 @@ streamingSubscriptionPollingSpec srcConfig = do
       currentCohortMap <- runIO $ STM.atomically $ TMap.getMap cohortMap
 
       it "the key of the cohort1 should have been moved from the cohortKey1 to cohortKey2, so it should not be found anymore at cohortKey1" $ do
-        cohortMappedToCohortKey1 <- STM.atomically $ traverse getStaticCohortSnapshot $ Map.lookup cohortKey1 currentCohortMap
+        cohortMappedToCohortKey1 <- STM.atomically $ traverse getStaticCohortSnapshot $ HashMap.lookup cohortKey1 currentCohortMap
         cohortMappedToCohortKey1 `shouldBe` Nothing
 
       it "the key of the cohort1 should have been moved from the cohortKey1 to cohortKey2, so it should be found anymore at cohortKey2" $ do
-        cohortMappedToCohortKey2 <- STM.atomically $ traverse getStaticCohortSnapshot $ Map.lookup cohortKey2 currentCohortMap
+        cohortMappedToCohortKey2 <- STM.atomically $ traverse getStaticCohortSnapshot $ HashMap.lookup cohortKey2 currentCohortMap
         cohortMappedToCohortKey2 `shouldBe` Just (CohortStaticSnapshot cohortId1 [subscriberId1] mempty)
 
     describe "manipulating cohorts" $ do
@@ -247,7 +247,7 @@ streamingSubscriptionPollingSpec srcConfig = do
               Async.wait pollAsync
           )
         currentCohortMap <- STM.atomically $ TMap.getMap cohortMap
-        let currentCohort2 = Map.lookup cohortKey3 currentCohortMap
+        let currentCohort2 = HashMap.lookup cohortKey3 currentCohortMap
 
         (originalCohort2StaticSnapshot, currentCohort2StaticSnapshot) <-
           STM.atomically $
@@ -270,7 +270,7 @@ streamingSubscriptionPollingSpec srcConfig = do
               Async.wait pollAsync
           )
         currentCohortMap <- STM.atomically $ TMap.getMap cohortMap
-        Map.size currentCohortMap `shouldBe` 0 -- since there was only one cohort initially, now the cohort map should not have any cohorts
+        HashMap.size currentCohortMap `shouldBe` 0 -- since there was only one cohort initially, now the cohort map should not have any cohorts
     describe "manipulating adding and deleting of subscribers concurrently" $ do
       it "adding a new subscriber concurrently should place the subscriber in the appropriate cohort" $ do
         temporarySubscriberId <- newSubscriberId
@@ -291,8 +291,8 @@ streamingSubscriptionPollingSpec srcConfig = do
               Async.wait pollAsync
           )
         currentCohortMap <- STM.atomically $ TMap.getMap cohortMap
-        let cohortKey2Cohort = Map.lookup cohortKey2 currentCohortMap
-            cohortKey1Cohort = Map.lookup cohortKey1 currentCohortMap
+        let cohortKey2Cohort = HashMap.lookup cohortKey2 currentCohortMap
+            cohortKey1Cohort = HashMap.lookup cohortKey1 currentCohortMap
         cohortKey1CohortSnapshot <- STM.atomically $ traverse getStaticCohortSnapshot cohortKey1Cohort
         _cssNewSubscribers <$> cohortKey1CohortSnapshot `shouldBe` Just [temporarySubscriberId]
 
@@ -321,8 +321,8 @@ streamingSubscriptionPollingSpec srcConfig = do
               Async.wait pollAsync
           )
         currentCohortMap <- STM.atomically $ TMap.getMap cohortMap
-        let cohortKey2Cohort = Map.lookup cohortKey2 currentCohortMap
-            cohortKey1Cohort = Map.lookup cohortKey1 currentCohortMap
+        let cohortKey2Cohort = HashMap.lookup cohortKey2 currentCohortMap
+            cohortKey1Cohort = HashMap.lookup cohortKey1 currentCohortMap
         cohortKey1CohortSnapshot <- STM.atomically $ traverse getStaticCohortSnapshot cohortKey1Cohort
         cohortKey2CohortSnapshot <- STM.atomically $ traverse getStaticCohortSnapshot cohortKey2Cohort
 

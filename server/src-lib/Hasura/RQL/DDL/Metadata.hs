@@ -28,7 +28,7 @@ import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
 import Data.Has (Has, getter)
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as HS
 import Data.List qualified as L
@@ -104,7 +104,7 @@ postDropSourceHookHelper oldSchemaCache sourceName sourceMetadataBackend = do
   logger :: (HL.Logger HL.Hasura) <- asks getter
 
   AB.dispatchAnyBackend @BackendMetadata sourceMetadataBackend \(oldSourceMetadata :: SourceMetadata b) -> do
-    let sourceInfoMaybe = unsafeSourceInfo @b =<< HM.lookup sourceName (scSources oldSchemaCache)
+    let sourceInfoMaybe = unsafeSourceInfo @b =<< HashMap.lookup sourceName (scSources oldSchemaCache)
     case sourceInfoMaybe of
       Nothing -> do
         unless (null (getTriggersMap oldSourceMetadata)) do
@@ -409,23 +409,23 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
             case _rmv2Metadata of
               RMWithoutSources m -> _mnsCronTriggers m
               RMWithSources m -> _metaCronTriggers m
-          -- this function is intended to use with `HM.differenceWith`, it's used when two
+          -- this function is intended to use with `HashMap.differenceWith`, it's used when two
           -- equal keys are encountered, then the values are compared to calculate the diff.
           -- see https://hackage.haskell.org/package/unordered-containers-0.2.14.0/docs/Data-HashMap-Internal.html#v:differenceWith
           leftIfDifferent l r
             | l == r = Nothing
             | otherwise = Just l
           cronTriggersToBeAdded =
-            HM.differenceWith
+            HashMap.differenceWith
               leftIfDifferent
               (OMap.toHashMap allNewCronTriggers)
               (OMap.toHashMap oldCronTriggersIncludedInMetadata)
           cronTriggersToBeDropped =
-            HM.differenceWith
+            HashMap.differenceWith
               leftIfDifferent
               (OMap.toHashMap oldCronTriggersIncludedInMetadata)
               (OMap.toHashMap allNewCronTriggers)
-      liftEitherM $ dropFutureCronEvents $ MetadataCronTriggers $ HM.keys cronTriggersToBeDropped
+      liftEitherM $ dropFutureCronEvents $ MetadataCronTriggers $ HashMap.keys cronTriggersToBeDropped
       cronTriggers <- do
         -- traverse over the new cron triggers and check if any of them
         -- already exists as a cron trigger with "included_in_metadata: false"

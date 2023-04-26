@@ -15,7 +15,7 @@ where
 
 import Control.Lens ((.~))
 import Data.Aeson.Types
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as Set
@@ -58,7 +58,7 @@ runCreateRelationship relType (WithTable source tableName relDef) = do
   let relName = _rdName relDef
   -- Check if any field with relationship name already exists in the table
   tableFields <- _tciFieldInfoMap <$> askTableCoreInfo @b source tableName
-  for_ (Map.lookup (fromRel relName) tableFields) $
+  for_ (HashMap.lookup (fromRel relName) tableFields) $
     const $
       throw400 AlreadyExists $
         "field with name " <> relName <<> " already exists in table " <>> tableName
@@ -107,7 +107,7 @@ defaultBuildObjectRelationshipInfo ::
 defaultBuildObjectRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case ru of
   RUManual rm -> do
     let refqt = rmTable rm
-        (lCols, rCols) = unzip $ Map.toList $ rmColumns rm
+        (lCols, rCols) = unzip $ HashMap.toList $ rmColumns rm
         io = fromMaybe BeforeParent $ rmInsertOrder rm
         mkDependency tableName reason col =
           SchemaDependency
@@ -123,7 +123,7 @@ defaultBuildObjectRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case
     pure (RelInfo rn ObjRel (rmColumns rm) refqt True io, dependencies)
   RUFKeyOn (SameTable columns) -> do
     foreignTableForeignKeys <-
-      Map.lookup qt foreignKeys
+      HashMap.lookup qt foreignKeys
         `onNothing` throw400 NotFound ("table " <> qt <<> " does not exist in source: " <> sourceNameToText source)
     ForeignKey constraint foreignTable colMap <- getRequiredFkey columns (Set.toList foreignTableForeignKeys)
     let dependencies =
@@ -162,7 +162,7 @@ nativeQueryArrayRelationshipSetup ::
   m (RelInfo b, Seq SchemaDependency)
 nativeQueryArrayRelationshipSetup sourceName nativeQueryName (RelDef relName manualConfig _) = do
   let refqt = rmTable manualConfig
-      (lCols, rCols) = unzip $ Map.toList $ rmColumns manualConfig
+      (lCols, rCols) = unzip $ HashMap.toList $ rmColumns manualConfig
       deps =
         ( fmap
             ( \c ->
@@ -200,7 +200,7 @@ defaultBuildArrayRelationshipInfo ::
 defaultBuildArrayRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case ru of
   RUManual rm -> do
     let refqt = rmTable rm
-        (lCols, rCols) = unzip $ Map.toList $ rmColumns rm
+        (lCols, rCols) = unzip $ HashMap.toList $ rmColumns rm
         deps =
           ( fmap
               ( \c ->
@@ -244,7 +244,7 @@ mkFkeyRel ::
   m (RelInfo b, Seq SchemaDependency)
 mkFkeyRel relType io source rn sourceTable remoteTable remoteColumns foreignKeys = do
   foreignTableForeignKeys <-
-    Map.lookup remoteTable foreignKeys
+    HashMap.lookup remoteTable foreignKeys
       `onNothing` throw400 NotFound ("table " <> remoteTable <<> " does not exist in source: " <> sourceNameToText source)
   let keysThatReferenceUs = filter ((== sourceTable) . _fkForeignTable) (Set.toList foreignTableForeignKeys)
   ForeignKey constraint _foreignTable colMap <- getRequiredFkey remoteColumns keysThatReferenceUs
@@ -270,7 +270,7 @@ mkFkeyRel relType io source rn sourceTable remoteTable remoteColumns foreignKeys
   pure (RelInfo rn relType (reverseMap (NEHashMap.toHashMap colMap)) remoteTable False io, dependencies)
   where
     reverseMap :: Hashable y => HashMap x y -> HashMap y x
-    reverseMap = Map.fromList . fmap swap . Map.toList
+    reverseMap = HashMap.fromList . fmap swap . HashMap.toList
 
 -- | Try to find a foreign key constraint, identifying a constraint by its set of columns
 getRequiredFkey ::
@@ -284,7 +284,7 @@ getRequiredFkey cols fkeys =
     [] -> throw400 ConstraintError "no foreign constraint exists on the given column(s)"
     _ -> throw400 ConstraintError "more than one foreign key constraint exists on the given column(s)"
   where
-    filteredFkeys = filter ((== Set.fromList (toList cols)) . Map.keysSet . NEHashMap.toHashMap . _fkColumnMapping) fkeys
+    filteredFkeys = filter ((== Set.fromList (toList cols)) . HashMap.keysSet . NEHashMap.toHashMap . _fkColumnMapping) fkeys
 
 drUsingColumnDep ::
   forall b.

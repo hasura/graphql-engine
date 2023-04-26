@@ -28,7 +28,7 @@ where
 
 import Data.Aeson qualified as A
 import Data.Aeson.TH qualified as A
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.IORef
 import Data.Time.Clock.POSIX (POSIXTime, getPOSIXTime)
 import GHC.IO.Unsafe (unsafePerformIO)
@@ -77,9 +77,9 @@ instance Semigroup RequestTimingsCount where
 -- NOTE: We use the global mutable variable pattern for metric collection
 -- counters for convenience at collection site (don't wear hairshirts that
 -- discourage useful reporting).
-requestCounters :: IORef (HM.HashMap (RequestDimensions, RunningTimeBucket) RequestTimingsCount)
+requestCounters :: IORef (HashMap.HashMap (RequestDimensions, RunningTimeBucket) RequestTimingsCount)
 {-# NOINLINE requestCounters #-}
-requestCounters = unsafePerformIO $ newIORef HM.empty
+requestCounters = unsafePerformIO $ newIORef HashMap.empty
 
 -- | Internal. Since these metrics are accumulated while graphql-engine is
 -- running and sent periodically, we need to include a tag that is unique for
@@ -163,7 +163,7 @@ recordTimingMetric reqDimensions RequestTimings {..} = liftIO $ do
                 sort totalTimeBuckets
   atomicModifyIORef' requestCounters $
     (,())
-      . HM.insertWith (<>) (reqDimensions, ourBucket) RequestTimingsCount {telemCount = 1, ..}
+      . HashMap.insertWith (<>) (reqDimensions, ourBucket) RequestTimingsCount {telemCount = 1, ..}
 
 -- | The final shape of this part of our metrics data JSON. This should allow
 -- reasonably efficient querying using GIN indexes and JSONB containment
@@ -196,7 +196,7 @@ instance A.FromJSON ServiceTimingMetrics
 dumpServiceTimingMetrics :: MonadIO m => m ServiceTimingMetrics
 dumpServiceTimingMetrics = liftIO $ do
   cs <- readIORef requestCounters
-  let serviceTimingMetrics = flip map (HM.toList cs) $
+  let serviceTimingMetrics = flip map (HashMap.toList cs) $
         \((dimensions, bucket), metrics) -> ServiceTimingMetric {..}
       collectionTag = round approxStartTime
   return ServiceTimingMetrics {..}

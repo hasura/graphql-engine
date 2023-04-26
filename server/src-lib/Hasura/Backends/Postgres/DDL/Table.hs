@@ -10,7 +10,7 @@ where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Validate
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.List (delete)
 import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
@@ -157,7 +157,7 @@ fetchEnumValuesFromDb tableName primaryKeyColumn maybeCommentColumn = do
       validEnums = rights enumValues
   case NE.nonEmpty badNames of
     Just someBadNames -> refute [EnumTableInvalidEnumValueNames someBadNames]
-    Nothing -> pure $ Map.fromList validEnums
+    Nothing -> pure $ HashMap.fromList validEnums
   where
     -- https://graphql.github.io/graphql-spec/June2018/#EnumValue
     mkValidEnumValueName name =

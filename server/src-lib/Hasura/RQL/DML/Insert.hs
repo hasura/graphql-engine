@@ -5,7 +5,7 @@ where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson.Types
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.Sequence qualified as DS
 import Data.Text.Extended
@@ -35,26 +35,26 @@ import Hasura.Tracing qualified as Tracing
 convObj ::
   (UserInfoM m, QErrM m) =>
   (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp) ->
-  HM.HashMap PGCol S.SQLExp ->
-  HM.HashMap PGCol S.SQLExp ->
+  HashMap.HashMap PGCol S.SQLExp ->
+  HashMap.HashMap PGCol S.SQLExp ->
   FieldInfoMap (FieldInfo ('Postgres 'Vanilla)) ->
   InsObj ('Postgres 'Vanilla) ->
   m ([PGCol], [S.SQLExp])
 convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
-  inpInsVals <- flip HM.traverseWithKey insObj $ \c val -> do
+  inpInsVals <- flip HashMap.traverseWithKey insObj $ \c val -> do
     let relWhenPGErr = "relationships can't be inserted"
     colType <- askColumnType fieldInfoMap c relWhenPGErr
     -- if column has predefined value then throw error
     when (c `elem` preSetCols) $ throwNotInsErr c
     -- Encode aeson's value into prepared value
     withPathK (getPGColTxt c) $ prepFn colType val
-  let insVals = HM.union setInsVals inpInsVals
-      sqlExps = HM.elems $ HM.union insVals defInsVals
-      inpCols = HM.keys inpInsVals
+  let insVals = HashMap.union setInsVals inpInsVals
+      sqlExps = HashMap.elems $ HashMap.union insVals defInsVals
+      inpCols = HashMap.keys inpInsVals
 
   return (inpCols, sqlExps)
   where
-    preSetCols = HM.keys setInsVals
+    preSetCols = HashMap.keys setInsVals
 
     throwNotInsErr c = do
       roleName <- _uiRole <$> askUserInfo
@@ -180,13 +180,13 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName _ val oC mR
   let mutOutput = mkDefaultMutFlds mAnnRetCols
 
   let defInsVals =
-        HM.fromList
+        HashMap.fromList
           [ (ciColumn column, S.columnDefaultValue)
             | column <- getCols fieldInfoMap,
               _cmIsInsertable (ciMutability column)
           ]
       allCols = getCols fieldInfoMap
-      insCols = HM.keys defInsVals
+      insCols = HashMap.keys defInsVals
 
   resolvedPreSet <- mapM (convPartialSQLExp sessVarBldr) setInsVals
 

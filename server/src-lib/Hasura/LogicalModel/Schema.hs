@@ -6,7 +6,7 @@ module Hasura.LogicalModel.Schema
   )
 where
 
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Hasura.GraphQL.Schema.Backend
   ( BackendLogicalModelSelectSchema (..),
     MonadBuildSchema,
@@ -40,7 +40,7 @@ getSelPermInfoForLogicalModel ::
   LogicalModelInfo b ->
   Maybe (SelPermInfo b)
 getSelPermInfoForLogicalModel role logicalModel =
-  HM.lookup role (_lmiPermissions logicalModel) >>= _permSel
+  HashMap.lookup role (_lmiPermissions logicalModel) >>= _permSel
 
 -- | build select permissions for logical model
 -- `admin` can always select everything

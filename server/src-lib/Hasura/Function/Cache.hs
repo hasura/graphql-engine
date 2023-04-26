@@ -64,7 +64,7 @@ import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.TH
 import Data.Char (toLower)
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.Extended as LE
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
@@ -355,7 +355,7 @@ deriving newtype instance FromJSON (RawFunctionInfo b) => FromJSON (FunctionOver
 
 data FunctionArgsExpG a = FunctionArgsExp
   { _faePositional :: [a],
-    _faeNamed :: (HM.HashMap Text a)
+    _faeNamed :: (HashMap.HashMap Text a)
   }
   deriving stock (Show, Eq, Functor, Foldable, Traversable, Generic)
 
@@ -366,4 +366,4 @@ instance (NFData a) => NFData (FunctionArgsExpG a)
 type FunctionArgsExp b v = FunctionArgsExpG (FunctionArgumentExp b v)
 
 emptyFunctionArgsExp :: FunctionArgsExpG a
-emptyFunctionArgsExp = FunctionArgsExp [] HM.empty
+emptyFunctionArgsExp = FunctionArgsExp [] HashMap.empty

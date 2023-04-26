@@ -10,7 +10,7 @@ module Hasura.Backends.MySQL.FromIr
 where
 
 import Control.Monad.Validate
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet.InsOrd qualified as OSet
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
@@ -224,7 +224,7 @@ fromMapping ::
   From ->
   HashMap Column Column ->
   ReaderT EntityAlias FromIr [Expression]
-fromMapping localFrom = traverse columnsToEqs . HM.toList
+fromMapping localFrom = traverse columnsToEqs . HashMap.toList
   where
     columnsToEqs (remoteColumn, localColumn) = do
       localFieldName <- local (const (fromAlias localFrom)) (fromColumn localColumn)
@@ -849,7 +849,7 @@ fromMappingFieldNames localFrom =
               (remoteFieldName)
           )
     )
-    . HM.toList
+    . HashMap.toList
 
 fieldTextNames :: IR.AnnFieldsG 'MySQL Void Expression -> [Text]
 fieldTextNames = fmap (\(IR.FieldName name, _) -> name)

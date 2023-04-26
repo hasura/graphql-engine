@@ -44,7 +44,7 @@ module Hasura.GraphQL.Execute.Inline
 where
 
 import Control.Lens
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.List qualified as L
 import Data.Text qualified as T
@@ -115,16 +115,16 @@ inlineSelectionSet ::
   SelectionSet FragmentSpread Name ->
   m (SelectionSet NoFragments Name)
 inlineSelectionSet fragmentDefinitions selectionSet = do
-  let fragmentDefinitionMap = Map.groupOnNE _fdName fragmentDefinitions
+  let fragmentDefinitionMap = HashMap.groupOnNE _fdName fragmentDefinitions
   uniqueFragmentDefinitions <- flip
-    Map.traverseWithKey
+    HashMap.traverseWithKey
     fragmentDefinitionMap
     \fragmentName fragmentDefinitions' ->
       case fragmentDefinitions' of
         a :| [] -> return a
         _ -> throw400 ParseFailed $ "multiple definitions for fragment " <>> fragmentName
   let usedFragmentNames = Set.fromList $ fragmentsInSelectionSet selectionSet
-      definedFragmentNames = Set.fromList $ Map.keys uniqueFragmentDefinitions
+      definedFragmentNames = Set.fromList $ HashMap.keys uniqueFragmentDefinitions
       -- At the time of writing, this check is disabled using
       -- a local binding because, the master branch doesn't implement this
       -- check.
@@ -188,7 +188,7 @@ inlineFragmentSpread FragmentSpread {_fsName, _fsDirectives} = do
 
   if
       -- If we’ve already inlined this fragment, no need to process it again.
-      | Just fragment <- Map.lookup _fsName _isFragmentCache ->
+      | Just fragment <- HashMap.lookup _fsName _isFragmentCache ->
           pure $! addSpreadDirectives fragment
       -- Fragment cycles are always illegal; see
       -- http://spec.graphql.org/June2018/#sec-Fragment-spreads-must-not-form-cycles
@@ -200,7 +200,7 @@ inlineFragmentSpread FragmentSpread {_fsName, _fsDirectives} = do
       -- We didn’t hit the fragment cache, so look up the definition and convert
       -- it to an inline fragment.
       | Just FragmentDefinition {_fdTypeCondition, _fdSelectionSet} <-
-          Map.lookup _fsName _ieFragmentDefinitions -> withPathK (unName _fsName) $ do
+          HashMap.lookup _fsName _ieFragmentDefinitions -> withPathK (unName _fsName) $ do
           selectionSet <-
             locally ieFragmentStack (_fsName :) $
               traverse inlineSelection _fdSelectionSet
@@ -214,7 +214,7 @@ inlineFragmentSpread FragmentSpread {_fsName, _fsDirectives} = do
                     _ifDirectives = [],
                     _ifSelectionSet = selectionSet
                   }
-          modify' $ over isFragmentCache $ Map.insert _fsName fragment
+          modify' $ over isFragmentCache $ HashMap.insert _fsName fragment
           pure $! addSpreadDirectives fragment
 
       -- If we get here, the fragment name is unbound; raise an error.

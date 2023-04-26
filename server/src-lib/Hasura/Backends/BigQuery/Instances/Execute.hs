@@ -4,7 +4,7 @@ module Hasura.Backends.BigQuery.Instances.Execute () where
 
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Text qualified as Aeson
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as LT
@@ -231,7 +231,7 @@ bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
             Aeson.encodeToLazyText lhs
 
     recordSetDefinitionList =
-      (coerceToColumn argumentId, BigQuery.IntegerScalarType) : Map.toList (fmap snd joinColumnMapping)
+      (coerceToColumn argumentId, BigQuery.IntegerScalarType) : HashMap.toList (fmap snd joinColumnMapping)
 
     jsonToRecordSet :: IR.SelectFromG ('BigQuery) (UnpreparedValue 'BigQuery)
     jsonToRecordSet =

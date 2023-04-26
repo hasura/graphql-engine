@@ -23,7 +23,7 @@ import Data.Aeson
 import Data.Aeson.TH qualified as J
 import Data.Aeson.Types (Parser, toJSONKeyText)
 import Data.CaseInsensitive qualified as CI
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Prelude
@@ -67,7 +67,7 @@ sessionVariableToText = T.toLower . CI.original . unSessionVariable
 mkSessionVariable :: Text -> SessionVariable
 mkSessionVariable = SessionVariable . CI.mk
 
-newtype SessionVariables = SessionVariables {unSessionVariables :: Map.HashMap SessionVariable SessionVariableValue}
+newtype SessionVariables = SessionVariables {unSessionVariables :: HashMap.HashMap SessionVariable SessionVariableValue}
   deriving (Show, Eq, Hashable, Semigroup, Monoid)
 
 instance ToJSON SessionVariables where
@@ -77,7 +77,7 @@ instance ToJSON SessionVariables where
 instance FromJSON SessionVariables where
   parseJSON v = mkSessionVariablesText <$> parseJSON v
 
-mkSessionVariablesText :: Map.HashMap Text Text -> SessionVariables
+mkSessionVariablesText :: HashMap.HashMap Text Text -> SessionVariables
 mkSessionVariablesText = SessionVariables . mapKeys mkSessionVariable
 
 -- | Represent the admin secret state; whether the secret is sent

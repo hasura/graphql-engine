@@ -11,7 +11,7 @@ where
 
 import Data.Aeson
 import Data.Graph qualified as G
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
@@ -86,7 +86,7 @@ mkBooleanPermissionMap constructorFn metadataPermissions orderedRoles =
   foldl' combineBooleanPermission metadataPermissions $ _unOrderedRoles orderedRoles
   where
     combineBooleanPermission accumulatedPermMap (Role roleName (ParentRoles parentRoles)) =
-      case M.lookup roleName accumulatedPermMap of
+      case HashMap.lookup roleName accumulatedPermMap of
         -- We check if a permission for the given role exists in the metadata, if it
         -- exists, we use that
         Just _ -> accumulatedPermMap
@@ -95,9 +95,9 @@ mkBooleanPermissionMap constructorFn metadataPermissions orderedRoles =
         -- then the inherited role will also be able to access the entity.
         Nothing ->
           -- see Note [Roles Inheritance]
-          let canInheritPermission = any ((`M.member` accumulatedPermMap)) (toList parentRoles)
+          let canInheritPermission = any ((`HashMap.member` accumulatedPermMap)) (toList parentRoles)
            in if canInheritPermission
-                then M.insert roleName (constructorFn roleName) accumulatedPermMap
+                then HashMap.insert roleName (constructorFn roleName) accumulatedPermMap
                 else accumulatedPermMap
 
 -- | `OrderedRoles` is a data type to hold topologically sorted roles
@@ -201,7 +201,7 @@ buildTablePermissions source tableCache tableFields tablePermissions orderedRole
       go accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) = do
         parentRolePermissions <-
           for (toList parentRoles) $ \role ->
-            onNothing (M.lookup role accumulatedRolePermMap) $
+            onNothing (HashMap.lookup role accumulatedRolePermMap) $
               throw500 $
                 -- this error will ideally never be thrown, but if it's thrown then
                 -- it's possible that the permissions for the role do exist, but it's
@@ -209,7 +209,7 @@ buildTablePermissions source tableCache tableFields tablePermissions orderedRole
                 "buildTablePermissions: table role permissions for role: " <> role <<> " not found"
         let combinedParentRolePermInfo = mconcat $ fmap rolePermInfoToCombineRolePermInfo parentRolePermissions
             selectPermissionsCount = length $ filter (isJust . _permSel) parentRolePermissions
-            accumulatedRolePermission = M.lookup roleName accumulatedRolePermMap
+            accumulatedRolePermission = HashMap.lookup roleName accumulatedRolePermMap
             roleSelectPermission =
               onNothing (_permSel =<< accumulatedRolePermission) $
                 combinedSelPermInfoToSelPermInfo selectPermissionsCount <$> (crpiSelPerm combinedParentRolePermInfo)
@@ -217,7 +217,7 @@ buildTablePermissions source tableCache tableFields tablePermissions orderedRole
         roleUpdatePermission <- resolveCheckTablePermission (crpiUpdPerm combinedParentRolePermInfo) accumulatedRolePermission _permUpd roleName source table PTUpdate
         roleDeletePermission <- resolveCheckTablePermission (crpiDelPerm combinedParentRolePermInfo) accumulatedRolePermission _permDel roleName source table PTDelete
         let rolePermInfo = RolePermInfo roleInsertPermission roleSelectPermission roleUpdatePermission roleDeletePermission
-        pure $ M.insert roleName rolePermInfo accumulatedRolePermMap
+        pure $ HashMap.insert roleName rolePermInfo accumulatedRolePermMap
 
   metadataRolePermissions <-
     for alignedPermissions \(insertPermission, selectPermission, updatePermission, deletePermission) -> do
@@ -238,7 +238,7 @@ buildTablePermissions source tableCache tableFields tablePermissions orderedRole
           selectsMap = (\a -> (Nothing, Just a, Nothing, Nothing)) <$> mkMap _tpiSelect
           updatesMap = (\a -> (Nothing, Nothing, Just a, Nothing)) <$> mkMap _tpiUpdate
           deletesMap = (\a -> (Nothing, Nothing, Nothing, Just a)) <$> mkMap _tpiDelete
-          unionMap = M.unionWith \(a, b, c, d) (a', b', c', d') -> (a <|> a', b <|> b', c <|> c', d <|> d')
+          unionMap = HashMap.unionWith \(a, b, c, d) (a', b', c', d') -> (a <|> a', b <|> b', c <|> c', d <|> d')
        in insertsMap `unionMap` selectsMap `unionMap` updatesMap `unionMap` deletesMap
 
     buildPermission :: Maybe (PermDef b a) -> m (Maybe (PermInfo a b))
@@ -304,7 +304,7 @@ buildLogicalModelPermissions sourceName tableCache logicalModelName logicalModel
         -- not yet built due to wrong ordering of the roles, check `orderRoles`.
         parentRolePermissions <-
           for (toList parentRoles) \role ->
-            M.lookup role acc
+            HashMap.lookup role acc
               `onNothing` throw500 ("buildTablePermissions: table role permissions for role: " <> role <<> " not found")
 
         let -- What permissions are we inheriting?
@@ -319,7 +319,7 @@ buildLogicalModelPermissions sourceName tableCache logicalModelName logicalModel
 
             -- Does our specific role have any permissions?
             accumulatedRolePermission :: Maybe (RolePermInfo b)
-            accumulatedRolePermission = M.lookup roleName acc
+            accumulatedRolePermission = HashMap.lookup roleName acc
 
             -- If we have a permission, we'll use it. Otherwise, we'll fall
             -- back to the inherited permission.
@@ -332,7 +332,7 @@ buildLogicalModelPermissions sourceName tableCache logicalModelName logicalModel
             rolePermInfo :: RolePermInfo b
             rolePermInfo = RolePermInfo Nothing roleSelectPermission Nothing Nothing
 
-        pure (M.insert roleName rolePermInfo acc)
+        pure (HashMap.insert roleName rolePermInfo acc)
 
   -- At the moment, we only support select permissions for logical models
   metadataRolePermissions <-

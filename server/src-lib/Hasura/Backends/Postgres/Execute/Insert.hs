@@ -9,8 +9,7 @@ module Hasura.Backends.Postgres.Execute.Insert
 where
 
 import Data.Aeson qualified as J
-import Data.HashMap.Strict qualified as Map
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.List qualified as L
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
@@ -79,7 +78,7 @@ insertMultipleObjects ::
     MonadReader QueryTagsComment m
   ) =>
   IR.MultiObjectInsert ('Postgres pgKind) Postgres.SQLExp ->
-  Map.HashMap PGCol Postgres.SQLExp ->
+  HashMap.HashMap PGCol Postgres.SQLExp ->
   UserInfo ->
   IR.MutationOutput ('Postgres pgKind) ->
   Seq.Seq PG.PrepArg ->
@@ -96,14 +95,14 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
 
     withoutRelsInsert = do
       indexedForM_ (IR.getInsertColumns <$> insObjs) \column ->
-        validateInsert (map fst column) [] (Map.keys additionalColumns)
-      let insObjRows = Map.fromList . IR.getInsertColumns <$> insObjs
-          (columnNames, insertRows) = Map.homogenise Postgres.columnDefaultValue $ map ((presetRow <> additionalColumns) <>) insObjRows
+        validateInsert (map fst column) [] (HashMap.keys additionalColumns)
+      let insObjRows = HashMap.fromList . IR.getInsertColumns <$> insObjs
+          (columnNames, insertRows) = HashMap.homogenise Postgres.columnDefaultValue $ map ((presetRow <> additionalColumns) <>) insObjRows
           insertQuery =
             IR.InsertQueryP1
               table
               (toList columnNames)
-              (map Map.elems insertRows)
+              (map HashMap.elems insertRows)
               conflictClause
               checkCondition
               mutationOutput
@@ -148,14 +147,14 @@ insertObject ::
   m (Int, Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal))
 insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase =
   Tracing.newSpan ("Insert " <> qualifiedObjectToText table) do
-    validateInsert (Map.keys columns) (map IR._riRelationInfo objectRels) (Map.keys additionalColumns)
+    validateInsert (HashMap.keys columns) (map IR._riRelationInfo objectRels) (HashMap.keys additionalColumns)
 
     -- insert all object relations and fetch this insert dependent column values
     objInsRes <- forM beforeInsert $ insertObjRel planVars userInfo stringifyNum tCase
 
     -- prepare final insert columns
     let objRelAffRows = sum $ map fst objInsRes
-        objRelDeterminedCols = Map.fromList $ concatMap snd objInsRes
+        objRelDeterminedCols = HashMap.fromList $ concatMap snd objInsRes
         finalInsCols = presetValues <> columns <> objRelDeterminedCols <> additionalColumns
 
     let cte = mkInsertQ table onConflict finalInsCols checkCond
@@ -171,7 +170,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase
     return (totAffRows, colValM)
   where
     IR.AnnotatedInsertData (IR.Single annObj) table checkCond allColumns _pk _extra presetValues (BackendInsert onConflict) = singleObjIns
-    columns = Map.fromList $ IR.getInsertColumns annObj
+    columns = HashMap.fromList $ IR.getInsertColumns annObj
     objectRels = IR.getInsertObjectRelationships annObj
     arrayRels = IR.getInsertArrayRelationships annObj
 
@@ -185,7 +184,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase
     afterInsertDepCols :: [ColumnInfo ('Postgres pgKind)]
     afterInsertDepCols =
       flip (getColInfos @('Postgres pgKind)) allColumns $
-        concatMap (Map.keys . riMapping . IR._riRelationInfo) allAfterInsertRels
+        concatMap (HashMap.keys . riMapping . IR._riRelationInfo) allAfterInsertRels
 
     objToArr :: forall a b. IR.ObjectRelationInsert b a -> IR.ArrayRelationInsert b a
     objToArr IR.RelationInsert {..} = IR.RelationInsert (singleToMulti _riInsertData) _riRelationInfo
@@ -237,7 +236,7 @@ insertObjRel planVars userInfo stringifyNum tCase objRelIns =
     (affRows, colValM) <- withPathK "data" $ insertObject singleObjIns mempty userInfo planVars stringifyNum tCase
     colVal <- onNothing colValM $ throw400 NotSupported errMsg
     retColsWithVals <- fetchFromColVals colVal rColInfos
-    let columns = flip mapMaybe (Map.toList mapCols) \(column, target) -> do
+    let columns = flip mapMaybe (HashMap.toList mapCols) \(column, target) -> do
           value <- lookup target retColsWithVals
           Just (column, value)
     pure (affRows, columns)
@@ -247,7 +246,7 @@ insertObjRel planVars userInfo stringifyNum tCase objRelIns =
     table = riRTable relInfo
     mapCols = riMapping relInfo
     allCols = IR._aiTableColumns singleObjIns
-    rCols = Map.elems mapCols
+    rCols = HashMap.elems mapCols
     rColInfos = getColInfos rCols allCols
     errMsg =
       "cannot proceed to insert object relation "
@@ -271,15 +270,15 @@ insertArrRel ::
   m Int
 insertArrRel resCols userInfo planVars stringifyNum tCase arrRelIns =
   withPathK (relNameToTxt $ riName relInfo) $ do
-    let additionalColumns = Map.fromList $
+    let additionalColumns = HashMap.fromList $
           flip mapMaybe resCols \(column, value) -> do
-            target <- Map.lookup column mapping
+            target <- HashMap.lookup column mapping
             Just (target, value)
     resBS <-
       withPathK "data" $
         insertMultipleObjects multiObjIns additionalColumns userInfo mutOutput planVars stringifyNum tCase
     resObj <- decodeEncJSON resBS
-    onNothing (Map.lookup ("affected_rows" :: Text) resObj) $
+    onNothing (HashMap.lookup ("affected_rows" :: Text) resObj) $
       throw500 "affected_rows not returned in array rel insert"
   where
     IR.RelationInsert multiObjIns relInfo = arrRelIns
@@ -310,7 +309,7 @@ validateInsert insCols objRels addCols = do
         <> " columns as their values are already being determined by parent insert"
 
   forM_ objRels $ \relInfo -> do
-    let lCols = Map.keys $ riMapping relInfo
+    let lCols = HashMap.keys $ riMapping relInfo
         relName = riName relInfo
         relNameTxt = relNameToTxt relName
         lColConflicts = lCols `intersect` (addCols <> insCols)
@@ -329,14 +328,14 @@ mkInsertQ ::
   Backend ('Postgres pgKind) =>
   QualifiedTable ->
   Maybe (IR.OnConflictClause ('Postgres pgKind) Postgres.SQLExp) ->
-  Map.HashMap PGCol Postgres.SQLExp ->
+  HashMap.HashMap PGCol Postgres.SQLExp ->
   (AnnBoolExpSQL ('Postgres pgKind), Maybe (AnnBoolExpSQL ('Postgres pgKind))) ->
   Postgres.TopLevelCTE
 mkInsertQ table onConflictM insertRow (insCheck, updCheck) =
   let sqlConflict = PGT.toSQLConflict table <$> onConflictM
-      sqlExps = Map.elems insertRow
+      sqlExps = HashMap.elems insertRow
       valueExp = Postgres.ValuesExp [Postgres.TupleExp sqlExps]
-      tableCols = Map.keys insertRow
+      tableCols = HashMap.keys insertRow
       sqlInsert =
         Postgres.SQLInsert table tableCols valueExp sqlConflict
           . Just
@@ -357,7 +356,7 @@ fetchFromColVals ::
   m [(PGCol, Postgres.SQLExp)]
 fetchFromColVals colVal reqCols =
   forM reqCols $ \ci -> do
-    let valM = Map.lookup (ciColumn ci) colVal
+    let valM = HashMap.lookup (ciColumn ci) colVal
     val <-
       onNothing valM $
         throw500 $

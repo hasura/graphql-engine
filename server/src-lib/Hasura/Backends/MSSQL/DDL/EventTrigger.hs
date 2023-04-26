@@ -36,7 +36,7 @@ import Data.Aeson qualified as J
 import Data.ByteString qualified as B
 import Data.ByteString.Lazy (fromStrict)
 import Data.FileEmbed (makeRelativeToProject)
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HashSet
 import Data.Set.NonEmpty qualified as NE
 import Data.Text qualified as T
@@ -894,11 +894,11 @@ addCleanupSchedules sourceConfig triggersWithcleanupConfig =
     let currTime = utcToZonedTime utc currTimeUTC
         triggerNames = map fst triggersWithcleanupConfig
     allScheduledCleanupsInDB <- liftEitherM $ liftIO $ runMSSQLSourceWriteTx sourceConfig $ selectLastCleanupScheduledTimestamp triggerNames
-    let triggerMap = Map.fromList $ allScheduledCleanupsInDB
+    let triggerMap = HashMap.fromList $ allScheduledCleanupsInDB
         scheduledTriggersAndTimestamps =
           mapMaybe
             ( \(tName, cConfig) ->
-                let lastScheduledTime = case Map.lookup tName triggerMap of
+                let lastScheduledTime = case HashMap.lookup tName triggerMap of
                       Nothing -> Just currTime
                       Just (count, lastTime) -> if count < 5 then (Just lastTime) else Nothing
                  in fmap

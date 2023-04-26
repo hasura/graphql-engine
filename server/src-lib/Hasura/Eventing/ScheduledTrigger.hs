@@ -129,7 +129,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Environment qualified as Env
 import Data.Has
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
 import Data.SerializableBlob qualified as SB
@@ -183,13 +183,13 @@ runCronEventsGenerator logger cronTriggerStatsLogger getSC = do
     -- get cron triggers from cache
     let cronTriggersCache = scCronTriggers sc
 
-    unless (Map.null cronTriggersCache) $ do
+    unless (HashMap.null cronTriggersCache) $ do
       -- Poll the DB only when there's at-least one cron trigger present
       -- in the schema cache
       -- get cron trigger stats from db
       -- When shutdown is initiated, we stop generating new cron events
       eitherRes <- runExceptT $ do
-        deprivedCronTriggerStats <- liftEitherM $ getDeprivedCronTriggerStats $ Map.keys cronTriggersCache
+        deprivedCronTriggerStats <- liftEitherM $ getDeprivedCronTriggerStats $ HashMap.keys cronTriggersCache
         -- Log fetched deprived cron trigger stats
         logFetchedCronTriggersStats cronTriggerStatsLogger deprivedCronTriggerStats
         -- join stats with cron triggers and produce @[(CronTriggerInfo, CronTriggerStats)]@
@@ -204,7 +204,7 @@ runCronEventsGenerator logger cronTriggerStatsLogger getSC = do
     liftIO $ sleep (minutes 1)
   where
     withCronTrigger cronTriggerCache cronTriggerStat = do
-      case Map.lookup (_ctsName cronTriggerStat) cronTriggerCache of
+      case HashMap.lookup (_ctsName cronTriggerStat) cronTriggerCache of
         Nothing -> do
           L.unLogger logger $
             ScheduledTriggerInternalErr $
@@ -257,7 +257,7 @@ processCronEvents logger httpMgr scheduledTriggerMetrics cronEvents cronTriggers
   saveLockedEvents (map _ceId cronEvents) lockedCronEvents
   -- The `createdAt` of a cron event is the `created_at` of the cron trigger
   forConcurrently_ cronEvents $ \(CronEvent id' name st _ tries _ _) -> do
-    case Map.lookup name cronTriggersInfo of
+    case HashMap.lookup name cronTriggersInfo of
       Nothing ->
         logInternalError $
           err500 Unexpected $
@@ -412,7 +412,7 @@ processScheduledTriggers getEnvHook logger statsLogger httpMgr scheduledTriggerM
       const do
         cronTriggersInfo <- scCronTriggers <$> liftIO getSC
         env <- liftIO getEnvHook
-        getScheduledEventsForDelivery (Map.keys cronTriggersInfo) >>= \case
+        getScheduledEventsForDelivery (HashMap.keys cronTriggersInfo) >>= \case
           Left e -> logInternalError e
           Right (cronEvents, oneOffEvents) -> do
             logFetchedScheduledEventsStats statsLogger (CronEventsCount $ length cronEvents) (OneOffScheduledEventsCount $ length oneOffEvents)

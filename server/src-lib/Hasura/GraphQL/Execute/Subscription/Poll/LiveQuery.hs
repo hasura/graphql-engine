@@ -11,7 +11,7 @@ import Control.Concurrent.Async qualified as A
 import Control.Concurrent.STM qualified as STM
 import Control.Lens
 import Data.ByteString qualified as BS
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.Split (chunksOf)
 import Data.Monoid (Sum (..))
 import Data.Text.Extended
@@ -188,7 +188,7 @@ pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) rol
         let resp = throwError $ GQExecError [encodeGQLErr False e]
          in [(resp, cohortId, Nothing, snapshot) | (cohortId, snapshot) <- cohorts]
       Right responses -> do
-        let cohortSnapshotMap = Map.fromList cohorts
+        let cohortSnapshotMap = HashMap.fromList cohorts
         flip mapMaybe responses $ \(cohortId, respBS) ->
           let respHash = mkRespHash respBS
               respSize = BS.length respBS
@@ -197,4 +197,4 @@ pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) rol
               -- (this shouldn't happen but if it happens it means a logic error and
               -- we should log it)
               (pure respBS,cohortId,Just (respHash, respSize),)
-                <$> Map.lookup cohortId cohortSnapshotMap
+                <$> HashMap.lookup cohortId cohortSnapshotMap

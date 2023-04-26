@@ -13,7 +13,7 @@ where
 import Control.Applicative (getConst)
 import Control.Monad.Validate
 import Data.Aeson.Extended qualified as J
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
@@ -87,7 +87,7 @@ fromSourceRelationship ::
   -- | List of json objects, each of which becomes a row of the table
   NE.NonEmpty J.Object ->
   -- | The above objects have this schema
-  HM.HashMap IR.FieldName (ColumnName, ScalarType) ->
+  HashMap.HashMap IR.FieldName (ColumnName, ScalarType) ->
   IR.FieldName ->
   (IR.FieldName, IR.SourceRelationshipSelection 'MSSQL Void (Const Expression)) ->
   FromIr TSQL.Select
@@ -132,7 +132,7 @@ fromSourceRelationship lhs lhsSchema argumentId relationshipField = do
                   openJsonWith =
                     Just $
                       toJsonFieldSpec argumentId IntegerType
-                        NE.:| map (uncurry toJsonFieldSpec . second snd) (HM.toList lhsSchema)
+                        NE.:| map (uncurry toJsonFieldSpec . second snd) (HashMap.toList lhsSchema)
                 },
             aliasedAlias = "lhs"
           }
@@ -148,7 +148,7 @@ fromSourceRelationship lhs lhsSchema argumentId relationshipField = do
 -- an object, array, or aggregate relationship.
 fromRemoteRelationFieldsG ::
   Map TableName EntityAlias ->
-  HM.HashMap ColumnName ColumnName ->
+  HashMap.HashMap ColumnName ColumnName ->
   (IR.FieldName, IR.SourceRelationshipSelection 'MSSQL Void (Const Expression)) ->
   ReaderT EntityAlias FromIr FieldSource
 fromRemoteRelationFieldsG existingJoins joinColumns (IR.FieldName name, field) =
@@ -828,7 +828,7 @@ fromMapping localFrom =
               (ColumnExpression remoteFieldName)
           )
     )
-    . HM.toList
+    . HashMap.toList
 
 selectFromMapping ::
   Select ->

@@ -4,7 +4,7 @@
 module Hasura.NativeQuery.Schema (defaultBuildNativeQueryRootFields) where
 
 import Data.Has (Has (getter))
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.Monoid (Ap (Ap, getAp))
 import Hasura.GraphQL.Schema.Backend
   ( BackendLogicalModelSelectSchema (..),
@@ -73,7 +73,7 @@ defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
   let interpolatedQuery nqArgs =
         InterpolatedQuery $
           (fmap . fmap)
-            ( \var@(NativeQueryArgumentName name) -> case HM.lookup var nqArgs of
+            ( \var@(NativeQueryArgumentName name) -> case HashMap.lookup var nqArgs of
                 Just arg -> UVParameter (FromInternal name) arg
                 Nothing ->
                   -- the `nativeQueryArgsParser` will already have checked
@@ -131,7 +131,7 @@ nativeQueryArgumentsSchema nativeQueryName argsSignature = do
       foldMap
         ( \(name, NullableScalarType {nstType, nstNullable, nstDescription}) -> Ap do
             argValueParser <-
-              fmap (HM.singleton name . openValueOrigin)
+              fmap (HashMap.singleton name . openValueOrigin)
                 <$> lift (columnParser (Column.ColumnScalar nstType) (G.Nullability nstNullable))
             -- TODO: Naming conventions?
             -- TODO: Custom fields? (Probably not)
@@ -145,7 +145,7 @@ nativeQueryArgumentsSchema nativeQueryName argsSignature = do
                 (Just description)
                 argValueParser
         )
-        (HM.toList argsSignature)
+        (HashMap.toList argsSignature)
 
   let desc = Just $ G.Description $ G.unName nativeQueryName <> " Native Query Arguments"
 

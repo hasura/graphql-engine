@@ -31,8 +31,7 @@ import Control.Exception (try)
 import Control.Lens
 import Data.Aeson qualified as A
 import Data.ByteString.Lazy qualified as BL
-import Data.HashMap.Strict qualified as HM
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.List qualified as L
 import Data.List.Extended qualified as L
 import Data.Text qualified as T
@@ -168,7 +167,7 @@ runTelemetry (Logger logger) appStateRef metadataDbUid pgVersion = do
             telemetries =
               map
                 (\sourceinfo -> (Any.dispatchAnyBackend @HasTag) sourceinfo telemetryForSource)
-                (HM.elems (scSources schemaCache))
+                (HashMap.elems (scSources schemaCache))
             payloads = A.encode <$> telemetries
 
         for_ payloads $ \payload -> do
@@ -249,10 +248,10 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
   let _mtTables = countSourceTables (isNothing . _tciViewInfo . _tiCoreInfo)
       _mtViews = countSourceTables (isJust . _tciViewInfo . _tiCoreInfo)
       _mtEnumTables = countSourceTables (isJust . _tciEnumValues . _tiCoreInfo)
-      allRels = join $ Map.elems $ Map.map (getRels . _tciFieldInfoMap . _tiCoreInfo) sourceTableCache
+      allRels = join $ HashMap.elems $ HashMap.map (getRels . _tciFieldInfoMap . _tiCoreInfo) sourceTableCache
       (manualRels, autoRels) = L.partition riIsManual allRels
       _mtRelationships = RelationshipMetric (length manualRels) (length autoRels)
-      rolePerms = join $ Map.elems $ Map.map permsOfTbl sourceTableCache
+      rolePerms = join $ HashMap.elems $ HashMap.map permsOfTbl sourceTableCache
       _pmRoles = length $ L.uniques $ fst <$> rolePerms
       allPerms = snd <$> rolePerms
       _pmInsert = calcPerms _permIns allPerms
@@ -262,24 +261,24 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
       _mtPermissions =
         PermissionMetric {..}
       _mtEventTriggers =
-        Map.size $
-          Map.filter (not . Map.null) $
-            Map.map _tiEventTriggerInfoMap sourceTableCache
-      _mtRemoteSchemas = Map.size <$> remoteSchemaMap
-      _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . _fiSystemDefined) sourceFunctionCache
+        HashMap.size $
+          HashMap.filter (not . HashMap.null) $
+            HashMap.map _tiEventTriggerInfoMap sourceTableCache
+      _mtRemoteSchemas = HashMap.size <$> remoteSchemaMap
+      _mtFunctions = HashMap.size $ HashMap.filter (not . isSystemDefined . _fiSystemDefined) sourceFunctionCache
       _mtActions = computeActionsMetrics <$> actionCache
-      _mtNativeQueries = countNativeQueries (HM.elems $ _siNativeQueries sourceInfo)
+      _mtNativeQueries = countNativeQueries (HashMap.elems $ _siNativeQueries sourceInfo)
    in Metrics {..}
   where
     sourceTableCache = _siTables sourceInfo
     sourceFunctionCache = _siFunctions sourceInfo
-    countSourceTables predicate = length . filter predicate $ Map.elems sourceTableCache
+    countSourceTables predicate = length . filter predicate $ HashMap.elems sourceTableCache
 
     calcPerms :: (RolePermInfo b -> Maybe a) -> [RolePermInfo b] -> Int
     calcPerms fn perms = length $ mapMaybe fn perms
 
     permsOfTbl :: TableInfo b -> [(RoleName, RolePermInfo b)]
-    permsOfTbl = Map.toList . _tiRolePermInfoMap
+    permsOfTbl = HashMap.toList . _tiRolePermInfoMap
 
     countNativeQueries :: [NativeQueryInfo b] -> NativeQueriesMetrics
     countNativeQueries =
@@ -295,7 +294,7 @@ computeActionsMetrics :: ActionCache -> ActionMetric
 computeActionsMetrics actionCache =
   ActionMetric syncActionsLen asyncActionsLen queryActionsLen typeRelationships customTypesLen
   where
-    actions = Map.elems actionCache
+    actions = HashMap.elems actionCache
     syncActionsLen = length . filter ((== ActionMutation ActionSynchronous) . _adType . _aiDefinition) $ actions
     asyncActionsLen = length . filter ((== ActionMutation ActionAsynchronous) . _adType . _aiDefinition) $ actions
     queryActionsLen = length . filter ((== ActionQuery) . _adType . _aiDefinition) $ actions

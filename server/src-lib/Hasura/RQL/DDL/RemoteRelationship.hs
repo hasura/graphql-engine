@@ -24,7 +24,7 @@ import Data.Aeson (FromJSON (..), ToJSON (..), (.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended ((<<>), (<>>))
@@ -313,7 +313,7 @@ buildRemoteFieldInfo ::
   -- | The entity on which the remote relationship is defined
   LHSIdentifier ->
   -- | join fields provided by the LHS entity
-  Map.HashMap FieldName lhsJoinField ->
+  HashMap.HashMap FieldName lhsJoinField ->
   -- | definition of remote relationship
   RemoteRelationship ->
   -- | Required context to process cross boundary relationships
@@ -329,7 +329,7 @@ buildRemoteFieldInfo lhsIdentifier lhsJoinFields RemoteRelationship {..} allSour
   case _rrDefinition of
     RelationshipToSource ToSourceRelationshipDef {..} -> do
       targetTables <-
-        Map.lookup _tsrdSource allSources
+        HashMap.lookup _tsrdSource allSources
           `onNothing` throw400 NotFound ("source not found: " <>> _tsrdSource)
       AB.dispatchAnyBackendWithTwoConstraints @Backend @BackendMetadata targetTables \(partiallyResolvedSource :: PartiallyResolvedSource b') -> do
         let PartiallyResolvedSource _ sourceConfig _ targetTablesInfo _ = partiallyResolvedSource
@@ -339,11 +339,11 @@ buildRemoteFieldInfo lhsIdentifier lhsJoinFields RemoteRelationship {..} allSour
         (targetTable :: TableName b') <- runAesonParser J.parseJSON _tsrdTable
         targetColumns <-
           fmap _tciFieldInfoMap $
-            onNothing (Map.lookup targetTable targetTablesInfo) $
+            onNothing (HashMap.lookup targetTable targetTablesInfo) $
               throw400 NotExists $
                 "table " <> targetTable <<> " does not exist in source: " <> sourceNameToText _tsrdSource
         -- TODO: rhs fields should also ideally be DBJoinFields
-        columnPairs <- for (Map.toList _tsrdFieldMapping) \(srcFieldName, tgtFieldName) -> do
+        columnPairs <- for (HashMap.toList _tsrdFieldMapping) \(srcFieldName, tgtFieldName) -> do
           lhsJoinField <- askFieldInfo lhsJoinFields srcFieldName
           tgtField <- askFieldInfo targetColumns tgtFieldName
           pure (srcFieldName, lhsJoinField, tgtField)
@@ -355,7 +355,7 @@ buildRemoteFieldInfo lhsIdentifier lhsJoinFields RemoteRelationship {..} allSour
         let rsri =
               RemoteSourceFieldInfo _rrName _tsrdRelationshipType _tsrdSource sourceConfig targetTable $
                 fmap (\(_, tgtType, tgtColumn) -> (tgtType, tgtColumn)) $
-                  Map.fromList columnMapping
+                  HashMap.fromList columnMapping
             rhsDependencies =
               SchemaDependency (SOSourceObj _tsrdSource $ AB.mkAnyBackend $ SOITable @b' targetTable) DRTable
                 : flip map columnPairs \(_, _srcColumn, tgtColumn) ->
@@ -367,11 +367,11 @@ buildRemoteFieldInfo lhsIdentifier lhsJoinFields RemoteRelationship {..} allSour
                               ciColumn tgtColumn
                     )
                     DRRemoteRelationship
-            requiredLHSJoinFields = fmap (\(srcField, _, _) -> srcField) $ Map.fromList columnMapping
+            requiredLHSJoinFields = fmap (\(srcField, _, _) -> srcField) $ HashMap.fromList columnMapping
         pure (RemoteFieldInfo requiredLHSJoinFields $ RFISource $ AB.mkAnyBackend @b' rsri, Seq.fromList rhsDependencies)
     RelationshipToSchema _ remoteRelationship@ToSchemaRelationshipDef {..} -> do
       RemoteSchemaCtx {..} <-
-        onNothing (Map.lookup _trrdRemoteSchema remoteSchemaMap) $
+        onNothing (HashMap.lookup _trrdRemoteSchema remoteSchemaMap) $
           throw400 RemoteSchemaError $
             "remote schema with name " <> _trrdRemoteSchema <<> " not found"
       (requiredLHSJoinFields, remoteField) <-
@@ -393,7 +393,7 @@ getRemoteSchemaEntityJoinColumns remoteSchemaName introspection typeName = do
   case typeDefinition of
     G.TypeDefinitionObject objectDefinition ->
       pure $
-        Map.fromList $ do
+        HashMap.fromList $ do
           fieldDefinition <- G._otdFieldsDefinition objectDefinition
           guard $ null $ G._fldArgumentsDefinition fieldDefinition
           pure (FieldName $ G.unName $ G._fldName fieldDefinition, G._fldName fieldDefinition)

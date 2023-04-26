@@ -40,7 +40,7 @@ where
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.FileEmbed (makeRelativeToProject)
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HashSet
 import Data.Int (Int64)
 import Data.Set.NonEmpty qualified as NE
@@ -859,11 +859,11 @@ addCleanupSchedules sourceConfig triggersWithcleanupConfig =
     let triggerNames = map fst triggersWithcleanupConfig
     countAndLastSchedules <- liftEitherM $ liftIO $ runPgSourceReadTx sourceConfig $ selectLastCleanupScheduledTimestamp triggerNames
     currTime <- liftIO $ Time.getCurrentTime
-    let triggerMap = Map.fromList $ map (\(triggerName, count, lastTime) -> (triggerName, (count, lastTime))) countAndLastSchedules
+    let triggerMap = HashMap.fromList $ map (\(triggerName, count, lastTime) -> (triggerName, (count, lastTime))) countAndLastSchedules
         scheduledTriggersAndTimestamps =
           mapMaybe
             ( \(triggerName, cleanupConfig) ->
-                let lastScheduledTime = case Map.lookup triggerName triggerMap of
+                let lastScheduledTime = case HashMap.lookup triggerName triggerMap of
                       Nothing -> Just currTime
                       Just (count, lastTime) -> if count < 5 then (Just lastTime) else Nothing
                  in fmap

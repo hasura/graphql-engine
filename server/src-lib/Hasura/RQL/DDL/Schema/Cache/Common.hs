@@ -49,7 +49,7 @@ import Control.Arrow.Interpret
 import Control.Lens
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson.Extended
-import Data.HashMap.Strict.Extended qualified as M
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
@@ -128,7 +128,7 @@ invalidateKeys CacheInvalidations {..} InvalidationKeys {..} =
       a ->
       HashMap a Inc.InvalidationKey ->
       HashMap a Inc.InvalidationKey
-    invalidate = M.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
+    invalidate = HashMap.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
 
     invalidateDataConnectors :: BackendInvalidationKeysWrapper 'DataConnector -> BackendInvalidationKeysWrapper 'DataConnector
     invalidateDataConnectors (BackendInvalidationKeysWrapper invalidationKeys) =
@@ -144,7 +144,7 @@ instance Backend b => FromJSON (BackendIntrospection b) where
   parseJSON = withObject "BackendIntrospection" \o -> do
     metadata <- o .: "metadata"
     enumValues <- o .: "enum_values"
-    pure $ BackendIntrospection metadata (M.fromList enumValues)
+    pure $ BackendIntrospection metadata (HashMap.fromList enumValues)
 
 deriving stock instance BackendMetadata b => Eq (BackendIntrospection b)
 
@@ -353,7 +353,7 @@ buildInfoMap ::
   (e, a) `arr` Maybe b ->
   (e, [a]) `arr` HashMap k b
 buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) -> do
-  let groupedInfos = M.groupOn extractKey infos
+  let groupedInfos = HashMap.groupOn extractKey infos
   infoMapMaybes <-
     (|
       Inc.keyed
@@ -377,7 +377,7 @@ buildInfoMapM ::
   [a] ->
   m (HashMap k b)
 buildInfoMapM extractKey mkMetadataObject buildInfo infos = do
-  let groupedInfos = M.groupOn extractKey infos
+  let groupedInfos = HashMap.groupOn extractKey infos
   infoMapMaybes <- for groupedInfos \duplicateInfos -> do
     infoMaybe <- noDuplicates mkMetadataObject duplicateInfos
     case infoMaybe of

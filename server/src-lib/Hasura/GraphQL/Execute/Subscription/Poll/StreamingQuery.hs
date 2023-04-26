@@ -11,8 +11,7 @@ import Control.Concurrent.Async qualified as A
 import Control.Concurrent.STM qualified as STM
 import Control.Lens
 import Data.ByteString qualified as BS
-import Data.HashMap.Strict qualified as Map
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.List.Split (chunksOf)
 import Data.Monoid (Sum (..))
@@ -169,7 +168,7 @@ mergeOldAndNewCursorValues (CursorVariableValues prevPollCursorValues) (CursorVa
         case currentVal of
           TENull -> previousVal -- When we get a null value from the DB, we retain the previous value
           TELit t -> TELit t
-   in CursorVariableValues $ Map.unionWith combineFn prevPollCursorValues currentPollCursorValues
+   in CursorVariableValues $ HashMap.unionWith combineFn prevPollCursorValues currentPollCursorValues
 
 pushResultToCohort ::
   GQResult BS.ByteString ->
@@ -360,7 +359,7 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
 
     -- processed cohorts is an array of tuples of the current poll cohort variables and a tuple
     -- of the cohort and the new cohort key
-    let processedCohortsMap = Map.fromList $ snd =<< batchesDetailsAndProcessedCohorts
+    let processedCohortsMap = HashMap.fromList $ snd =<< batchesDetailsAndProcessedCohorts
 
     -- rebuilding the cohorts and the cohort map, see [Streaming subscription polling]
     -- and [Streaming subscriptions rebuilding cohort map]
@@ -368,12 +367,12 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
     updatedCohortsMap <-
       foldM
         ( \accCohortMap (currentCohortKey, currentCohort) -> do
-            let processedCohortMaybe = Map.lookup currentCohortKey processedCohortsMap
+            let processedCohortMaybe = HashMap.lookup currentCohortKey processedCohortsMap
             case processedCohortMaybe of
               -- A new cohort has been added in the cohort map whilst the
               -- current poll was happening, in this case we just return it
               -- as it is
-              Nothing -> Map.insertWithM mergeCohorts currentCohortKey currentCohort accCohortMap
+              Nothing -> HashMap.insertWithM mergeCohorts currentCohortKey currentCohort accCohortMap
               Just (processedCohort, updatedCohortKey, snapshottedNewSubs) -> do
                 updateCohortSubscribers currentCohort snapshottedNewSubs
                 currentCohortExistingSubscribers <- TMap.toList $ C._cExistingSubscribers currentCohort
@@ -413,15 +412,15 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
                             newSubs
                             (C._cStreamCursorVariables currentCohort)
                       TMap.replace (C._cNewSubscribers newCohort) newlyAddedSubscribers
-                      Map.insertWithM mergeCohorts currentCohortKey newCohort accCohortMap
-                let allCurrentSubscribers = Set.fromList $ fst <$> (Map.toList newlyAddedSubscribers <> currentCohortExistingSubscribers)
+                      HashMap.insertWithM mergeCohorts currentCohortKey newCohort accCohortMap
+                let allCurrentSubscribers = Set.fromList $ fst <$> (HashMap.toList newlyAddedSubscribers <> currentCohortExistingSubscribers)
                 -- retain subscribers only if they still exist in the original cohort's subscriber.
                 -- It may happen that a subscriber has stopped their subscription which means it will
                 -- no longer exist in the cohort map, so we need to accordingly remove such subscribers
                 -- from our processed cohorts.
                 TMap.filterWithKey (\k _ -> k `elem` allCurrentSubscribers) $ C._cExistingSubscribers processedCohort
                 TMap.filterWithKey (\k _ -> k `elem` allCurrentSubscribers) $ C._cNewSubscribers processedCohort
-                Map.insertWithM mergeCohorts updatedCohortKey processedCohort accCohortMapWithCurrentCohort
+                HashMap.insertWithM mergeCohorts updatedCohortKey processedCohort accCohortMapWithCurrentCohort
         )
         mempty
         currentCohorts
@@ -468,7 +467,7 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
         let resp = throwError $ GQExecError [encodeGQLErr False e]
          in [(resp, cohortId, Nothing, Nothing, snapshot) | (cohortId, snapshot) <- cohorts]
       Right responses -> do
-        let cohortSnapshotMap = Map.fromList cohorts
+        let cohortSnapshotMap = HashMap.fromList cohorts
         -- every row of the response will contain the cohortId, response of the query and the latest value of the cursor for the cohort
         flip mapMaybe responses $ \(cohortId, respBS, respCursorLatestValue) ->
           let respHash = mkRespHash respBS
@@ -478,4 +477,4 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
               -- (this shouldn't happen but if it happens it means a logic error and
               -- we should log it)
               (pure respBS,cohortId,Just (respHash, respSize),Just respCursorLatestValue,)
-                <$> Map.lookup cohortId cohortSnapshotMap
+                <$> HashMap.lookup cohortId cohortSnapshotMap

@@ -8,7 +8,7 @@ module Hasura.Backends.Postgres.Translate.BoolExp
   )
 where
 
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended (ToTxt)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
@@ -294,7 +294,7 @@ translateTableRelationship colMapping relTableNameIdentifier = do
   BoolExpCtx {currTableReference} <- ask
   pure $
     sqlAnd $
-      flip map (M.toList colMapping) $ \(lCol, rCol) ->
+      flip map (HashMap.toList colMapping) $ \(lCol, rCol) ->
         S.BECompare
           S.SEQ
           (S.mkIdentifierSQLExp (S.QualifiedIdentifier relTableNameIdentifier Nothing) rCol)
@@ -405,6 +405,6 @@ mkFieldCompExp rootReference currTableReference lhsField = mkCompExp qLhsField
         withSQLNull = fromMaybe S.SENull
 
         mkCastsExp casts =
-          sqlAnd . flip map (M.toList casts) $ \(targetType, operations) ->
+          sqlAnd . flip map (HashMap.toList casts) $ \(targetType, operations) ->
             let targetAnn = S.mkTypeAnn $ CollectableTypeScalar targetType
              in sqlAnd $ map (mkCompExp (S.SETyAnn lhs targetAnn)) operations

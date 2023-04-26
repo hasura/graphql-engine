@@ -6,7 +6,7 @@ module Hasura.GraphQL.Schema.BoolExp.AggregationPredicatesSpec (spec) where
 
 import Data.Aeson.QQ (aesonQQ)
 import Data.Has (Has (..))
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.NonEmpty (nonEmptyTextQQ)
 import Hasura.Backends.Postgres.Instances.Schema ()
 import Hasura.Backends.Postgres.SQL.Types
@@ -308,7 +308,7 @@ spec = do
       RelInfo
         { riName = RelName [nonEmptyTextQQ|tracks|],
           riType = ArrRel,
-          riMapping = HM.fromList [("id", "album_id")],
+          riMapping = HashMap.fromList [("id", "album_id")],
           riRTable = (mkTable "track"),
           riIsManual = False,
           riInsertOrder = AfterParent
@@ -330,4 +330,4 @@ spec = do
         }
 
     makeTableCache :: [TableInfo ('Postgres 'Vanilla)] -> HashMap QualifiedTable (TableInfo ('Postgres 'Vanilla))
-    makeTableCache tables = HM.fromList [(_tciName $ _tiCoreInfo ti, ti) | ti <- tables]
+    makeTableCache tables = HashMap.fromList [(_tciName $ _tiCoreInfo ti, ti) | ti <- tables]

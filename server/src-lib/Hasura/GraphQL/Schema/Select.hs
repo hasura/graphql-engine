@@ -35,8 +35,7 @@ import Data.Aeson.Internal qualified as J
 import Data.Aeson.Key qualified as K
 import Data.ByteString.Lazy qualified as BL
 import Data.Has
-import Data.HashMap.Strict qualified as HM
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
@@ -233,7 +232,7 @@ selectTableByPk tableInfo fieldName description = runMaybeT do
   selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   primaryKeys <- hoistMaybe $ fmap _pkColumns . _tciPrimaryKey . _tiCoreInfo $ tableInfo
   selectionSetParser <- MaybeT $ tableSelectionSet tableInfo
-  guard $ all (\c -> ciColumn c `Map.member` spiCols selectPermissions) primaryKeys
+  guard $ all (\c -> ciColumn c `HashMap.member` spiCols selectPermissions) primaryKeys
   lift $ P.memoizeOn 'selectTableByPk (sourceName, tableName, fieldName) do
     stringifyNumbers <- retrieve Options.soStringifyNumbers
     argsParser <-
@@ -410,7 +409,7 @@ defaultTableSelectionSet tableInfo = runMaybeT do
     tableGQLName <- getTableIdentifierName tableInfo
     let objectTypename = mkTypename $ applyTypeNameCaseIdentifier tCase tableGQLName
         xRelay = relayExtension @b
-        tableFields = Map.elems $ _tciFieldInfoMap tableCoreInfo
+        tableFields = HashMap.elems $ _tciFieldInfoMap tableCoreInfo
         tablePkeyColumns = _pkColumns <$> _tciPrimaryKey tableCoreInfo
         pkFields = concatMap toList tablePkeyColumns
         pkFieldDirective = T.intercalate " " $ map (G.unName . ciName) pkFields
@@ -423,7 +422,7 @@ defaultTableSelectionSet tableInfo = runMaybeT do
         --  }
         pkDirectives =
           if isApolloFedV1enabled (_tciApolloFederationConfig tableCoreInfo) && (not . null) pkFields
-            then [(G.Directive Name._key . Map.singleton Name._fields . G.VString) pkFieldDirective]
+            then [(G.Directive Name._key . HashMap.singleton Name._fields . G.VString) pkFieldDirective]
             else mempty
         description = G.Description . Postgres.getPGDescription <$> _tciDescription tableCoreInfo
     fieldParsers <-
@@ -485,9 +484,9 @@ logicalModelColumnsForRole role logicalModel =
       pure Permission.PCStar
     else -- find list of columns we're allowed to access for this role
 
-      HM.lookup role (_lmiPermissions logicalModel)
+      HashMap.lookup role (_lmiPermissions logicalModel)
         >>= _permSel
-        <&> Permission.PCCols . HM.keys . spiCols
+        <&> Permission.PCCols . HashMap.keys . spiCols
 
 -- | this seems like it works on luck, ie that everything is really just Text
 -- underneath
@@ -1063,12 +1062,12 @@ tableAggregationFields tableInfo = do
     let numericColumns = onlyNumCols allColumns
         comparableColumns = onlyComparableCols allColumns
         customOperatorsAndColumns =
-          Map.toList $ Map.mapMaybe (getCustomAggOpsColumns allColumns) $ getCustomAggregateOperators @b (_siConfiguration sourceInfo)
+          HashMap.toList $ HashMap.mapMaybe (getCustomAggOpsColumns allColumns) $ getCustomAggregateOperators @b (_siConfiguration sourceInfo)
         description = G.Description $ "aggregate fields of " <>> tableInfoName tableInfo
         selectName = runMkTypename mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableAggregateFieldTypeName tableGQLName
     count <- countField
     nonCountFieldsMap <-
-      fmap (Map.unionsWith (++) . concat) $
+      fmap (HashMap.unionsWith (++) . concat) $
         sequenceA $
           catMaybes
             [ -- operators on numeric columns
@@ -1077,7 +1076,7 @@ tableAggregationFields tableInfo = do
                 else Just $
                   for numericAggOperators $ \operator -> do
                     numFields <- mkNumericAggFields operator numericColumns
-                    pure $ Map.singleton operator numFields,
+                    pure $ HashMap.singleton operator numFields,
               -- operators on comparable columns
               if null comparableColumns
                 then Nothing
@@ -1085,21 +1084,21 @@ tableAggregationFields tableInfo = do
                   comparableFields <- traverse mkColumnAggField comparableColumns
                   pure $
                     comparisonAggOperators & map \operator ->
-                      Map.singleton operator comparableFields,
+                      HashMap.singleton operator comparableFields,
               -- -- custom operators
               if null customOperatorsAndColumns
                 then Nothing
                 else Just $
                   for customOperatorsAndColumns \(operator, columnTypes) -> do
                     customFields <- traverse (uncurry mkNullableScalarTypeAggField) (toList columnTypes)
-                    pure $ Map.singleton (C.fromCustomName operator) customFields
+                    pure $ HashMap.singleton (C.fromCustomName operator) customFields
             ]
     let nonCountFields =
-          Map.mapWithKey
+          HashMap.mapWithKey
             ( \operator fields -> parseAggOperator mkTypename operator tCase tableGQLName fields
             )
             nonCountFieldsMap
-        aggregateFields = count : Map.elems nonCountFields
+        aggregateFields = count : HashMap.elems nonCountFields
     pure $
       P.selectionSet selectName (Just description) aggregateFields
         <&> parsedSelectionsToFields IR.AFExp
@@ -1112,7 +1111,7 @@ tableAggregationFields tableInfo = do
               case ciType of
                 ColumnEnumReference _ -> Nothing
                 ColumnScalar scalarType ->
-                  (ci,) <$> Map.lookup scalarType typeMap
+                  (ci,) <$> HashMap.lookup scalarType typeMap
           )
         & nonEmpty
 
@@ -1270,8 +1269,8 @@ fieldSelection table tableInfo = \case
       guard $ isHasuraSchema schemaKind || fieldName /= Name._id
       let columnName = ciColumn columnInfo
       selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
-      guard $ columnName `Map.member` spiCols selectPermissions
-      let !caseBoolExp = join $ Map.lookup columnName (spiCols selectPermissions)
+      guard $ columnName `HashMap.member` spiCols selectPermissions
+      let !caseBoolExp = join $ HashMap.lookup columnName (spiCols selectPermissions)
           !caseBoolExpUnpreparedValue =
             (fmap . fmap) partialSQLExpToUnpreparedValue <$!> caseBoolExp
           pathArg = scalarSelectionArgumentsParser $ ciType columnInfo
@@ -1324,7 +1323,7 @@ fieldSelection table tableInfo = \case
     nestedObjectFieldParser :: TableInfo b -> NestedObjectInfo b -> SchemaT r m (FieldParser n (AnnotatedNestedObjectSelect b))
     nestedObjectFieldParser TableInfo {..} NestedObjectInfo {..} = do
       let customObjectTypes = _tciCustomObjectTypes _tiCoreInfo
-      case Map.lookup _noiType customObjectTypes of
+      case HashMap.lookup _noiType customObjectTypes of
         Just objectType -> do
           parser <- nestedObjectParser _noiSupportsNestedObjects customObjectTypes objectType _noiColumn _noiIsNullable
           pure $ P.subselection_ _noiName _noiDescription parser
@@ -1358,7 +1357,7 @@ nestedObjectParser supportsNestedObjects objectTypes objectType column isNullabl
           TOFTScalar fieldTypeName scalarType ->
             wrapScalar scalarType $ customScalarParser fieldTypeName
           TOFTObject objectName -> do
-            objectType' <- Map.lookup objectName objectTypes `onNothing` throw500 ("Custom type " <> objectName <<> " not found")
+            objectType' <- HashMap.lookup objectName objectTypes `onNothing` throw500 ("Custom type " <> objectName <<> " not found")
             parser <- fmap (IR.AFNestedObject @b) <$> nestedObjectParser supportsNestedObjects objectTypes objectType' column' (G.isNullable gType)
             pure $ P.subselection_ name description parser
       where
@@ -1485,7 +1484,7 @@ relationshipField table ri = runMaybeT do
             -- `table`.  If it is, then we can optimize the row-level permission
             -- filters by dropping them here.
             if (riRTable remoteRI == table)
-              && (riMapping remoteRI `Map.isInverseOf` riMapping ri)
+              && (riMapping remoteRI `HashMap.isInverseOf` riMapping ri)
               && (thisTablePerm == remoteTablePerm)
               then BoolAnd []
               else x
@@ -1535,9 +1534,9 @@ relationshipField table ri = runMaybeT do
       nullable <- case (riIsManual ri, riInsertOrder ri) of
         -- Automatically generated forward relationship
         (False, BeforeParent) -> do
-          let columns = Map.keys $ riMapping ri
+          let columns = HashMap.keys $ riMapping ri
               fieldInfoMap = _tciFieldInfoMap $ _tiCoreInfo tableInfo
-              findColumn col = Map.lookup (fromCol @b col) fieldInfoMap ^? _Just . _FIColumn
+              findColumn col = HashMap.lookup (fromCol @b col) fieldInfoMap ^? _Just . _FIColumn
           -- Fetch information about the referencing columns of the foreign key
           -- constraint
           colInfo <-

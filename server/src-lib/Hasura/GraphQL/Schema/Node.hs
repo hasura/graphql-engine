@@ -21,7 +21,7 @@ where
 
 import Data.Aeson qualified as J
 import Data.Aeson.Types qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
@@ -249,6 +249,6 @@ newtype TableMap b = TableMap (HashMap (TableName b) (NodeInfo b))
 -- 'NodeMap'.
 findNode :: forall b. Backend b => SourceName -> TableName b -> NodeMap -> Maybe (NodeInfo b)
 findNode sourceName tableName nodeMap = do
-  anyTableMap <- Map.lookup sourceName nodeMap
+  anyTableMap <- HashMap.lookup sourceName nodeMap
   TableMap tableMap <- AB.unpackAnyBackend @b anyTableMap
-  Map.lookup tableName tableMap
+  HashMap.lookup tableName tableMap

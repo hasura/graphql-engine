@@ -9,7 +9,7 @@ module Hasura.Backends.MSSQL.FromIr.Expression
 where
 
 import Control.Monad.Validate
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.MSSQL.FromIr
   ( Error (UnsupportedOpExpG),
     FromIr,
@@ -126,7 +126,7 @@ fromAnnBoolExpFld =
                   (ColumnExpression remoteFieldName)
               )
         )
-        . HM.toList
+        . HashMap.toList
 
 -- | Scope a translation action to the table bound in a FROM clause.
 scopedTo :: From -> ReaderT EntityAlias FromIr a -> ReaderT EntityAlias FromIr a

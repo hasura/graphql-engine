@@ -29,7 +29,7 @@ import Control.Retry qualified as Retry
 import Data.Aeson
 import Data.Either (isLeft)
 import Data.Environment qualified as Env
-import Data.HashMap.Strict.Extended qualified as M
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as HS
 import Data.Proxy
@@ -250,7 +250,7 @@ instance
     where
       -- Prunes invalidation keys that no longer exist in the schema to avoid leaking memory by
       -- hanging onto unnecessary keys.
-      pruneInvalidationKeys schemaCache = over ikRemoteSchemas $ M.filterWithKey \name _ ->
+      pruneInvalidationKeys schemaCache = over ikRemoteSchemas $ HashMap.filterWithKey \name _ ->
         -- see Note [Keep invalidation keys for inconsistent objects]
         name `elem` getAllRemoteSchemas schemaCache
 
@@ -269,7 +269,7 @@ instance
 -- | Generate health checks related cache from sources metadata
 buildHealthCheckCache :: Sources -> SourceHealthCheckCache
 buildHealthCheckCache sources =
-  catMaybes $ M.fromList $ map (second mkSourceHealthCheck) (OMap.toList sources)
+  catMaybes $ HashMap.fromList $ map (second mkSourceHealthCheck) (OMap.toList sources)
   where
     mkSourceHealthCheck :: BackendSourceMetadata -> Maybe BackendSourceHealthCheckInfo
     mkSourceHealthCheck (BackendSourceMetadata sourceMetadata) =
@@ -286,7 +286,7 @@ buildHealthCheckCache sources =
 -- attribution
 buildSourcePingCache :: Sources -> SourcePingCache
 buildSourcePingCache sources =
-  M.fromList $ map (second mkSourcePing) (OMap.toList sources)
+  HashMap.fromList $ map (second mkSourcePing) (OMap.toList sources)
   where
     mkSourcePing :: BackendSourceMetadata -> BackendSourcePingInfo
     mkSourcePing (BackendSourceMetadata sourceMetadata) =
@@ -374,13 +374,13 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
 
       ceUrlTxt = toTxt . _ceUrl
 
-      endpoints = buildEndpointsTrie (M.elems resolvedEndpoints)
+      endpoints = buildEndpointsTrie (HashMap.elems resolvedEndpoints)
 
       duplicateF md = DuplicateRestVariables (ceUrlTxt md) (endpointObject md)
-      duplicateRestVariables = map duplicateF $ filter duplicateVariables (M.elems resolvedEndpoints)
+      duplicateRestVariables = map duplicateF $ filter duplicateVariables (HashMap.elems resolvedEndpoints)
 
       invalidF md = InvalidRestSegments (ceUrlTxt md) (endpointObject md)
-      invalidRestSegments = map invalidF $ filter hasInvalidSegments (M.elems resolvedEndpoints)
+      invalidRestSegments = map invalidF $ filter hasInvalidSegments (HashMap.elems resolvedEndpoints)
 
       ambiguousF' ep = MetadataObject (endpointObjId ep) (toJSON ep)
       ambiguousF mds = AmbiguousRestEndpoints (commaSeparated $ map _ceUrl mds) (map ambiguousF' mds)
@@ -669,7 +669,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
           tablesMetadata = OMap.elems tables
           (_, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
           alignTableMap :: HashMap (TableName b) a -> HashMap (TableName b) c -> HashMap (TableName b) (a, c)
-          alignTableMap = M.intersectionWith (,)
+          alignTableMap = HashMap.intersectionWith (,)
 
       -- relationships and computed fields
       let nonColumnsByTable = mapFromL _nctiTable nonColumnInputs
@@ -738,7 +738,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                 withRecordInconsistencyM metadataObject $ modifyErr addFunctionContext do
                   funcDefs <-
                     onNothing
-                      (M.lookup qf dbFunctions)
+                      (HashMap.lookup qf dbFunctions)
                       (throw400 NotExists $ "no such function exists: " <>> qf)
 
                   rawfunctionInfo <- getSingleUniqueFunctionOverload @b qf funcDefs
@@ -817,7 +817,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
 
                 logicalModel <-
                   onNothing
-                    (M.lookup _nqmReturns logicalModelsCache)
+                    (HashMap.lookup _nqmReturns logicalModelsCache)
                     (throw400 InvalidConfiguration ("The logical model " <> toTxt _nqmReturns <> " could not be found"))
 
                 recordDependenciesM metadataObject schemaObjId $
@@ -893,14 +893,14 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
 
       resolvedInheritedRoles <- interpretWriter -< buildInheritedRoles allRoleNames (OMap.elems inheritedRoles)
 
-      let allRoles = resolvedInheritedRoles `M.union` metadataRoles
+      let allRoles = resolvedInheritedRoles `HashMap.union` metadataRoles
 
-      orderedRoles <- bindA -< orderRoles $ M.elems allRoles
+      orderedRoles <- bindA -< orderRoles $ HashMap.elems allRoles
 
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
       remoteSchemaMap <- buildRemoteSchemas env -< ((remoteSchemaInvalidationKeys, orderedRoles, fmap encJToLBS . siRemotes <$> storedIntrospection), OMap.elems remoteSchemas)
-      let remoteSchemaCtxMap = M.map fst remoteSchemaMap
+      let remoteSchemaCtxMap = HashMap.map fst remoteSchemaMap
           !defaultNC = _cdcDefaultNamingConvention dynamicConfig
           !isNamingConventionEnabled = EFNamingConventions `elem` (_cdcExperimentalFeatures dynamicConfig)
 
@@ -920,7 +920,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                       let sourceMetadata = _bcasmSourceMetadata backendInfoAndSourceMetadata
                           sourceName = _smName sourceMetadata
                           sourceInvalidationsKeys = Inc.selectD #_ikSources invalidationKeys
-                          sourceIntrospection = AB.unpackAnyBackend @b =<< M.lookup sourceName =<< siBackendIntrospection <$> storedIntrospection
+                          sourceIntrospection = AB.unpackAnyBackend @b =<< HashMap.lookup sourceName =<< siBackendIntrospection <$> storedIntrospection
                       maybeResolvedSource <- tryResolveSource -< (sourceInvalidationsKeys, sourceIntrospection, backendInfoAndSourceMetadata)
                       case maybeResolvedSource of
                         Nothing -> returnA -< Nothing
@@ -949,7 +949,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                           bindA -< unLogger logger (sourceName, sourceCatalogMigrationState)
 
                           let alignTableMap :: HashMap (TableName b) a -> HashMap (TableName b) c -> HashMap (TableName b) (a, c)
-                              alignTableMap = M.intersectionWith (,)
+                              alignTableMap = HashMap.intersectionWith (,)
 
                           eventTriggerInfoMaps <-
                             (|
@@ -968,7 +968,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                   -<
                     (exists, (dynamicConfig, invalidationKeys, storedIntrospection, defaultNC, isNamingConventionEnabled))
             )
-          |) (M.fromList $ OMap.toList backendInfoAndSourceMetadata)
+          |) (HashMap.fromList $ OMap.toList backendInfoAndSourceMetadata)
       let partiallyResolvedSources = catMaybes partiallyResolvedSourcesMaybes
 
       -- then we can build the entire source output
@@ -1025,8 +1025,8 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
         interpretWriter
           -< do
             -- custom types
-            let scalarsMap = mconcat $ map snd $ M.elems sourcesOutput
-                sourcesCache = M.map fst sourcesOutput
+            let scalarsMap = mconcat $ map snd $ HashMap.elems sourcesOutput
+                sourcesCache = HashMap.map fst sourcesOutput
                 actionList = OMap.elems actions
             maybeResolvedCustomTypes <-
               withRecordInconsistencyM (MetadataObject MOCustomTypes $ toJSON customTypes) $
@@ -1046,7 +1046,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
       returnA
         -<
           BuildOutputs
-            { _boSources = M.map fst sourcesOutput,
+            { _boSources = HashMap.map fst sourcesOutput,
               _boActions = actionCache,
               _boRemoteSchemas = remoteSchemaCache,
               _boCustomTypes = annotatedCustomTypes,
@@ -1222,7 +1222,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                         case buildReason of
                           CatalogUpdate _ -> True
                           CatalogSync -> False
-                      tableColumns = M.elems $ _tciFieldInfoMap tableInfo
+                      tableColumns = HashMap.elems $ _tciFieldInfoMap tableInfo
                   if ( _cscMaintenanceMode staticConfig == MaintenanceModeDisabled
                          && _cscReadOnlyMode staticConfig == ReadOnlyModeDisabled
                      )

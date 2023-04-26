@@ -117,7 +117,7 @@ where
 import Control.Lens (makeLenses)
 import Data.Aeson.Extended qualified as J
 import Data.Aeson.TH qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.UUID (UUID)
 import Data.UUID qualified as UUID
@@ -160,11 +160,11 @@ deriving instance (Monoid (f TxtEncodedVal)) => Monoid (ValidatedVariables f)
 
 $(makeLenses 'ValidatedVariables)
 
-type ValidatedQueryVariables = ValidatedVariables (Map.HashMap G.Name)
+type ValidatedQueryVariables = ValidatedVariables (HashMap.HashMap G.Name)
 
 type ValidatedSyntheticVariables = ValidatedVariables []
 
-type ValidatedCursorVariables = ValidatedVariables (Map.HashMap G.Name)
+type ValidatedCursorVariables = ValidatedVariables (HashMap.HashMap G.Name)
 
 mkUnsafeValidateVariables :: f TxtEncodedVal -> ValidatedVariables f
 mkUnsafeValidateVariables = ValidatedVariables

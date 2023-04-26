@@ -25,7 +25,7 @@ where
 import Control.Lens
 import Control.Monad.Writer
 import Data.ByteString qualified as B
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.Semigroup.Generic
@@ -272,7 +272,7 @@ resolveMultiplexedValue allSessionVars = \case
     varJsonPath <- case provenance of
       FromGraphQL varInfo -> do
         let varName = getName varInfo
-        modifying qpiReusableVariableValues $ Map.insert varName colVal
+        modifying qpiReusableVariableValues $ HashMap.insert varName colVal
         pure ["query", G.unName varName]
       _ -> do
         syntheticVarIndex <- use (qpiSyntheticVariableValues . to length)

@@ -10,7 +10,7 @@ module Hasura.GraphQL.Logging.QueryLog
 where
 
 import Data.Aeson qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
@@ -60,7 +60,7 @@ instance J.ToJSON QueryLog where
       ]
         <> maybe [] (\val -> ["connection_template" J..= val]) (getResolvedConnectionTemplate kind)
     where
-      fromPair p = Map.fromList [first toTxt p]
+      fromPair p = HashMap.fromList [first toTxt p]
       getResolvedConnectionTemplate :: QueryLogKind -> Maybe (BackendResolvedConnectionTemplate)
       getResolvedConnectionTemplate (QueryLogKindDatabase x) = x
       getResolvedConnectionTemplate _ = Nothing

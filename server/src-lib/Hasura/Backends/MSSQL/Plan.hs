@@ -23,7 +23,7 @@ where
 import Control.Applicative (Const (Const))
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy (toStrict)
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
@@ -64,7 +64,7 @@ planSourceRelationship ::
   -- | List of json objects, each of which becomes a row of the table
   NE.NonEmpty J.Object ->
   -- | The above objects have this schema
-  HM.HashMap RQL.FieldName (ColumnName, ScalarType) ->
+  HashMap.HashMap RQL.FieldName (ColumnName, ScalarType) ->
   RQL.FieldName ->
   (RQL.FieldName, SourceRelationshipSelection 'MSSQL Void UnpreparedValue) ->
   m Select
@@ -235,7 +235,7 @@ prepareValueSubscription globalVariables =
         ( \s ->
             s
               { namedArguments =
-                  HM.insert name columnValue (namedArguments s)
+                  HashMap.insert name columnValue (namedArguments s)
               }
         )
       pure $ resultVarExp (queryDot $ G.unName name)

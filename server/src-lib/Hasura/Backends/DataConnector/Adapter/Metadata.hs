@@ -10,7 +10,6 @@ import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Environment (Environment)
 import Data.Has (Has (getter))
-import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as HashSet

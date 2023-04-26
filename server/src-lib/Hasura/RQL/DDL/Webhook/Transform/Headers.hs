@@ -19,7 +19,7 @@ import Autodocodec.Extended (caseInsensitiveHashMapCodec, caseInsensitiveTextCod
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
 import Data.CaseInsensitive qualified as CI
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Encoding qualified as TE
 import Data.Validation (Validation)
 import Data.Validation qualified as V
@@ -144,13 +144,13 @@ instance HasCodec AddReplaceOrRemoveFields where
         <$> optionalFieldWithDefaultWith' "add_headers" addCodec mempty .= addOrReplaceHeaders
         <*> optionalFieldWithDefaultWith' "remove_headers" removeCodec mempty .= removeHeaders
     where
-      addCodec = dimapCodec M.toList M.fromList $ caseInsensitiveHashMapCodec codec
+      addCodec = dimapCodec HashMap.toList HashMap.fromList $ caseInsensitiveHashMapCodec codec
       removeCodec = listCodec caseInsensitiveTextCodec
 
 instance FromJSON AddReplaceOrRemoveFields where
   parseJSON = J.withObject "AddReplaceRemoveFields" $ \o -> do
     addOrReplaceHeadersTxt <- o J..:? "add_headers" J..!= mempty
-    let addOrReplaceHeaders = M.toList $ mapKeys CI.mk addOrReplaceHeadersTxt
+    let addOrReplaceHeaders = HashMap.toList $ mapKeys CI.mk addOrReplaceHeadersTxt
 
     removeHeadersTxt <- o J..:? "remove_headers" J..!= mempty
     -- NOTE: Ensure that the FromJSON instance is used for deserialization.
@@ -161,7 +161,7 @@ instance FromJSON AddReplaceOrRemoveFields where
 instance ToJSON AddReplaceOrRemoveFields where
   toJSON AddReplaceOrRemoveFields {..} =
     J.object
-      [ "add_headers" J..= M.fromList (fmap (first CI.original) addOrReplaceHeaders),
+      [ "add_headers" J..= HashMap.fromList (fmap (first CI.original) addOrReplaceHeaders),
         "remove_headers" J..= fmap CI.original removeHeaders
       ]
 

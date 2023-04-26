@@ -34,7 +34,7 @@ import Control.Monad.Morph
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson (Value, toJSON)
 import Data.Aeson.TH
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.Multi qualified as MultiMap
 import Data.List qualified as L
@@ -295,17 +295,17 @@ buildSchemaCacheFor objectId metadataModifier = do
   buildSchemaCache metadataModifier
   newSchemaCache <- askSchemaCache
 
-  let diffInconsistentObjects = Map.difference `on` (groupInconsistentMetadataById . scInconsistentObjs)
+  let diffInconsistentObjects = HashMap.difference `on` (groupInconsistentMetadataById . scInconsistentObjs)
       newInconsistentObjects = newSchemaCache `diffInconsistentObjects` oldSchemaCache
 
-  for_ (Map.lookup objectId newInconsistentObjects) $ \matchingObjects -> do
+  for_ (HashMap.lookup objectId newInconsistentObjects) $ \matchingObjects -> do
     let reasons = commaSeparated $ imReason <$> matchingObjects
     throwError (err400 InvalidConfiguration reasons) {qeInternal = Just $ ExtraInternal $ toJSON matchingObjects}
 
   unless (null newInconsistentObjects) $
     throwError
       (err400 Unexpected "cannot continue due to new inconsistent metadata")
-        { qeInternal = Just $ ExtraInternal $ toJSON (L.nub . concatMap toList $ Map.elems newInconsistentObjects)
+        { qeInternal = Just $ ExtraInternal $ toJSON (L.nub . concatMap toList $ HashMap.elems newInconsistentObjects)
         }
 
 -- | Requests the schema cache, and fails if there is any inconsistent metadata.
@@ -325,9 +325,9 @@ withNewInconsistentObjsCheck action = do
   result <- action
   currentObjects <- scInconsistentObjs <$> askSchemaCache
 
-  let diffInconsistentObjects = Map.difference `on` groupInconsistentMetadataById
+  let diffInconsistentObjects = HashMap.difference `on` groupInconsistentMetadataById
       newInconsistentObjects =
-        L.uniques $ concatMap toList $ Map.elems (currentObjects `diffInconsistentObjects` originalObjects)
+        L.uniques $ concatMap toList $ HashMap.elems (currentObjects `diffInconsistentObjects` originalObjects)
   unless (null newInconsistentObjects) $
     throwError
       (err500 Unexpected "cannot continue due to newly found inconsistent metadata")

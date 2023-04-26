@@ -30,8 +30,8 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Aeson.Ordered qualified as JO
 import Data.Align (align)
-import Data.HashMap.Strict qualified as HM
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as S
 import Data.Text.Casing (GQLNameIdentifier, fromCustomName)
@@ -126,7 +126,7 @@ instance (Backend b) => FromJSON (UntrackTable b) where
 
 isTableTracked :: forall b. (Backend b) => SourceInfo b -> TableName b -> Bool
 isTableTracked sourceInfo tableName =
-  isJust $ Map.lookup tableName $ _siTables sourceInfo
+  isJust $ HashMap.lookup tableName $ _siTables sourceInfo
 
 -- | Track table/view, Phase 1:
 -- Validate table tracking operation. Fails if table is already being tracked,
@@ -143,7 +143,7 @@ trackExistingTableOrViewP1 source tableName = do
     throw400 AlreadyTracked $
       "view/table already tracked: " <>> tableName
   let functionName = tableToFunction @b tableName
-  when (isJust $ Map.lookup functionName $ _siFunctions @b sourceInfo) $
+  when (isJust $ HashMap.lookup functionName $ _siFunctions @b sourceInfo) $
     throw400 NotSupported $
       "function with name " <> tableName <<> " already exists"
 
@@ -316,7 +316,7 @@ instance FromJSON SetTableCustomFields where
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"
       <*> o .:? "custom_root_fields" .!= emptyCustomRootFields
-      <*> o .:? "custom_column_names" .!= Map.empty
+      <*> o .:? "custom_column_names" .!= HashMap.empty
 
 runSetTableCustomFieldsQV2 ::
   (QErrM m, CacheRWM m, MetadataM m) => SetTableCustomFields -> m EncJSON
@@ -363,7 +363,7 @@ unTrackExistingTableOrViewP2 (UntrackTable source tableName cascade) = do
   sc <- askSchemaCache
   sourceConfig <- askSourceConfig @b source
   sourceInfo <- askTableInfo @b source tableName
-  let triggers = HM.keys $ _tiEventTriggerInfoMap sourceInfo
+  let triggers = HashMap.keys $ _tiEventTriggerInfoMap sourceInfo
   -- Get relational, query template and function dependants
   let allDeps =
         getDependentObjs
@@ -431,7 +431,7 @@ buildTableCache ::
     Maybe (BackendIntrospection b),
     NamingCase
   )
-    `arr` Map.HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
+    `arr` HashMap.HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
 buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuildInputs, reloadMetadataInvalidationKey, sourceIntrospection, tCase) -> do
   rawTableInfos <-
     (|
@@ -441,7 +441,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
               withRecordInconsistency
                 ( do
                     table <- noDuplicateTables -< tables
-                    case Map.lookup (_tbiName table) dbTablesMeta of
+                    case HashMap.lookup (_tbiName table) dbTablesMeta of
                       Nothing ->
                         throwA
                           -<
@@ -451,7 +451,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
                 )
             |) (mkTableMetadataObject source tableName)
         )
-      |) (Map.groupOnNE _tbiName tableBuildInputs)
+      |) (HashMap.groupOnNE _tbiName tableBuildInputs)
   let rawTableCache = catMaybes rawTableInfos
       enumTables = flip mapMaybe rawTableCache \rawTableInfo ->
         (,,) <$> _tciPrimaryKey rawTableInfo <*> pure (_tciCustomConfig rawTableInfo) <*> _tciEnumValues rawTableInfo
@@ -495,7 +495,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       enumValues <- do
         if isEnum
           then do
-            case HM.lookup name =<< sourceIntrospection of
+            case HashMap.lookup name =<< sourceIntrospection of
               Just enumValues -> returnA -< Just enumValues
               _ -> do
                 -- We want to make sure we reload enum values whenever someone explicitly calls
@@ -526,7 +526,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
     -- types.
     processTableInfo ::
       QErrM n =>
-      Map.HashMap (TableName b) (PrimaryKey b (Column b), TableConfig b, EnumValues) ->
+      HashMap.HashMap (TableName b) (PrimaryKey b (Column b), TableConfig b, EnumValues) ->
       TableCoreInfoG b (RawColumnInfo b) (Column b) ->
       NamingCase ->
       n (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
@@ -536,7 +536,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       columnInfoMap <-
         collectColumnConfiguration columns (_tciCustomConfig rawInfo)
           >>= traverse (processColumnInfo tCase enumReferences (_tciName rawInfo))
-      assertNoDuplicateFieldNames (Map.elems columnInfoMap)
+      assertNoDuplicateFieldNames (HashMap.elems columnInfoMap)
 
       primaryKey <- traverse (resolvePrimaryKeyColumns columnInfoMap) (_tciPrimaryKey rawInfo)
       pure
@@ -548,7 +548,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
     resolvePrimaryKeyColumns ::
       forall n a. (QErrM n) => HashMap FieldName a -> PrimaryKey b (Column b) -> n (PrimaryKey b a)
     resolvePrimaryKeyColumns columnMap = traverseOf (pkColumns . traverse) \columnName ->
-      Map.lookup (FieldName (toTxt columnName)) columnMap
+      HashMap.lookup (FieldName (toTxt columnName)) columnMap
         `onNothing` throw500 "column in primary key not in table!"
 
     collectColumnConfiguration ::
@@ -558,7 +558,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       n (FieldInfoMap (RawColumnInfo b, GQLNameIdentifier, Maybe G.Description))
     collectColumnConfiguration columns TableConfig {..} = do
       let configByFieldName = mapKeys (fromCol @b) _tcColumnConfig
-      Map.traverseWithKey
+      HashMap.traverseWithKey
         (\fieldName -> pairColumnInfoAndConfig fieldName >=> extractColumnConfiguration fieldName)
         (align columns configByFieldName)
 
@@ -591,7 +591,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
     processColumnInfo ::
       (QErrM n) =>
       NamingCase ->
-      Map.HashMap (Column b) (NonEmpty (EnumReference b)) ->
+      HashMap.HashMap (Column b) (NonEmpty (EnumReference b)) ->
       TableName b ->
       (RawColumnInfo b, GQLNameIdentifier, Maybe G.Description) ->
       n (ColumnInfo b)
@@ -610,7 +610,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       where
         pgCol = rciName rawInfo
         resolveColumnType =
-          case Map.lookup pgCol tableEnumReferences of
+          case HashMap.lookup pgCol tableEnumReferences of
             -- no references? not an enum
             Nothing -> pure $ ColumnScalar (rciType rawInfo)
             -- one reference? is an enum
@@ -626,7 +626,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
                   <> ")"
 
     assertNoDuplicateFieldNames columns =
-      void $ flip Map.traverseWithKey (Map.groupOn ciName columns) \name columnsWithName ->
+      void $ flip HashMap.traverseWithKey (HashMap.groupOn ciName columns) \name columnsWithName ->
         case columnsWithName of
           one : two : more ->
             throw400 AlreadyExists $

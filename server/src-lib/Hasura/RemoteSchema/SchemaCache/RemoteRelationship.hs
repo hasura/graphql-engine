@@ -7,7 +7,7 @@ module Hasura.RemoteSchema.SchemaCache.RemoteRelationship
   )
 where
 
-import Data.HashMap.Strict.Extended qualified as HM
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended
@@ -102,18 +102,18 @@ validateToSchemaRelationship ::
   LHSIdentifier ->
   RelName ->
   (RemoteSchemaInfo, IntrospectionResult) ->
-  HM.HashMap FieldName joinField ->
-  m (HM.HashMap FieldName joinField, RemoteSchemaFieldInfo)
+  HashMap.HashMap FieldName joinField ->
+  m (HashMap.HashMap FieldName joinField, RemoteSchemaFieldInfo)
 validateToSchemaRelationship schema lhsIdentifier name (remoteSchemaInfo, introspectionResult) lhsJoinFields = do
   let remoteSchemaName = _trrdRemoteSchema schema
   requiredLHSJoinFields <- forM (toList $ _trrdLhsFields schema) $ \fieldName -> do
     fmap (fieldName,) $
-      onNothing (HM.lookup fieldName lhsJoinFields) $
+      onNothing (HashMap.lookup fieldName lhsJoinFields) $
         throwError $
           JoinFieldNonExistent lhsIdentifier fieldName $
-            HM.keysSet lhsJoinFields
+            HashMap.keysSet lhsJoinFields
   hasuraFieldsVariablesMap <-
-    fmap HM.fromList $ for requiredLHSJoinFields $ \(fieldName, field) -> (,field) <$> hasuraFieldToVariable fieldName
+    fmap HashMap.fromList $ for requiredLHSJoinFields $ \(fieldName, field) -> (,field) <$> hasuraFieldToVariable fieldName
   let schemaDoc = irDoc introspectionResult
       queryRootName = irQueryRoot introspectionResult
   queryRoot <-
@@ -126,7 +126,7 @@ validateToSchemaRelationship schema lhsIdentifier name (remoteSchemaInfo, intros
       (queryRoot, (mempty, mempty))
       (unRemoteFields $ _trrdRemoteField schema)
   pure $
-    ( HM.fromList requiredLHSJoinFields,
+    ( HashMap.fromList requiredLHSJoinFields,
       RemoteSchemaFieldInfo
         { _rrfiName = name,
           _rrfiParamMap = leafParamMap,
@@ -134,7 +134,7 @@ validateToSchemaRelationship schema lhsIdentifier name (remoteSchemaInfo, intros
           _rrfiRemoteSchema = remoteSchemaInfo,
           -- adding the new input types after stripping the values of the
           -- schema document
-          _rrfiInputValueDefinitions = HM.elems leafTypeMap,
+          _rrfiInputValueDefinitions = HashMap.elems leafTypeMap,
           _rrfiRemoteSchemaName = remoteSchemaName,
           _rrfiLHSIdentifier = lhsIdentifier
         }
@@ -217,17 +217,17 @@ stripInMap ::
   RelName ->
   LHSIdentifier ->
   RemoteSchemaIntrospection ->
-  HM.HashMap G.Name RemoteSchemaInputValueDefinition ->
-  HM.HashMap G.Name (G.Value G.Name) ->
+  HashMap.HashMap G.Name RemoteSchemaInputValueDefinition ->
+  HashMap.HashMap G.Name (G.Value G.Name) ->
   StateT
     (HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition))
     (Either ValidationError)
-    (HM.HashMap G.Name RemoteSchemaInputValueDefinition)
+    (HashMap.HashMap G.Name RemoteSchemaInputValueDefinition)
 stripInMap relName lhsIdentifier types schemaArguments providedArguments =
   fmap catMaybes $
-    HM.traverseWithKey
+    HashMap.traverseWithKey
       ( \name remoteInpValDef@(RemoteSchemaInputValueDefinition inpValInfo _preset) ->
-          case HM.lookup name providedArguments of
+          case HashMap.lookup name providedArguments of
             Nothing -> pure $ Just remoteInpValDef
             Just value -> do
               maybeNewGType <- stripValue relName lhsIdentifier types (G._ivdType inpValInfo) value
@@ -319,11 +319,11 @@ stripObject name lhsIdentifier schemaDoc originalGtype templateArguments =
               templateArguments
           let newInpObjTyInfo =
                 originalInpObjTyInfo
-                  { G._iotdValueDefinitions = HM.elems newSchemaArguments,
+                  { G._iotdValueDefinitions = HashMap.elems newSchemaArguments,
                     G._iotdName = newNamedType
                   }
               newGtype = G.TypeNamed nullability newNamedType
-          modify (HM.insert newNamedType (G.TypeDefinitionInputObject newInpObjTyInfo))
+          modify (HashMap.insert newNamedType (G.TypeDefinitionInputObject newInpObjTyInfo))
           pure newGtype
         _ -> lift (Left (InvalidGTypeForStripping originalGtype))
     _ -> lift (Left (InvalidGTypeForStripping originalGtype))
@@ -366,26 +366,26 @@ lookupField name objFldInfo = viaObject objFldInfo
     viaObject =
       maybe (throwError (CouldntFindRemoteField name $ G._otdName objFldInfo)) pure
         . lookup name
-        . HM.toList
+        . HashMap.toList
         . mapFromL G._fldName
         . G._otdFieldsDefinition
 
 -- | Validate remote input arguments against the remote schema.
 validateRemoteArguments ::
   (MonadError ValidationError m) =>
-  HM.HashMap G.Name RemoteSchemaInputValueDefinition ->
-  HM.HashMap G.Name (G.Value G.Name) ->
-  HM.HashMap G.Name joinField ->
+  HashMap.HashMap G.Name RemoteSchemaInputValueDefinition ->
+  HashMap.HashMap G.Name (G.Value G.Name) ->
+  HashMap.HashMap G.Name joinField ->
   RemoteSchemaIntrospection ->
   m ()
 validateRemoteArguments expectedArguments providedArguments permittedVariables schemaDocument = do
-  traverse_ validateProvided (HM.toList providedArguments)
+  traverse_ validateProvided (HashMap.toList providedArguments)
   where
     -- Not neccessary to validate if all required args are provided in the relationship
-    -- traverse validateExpected (HM.toList expectedArguments)
+    -- traverse validateExpected (HashMap.toList expectedArguments)
 
     validateProvided (providedName, providedValue) =
-      case HM.lookup providedName expectedArguments of
+      case HashMap.lookup providedName expectedArguments of
         Nothing -> throwError (NoSuchArgumentForRemote providedName)
         Just (G._ivdType . _rsitdDefinition -> expectedType) ->
           validateType permittedVariables providedValue expectedType schemaDocument
@@ -398,7 +398,7 @@ unwrapGraphQLType = \case
 -- | Validate a value against a type.
 validateType ::
   (MonadError ValidationError m) =>
-  HM.HashMap G.Name joinField ->
+  HashMap.HashMap G.Name joinField ->
   G.Value G.Name ->
   G.GType ->
   RemoteSchemaIntrospection ->
@@ -406,8 +406,8 @@ validateType ::
 validateType permittedVariables value expectedGType schemaDocument =
   case value of
     G.VVariable variable ->
-      case HM.lookup variable permittedVariables of
-        Nothing -> throwError (InvalidVariable variable $ HM.keysSet permittedVariables)
+      case HashMap.lookup variable permittedVariables of
+        Nothing -> throwError (InvalidVariable variable $ HashMap.keysSet permittedVariables)
         -- TODO: check whether the type of lhs join field is allowed
         Just _lhsJoinField -> pure ()
     G.VInt {} -> do
@@ -437,7 +437,7 @@ validateType permittedVariables value expectedGType schemaDocument =
         )
     G.VObject values ->
       for_
-        (HM.toList values)
+        (HashMap.toList values)
         ( \(name, val) ->
             let expectedNamedType = G.getBaseType expectedGType
              in case lookupType schemaDocument expectedNamedType of
@@ -447,7 +447,7 @@ validateType permittedVariables value expectedGType schemaDocument =
                       G.TypeDefinitionInputObject inpObjTypeInfo ->
                         let objectTypeDefnsMap =
                               mapFromL (G._ivdName . _rsitdDefinition) $ G._iotdValueDefinitions inpObjTypeInfo
-                         in case HM.lookup name objectTypeDefnsMap of
+                         in case HashMap.lookup name objectTypeDefnsMap of
                               Nothing -> throwError $ NoSuchArgumentForRemote name
                               Just (G._ivdType . _rsitdDefinition -> expectedType) ->
                                 validateType permittedVariables val expectedType schemaDocument

@@ -31,7 +31,7 @@ import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as LBS
 import Data.CaseInsensitive qualified as CI
 import Data.Dependent.Map qualified as DM
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
@@ -660,7 +660,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                         runExceptT $
                           for actions $ \(actionId, resultBuilder) -> do
                             actionLogResponse <-
-                              Map.lookup actionId actionLogMap
+                              HashMap.lookup actionId actionLogMap
                                 `onNothing` throw500 "unexpected: cannot lookup action_id in response map"
                             liftEither $ resultBuilder actionLogResponse
                       case resultsE of
@@ -1180,7 +1180,7 @@ onConnInit logger manager wsConn getAuthMode connParamsM onConnInitErrAction kee
 
     paramHeaders =
       [ (CI.mk $ TE.encodeUtf8 h, TE.encodeUtf8 v)
-        | (h, v) <- maybe [] Map.toList $ connParamsM >>= _cpHeaders
+        | (h, v) <- maybe [] HashMap.toList $ connParamsM >>= _cpHeaders
       ]
 
     getClientHdrs st = case st of

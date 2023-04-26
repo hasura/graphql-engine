@@ -14,7 +14,7 @@ where
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Aeson qualified as J
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.String (fromString)
 import Data.Text qualified as T
@@ -110,7 +110,7 @@ runSQL mssqlRunSQL@MSSQLRunSQL {..} = do
       preActionTablesMeta <- toTableMeta <$> loadDBMetadata
       results <- sqlQueryTx
       postActionTablesMeta <- toTableMeta <$> loadDBMetadata
-      let trackedTablesMeta = filter (flip M.member tableCache . tmTable) preActionTablesMeta
+      let trackedTablesMeta = filter (flip HashMap.member tableCache . tmTable) preActionTablesMeta
           tablesDiff = getTablesDiff trackedTablesMeta postActionTablesMeta
 
       -- Get indirect dependencies
@@ -131,7 +131,7 @@ runSQL mssqlRunSQL@MSSQLRunSQL {..} = do
       where
         toTableMeta :: DBTablesMetadata 'MSSQL -> [TableMeta 'MSSQL]
         toTableMeta dbTablesMeta =
-          M.toList dbTablesMeta <&> \(table, dbTableMeta) ->
+          HashMap.toList dbTablesMeta <&> \(table, dbTableMeta) ->
             TableMeta table dbTableMeta [] -- No computed fields
 
 isSchemaCacheBuildRequiredRunSQL :: MSSQLRunSQL -> Bool

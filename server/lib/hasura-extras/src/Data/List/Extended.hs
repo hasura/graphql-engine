@@ -12,7 +12,7 @@ where
 
 import Data.Containers.ListUtils (nubOrd)
 import Data.Function (on)
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.Hashable (Hashable)
 import Data.List qualified as L
@@ -21,7 +21,7 @@ import Prelude
 
 duplicates :: Hashable a => [a] -> Set.HashSet a
 duplicates =
-  Map.keysSet . Map.filter (> 1) . Map.fromListWith (+) . map (,1 :: Int)
+  HashMap.keysSet . HashMap.filter (> 1) . HashMap.fromListWith (+) . map (,1 :: Int)
 
 -- | Remove duplicates from a list. Like 'nub' but runs in @O(n * log(n))@
 --   time and requires 'Ord' instances.
@@ -34,13 +34,13 @@ getDifference :: Hashable a => [a] -> [a] -> Set.HashSet a
 getDifference = Set.difference `on` Set.fromList
 
 getDifferenceOn :: Hashable k => (v -> k) -> [v] -> [v] -> [v]
-getDifferenceOn f l = Map.elems . Map.differenceOn f l
+getDifferenceOn f l = HashMap.elems . HashMap.differenceOn f l
 
 getOverlapWith :: Hashable k => (v -> k) -> [v] -> [v] -> [(v, v)]
 getOverlapWith getKey left right =
-  Map.elems $ Map.intersectionWith (,) (mkMap left) (mkMap right)
+  HashMap.elems $ HashMap.intersectionWith (,) (mkMap left) (mkMap right)
   where
-    mkMap = Map.fromList . map (\v -> (getKey v, v))
+    mkMap = HashMap.fromList . map (\v -> (getKey v, v))
 
 -- | Returns the longest prefix common to all given lists. Returns an empty list on an empty list.
 --

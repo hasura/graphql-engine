@@ -7,7 +7,7 @@ module Hasura.Backends.Postgres.Translate.Update
   )
 where
 
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.BoolExp
@@ -68,7 +68,7 @@ mkUpdateCTE (AnnotatedUpdateG tn permFltr chk updateVariant _ columnsInfo _tCase
         S.SQLUpdate
           { upTable = tn,
             upSet =
-              S.SetExp $ map (expandOperator columnsInfo) (Map.toList _ubOperations),
+              S.SetExp $ map (expandOperator columnsInfo) (HashMap.toList _ubOperations),
             upFrom = Nothing,
             upWhere = mkWhere _ubWhere,
             upRet = checkConstraint

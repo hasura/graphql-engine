@@ -52,7 +52,7 @@ import Data.Aeson
 import Data.Aeson.Extended ((.=?))
 import Data.Aeson.TH
 import Data.ByteString.Lazy qualified as LBS
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Extended
@@ -547,7 +547,7 @@ instance Backend b => NFData (EventTriggerInfo b)
 instance Backend b => ToJSON (EventTriggerInfo b) where
   toJSON = genericToJSON hasuraJSON
 
-type EventTriggerInfoMap b = M.HashMap TriggerName (EventTriggerInfo b)
+type EventTriggerInfoMap b = HashMap.HashMap TriggerName (EventTriggerInfo b)
 
 newtype FetchBatchSize = FetchBatchSize {_unFetchBatchSize :: Int}
   deriving (Show, Eq)

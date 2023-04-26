@@ -4,7 +4,7 @@ module Hasura.RQL.DML.Select
 where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as DS
 import Data.Text.Extended
@@ -81,7 +81,7 @@ convWildcard fieldInfoMap selPermInfo wildcard =
     pgCols = map ciColumn $ getCols fieldInfoMap
     relColInfos = getRels fieldInfoMap
 
-    simpleCols = map ECSimple $ filter (`HM.member` cols) pgCols
+    simpleCols = map ECSimple $ filter (`HashMap.member` cols) pgCols
 
     mkRelCol wc relInfo = do
       let relName = riName relInfo
@@ -246,7 +246,7 @@ convExtSimple ::
 convExtSimple fieldInfoMap selPermInfo pgCol = do
   checkSelOnCol selPermInfo pgCol
   colInfo <- askColInfo fieldInfoMap pgCol relWhenPGErr
-  pure (colInfo, join $ HM.lookup pgCol (spiCols selPermInfo))
+  pure (colInfo, join $ HashMap.lookup pgCol (spiCols selPermInfo))
   where
     relWhenPGErr = "relationships have to be expanded"
 

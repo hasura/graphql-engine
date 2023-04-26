@@ -45,7 +45,7 @@ where
 
 import Control.Lens (makeLenses, makePrisms)
 import Data.Aeson qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Kind (Type)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
@@ -117,14 +117,14 @@ data AnnActionExecution (r :: Type) = AnnActionExecution
   }
   deriving stock (Functor, Foldable, Traversable)
 
-type ActionOutputFields = Map.HashMap G.Name G.GType
+type ActionOutputFields = HashMap.HashMap G.Name G.GType
 
 getActionOutputFields :: AnnotatedOutputType -> ActionOutputFields
 getActionOutputFields inp = case inp of
-  AOTObject aot -> Map.fromList do
+  AOTObject aot -> HashMap.fromList do
     ObjectFieldDefinition {..} <- toList $ _aotFields aot
     pure (unObjectFieldName _ofdName, fst _ofdType)
-  AOTScalar _ -> Map.empty
+  AOTScalar _ -> HashMap.empty
 
 data AnnActionMutationAsync = AnnActionMutationAsync
   { _aamaName :: RQL.ActionName,

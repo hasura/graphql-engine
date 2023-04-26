@@ -116,8 +116,7 @@ import Data.Aeson.Casing
 import Data.Aeson.Extended
 import Data.Aeson.TH
 import Data.Aeson.Types (Parser, prependFailure, typeMismatch)
-import Data.HashMap.Strict qualified as M
-import Data.HashMap.Strict.Extended qualified as M
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.NonEmpty (NEHashMap)
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as HS
@@ -369,7 +368,7 @@ instance Backend b => ToJSON (FieldInfo b) where
 
 $(makePrisms ''FieldInfo)
 
-type FieldInfoMap = M.HashMap FieldName
+type FieldInfoMap = HashMap.HashMap FieldName
 
 fieldInfoName :: forall b. Backend b => FieldInfo b -> FieldName
 fieldInfoName = \case
@@ -408,17 +407,17 @@ fieldInfoGraphQLNames info = case info of
   FIRemoteRelationship _ -> maybeToList $ fieldInfoGraphQLName info
 
 getCols :: FieldInfoMap (FieldInfo backend) -> [ColumnInfo backend]
-getCols = mapMaybe (^? _FIColumn) . M.elems
+getCols = mapMaybe (^? _FIColumn) . HashMap.elems
 
 -- | Sort columns based on their ordinal position
 sortCols :: [ColumnInfo backend] -> [ColumnInfo backend]
 sortCols = sortBy (\l r -> compare (ciPosition l) (ciPosition r))
 
 getRels :: FieldInfoMap (FieldInfo backend) -> [RelInfo backend]
-getRels = mapMaybe (^? _FIRelationship) . M.elems
+getRels = mapMaybe (^? _FIRelationship) . HashMap.elems
 
 getComputedFieldInfos :: FieldInfoMap (FieldInfo backend) -> [ComputedFieldInfo backend]
-getComputedFieldInfos = mapMaybe (^? _FIComputedField) . M.elems
+getComputedFieldInfos = mapMaybe (^? _FIComputedField) . HashMap.elems
 
 data InsPermInfo (b :: BackendType) = InsPermInfo
   { ipiCols :: HS.HashSet (Column b),
@@ -459,8 +458,8 @@ instance
 -- | This type is only used as an intermediate type
 --   to combine more than one select permissions for inherited roles.
 data CombinedSelPermInfo (b :: BackendType) = CombinedSelPermInfo
-  { cspiCols :: [(M.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)))],
-    cspiComputedFields :: [(M.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b)))],
+  { cspiCols :: [(HashMap.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)))],
+    cspiComputedFields :: [(HashMap.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b)))],
     cspiFilter :: [(AnnBoolExpPartialSQL b)],
     cspiLimit :: Maybe (Max Int),
     cspiAllowAgg :: Any,
@@ -489,8 +488,8 @@ combinedSelPermInfoToSelPermInfo ::
   SelPermInfo b
 combinedSelPermInfoToSelPermInfo selPermsCount CombinedSelPermInfo {..} =
   SelPermInfo
-    (mergeColumnsWithBoolExp <$> M.unionsAll cspiCols)
-    (mergeColumnsWithBoolExp <$> M.unionsAll cspiComputedFields)
+    (mergeColumnsWithBoolExp <$> HashMap.unionsAll cspiCols)
+    (mergeColumnsWithBoolExp <$> HashMap.unionsAll cspiComputedFields)
     (BoolOr cspiFilter)
     (getMax <$> cspiLimit)
     (getAny cspiAllowAgg)
@@ -531,11 +530,11 @@ data SelPermInfo (b :: BackendType) = SelPermInfo
     -- inherited role, for a non-inherited role, it will be `Nothing`. The above
     -- bool exp will determine if the column should be nullified in a row, when
     -- there aren't requisite permissions.
-    spiCols :: M.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)),
+    spiCols :: HashMap.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)),
     -- | HashMap of accessible computed fields to the role, mapped to
     -- `AnnColumnCaseBoolExpPartialSQL`, simililar to `spiCols`.
     -- These computed fields do not return rows of existing table.
-    spiComputedFields :: M.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b)),
+    spiComputedFields :: HashMap.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b)),
     spiFilter :: AnnBoolExpPartialSQL b,
     spiLimit :: Maybe Int,
     spiAllowAgg :: Bool,
@@ -679,7 +678,7 @@ instance
 
 makeLenses ''RolePermInfo
 
-type RolePermInfoMap b = M.HashMap RoleName (RolePermInfo b)
+type RolePermInfoMap b = HashMap.HashMap RoleName (RolePermInfo b)
 
 -- data ConstraintType
 --   = CTCHECK
@@ -802,7 +801,7 @@ $(makeLenses ''TableConfig)
 
 emptyTableConfig :: TableConfig b
 emptyTableConfig =
-  TableConfig emptyCustomRootFields M.empty Nothing Automatic
+  TableConfig emptyCustomRootFields HashMap.empty Nothing Automatic
 
 instance (Backend b) => HasCodec (TableConfig b) where
   codec =
@@ -827,19 +826,19 @@ instance (Backend b) => HasCodec (TableConfig b) where
       columnConfigCodec =
         dimapCodec dec enc $
           (,)
-            <$> optionalFieldWithDefault' "column_config" M.empty AC..= fst
-            <*> optionalFieldWithDefaultWith' "custom_column_names" (hashMapCodec graphQLFieldNameCodec) M.empty AC..= snd
+            <$> optionalFieldWithDefault' "column_config" HashMap.empty AC..= fst
+            <*> optionalFieldWithDefaultWith' "custom_column_names" (hashMapCodec graphQLFieldNameCodec) HashMap.empty AC..= snd
 
       -- if @custom_column_names@ was given then merge its value during decoding
       -- to get a complete value for _tcColumnConfig
       dec (columnConfig, legacyCustomColumnNames) =
         let legacyColumnConfig = (\name -> ColumnConfig (Just name) Automatic) <$> legacyCustomColumnNames
-         in M.unionWith (<>) columnConfig legacyColumnConfig -- columnConfig takes precedence over legacy
+         in HashMap.unionWith (<>) columnConfig legacyColumnConfig -- columnConfig takes precedence over legacy
 
       -- encode value from _tcColumnConfig for @column_config@, and for the
       -- legacy representation for @custom_column_names@.
       enc columnConfig =
-        let outputColumnConfig = M.filter (/= mempty) columnConfig
+        let outputColumnConfig = HashMap.filter (/= mempty) columnConfig
             legacyCustomColumnNames = mapMaybe _ccfgCustomName columnConfig
          in (outputColumnConfig, legacyCustomColumnNames)
 
@@ -857,10 +856,10 @@ instance (Backend b) => FromJSON (TableConfig b) where
       -- custom_column_names can be removed once the deprecation period has expired and we get rid of it
       parseColumnConfig :: Object -> Parser (HashMap (Column b) ColumnConfig)
       parseColumnConfig obj = do
-        columnConfig <- obj .:? "column_config" .!= M.empty
-        legacyCustomColumnNames <- obj .:? "custom_column_names" .!= M.empty
+        columnConfig <- obj .:? "column_config" .!= HashMap.empty
+        legacyCustomColumnNames <- obj .:? "custom_column_names" .!= HashMap.empty
         let legacyColumnConfig = (\name -> ColumnConfig (Just name) Automatic) <$> legacyCustomColumnNames
-        pure $ M.unionWith (<>) columnConfig legacyColumnConfig -- columnConfig takes precedence over legacy
+        pure $ HashMap.unionWith (<>) columnConfig legacyColumnConfig -- columnConfig takes precedence over legacy
 
 instance (Backend b) => ToJSON (TableConfig b) where
   toJSON TableConfig {..} =
@@ -872,7 +871,7 @@ instance (Backend b) => ToJSON (TableConfig b) where
           -- We are retaining it here, sourcing its values from column_config, for backwards-compatibility
           -- custom_column_names can be removed once the deprecation period has expired and we get rid of it
           "custom_column_names" .= mapMaybe _ccfgCustomName _tcColumnConfig,
-          "column_config" .= M.filter (/= mempty) _tcColumnConfig,
+          "column_config" .= HashMap.filter (/= mempty) _tcColumnConfig,
           "custom_name" .= _tcCustomName,
           "comment" .= _tcComment
         ]
@@ -1103,14 +1102,14 @@ getRolePermInfo role tableInfo
   | otherwise =
       fromMaybe
         (RolePermInfo Nothing Nothing Nothing Nothing)
-        (M.lookup role $ _tiRolePermInfoMap tableInfo)
+        (HashMap.lookup role $ _tiRolePermInfoMap tableInfo)
 
-type TableCoreCache b = M.HashMap (TableName b) (TableCoreInfo b)
+type TableCoreCache b = HashMap.HashMap (TableName b) (TableCoreInfo b)
 
-type TableCache b = M.HashMap (TableName b) (TableInfo b) -- info of all tables
+type TableCache b = HashMap.HashMap (TableName b) (TableInfo b) -- info of all tables
 
 -- map of all event triggers on the table
-type TableEventTriggers b = M.HashMap (TableName b) [TriggerName]
+type TableEventTriggers b = HashMap.HashMap (TableName b) [TriggerName]
 
 -- | Metadata of a Postgres foreign key constraint which is being
 -- extracted from database via 'src-rsr/pg_table_metadata.sql'
@@ -1189,7 +1188,7 @@ askFieldInfo ::
   FieldName ->
   m fieldInfo
 askFieldInfo m f =
-  onNothing (M.lookup f m) $ throw400 NotExists (f <<> " does not exist")
+  onNothing (HashMap.lookup f m) $ throw400 NotExists (f <<> " does not exist")
 
 askColumnType ::
   (MonadError QErr m, Backend backend) =>
@@ -1298,7 +1297,7 @@ mkAdminRolePermInfo tableInfo =
   where
     fields = _tciFieldInfoMap tableInfo
     pgCols = map ciColumn $ getCols fields
-    pgColsWithFilter = M.fromList $ map (,Nothing) pgCols
+    pgColsWithFilter = HashMap.fromList $ map (,Nothing) pgCols
     computedFields =
       -- Fetch the list of computed fields not returning rows of existing table.
       -- For other computed fields returning existing table rows, the admin role can query them
@@ -1307,7 +1306,7 @@ mkAdminRolePermInfo tableInfo =
     computedFields' = HS.toMap computedFields $> Nothing
 
     tableName = _tciName tableInfo
-    i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False mempty
+    i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue HashMap.empty False mempty
     s = SelPermInfo pgColsWithFilter computedFields' annBoolExpTrue Nothing True mempty ARFAllowAllRootFields ARFAllowAllRootFields
-    u = UpdPermInfo (HS.fromList pgCols) tableName annBoolExpTrue Nothing M.empty False mempty
+    u = UpdPermInfo (HS.fromList pgCols) tableName annBoolExpTrue Nothing HashMap.empty False mempty
     d = DelPermInfo tableName annBoolExpTrue False mempty

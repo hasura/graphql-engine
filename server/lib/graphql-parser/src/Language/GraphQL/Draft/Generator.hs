@@ -73,7 +73,7 @@ where
 -------------------------------------------------------------------------------
 
 import Control.Monad.IO.Class (MonadIO)
-import Data.HashMap.Strict as M
+import Data.HashMap.Strict as HashMap
 import Data.Scientific (fromFloatDigits)
 import Data.Text (Text)
 import Data.Text qualified as T
@@ -174,8 +174,8 @@ genEnumValue = EnumValue <$> genName
 genListValue :: Gen (Value a) -> Gen [Value a]
 genListValue = mkList
 
-genObjectValue :: Gen (Value a) -> Gen (M.HashMap Name (Value a))
-genObjectValue genVal = M.fromList <$> mkList genObjectField
+genObjectValue :: Gen (Value a) -> Gen (HashMap.HashMap Name (Value a))
+genObjectValue genVal = HashMap.fromList <$> mkList genObjectField
   where
     genObjectField = (,) <$> genName <*> genVal
 
@@ -453,7 +453,7 @@ genField =
   Field
     <$> Gen.maybe genName
     <*> genName
-    <*> (M.fromList <$> mkList genArgument)
+    <*> (HashMap.fromList <$> mkList genArgument)
     <*> genDirectives
     <*> genSelectionSet
 
@@ -461,7 +461,7 @@ genDirective :: Generator a => Gen (Directive a)
 genDirective =
   Directive
     <$> genName
-    <*> (M.fromList <$> mkList genArgument)
+    <*> (HashMap.fromList <$> mkList genArgument)
 
 genDirectives :: Generator a => Gen [Directive a]
 genDirectives = mkList genDirective

@@ -6,7 +6,7 @@ module Hasura.LogicalModel.Common
 where
 
 import Data.Bifunctor (bimap)
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.Text.Extended (ToTxt (toTxt))
 import Hasura.LogicalModel.Types (LogicalModelField (..))
@@ -61,7 +61,7 @@ logicalModelFieldsToFieldInfo ::
   InsOrd.InsOrdHashMap (Column b) (LogicalModelField b) ->
   FieldInfoMap (FieldInfo b)
 logicalModelFieldsToFieldInfo =
-  Map.fromList
+  HashMap.fromList
     . fmap (bimap (fromCol @b) FIColumn)
     . fromMaybe mempty
     . traverseWithIndex

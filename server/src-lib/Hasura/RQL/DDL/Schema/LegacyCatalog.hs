@@ -16,7 +16,7 @@ where
 import Control.Lens hiding ((.=))
 import Data.Aeson
 import Data.FileEmbed (makeRelativeToProject)
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Extended ((<<>))
 import Data.Text.NonEmpty
@@ -902,4 +902,4 @@ recreateSystemMetadata = do
     objectRel name using = Left $ RelDef (RelName name) using Nothing
     arrayRel name using = Right $ RelDef (RelName name) using Nothing
     manualConfig schemaName tableName columns =
-      RUManual $ RelManualConfig (QualifiedObject schemaName tableName) (HM.fromList columns) Nothing
+      RUManual $ RelManualConfig (QualifiedObject schemaName tableName) (HashMap.fromList columns) Nothing

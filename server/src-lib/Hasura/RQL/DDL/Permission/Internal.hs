@@ -17,7 +17,7 @@ where
 import Control.Lens hiding ((.=))
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Types
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
@@ -72,7 +72,7 @@ assertPermDefined role pt tableInfo =
         <> role
           <<> " does not exist"
   where
-    rpi = M.lookup role $ _tiRolePermInfoMap tableInfo
+    rpi = HashMap.lookup role $ _tiRolePermInfoMap tableInfo
 
 newtype CreatePerm a b = CreatePerm (WithTable b (PermDef b a))
 

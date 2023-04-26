@@ -11,7 +11,7 @@ where
 import Control.Lens.Combinators
 import Control.Lens.Operators
 import Data.Aeson
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.Text.Extended
@@ -199,7 +199,7 @@ renameColumnInMetadata oCol nCol source qt fieldInfo = do
   where
     errMsg = "cannot rename column " <> oCol <<> " to " <>> nCol
     assertFldNotExists =
-      case M.lookup (fromCol @b oCol) fieldInfo of
+      case HashMap.lookup (fromCol @b oCol) fieldInfo of
         Just (FIRelationship _) ->
           throw400 AlreadyExists $
             "cannot rename column "
@@ -411,9 +411,9 @@ updatePreset qt rf obj =
     _ -> obj
   where
     updatePreset' oCol nCol =
-      M.fromList updItems
+      HashMap.fromList updItems
       where
-        updItems = map procObjItem $ M.toList obj
+        updItems = map procObjItem $ HashMap.toList obj
         procObjItem (pgCol, v) =
           let isUpdated = pgCol == oCol
               updCol = bool pgCol nCol isUpdated
@@ -476,8 +476,8 @@ updateColExp qt rf (ColExp fld val) =
     updatedVal = do
       tables <- ask
       let maybeFieldInfo =
-            M.lookup qt tables
-              >>= M.lookup fld . _tciFieldInfoMap . _tiCoreInfo
+            HashMap.lookup qt tables
+              >>= HashMap.lookup fld . _tciFieldInfoMap . _tiCoreInfo
       case maybeFieldInfo of
         Nothing -> pure val
         Just fi -> case fi of
@@ -550,7 +550,7 @@ updateColInRemoteRelationshipLHS source remoteRelationshipName (RenameItem qt ol
 
       updateMapKey =
         -- mapKeys is not available in 0.2.13.0
-        M.fromList . map (\(key, value) -> (if key == oldFieldName then newFieldName else key, value)) . M.toList
+        HashMap.fromList . map (\(key, value) -> (if key == oldFieldName then newFieldName else key, value)) . HashMap.toList
 
       updateFieldCalls (RemoteFields fields) =
         RemoteFields $
@@ -724,7 +724,7 @@ updateColMap ::
   ColMap b ->
   ColMap b
 updateColMap fromQT toQT rnCol =
-  M.fromList . map (modCol fromQT *** modCol toQT) . M.toList
+  HashMap.fromList . map (modCol fromQT *** modCol toQT) . HashMap.toList
   where
     RenameItem qt oCol nCol = rnCol
     modCol colQt col = if colQt == qt && col == oCol then nCol else col
@@ -744,4 +744,4 @@ possiblyUpdateCustomColumnNames source tableName oldColumn newColumn = do
   where
     swapOldColumnForNewColumn :: HashMap (Column b) columnData -> HashMap (Column b) columnData
     swapOldColumnForNewColumn customColumns =
-      M.fromList $ (\(dbCol, val) -> (,val) $ if dbCol == oldColumn then newColumn else dbCol) <$> M.toList customColumns
+      HashMap.fromList $ (\(dbCol, val) -> (,val) $ if dbCol == oldColumn then newColumn else dbCol) <$> HashMap.toList customColumns

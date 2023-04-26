@@ -16,7 +16,7 @@ module Data.Trie
 where
 
 import Data.Aeson (ToJSON, ToJSONKey)
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.Hashable (Hashable)
 import GHC.Generics (Generic)
 import Prelude hiding (lookup)
@@ -25,7 +25,7 @@ import Prelude hiding (lookup)
 
 -- | Data structure for storing a value @v@ keyed on a sequence of @k@s
 data Trie k v = Trie
-  { trieMap :: M.HashMap k (Trie k v),
+  { trieMap :: HashMap.HashMap k (Trie k v),
     trieData :: Maybe v
   }
   deriving stock (Eq, Show, Ord, Generic)
@@ -35,7 +35,7 @@ data Trie k v = Trie
 -- tries contain a value at a given path, we use the value's semigroup instance
 -- to compute the resulting value.
 instance (Hashable k, Semigroup v) => Semigroup (Trie k v) where
-  Trie m0 v0 <> Trie m1 v1 = Trie (M.unionWith (<>) m0 m1) (v0 <> v1)
+  Trie m0 v0 <> Trie m1 v1 = Trie (HashMap.unionWith (<>) m0 m1) (v0 <> v1)
 
 instance (Hashable k, Semigroup v) => Monoid (Trie k v) where
   mempty = empty
@@ -46,7 +46,7 @@ instance (ToJSONKey a, ToJSON v) => ToJSON (Trie a v)
 
 -- | Construct an empty trie.
 empty :: Trie k v
-empty = Trie M.empty Nothing
+empty = Trie HashMap.empty Nothing
 
 -- | Creates a trie from a path and a value
 --
@@ -56,14 +56,14 @@ empty = Trie M.empty Nothing
 -- >>> singleton [] 5
 -- Trie (fromList []) (Just 5)
 singleton :: (Hashable k) => [k] -> v -> Trie k v
-singleton ps v = foldr (\p t -> Trie (M.singleton p t) Nothing) (Trie M.empty (Just v)) ps
+singleton ps v = foldr (\p t -> Trie (HashMap.singleton p t) Nothing) (Trie HashMap.empty (Just v)) ps
 
 -------------------------------------------------------------------------------
 
 -- | Find a value at the given path, if any.
 lookup :: Hashable k => [k] -> Trie k v -> Maybe v
 lookup [] (Trie _ value) = value
-lookup (p : ps) (Trie tmap _) = lookup ps =<< M.lookup p tmap
+lookup (p : ps) (Trie tmap _) = lookup ps =<< HashMap.lookup p tmap
 
 -- | Insert the given value at the given path.
 --
@@ -83,7 +83,7 @@ insertWith fun path newValue t = go t path
         Just $ case value of
           Nothing -> newValue
           Just oldValue -> fun newValue oldValue
-      (p : ps) -> Trie (M.alter (step ps) p tmap) value
+      (p : ps) -> Trie (HashMap.alter (step ps) p tmap) value
     step ps = \case
       -- this path did not exist and must be created
       Nothing -> Just $ go empty ps
@@ -93,7 +93,7 @@ insertWith fun path newValue t = go t path
 -- | Extract all values of the trie, discarding any path information.
 elems :: Trie k v -> [v]
 elems (Trie m v) =
-  let subElems = concatMap elems (M.elems m)
+  let subElems = concatMap elems (HashMap.elems m)
    in case v of
         Nothing -> subElems
         Just val -> val : subElems

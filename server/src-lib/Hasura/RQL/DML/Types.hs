@@ -28,7 +28,7 @@ import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.TH
 import Data.Attoparsec.Text qualified as AT
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.Postgres.Instances.Types ()
 import Hasura.Backends.Postgres.SQL.DML qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Types
@@ -214,9 +214,9 @@ instance FromJSON UpdateQuery where
       <$> o .: "table"
       <*> o .:? "source" .!= defaultSource
       <*> o .: "where"
-      <*> ((o .: "$set" <|> o .:? "values") .!= M.empty)
-      <*> (o .:? "$inc" .!= M.empty)
-      <*> (o .:? "$mul" .!= M.empty)
+      <*> ((o .: "$set" <|> o .:? "values") .!= HashMap.empty)
+      <*> (o .:? "$inc" .!= HashMap.empty)
+      <*> (o .:? "$mul" .!= HashMap.empty)
       <*> o .:? "$default" .!= []
       <*> o .:? "returning"
 

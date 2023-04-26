@@ -15,7 +15,7 @@ module Hasura.Backends.BigQuery.FromIr
 where
 
 import Control.Monad.Validate
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.Int qualified as Int
 import Data.List.Extended (appendToNonEmpty)
 import Data.List.NonEmpty qualified as NE
@@ -770,12 +770,12 @@ fromFunction ::
   -- | List of positional Arguments
   [ArgumentExp Expression] ->
   -- | List of named arguments
-  HM.HashMap Text (ArgumentExp Expression) ->
+  HashMap.HashMap Text (ArgumentExp Expression) ->
   FromIr From
 fromFunction parentEntityAlias functionName positionalArgs namedArgs = do
   alias <- generateEntityAlias (FunctionTemplate functionName)
   positionalArgExps <- mapM fromArgumentExp positionalArgs
-  namedArgExps <- for (HM.toList namedArgs) $ \(argName, argValue) -> FunctionNamedArgument argName <$> fromArgumentExp argValue
+  namedArgExps <- for (HashMap.toList namedArgs) $ \(argName, argValue) -> FunctionNamedArgument argName <$> fromArgumentExp argValue
   pure
     ( FromFunction
         ( Aliased
@@ -1694,7 +1694,7 @@ fromMapping localFrom =
               (ColumnExpression remoteFieldName)
           )
     )
-    . HM.toList
+    . HashMap.toList
 
 -- | Given an alias for the remote table, and a map of local-to-remote column
 -- name pairings, produce 'FieldName' pairings (column names paired with their
@@ -1729,7 +1729,7 @@ fromMappingFieldNames ::
   EntityAlias ->
   HashMap ColumnName ColumnName ->
   ReaderT EntityAlias FromIr [(FieldName, FieldName)]
-fromMappingFieldNames remoteFrom = traverse go . HM.toList
+fromMappingFieldNames remoteFrom = traverse go . HashMap.toList
   where
     go (localColumn, remoteColumn) = do
       remoteFieldName <- local (const remoteFrom) (fromColumn remoteColumn)

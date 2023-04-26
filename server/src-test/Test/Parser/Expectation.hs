@@ -15,7 +15,7 @@ module Test.Parser.Expectation
   )
 where
 
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.Postgres.SQL.Types (QualifiedTable)
 import Hasura.Backends.Postgres.Types.Update (PgUpdateVariant (..), UpdateOpExpression (..))
 import Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
@@ -97,7 +97,7 @@ runUpdateFieldTest UpdateTestSetup {..} =
       SourceInfo
         { _siName = SNDefault,
           _siSourceKind = PostgresVanillaKind,
-          _siTables = HM.singleton table tableInfo,
+          _siTables = HashMap.singleton table tableInfo,
           _siFunctions = mempty,
           _siNativeQueries = mempty,
           _siLogicalModels = mempty,
@@ -196,7 +196,7 @@ mkAnnotatedUpdate AnnotatedUpdateBuilder {..} = AnnotatedUpdateG {..}
     mapUpdateBatch UpdateBatchBuilder {..} =
       UpdateBatch
         { _ubWhere = toBoolExp ubbWhere,
-          _ubOperations = HM.fromList $ fmap (first ciColumn) ubbOperations
+          _ubOperations = HashMap.fromList $ fmap (first ciColumn) ubbOperations
         }
 
     _auOutput :: Output r

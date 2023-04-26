@@ -17,7 +17,7 @@ module Hasura.GraphQL.Schema.Table
 where
 
 import Data.Has
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Casing qualified as C
@@ -224,20 +224,20 @@ tableSelectFields tableInfo = do
   roleName <- retrieve scRole
   let tableFields = _tciFieldInfoMap . _tiCoreInfo $ tableInfo
       permissions = tableSelectPermissions roleName tableInfo
-  filterM (canBeSelected roleName permissions) $ Map.elems tableFields
+  filterM (canBeSelected roleName permissions) $ HashMap.elems tableFields
   where
     canBeSelected _ Nothing _ = pure False
     canBeSelected _ (Just permissions) (FIColumn columnInfo) =
-      pure $! Map.member (ciColumn columnInfo) (spiCols permissions)
+      pure $! HashMap.member (ciColumn columnInfo) (spiCols permissions)
     canBeSelected _ (Just permissions) (FINestedObject NestedObjectInfo {..}) =
-      pure $! Map.member _noiColumn (spiCols permissions)
+      pure $! HashMap.member _noiColumn (spiCols permissions)
     canBeSelected role _ (FIRelationship relationshipInfo) = do
       tableInfo' <- askTableInfo $ riRTable relationshipInfo
       pure $! isJust $ tableSelectPermissions @b role tableInfo'
     canBeSelected role (Just permissions) (FIComputedField computedFieldInfo) =
       case computedFieldReturnType @b (_cfiReturnType computedFieldInfo) of
         ReturnsScalar _ ->
-          pure $! Map.member (_cfiName computedFieldInfo) $ spiComputedFields permissions
+          pure $! HashMap.member (_cfiName computedFieldInfo) $ spiComputedFields permissions
         ReturnsTable tableName -> do
           tableInfo' <- askTableInfo tableName
           pure $! isJust $ tableSelectPermissions @b role tableInfo'
@@ -247,7 +247,7 @@ tableSelectFields tableInfo = do
 tableColumns ::
   forall b. TableInfo b -> [ColumnInfo b]
 tableColumns tableInfo =
-  mapMaybe columnInfo . Map.elems . _tciFieldInfoMap . _tiCoreInfo $ tableInfo
+  mapMaybe columnInfo . HashMap.elems . _tciFieldInfoMap . _tiCoreInfo $ tableInfo
   where
     columnInfo (FIColumn ci) = Just ci
     columnInfo _ = Nothing
@@ -287,5 +287,5 @@ tableUpdateColumns role tableInfo =
       where
         columnIsUpdatable = _cmIsUpdatable (ciMutability columnInfo)
         columnIsPermitted = Set.member (ciColumn columnInfo) (upiCols permissions)
-        columnHasNoPreset = not (Map.member (ciColumn columnInfo) (upiSet permissions))
+        columnHasNoPreset = not (HashMap.member (ciColumn columnInfo) (upiSet permissions))
     isUpdatable Nothing _ = False

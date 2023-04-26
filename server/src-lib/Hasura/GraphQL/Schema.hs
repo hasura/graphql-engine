@@ -11,7 +11,7 @@ import Control.Concurrent.Extended (concurrentlyEIO, forConcurrentlyEIO)
 import Control.Lens hiding (contexts)
 import Control.Monad.Memoize
 import Data.Aeson.Ordered qualified as JO
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.List.Extended (duplicates)
@@ -129,14 +129,14 @@ buildGQLContext
   allRemoteSchemas
   allActions
   customTypes = do
-    let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
+    let remoteSchemasRoles = concatMap (HashMap.keys . _rscPermissions . fst . snd) $ HashMap.toList allRemoteSchemas
         actionRoles =
           Set.insert adminRoleName $
-            Set.fromList (allActionInfos ^.. folded . aiPermissions . to Map.keys . folded)
+            Set.fromList (allActionInfos ^.. folded . aiPermissions . to HashMap.keys . folded)
               <> Set.fromList (bool mempty remoteSchemasRoles $ remoteSchemaPermissions == Options.EnableRemoteSchemaPermissions)
-        allActionInfos = Map.elems allActions
-        allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
-        allLogicalModelRoles = Set.fromList $ getLogicalModelRoles =<< Map.elems sources
+        allActionInfos = HashMap.elems allActions
+        allTableRoles = Set.fromList $ getTableRoles =<< HashMap.elems sources
+        allLogicalModelRoles = Set.fromList $ getLogicalModelRoles =<< HashMap.elems sources
         allRoles = actionRoles <> allTableRoles <> allLogicalModelRoles
 
     contexts <-
@@ -144,7 +144,7 @@ buildGQLContext
       -- but that isn't really acheivable (see mono #3829). NOTE: the admin role
       -- will still be a bottleneck here, even on huge_schema which has many
       -- roles.
-      fmap Map.fromList $
+      fmap HashMap.fromList $
         forConcurrentlyEIO 10 (Set.toList allRoles) $ \role -> do
           (role,)
             <$> concurrentlyEIO
@@ -171,7 +171,7 @@ buildGQLContext
         relayContexts = snd <$> contexts
 
     adminIntrospection <-
-      case Map.lookup adminRoleName hasuraContexts of
+      case HashMap.lookup adminRoleName hasuraContexts of
         Just (_context, _errors, introspection) -> pure introspection
         Nothing -> throw500 "buildGQLContext failed to build for the admin role"
     (unauthenticated, unauthenticatedRemotesErrors) <- unauthenticatedContext (sqlGen, functionPermissions) sources allRemoteSchemas experimentalFeatures remoteSchemaPermissions
@@ -179,7 +179,7 @@ buildGQLContext
       ( ( adminIntrospection,
           view _1 <$> hasuraContexts,
           unauthenticated,
-          Set.unions $ unauthenticatedRemotesErrors : (view _2 <$> Map.elems hasuraContexts)
+          Set.unions $ unauthenticatedRemotesErrors : (view _2 <$> HashMap.elems hasuraContexts)
         ),
         ( relayContexts,
           -- Currently, remote schemas are exposed through Relay, but ONLY through
@@ -590,7 +590,7 @@ buildAndValidateRemoteSchemas ::
     (MemoizeT m)
     ([RemoteSchemaParser P.Parse], HashSet InconsistentMetadata)
 buildAndValidateRemoteSchemas remotes sourcesQueryFields sourcesMutationFields role remoteSchemaPermsCtx =
-  runWriterT $ foldlM step [] (Map.elems remotes)
+  runWriterT $ foldlM step [] (HashMap.elems remotes)
   where
     getFieldName = P.getName . P.fDefinition
 
@@ -680,10 +680,10 @@ buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs
   functionPermsCtx <- retrieve Options.soInferFunctionPermissions
   functionSelectExpParsers <-
     concat . catMaybes
-      <$> for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
+      <$> for (HashMap.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
         guard $
           roleName == adminRoleName
-            || roleName `Map.member` _fiPermissions functionInfo
+            || roleName `HashMap.member` _fiPermissions functionInfo
             || functionPermsCtx == Options.InferFunctionPermissions
         let targetTableName = _fiReturnType functionInfo
         lift $ mkRFs $ buildFunctionQueryFields mkRootFieldName functionName functionInfo targetTableName
@@ -692,7 +692,7 @@ buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs
 
   (tableQueryFields, tableSubscriptionFields, apolloFedTableParsers) <-
     unzip3 . catMaybes
-      <$> for (Map.toList tables) \(tableName, tableInfo) -> runMaybeT $ do
+      <$> for (HashMap.toList tables) \(tableName, tableInfo) -> runMaybeT $ do
         tableIdentifierName <- getTableIdentifierName @b tableInfo
         lift $ buildTableQueryAndSubscriptionFields mkRootFieldName tableName tableInfo tableIdentifierName
 
@@ -723,14 +723,14 @@ buildNativeQueryFields ::
 buildNativeQueryFields sourceInfo nativeQueries = runMaybeTmempty $ do
   roleName <- retrieve scRole
 
-  map mkRF . catMaybes <$> for (Map.elems nativeQueries) \nativeQuery -> do
+  map mkRF . catMaybes <$> for (HashMap.elems nativeQueries) \nativeQuery -> do
     -- only include this native query in the schema
     -- if the current role is admin, or we have a select permission
     -- for this role (this is the broad strokes check. later, we'll filter
     -- more granularly on columns and then rows)
     guard $
       roleName == adminRoleName
-        || roleName `Map.member` _lmiPermissions (_nqiReturns nativeQuery)
+        || roleName `HashMap.member` _lmiPermissions (_nqiReturns nativeQuery)
 
     lift (buildNativeQueryRootFields nativeQuery)
   where
@@ -754,7 +754,7 @@ buildRelayQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExpo
   roleName <- retrieve scRole
   (tableConnectionQueryFields, tableConnectionSubscriptionFields) <-
     unzip . catMaybes
-      <$> for (Map.toList tables) \(tableName, tableInfo) -> runMaybeT do
+      <$> for (HashMap.toList tables) \(tableName, tableInfo) -> runMaybeT do
         tableIdentifierName <- getTableIdentifierName @b tableInfo
         SelPermInfo {..} <- hoistMaybe $ tableSelectPermissions roleName tableInfo
         pkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
@@ -766,7 +766,7 @@ buildRelayQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExpo
             includeRelayWhen (isRootFieldAllowed SRFTSelect spiAllowedSubscriptionRootFields)
           )
 
-  functionConnectionFields <- for (Map.toList functions) $ \(functionName, functionInfo) -> runMaybeT do
+  functionConnectionFields <- for (HashMap.toList functions) $ \(functionName, functionInfo) -> runMaybeT do
     let returnTableName = _fiReturnType functionInfo
     -- FIXME: only extract the TableInfo once to avoid redundant cache lookups
     returnTableInfo <- lift $ askTableInfo returnTableName
@@ -793,7 +793,7 @@ buildMutationFields ::
   SchemaT r m [P.FieldParser n (MutationRootField UnpreparedValue)]
 buildMutationFields mkRootFieldName scenario sourceInfo tables (takeExposedAs FEAMutation -> functions) = do
   roleName <- retrieve scRole
-  tableMutations <- for (Map.toList tables) \(tableName, tableInfo) -> do
+  tableMutations <- for (HashMap.toList tables) \(tableName, tableInfo) -> do
     tableIdentifierName <- getTableIdentifierName @b tableInfo
     inserts <-
       mkRFs (MDBR . MDBInsert) $ buildTableInsertMutationFields mkRootFieldName scenario tableName tableInfo tableIdentifierName
@@ -802,7 +802,7 @@ buildMutationFields mkRootFieldName scenario sourceInfo tables (takeExposedAs FE
     deletes <-
       mkRFs (MDBR . MDBDelete) $ buildTableDeleteMutationFields mkRootFieldName scenario tableName tableInfo tableIdentifierName
     pure $ concat [inserts, updates, deletes]
-  functionMutations <- for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
+  functionMutations <- for (HashMap.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
     let targetTableName = _fiReturnType functionInfo
     -- A function exposed as mutation must have a function permission
     -- configured for the role. See Note [Function Permissions]
@@ -815,7 +815,7 @@ buildMutationFields mkRootFieldName scenario sourceInfo tables (takeExposedAs FE
 
       -- when function permissions are inferred, we don't expose the
       -- mutation functions for non-admin roles. See Note [Function Permissions]
-      roleName == adminRoleName || roleName `Map.member` _fiPermissions functionInfo
+      roleName == adminRoleName || roleName `HashMap.member` _fiPermissions functionInfo
     lift $ mkRFs MDBR $ buildFunctionMutationFields mkRootFieldName functionName functionInfo targetTableName
   pure $ concat $ tableMutations <> catMaybes functionMutations
   where
@@ -1014,7 +1014,7 @@ mkRootFields sourceName sourceConfig queryTagsConfig inj =
     )
 
 takeExposedAs :: FunctionExposedAs -> FunctionCache b -> FunctionCache b
-takeExposedAs x = Map.filter ((== x) . _fiExposedAs)
+takeExposedAs x = HashMap.filter ((== x) . _fiExposedAs)
 
 subscriptionRoot :: G.Name
 subscriptionRoot = Name._subscription_root

@@ -10,7 +10,7 @@ where
 
 import Control.Lens ((^.))
 import Data.Aeson.TH qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -63,7 +63,7 @@ runAddRemoteSchemaPermissions remoteSchemaPermsCtx q = do
         <> "remote schema permissions are enabled in the graphql-engine"
   remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
   remoteSchemaCtx <-
-    onNothing (Map.lookup name remoteSchemaMap) $
+    onNothing (HashMap.lookup name remoteSchemaMap) $
       throw400 NotExists $
         "remote schema " <> name <<> " doesn't exist"
   when (doesRemoteSchemaPermissionExist metadata name role) $
@@ -98,7 +98,7 @@ runDropRemoteSchemaPermissions (DropRemoteSchemaPermissions name roleName) = do
   metadata <- getMetadata
   remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
   void $
-    onNothing (Map.lookup name remoteSchemaMap) $
+    onNothing (HashMap.lookup name remoteSchemaMap) $
       throw400 NotExists $
         "remote schema " <> name <<> " doesn't exist"
   unless (doesRemoteSchemaPermissionExist metadata name roleName) $

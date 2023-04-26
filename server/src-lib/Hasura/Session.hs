@@ -26,7 +26,7 @@ module Hasura.Session
 where
 
 import Data.CaseInsensitive qualified as CI
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.Text qualified as T
 import Hasura.Base.Error
@@ -48,12 +48,12 @@ filterSessionVariables ::
   (SessionVariable -> SessionVariableValue -> Bool) ->
   SessionVariables ->
   SessionVariables
-filterSessionVariables f = SessionVariables . Map.filterWithKey f . unSessionVariables
+filterSessionVariables f = SessionVariables . HashMap.filterWithKey f . unSessionVariables
 
 mkSessionVariablesHeaders :: [HTTP.Header] -> SessionVariables
 mkSessionVariablesHeaders =
   SessionVariables
-    . Map.fromList
+    . HashMap.fromList
     . map (first SessionVariable)
     . filter (isSessionVariable . CI.original . fst) -- Only x-hasura-* headers
     . map (CI.map bsToTxt *** bsToTxt)
@@ -61,17 +61,17 @@ mkSessionVariablesHeaders =
 sessionVariablesToHeaders :: SessionVariables -> [HTTP.Header]
 sessionVariablesToHeaders =
   map ((CI.map txtToBs . unSessionVariable) *** txtToBs)
-    . Map.toList
+    . HashMap.toList
     . unSessionVariables
 
 getSessionVariables :: SessionVariables -> [Text]
-getSessionVariables = map sessionVariableToText . Map.keys . unSessionVariables
+getSessionVariables = map sessionVariableToText . HashMap.keys . unSessionVariables
 
 getSessionVariablesSet :: SessionVariables -> Set.HashSet SessionVariable
-getSessionVariablesSet = Map.keysSet . unSessionVariables
+getSessionVariablesSet = HashMap.keysSet . unSessionVariables
 
 getSessionVariableValue :: SessionVariable -> SessionVariables -> Maybe SessionVariableValue
-getSessionVariableValue k = Map.lookup k . unSessionVariables
+getSessionVariableValue k = HashMap.lookup k . unSessionVariables
 
 -- | Represent the admin secret state; whether the secret is sent
 -- in the request or if actually authorization is not configured.
@@ -109,9 +109,9 @@ mkUserInfo roleBuild userAdminSecret sessionVariables = do
     modifySessionVariables :: RoleName -> SessionVariables -> SessionVariables
     modifySessionVariables roleName =
       SessionVariables
-        . Map.insert userRoleHeader (roleNameToTxt roleName)
-        . Map.delete adminSecretHeader
-        . Map.delete deprecatedAccessKeyHeader
+        . HashMap.insert userRoleHeader (roleNameToTxt roleName)
+        . HashMap.delete adminSecretHeader
+        . HashMap.delete deprecatedAccessKeyHeader
         . unSessionVariables
 
     getBackendOnlyFieldAccess :: m BackendOnlyFieldAccess

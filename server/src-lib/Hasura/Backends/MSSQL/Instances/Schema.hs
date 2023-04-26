@@ -8,7 +8,7 @@
 module Hasura.Backends.MSSQL.Instances.Schema () where
 
 import Data.Char qualified as Char
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Encoding as TE
@@ -199,7 +199,7 @@ msColumnParser columnType nullability = case columnType of
                       >=> either (P.parseErrorWith P.ParseFailed . toErrorMessage . qeError) pure . (MSSQL.parseScalarValue scalarType)
                 }
   ColumnEnumReference (EnumReference tableName enumValues customTableName) ->
-    case nonEmpty (Map.toList enumValues) of
+    case nonEmpty (HashMap.toList enumValues) of
       Just enumValuesList ->
         peelWithOrigin . fmap (ColumnValue columnType)
           <$> msEnumParser tableName enumValuesList customTableName nullability

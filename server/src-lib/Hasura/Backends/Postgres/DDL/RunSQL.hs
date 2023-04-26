@@ -21,7 +21,7 @@ where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended
@@ -170,10 +170,10 @@ fetchTablesFunctionsMetadata tableCache tables functions = do
         ]
   let tableMetas =
         [ Diff.TableMeta table tableMetaInfo computedFieldInfos
-          | (table, tableMetaInfo) <- M.toList tableMetaInfos,
+          | (table, tableMetaInfo) <- HashMap.toList tableMetaInfos,
             let computedFieldInfos =
                   [ computedFieldMeta
-                    | Just tableInfo <- pure (M.lookup table tableCache),
+                    | Just tableInfo <- pure (HashMap.lookup table tableCache),
                       computedField <- getComputedFields tableInfo,
                       computedFieldMeta <-
                         [ Diff.ComputedFieldMeta fieldName functionMeta
@@ -194,7 +194,7 @@ fetchTablesFunctionsMetadata tableCache tables functions = do
       [ Diff.FunctionMeta (rfiOid rawInfo) function (rfiFunctionType rawInfo)
         | -- It would seem like we could feasibly detect function overloads here already,
           -- But that is handled elsewhere.
-          Just overloads <- pure (M.lookup function functionMetaInfos),
+          Just overloads <- pure (HashMap.lookup function functionMetaInfos),
           rawInfo <- NE.toList $ getFunctionOverloads overloads
       ]
 
@@ -282,10 +282,10 @@ withMetadataCheck sqlGen source cascade txAccess runSQLQuery = do
       let tables = fromMaybe mempty $ unsafeTableCache @('Postgres pgKind) source $ scSources schemaCache
       liftEitherM $
         runPgSourceWriteTx sourceConfig RunSQLQuery $
-          forM_ (M.elems tables) $ \(TableInfo coreInfo _ eventTriggers _) -> do
+          forM_ (HashMap.elems tables) $ \(TableInfo coreInfo _ eventTriggers _) -> do
             let table = _tciName coreInfo
                 columns = getCols $ _tciFieldInfoMap coreInfo
-            forM_ (M.toList eventTriggers) $ \(triggerName, EventTriggerInfo {etiOpsDef, etiTriggerOnReplication}) -> do
+            forM_ (HashMap.toList eventTriggers) $ \(triggerName, EventTriggerInfo {etiOpsDef, etiTriggerOnReplication}) -> do
               flip runReaderT sqlGen $
                 mkAllTriggersQ triggerName table etiTriggerOnReplication columns etiOpsDef
 
@@ -319,9 +319,9 @@ runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cas
         -- Running in a transaction helps to rollback the @'tx' execution in case of any exceptions
 
         -- Before running the @'tx', fetch metadata of existing tables and functions from Postgres.
-        let tableNames = M.keysSet tableCache
-            computedFieldFunctions = mconcat $ map getComputedFieldFunctions (M.elems tableCache)
-            functionNames = M.keysSet functionCache <> computedFieldFunctions
+        let tableNames = HashMap.keysSet tableCache
+            computedFieldFunctions = mconcat $ map getComputedFieldFunctions (HashMap.elems tableCache)
+            functionNames = HashMap.keysSet functionCache <> computedFieldFunctions
         (preTxTablesMeta, preTxFunctionsMeta) <- fetchTablesFunctionsMetadata tableCache tableNames functionNames
 
         -- Since the @'tx' may alter table/function names we use the OIDs of underlying tables
@@ -344,7 +344,7 @@ runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cas
             -- query/mutation functions and exclude functions underpinning computed fields.
             -- Computed field functions are being processed under each table diff.
             -- See @'getTablesDiff' and @'Diff.processTablesDiff'
-            excludeComputedFieldFunctions = filter ((`M.member` functionCache) . Diff.fmFunction)
+            excludeComputedFieldFunctions = filter ((`HashMap.member` functionCache) . Diff.fmFunction)
             functionsDiff =
               Diff.getFunctionsDiff
                 (excludeComputedFieldFunctions preTxFunctionsMeta)
@@ -352,7 +352,7 @@ runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cas
 
         dontAllowFunctionOverloading $
           Diff.getOverloadedFunctions
-            (M.keys functionCache)
+            (HashMap.keys functionCache)
             (excludeComputedFieldFunctions postTxFunctionMeta)
 
         -- Update metadata with schema change caused by @'tx'

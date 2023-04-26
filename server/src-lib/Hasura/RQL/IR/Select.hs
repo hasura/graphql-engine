@@ -118,7 +118,7 @@ where
 
 import Control.Lens.TH (makeLenses, makePrisms)
 import Data.Bifoldable
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.Kind (Type)
 import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
@@ -660,7 +660,7 @@ data
     -- from src
     -- (Column tgt) so that an appropriate join condition / IN clause can be built
     -- by the remote
-    _rssJoinMapping :: (HM.HashMap FieldName (ScalarType tgt, Column tgt)),
+    _rssJoinMapping :: (HashMap.HashMap FieldName (ScalarType tgt, Column tgt)),
     _rssStringifyNums :: StringifyNumbers
   }
 
@@ -718,7 +718,7 @@ insertFunctionArg argName idx value (FunctionArgsExp positional named) =
     then FunctionArgsExp (insertAt idx value positional) named
     else
       FunctionArgsExp positional $
-        HM.insert (getFuncArgNameTxt argName) value named
+        HashMap.insert (getFuncArgNameTxt argName) value named
   where
     insertAt i a = toList . Seq.insertAt i a . Seq.fromList
 

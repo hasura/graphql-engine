@@ -7,7 +7,7 @@
 -- Defines a 'Hasura.RQL.Types.Metadata.Backend.BackendMetadata' type class instance for Postgres.
 module Hasura.Backends.Postgres.Instances.Metadata () where
 
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.String.Interpolate (i)
 import Data.Text.Extended
@@ -144,7 +144,7 @@ instance PostgresMetadata 'Citus where
           RUManual RelManualConfig {} -> pure ()
     where
       lookupTableInfo tableName =
-        Map.lookup tableName tableCache
+        HashMap.lookup tableName tableCache
           `onNothing` throw400 NotFound ("no such table " <>> tableName)
 
       checkObjectRelationship sourceTableInfo targetTable = do

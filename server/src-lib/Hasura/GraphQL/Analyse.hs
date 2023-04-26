@@ -18,7 +18,7 @@ where
 
 import Control.Monad.Circular
 import Control.Monad.Writer (Writer, runWriter)
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Sequence ((|>))
 import Data.Text qualified as T
 import Hasura.GraphQL.Parser.Name qualified as GName
@@ -162,7 +162,7 @@ analyzeObjectSelectionSet ::
   Analysis (HashMap G.Name FieldInfo)
 analyzeObjectSelectionSet (G.ObjectTypeDefinition {..}) selectionSet = do
   fields <- traverse analyzeSelection selectionSet
-  foldlM (Map.unionWithM mergeFields) mempty $ catMaybes fields
+  foldlM (HashMap.unionWithM mergeFields) mempty $ catMaybes fields
   where
     analyzeSelection :: G.Selection G.NoFragments G.Name -> Analysis (Maybe (HashMap G.Name FieldInfo))
     analyzeSelection = \case
@@ -182,7 +182,7 @@ analyzeObjectSelectionSet (G.ObjectTypeDefinition {..}) selectionSet = do
                 `onNothingM` throwDiagnosis (TypeNotFound baseType)
             -- attempt to build a corresponding FieldInfo
             maybeFieldInfo <- analyzeField _fldType typeDefinition field
-            pure $ Map.singleton (fromMaybe _fName _fAlias) <$> maybeFieldInfo
+            pure $ HashMap.singleton (fromMaybe _fName _fAlias) <$> maybeFieldInfo
 
     -- Additional hidden fields that are allowed despite not being listed in the
     -- schema.
@@ -223,7 +223,7 @@ analyzeObjectSelectionSet (G.ObjectTypeDefinition {..}) selectionSet = do
           throwDiagnosis $
             MismatchedFields name t1 t2
         mergedSelection <-
-          Map.unionWithM
+          HashMap.unionWithM
             mergeFields
             (_oiSelection o1)
             (_oiSelection o2)
@@ -302,7 +302,7 @@ analyzeVariables variables = do
         lookupType baseType
           `onNothingM` throwDiagnosis (TypeNotFound baseType)
       ifInfo <- analyzeInputField baseType typeDefinition
-      pure $ Map.singleton _vdName $ VariableInfo _vdType ifInfo _vdDefaultValue
+      pure $ HashMap.singleton _vdName $ VariableInfo _vdType ifInfo _vdDefaultValue
   pure $ fold $ catMaybes result
 
 -- | Builds an 'InputFieldInfo' for a given typename.
@@ -328,7 +328,7 @@ analyzeInputField typeName typeDefinition =
               `onNothingM` throwDiagnosis (TypeNotFound baseType)
           info <- analyzeInputField baseType typeDef
           pure (_ivdName, (_ivdType, info))
-      pure $ InputFieldObjectInfo (InputObjectInfo iotd $ Map.fromList $ catMaybes fields)
+      pure $ InputFieldObjectInfo (InputObjectInfo iotd $ HashMap.fromList $ catMaybes fields)
     G.TypeDefinitionObject _otd -> throwDiagnosis $ ObjectInInput typeName
     G.TypeDefinitionInterface _itd -> throwDiagnosis $ InterfaceInInput typeName
     G.TypeDefinitionUnion _utd -> throwDiagnosis $ UnionInInput typeName
@@ -383,7 +383,7 @@ lookupType ::
   m (Maybe (G.TypeDefinition [G.Name] G.InputValueDefinition))
 lookupType name = do
   G.SchemaIntrospection types <- asks snd
-  pure $ Map.lookup name types
+  pure $ HashMap.lookup name types
 
 -- | Add the current field to the error path.
 withField ::

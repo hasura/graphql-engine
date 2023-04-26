@@ -108,7 +108,7 @@ where
 
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.Int (Int64)
 import Data.String (fromString)
 import Data.Text (pack)
@@ -676,7 +676,7 @@ instance ToSQL DistinctExpr where
 
 data FunctionArgs = FunctionArgs
   { fasPostional :: [SQLExp],
-    fasNamed :: (HM.HashMap Text SQLExp)
+    fasNamed :: (HashMap.HashMap Text SQLExp)
   }
   deriving (Show, Eq, Generic, Data)
 
@@ -686,7 +686,7 @@ instance Hashable FunctionArgs
 
 instance ToSQL FunctionArgs where
   toSQL (FunctionArgs positionalArgs namedArgsMap) =
-    let namedArgs = flip map (HM.toList namedArgsMap) $
+    let namedArgs = flip map (HashMap.toList namedArgsMap) $
           \(argName, argVal) -> SENamedArg (Identifier argName) argVal
      in parenB $ ", " <+> (positionalArgs <> namedArgs)
 
@@ -1040,13 +1040,13 @@ newtype SetExpItem = SetExpItem (PGCol, SQLExp)
 
 buildUpsertSetExp ::
   [PGCol] ->
-  HM.HashMap PGCol SQLExp ->
+  HashMap.HashMap PGCol SQLExp ->
   SetExp
 buildUpsertSetExp cols preSet =
-  SetExp $ map SetExpItem $ HM.toList setExps
+  SetExp $ map SetExpItem $ HashMap.toList setExps
   where
-    setExps = HM.union preSet $
-      HM.fromList $
+    setExps = HashMap.union preSet $
+      HashMap.fromList $
         flip map cols $ \col ->
           (col, SEExcluded $ toIdentifier col)
 

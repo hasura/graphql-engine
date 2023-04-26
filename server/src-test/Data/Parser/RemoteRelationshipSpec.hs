@@ -3,7 +3,7 @@
 module Data.Parser.RemoteRelationshipSpec (spec) where
 
 import Data.Aeson
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Text.NonEmpty (nonEmptyText)
@@ -88,7 +88,7 @@ toSchemaRelationshipDef =
           fieldCall =
             FieldCall
               { fcName = $$(G.litName "top_level_field"),
-                fcArguments = RemoteArguments $ Map.singleton idName (G.VVariable idName)
+                fcArguments = RemoteArguments $ HashMap.singleton idName (G.VVariable idName)
               }
        in RemoteFields $ fieldCall NE.:| []
 

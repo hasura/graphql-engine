@@ -25,7 +25,7 @@ import Autodocodec
 import Autodocodec.OpenAPI ()
 import Control.Lens (preview)
 import Data.Aeson qualified as Aeson
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.NonEmpty qualified as MapNE
 import Data.HashSet qualified as H
 import Data.OpenApi (ToSchema (..))
@@ -158,15 +158,15 @@ suggestRelsFK omitTracked tables name uniqueConstraints tracked predicate foreig
           rFrom = Mapping {mTable = relatedTableName, mColumns = relatedColumns, mConstraintName = Nothing}
         }
     columnRelationships = MapNE.toHashMap (_fkColumnMapping foreignKey)
-    localColumns = Map.keys columnRelationships
-    relatedColumns = Map.elems columnRelationships
+    localColumns = HashMap.keys columnRelationships
+    relatedColumns = HashMap.elems columnRelationships
     uniqueConstraintColumns = H.map _ucColumns uniqueConstraints
     relatedTableName = _fkForeignTable foreignKey
-    relatedTable = Map.lookup relatedTableName tables
+    relatedTable = HashMap.lookup relatedTableName tables
     constraintName = Aeson.toJSON (_cName (_fkConstraint foreignKey))
     discard b x = bool Nothing (Just x) (not b)
-    invert = Map.fromList . map swap . Map.toList
-    trackedBack = H.fromList $ mapMaybe (relationships (riRTable &&& riMapping)) $ maybe [] (Map.elems . _tciFieldInfoMap) relatedTable
+    invert = HashMap.fromList . map swap . HashMap.toList
+    trackedBack = H.fromList $ mapMaybe (relationships (riRTable &&& riMapping)) $ maybe [] (HashMap.elems . _tciFieldInfoMap) relatedTable
 
 suggestRelsTable ::
   forall b.
@@ -181,7 +181,7 @@ suggestRelsTable omitTracked tables predicate (name, table) =
   where
     foreignKeys = _tciForeignKeys table
     constraints = _tciUniqueConstraints table
-    tracked = H.fromList $ mapMaybe (relationships (riRTable &&& riMapping)) $ Map.elems $ _tciFieldInfoMap table
+    tracked = H.fromList $ mapMaybe (relationships (riRTable &&& riMapping)) $ HashMap.elems $ _tciFieldInfoMap table
 
 relationships :: (RelInfo b1 -> b2) -> FieldInfo b1 -> Maybe b2
 relationships f = fmap f . preview _FIRelationship
@@ -196,7 +196,7 @@ suggestRelsResponse ::
   SuggestedRelationships b
 suggestRelsResponse omitTracked tables predicate =
   Relationships $
-    suggestRelsTable omitTracked tables predicate =<< Map.toList tables
+    suggestRelsTable omitTracked tables predicate =<< HashMap.toList tables
 
 tablePredicate :: Hashable a => Maybe [a] -> a -> Bool
 tablePredicate Nothing _ = True

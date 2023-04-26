@@ -14,7 +14,7 @@ where
 
 import Control.Lens ((.~))
 import Data.Aeson
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as HS
 import Data.List.Extended
@@ -297,7 +297,7 @@ processTablesDiff source preActionTables tablesDiff = do
   for_ alteredTables $ \(oldQtn, tableDiff) -> do
     ti <-
       onNothing
-        (M.lookup oldQtn preActionTables)
+        (HashMap.lookup oldQtn preActionTables)
         (throw500 $ "old table metadata not found in cache: " <>> oldQtn)
     alterTableInMetadata source (_tiCoreInfo ti) tableDiff
   where
@@ -430,5 +430,5 @@ removeDroppedColumnsFromMetadataField source droppedCols tableInfo = do
     tableName = _tciName tableInfo
     originalTableConfig = _tciCustomConfig tableInfo
     originalColumnConfig = _tcColumnConfig originalTableConfig
-    newColumnConfig = foldl' (flip M.delete) originalColumnConfig droppedCols
+    newColumnConfig = foldl' (flip HashMap.delete) originalColumnConfig droppedCols
     newTableConfig = originalTableConfig & tcColumnConfig .~ newColumnConfig

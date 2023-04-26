@@ -4,7 +4,7 @@ module Hasura.GraphQL.Schema.RemoteRelationship
 where
 
 import Control.Lens
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
@@ -67,13 +67,13 @@ remoteRelationshipToSchemaField ::
   (MonadBuildRemoteSchema r m n) =>
   RemoteSchemaMap ->
   RemoteSchemaPermissions ->
-  Map.HashMap FieldName lhsJoinField ->
+  HashMap.HashMap FieldName lhsJoinField ->
   RemoteSchemaFieldInfo ->
   SchemaT r m (Maybe (FieldParser n (IR.RemoteSchemaSelect (IR.RemoteRelationshipField IR.UnpreparedValue))))
 remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions lhsFields RemoteSchemaFieldInfo {..} = runMaybeT do
   roleName <- retrieve scRole
   remoteSchemaContext <-
-    Map.lookup _rrfiRemoteSchemaName remoteSchemaCache
+    HashMap.lookup _rrfiRemoteSchemaName remoteSchemaCache
       `onNothing` throw500 ("invalid remote schema name: " <>> _rrfiRemoteSchemaName)
   introspection <- hoistMaybe $ getIntrospectionResult remoteSchemaPermissions roleName remoteSchemaContext
   let remoteSchemaRelationships = _rscRemoteRelationships remoteSchemaContext
@@ -81,7 +81,7 @@ remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions lhsFie
       remoteSchemaRoot = irQueryRoot introspection
       remoteSchemaCustomizer = rsCustomizer $ _rscInfo remoteSchemaContext
       RemoteSchemaIntrospection typeDefns = roleIntrospection
-  let hasuraFieldNames = Map.keysSet lhsFields
+  let hasuraFieldNames = HashMap.keysSet lhsFields
       relationshipDef = ToSchemaRelationshipDef _rrfiRemoteSchemaName hasuraFieldNames _rrfiRemoteFields
   (newInpValDefns :: [G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition], remoteFieldParamMap) <-
     if roleName == adminRoleName
@@ -99,7 +99,7 @@ remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions lhsFie
         pure (Remote._rrfiInputValueDefinitions roleRemoteField, Remote._rrfiParamMap roleRemoteField)
   let -- add the new input value definitions created by the remote relationship
       -- to the existing schema introspection of the role
-      remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> Map.fromListOn getTypeName newInpValDefns
+      remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> HashMap.fromListOn getTypeName newInpValDefns
   fieldName <- textToName $ relNameToTxt _rrfiName
 
   -- This selection set parser, should be of the remote node's selection set parser, which comes
@@ -116,7 +116,7 @@ remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions lhsFie
       throw500 $
         "unexpected: " <> typeName <<> " not found "
   -- These are the arguments that are given by the user while executing a query
-  let remoteFieldUserArguments = map snd $ Map.toList remoteFieldParamMap
+  let remoteFieldUserArguments = map snd $ HashMap.toList remoteFieldParamMap
   remoteFld <-
     withRemoteSchemaCustomization remoteSchemaCustomizer $
       lift $
@@ -127,7 +127,7 @@ remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions lhsFie
     remoteFld
       `P.bindField` \fld@IR.GraphQLField {IR._fArguments = args, IR._fSelectionSet = selSet, IR._fName = fname} -> do
         let remoteArgs =
-              Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue argVal
+              HashMap.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue argVal
         let resultCustomizer =
               applyFieldCalls fieldCalls $
                 applyAliasMapping (singletonAliasMapping fname (fcName $ NE.last fieldCalls)) $
@@ -192,7 +192,7 @@ remoteRelationshipToSourceField ::
   m [FieldParser n (IR.RemoteSourceSelect (IR.RemoteRelationshipField IR.UnpreparedValue) IR.UnpreparedValue tgt)]
 remoteRelationshipToSourceField context options sourceCache RemoteSourceFieldInfo {..} = do
   sourceInfo <-
-    onNothing (unsafeSourceInfo @tgt =<< Map.lookup _rsfiSource sourceCache) $
+    onNothing (unsafeSourceInfo @tgt =<< HashMap.lookup _rsfiSource sourceCache) $
       throw500 $
         "source not found " <> dquote _rsfiSource
   runSourceSchema context options sourceInfo do

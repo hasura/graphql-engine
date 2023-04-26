@@ -39,7 +39,7 @@ import Data.ByteString.Char8 qualified as B8
 import Data.ByteString.Char8 qualified as Char8
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as S
 import Data.Kind (Type)
 import Data.String (fromString)
@@ -618,7 +618,7 @@ v1Alpha1PGDumpHandler b = do
   schemaCache <- asks hcSchemaCache
   let sources = scSources (lastBuiltSchemaCache schemaCache)
       sourceName = PGD.prbSource b
-      sourceConfig = unsafeSourceConfiguration @('Postgres 'Vanilla) =<< M.lookup sourceName sources
+      sourceConfig = unsafeSourceConfiguration @('Postgres 'Vanilla) =<< HashMap.lookup sourceName sources
   ci <-
     fmap _pscConnInfo sourceConfig
       `onNothing` throw400 NotFound ("source " <> sourceName <<> " not found")

@@ -13,7 +13,7 @@ where
 
 import Control.Lens hiding (index)
 import Data.Has (getter)
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Sequence qualified as Seq
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
@@ -218,7 +218,7 @@ computedFieldPG ComputedFieldInfo {..} parentTable tableInfo = runMaybeT do
   case _cfiReturnType of
     Postgres.CFRScalar scalarReturnType -> do
       caseBoolExpMaybe <-
-        hoistMaybe (Map.lookup _cfiName (spiComputedFields selectPermissions))
+        hoistMaybe (HashMap.lookup _cfiName (spiComputedFields selectPermissions))
       let caseBoolExpUnpreparedValue =
             (fmap . fmap) partialSQLExpToUnpreparedValue <$> caseBoolExpMaybe
           fieldArgsParser = do
@@ -327,7 +327,7 @@ functionArgs functionTrackedAs (toList -> inputArgs) = do
       -- mandatory arguments. Optional arguments have a default value, mandatory
       -- arguments don't.
       (names, session, optional, mandatory) = mconcat $ snd $ mapAccumL splitArguments 1 inputArgs
-      defaultArguments = FunctionArgsExp (snd <$> session) Map.empty
+      defaultArguments = FunctionArgsExp (snd <$> session) HashMap.empty
 
   if
       | length session > 1 ->
@@ -365,13 +365,13 @@ functionArgs functionTrackedAs (toList -> inputArgs) = do
                   -- After successfully parsing, we create a dictionary of the parsed fields
                   -- and we re-iterate through the original list of sql arguments, now with
                   -- the knowledge of their graphql name.
-                  let foundArguments = Map.fromList $ catMaybes arguments <> session
+                  let foundArguments = HashMap.fromList $ catMaybes arguments <> session
                       argsWithNames = zip names inputArgs
 
                   -- All elements (in the orignal sql order) that are found in the result map
                   -- are treated as positional arguments, whether they were originally named or
                   -- not.
-                  (positional, left) <- spanMaybeM (\(name, _) -> pure $ Map.lookup name foundArguments) argsWithNames
+                  (positional, left) <- spanMaybeM (\(name, _) -> pure $ HashMap.lookup name foundArguments) argsWithNames
 
                   -- If there are arguments left, it means we found one that was not passed
                   -- positionally. As a result, any remaining argument will have to be passed
@@ -381,7 +381,7 @@ functionArgs functionTrackedAs (toList -> inputArgs) = do
                   --   * it has no name we can use.
                   -- We also fail if we find a mandatory argument that was not
                   -- provided by the user.
-                  named <- Map.fromList . catMaybes <$> traverse (namedArgument foundArguments) left
+                  named <- HashMap.fromList . catMaybes <$> traverse (namedArgument foundArguments) left
                   pure $ FunctionArgsExp positional named
           pure $ P.field fieldName (Just fieldDesc) objectParser
   where
@@ -434,7 +434,7 @@ functionArgs functionTrackedAs (toList -> inputArgs) = do
       n (Maybe (Text, Postgres.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind))))
     namedArgument dictionary (name, inputArgument) = case inputArgument of
       IASessionVariables _ -> pure $ Just (name, sessionPlaceholder)
-      IAUserProvided arg -> case Map.lookup name dictionary of
+      IAUserProvided arg -> case HashMap.lookup name dictionary of
         Just parsedValue -> case Postgres.faName arg of
           Just _ -> pure $ Just (name, parsedValue)
           Nothing -> P.parseErrorWith P.NotSupported "Only last set of positional arguments can be omitted"

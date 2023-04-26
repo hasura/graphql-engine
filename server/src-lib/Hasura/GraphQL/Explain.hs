@@ -9,7 +9,7 @@ where
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Base.Error
@@ -43,7 +43,7 @@ import Network.HTTP.Types qualified as HTTP
 
 data GQLExplain = GQLExplain
   { _gqeQuery :: !GH.GQLReqParsed,
-    _gqeUser :: !(Maybe (Map.HashMap Text Text)),
+    _gqeUser :: !(Maybe (HashMap.HashMap Text Text)),
     _gqeIsRelay :: !(Maybe Bool)
   }
   deriving (Show, Eq)

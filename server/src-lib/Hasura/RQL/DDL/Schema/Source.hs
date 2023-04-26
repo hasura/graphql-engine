@@ -39,7 +39,7 @@ import Data.Aeson.TH
 import Data.Bifunctor (bimap)
 import Data.Environment qualified as Env
 import Data.Has
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
@@ -127,7 +127,7 @@ runAddSource env (AddSource name backendKind sourceConfig replaceConfiguration s
 
   metadataModifier <-
     MetadataModifier
-      <$> if HM.member name sources
+      <$> if HashMap.member name sources
         then
           if replaceConfiguration
             then do
@@ -162,11 +162,11 @@ runRenameSource ::
 runRenameSource RenameSource {..} = do
   sources <- scSources <$> askSchemaCache
 
-  unless (HM.member _rmName sources) $
+  unless (HashMap.member _rmName sources) $
     throw400 NotExists $
       "Could not find source with name " <>> _rmName
 
-  when (HM.member _rmNewName sources) $
+  when (HashMap.member _rmNewName sources) $
     throw400 AlreadyExists $
       "Source with name " <> _rmNewName <<> " already exists"
 
@@ -220,7 +220,7 @@ runDropSource ::
 runDropSource dropSourceInfo@(DropSource name cascade) = do
   schemaCache <- askSchemaCache
   let sources = scSources schemaCache
-  case HM.lookup name sources of
+  case HashMap.lookup name sources of
     Just backendSourceInfo ->
       AB.dispatchAnyBackend @BackendMetadata backendSourceInfo $ dropSource dropSourceInfo
     Nothing -> do
@@ -283,7 +283,7 @@ runPostDropSourceHook sourceName sourceInfo = do
   logger :: (L.Logger L.Hasura) <- asks getter
   let sourceConfig = _siConfiguration sourceInfo
   -- Create a hashmap: {TableName: [Triggers]}
-  let tableTriggersMap = HM.map (HM.keys . _tiEventTriggerInfoMap) (_siTables sourceInfo)
+  let tableTriggersMap = HashMap.map (HashMap.keys . _tiEventTriggerInfoMap) (_siTables sourceInfo)
   -- We only log errors that arise from 'postDropSourceHook' here, and not
   -- surface them as end-user errors. See comment
   -- https://github.com/hasura/graphql-engine/issues/7092#issuecomment-873845282
@@ -328,7 +328,7 @@ runUpdateSource (UpdateSource name sourceConfig sourceCustomization healthCheckC
 
   metadataModifier <-
     MetadataModifier
-      <$> if HM.member name sources
+      <$> if HashMap.member name sources
         then do
           let sMetadata = metaSources . ix name . toSourceMetadata @b
               updateConfig = maybe id (\scc -> sMetadata . smConfiguration .~ scc) sourceConfig
@@ -401,7 +401,7 @@ runGetTableInfo GetTableInfo {..} = do
       Backend.DataConnectorKind _dcName -> do
         sourceInfo <- askSourceInfo @'DataConnector _gtiSourceName
         let tableName = Witch.from _gtiTableName
-        let table = HM.lookup tableName $ _rsTables $ _siDbObjectsIntrospection sourceInfo
+        let table = HashMap.lookup tableName $ _rsTables $ _siDbObjectsIntrospection sourceInfo
         pure . EncJSON.encJFromJValue $ convertTableMetadataToTableInfo tableName <$> table
       backend ->
         Error.throw500 ("Schema fetching is not supported for '" <> Text.E.toTxt backend <> "'")
@@ -440,7 +440,7 @@ convertTableMetadataToTableInfo tableName DBTableMetadata {..} =
           _ciValueGenerated = DC.Types._ecmValueGenerated =<< extraColumnMetadata
         }
       where
-        extraColumnMetadata = HM.lookup rciName . DC.Types._etmExtraColumnMetadata $ _ptmiExtraTableMetadata
+        extraColumnMetadata = HashMap.lookup rciName . DC.Types._etmExtraColumnMetadata $ _ptmiExtraTableMetadata
 
     convertForeignKeys :: HashSet (ForeignKeyMetadata 'DataConnector) -> API.ForeignKeys
     convertForeignKeys foreignKeys =
@@ -452,9 +452,9 @@ convertTableMetadataToTableInfo tableName DBTableMetadata {..} =
                   constraint =
                     API.Constraint
                       { _cForeignTable = Witch.from _fkForeignTable,
-                        _cColumnMapping = HM.fromList $ bimap Witch.from Witch.from <$> NEHashMap.toList _fkColumnMapping
+                        _cColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> NEHashMap.toList _fkColumnMapping
                       }
                in (constraintName, constraint)
           )
-        & HM.fromList
+        & HashMap.fromList
         & API.ForeignKeys

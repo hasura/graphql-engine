@@ -40,7 +40,7 @@ where
 
 import Control.Lens hiding (set, (.=))
 import Data.Aeson.Types
-import Data.HashMap.Strict.Extended qualified as M
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Text.Extended
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Base.ErrorMessage
@@ -352,7 +352,7 @@ imReason = \case
 groupInconsistentMetadataById ::
   [InconsistentMetadata] -> HashMap MetadataObjId (NonEmpty InconsistentMetadata)
 groupInconsistentMetadataById =
-  M.fromListWith (<>) . concatMap \metadata ->
+  HashMap.fromListWith (<>) . concatMap \metadata ->
     map (,metadata :| []) (imObjectIds metadata)
 
 instance ToJSON InconsistentMetadata where

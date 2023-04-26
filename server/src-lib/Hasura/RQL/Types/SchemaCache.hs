@@ -118,7 +118,7 @@ where
 import Control.Lens (Traversal', at, preview, (^.))
 import Data.Aeson
 import Data.Aeson.TH
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.Int (Int64)
 import Data.Text.Extended ((<<>))
@@ -266,16 +266,16 @@ type RemoteSchemaRelationships = RemoteSchemaRelationshipsG (RemoteFieldInfo G.N
 
 type RemoteSchemaCtx = RemoteSchemaCtxG (RemoteFieldInfo G.Name)
 
-type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
+type RemoteSchemaMap = HashMap.HashMap RemoteSchemaName RemoteSchemaCtx
 
 type PartiallyResolvedRemoteSchemaCtx =
   RemoteSchemaCtxG
     (PartiallyResolvedRemoteRelationship RemoteRelationshipDefinition)
 
 type PartiallyResolvedRemoteSchemaMap =
-  M.HashMap RemoteSchemaName PartiallyResolvedRemoteSchemaCtx
+  HashMap.HashMap RemoteSchemaName PartiallyResolvedRemoteSchemaCtx
 
-type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
+type DepMap = HashMap.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
 data CronTriggerInfo = CronTriggerInfo
   { ctiName :: TriggerName,
@@ -302,9 +302,9 @@ incSchemaCacheVer :: SchemaCacheVer -> SchemaCacheVer
 incSchemaCacheVer (SchemaCacheVer prev) =
   SchemaCacheVer $ prev + 1
 
-type ActionCache = M.HashMap ActionName ActionInfo -- info of all actions
+type ActionCache = HashMap.HashMap ActionName ActionInfo -- info of all actions
 
-type InheritedRolesCache = M.HashMap RoleName (HashSet RoleName)
+type InheritedRolesCache = HashMap.HashMap RoleName (HashSet RoleName)
 
 -------------------------------------------------------------------------------
 
@@ -325,7 +325,7 @@ askSourceInfo ::
 askSourceInfo sourceName = do
   sources <- scSources <$> askSchemaCache
   -- find any matching source info by name
-  case M.lookup sourceName sources of
+  case HashMap.lookup sourceName sources of
     -- 1. The function fails to find the named source at all
     Nothing -> throw400 NotExists $ "source with name " <> sourceName <<> " does not exist"
     Just matchingNameSourceInfo -> do
@@ -355,7 +355,7 @@ askSourceInfoMaybe ::
   m (Maybe (SourceInfo b))
 askSourceInfoMaybe sourceName = do
   sources <- scSources <$> askSchemaCache
-  pure (unsafeSourceInfo @b =<< M.lookup sourceName sources)
+  pure (unsafeSourceInfo @b =<< HashMap.lookup sourceName sources)
 
 -- | Retrieves the source config for a given source name.
 --
@@ -385,7 +385,7 @@ askSourceConfigMaybe =
 unsafeTableCache ::
   forall b. Backend b => SourceName -> SourceCache -> Maybe (TableCache b)
 unsafeTableCache sourceName cache = do
-  unsafeSourceTables @b =<< M.lookup sourceName cache
+  unsafeSourceTables @b =<< HashMap.lookup sourceName cache
 
 -- | Retrieves the table cache for a given source name.
 --
@@ -402,7 +402,7 @@ askTableCache ::
   m (Maybe (TableCache b))
 askTableCache sourceName = do
   sources <- scSources <$> askSchemaCache
-  pure $ unsafeSourceTables =<< M.lookup sourceName sources
+  pure $ unsafeSourceTables =<< HashMap.lookup sourceName sources
 
 -- | Retrieves the information about a table from the source cache, the source
 -- name, and the table name.
@@ -413,7 +413,7 @@ askTableCache sourceName = do
 unsafeTableInfo ::
   forall b. Backend b => SourceName -> TableName b -> SourceCache -> Maybe (TableInfo b)
 unsafeTableInfo sourceName tableName cache =
-  M.lookup tableName =<< unsafeTableCache @b sourceName cache
+  HashMap.lookup tableName =<< unsafeTableCache @b sourceName cache
 
 -- | Retrieves the information about a table for a given source name and table
 -- name.
@@ -493,7 +493,7 @@ askTableMetadata sourceName tableName = do
 unsafeFunctionCache ::
   forall b. Backend b => SourceName -> SourceCache -> Maybe (FunctionCache b)
 unsafeFunctionCache sourceName cache =
-  unsafeSourceFunctions @b =<< M.lookup sourceName cache
+  unsafeSourceFunctions @b =<< HashMap.lookup sourceName cache
 
 -- | Retrieves the information about a function from the source cache, the
 -- source name, and the function name.
@@ -504,7 +504,7 @@ unsafeFunctionCache sourceName cache =
 unsafeFunctionInfo ::
   forall b. Backend b => SourceName -> FunctionName b -> SourceCache -> Maybe (FunctionInfo b)
 unsafeFunctionInfo sourceName functionName cache =
-  M.lookup functionName =<< unsafeFunctionCache @b sourceName cache
+  HashMap.lookup functionName =<< unsafeFunctionCache @b sourceName cache
 
 -- | Retrieves the information about a function cache for a given source name
 -- and function name.
@@ -555,7 +555,7 @@ data SchemaCache = SchemaCache
     scUnauthenticatedRelayContext :: GQLContext,
     scDepMap :: DepMap,
     scInconsistentObjs :: [InconsistentMetadata],
-    scCronTriggers :: M.HashMap TriggerName CronTriggerInfo,
+    scCronTriggers :: HashMap.HashMap TriggerName CronTriggerInfo,
     scEndpoints :: EndpointTrie GQLQueryWithText,
     scApiLimits :: ApiLimit,
     scMetricsConfig :: MetricsConfig,
@@ -597,7 +597,7 @@ instance ToJSON SchemaCache where
 
 getAllRemoteSchemas :: SchemaCache -> [RemoteSchemaName]
 getAllRemoteSchemas sc =
-  let consistentRemoteSchemas = M.keys $ scRemoteSchemas sc
+  let consistentRemoteSchemas = HashMap.keys $ scRemoteSchemas sc
       inconsistentRemoteSchemas =
         getInconsistentRemoteSchemas $ scInconsistentObjs sc
    in consistentRemoteSchemas <> inconsistentRemoteSchemas
@@ -631,7 +631,7 @@ instance (MonadReader r m) => MonadReader r (TableCoreCacheRT b m) where
 
 instance (Monad m, Backend b) => TableCoreInfoRM b (TableCoreCacheRT b m) where
   lookupTableCoreInfo tableName =
-    TableCoreCacheRT (pure . M.lookup tableName)
+    TableCoreCacheRT (pure . HashMap.lookup tableName)
 
 -- | All our RQL DML queries operate over a single source. This typeclass facilitates that.
 class (TableCoreInfoRM b m) => TableInfoRM b m where
@@ -657,11 +657,11 @@ newtype TableCacheRT b m a = TableCacheRT {runTableCacheRT :: TableCache b -> m 
 
 instance (Monad m, Backend b) => TableCoreInfoRM b (TableCacheRT b m) where
   lookupTableCoreInfo tableName =
-    TableCacheRT (pure . fmap _tiCoreInfo . M.lookup tableName)
+    TableCacheRT (pure . fmap _tiCoreInfo . HashMap.lookup tableName)
 
 instance (Monad m, Backend b) => TableInfoRM b (TableCacheRT b m) where
   lookupTableInfo tableName =
-    TableCacheRT (pure . M.lookup tableName)
+    TableCacheRT (pure . HashMap.lookup tableName)
 
 class (Monad m) => CacheRM m where
   askSchemaCache :: m SchemaCache
@@ -690,7 +690,7 @@ getDependentObjs = getDependentObjsWith (const True)
 getDependentObjsWith ::
   (DependencyReason -> Bool) -> SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjsWith f sc objId =
-  map fst $ filter (isDependency . snd) $ M.toList $ scDepMap sc
+  map fst $ filter (isDependency . snd) $ HashMap.toList $ scDepMap sc
   where
     isDependency deps = not $
       HS.null $

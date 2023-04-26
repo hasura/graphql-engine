@@ -47,7 +47,7 @@ where
 import Control.Lens hiding ((.=))
 import Data.Aeson.Extended
 import Data.Environment
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Database.PG.Query qualified as PG
 import Hasura.Base.Error
 import Hasura.Function.Cache
@@ -151,7 +151,7 @@ instance Backend b => FromJSON (DBObjectsIntrospection b) where
     tables <- o .: "tables"
     functions <- o .: "functions"
     scalars <- o .: "scalars"
-    pure $ DBObjectsIntrospection (Map.fromList tables) (Map.fromList functions) (ScalarMap (Map.fromList scalars))
+    pure $ DBObjectsIntrospection (HashMap.fromList tables) (HashMap.fromList functions) (ScalarMap (HashMap.fromList scalars))
 
 instance (L.ToEngineLog (DBObjectsIntrospection b) L.Hasura) where
   toEngineLog _ = (L.LevelDebug, L.ELTStartup, toJSON rsLog)

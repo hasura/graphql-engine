@@ -6,7 +6,7 @@ where
 
 import Data.Aeson qualified as J
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Tagged qualified as Tagged
 import Hasura.Base.Error
@@ -52,7 +52,7 @@ parseGraphQLQuery ::
       G.SelectionSet G.NoFragments Variable
     )
 parseGraphQLQuery gqlContext varDefs varValsM directives fields = do
-  (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe Map.empty varValsM) directives fields
+  (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe HashMap.empty varValsM) directives fields
   parsedQuery <- liftEither $ gqlQueryParser gqlContext resolvedSelSet
   pure (parsedQuery, resolvedDirectives, resolvedSelSet)
 

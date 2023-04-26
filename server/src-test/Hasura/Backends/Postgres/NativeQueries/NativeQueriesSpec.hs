@@ -8,7 +8,7 @@ module Hasura.Backends.Postgres.NativeQueries.NativeQueriesSpec (spec) where
 
 import Data.Bifunctor
 import Data.Either
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.Postgres.Instances.NativeQueries
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Base.Error
@@ -102,7 +102,7 @@ spec = do
                   nqm
                     { _nqmCode = code,
                       _nqmArguments =
-                        HM.fromList
+                        HashMap.fromList
                           [ (NativeQueryArgumentName "hey", NullableScalarType PGVarchar False Nothing)
                           ]
                     }
@@ -122,7 +122,7 @@ spec = do
                   nqm
                     { _nqmCode = code,
                       _nqmArguments =
-                        HM.fromList
+                        HashMap.fromList
                           [ (NativeQueryArgumentName "hey", NullableScalarType PGVarchar False Nothing),
                             (NativeQueryArgumentName "ho", NullableScalarType PGInteger False Nothing)
                           ]
