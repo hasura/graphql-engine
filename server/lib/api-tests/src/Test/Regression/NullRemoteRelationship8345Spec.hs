@@ -4,7 +4,7 @@
 -- | Regression tests for issue 8345.
 module Test.Regression.NullRemoteRelationship8345Spec (spec) where
 
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Char (isUpper, toLower)
 import Data.List.NonEmpty qualified as NE
 import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
@@ -179,7 +179,7 @@ rhsArtist =
 lhsPostgresMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 lhsPostgresMkLocalTestEnvironment _ = pure Nothing
 
-lhsPostgresSetup :: Aeson.Value -> Aeson.Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsPostgresSetup :: J.Value -> J.Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresSetup albumJoin artistJoin (wholeTestEnvironment, _) = do
   let testEnvironment = focusFixtureLeft wholeTestEnvironment
       sourceName = "source"
@@ -426,7 +426,7 @@ lhsRemoteServerMkLocalTestEnvironment _ =
           t_artist_id = pure artistId
         }
 
-lhsRemoteServerSetup :: Aeson.Value -> Aeson.Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsRemoteServerSetup :: J.Value -> J.Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsRemoteServerSetup albumJoin artistJoin (testEnvironment, maybeRemoteServer) = case maybeRemoteServer of
   Nothing -> error "XToDBObjectRelationshipSpec: remote server local testEnvironment did not succesfully create a server"
   Just remoteServer -> do

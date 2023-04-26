@@ -5,7 +5,7 @@ module Hasura.RQL.Types.EECredentials
 where
 
 import Data.Aeson (FromJSON, (.:))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Hasura.Prelude
 
 data EEClientCredentials = EEClientCredentials
@@ -17,7 +17,7 @@ newtype EEClientId = EEClientId {_getEEClientId :: Text}
   deriving newtype (FromJSON)
 
 instance FromJSON EEClientCredentials where
-  parseJSON = Aeson.withObject "EEClientCredentials" $ \o -> do
+  parseJSON = J.withObject "EEClientCredentials" $ \o -> do
     eccClientId <- o .: "client_id"
     eccClientSecret <- o .: "client_secret"
     pure EEClientCredentials {..}

@@ -29,8 +29,8 @@ module Hasura.GraphQL.Parser.Internal.Scalars
 where
 
 import Control.Monad ((>=>))
-import Data.Aeson qualified as A
-import Data.Aeson.Internal qualified as A.Internal
+import Data.Aeson qualified as J
+import Data.Aeson.Internal qualified as J.Internal
 import Data.Int (Int32, Int64)
 import Data.Scientific (Scientific)
 import Data.Scientific qualified as S
@@ -63,7 +63,7 @@ import Language.GraphQL.Draft.Syntax hiding (Definition)
 namedBoolean :: MonadParse m => Name -> Parser origin 'Both m Bool
 namedBoolean name = mkScalar name \case
   GraphQLValue (VBoolean b) -> pure b
-  JSONValue (A.Bool b) -> pure b
+  JSONValue (J.Bool b) -> pure b
   v -> typeMismatch name "a boolean" v
 
 boolean :: MonadParse m => Parser origin 'Both m Bool
@@ -72,7 +72,7 @@ boolean = namedBoolean GName._Boolean
 namedInt :: MonadParse m => Name -> Parser origin 'Both m Int32
 namedInt name = mkScalar name \case
   GraphQLValue (VInt i) -> scientificToInteger $ fromInteger i
-  JSONValue (A.Number n) -> scientificToInteger n
+  JSONValue (J.Number n) -> scientificToInteger n
   v -> typeMismatch name "a 32-bit integer" v
 
 int :: MonadParse m => Parser origin 'Both m Int32
@@ -82,7 +82,7 @@ namedFloat :: MonadParse m => Name -> Parser origin 'Both m Double
 namedFloat name = mkScalar name \case
   GraphQLValue (VFloat f) -> scientificToFloat f
   GraphQLValue (VInt i) -> scientificToFloat $ fromInteger i
-  JSONValue (A.Number n) -> scientificToFloat n
+  JSONValue (J.Number n) -> scientificToFloat n
   v -> typeMismatch name "a float" v
 
 float :: MonadParse m => Parser origin 'Both m Double
@@ -91,7 +91,7 @@ float = namedFloat GName._Float
 namedString :: MonadParse m => Name -> Parser origin 'Both m Text
 namedString name = mkScalar name \case
   GraphQLValue (VString s) -> pure s
-  JSONValue (A.String s) -> pure s
+  JSONValue (J.String s) -> pure s
   v -> typeMismatch name "a string" v
 
 string :: MonadParse m => Parser origin 'Both m Text
@@ -103,8 +103,8 @@ namedIdentifier :: MonadParse m => Name -> Parser origin 'Both m Text
 namedIdentifier name = mkScalar name \case
   GraphQLValue (VString s) -> pure s
   GraphQLValue (VInt i) -> pure . Text.pack $ show i
-  JSONValue (A.String s) -> pure s
-  JSONValue (A.Number n) -> parseScientific n
+  JSONValue (J.String s) -> pure s
+  JSONValue (J.Number n) -> parseScientific n
   v -> typeMismatch name "a String or a 32-bit integer" v
   where
     parseScientific = fmap (Text.pack . show @Int) . scientificToInteger
@@ -117,13 +117,13 @@ identifier = namedIdentifier GName._ID
 
 uuid :: MonadParse m => Parser origin 'Both m UUID.UUID
 uuid = mkScalar name \case
-  GraphQLValue (VString s) -> parseJSON $ A.String s
+  GraphQLValue (VString s) -> parseJSON $ J.String s
   JSONValue v -> parseJSON v
   v -> typeMismatch name "a UUID" v
   where
     name = $$(litName "uuid")
 
-json, jsonb :: MonadParse m => Parser origin 'Both m A.Value
+json, jsonb :: MonadParse m => Parser origin 'Both m J.Value
 json = jsonScalar $$(litName "json") Nothing
 jsonb = jsonScalar $$(litName "jsonb") Nothing
 
@@ -133,7 +133,7 @@ jsonb = jsonScalar $$(litName "jsonb") Nothing
 nonNegativeInt :: MonadParse m => Parser origin 'Both m Int32
 nonNegativeInt = mkScalar GName._Int \case
   GraphQLValue (VInt i) | i >= 0 -> scientificToInteger $ fromInteger i
-  JSONValue (A.Number n) | n >= 0 -> scientificToInteger n
+  JSONValue (J.Number n) | n >= 0 -> scientificToInteger n
   v -> typeMismatch GName._Int "a non-negative 32-bit integer" v
 
 -- | GraphQL ints are 32-bit integers; but in some places we want to accept bigger ints. To do so,
@@ -143,11 +143,11 @@ nonNegativeInt = mkScalar GName._Int \case
 bigInt :: MonadParse m => Parser origin 'Both m Int64
 bigInt = mkScalar GName._Int \case
   GraphQLValue (VInt i) -> scientificToInteger $ fromInteger i
-  JSONValue (A.Number n) -> scientificToInteger n
+  JSONValue (J.Number n) -> scientificToInteger n
   GraphQLValue (VString s)
     | Right (i, "") <- decimal s ->
         pure i
-  JSONValue (A.String s)
+  JSONValue (J.String s)
     | Right (i, "") <- decimal s ->
         pure i
   v -> typeMismatch GName._Int "a 32-bit integer, or a 64-bit integer represented as a string" v
@@ -158,7 +158,7 @@ scientific :: MonadParse m => Parser origin 'Both m Scientific
 scientific = mkScalar name \case
   GraphQLValue (VFloat f) -> pure f
   GraphQLValue (VInt i) -> pure $ S.scientific i 0
-  JSONValue (A.Number n) -> pure n
+  JSONValue (J.Number n) -> pure n
   v -> typeMismatch name "Decimal represented as a string" v
   where
     name = $$(litName "decimal")
@@ -168,7 +168,7 @@ scientific = mkScalar name \case
 
 -- | Creates a parser that transforms its input into a JSON value. 'valueToJSON'
 -- does properly unpack variables.
-jsonScalar :: MonadParse m => Name -> Maybe Description -> Parser origin 'Both m A.Value
+jsonScalar :: MonadParse m => Name -> Maybe Description -> Parser origin 'Both m J.Value
 jsonScalar name description =
   Parser
     { pType = schemaType,
@@ -209,8 +209,8 @@ scientificToFloat num =
   where
     failure = "The value " <> toErrorMessage (Text.pack (show num)) <> " lies outside the bounds. Is it overflowing the float bounds?"
 
-parseJSON :: (MonadParse m, A.FromJSON b) => A.Value -> m b
+parseJSON :: (MonadParse m, J.FromJSON b) => J.Value -> m b
 parseJSON x =
-  case A.Internal.iparse A.parseJSON x of
-    A.Internal.IError path message -> withPath path $ parseErrorWith ParseFailed (toErrorMessage (Text.pack message))
-    A.Internal.ISuccess result -> pure result
+  case J.Internal.iparse J.parseJSON x of
+    J.Internal.IError path message -> withPath path $ parseErrorWith ParseFailed (toErrorMessage (Text.pack message))
+    J.Internal.ISuccess result -> pure result

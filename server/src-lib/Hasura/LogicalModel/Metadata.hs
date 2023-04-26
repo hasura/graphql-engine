@@ -16,7 +16,7 @@ import Autodocodec (Autodocodec (Autodocodec), HasCodec)
 import Autodocodec qualified as AC
 import Control.Lens (makeLenses)
 import Data.Aeson (FromJSON (parseJSON), ToJSON, (.!=), (.:), (.:?))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec)
 import Hasura.LogicalModel.Types
@@ -88,13 +88,13 @@ data WithLogicalModel a = WithLogicalModel
 -- | something to note here: if the `a` contains a `name` or `source` key then
 -- this won't work anymore.
 instance (FromJSON a) => FromJSON (WithLogicalModel a) where
-  parseJSON = Aeson.withObject "LogicalModel" \obj -> do
+  parseJSON = J.withObject "LogicalModel" \obj -> do
     _wlmSource <- obj .:? "source" .!= defaultSource
     _wlmName <- obj .: "name"
-    _wlmInfo <- parseJSON (Aeson.Object obj)
+    _wlmInfo <- parseJSON (J.Object obj)
 
     pure WithLogicalModel {..}
 
 instance (ToAesonPairs a) => ToJSON (WithLogicalModel a) where
   toJSON (WithLogicalModel source name info) =
-    Aeson.object $ ("source", Aeson.toJSON source) : ("name", Aeson.toJSON name) : toAesonPairs info
+    J.object $ ("source", J.toJSON source) : ("name", J.toJSON name) : toAesonPairs info

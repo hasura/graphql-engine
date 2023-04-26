@@ -11,7 +11,7 @@ where
 import Autodocodec (HasCodec, optionalField', optionalFieldWithDefault', requiredField')
 import Autodocodec qualified as AC
 import Autodocodec.Extended (boundedEnumCodec)
-import Data.Aeson as A
+import Data.Aeson as J
 import Data.Text qualified as T
 import Hasura.Prelude
 
@@ -31,7 +31,7 @@ instance FromJSON Network where
   parseJSON = withObject "Network" $ \o -> Network <$> o .:? "tls_allowlist" .!= []
 
 instance ToJSON Network where
-  toJSON (Network t) = object ["tls_allowlist" A..= t]
+  toJSON (Network t) = object ["tls_allowlist" J..= t]
 
 emptyNetwork :: Network
 emptyNetwork = Network []
@@ -72,9 +72,9 @@ instance FromJSON TlsAllow where
 instance ToJSON TlsAllow where
   toJSON (TlsAllow h p a) =
     object
-      [ "host" A..= h,
-        "suffix" A..= p,
-        "permissions" A..= a
+      [ "host" J..= h,
+        "suffix" J..= p,
+        "permissions" J..= a
       ]
 
 data TlsPermission
@@ -111,6 +111,6 @@ instance FromJSON DropHostFromTLSAllowlist where
 instance ToJSON DropHostFromTLSAllowlist where
   toJSON (DropHostFromTLSAllowlist h p) =
     object
-      [ "host" A..= h,
-        "suffix" A..= p
+      [ "host" J..= h,
+        "suffix" J..= p
       ]

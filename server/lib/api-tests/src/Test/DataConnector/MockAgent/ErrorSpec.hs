@@ -7,7 +7,7 @@ module Test.DataConnector.MockAgent.ErrorSpec (spec) where
 --------------------------------------------------------------------------------
 
 import Control.Lens ((?~))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest)
 import Harness.Backend.DataConnector.Mock qualified as Mock
@@ -37,7 +37,7 @@ spec =
     )
     tests
 
-sourceMetadata :: Aeson.Value
+sourceMetadata :: J.Value
 sourceMetadata =
   let source = BackendType.backendSourceName Mock.backendTypeMetadata
       backendType = BackendType.backendTypeString Mock.backendTypeMetadata

@@ -6,7 +6,7 @@ where
 
 import Control.Applicative
 import Data.Aeson (Key)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Internal (JSONPath, JSONPathElement (..))
 import Data.Aeson.Key qualified as K
 import Data.Attoparsec.Text
@@ -23,7 +23,7 @@ encodeJSONPath path = "$" <> foldMap formatPart path
   where
     formatPart (Index idx) = "[" <> tshow idx <> "]"
     formatPart (Key key)
-      | specialChars stringKey = TL.toStrict ("[" <> TL.decodeUtf8 (Aeson.encode (Aeson.String textKey)) <> "]")
+      | specialChars stringKey = TL.toStrict ("[" <> TL.decodeUtf8 (J.encode (J.String textKey)) <> "]")
       | otherwise = "." <> textKey
       where
         textKey = K.toText key
@@ -76,7 +76,7 @@ bracketElement = do
   pure result
   where
     parseJSONString inQuotes =
-      maybe (fail "Invalid JSON string") (pure . K.fromText) . Aeson.decode . TL.encodeUtf8 $
+      maybe (fail "Invalid JSON string") (pure . K.fromText) . J.decode . TL.encodeUtf8 $
         "\"" <> inQuotes <> "\""
 
     doubleQuotedString = do

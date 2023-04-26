@@ -8,17 +8,17 @@ module GHC.Stats.Extended
   )
 where
 
-import Data.Aeson qualified as A
-import Data.Aeson.TH qualified as A
+import Data.Aeson qualified as J
+import Data.Aeson.TH qualified as J
 import GHC.Stats
 
-$(A.deriveToJSON A.defaultOptions ''GCDetails)
-$(A.deriveToJSON A.defaultOptions ''RTSStats)
+$(J.deriveToJSON J.defaultOptions ''GCDetails)
+$(J.deriveToJSON J.defaultOptions ''RTSStats)
 
 {- for base >= 4.15
-instance A.ToJSON S.GCDetails where
-    toEncoding = A.genericToEncoding A.defaultOptions
+instance J.ToJSON S.GCDetails where
+    toEncoding = J.genericToEncoding J.defaultOptions
 
-instance A.ToJSON S.RTSStats where
-    toEncoding = A.genericToEncoding A.defaultOptions
+instance J.ToJSON S.RTSStats where
+    toEncoding = J.genericToEncoding J.defaultOptions
 -}

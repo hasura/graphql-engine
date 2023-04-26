@@ -2,8 +2,8 @@
 
 module Hasura.Backends.BigQuery.Instances.Execute () where
 
-import Data.Aeson qualified as Aeson
-import Data.Aeson.Text qualified as Aeson
+import Data.Aeson qualified as J
+import Data.Aeson.Text qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text qualified as T
@@ -82,7 +82,7 @@ bqDBQueryPlan userInfo sourceName sourceConfig qrf _ _ = do
             sourceConfig
             (DataLoader.executeSelect select)
         case result of
-          Left err -> throw500WithDetail (DataLoader.executeProblemMessage DataLoader.HideDetails err) $ Aeson.toJSON err
+          Left err -> throw500WithDetail (DataLoader.executeProblemMessage DataLoader.HideDetails err) $ J.toJSON err
           Right (job, recordSet) -> pure ActionResult {arStatistics = Just BigQuery.ExecutionStatistics {_esJob = job}, arResult = recordSetToEncJSON (BigQuery.selectCardinality select) recordSet}
   pure $ DBStepInfo @'BigQuery sourceName sourceConfig (Just (selectSQLTextForExplain select)) action ()
 
@@ -99,7 +99,7 @@ recordSetToEncJSON cardinality DataLoader.RecordSet {rows} =
       encJFromInsOrdHashMap . fmap encJFromOutputValue . OMap.mapKeys coerce
     encJFromOutputValue outputValue =
       case outputValue of
-        DataLoader.NullOutputValue -> encJFromJValue Aeson.Null
+        DataLoader.NullOutputValue -> encJFromJValue J.Null
         DataLoader.DecimalOutputValue i -> encJFromJValue i
         DataLoader.BigDecimalOutputValue i -> encJFromJValue i
         DataLoader.FloatOutputValue i -> encJFromJValue i
@@ -204,7 +204,7 @@ bqDBRemoteRelationshipPlan ::
   SourceName ->
   SourceConfig 'BigQuery ->
   -- | List of json objects, each of which becomes a row of the table.
-  NonEmpty Aeson.Object ->
+  NonEmpty J.Object ->
   -- | The above objects have this schema
   --
   -- XXX: What is this for/what does this mean?
@@ -228,7 +228,7 @@ bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
       UVParameter IR.Unknown $
         ColumnValue (ColumnScalar BigQuery.StringScalarType) $
           BigQuery.StringValue . LT.toStrict $
-            Aeson.encodeToLazyText lhs
+            J.encodeToLazyText lhs
 
     recordSetDefinitionList =
       (coerceToColumn argumentId, BigQuery.IntegerScalarType) : HashMap.toList (fmap snd joinColumnMapping)

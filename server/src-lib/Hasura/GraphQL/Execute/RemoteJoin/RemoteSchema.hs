@@ -22,7 +22,7 @@ module Hasura.GraphQL.Execute.RemoteJoin.RemoteSchema
 where
 
 import Control.Lens (view, _2, _3)
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Data.Aeson.Ordered qualified as AO
 import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict.Extended qualified as HashMap
@@ -258,9 +258,9 @@ fieldsToRequest gFields =
           }
     }
   where
-    variableInfos :: HashMap G.VariableDefinition A.Value
+    variableInfos :: HashMap G.VariableDefinition J.Value
     variableInfos = HashMap.fromList $ concatMap (foldMap getVariableInfo) gFields
-    getVariableInfo :: P.Variable -> [(G.VariableDefinition, A.Value)]
+    getVariableInfo :: P.Variable -> [(G.VariableDefinition, J.Value)]
     getVariableInfo = pure . fmap snd . getVariableDefinitionAndValue
 
 ------------------------------------------------------------------------------
@@ -292,7 +292,7 @@ executeRemoteSchemaCall networkFunction (RemoteSchemaCall customizer request _) 
       | otherwise ->
           throwError
             (err400 Unexpected "Errors from remote server")
-              { qeInternal = Just $ ExtraInternal $ A.object ["errors" A..= (AO.fromOrdered <$> errors)]
+              { qeInternal = Just $ ExtraInternal $ J.object ["errors" J..= (AO.fromOrdered <$> errors)]
               }
 
 -------------------------------------------------------------------------------

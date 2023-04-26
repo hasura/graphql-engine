@@ -16,7 +16,7 @@ where
 import Control.Monad.Except
 import Control.Monad.Trans.Control
 import Data.Aeson (FromJSON, ToJSON, (.!=), (.:), (.:?), (.=))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Has
 import Data.Map.Strict qualified as Map
 import Data.Monoid
@@ -60,7 +60,7 @@ newtype SkipCheck = SkipCheck Bool
   deriving (Semigroup, Monoid) via Any
 
 instance FromJSON DCAddAgent where
-  parseJSON = Aeson.withObject "DCAddAgent" \o -> do
+  parseJSON = J.withObject "DCAddAgent" \o -> do
     _gdcaName <- o .: "name"
     mUri <- o .: "url"
     _gdcaDisplayName <- o .:? "display_name"
@@ -71,7 +71,7 @@ instance FromJSON DCAddAgent where
 
 instance ToJSON DCAddAgent where
   toJSON DCAddAgent {..} =
-    Aeson.object $
+    J.object $
       [ "name" .= _gdcaName,
         "url" .= show _gdcaUrl,
         "skip_check" .= _gdcaSkipCheck
@@ -103,8 +103,8 @@ runAddDataConnectorAgent DCAddAgent {..} = do
             NotAvailable err ->
               pure $
                 EncJSON.encJFromJValue $
-                  Aeson.object
-                    [ ("message" .= Aeson.String "Agent is not available"),
+                  J.object
+                    [ ("message" .= J.String "Agent is not available"),
                       ("details" .= err)
                     ]
             _ -> addAgent _gdcaName agent
@@ -149,12 +149,12 @@ checkAgentAvailability url = do
 newtype DCDeleteAgent = DCDeleteAgent {_dcdaName :: DC.Types.DataConnectorName}
 
 instance FromJSON DCDeleteAgent where
-  parseJSON = Aeson.withObject "DCDeleteAgent" \o -> do
+  parseJSON = J.withObject "DCDeleteAgent" \o -> do
     _dcdaName <- o .: "name"
     pure $ DCDeleteAgent {..}
 
 instance ToJSON DCDeleteAgent where
-  toJSON DCDeleteAgent {..} = Aeson.object ["name" .= _dcdaName]
+  toJSON DCDeleteAgent {..} = J.object ["name" .= _dcdaName]
 
 -- | Delete a Data Connector Agent from the Metadata.
 runDeleteDataConnectorAgent ::

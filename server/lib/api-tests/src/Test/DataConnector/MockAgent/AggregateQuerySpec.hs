@@ -5,7 +5,7 @@ module Test.DataConnector.MockAgent.AggregateQuerySpec (spec) where
 --------------------------------------------------------------------------------
 
 import Control.Lens ((.~), (?~))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
@@ -40,7 +40,7 @@ spec =
 
 --------------------------------------------------------------------------------
 
-sourceMetadata :: Aeson.Value
+sourceMetadata :: J.Value
 sourceMetadata =
   let source = BackendType.backendSourceName Mock.backendTypeMetadata
       backendType = BackendType.backendTypeString Mock.backendTypeMetadata
@@ -111,13 +111,13 @@ tests = describe "Aggregate Query Tests" $ do
           |]
     let queryResponse =
           mkRowsQueryResponse
-            [ [ ("ArtistIds_Id", API.mkColumnFieldValue $ Aeson.Number 1),
-                ("ArtistNames_Name", API.mkColumnFieldValue $ Aeson.String "AC/DC"),
+            [ [ ("ArtistIds_Id", API.mkColumnFieldValue $ J.Number 1),
+                ("ArtistNames_Name", API.mkColumnFieldValue $ J.String "AC/DC"),
                 ( "nodes_Albums",
                   API.mkRelationshipFieldValue $
                     mkRowsQueryResponse
-                      [ [("nodes_Title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")],
-                        [("nodes_Title", API.mkColumnFieldValue $ Aeson.String "Let There Be Rock")]
+                      [ [("nodes_Title", API.mkColumnFieldValue $ J.String "For Those About To Rock We Salute You")],
+                        [("nodes_Title", API.mkColumnFieldValue $ J.String "Let There Be Rock")]
                       ]
                 )
               ]
@@ -209,23 +209,23 @@ tests = describe "Aggregate Query Tests" $ do
             }
           |]
     let aggregates =
-          [ ("counts_count", Aeson.Number 2),
-            ("counts_uniqueBillingCountries", Aeson.Number 2),
-            ("ids_minimum_Id", Aeson.Number 1),
-            ("ids_max_InvoiceId", Aeson.Number 2)
+          [ ("counts_count", J.Number 2),
+            ("counts_uniqueBillingCountries", J.Number 2),
+            ("ids_minimum_Id", J.Number 1),
+            ("ids_max_InvoiceId", J.Number 2)
           ]
         rows =
           [ [ ( "nodes_Lines",
                 API.mkRelationshipFieldValue $
                   mkAggregatesQueryResponse
-                    [ ("aggregate_count", Aeson.Number 2)
+                    [ ("aggregate_count", J.Number 2)
                     ]
               )
             ],
             [ ( "nodes_Lines",
                 API.mkRelationshipFieldValue $
                   mkAggregatesQueryResponse
-                    [ ("aggregate_count", Aeson.Number 4)
+                    [ ("aggregate_count", J.Number 4)
                     ]
               )
             ]

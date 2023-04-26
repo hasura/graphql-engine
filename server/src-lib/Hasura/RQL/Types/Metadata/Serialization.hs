@@ -20,7 +20,7 @@ module Hasura.RQL.Types.Metadata.Serialization
 where
 
 import Data.Aeson (ToJSON (..))
-import Data.Aeson qualified as JSON
+import Data.Aeson qualified as J
 import Data.Aeson.Ordered qualified as AO
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Text.Extended qualified as T
@@ -670,7 +670,7 @@ listToMaybeOrdPair name f ta = case toList ta of
   [] -> Nothing
   list -> Just $ (name,) $ AO.array $ map f list
 
-maybeSetToMaybeOrdPair :: (Backend b) => Maybe (ColumnValues b JSON.Value) -> Maybe (Text, AO.Value)
+maybeSetToMaybeOrdPair :: (Backend b) => Maybe (ColumnValues b J.Value) -> Maybe (Text, AO.Value)
 maybeSetToMaybeOrdPair set =
   set >>= \colVals ->
     if colVals == mempty

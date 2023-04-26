@@ -10,7 +10,7 @@ where
 --------------------------------------------------------------------------------
 
 import Data.Aeson (FromJSON, (.:), (.=))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Hasura.Base.Error qualified as Error
 import Hasura.EncJSON (EncJSON)
@@ -24,7 +24,7 @@ import Hasura.Server.Types qualified as Types
 newtype GetFeatureFlag = GetFeatureFlag {gfgIdentifier :: Text}
 
 instance FromJSON GetFeatureFlag where
-  parseJSON = Aeson.withObject "GetFeatureFlag" \o -> do
+  parseJSON = J.withObject "GetFeatureFlag" \o -> do
     gfgIdentifier <- o .: "identifier"
     pure $ GetFeatureFlag {..}
 
@@ -43,7 +43,7 @@ runGetFeatureFlag (Types.CheckFeatureFlag getFeatureFlag) GetFeatureFlag {..} = 
       flagValue <- liftIO $ getFeatureFlag flag
       pure $
         EncJSON.encJFromJValue $
-          Aeson.object
+          J.object
             [ "identifier" .= gfgIdentifier,
               "value" .= flagValue,
               "description" .= FeatureFlag.ffDescription flag

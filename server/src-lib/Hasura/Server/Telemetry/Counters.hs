@@ -26,8 +26,8 @@ module Hasura.Server.Telemetry.Counters
   )
 where
 
-import Data.Aeson qualified as A
-import Data.Aeson.TH qualified as A
+import Data.Aeson qualified as J
+import Data.Aeson.TH qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Data.IORef
 import Data.Time.Clock.POSIX (POSIXTime, getPOSIXTime)
@@ -98,9 +98,9 @@ data QueryType = Mutation | Query
 
 instance Hashable QueryType
 
-instance A.ToJSON QueryType
+instance J.ToJSON QueryType
 
-instance A.FromJSON QueryType
+instance J.FromJSON QueryType
 
 -- | Was this a PG local query, or did it involve remote execution?
 data Locality
@@ -116,9 +116,9 @@ data Locality
 
 instance Hashable Locality
 
-instance A.ToJSON Locality
+instance J.ToJSON Locality
 
-instance A.FromJSON Locality
+instance J.FromJSON Locality
 
 instance Semigroup Locality where
   Empty <> x = x
@@ -135,14 +135,14 @@ data Transport = HTTP | WebSocket
 
 instance Hashable Transport
 
-instance A.ToJSON Transport
+instance J.ToJSON Transport
 
-instance A.FromJSON Transport
+instance J.FromJSON Transport
 
 -- | The timings and counts here were from requests with total time longer than
 -- 'bucketGreaterThan' (but less than any larger bucket cutoff times).
 newtype RunningTimeBucket = RunningTimeBucket {bucketGreaterThan :: Seconds}
-  deriving (Ord, Eq, Show, Generic, A.ToJSON, A.FromJSON, Hashable)
+  deriving (Ord, Eq, Show, Generic, J.ToJSON, J.FromJSON, Hashable)
 
 -- NOTE: an HDR histogram is a nice way to collect metrics when you don't know
 -- a priori what the most useful binning is. It's not clear how we'd make use
@@ -182,16 +182,16 @@ data ServiceTimingMetric = ServiceTimingMetric
   }
   deriving (Show, Generic, Eq, Ord)
 
-$(A.deriveJSON hasuraJSON ''RequestTimingsCount)
-$(A.deriveJSON hasuraJSON ''RequestDimensions)
+$(J.deriveJSON hasuraJSON ''RequestTimingsCount)
+$(J.deriveJSON hasuraJSON ''RequestDimensions)
 
-instance A.ToJSON ServiceTimingMetric
+instance J.ToJSON ServiceTimingMetric
 
-instance A.FromJSON ServiceTimingMetric
+instance J.FromJSON ServiceTimingMetric
 
-instance A.ToJSON ServiceTimingMetrics
+instance J.ToJSON ServiceTimingMetrics
 
-instance A.FromJSON ServiceTimingMetrics
+instance J.FromJSON ServiceTimingMetrics
 
 dumpServiceTimingMetrics :: MonadIO m => m ServiceTimingMetrics
 dumpServiceTimingMetrics = liftIO $ do

@@ -21,7 +21,7 @@ where
 --------------------------------------------------------------------------------
 
 import Control.Monad.Morph qualified as Morph
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.ByteString.Lazy.UTF8 qualified as BLU
 import Data.Char qualified as Char
 import Data.HashSet qualified as HashSet
@@ -231,14 +231,14 @@ instance FromEnv Config.AdminInternalErrorsStatus where
 instance FromEnv Config.WsReadCookieStatus where
   fromEnv = fmap (bool Config.WsReadCookieDisabled Config.WsReadCookieEnabled) . fromEnv
 
-instance FromEnv Aeson.Value where
-  fromEnv = Aeson.eitherDecode . BLU.fromString
+instance FromEnv J.Value where
+  fromEnv = J.eitherDecode . BLU.fromString
 
 instance FromEnv MetadataDefaults where
-  fromEnv = Aeson.eitherDecode . BLU.fromString
+  fromEnv = J.eitherDecode . BLU.fromString
 
 instance FromEnv Metadata where
-  fromEnv = Aeson.eitherDecode . BLU.fromString
+  fromEnv = J.eitherDecode . BLU.fromString
 
 instance FromEnv Options.StringifyNumbers where
   fromEnv = fmap (bool Options.Don'tStringifyNumbers Options.StringifyNumbers) . fromEnv @Bool

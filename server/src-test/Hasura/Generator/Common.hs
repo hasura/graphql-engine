@@ -15,7 +15,7 @@ module Hasura.Generator.Common
 where
 
 import Data.Aeson (FromJSON, ToJSON)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Data.Text.NonEmpty (NonEmptyText, mkNonEmptyText)
 import Hasura.Prelude
@@ -73,4 +73,4 @@ jsonRoundTrip :: forall a. (FromJSON a, ToJSON a, Eq a, Show a) => Gen a -> Stri
 jsonRoundTrip gen ty = do
   it ty $ hedgehog $ do
     term <- forAll gen
-    tripping term Aeson.toJSON Aeson.fromJSON
+    tripping term J.toJSON J.fromJSON

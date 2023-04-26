@@ -26,7 +26,7 @@ module Hasura.RQL.DDL.Warnings
 where
 
 import Data.Aeson (FromJSON, ToJSON)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Extended ((.=))
 import Data.Sequence qualified as Seq
 import Hasura.EncJSON (EncJSON, encJFromJValue)
@@ -66,11 +66,11 @@ data AllowWarnings
 
 instance FromJSON AllowWarnings where
   parseJSON =
-    Aeson.withBool "AllowWarnings" $
+    J.withBool "AllowWarnings" $
       pure . bool NoAllowWarnings AllowWarnings
 
 instance ToJSON AllowWarnings where
-  toJSON = Aeson.toJSON . toBool
+  toJSON = J.toJSON . toBool
     where
       toBool AllowWarnings = True
       toBool NoAllowWarnings = False
@@ -95,7 +95,7 @@ data MetadataWarning = MetadataWarning
 
 instance ToJSON MetadataWarning where
   toJSON (MetadataWarning code mObj msg) =
-    Aeson.object
+    J.object
       [ "message" .= msg,
         "type" .= moiTypeName mObj,
         "name" .= moiName mObj,
@@ -116,7 +116,7 @@ runMetadataWarnings = flip runStateT mempty
 
 mkSuccessResponseWithWarnings :: MetadataWarnings -> EncJSON
 mkSuccessResponseWithWarnings warnings =
-  encJFromJValue . Aeson.object $
+  encJFromJValue . J.object $
     [ "message" .= ("success" :: Text)
     ]
       <> ["warnings" .= warnings | not (null warnings)]

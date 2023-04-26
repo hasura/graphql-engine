@@ -5,7 +5,7 @@ module Hasura.Server.Migrate.Version
   )
 where
 
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Data.List (isPrefixOf)
 import Data.Text.Extended
 import Hasura.Logging (Hasura, LogLevel (..), ToEngineLog (..))
@@ -98,9 +98,9 @@ instance ToEngineLog (SourceName, SourceCatalogMigrationState) Hasura where
             { slLogLevel = LevelInfo,
               slKind = "source_catalog_migrate",
               slInfo =
-                A.toJSON $
-                  A.object
-                    [ "source" A..= sourceName,
-                      "message" A..= migrationStatusMessage
+                J.toJSON $
+                  J.object
+                    [ "source" J..= sourceName,
+                      "message" J..= migrationStatusMessage
                     ]
             }

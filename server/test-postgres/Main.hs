@@ -6,7 +6,7 @@ import Constants qualified
 import Control.Concurrent.MVar
 import Control.Monad.Trans.Managed (lowerManagedT)
 import Control.Natural ((:~>) (..))
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Data.ByteString.Lazy.Char8 qualified as BL
 import Data.ByteString.Lazy.UTF8 qualified as LBS
 import Data.Environment qualified as Env
@@ -86,7 +86,7 @@ main = do
       logger :: Logger Hasura = Logger $ \l -> do
         let (logLevel, logType :: EngineLogType Hasura, logDetail) = toEngineLog l
         t <- liftIO $ getFormattedTime Nothing
-        liftIO $ putStrLn $ LBS.toString $ A.encode $ EngineLog t logLevel logType logDetail
+        liftIO $ putStrLn $ LBS.toString $ J.encode $ EngineLog t logLevel logType logDetail
 
       setupCacheRef = do
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
@@ -167,8 +167,8 @@ main = do
 printErrExit :: String -> IO a
 printErrExit = (*> exitFailure) . putStrLn
 
-printErrJExit :: (A.ToJSON a) => a -> IO b
-printErrJExit = (*> exitFailure) . BL.putStrLn . A.encode
+printErrJExit :: (J.ToJSON a) => a -> IO b
+printErrJExit = (*> exitFailure) . BL.putStrLn . J.encode
 
 -- | Used only for 'runApp' above.
 data TestMetricsSpec name metricType tags

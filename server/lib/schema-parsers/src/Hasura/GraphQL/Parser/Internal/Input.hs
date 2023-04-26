@@ -19,10 +19,10 @@ import Control.Applicative (Alternative ((<|>)), liftA2)
 import Control.Arrow ((>>>))
 import Control.Lens hiding (enum, index)
 import Control.Monad (unless, (<=<), (>=>))
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.Aeson.Types qualified as A
+import Data.Aeson.Types qualified as J
 import Data.Foldable (for_)
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
@@ -253,7 +253,7 @@ field ::
 field name description parser =
   InputFieldsParser
     { ifDefinitions = [Definition name description Nothing [] $ InputFieldInfo (pType parser) Nothing],
-      ifParser = \values -> withKey (A.Key (K.fromText (unName name))) do
+      ifParser = \values -> withKey (J.Key (K.fromText (unName name))) do
         value <-
           maybe (parseError ("missing required field " <> toErrorValue name)) pure $ HashMap.lookup name values <|> nullableDefault
         pInputParser parser value
@@ -287,7 +287,7 @@ fieldOptional name description parser =
         ],
       ifParser =
         HashMap.lookup name
-          >>> withKey (A.Key (K.fromText (unName name)))
+          >>> withKey (J.Key (K.fromText (unName name)))
             . traverse (pInputParser parser <=< peelVariable expectedType)
     }
   where
@@ -310,7 +310,7 @@ fieldWithDefault name description defaultValue parser =
     { ifDefinitions = [Definition name description Nothing [] $ InputFieldInfo (pType parser) (Just defaultValue)],
       ifParser =
         HashMap.lookup name
-          >>> withKey (A.Key (K.fromText (unName name))) . \case
+          >>> withKey (J.Key (K.fromText (unName name))) . \case
             Just value -> peelVariableWith True expectedType value >>= pInputParser parser
             Nothing -> pInputParser parser $ GraphQLValue $ literal defaultValue
     }
@@ -331,7 +331,7 @@ enum name description values =
     { pType = schemaType,
       pParser =
         peelVariable (toGraphQLType schemaType) >=> \case
-          JSONValue (A.String stringValue)
+          JSONValue (J.String stringValue)
             | Just enumValue <- mkName stringValue -> validate enumValue
           GraphQLValue (VEnum (EnumValue enumValue)) -> validate enumValue
           other -> typeMismatch name "an enum value" other
@@ -371,7 +371,7 @@ object name description parser =
       pParser =
         peelVariable (toGraphQLType schemaType) >=> \case
           GraphQLValue (VObject fields) -> parseFields $ GraphQLValue <$> fields
-          JSONValue (A.Object fields) -> do
+          JSONValue (J.Object fields) -> do
             translatedFields <-
               HashMap.fromList <$> for (KM.toList fields) \(K.toText -> key, val) -> do
                 name' <- maybe (invalidName key) pure $ mkName key
@@ -390,7 +390,7 @@ object name description parser =
       -- handles parsing the fields it cares about
       for_ (HashMap.keys fields) \fieldName ->
         unless (fieldName `S.member` fieldNames) $
-          withKey (A.Key (K.fromText (unName fieldName))) $
+          withKey (J.Key (K.fromText (unName fieldName))) $
             parseError $
               "field " <> toErrorValue fieldName <> " not found in type: " <> toErrorValue name
       ifParser parser fields
@@ -406,9 +406,9 @@ list parser =
         pParser =
           peelVariable (toGraphQLType schemaType) >=> \case
             GraphQLValue (VList values) -> for (zip [0 ..] values) \(index, value) ->
-              withKey (A.Index index) $ pParser parser $ GraphQLValue value
-            JSONValue (A.Array values) -> for (zip [0 ..] $ V.toList values) \(index, value) ->
-              withKey (A.Index index) $ pParser parser $ JSONValue value
+              withKey (J.Index index) $ pParser parser $ GraphQLValue value
+            JSONValue (J.Array values) -> for (zip [0 ..] $ V.toList values) \(index, value) ->
+              withKey (J.Index index) $ pParser parser $ JSONValue value
             -- List Input Coercion
             --
             -- According to section 3.11 of the GraphQL spec: iff the value
@@ -421,8 +421,8 @@ list parser =
             -- be returning `[null]` if the parser accepts a null value,
             -- which would contradict the spec.
             GraphQLValue VNull -> parseError "expected a list, but found null"
-            JSONValue A.Null -> parseError "expected a list, but found null"
-            other -> fmap pure $ withKey (A.Index 0) $ pParser parser other
+            JSONValue J.Null -> parseError "expected a list, but found null"
+            other -> fmap pure $ withKey (J.Index 0) $ pParser parser other
       }
   where
     schemaType = TList NonNullable $ pType parser

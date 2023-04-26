@@ -12,7 +12,7 @@ module Hasura.Backends.MSSQL.Meta
   )
 where
 
-import Data.Aeson as Aeson
+import Data.Aeson as J
 import Data.ByteString.UTF8 qualified as BSUTF8
 import Data.FileEmbed (embedFile, makeRelativeToProject)
 import Data.HashMap.Strict qualified as HashMap
@@ -42,7 +42,7 @@ loadDBMetadata = do
   let queryBytes = $(makeRelativeToProject "src-rsr/mssql/mssql_table_metadata.sql" >>= embedFile)
       odbcQuery :: ODBC.Query = fromString . BSUTF8.toString $ queryBytes
   sysTablesText <- runIdentity <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler odbcQuery
-  case Aeson.eitherDecodeStrict (T.encodeUtf8 sysTablesText) of
+  case J.eitherDecodeStrict (T.encodeUtf8 sysTablesText) of
     Left e -> throw500 $ T.pack $ "error loading sql server database schema: " <> e
     Right sysTables -> pure $ HashMap.fromList $ map transformTable sysTables
 

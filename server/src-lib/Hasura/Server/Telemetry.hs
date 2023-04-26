@@ -29,7 +29,7 @@ import CI qualified
 import Control.Concurrent.Extended qualified as C
 import Control.Exception (try)
 import Control.Lens
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict qualified as HashMap
 import Data.List qualified as L
@@ -83,25 +83,25 @@ data TelemetryHttpError = TelemetryHttpError
   }
   deriving (Show)
 
-instance A.ToJSON TelemetryLog where
+instance J.ToJSON TelemetryLog where
   toJSON tl =
-    A.object
-      [ "type" A..= _tlType tl,
-        "message" A..= _tlMessage tl,
-        "http_error" A..= (A.toJSON <$> _tlHttpError tl)
+    J.object
+      [ "type" J..= _tlType tl,
+        "message" J..= _tlMessage tl,
+        "http_error" J..= (J.toJSON <$> _tlHttpError tl)
       ]
 
-instance A.ToJSON TelemetryHttpError where
+instance J.ToJSON TelemetryHttpError where
   toJSON tlhe =
-    A.object
-      [ "status_code" A..= (HTTP.statusCode <$> tlheStatus tlhe),
-        "url" A..= tlheUrl tlhe,
-        "response" A..= tlheResponse tlhe,
-        "http_exception" A..= (A.toJSON <$> tlheHttpException tlhe)
+    J.object
+      [ "status_code" J..= (HTTP.statusCode <$> tlheStatus tlhe),
+        "url" J..= tlheUrl tlhe,
+        "response" J..= tlheResponse tlhe,
+        "http_exception" J..= (J.toJSON <$> tlheHttpException tlhe)
       ]
 
 instance ToEngineLog TelemetryLog Hasura where
-  toEngineLog tl = (_tlLogLevel tl, ELTInternal ILTTelemetry, A.toJSON tl)
+  toEngineLog tl = (_tlLogLevel tl, ELTInternal ILTTelemetry, J.toJSON tl)
 
 mkHttpError ::
   Text ->
@@ -168,7 +168,7 @@ runTelemetry (Logger logger) appStateRef metadataDbUid pgVersion = do
               map
                 (\sourceinfo -> (Any.dispatchAnyBackend @HasTag) sourceinfo telemetryForSource)
                 (HashMap.elems (scSources schemaCache))
-            payloads = A.encode <$> telemetries
+            payloads = J.encode <$> telemetries
 
         for_ payloads $ \payload -> do
           logger $ debugLBS $ "metrics_info: " <> payload

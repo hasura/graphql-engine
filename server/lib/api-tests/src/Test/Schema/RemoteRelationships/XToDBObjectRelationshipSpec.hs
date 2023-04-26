@@ -12,7 +12,7 @@
 module Test.Schema.RemoteRelationships.XToDBObjectRelationshipSpec (spec) where
 
 import Data.Aeson (Value)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Char (isUpper, toLower)
 import Data.List.NonEmpty qualified as NE
 import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
@@ -199,7 +199,7 @@ rhsSQLServer =
 
 rhsSqlite :: RHSFixture
 rhsSqlite =
-  let sqliteRhsTableName = Aeson.toJSON ["main" :: Text, "album"]
+  let sqliteRhsTableName = J.toJSON ["main" :: Text, "album"]
       context =
         (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
           { Fixture.mkLocalTestEnvironment = Fixture.noLocalTestEnvironment,
@@ -525,12 +525,12 @@ lhsSqliteSetup rhsTableName (wholeTestEnvironment, _) = do
   let cloneName = API.DatasetCloneName $ tshow (uniqueTestId testEnvironment) <> "-lhs"
   let lhsSourceName_ = "source"
   let sourceName = Text.unpack lhsSourceName_
-  let sqliteLhsTableName = Aeson.toJSON ["main" :: Text, "track"]
+  let sqliteLhsTableName = J.toJSON ["main" :: Text, "track"]
 
   (API.Config sourceConfig) <- Sqlite.createEmptyDatasetCloneSourceConfig cloneName
 
   -- Add remote source
-  Schema.addSource lhsSourceName_ (Aeson.Object sourceConfig) testEnvironment
+  Schema.addSource lhsSourceName_ (J.Object sourceConfig) testEnvironment
 
   -- Setup tables
   Sqlite.createTable sourceName testEnvironment track
@@ -1022,12 +1022,12 @@ rhsSqliteSetup (wholeTestEnvironment, _) = do
   let cloneName = API.DatasetCloneName $ tshow (uniqueTestId testEnvironment) <> "-rhs"
   let rhsSourceName_ = "target"
   let sourceName = Text.unpack rhsSourceName_
-  let sqliteRhsTableName = Aeson.toJSON ["main" :: Text, "album"]
+  let sqliteRhsTableName = J.toJSON ["main" :: Text, "album"]
 
   (API.Config sourceConfig) <- Sqlite.createEmptyDatasetCloneSourceConfig cloneName
 
   -- Add remote source
-  Schema.addSource rhsSourceName_ (Aeson.Object sourceConfig) testEnvironment
+  Schema.addSource rhsSourceName_ (J.Object sourceConfig) testEnvironment
 
   -- Setup tables
   Sqlite.createTable sourceName testEnvironment album

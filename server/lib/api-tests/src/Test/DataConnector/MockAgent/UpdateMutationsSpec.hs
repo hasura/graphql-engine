@@ -4,7 +4,7 @@ module Test.DataConnector.MockAgent.UpdateMutationsSpec
 where
 
 import Control.Lens ((.~), (?~))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
@@ -42,7 +42,7 @@ spec =
 testRoleName :: ByteString
 testRoleName = "test-role"
 
-sourceMetadata :: Aeson.Value
+sourceMetadata :: J.Value
 sourceMetadata =
   let source = BackendType.backendSourceName Mock.backendTypeMetadata
       backendType = BackendType.backendTypeString Mock.backendTypeMetadata
@@ -130,34 +130,34 @@ tests = do
                   API._morReturning =
                     Just
                       [ mkFieldsMap
-                          [ ("updatedRows_TrackId", API.mkColumnFieldValue $ Aeson.Number 3),
-                            ("updatedRows_Name", API.mkColumnFieldValue $ Aeson.String "Another Name"),
+                          [ ("updatedRows_TrackId", API.mkColumnFieldValue $ J.Number 3),
+                            ("updatedRows_Name", API.mkColumnFieldValue $ J.String "Another Name"),
                             ( "updatedRows_Genre",
                               API.mkRelationshipFieldValue $
                                 mkRowsQueryResponse
-                                  [ [ ("Name", API.mkColumnFieldValue $ Aeson.String "Rock")
+                                  [ [ ("Name", API.mkColumnFieldValue $ J.String "Rock")
                                     ]
                                   ]
                             )
                           ],
                         mkFieldsMap
-                          [ ("updatedRows_TrackId", API.mkColumnFieldValue $ Aeson.Number 4),
-                            ("updatedRows_Name", API.mkColumnFieldValue $ Aeson.String "Another Name"),
+                          [ ("updatedRows_TrackId", API.mkColumnFieldValue $ J.Number 4),
+                            ("updatedRows_Name", API.mkColumnFieldValue $ J.String "Another Name"),
                             ( "updatedRows_Genre",
                               API.mkRelationshipFieldValue $
                                 mkRowsQueryResponse
-                                  [ [ ("Name", API.mkColumnFieldValue $ Aeson.String "Rock")
+                                  [ [ ("Name", API.mkColumnFieldValue $ J.String "Rock")
                                     ]
                                   ]
                             )
                           ],
                         mkFieldsMap
-                          [ ("updatedRows_TrackId", API.mkColumnFieldValue $ Aeson.Number 5),
-                            ("updatedRows_Name", API.mkColumnFieldValue $ Aeson.String "Another Name"),
+                          [ ("updatedRows_TrackId", API.mkColumnFieldValue $ J.Number 5),
+                            ("updatedRows_Name", API.mkColumnFieldValue $ J.String "Another Name"),
                             ( "updatedRows_Genre",
                               API.mkRelationshipFieldValue $
                                 mkRowsQueryResponse
-                                  [ [ ("Name", API.mkColumnFieldValue $ Aeson.String "Rock")
+                                  [ [ ("Name", API.mkColumnFieldValue $ J.String "Rock")
                                     ]
                                   ]
                             )
@@ -214,19 +214,19 @@ tests = do
                            [ API.SetColumn $
                                API.RowColumnOperatorValue
                                  { API._rcovColumn = API.ColumnName "Name",
-                                   API._rcovValue = Aeson.String "Another Name",
+                                   API._rcovValue = J.String "Another Name",
                                    API._rcovValueType = API.ScalarType "string"
                                  },
                              API.CustomUpdateColumnOperator (API.UpdateColumnOperatorName [G.name|inc|]) $
                                API.RowColumnOperatorValue
                                  { API._rcovColumn = API.ColumnName "Milliseconds",
-                                   API._rcovValue = Aeson.Number 1000,
+                                   API._rcovValue = J.Number 1000,
                                    API._rcovValueType = API.ScalarType "number"
                                  },
                              API.SetColumn $
                                API.RowColumnOperatorValue
                                  { API._rcovColumn = API.ColumnName "AlbumId",
-                                   API._rcovValue = Aeson.Number 3,
+                                   API._rcovValue = J.Number 3,
                                    API._rcovValueType = API.ScalarType "number"
                                  }
                            ],
@@ -236,18 +236,18 @@ tests = do
                                [ API.ApplyBinaryComparisonOperator
                                    API.Equal
                                    (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number")),
+                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number")),
                                  API.ApplyBinaryComparisonOperator
                                    API.Equal
                                    (API.ComparisonColumn API.CurrentTable (API.ColumnName "GenreId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 1) (API.ScalarType "number"))
+                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 1) (API.ScalarType "number"))
                                ],
                          API._umoPostUpdateCheck =
                            Just $
                              API.ApplyBinaryComparisonOperator
                                API.GreaterThan
                                (API.ComparisonColumn API.CurrentTable (API.ColumnName "UnitPrice") $ API.ScalarType "number")
-                               (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 0) (API.ScalarType "number")),
+                               (API.ScalarValueComparison $ API.ScalarValue (J.Number 0) (API.ScalarType "number")),
                          API._umoReturningFields =
                            mkFieldsMap
                              [ ("updatedRows_TrackId", API.ColumnField (API.ColumnName "TrackId") (API.ScalarType "number")),
@@ -291,12 +291,12 @@ tests = do
                   API._morReturning =
                     Just
                       [ mkFieldsMap
-                          [ ("updatedRows_TrackId", API.mkColumnFieldValue $ Aeson.Number 3),
-                            ("updatedRows_Name", API.mkColumnFieldValue $ Aeson.String "Another Name"),
+                          [ ("updatedRows_TrackId", API.mkColumnFieldValue $ J.Number 3),
+                            ("updatedRows_Name", API.mkColumnFieldValue $ J.String "Another Name"),
                             ( "updatedRows_Genre",
                               API.mkRelationshipFieldValue $
                                 mkRowsQueryResponse
-                                  [ [ ("Name", API.mkColumnFieldValue $ Aeson.String "Rock")
+                                  [ [ ("Name", API.mkColumnFieldValue $ J.String "Rock")
                                     ]
                                   ]
                             )
@@ -308,23 +308,23 @@ tests = do
                   API._morReturning =
                     Just
                       [ mkFieldsMap
-                          [ ("updatedRows_TrackId", API.mkColumnFieldValue $ Aeson.Number 4),
-                            ("updatedRows_Name", API.mkColumnFieldValue $ Aeson.String "Better Name"),
+                          [ ("updatedRows_TrackId", API.mkColumnFieldValue $ J.Number 4),
+                            ("updatedRows_Name", API.mkColumnFieldValue $ J.String "Better Name"),
                             ( "updatedRows_Genre",
                               API.mkRelationshipFieldValue $
                                 mkRowsQueryResponse
-                                  [ [ ("Name", API.mkColumnFieldValue $ Aeson.String "Rock")
+                                  [ [ ("Name", API.mkColumnFieldValue $ J.String "Rock")
                                     ]
                                   ]
                             )
                           ],
                         mkFieldsMap
-                          [ ("updatedRows_TrackId", API.mkColumnFieldValue $ Aeson.Number 5),
-                            ("updatedRows_Name", API.mkColumnFieldValue $ Aeson.String "Better Name"),
+                          [ ("updatedRows_TrackId", API.mkColumnFieldValue $ J.Number 5),
+                            ("updatedRows_Name", API.mkColumnFieldValue $ J.String "Better Name"),
                             ( "updatedRows_Genre",
                               API.mkRelationshipFieldValue $
                                 mkRowsQueryResponse
-                                  [ [ ("Name", API.mkColumnFieldValue $ Aeson.String "Rock")
+                                  [ [ ("Name", API.mkColumnFieldValue $ J.String "Rock")
                                     ]
                                   ]
                             )
@@ -363,7 +363,7 @@ tests = do
             API.ApplyBinaryComparisonOperator
               API.GreaterThan
               (API.ComparisonColumn API.CurrentTable (API.ColumnName "UnitPrice") $ API.ScalarType "number")
-              (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 0) (API.ScalarType "number"))
+              (API.ScalarValueComparison $ API.ScalarValue (J.Number 0) (API.ScalarType "number"))
     let sharedReturning =
           mkFieldsMap
             [ ("updatedRows_TrackId", API.ColumnField (API.ColumnName "TrackId") (API.ScalarType "number")),
@@ -401,19 +401,19 @@ tests = do
                            [ API.SetColumn $
                                API.RowColumnOperatorValue
                                  { API._rcovColumn = API.ColumnName "Name",
-                                   API._rcovValue = Aeson.String "Another Name",
+                                   API._rcovValue = J.String "Another Name",
                                    API._rcovValueType = API.ScalarType "string"
                                  },
                              API.CustomUpdateColumnOperator (API.UpdateColumnOperatorName [G.name|inc|]) $
                                API.RowColumnOperatorValue
                                  { API._rcovColumn = API.ColumnName "Milliseconds",
-                                   API._rcovValue = Aeson.Number 1000,
+                                   API._rcovValue = J.Number 1000,
                                    API._rcovValueType = API.ScalarType "number"
                                  },
                              API.SetColumn $
                                API.RowColumnOperatorValue
                                  { API._rcovColumn = API.ColumnName "AlbumId",
-                                   API._rcovValue = Aeson.Number 3,
+                                   API._rcovValue = J.Number 3,
                                    API._rcovValueType = API.ScalarType "number"
                                  }
                            ],
@@ -423,11 +423,11 @@ tests = do
                                [ API.ApplyBinaryComparisonOperator
                                    API.Equal
                                    (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number")),
+                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number")),
                                  API.ApplyBinaryComparisonOperator
                                    API.Equal
                                    (API.ComparisonColumn API.CurrentTable (API.ColumnName "TrackId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number"))
+                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number"))
                                ],
                          API._umoPostUpdateCheck = sharedPostUpdateCheck,
                          API._umoReturningFields = sharedReturning
@@ -439,19 +439,19 @@ tests = do
                            [ API.SetColumn $
                                API.RowColumnOperatorValue
                                  { API._rcovColumn = API.ColumnName "Name",
-                                   API._rcovValue = Aeson.String "Better Name",
+                                   API._rcovValue = J.String "Better Name",
                                    API._rcovValueType = API.ScalarType "string"
                                  },
                              API.CustomUpdateColumnOperator (API.UpdateColumnOperatorName [G.name|inc|]) $
                                API.RowColumnOperatorValue
                                  { API._rcovColumn = API.ColumnName "UnitPrice",
-                                   API._rcovValue = Aeson.Number 1,
+                                   API._rcovValue = J.Number 1,
                                    API._rcovValueType = API.ScalarType "number"
                                  },
                              API.SetColumn $
                                API.RowColumnOperatorValue
                                  { API._rcovColumn = API.ColumnName "AlbumId",
-                                   API._rcovValue = Aeson.Number 3,
+                                   API._rcovValue = J.Number 3,
                                    API._rcovValueType = API.ScalarType "number"
                                  }
                            ],
@@ -461,11 +461,11 @@ tests = do
                                [ API.ApplyBinaryComparisonOperator
                                    API.Equal
                                    (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number")),
+                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number")),
                                  API.ApplyBinaryComparisonOperator
                                    API.GreaterThan
                                    (API.ComparisonColumn API.CurrentTable (API.ColumnName "TrackId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 3) (API.ScalarType "number"))
+                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number"))
                                ],
                          API._umoPostUpdateCheck = sharedPostUpdateCheck,
                          API._umoReturningFields = sharedReturning

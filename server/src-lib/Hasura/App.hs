@@ -71,7 +71,7 @@ import Control.Monad.Stateless
 import Control.Monad.Trans.Control (MonadBaseControl (..))
 import Control.Monad.Trans.Managed (ManagedT (..), allocate, allocate_)
 import Control.Retry qualified as Retry
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Data.ByteString.Char8 qualified as BC
 import Data.ByteString.Lazy qualified as BL
 import Data.ByteString.Lazy.Char8 qualified as BLC
@@ -198,8 +198,8 @@ instance Exception ExitException
 throwErrExit :: (MonadIO m) => forall a. ExitCode -> String -> m a
 throwErrExit reason = liftIO . throwIO . ExitException reason . BC.pack
 
-throwErrJExit :: (A.ToJSON a, MonadIO m) => forall b. ExitCode -> a -> m b
-throwErrJExit reason = liftIO . throwIO . ExitException reason . BLC.toStrict . A.encode
+throwErrJExit :: (J.ToJSON a, MonadIO m) => forall b. ExitCode -> a -> m b
+throwErrJExit reason = liftIO . throwIO . ExitException reason . BLC.toStrict . J.encode
 
 accessDeniedErrMsg :: Text
 accessDeniedErrMsg = "restricted access : admin only"
@@ -207,8 +207,8 @@ accessDeniedErrMsg = "restricted access : admin only"
 --------------------------------------------------------------------------------
 -- Printing helpers (move to another module!)
 
-printJSON :: (A.ToJSON a, MonadIO m) => a -> m ()
-printJSON = liftIO . BLC.putStrLn . A.encode
+printJSON :: (J.ToJSON a, MonadIO m) => a -> m ()
+printJSON = liftIO . BLC.putStrLn . J.encode
 
 --------------------------------------------------------------------------------
 -- Logging
@@ -390,7 +390,7 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
       StartupLog
         { slLogLevel = LevelWarn,
           slKind = "no_admin_secret",
-          slInfo = A.toJSON ("WARNING: No admin secret provided" :: Text)
+          slInfo = J.toJSON ("WARNING: No admin secret provided" :: Text)
         }
 
   -- SIDE EFFECT: log all server options.
@@ -567,7 +567,7 @@ migrateCatalogAndFetchMetadata
           StartupLog
             { slLogLevel = LevelError,
               slKind = "catalog_migrate",
-              slInfo = A.toJSON err
+              slInfo = J.toJSON err
             }
         liftIO (throwErrJExit DatabaseMigrationError err)
       Right (migrationResult, metadataWithVersion) -> do
@@ -615,7 +615,7 @@ buildFirstSchemaCache
         StartupLog
           { slLogLevel = LevelError,
             slKind = "catalog_migrate",
-            slInfo = A.toJSON err
+            slInfo = J.toJSON err
           }
       liftIO (throwErrJExit DatabaseMigrationError err)
 
@@ -735,7 +735,7 @@ instance ConsoleRenderer AppM where
 
 instance MonadVersionAPIWithExtraData AppM where
   -- we always default to CE as the `server_type` in this codebase
-  getExtraDataForVersionAPI = return ["server_type" A..= ("ce" :: Text)]
+  getExtraDataForVersionAPI = return ["server_type" J..= ("ce" :: Text)]
 
 instance MonadGQLExecutionCheck AppM where
   checkGQLExecution userInfo _ enableAL sc query _ = runExceptT $ do
@@ -1367,7 +1367,7 @@ getCatalogStateTx =
     mkCatalogState (dbId, PG.ViaJSON cliState, PG.ViaJSON consoleState) =
       CatalogState dbId cliState consoleState
 
-setCatalogStateTx :: CatalogStateType -> A.Value -> PG.TxE QErr ()
+setCatalogStateTx :: CatalogStateType -> J.Value -> PG.TxE QErr ()
 setCatalogStateTx stateTy stateValue =
   case stateTy of
     CSTCli ->
@@ -1402,16 +1402,16 @@ mkConsoleHTML ::
 mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn ceConsoleType =
   renderHtmlTemplate consoleTmplt $
     -- variables required to render the template
-    A.object
-      [ "isAdminSecretSet" A..= isAdminSecretSet authMode,
-        "consolePath" A..= consolePath,
-        "enableTelemetry" A..= boolToText (isTelemetryEnabled enableTelemetry),
-        "cdnAssets" A..= boolToText (isNothing consoleAssetsDir),
-        "consoleSentryDsn" A..= fromMaybe "" consoleSentryDsn,
-        "assetsVersion" A..= consoleAssetsVersion,
-        "serverVersion" A..= currentVersion,
-        "consoleType" A..= ceConsoleTypeIdentifier ceConsoleType, -- TODO(awjchen): This is a kludge that will be removed when the entitlement service is fully implemented.
-        "consoleSentryDsn" A..= ("" :: Text)
+    J.object
+      [ "isAdminSecretSet" J..= isAdminSecretSet authMode,
+        "consolePath" J..= consolePath,
+        "enableTelemetry" J..= boolToText (isTelemetryEnabled enableTelemetry),
+        "cdnAssets" J..= boolToText (isNothing consoleAssetsDir),
+        "consoleSentryDsn" J..= fromMaybe "" consoleSentryDsn,
+        "assetsVersion" J..= consoleAssetsVersion,
+        "serverVersion" J..= currentVersion,
+        "consoleType" J..= ceConsoleTypeIdentifier ceConsoleType, -- TODO(awjchen): This is a kludge that will be removed when the entitlement service is fully implemented.
+        "consoleSentryDsn" J..= ("" :: Text)
       ]
   where
     consolePath = case path of

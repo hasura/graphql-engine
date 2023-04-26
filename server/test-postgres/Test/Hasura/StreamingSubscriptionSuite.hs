@@ -9,7 +9,7 @@ import Control.Concurrent.MVar qualified as MVar
 import Control.Concurrent.STM qualified as STM
 import Control.Immortal qualified as Immortal
 import Control.Lens ((.~))
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Data.ByteString.Lazy.UTF8 qualified as LBS
 import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as T
@@ -371,7 +371,7 @@ streamingSubscriptionPollingSpec srcConfig = do
       let logger :: Logger Hasura = Logger $ \l -> do
             let (logLevel, logType :: EngineLogType Hasura, logDetail) = toEngineLog l
             t <- liftIO $ getFormattedTime Nothing
-            liftIO $ putStrLn $ LBS.toString $ A.encode $ EngineLog t logLevel logType logDetail
+            liftIO $ putStrLn $ LBS.toString $ J.encode $ EngineLog t logLevel logType logDetail
 
           subOptions = mkSubscriptionsOptions Nothing Nothing
           addStreamSubQuery subscriberMetadata reqId =

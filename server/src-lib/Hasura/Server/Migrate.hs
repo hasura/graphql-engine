@@ -28,7 +28,7 @@ module Hasura.Server.Migrate
 where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Data.FileEmbed (makeRelativeToProject)
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text qualified as T
@@ -78,7 +78,7 @@ instance ToEngineLog MigrationResult Hasura where
       StartupLog
         { slLogLevel = LevelInfo,
           slKind = "catalog_migrate",
-          slInfo = A.toJSON $ case result of
+          slInfo = J.toJSON $ case result of
             MRNothingToDo ->
               "Already at the latest catalog version ("
                 <> latestCatalogVersionString

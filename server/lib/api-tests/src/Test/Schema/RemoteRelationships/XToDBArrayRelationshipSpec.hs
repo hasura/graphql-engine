@@ -12,7 +12,7 @@ module Test.Schema.RemoteRelationships.XToDBArrayRelationshipSpec (spec) where
 
 import Control.Lens (findOf, has, only, (^?!))
 import Data.Aeson (Value (..))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Lens (key, values, _String)
 import Data.Char (isUpper, toLower)
 import Data.List.NonEmpty qualified as NE
@@ -184,7 +184,7 @@ rhsSQLServer =
 
 rhsSqlite :: RHSFixture
 rhsSqlite =
-  let sqliteRhsTableName = Aeson.toJSON ["main", rhsTableName_]
+  let sqliteRhsTableName = J.toJSON ["main", rhsTableName_]
       fixture =
         (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
           { Fixture.mkLocalTestEnvironment = Fixture.noLocalTestEnvironment,
@@ -307,7 +307,7 @@ rhsRole2 =
         selectPermissionTable = rhsTableName_,
         selectPermissionColumns = (["id", "title", "artist_id"] :: [Text]),
         selectPermissionAllowAggregations = True,
-        selectPermissionLimit = Aeson.Number 2,
+        selectPermissionLimit = J.Number 2,
         selectPermissionRows =
           [yaml|
         artist_id:
@@ -316,14 +316,14 @@ rhsRole2 =
         selectPermissionSource = Just rhsSourceName_
       }
 
-mkLhsTable :: Schema.SchemaName -> Aeson.Value
+mkLhsTable :: Schema.SchemaName -> J.Value
 mkLhsTable (Schema.SchemaName schemaName) =
   [yaml|
     schema: *schemaName
     name: *lhsTableName_
   |]
 
-rhsTable :: Aeson.Value
+rhsTable :: J.Value
 rhsTable =
   [yaml|
     schema: hasura
@@ -447,7 +447,7 @@ lhsSqliteSetup rhsTableName (wholeTestEnvironment, _) = do
   (API.Config sourceConfig) <- Sqlite.createEmptyDatasetCloneSourceConfig cloneName
 
   -- Add remote source
-  Schema.addSource lhsSourceName_ (Aeson.Object sourceConfig) testEnvironment
+  Schema.addSource lhsSourceName_ (J.Object sourceConfig) testEnvironment
 
   -- Setup tables
   Sqlite.createTable sourceName testEnvironment artist
@@ -461,7 +461,7 @@ lhsSqliteSetup rhsTableName (wholeTestEnvironment, _) = do
   GraphqlEngine.postMetadata_ testEnvironment do
     Permissions.createPermissionMetadata testEnvironment lhsRole2
 
-  let sqliteLhsTableName = Aeson.toJSON ["main", lhsTableName_]
+  let sqliteLhsTableName = J.toJSON ["main", lhsTableName_]
   createRemoteRelationship sqliteLhsTableName rhsTableName testEnvironment
 
   pure cloneName
@@ -759,7 +759,7 @@ rhsSqliteSetup (wholeTestEnvironment, _) = do
   (API.Config sourceConfig) <- Sqlite.createEmptyDatasetCloneSourceConfig cloneName
 
   -- Add remote source
-  Schema.addSource rhsSourceName_ (Aeson.Object sourceConfig) testEnvironment
+  Schema.addSource rhsSourceName_ (J.Object sourceConfig) testEnvironment
 
   -- Setup tables
   Sqlite.createTable sourceName testEnvironment album

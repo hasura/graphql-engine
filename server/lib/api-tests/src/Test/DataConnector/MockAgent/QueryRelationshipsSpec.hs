@@ -6,7 +6,7 @@ module Test.DataConnector.MockAgent.QueryRelationshipsSpec (spec) where
 --------------------------------------------------------------------------------
 
 import Control.Lens ((.~), (?~))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
@@ -54,7 +54,7 @@ spec = do
 testRoleName :: ByteString
 testRoleName = "test-role"
 
-sourceMetadata :: Aeson.Value
+sourceMetadata :: J.Value
 sourceMetadata =
   let source = BackendType.backendSourceName Mock.backendTypeMetadata
       backendType = BackendType.backendTypeString Mock.backendTypeMetadata
@@ -159,17 +159,17 @@ tests = describe "Object Relationships Tests" $ do
           |]
     let queryResponse =
           mkRowsQueryResponse
-            [ [ ("Name", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock (We Salute You)"),
+            [ [ ("Name", API.mkColumnFieldValue $ J.String "For Those About To Rock (We Salute You)"),
                 ( "Genre",
                   API.mkRelationshipFieldValue $
                     mkRowsQueryResponse
-                      [ [("Name", API.mkColumnFieldValue $ Aeson.String "Rock")]
+                      [ [("Name", API.mkColumnFieldValue $ J.String "Rock")]
                       ]
                 ),
                 ( "MediaType",
                   API.mkRelationshipFieldValue $
                     mkRowsQueryResponse
-                      [ [("Name", API.mkColumnFieldValue $ Aeson.String "MPEG audio file")]
+                      [ [("Name", API.mkColumnFieldValue $ J.String "MPEG audio file")]
                       ]
                 )
               ]
@@ -264,12 +264,12 @@ tests = describe "Object Relationships Tests" $ do
                       [ [ ( "Artist",
                             API.mkRelationshipFieldValue $
                               mkRowsQueryResponse
-                                [[("Name", API.mkColumnFieldValue $ Aeson.String "Zeca Pagodinho")]]
+                                [[("Name", API.mkColumnFieldValue $ J.String "Zeca Pagodinho")]]
                           )
                         ]
                       ]
                 ),
-                ("Name", API.mkColumnFieldValue $ Aeson.String "Camarão que Dorme e Onda Leva")
+                ("Name", API.mkColumnFieldValue $ J.String "Camarão que Dorme e Onda Leva")
               ]
             ]
     let mockConfig = mockQueryResponse queryResponse
@@ -380,7 +380,7 @@ tests = describe "Object Relationships Tests" $ do
           |]
     let queryResponse =
           mkRowsQueryResponse
-            [ [ ("EmployeeId", API.mkColumnFieldValue $ Aeson.Number 3)
+            [ [ ("EmployeeId", API.mkColumnFieldValue $ J.Number 3)
               ]
             ]
     let mockConfig = mockQueryResponse queryResponse
@@ -468,7 +468,7 @@ noRelationshipsCapabilityMockConfig =
           & API.crCapabilities . API.cRelationships .~ Nothing -- Remove relationships capability
     }
 
-noRelationshipsCapabilitySourceMetadata :: Aeson.Value
+noRelationshipsCapabilitySourceMetadata :: J.Value
 noRelationshipsCapabilitySourceMetadata =
   let source = BackendType.backendSourceName Mock.backendTypeMetadata
       backendType = BackendType.backendTypeString Mock.backendTypeMetadata

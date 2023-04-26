@@ -18,7 +18,7 @@ where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KeyMap
 import Data.Text qualified as Text
 import Data.Text.Extended qualified as Text (commaSeparated)
@@ -76,7 +76,7 @@ setupTablesAction ts env =
     (const $ teardown ts (env, ()))
 
 -- | Metadata source information for the default Sqlite instance.
-sourceMetadata :: API.Config -> Aeson.Value
+sourceMetadata :: API.Config -> J.Value
 sourceMetadata (API.Config config) =
   let source = Fixture.backendSourceName backendTypeMetadata
       backendType = BackendType.backendTypeString backendTypeMetadata
@@ -88,7 +88,7 @@ sourceMetadata (API.Config config) =
           value: *config
       |]
 
-backendConfig :: Aeson.Value
+backendConfig :: J.Value
 backendConfig =
   let backendType = BackendType.backendTypeString backendTypeMetadata
    in [yaml|
@@ -110,7 +110,7 @@ deleteDatasetClone cloneName =
 
 enableExplicitMainSchema :: API.Config -> API.Config
 enableExplicitMainSchema (API.Config config) =
-  API.Config $ KeyMap.insert "explicit_main_schema" (Aeson.Bool True) config
+  API.Config $ KeyMap.insert "explicit_main_schema" (J.Bool True) config
 
 setupSqliteAgent :: TestEnvironment -> IO ()
 setupSqliteAgent testEnvironment =

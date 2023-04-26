@@ -36,7 +36,7 @@ module Harness.Schema.Table
   )
 where
 
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Time (defaultTimeLocale)
 import Data.Time.Format (parseTimeOrError)
 import Harness.Test.ScalarType
@@ -117,7 +117,7 @@ data NativeQuery = NativeQuery
     nativeQueryLogicalModel :: Text,
     nativeQueryQuery :: Text,
     nativeQueryArguments :: [NativeQueryColumn],
-    nativeQueryArrayRelationships :: [Aeson.Value]
+    nativeQueryArrayRelationships :: [J.Value]
   }
   deriving (Show, Eq)
 

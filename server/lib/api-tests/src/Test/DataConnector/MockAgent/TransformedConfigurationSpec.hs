@@ -6,7 +6,7 @@ module Test.DataConnector.MockAgent.TransformedConfigurationSpec (spec) where
 --------------------------------------------------------------------------------
 
 import Control.Lens ((?~))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
@@ -42,7 +42,7 @@ spec =
 
 --------------------------------------------------------------------------------
 
-sourceMetadata :: Aeson.Value
+sourceMetadata :: J.Value
 sourceMetadata =
   let source = BackendType.backendSourceName Mock.backendTypeMetadata
       backendType = BackendType.backendTypeString Mock.backendTypeMetadata
@@ -115,8 +115,8 @@ tests = describe "Transformed Configuration Tests" $ do
           |]
     let queryResponse =
           mkRowsQueryResponse
-            [ [ ("id", API.mkColumnFieldValue $ Aeson.Number 1),
-                ("title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
+            [ [ ("id", API.mkColumnFieldValue $ J.Number 1),
+                ("title", API.mkColumnFieldValue $ J.String "For Those About To Rock We Salute You")
               ]
             ]
     let mockConfig = mockQueryResponse queryResponse
@@ -146,7 +146,7 @@ tests = describe "Transformed Configuration Tests" $ do
               )
         )
 
-    Aeson.toJSON _mrrRecordedRequestConfig
+    J.toJSON _mrrRecordedRequestConfig
       `shouldBeYaml` [yaml|
           DEBUG:
             config: "baz config default"

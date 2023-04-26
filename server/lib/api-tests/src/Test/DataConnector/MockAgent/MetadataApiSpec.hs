@@ -7,7 +7,7 @@ module Test.DataConnector.MockAgent.MetadataApiSpec where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Lens (_Array)
 import Data.List.NonEmpty qualified as NE
 import Data.Vector qualified as Vector
@@ -38,7 +38,7 @@ spec =
     )
     tests
 
-sourceMetadata :: Aeson.Value
+sourceMetadata :: J.Value
 sourceMetadata =
   let source = BackendType.backendSourceName Mock.backendTypeMetadata
       backendType = BackendType.backendTypeString Mock.backendTypeMetadata
@@ -78,7 +78,7 @@ tests = do
       let expectedStatusCode = 200
       MockRequestResults {..} <- performMetadataRequest defaultMockRequestConfig expectedStatusCode request
 
-      Aeson.toJSON _mrrRecordedRequestConfig
+      J.toJSON _mrrRecordedRequestConfig
         `shouldBe` [yaml|
             DEBUG:
               test: data

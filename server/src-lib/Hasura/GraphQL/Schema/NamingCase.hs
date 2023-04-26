@@ -9,7 +9,7 @@ module Hasura.GraphQL.Schema.NamingCase
 where
 
 import Autodocodec qualified as AC
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.HashSet qualified as Set
 import Hasura.Prelude
 import Hasura.Server.Types (ExperimentalFeature (..))
@@ -24,12 +24,12 @@ instance AC.HasCodec NamingCase where
     AC.named "NamingCase" $
       AC.stringConstCodec [(HasuraCase, "hasura-default"), (GraphqlCase, "graphql-default")]
 
-instance Aeson.ToJSON NamingCase where
-  toJSON HasuraCase = Aeson.String "hasura-default"
-  toJSON GraphqlCase = Aeson.String "graphql-default"
+instance J.ToJSON NamingCase where
+  toJSON HasuraCase = J.String "hasura-default"
+  toJSON GraphqlCase = J.String "graphql-default"
 
-instance Aeson.FromJSON NamingCase where
-  parseJSON = Aeson.withText "NamingCase" $ \s -> case parseNamingConventionFromText s of
+instance J.FromJSON NamingCase where
+  parseJSON = J.withText "NamingCase" $ \s -> case parseNamingConventionFromText s of
     (Right nc) -> pure nc
     (Left err) -> fail err
 

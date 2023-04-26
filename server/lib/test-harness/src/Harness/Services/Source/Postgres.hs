@@ -9,9 +9,9 @@ module Harness.Services.Source.Postgres
   )
 where
 
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
-import Data.Aeson.Types qualified as A
+import Data.Aeson.Types qualified as J
 import Data.Has
 import Harness.Logging
 import Harness.Quoter.Yaml (yaml)
@@ -144,10 +144,10 @@ pg_track_table testEnvironment (Schema.Table {tableName, tableColumns}) = do
 
   return ()
   where
-    columnsConfig :: [Schema.Column] -> A.Value
-    columnsConfig = A.object . mapMaybe columnConfig
+    columnsConfig :: [Schema.Column] -> J.Value
+    columnsConfig = J.object . mapMaybe columnConfig
 
-    columnConfig :: Schema.Column -> Maybe A.Pair
+    columnConfig :: Schema.Column -> Maybe J.Pair
     columnConfig col = do
       alias <- Schema.columnGqlAlias col
       return $

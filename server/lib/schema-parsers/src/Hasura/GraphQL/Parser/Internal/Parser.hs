@@ -16,7 +16,7 @@ where
 import Control.Arrow ((&&&))
 import Control.Monad (unless, when, (>=>))
 import Control.Monad.Except (MonadError (throwError))
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.Types (JSONPathElement (Key))
 import Data.Foldable (for_, toList)
@@ -91,7 +91,7 @@ nullable parser =
       { pType = schemaType,
         pParser =
           peelVariable (toGraphQLType schemaType) >=> \case
-            JSONValue A.Null -> pure Nothing
+            JSONValue J.Null -> pure Nothing
             GraphQLValue VNull -> pure Nothing
             value -> Just <$> pParser parser value
       }

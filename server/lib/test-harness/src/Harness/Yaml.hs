@@ -14,7 +14,7 @@ module Harness.Yaml
 where
 
 import Data.Aeson (Value (..))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
 import Data.Has
 import Data.Text qualified as T
@@ -88,7 +88,7 @@ parseToMatch (Number _) (String text) =
     Just actual -> Number actual
     Nothing -> String text
 parseToMatch (Object expected) (Object actual) = do
-  let walk :: KM.KeyMap Value -> Aeson.Key -> Value -> Value
+  let walk :: KM.KeyMap Value -> J.Key -> Value -> Value
       walk reference key current =
         case KM.lookup key reference of
           Just this -> parseToMatch this current
@@ -144,16 +144,16 @@ shouldAtLeastBe actual expected =
 -- * For arrays, there is a contiguous segment in 'sup' in which all elements are subset-related with 'sub' in order
 -- * For objects, the keys of 'sub' are a subset of those of 'sup', and all their associated values are also subset-related
 -- * Leaf values are identical
-jsonSubsetOf :: Aeson.Value -> Aeson.Value -> Bool
-jsonSubsetOf (Aeson.Array sub) (Aeson.Array sup) = sub `subarrayOf` sup
-jsonSubsetOf (Aeson.Object sub) (Aeson.Object sup) = sub `subobjectOf` sup
-jsonSubsetOf (Aeson.String sub) (Aeson.String sup) = sub == sup
-jsonSubsetOf (Aeson.Number sub) (Aeson.Number sup) = sub == sup
-jsonSubsetOf (Aeson.Bool sub) (Aeson.Bool sup) = sub == sup
-jsonSubsetOf Aeson.Null Aeson.Null = True
+jsonSubsetOf :: J.Value -> J.Value -> Bool
+jsonSubsetOf (J.Array sub) (J.Array sup) = sub `subarrayOf` sup
+jsonSubsetOf (J.Object sub) (J.Object sup) = sub `subobjectOf` sup
+jsonSubsetOf (J.String sub) (J.String sup) = sub == sup
+jsonSubsetOf (J.Number sub) (J.Number sup) = sub == sup
+jsonSubsetOf (J.Bool sub) (J.Bool sup) = sub == sup
+jsonSubsetOf J.Null J.Null = True
 jsonSubsetOf _sub _sup = False
 
-subobjectOf :: KM.KeyMap Aeson.Value -> KM.KeyMap Aeson.Value -> Bool
+subobjectOf :: KM.KeyMap J.Value -> KM.KeyMap J.Value -> Bool
 subobjectOf sub sup =
   KM.foldr (&&) True $
     KM.alignWith
@@ -165,7 +165,7 @@ subobjectOf sub sup =
       sub
       sup
 
-subarrayOf :: V.Vector Aeson.Value -> V.Vector Aeson.Value -> Bool
+subarrayOf :: V.Vector J.Value -> V.Vector J.Value -> Bool
 subarrayOf sub sup | V.length sub > V.length sup = False
 subarrayOf sub sup | V.and $ V.zipWith jsonSubsetOf sub sup = True
 subarrayOf sub sup = subarrayOf sub (V.tail sup)

@@ -4,7 +4,7 @@ module Test.DataConnector.MockAgent.InsertMutationsSpec
 where
 
 import Control.Lens ((.~), (?~))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
@@ -41,7 +41,7 @@ spec =
 testRoleName :: ByteString
 testRoleName = "test-role"
 
-sourceMetadata :: Aeson.Value
+sourceMetadata :: J.Value
 sourceMetadata =
   let source = BackendType.backendSourceName Mock.backendTypeMetadata
       backendType = BackendType.backendTypeString Mock.backendTypeMetadata
@@ -119,25 +119,25 @@ tests = do
                   API._morReturning =
                     Just
                       [ mkFieldsMap
-                          [ ("insertedRows_AlbumId", API.mkColumnFieldValue $ Aeson.Number 9001),
-                            ("insertedRows_Title", API.mkColumnFieldValue $ Aeson.String "Super Mega Rock"),
+                          [ ("insertedRows_AlbumId", API.mkColumnFieldValue $ J.Number 9001),
+                            ("insertedRows_Title", API.mkColumnFieldValue $ J.String "Super Mega Rock"),
                             ( "insertedRows_Artist",
                               API.mkRelationshipFieldValue $
                                 mkRowsQueryResponse
-                                  [ [ ("ArtistId", API.mkColumnFieldValue $ Aeson.Number 2),
-                                      ("Name", API.mkColumnFieldValue $ Aeson.String "Accept")
+                                  [ [ ("ArtistId", API.mkColumnFieldValue $ J.Number 2),
+                                      ("Name", API.mkColumnFieldValue $ J.String "Accept")
                                     ]
                                   ]
                             )
                           ],
                         mkFieldsMap
-                          [ ("insertedRows_AlbumId", API.mkColumnFieldValue $ Aeson.Number 9002),
-                            ("insertedRows_Title", API.mkColumnFieldValue $ Aeson.String "Accept This"),
+                          [ ("insertedRows_AlbumId", API.mkColumnFieldValue $ J.Number 9002),
+                            ("insertedRows_Title", API.mkColumnFieldValue $ J.String "Accept This"),
                             ( "insertedRows_Artist",
                               API.mkRelationshipFieldValue $
                                 mkRowsQueryResponse
-                                  [ [ ("ArtistId", API.mkColumnFieldValue $ Aeson.Number 2),
-                                      ("Name", API.mkColumnFieldValue $ Aeson.String "Accept")
+                                  [ [ ("ArtistId", API.mkColumnFieldValue $ J.Number 2),
+                                      ("Name", API.mkColumnFieldValue $ J.String "Accept")
                                     ]
                                   ]
                             )
@@ -203,15 +203,15 @@ tests = do
                          API._imoRows =
                            [ API.RowObject $
                                mkFieldsMap
-                                 [ ("AlbumId", API.mkColumnInsertFieldValue $ Aeson.Number 9001),
-                                   ("ArtistId", API.mkColumnInsertFieldValue $ Aeson.Number 2),
-                                   ("Title", API.mkColumnInsertFieldValue $ Aeson.String "Super Mega Rock")
+                                 [ ("AlbumId", API.mkColumnInsertFieldValue $ J.Number 9001),
+                                   ("ArtistId", API.mkColumnInsertFieldValue $ J.Number 2),
+                                   ("Title", API.mkColumnInsertFieldValue $ J.String "Super Mega Rock")
                                  ],
                              API.RowObject $
                                mkFieldsMap
-                                 [ ("AlbumId", API.mkColumnInsertFieldValue $ Aeson.Number 9002),
-                                   ("ArtistId", API.mkColumnInsertFieldValue $ Aeson.Number 2),
-                                   ("Title", API.mkColumnInsertFieldValue $ Aeson.String "Accept This")
+                                 [ ("AlbumId", API.mkColumnInsertFieldValue $ J.Number 9002),
+                                   ("ArtistId", API.mkColumnInsertFieldValue $ J.Number 2),
+                                   ("Title", API.mkColumnInsertFieldValue $ J.String "Accept This")
                                  ]
                            ],
                          API._imoPostInsertCheck =
@@ -219,7 +219,7 @@ tests = do
                              API.ApplyBinaryComparisonOperator
                                API.Equal
                                (API.ComparisonColumn API.CurrentTable (API.ColumnName "ArtistId") $ API.ScalarType "number")
-                               (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 2) (API.ScalarType "number")),
+                               (API.ScalarValueComparison $ API.ScalarValue (J.Number 2) (API.ScalarType "number")),
                          API._imoReturningFields =
                            mkFieldsMap
                              [ ("insertedRows_AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),

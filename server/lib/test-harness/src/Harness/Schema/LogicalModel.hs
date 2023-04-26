@@ -16,7 +16,7 @@ module Harness.Schema.LogicalModel
 where
 
 import Data.Aeson (Value, (.=))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Vector qualified as V
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -75,12 +75,12 @@ trackLogicalModelCommand :: String -> BackendTypeConfig -> LogicalModel -> Value
 trackLogicalModelCommand sourceName backendTypeConfig (LogicalModel {logicalModelDescription, logicalModelName, logicalModelColumns}) =
   -- return type is an array of items
   let returnTypeToJson =
-        Aeson.Array
+        J.Array
           . V.fromList
           . fmap
             ( \case
                 LogicalModelReference {..} ->
-                  Aeson.object $
+                  J.object $
                     [ ("logical_model" .= logicalModelColumnReference),
                       ("name" .= logicalModelColumnName)
                     ]
@@ -88,7 +88,7 @@ trackLogicalModelCommand sourceName backendTypeConfig (LogicalModel {logicalMode
                   let descriptionPair = case logicalModelColumnDescription of
                         Just desc -> [("description" .= desc)]
                         Nothing -> []
-                   in Aeson.object $
+                   in J.object $
                         [ ("name" .= logicalModelColumnName),
                           ("type" .= (BackendType.backendScalarType backendTypeConfig) logicalModelColumnType),
                           ("nullable" .= logicalModelColumnNullable)

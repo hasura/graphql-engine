@@ -10,7 +10,7 @@ module Test.DataConnector.MockAgent.TestHelpers
   )
 where
 
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
@@ -30,10 +30,10 @@ emptyMutationRequest = API.MutationRequest [] [] []
 mkRowsQueryResponse :: [[(Text, API.FieldValue)]] -> API.QueryResponse
 mkRowsQueryResponse rows = API.QueryResponse (Just $ mkFieldsMap <$> rows) Nothing
 
-mkAggregatesQueryResponse :: [(Text, Aeson.Value)] -> API.QueryResponse
+mkAggregatesQueryResponse :: [(Text, J.Value)] -> API.QueryResponse
 mkAggregatesQueryResponse aggregates = API.QueryResponse Nothing (Just $ mkFieldsMap aggregates)
 
-mkQueryResponse :: [[(Text, API.FieldValue)]] -> [(Text, Aeson.Value)] -> API.QueryResponse
+mkQueryResponse :: [[(Text, API.FieldValue)]] -> [(Text, J.Value)] -> API.QueryResponse
 mkQueryResponse rows aggregates = API.QueryResponse (Just $ mkFieldsMap <$> rows) (Just $ mkFieldsMap aggregates)
 
 mkFieldsMap :: [(Text, v)] -> HashMap API.FieldName v

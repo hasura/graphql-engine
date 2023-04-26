@@ -17,7 +17,7 @@ where
 --------------------------------------------------------------------------------
 
 import Control.Monad.Managed (Managed)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
 import Harness.DataConnectorAgent (createManagedClone)
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -31,9 +31,9 @@ import Hasura.Prelude
 
 data ChinookTestEnv = ChinookTestEnv
   { -- | Default configuration JSON for the backend source.
-    backendSourceConfig :: Aeson.Value,
+    backendSourceConfig :: J.Value,
     -- | Default configuration for the backend config that sets the agent configuration
-    backendAgentConfig :: Aeson.Value,
+    backendAgentConfig :: J.Value,
     -- | Name formatting functions to correct for backend-specific naming rules
     nameFormatting :: NameFormatting,
     -- | Backend-specific expected scalar types
@@ -67,7 +67,7 @@ mkChinookCloneTestEnvironment nameFormatting scalarTypes testEnv = do
   agentUrl <- Fixture.backendServerUrl backendTypeConfig `onNothing` fail ("Backend " <> show (Fixture.backendType backendTypeConfig) <> " does not have a server url")
   cloneConfig <- API._dccrConfig <$> createManagedClone agentUrl testEnv (API.DatasetTemplateName "Chinook")
   let agentBackendConfig = mkAgentBackendConfig backendTypeConfig
-  let cloneConfigValue = Aeson.Object $ API.unConfig cloneConfig
+  let cloneConfigValue = J.Object $ API.unConfig cloneConfig
   let sourceConfig =
         [yaml|
           value: *cloneConfigValue
@@ -79,7 +79,7 @@ mkChinookCloneTestEnvironment nameFormatting scalarTypes testEnv = do
 -- | Create a test environment that uses the source config specified to connect to a specific DB on the agent
 -- that contains the Chinook dataset.
 -- This should be used with agents that do not support datasets.
-mkChinookStaticTestEnvironment :: NameFormatting -> ScalarTypes -> Aeson.Value -> TestEnvironment -> Managed ChinookTestEnv
+mkChinookStaticTestEnvironment :: NameFormatting -> ScalarTypes -> J.Value -> TestEnvironment -> Managed ChinookTestEnv
 mkChinookStaticTestEnvironment nameFormatting scalarTypes sourceConfig testEnv = do
   backendTypeConfig <- getBackendTypeConfig testEnv `onNothing` fail "Unable to find backend type config in this test environment"
   let agentBackendConfig = mkAgentBackendConfig backendTypeConfig
@@ -90,7 +90,7 @@ mkChinookStaticTestEnvironment nameFormatting scalarTypes sourceConfig testEnv =
 -- | Sets up a source in HGE using the source returned by 'mkSourceMetadata'
 setupCustomSourceAction ::
   -- | Function that makes a source metadata, taking the 'BackendTypeConfig' and source's configuration as its input parameters
-  (Fixture.BackendTypeConfig -> Aeson.Value -> Aeson.Value) ->
+  (Fixture.BackendTypeConfig -> J.Value -> J.Value) ->
   (TestEnvironment, ChinookTestEnv) ->
   Fixture.SetupAction
 setupCustomSourceAction mkSourceMetadata testEnvs@(testEnv, _chinookTestEnv) =
@@ -104,7 +104,7 @@ setupChinookSourceAction = setupCustomSourceAction mkChinookSourceMetadata
 
 setupCustomSource ::
   -- | Function that makes a source metadata, taking the 'BackendTypeConfig' and source's configuration as its input parameters
-  (Fixture.BackendTypeConfig -> Aeson.Value -> Aeson.Value) ->
+  (Fixture.BackendTypeConfig -> J.Value -> J.Value) ->
   (TestEnvironment, ChinookTestEnv) ->
   IO ()
 setupCustomSource mkSourceMetadata (testEnv, ChinookTestEnv {..}) = do
@@ -120,7 +120,7 @@ teardown testEnvironment = do
 
 --------------------------------------------------------------------------------
 
-mkAgentBackendConfig :: Fixture.BackendTypeConfig -> Aeson.Value
+mkAgentBackendConfig :: Fixture.BackendTypeConfig -> J.Value
 mkAgentBackendConfig backendTypeConfig =
   let backendType = Fixture.backendTypeString backendTypeConfig
       uri = Fixture.backendServerUrl backendTypeConfig
@@ -133,7 +133,7 @@ mkAgentBackendConfig backendTypeConfig =
 --------------------------------------------------------------------------------
 
 -- | Build a standard Chinook Source given an Agent specific @configuration@ field.
-mkChinookSourceMetadata :: Fixture.BackendTypeConfig -> Aeson.Value -> Aeson.Value
+mkChinookSourceMetadata :: Fixture.BackendTypeConfig -> J.Value -> J.Value
 mkChinookSourceMetadata backendTypeMetadata config =
   let source = Fixture.backendSourceName backendTypeMetadata
       backendTypeString = Fixture.backendTypeString backendTypeMetadata

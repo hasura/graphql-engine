@@ -24,7 +24,7 @@ where
 import Autodocodec
 import Autodocodec.OpenAPI ()
 import Control.Lens (preview)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.NonEmpty qualified as MapNE
 import Data.HashSet qualified as H
@@ -48,7 +48,7 @@ data SuggestRels b = SuggestRels
     _srsOmitTracked :: Bool
   }
   deriving (Generic)
-  deriving (Aeson.FromJSON, Aeson.ToJSON, ToSchema) via Autodocodec (SuggestRels b)
+  deriving (J.FromJSON, J.ToJSON, ToSchema) via Autodocodec (SuggestRels b)
 
 instance Backend b => HasCodec (SuggestRels b) where
   codec =
@@ -68,7 +68,7 @@ newtype SuggestedRelationships b = Relationships
   { sRelationships :: [Relationship b]
   }
   deriving (Generic)
-  deriving (Aeson.FromJSON, Aeson.ToJSON, ToSchema) via Autodocodec (SuggestedRelationships b)
+  deriving (J.FromJSON, J.ToJSON, ToSchema) via Autodocodec (SuggestedRelationships b)
 
 instance Backend b => HasCodec (SuggestedRelationships b) where
   codec =
@@ -85,7 +85,7 @@ data Relationship b = Relationship
     rTo :: Mapping b
   }
   deriving (Generic)
-  deriving (Aeson.FromJSON, Aeson.ToJSON, ToSchema) via Autodocodec (Relationship b)
+  deriving (J.FromJSON, J.ToJSON, ToSchema) via Autodocodec (Relationship b)
 
 instance Backend b => HasCodec (Relationship b) where
   codec =
@@ -103,10 +103,10 @@ instance Backend b => HasCodec (Relationship b) where
 data Mapping b = Mapping
   { mTable :: TableName b,
     mColumns :: [Column b],
-    mConstraintName :: Maybe Aeson.Value
+    mConstraintName :: Maybe J.Value
   }
   deriving (Generic)
-  deriving (Aeson.FromJSON, Aeson.ToJSON, ToSchema) via Autodocodec (Mapping b)
+  deriving (J.FromJSON, J.ToJSON, ToSchema) via Autodocodec (Mapping b)
 
 instance Backend b => HasCodec (Mapping b) where
   codec =
@@ -163,7 +163,7 @@ suggestRelsFK omitTracked tables name uniqueConstraints tracked predicate foreig
     uniqueConstraintColumns = H.map _ucColumns uniqueConstraints
     relatedTableName = _fkForeignTable foreignKey
     relatedTable = HashMap.lookup relatedTableName tables
-    constraintName = Aeson.toJSON (_cName (_fkConstraint foreignKey))
+    constraintName = J.toJSON (_cName (_fkConstraint foreignKey))
     discard b x = bool Nothing (Just x) (not b)
     invert = HashMap.fromList . map swap . HashMap.toList
     trackedBack = H.fromList $ mapMaybe (relationships (riRTable &&& riMapping)) $ maybe [] (HashMap.elems . _tciFieldInfoMap) relatedTable

@@ -32,9 +32,8 @@ where
 
 import Control.Lens (at, (.~), (^.))
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Extended
-import Data.Aeson.Extended qualified as J
 import Data.Aeson.TH
 import Data.Bifunctor (bimap)
 import Data.Environment qualified as Env
@@ -346,7 +345,7 @@ runUpdateSource (UpdateSource name sourceConfig sourceCustomization healthCheckC
 newtype GetSourceTables (b :: BackendType) = GetSourceTables {_gstSourceName :: SourceName}
 
 instance FromJSON (GetSourceTables b) where
-  parseJSON = Aeson.withObject "GetSourceTables" \o -> do
+  parseJSON = J.withObject "GetSourceTables" \o -> do
     _gstSourceName <- o .: "source"
     pure $ GetSourceTables {..}
 
@@ -376,7 +375,7 @@ data GetTableInfo = GetTableInfo
   }
 
 instance FromJSON GetTableInfo where
-  parseJSON = Aeson.withObject "GetSourceTables" \o -> do
+  parseJSON = J.withObject "GetSourceTables" \o -> do
     _gtiSourceName <- o .: "source"
     _gtiTableName <- o .: "table"
     pure $ GetTableInfo {..}

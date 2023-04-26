@@ -24,7 +24,7 @@ import Control.Exception.Safe
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Except
 import Data.Aeson
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Foldable
 import Data.Maybe
 import Data.Sequence qualified as Seq
@@ -228,7 +228,7 @@ getTablesForDataSet conn dataSet = do
         Right resp ->
           case getResponseStatusCode resp of
             200 ->
-              case Aeson.eitherDecode (getResponseBody resp) of
+              case J.eitherDecode (getResponseBody resp) of
                 Left e -> pure (Left (GetMetaDecodeProblem e))
                 Right RestTableList {nextPageToken, tables} ->
                   case nextPageToken of
@@ -271,7 +271,7 @@ getTable conn dataSet tableId = do
         Right resp ->
           case getResponseStatusCode resp of
             200 ->
-              case Aeson.eitherDecode (getResponseBody resp) of
+              case J.eitherDecode (getResponseBody resp) of
                 Left e -> pure (Left (GetMetaDecodeProblem e))
                 Right table -> pure (Right table)
             _ -> pure (Left (RESTRequestNonOK (getResponseStatus resp)))
@@ -441,7 +441,7 @@ getRoutinesForDataSet conn dataSet = do
         Right resp ->
           case getResponseStatusCode resp of
             200 ->
-              case Aeson.eitherDecode (getResponseBody resp) of
+              case J.eitherDecode (getResponseBody resp) of
                 Left e -> pure (Left (GetMetaDecodeProblem e))
                 Right RestRoutineList {_rrlRoutines = routines, _rrlNextPageToken = nextPageToken} ->
                   case nextPageToken of

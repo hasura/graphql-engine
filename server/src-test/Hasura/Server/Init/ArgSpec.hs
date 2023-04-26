@@ -9,7 +9,7 @@ where
 --------------------------------------------------------------------------------
 
 import Control.Lens (preview, _Just)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.HashSet qualified as Set
 import Data.Time (NominalDiffTime)
 import Data.URL.Template qualified as Template
@@ -2070,8 +2070,8 @@ serveParserSpec =
 
           -- Then
           argResult = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
-          mdResult = Aeson.eitherDecode @Metadata mdInput
-          mdExpectedResult = Aeson.eitherDecode @Metadata mdExpected
+          mdResult = J.eitherDecode @Metadata mdInput
+          mdExpectedResult = J.eitherDecode @Metadata mdExpected
 
       fmap UUT.rsoMetadataDefaults argResult `Hspec.shouldSatisfy` \case
         Opt.Success Nothing -> False

@@ -274,6 +274,10 @@
 
 - modules:
   - name:
+    - Data.Aeson
+    - Data.Aeson.Extended
+    as: J
+  - name:
     - Data.HashMap.Strict
     - Data.HashMap.Strict.Extended
     as: HashMap
