@@ -7,7 +7,7 @@
 </span><span id="line-7"></span><span class="hs-comment">-- Defines a 'Hasura.RQL.Types.Metadata.Backend.BackendMetadata' type class instance for Postgres.</span><span>
 </span><span id="line-8"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.Postgres.Instances.Metadata</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-9"></span><span>
-</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">InsOrd</span></span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.String.Interpolate</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">i</span></span><span class="hs-special">)</span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Extended</span></span><span>
@@ -301,7 +301,7 @@ TableCache ('Postgres 'Citus)
 </span><a href="#local-6989586621690938269"><span class="hs-identifier hs-var hs-var">lookupTableInfo</span></a></span></span><span> </span><span id="local-6989586621690938254"><span class="annot"><span class="annottext">QualifiedTable
 </span><a href="#local-6989586621690938254"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-147"></span><span>        </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">QualifiedTable
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">QualifiedTable
 </span><a href="#local-6989586621690938254"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">TableCache ('Postgres 'Citus)
 </span><a href="#local-6989586621690938273"><span class="hs-identifier hs-var">tableCache</span></a></span><span>
 </span><span id="line-148"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a

@@ -15,7 +15,7 @@
 </span><span id="line-15"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-16"></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Validate</span></span><span>
-</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HM</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.Int</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Int</span></span><span>
 </span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List.Extended</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">appendToNonEmpty</span></span><span class="hs-special">)</span><span>
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.List.NonEmpty</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NE</span></span><span>
@@ -1967,7 +1967,7 @@ $sel:joinOn:Join :: [(FieldName, FieldName)]
 </span><span id="line-770"></span><span>  </span><span class="hs-comment">-- | List of positional Arguments</span><span>
 </span><span id="line-771"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ArgumentExp"><span class="hs-identifier hs-type">ArgumentExp</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-772"></span><span>  </span><span class="hs-comment">-- | List of named arguments</span><span>
-</span><span id="line-773"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HM.HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ArgumentExp"><span class="hs-identifier hs-type">ArgumentExp</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-773"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HashMap.HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ArgumentExp"><span class="hs-identifier hs-type">ArgumentExp</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-774"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.FromIr.html#FromIr"><span class="hs-identifier hs-type">FromIr</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#From"><span class="hs-identifier hs-type">From</span></a></span><span>
 </span><span id="line-775"></span><span id="fromFunction"><span class="annot"><span class="annottext">fromFunction :: ParentSelectFromEntity
 -&gt; FunctionName
@@ -1996,7 +1996,7 @@ $sel:joinOn:Join :: [(FieldName, FieldName)]
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">HM.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap Text (ArgumentExp Expression)
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap Text (ArgumentExp Expression)
 </span><a href="#local-6989586621690853459"><span class="hs-identifier hs-var">namedArgs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621690853451"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690853451"><span class="hs-identifier hs-var">argName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690853450"><span class="annot"><span class="annottext">ArgumentExp Expression
@@ -4274,7 +4274,7 @@ $sel:fieldName:FieldName :: Text
 </span><span id="line-1696"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-1697"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">HM.toList</span></span><span>
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span>
 </span><span id="line-1698"></span><span>
 </span><span id="line-1699"></span><span class="hs-comment">-- | Given an alias for the remote table, and a map of local-to-remote column</span><span>
 </span><span id="line-1700"></span><span class="hs-comment">-- name pairings, produce 'FieldName' pairings (column names paired with their</span><span>
@@ -4320,7 +4320,7 @@ $sel:fieldName:FieldName :: Text
 -&gt; ReaderT EntityAlias FromIr (FieldName, FieldName)
 </span><a href="#local-6989586621690853095"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">HM.toList</span></span><span>
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span>
 </span><span id="line-1733"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-1734"></span><span>    </span><span id="local-6989586621690853095"><span class="annot"><span class="annottext">go :: (ColumnName, ColumnName)
 -&gt; ReaderT EntityAlias FromIr (FieldName, FieldName)

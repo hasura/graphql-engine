@@ -21,7 +21,7 @@
 </span><span id="line-21"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-22"></span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
-</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier">Data.IntMap</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">IntMap</span></span><span>
 </span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Extended</span></span><span>
 </span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier">Database.PG.Query</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
@@ -49,7 +49,7 @@
 </span><span id="line-49"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-50"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
 </span><span id="line-51"></span><span>
-</span><span id="line-52"></span><span class="hs-keyword">type</span><span> </span><span id="PlanVariables"><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#PlanVariables"><span class="hs-identifier hs-var">PlanVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Map.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#PlanVariable"><span class="hs-identifier hs-type">PlanVariable</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">type</span><span> </span><span id="PlanVariables"><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#PlanVariables"><span class="hs-identifier hs-var">PlanVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#PlanVariable"><span class="hs-identifier hs-type">PlanVariable</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
 </span><span id="line-53"></span><span>
 </span><span id="line-54"></span><span class="hs-comment">-- | A variable used within the 'PlanVariables' map. We make the distinction</span><span>
 </span><span id="line-55"></span><span class="hs-comment">-- between internal (i.e. generated within `graphql-engine`) and external (i.e.</span><span>
@@ -130,7 +130,7 @@ $cshowsPrec :: Int -&gt; PlanningSt -&gt; ShowS
 </span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#initPlanningSt"><span class="hs-identifier hs-var hs-var">initPlanningSt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; PlanVariables -&gt; PrepArgMap -&gt; PlanningSt
 </span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#PlanningSt"><span class="hs-identifier hs-var">PlanningSt</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">2</span></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v
-</span><span class="hs-identifier hs-var">Map.empty</span></span><span> </span><span class="annot"><span class="annottext">forall a. IntMap a
+</span><span class="hs-identifier hs-var">HashMap.empty</span></span><span> </span><span class="annot"><span class="annottext">forall a. IntMap a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier hs-var">IntMap.empty</span></a></span><span>
 </span><span id="line-79"></span><span>
 </span><span id="line-80"></span><span class="hs-comment">-- | If we're preparing a value with planning state, we favour referring to</span><span>
@@ -364,7 +364,7 @@ PlanVariable -&gt; m Int
 </span><a href="#local-6989586621690985110"><span class="hs-identifier hs-var">prepped</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall s (m :: * -&gt; *). MonadState s m =&gt; m s
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-var">get</span></a></span><span>
 </span><span id="line-157"></span><span>  </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">PlanVariable
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">PlanVariable
 </span><a href="#local-6989586621690985113"><span class="hs-identifier hs-var">var</span></a></span><span> </span><span class="annot"><span class="annottext">PlanVariables
 </span><a href="#local-6989586621690985111"><span class="hs-identifier hs-var">vars</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="hs-keyword">do</span><span>
@@ -377,7 +377,7 @@ PlanVariable -&gt; m Int
 </span><span class="hs-number">1</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; HashMap k v -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.insert</span></span><span> </span><span class="annot"><span class="annottext">PlanVariable
+</span><span class="hs-identifier hs-var">HashMap.insert</span></span><span> </span><span class="annot"><span class="annottext">PlanVariable
 </span><a href="#local-6989586621690985113"><span class="hs-identifier hs-var">var</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><a href="#local-6989586621690985112"><span class="hs-identifier hs-var">curArgNum</span></a></span><span> </span><span class="annot"><span class="annottext">PlanVariables
 </span><a href="#local-6989586621690985111"><span class="hs-identifier hs-var">vars</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">PrepArgMap

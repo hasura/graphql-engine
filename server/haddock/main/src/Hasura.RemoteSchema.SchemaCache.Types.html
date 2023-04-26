@@ -53,7 +53,7 @@
 </span><span id="line-53"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.Char</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">C</span></span><span>
 </span><span id="line-54"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Environment</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Env</span></span><span>
 </span><span id="line-55"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Has</span></span><span>
-</span><span id="line-56"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-56"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-57"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
 </span><span id="line-58"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.Monoid</span></a></span><span>
 </span><span id="line-59"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
@@ -133,7 +133,7 @@ RemoteSchemaCtxG remoteFieldInfo -&gt; ByteString
 </span><span id="line-98"></span><span>    </span><span id="_rscPermissions"><span class="annot"><span class="annottext">forall remoteFieldInfo.
 RemoteSchemaCtxG remoteFieldInfo
 -&gt; HashMap RoleName IntrospectionResult
-</span><a href="Hasura.RemoteSchema.SchemaCache.Types.html#_rscPermissions"><span class="hs-identifier hs-var hs-var">_rscPermissions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Map.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#IntrospectionResult"><span class="hs-identifier hs-type">IntrospectionResult</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RemoteSchema.SchemaCache.Types.html#_rscPermissions"><span class="hs-identifier hs-var hs-var">_rscPermissions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#IntrospectionResult"><span class="hs-identifier hs-type">IntrospectionResult</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-99"></span><span>    </span><span id="_rscRemoteRelationships"><span class="annot"><span class="annottext">forall remoteFieldInfo.
 RemoteSchemaCtxG remoteFieldInfo
 -&gt; RemoteSchemaRelationshipsG remoteFieldInfo
@@ -576,7 +576,7 @@ _rscNamespaceFieldName :: RemoteSchemaCustomizer -&gt; Maybe Name
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690728648"><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690728648"><span class="hs-identifier hs-var">typeName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-164"></span><span>  </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; v -&gt; k -&gt; HashMap k v -&gt; v
-</span><span class="hs-identifier hs-var">Map.lookupDefault</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><span class="hs-identifier hs-var">HashMap.lookupDefault</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690728648"><span class="hs-identifier hs-var">typeName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690728648"><span class="hs-identifier hs-var">typeName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name Name
 </span><a href="#local-6989586621690728651"><span class="hs-identifier hs-var">_rscCustomizeTypeName</span></a></span><span>
@@ -652,11 +652,11 @@ _rscNamespaceFieldName :: RemoteSchemaCustomizer -&gt; Maybe Name
 </span><a href="#local-6989586621690728587"><span class="hs-identifier hs-var">typeName</span></a></span></span><span> </span><span id="local-6989586621690728586"><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690728586"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-176"></span><span>  </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690728587"><span class="hs-identifier hs-var">typeName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (HashMap Name Name)
 </span><a href="#local-6989586621690728588"><span class="hs-identifier hs-var">_rscCustomizeFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690728586"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. a -&gt; (a -&gt; b) -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">Name
@@ -677,10 +677,10 @@ _rscNamespaceFieldName :: RemoteSchemaCustomizer -&gt; Maybe Name
 </span><span id="line-180"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; Bool
-</span><span class="hs-identifier hs-var">Map.null</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name Name
+</span><span class="hs-identifier hs-var">HashMap.null</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name Name
 </span><a href="#local-6989586621690728581"><span class="hs-identifier hs-var">_rscCustomizeTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&amp;&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; Bool
-</span><span class="hs-identifier hs-var">Map.null</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name (HashMap Name Name)
+</span><span class="hs-identifier hs-var">HashMap.null</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name (HashMap Name Name)
 </span><a href="#local-6989586621690728580"><span class="hs-identifier hs-var">_rscCustomizeFieldName</span></a></span><span>
 </span><span id="line-181"></span><span>
 </span><span id="line-182"></span><span class="hs-comment">-- | 'RemoteSchemaDef' after the RemoteSchemaCustomizer has been generated</span><span>
@@ -768,7 +768,7 @@ _rfcParentType :: Name
 (Foldable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for_</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [k]
-</span><span class="hs-identifier hs-var">Map.keys</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name Name
+</span><span class="hs-identifier hs-var">HashMap.keys</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name Name
 </span><a href="#local-6989586621690728513"><span class="hs-identifier hs-var">_rfcMapping</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690728507"><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690728507"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -1273,7 +1273,7 @@ InterfaceTypeDefinition possibleTypes inputType -&gt; Name
   Name (TypeDefinition [Name] RemoteSchemaInputValueDefinition)
 </span><a href="#local-6989586621690728113"><span class="hs-identifier hs-var">types</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621690728112"><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690728112"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690728112"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap
   Name (TypeDefinition [Name] RemoteSchemaInputValueDefinition)
 </span><a href="#local-6989586621690728113"><span class="hs-identifier hs-var">types</span></a></span><span>

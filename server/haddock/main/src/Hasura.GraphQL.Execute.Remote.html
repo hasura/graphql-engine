@@ -10,7 +10,7 @@
 </span><span id="line-10"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-11"></span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
-</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Extended</span></span><span>
@@ -160,7 +160,7 @@ SelectionSet fragments var -&gt; HashSet var
 </span><a href="#local-6989586621690983925"><span class="hs-identifier hs-var">selSet</span></a></span><span>
 </span><span id="line-77"></span><span>      </span><span id="local-6989586621690983919"><span class="annot"><span class="annottext">varValues :: HashMap Name Value
 </span><a href="#local-6989586621690983919"><span class="hs-identifier hs-var hs-var">varValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">snd</span></a></span><span> </span><span class="annot"><span class="annottext">[(VariableDefinition, (Name, Value))]
@@ -172,7 +172,7 @@ SelectionSet fragments var -&gt; HashSet var
 </span><a href="#local-6989586621690983919"><span class="hs-identifier hs-var">varValues</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; Bool
-</span><span class="hs-identifier hs-var">Map.null</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name Value
+</span><span class="hs-identifier hs-var">HashMap.null</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name Value
 </span><a href="#local-6989586621690983919"><span class="hs-identifier hs-var">varValues</span></a></span><span>
 </span><span id="line-79"></span><span>      </span><span id="local-6989586621690983914"><span class="annot"><span class="annottext">varDefs :: [VariableDefinition]
 </span><a href="#local-6989586621690983914"><span class="hs-identifier hs-var hs-var">varDefs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
@@ -565,13 +565,13 @@ UserInfo
 </span><span id="line-208"></span><span>    </span><span id="local-6989586621690983660"><span class="annot"><span class="annottext">Int
 </span><a href="#local-6989586621690983660"><span class="hs-identifier hs-var">index</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-209"></span><span>      </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">RemoteJSONVariableKey
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">RemoteJSONVariableKey
 </span><a href="#local-6989586621690983663"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap RemoteJSONVariableKey Int
 </span><a href="#local-6989586621690983662"><span class="hs-identifier hs-var">varMap</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-210"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690983658"><span class="annot"><span class="annottext">i :: Int
 </span><a href="#local-6989586621690983658"><span class="hs-identifier hs-var hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; Int
-</span><span class="hs-identifier hs-var">Map.size</span></span><span> </span><span class="annot"><span class="annottext">HashMap RemoteJSONVariableKey Int
+</span><span class="hs-identifier hs-var">HashMap.size</span></span><span> </span><span class="annot"><span class="annottext">HashMap RemoteJSONVariableKey Int
 </span><a href="#local-6989586621690983662"><span class="hs-identifier hs-var">varMap</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span>
@@ -582,7 +582,7 @@ UserInfo
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; HashMap k v -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.insert</span></span><span> </span><span class="annot"><span class="annottext">RemoteJSONVariableKey
+</span><span class="hs-identifier hs-var">HashMap.insert</span></span><span> </span><span class="annot"><span class="annottext">RemoteJSONVariableKey
 </span><a href="#local-6989586621690983663"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><a href="#local-6989586621690983658"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap RemoteJSONVariableKey Int
 </span><a href="#local-6989586621690983662"><span class="hs-identifier hs-var">varMap</span></a></span><span>

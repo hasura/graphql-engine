@@ -7,7 +7,7 @@
 </span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-8"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-9"></span><span>
-</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.DML</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">S</span></span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Types</span></a></span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.BoolExp.html"><span class="hs-identifier">Hasura.Backends.Postgres.Translate.BoolExp</span></a></span><span>
@@ -160,7 +160,7 @@ _ubOperations :: HashMap (Column ('Postgres pgKind)) (UpdateOpExpression SQLExp)
 -&gt; (PGCol, UpdateOpExpression SQLExp) -&gt; SetExpItem
 </span><a href="Hasura.Backends.Postgres.Translate.Update.html#expandOperator"><span class="hs-identifier hs-var">expandOperator</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo ('Postgres pgKind)]
 </span><a href="#local-6989586621690926003"><span class="hs-identifier hs-var">columnsInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap (Column ('Postgres pgKind)) (UpdateOpExpression SQLExp)
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap (Column ('Postgres pgKind)) (UpdateOpExpression SQLExp)
 </span><a href="#local-6989586621690925982"><span class="hs-identifier hs-var">_ubOperations</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-72"></span><span>            </span><span class="annot"><span class="annottext">upFrom :: Maybe FromExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#upFrom"><span class="hs-identifier hs-var">upFrom</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a

@@ -28,7 +28,7 @@
 </span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.CaseInsensitive</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">CI</span></span><span>
 </span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Environment</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Env</span></span><span>
 </span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Has</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Has</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">getter</span></span><span class="hs-special">)</span><span>
-</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HM</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd.Extended</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
 </span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HS</span></span><span>
 </span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.List</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
@@ -125,7 +125,7 @@ HasTag b =&gt;
 BackendSourceInfo -&gt; Maybe (SourceInfo b)
 </span><a href="Hasura.RQL.Types.Source.html#unsafeSourceInfo"><span class="hs-identifier hs-var">unsafeSourceInfo</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691003278"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">=&lt;&lt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">HM.lookup</span></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621691003318"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SchemaCache -&gt; SourceCache
 </span><a href="Hasura.RQL.Types.SchemaCache.html#scSources"><span class="hs-identifier hs-var">scSources</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
 </span><a href="#local-6989586621691003319"><span class="hs-identifier hs-var">oldSchemaCache</span></a></span><span class="hs-special">)</span><span>
@@ -1088,7 +1088,7 @@ Hashable k =&gt;
 </span><a href="#local-6989586621691002652"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; CronTriggers
 </span><a href="Hasura.RQL.Types.Metadata.html#_metaCronTriggers"><span class="hs-identifier hs-var">_metaCronTriggers</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
 </span><a href="#local-6989586621691002652"><span class="hs-identifier hs-var">m</span></a></span><span>
-</span><span id="line-412"></span><span>          </span><span class="hs-comment">-- this function is intended to use with `HM.differenceWith`, it's used when two</span><span>
+</span><span id="line-412"></span><span>          </span><span class="hs-comment">-- this function is intended to use with `HashMap.differenceWith`, it's used when two</span><span>
 </span><span id="line-413"></span><span>          </span><span class="hs-comment">-- equal keys are encountered, then the values are compared to calculate the diff.</span><span>
 </span><span id="line-414"></span><span>          </span><span class="hs-comment">-- see https://hackage.haskell.org/package/unordered-containers-0.2.14.0/docs/Data-HashMap-Internal.html#v:differenceWith</span><span>
 </span><span id="line-415"></span><span>          </span><span id="local-6989586621691002649"><span class="annot"><span class="annottext">leftIfDifferent :: a -&gt; a -&gt; Maybe a
@@ -1109,7 +1109,7 @@ Hashable k =&gt;
 </span><span id="line-419"></span><span>            </span><span class="annot"><span class="annottext">forall k v w.
 (Eq k, Hashable k) =&gt;
 (v -&gt; w -&gt; Maybe v) -&gt; HashMap k v -&gt; HashMap k w -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">HM.differenceWith</span></span><span>
+</span><span class="hs-identifier hs-var">HashMap.differenceWith</span></span><span>
 </span><span id="line-420"></span><span>              </span><span class="annot"><span class="annottext">forall {a}. Eq a =&gt; a -&gt; a -&gt; Maybe a
 </span><a href="#local-6989586621691002649"><span class="hs-identifier hs-var">leftIfDifferent</span></a></span><span>
 </span><span id="line-421"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; HashMap k v
@@ -1123,7 +1123,7 @@ Hashable k =&gt;
 </span><span id="line-424"></span><span>            </span><span class="annot"><span class="annottext">forall k v w.
 (Eq k, Hashable k) =&gt;
 (v -&gt; w -&gt; Maybe v) -&gt; HashMap k v -&gt; HashMap k w -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">HM.differenceWith</span></span><span>
+</span><span class="hs-identifier hs-var">HashMap.differenceWith</span></span><span>
 </span><span id="line-425"></span><span>              </span><span class="annot"><span class="annottext">forall {a}. Eq a =&gt; a -&gt; a -&gt; Maybe a
 </span><a href="#local-6989586621691002649"><span class="hs-identifier hs-var">leftIfDifferent</span></a></span><span>
 </span><span id="line-426"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; HashMap k v
@@ -1141,7 +1141,7 @@ ClearCronEvents -&gt; m (Either QErr ())
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[TriggerName] -&gt; ClearCronEvents
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#MetadataCronTriggers"><span class="hs-identifier hs-var">MetadataCronTriggers</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [k]
-</span><span class="hs-identifier hs-var">HM.keys</span></span><span> </span><span class="annot"><span class="annottext">HashMap TriggerName CronTriggerMetadata
+</span><span class="hs-identifier hs-var">HashMap.keys</span></span><span> </span><span class="annot"><span class="annottext">HashMap TriggerName CronTriggerMetadata
 </span><a href="#local-6989586621691002643"><span class="hs-identifier hs-var">cronTriggersToBeDropped</span></a></span><span>
 </span><span id="line-429"></span><span>      </span><span id="local-6989586621691002638"><span class="annot"><span class="annottext">CronTriggers
 </span><a href="#local-6989586621691002638"><span class="hs-identifier hs-var">cronTriggers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span>

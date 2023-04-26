@@ -11,7 +11,7 @@
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens.Combinators</span></span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens.Operators</span></span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
-</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">M</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Extended</span></span><span>
@@ -537,7 +537,7 @@ SourceName -&gt; TableName b -&gt; Column b -&gt; Column b -&gt; m ()
 </span><span id="line-201"></span><span>    </span><span id="local-6989586621690894253"><span class="annot"><span class="annottext">assertFldNotExists :: m ()
 </span><a href="#local-6989586621690894253"><span class="hs-identifier hs-var hs-var">assertFldNotExists</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-202"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">M.lookup</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). Backend b =&gt; Column b -&gt; FieldName
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). Backend b =&gt; Column b -&gt; FieldName
 </span><a href="Hasura.RQL.Types.Column.html#fromCol"><span class="hs-identifier hs-var">fromCol</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621690894863"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">Column b
 </span><a href="#local-6989586621690894259"><span class="hs-identifier hs-var">oCol</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
 </span><a href="#local-6989586621690894255"><span class="hs-identifier hs-var">fieldInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
@@ -1465,7 +1465,7 @@ TableName b
 </span><a href="#local-6989586621690893860"><span class="hs-identifier hs-var">oCol</span></a></span></span><span> </span><span id="local-6989586621690893859"><span class="annot"><span class="annottext">Column b
 </span><a href="#local-6989586621690893859"><span class="hs-identifier hs-var">nCol</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-414"></span><span>      </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">M.fromList</span></span><span> </span><span class="annot"><span class="annottext">[(Column b, Value)]
+</span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">[(Column b, Value)]
 </span><a href="#local-6989586621690893857"><span class="hs-identifier hs-var">updItems</span></a></span><span>
 </span><span id="line-415"></span><span>      </span><span class="hs-keyword">where</span><span>
 </span><span id="line-416"></span><span>        </span><span id="local-6989586621690893857"><span class="annot"><span class="annottext">updItems :: [(Column b, Value)]
@@ -1473,7 +1473,7 @@ TableName b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">(Column b, Value) -&gt; (Column b, Value)
 </span><a href="#local-6989586621690893856"><span class="hs-identifier hs-var">procObjItem</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">M.toList</span></span><span> </span><span class="annot"><span class="annottext">ColumnValues b Value
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">ColumnValues b Value
 </span><a href="#local-6989586621690893865"><span class="hs-identifier hs-var">obj</span></a></span><span>
 </span><span id="line-417"></span><span>        </span><span id="local-6989586621690893856"><span class="annot"><span class="annottext">procObjItem :: (Column b, Value) -&gt; (Column b, Value)
 </span><a href="#local-6989586621690893856"><span class="hs-identifier hs-var hs-var">procObjItem</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690893854"><span class="annot"><span class="annottext">Column b
@@ -1716,12 +1716,12 @@ TableName b -&gt; RenameField b -&gt; ColExp -&gt; m ColExp
 </span><span id="line-478"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690893707"><span class="annot"><span class="annottext">maybeFieldInfo :: Maybe (FieldInfo b)
 </span><a href="#local-6989586621690893707"><span class="hs-identifier hs-var hs-var">maybeFieldInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-479"></span><span>            </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">M.lookup</span></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621690893720"><span class="hs-identifier hs-var">qt</span></a></span><span> </span><span class="annot"><span class="annottext">TableCache b
 </span><a href="#local-6989586621690893709"><span class="hs-identifier hs-var">tables</span></a></span><span>
 </span><span id="line-480"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">M.lookup</span></span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">FieldName
 </span><a href="#local-6989586621690893717"><span class="hs-identifier hs-var">fld</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) field primaryKeyColumn.
 TableCoreInfoG b field primaryKeyColumn -&gt; FieldInfoMap field
@@ -1975,7 +1975,7 @@ SourceName -&gt; RelName -&gt; RenameCol b -&gt; m ()
 </span><a href="#local-6989586621690893563"><span class="hs-identifier hs-var hs-var">updateMapKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-552"></span><span>        </span><span class="hs-comment">-- mapKeys is not available in 0.2.13.0</span><span>
 </span><span id="line-553"></span><span>        </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">M.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621690893562"><span class="annot"><span class="annottext">FieldName
 </span><a href="#local-6989586621690893562"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690893561"><span class="annot"><span class="annottext">FieldName
@@ -1987,7 +1987,7 @@ SourceName -&gt; RelName -&gt; RenameCol b -&gt; m ()
 </span><a href="#local-6989586621690893562"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FieldName
 </span><a href="#local-6989586621690893561"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">M.toList</span></span><span>
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span>
 </span><span id="line-554"></span><span>
 </span><span id="line-555"></span><span>      </span><span id="local-6989586621690893560"><span class="annot"><span class="annottext">updateFieldCalls :: RemoteFields -&gt; RemoteFields
 </span><a href="#local-6989586621690893560"><span class="hs-identifier hs-var hs-var">updateFieldCalls</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.RemoteRelationship.html#RemoteFields"><span class="hs-identifier hs-type">RemoteFields</span></a></span><span> </span><span id="local-6989586621690893558"><span class="annot"><span class="annottext">NonEmpty FieldCall
@@ -2493,7 +2493,7 @@ TableName b -&gt; TableName b -&gt; RenameCol b -&gt; ColMap b -&gt; ColMap b
 </span><a href="#local-6989586621690893402"><span class="hs-identifier hs-var">toQT</span></a></span></span><span> </span><span id="local-6989586621690893401"><span class="annot"><span class="annottext">RenameCol b
 </span><a href="#local-6989586621690893401"><span class="hs-identifier hs-var">rnCol</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-727"></span><span>  </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">M.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TableName b -&gt; Column b -&gt; Column b
 </span><a href="#local-6989586621690893400"><span class="hs-identifier hs-var">modCol</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
@@ -2504,7 +2504,7 @@ a b c -&gt; a b' c' -&gt; a (b, b') (c, c')
 </span><a href="#local-6989586621690893400"><span class="hs-identifier hs-var">modCol</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621690893402"><span class="hs-identifier hs-var">toQT</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">M.toList</span></span><span>
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span>
 </span><span id="line-728"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-729"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Rename.html#RenameItem"><span class="hs-identifier hs-type">RenameItem</span></a></span><span> </span><span id="local-6989586621690893398"><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621690893398"><span class="hs-identifier hs-var">qt</span></a></span></span><span> </span><span id="local-6989586621690893397"><span class="annot"><span class="annottext">Column b
@@ -2572,7 +2572,7 @@ HashMap (Column b) columnData -&gt; HashMap (Column b) columnData
 </span><a href="#local-6989586621690893377"><span class="hs-identifier hs-var hs-var">swapOldColumnForNewColumn</span></a></span></span><span> </span><span id="local-6989586621690893371"><span class="annot"><span class="annottext">HashMap (Column b) columnData
 </span><a href="#local-6989586621690893371"><span class="hs-identifier hs-var">customColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-747"></span><span>      </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">M.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621690893370"><span class="annot"><span class="annottext">Column b
 </span><a href="#local-6989586621690893370"><span class="hs-identifier hs-var">dbCol</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690893369"><span class="annot"><span class="annottext">columnData
 </span><a href="#local-6989586621690893369"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="annot"><span class="annottext">columnData
@@ -2584,6 +2584,6 @@ HashMap (Column b) columnData -&gt; HashMap (Column b) columnData
 </span><a href="#local-6989586621690893380"><span class="hs-identifier hs-var">newColumn</span></a></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Column b
 </span><a href="#local-6989586621690893370"><span class="hs-identifier hs-var">dbCol</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">M.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap (Column b) columnData
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap (Column b) columnData
 </span><a href="#local-6989586621690893371"><span class="hs-identifier hs-var">customColumns</span></a></span><span>
 </span><span id="line-748"></span></pre></body></html>

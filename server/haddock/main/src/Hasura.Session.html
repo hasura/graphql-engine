@@ -26,7 +26,7 @@
 </span><span id="line-26"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-27"></span><span>
 </span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.CaseInsensitive</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">CI</span></span><span>
-</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
 </span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
 </span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Hasura.Base.Error</span></span><span>
@@ -62,7 +62,7 @@
 </span><a href="#local-6989586621690725006"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap SessionVariable Text -&gt; SessionVariables
 </span><a href="Hasura.RQL.Types.Session.html#SessionVariables"><span class="hs-identifier hs-var">SessionVariables</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. (k -&gt; v -&gt; Bool) -&gt; HashMap k v -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.filterWithKey</span></span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; Text -&gt; Bool
+</span><span class="hs-identifier hs-var">HashMap.filterWithKey</span></span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; Text -&gt; Bool
 </span><a href="#local-6989586621690725006"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables -&gt; HashMap SessionVariable Text
 </span><a href="Hasura.RQL.Types.Session.html#unSessionVariables"><span class="hs-identifier hs-var">unSessionVariables</span></a></span><span>
@@ -74,7 +74,7 @@
 </span><a href="Hasura.RQL.Types.Session.html#SessionVariables"><span class="hs-identifier hs-var">SessionVariables</span></a></span><span>
 </span><span id="line-56"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.fromList</span></span><span>
+</span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span>
 </span><span id="line-57"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (a :: * -&gt; * -&gt; *) b c d.
@@ -115,7 +115,7 @@ a b c -&gt; a b' c' -&gt; a (b, b') (c, c')
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">txtToBs</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-64"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">Map.toList</span></span><span>
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span>
 </span><span id="line-65"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables -&gt; HashMap SessionVariable Text
 </span><a href="Hasura.RQL.Types.Session.html#unSessionVariables"><span class="hs-identifier hs-var">unSessionVariables</span></a></span><span>
@@ -126,14 +126,14 @@ a b c -&gt; a b' c' -&gt; a (b, b') (c, c')
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; Text
 </span><a href="Hasura.RQL.Types.Session.html#sessionVariableToText"><span class="hs-identifier hs-var">sessionVariableToText</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [k]
-</span><span class="hs-identifier hs-var">Map.keys</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">HashMap.keys</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables -&gt; HashMap SessionVariable Text
 </span><a href="Hasura.RQL.Types.Session.html#unSessionVariables"><span class="hs-identifier hs-var">unSessionVariables</span></a></span><span>
 </span><span id="line-69"></span><span>
 </span><span id="line-70"></span><span class="annot"><a href="Hasura.Session.html#getSessionVariablesSet"><span class="hs-identifier hs-type">getSessionVariablesSet</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Session.html#SessionVariable"><span class="hs-identifier hs-type">SessionVariable</span></a></span><span>
 </span><span id="line-71"></span><span id="getSessionVariablesSet"><span class="annot"><span class="annottext">getSessionVariablesSet :: SessionVariables -&gt; HashSet SessionVariable
 </span><a href="Hasura.Session.html#getSessionVariablesSet"><span class="hs-identifier hs-var hs-var">getSessionVariablesSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k a. HashMap k a -&gt; HashSet k
-</span><span class="hs-identifier hs-var">Map.keysSet</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">HashMap.keysSet</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables -&gt; HashMap SessionVariable Text
 </span><a href="Hasura.RQL.Types.Session.html#unSessionVariables"><span class="hs-identifier hs-var">unSessionVariables</span></a></span><span>
 </span><span id="line-72"></span><span>
@@ -141,7 +141,7 @@ a b c -&gt; a b' c' -&gt; a (b, b') (c, c')
 </span><span id="line-74"></span><span id="getSessionVariableValue"><span class="annot"><span class="annottext">getSessionVariableValue :: SessionVariable -&gt; SessionVariables -&gt; Maybe Text
 </span><a href="Hasura.Session.html#getSessionVariableValue"><span class="hs-identifier hs-var hs-var">getSessionVariableValue</span></a></span></span><span> </span><span id="local-6989586621690724990"><span class="annot"><span class="annottext">SessionVariable
 </span><a href="#local-6989586621690724990"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">SessionVariable
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">SessionVariable
 </span><a href="#local-6989586621690724990"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables -&gt; HashMap SessionVariable Text
 </span><a href="Hasura.RQL.Types.Session.html#unSessionVariables"><span class="hs-identifier hs-var">unSessionVariables</span></a></span><span>
@@ -252,17 +252,17 @@ UserRoleBuild -&gt; UserAdminSecret -&gt; SessionVariables -&gt; m UserInfo
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; HashMap k v -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.insert</span></span><span> </span><span class="annot"><span class="annottext">forall a. IsString a =&gt; a
+</span><span class="hs-identifier hs-var">HashMap.insert</span></span><span> </span><span class="annot"><span class="annottext">forall a. IsString a =&gt; a
 </span><a href="Hasura.Server.Utils.html#userRoleHeader"><span class="hs-identifier hs-var">userRoleHeader</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RoleName -&gt; Text
 </span><a href="Hasura.RQL.Types.Roles.html#roleNameToTxt"><span class="hs-identifier hs-var">roleNameToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621690724908"><span class="hs-identifier hs-var">roleName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-113"></span><span>        </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.delete</span></span><span> </span><span class="annot"><span class="annottext">forall a. IsString a =&gt; a
+</span><span class="hs-identifier hs-var">HashMap.delete</span></span><span> </span><span class="annot"><span class="annottext">forall a. IsString a =&gt; a
 </span><a href="Hasura.Server.Utils.html#adminSecretHeader"><span class="hs-identifier hs-var">adminSecretHeader</span></a></span><span>
 </span><span id="line-114"></span><span>        </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.delete</span></span><span> </span><span class="annot"><span class="annottext">forall a. IsString a =&gt; a
+</span><span class="hs-identifier hs-var">HashMap.delete</span></span><span> </span><span class="annot"><span class="annottext">forall a. IsString a =&gt; a
 </span><a href="Hasura.Server.Utils.html#deprecatedAccessKeyHeader"><span class="hs-identifier hs-var">deprecatedAccessKeyHeader</span></a></span><span>
 </span><span id="line-115"></span><span>        </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables -&gt; HashMap SessionVariable Text

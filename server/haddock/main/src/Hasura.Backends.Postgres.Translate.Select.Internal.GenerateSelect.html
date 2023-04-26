@@ -10,7 +10,7 @@
 </span><span id="line-10"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-11"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-12"></span><span>
-</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HM</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.List.NonEmpty</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NE</span></span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.DML</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">S</span></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Types</span></a></span><span>
@@ -55,7 +55,7 @@
 </span><a href="#local-6989586621690847840"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690847840"><span class="annot"><span class="annottext">ColumnAlias
 </span><a href="#local-6989586621690847840"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690847841"><span class="annot"><span class="annottext">SQLExp
 </span><a href="#local-6989586621690847841"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">HM.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap ColumnAlias SQLExp
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap ColumnAlias SQLExp
 </span><a href="#local-6989586621690847838"><span class="hs-identifier hs-var">extractors</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-45"></span><span>          </span><span class="hs-comment">-- If the select list is empty we will generated code which looks like this:</span><span>
 </span><span id="line-46"></span><span>          </span><span class="hs-comment">-- &gt; SELECT FROM ...</span><span>
@@ -240,25 +240,25 @@ Foldable t =&gt;
 </span><span id="line-99"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">(ObjectRelationSource, SelectNode) -&gt; FromItem
 </span><a href="#local-6989586621690847775"><span class="hs-identifier hs-var">objectRelationToFromItem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">HM.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap ObjectRelationSource SelectNode
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap ObjectRelationSource SelectNode
 </span><a href="#local-6989586621690847809"><span class="hs-identifier hs-var">objectRelations</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-100"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">(ArrayRelationSource, MultiRowSelectNode) -&gt; FromItem
 </span><a href="#local-6989586621690847774"><span class="hs-identifier hs-var">arrayRelationToFromItem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">HM.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap ArrayRelationSource MultiRowSelectNode
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap ArrayRelationSource MultiRowSelectNode
 </span><a href="#local-6989586621690847808"><span class="hs-identifier hs-var">arrayRelations</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-101"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">(ArrayConnectionSource, MultiRowSelectNode) -&gt; FromItem
 </span><a href="#local-6989586621690847773"><span class="hs-identifier hs-var">arrayConnectionToFromItem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">HM.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap ArrayConnectionSource MultiRowSelectNode
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap ArrayConnectionSource MultiRowSelectNode
 </span><a href="#local-6989586621690847807"><span class="hs-identifier hs-var">arrayConnections</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-102"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">(ComputedFieldTableSetSource, MultiRowSelectNode) -&gt; FromItem
 </span><a href="#local-6989586621690847772"><span class="hs-identifier hs-var">computedFieldToFromItem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">HM.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap ComputedFieldTableSetSource MultiRowSelectNode
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap ComputedFieldTableSetSource MultiRowSelectNode
 </span><a href="#local-6989586621690847806"><span class="hs-identifier hs-var">computedFields</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-103"></span><span>
 </span><span id="line-104"></span><span>    </span><span class="annot"><a href="#local-6989586621690847775"><span class="hs-identifier hs-type">objectRelationToFromItem</span></a></span><span> </span><span class="hs-glyph">::</span><span>
@@ -463,7 +463,7 @@ Foldable t =&gt;
 </span><span id="line-165"></span><span>    </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">HM.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap PGCol PGCol
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap PGCol PGCol
 </span><a href="#local-6989586621690847729"><span class="hs-identifier hs-var">colMapn</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621690847727"><span class="annot"><span class="annottext">PGCol
 </span><a href="#local-6989586621690847727"><span class="hs-identifier hs-var">lCol</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690847726"><span class="annot"><span class="annottext">PGCol

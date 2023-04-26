@@ -9,7 +9,7 @@
 </span><span id="line-9"></span><span>
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Traversal'</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">preview</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">traverseOf</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">_2</span></span><span class="hs-special">)</span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier">Control.Monad.Writer</span></a></span><span>
-</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.NonEmpty</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NEHashMap</span></span><span class="hs-special">)</span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.NonEmpty</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NEMap</span></span><span>
@@ -910,7 +910,7 @@ Lens
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) k v1 v2.
 Applicative f =&gt;
 (k -&gt; v1 -&gt; f v2) -&gt; HashMap k v1 -&gt; f (HashMap k v2)
-</span><span class="hs-identifier hs-var">Map.traverseWithKey</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690979626"><span class="annot"><span class="annottext">Name
+</span><span class="hs-identifier hs-var">HashMap.traverseWithKey</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690979626"><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690979626"><span class="hs-identifier hs-var">typeName</span></a></span></span><span> </span><span id="local-6989586621690979625"><span class="annot"><span class="annottext">ObjectSelectionSet (RemoteRelationshipField UnpreparedValue) var2
 </span><a href="#local-6989586621690979625"><span class="hs-identifier hs-var">objectSelectionSet</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-274"></span><span>        </span><span class="annot"><span class="annottext">forall var.
@@ -1173,7 +1173,7 @@ _rrsLHSJoinFields :: HashMap FieldName (DBJoinField src)
 </span><a href="Hasura.GraphQL.Execute.RemoteJoin.Collect.html#createRemoteJoin"><span class="hs-identifier hs-var">createRemoteJoin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v w.
 (Eq k, Hashable k) =&gt;
 HashMap k v -&gt; HashMap k w -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.intersection</span></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName JoinColumnAlias
+</span><span class="hs-identifier hs-var">HashMap.intersection</span></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName JoinColumnAlias
 </span><a href="#local-6989586621690979517"><span class="hs-identifier hs-var">joinColumnAliases</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName (DBJoinField src)
 </span><a href="#local-6989586621690979524"><span class="hs-identifier hs-var">_rrsLHSJoinFields</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RemoteRelationshipField UnpreparedValue
 </span><a href="#local-6989586621690979523"><span class="hs-identifier hs-var">_rrsRelationship</span></a></span><span>
@@ -1253,7 +1253,7 @@ Filterable f =&gt;
 </span><span id="line-355"></span><span>    </span><span id="local-6989586621690979506"><span class="annot"><span class="annottext">columnFields :: HashMap (Column src) FieldName
 </span><a href="#local-6989586621690979506"><span class="hs-identifier hs-var hs-var">columnFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-356"></span><span>      </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-357"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType) v. AnnColumnField b v -&gt; Column b
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_acfColumn%3AAnnColumnField"><span class="hs-identifier hs-var">_acfColumn</span></a></span><span> </span><span class="annot"><span class="annottext">AnnColumnField src (UnpreparedValue src)
@@ -1272,11 +1272,11 @@ Prism' (AnnFieldG b r v) (AnnColumnField b v)
 </span><span id="line-360"></span><span>
 </span><span id="line-361"></span><span>    </span><span class="hs-comment">-- This is a map of computed field name to its alias of all computed fields</span><span>
 </span><span id="line-362"></span><span>    </span><span class="hs-comment">-- in the selection set.</span><span>
-</span><span id="line-363"></span><span>    </span><span class="annot"><a href="#local-6989586621690979496"><span class="hs-identifier hs-type">computedFields</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Map.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldName"><span class="hs-identifier hs-type">ComputedFieldName</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span>
+</span><span id="line-363"></span><span>    </span><span class="annot"><a href="#local-6989586621690979496"><span class="hs-identifier hs-type">computedFields</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldName"><span class="hs-identifier hs-type">ComputedFieldName</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span>
 </span><span id="line-364"></span><span>    </span><span id="local-6989586621690979496"><span class="annot"><span class="annottext">computedFields :: HashMap ComputedFieldName FieldName
 </span><a href="#local-6989586621690979496"><span class="hs-identifier hs-var hs-var">computedFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-365"></span><span>      </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-366"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComputedFieldName
 </span><a href="#local-6989586621690979495"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FieldName
@@ -1380,7 +1380,7 @@ FieldName
 </span><span id="line-392"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690979462"><span class="annot"><span class="annottext">lhsJoinFields :: HashMap FieldName (DBJoinField src)
 </span><a href="#local-6989586621690979462"><span class="hs-identifier hs-var hs-var">lhsJoinFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-393"></span><span>            </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [HashMap k v] -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.unions</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">HashMap.unions</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType) r.
 RemoteRelationshipSelect b r -&gt; HashMap FieldName (DBJoinField b)
@@ -1396,7 +1396,7 @@ Prism' (AnnFieldG b r v) (RemoteRelationshipSelect b r)
 </span><a href="#local-6989586621690979564"><span class="hs-identifier hs-var">fields</span></a></span><span>
 </span><span id="line-394"></span><span>          </span><span id="local-6989586621690979456"><span class="annot"><span class="annottext">annotatedJoinColumns :: HashMap FieldName (DBJoinField src, JoinColumnAlias)
 </span><a href="#local-6989586621690979456"><span class="hs-identifier hs-var hs-var">annotatedJoinColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v1 v2. (k -&gt; v1 -&gt; v2) -&gt; HashMap k v1 -&gt; HashMap k v2
-</span><span class="hs-identifier hs-var">Map.mapWithKey</span></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; DBJoinField src -&gt; (DBJoinField src, JoinColumnAlias)
+</span><span class="hs-identifier hs-var">HashMap.mapWithKey</span></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; DBJoinField src -&gt; (DBJoinField src, JoinColumnAlias)
 </span><a href="#local-6989586621690979484"><span class="hs-identifier hs-var">annotateDBJoinField</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName (DBJoinField src)
 </span><a href="#local-6989586621690979462"><span class="hs-identifier hs-var">lhsJoinFields</span></a></span><span>
@@ -1587,7 +1587,7 @@ _arrsLHSJoinFields :: HashMap FieldName Name
 </span><a href="Hasura.GraphQL.Execute.RemoteJoin.Collect.html#createRemoteJoin"><span class="hs-identifier hs-var">createRemoteJoin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v w.
 (Eq k, Hashable k) =&gt;
 HashMap k v -&gt; HashMap k w -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.intersection</span></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName JoinColumnAlias
+</span><span class="hs-identifier hs-var">HashMap.intersection</span></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName JoinColumnAlias
 </span><a href="#local-6989586621690979408"><span class="hs-identifier hs-var">joinColumnAliases</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName Name
 </span><a href="#local-6989586621690979413"><span class="hs-identifier hs-var">_arrsLHSJoinFields</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RemoteRelationshipField UnpreparedValue
 </span><a href="#local-6989586621690979412"><span class="hs-identifier hs-var">_arrsRelationship</span></a></span><span>
@@ -1663,7 +1663,7 @@ Filterable f =&gt;
 </span><span id="line-470"></span><span>    </span><span id="local-6989586621690979398"><span class="annot"><span class="annottext">scalarFields :: HashMap Name FieldName
 </span><a href="#local-6989586621690979398"><span class="hs-identifier hs-var hs-var">scalarFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-471"></span><span>      </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-472"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690979397"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FieldName
@@ -1718,7 +1718,7 @@ FieldName
 </span><span id="line-491"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690979386"><span class="annot"><span class="annottext">lhsJoinFields :: HashMap FieldName Name
 </span><a href="#local-6989586621690979386"><span class="hs-identifier hs-var hs-var">lhsJoinFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-492"></span><span>            </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [HashMap k v] -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.unions</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">HashMap.unions</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall r.
 ActionRemoteRelationshipSelect r -&gt; HashMap FieldName Name
@@ -1733,7 +1733,7 @@ Prism' (ActionFieldG r) (ActionRemoteRelationshipSelect r)
 </span><a href="#local-6989586621690979421"><span class="hs-identifier hs-var">fields</span></a></span><span>
 </span><span id="line-493"></span><span>          </span><span id="local-6989586621690979381"><span class="annot"><span class="annottext">annotatedJoinColumns :: HashMap FieldName (Name, JoinColumnAlias)
 </span><a href="#local-6989586621690979381"><span class="hs-identifier hs-var hs-var">annotatedJoinColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v1 v2. (k -&gt; v1 -&gt; v2) -&gt; HashMap k v1 -&gt; HashMap k v2
-</span><span class="hs-identifier hs-var">Map.mapWithKey</span></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; Name -&gt; (Name, JoinColumnAlias)
+</span><span class="hs-identifier hs-var">HashMap.mapWithKey</span></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; Name -&gt; (Name, JoinColumnAlias)
 </span><a href="#local-6989586621690979391"><span class="hs-identifier hs-var">annotateJoinField</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName Name
 </span><a href="#local-6989586621690979386"><span class="hs-identifier hs-var">lhsJoinFields</span></a></span><span>
@@ -1849,7 +1849,7 @@ _srrsLHSJoinFields :: HashMap FieldName Name
 </span><a href="Hasura.GraphQL.Execute.RemoteJoin.Collect.html#createRemoteJoin"><span class="hs-identifier hs-var">createRemoteJoin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v w.
 (Eq k, Hashable k) =&gt;
 HashMap k v -&gt; HashMap k w -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.intersection</span></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName JoinColumnAlias
+</span><span class="hs-identifier hs-var">HashMap.intersection</span></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName JoinColumnAlias
 </span><a href="#local-6989586621690979304"><span class="hs-identifier hs-var">joinColumnAliases</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName Name
 </span><a href="#local-6989586621690979309"><span class="hs-identifier hs-var">_srrsLHSJoinFields</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RemoteRelationshipField UnpreparedValue
 </span><a href="#local-6989586621690979308"><span class="hs-identifier hs-var">_srrsRelationship</span></a></span><span>
@@ -2000,7 +2000,7 @@ Maybe Name
 </span><span id="line-573"></span><span>    </span><span id="local-6989586621690979274"><span class="annot"><span class="annottext">noArgsGraphQLFields :: HashMap Name FieldName
 </span><a href="#local-6989586621690979274"><span class="hs-identifier hs-var hs-var">noArgsGraphQLFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-574"></span><span>      </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-575"></span><span>        </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b.
@@ -2090,7 +2090,7 @@ Maybe Name
 </span><span id="line-599"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690979261"><span class="annot"><span class="annottext">lhsJoinFields :: HashMap FieldName Name
 </span><a href="#local-6989586621690979261"><span class="hs-identifier hs-var hs-var">lhsJoinFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-600"></span><span>            </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [HashMap k v] -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.unions</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">HashMap.unions</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">forall r.
 SchemaRemoteRelationshipSelect r -&gt; HashMap FieldName Name
@@ -2109,7 +2109,7 @@ Prism' (Field r var) (SchemaRemoteRelationshipSelect r)
 </span><a href="#local-6989586621690979322"><span class="hs-identifier hs-var">selectionSet</span></a></span><span>
 </span><span id="line-601"></span><span>          </span><span id="local-6989586621690979259"><span class="annot"><span class="annottext">annotatedJoinColumns :: HashMap FieldName (GraphQLField Void var, JoinColumnAlias)
 </span><a href="#local-6989586621690979259"><span class="hs-identifier hs-var hs-var">annotatedJoinColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v1 v2. (k -&gt; v1 -&gt; v2) -&gt; HashMap k v1 -&gt; HashMap k v2
-</span><span class="hs-identifier hs-var">Map.mapWithKey</span></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; Name -&gt; (GraphQLField Void var, JoinColumnAlias)
+</span><span class="hs-identifier hs-var">HashMap.mapWithKey</span></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; Name -&gt; (GraphQLField Void var, JoinColumnAlias)
 </span><a href="#local-6989586621690979268"><span class="hs-identifier hs-var">annotateLHSJoinField</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName Name
 </span><a href="#local-6989586621690979261"><span class="hs-identifier hs-var">lhsJoinFields</span></a></span><span>
 </span><span id="line-602"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -2128,7 +2128,7 @@ Prism' (Field r var) (SchemaRemoteRelationshipSelect r)
 </span><span id="line-609"></span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Collect.html#createRemoteJoin"><span class="hs-identifier hs-type">createRemoteJoin</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-610"></span><span>  </span><span class="hs-comment">-- We need information about 'how' the lhs join fields appear in the lhs</span><span>
 </span><span id="line-611"></span><span>  </span><span class="hs-comment">-- response to construct a 'RemoteJoin' node</span><span>
-</span><span id="line-612"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Map.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinColumnAlias"><span class="hs-identifier hs-type">JoinColumnAlias</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-612"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HashMap.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinColumnAlias"><span class="hs-identifier hs-type">JoinColumnAlias</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-613"></span><span>  </span><span class="hs-comment">-- The remote relationship field as captured in the IR</span><span>
 </span><span id="line-614"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-615"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteJoin"><span class="hs-identifier hs-type">RemoteJoin</span></a></span><span>
@@ -2158,7 +2158,7 @@ _rselArgs :: [RemoteFieldArgument]
 </span><span id="line-618"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690979241"><span class="annot"><span class="annottext">inputArgsToMap :: [RemoteFieldArgument]
 -&gt; HashMap Name (InputValue RemoteSchemaVariable)
 </span><a href="#local-6989586621690979241"><span class="hs-identifier hs-var hs-var">inputArgsToMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RemoteFieldArgument -&gt; Name
 </span><a href="Hasura.RQL.IR.RemoteSchema.html#_rfaArgument"><span class="hs-identifier hs-var">_rfaArgument</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: * -&gt; * -&gt; *) b c c'.
@@ -2262,7 +2262,7 @@ SourceRelationshipSelection
 </span><a href="#local-6989586621690979217"><span class="hs-identifier hs-var">_rssJoinMapping</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. a -&gt; (a -&gt; b) -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v1 v2.
 (k -&gt; v1 -&gt; Maybe v2) -&gt; HashMap k v1 -&gt; HashMap k v2
-</span><span class="hs-identifier hs-var">Map.mapMaybeWithKey</span></span><span>
+</span><span class="hs-identifier hs-var">HashMap.mapMaybeWithKey</span></span><span>
 </span><span id="line-643"></span><span>              </span><span class="hs-glyph">\</span><span id="local-6989586621690979206"><span class="annot"><span class="annottext">FieldName
 </span><a href="#local-6989586621690979206"><span class="hs-identifier hs-var">joinFieldName</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690979205"><span class="annot"><span class="annottext">ScalarType b
 </span><a href="#local-6989586621690979205"><span class="hs-identifier hs-var">rhsColumnType</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690979204"><span class="annot"><span class="annottext">Column b
@@ -2272,7 +2272,7 @@ SourceRelationshipSelection
 </span><a href="#local-6989586621690979205"><span class="hs-identifier hs-var">rhsColumnType</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-645"></span><span>                  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">FieldName
 </span><a href="#local-6989586621690979206"><span class="hs-identifier hs-var">joinFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName JoinColumnAlias
 </span><a href="#local-6989586621690979258"><span class="hs-identifier hs-var">joinColumnAliases</span></a></span><span>
 </span><span id="line-646"></span><span>          </span><span id="local-6989586621690979202"><span class="annot"><span class="annottext">anySourceJoin :: AnyBackend RemoteSourceJoin
@@ -2335,7 +2335,7 @@ FieldName
 </span><a href="#local-6989586621690979173"><span class="hs-identifier hs-var">selectedFields</span></a></span></span><span> </span><span id="local-6989586621690979172"><span class="annot"><span class="annottext">[FieldName]
 </span><a href="#local-6989586621690979172"><span class="hs-identifier hs-var">allAliases</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-673"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">field
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">field
 </span><a href="#local-6989586621690979174"><span class="hs-identifier hs-var">field</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap field FieldName
 </span><a href="#local-6989586621690979173"><span class="hs-identifier hs-var">selectedFields</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-674"></span><span>    </span><span class="annot"><span class="annottext">Maybe FieldName

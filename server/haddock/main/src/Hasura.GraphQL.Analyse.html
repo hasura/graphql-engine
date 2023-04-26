@@ -18,7 +18,7 @@
 </span><span id="line-18"></span><span>
 </span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Control.Monad.Circular.html"><span class="hs-identifier">Control.Monad.Circular</span></a></span><span>
 </span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier">Control.Monad.Writer</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier">Writer</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier">runWriter</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.Extended</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.Extended</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier">Data.Sequence</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-operator">(|&gt;)</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
 </span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier">Hasura.GraphQL.Parser.Name</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">GName</span></span><span>
@@ -299,7 +299,7 @@ _otdDescription :: Maybe Description
 (Monad m, Hashable k) =&gt;
 (k -&gt; v -&gt; v -&gt; m v)
 -&gt; HashMap k v -&gt; HashMap k v -&gt; m (HashMap k v)
-</span><span class="hs-identifier hs-var">Map.unionWithM</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; FieldInfo -&gt; FieldInfo -&gt; Analysis FieldInfo
+</span><span class="hs-identifier hs-var">HashMap.unionWithM</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; FieldInfo -&gt; FieldInfo -&gt; Analysis FieldInfo
 </span><a href="#local-6989586621690634358"><span class="hs-identifier hs-var">mergeFields</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
@@ -419,7 +419,7 @@ Diagnosis -&gt; m a
 </span><span id="line-185"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. Hashable k =&gt; k -&gt; v -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.singleton</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">HashMap.singleton</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690634348"><span class="hs-identifier hs-var">_fName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
 </span><a href="#local-6989586621690634349"><span class="hs-identifier hs-var">_fAlias</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -561,7 +561,7 @@ Diagnosis -&gt; m a
 (Monad m, Hashable k) =&gt;
 (k -&gt; v -&gt; v -&gt; m v)
 -&gt; HashMap k v -&gt; HashMap k v -&gt; m (HashMap k v)
-</span><span class="hs-identifier hs-var">Map.unionWithM</span></span><span>
+</span><span class="hs-identifier hs-var">HashMap.unionWithM</span></span><span>
 </span><span id="line-227"></span><span>            </span><span class="annot"><span class="annottext">Name -&gt; FieldInfo -&gt; FieldInfo -&gt; Analysis FieldInfo
 </span><a href="#local-6989586621690634358"><span class="hs-identifier hs-var">mergeFields</span></a></span><span>
 </span><span id="line-228"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ObjectInfo -&gt; HashMap Name FieldInfo
@@ -844,7 +844,7 @@ Diagnosis -&gt; m a
 </span><span id="line-305"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. Hashable k =&gt; k -&gt; v -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.singleton</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><span class="hs-identifier hs-var">HashMap.singleton</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690634257"><span class="hs-identifier hs-var">_vdName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">GType -&gt; InputFieldInfo -&gt; Maybe (Value Void) -&gt; VariableInfo
 </span><a href="Hasura.GraphQL.Analyse.html#VariableInfo"><span class="hs-identifier hs-var">VariableInfo</span></a></span><span> </span><span class="annot"><span class="annottext">GType
@@ -970,7 +970,7 @@ Diagnosis -&gt; m a
 </span><a href="Hasura.GraphQL.Analyse.html#InputObjectInfo"><span class="hs-identifier hs-var">InputObjectInfo</span></a></span><span> </span><span class="annot"><span class="annottext">InputObjectTypeDefinition InputValueDefinition
 </span><a href="#local-6989586621690634241"><span class="hs-identifier hs-var">iotd</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
 </span><span class="hs-identifier hs-var">catMaybes</span></span><span> </span><span class="annot"><span class="annottext">[Maybe (Name, (GType, InputFieldInfo))]
 </span><a href="#local-6989586621690634240"><span class="hs-identifier hs-var">fields</span></a></span><span class="hs-special">)</span><span>
@@ -1159,7 +1159,7 @@ Name -&gt; m (Maybe (TypeDefinition [Name] InputValueDefinition))
 </span><span id="line-386"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690633977"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (TypeDefinition [Name] InputValueDefinition)
 </span><a href="#local-6989586621690633975"><span class="hs-identifier hs-var">types</span></a></span><span>
 </span><span id="line-387"></span><span>

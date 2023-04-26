@@ -21,7 +21,7 @@
 </span><span id="line-21"></span><span>
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Trans.Control</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadBaseControl</span></span><span class="hs-special">)</span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
-</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">M</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HS</span></span><span>
 </span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.List.NonEmpty</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NE</span></span><span>
 </span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Extended</span></span><span>
@@ -359,7 +359,7 @@ TableName b
 </span><span id="line-173"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690999091"><span class="annot"><span class="annottext">QualifiedTable
 </span><a href="#local-6989586621690999091"><span class="hs-identifier hs-var">table</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690999090"><span class="annot"><span class="annottext">DBTableMetadata ('Postgres pgKind)
 </span><a href="#local-6989586621690999090"><span class="hs-identifier hs-var">tableMetaInfo</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">M.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap QualifiedTable (DBTableMetadata ('Postgres pgKind))
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap QualifiedTable (DBTableMetadata ('Postgres pgKind))
 </span><a href="#local-6989586621690999100"><span class="hs-identifier hs-var">tableMetaInfos</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-174"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690999089"><span class="annot"><span class="annottext">computedFieldInfos :: [ComputedFieldMeta ('Postgres pgKind)]
 </span><a href="#local-6989586621690999089"><span class="hs-identifier hs-var hs-var">computedFieldInfos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
@@ -368,7 +368,7 @@ TableName b
 </span><span id="line-176"></span><span>                    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690999086"><span class="annot"><span class="annottext">TableInfo ('Postgres pgKind)
 </span><a href="#local-6989586621690999086"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">M.lookup</span></span><span> </span><span class="annot"><span class="annottext">QualifiedTable
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">QualifiedTable
 </span><a href="#local-6989586621690999091"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">TableCache ('Postgres pgKind)
 </span><a href="#local-6989586621690999103"><span class="hs-identifier hs-var">tableCache</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-177"></span><span>                      </span><span id="local-6989586621690999084"><span class="annot"><span class="annottext">ComputedFieldInfo ('Postgres pgKind)
@@ -433,7 +433,7 @@ OID -&gt; FunctionName b -&gt; FunctionVolatility -&gt; FunctionMeta b
 </span><span id="line-197"></span><span>          </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690999069"><span class="annot"><span class="annottext">FunctionOverloads ('Postgres pgKind)
 </span><a href="#local-6989586621690999069"><span class="hs-identifier hs-var">overloads</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">M.lookup</span></span><span> </span><span class="annot"><span class="annottext">QualifiedFunction
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">QualifiedFunction
 </span><a href="#local-6989586621690999074"><span class="hs-identifier hs-var">function</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap QualifiedFunction (FunctionOverloads ('Postgres pgKind))
 </span><a href="#local-6989586621690999075"><span class="hs-identifier hs-var">functionMetaInfos</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-198"></span><span>          </span><span id="local-6989586621690999071"><span class="annot"><span class="annottext">PGRawFunctionInfo
@@ -735,7 +735,7 @@ PGSourceConfig -&gt; PGExecFrom -&gt; TxET QErr m a -&gt; m (Either QErr a)
 (Foldable t, Monad m) =&gt;
 t a -&gt; (a -&gt; m b) -&gt; m ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">forM_</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">M.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap QualifiedTable (TableInfo ('Postgres pgKind))
+</span><span class="hs-identifier hs-var">HashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap QualifiedTable (TableInfo ('Postgres pgKind))
 </span><a href="#local-6989586621690998867"><span class="hs-identifier hs-var">tables</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span id="local-6989586621690998859"><span class="annot"><span class="annottext">TableCoreInfo ('Postgres pgKind)
 </span><a href="#local-6989586621690998859"><span class="hs-identifier hs-var">coreInfo</span></a></span></span><span> </span><span class="annot"><span class="annottext">RolePermInfoMap ('Postgres pgKind)
@@ -759,7 +759,7 @@ TableCoreInfoG b field primaryKeyColumn -&gt; FieldInfoMap field
 (Foldable t, Monad m) =&gt;
 t a -&gt; (a -&gt; m b) -&gt; m ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">forM_</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">M.toList</span></span><span> </span><span class="annot"><span class="annottext">EventTriggerInfoMap ('Postgres pgKind)
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">EventTriggerInfoMap ('Postgres pgKind)
 </span><a href="#local-6989586621690998858"><span class="hs-identifier hs-var">eventTriggers</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621690998852"><span class="annot"><span class="annottext">TriggerName
 </span><a href="#local-6989586621690998852"><span class="hs-identifier hs-var">triggerName</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerInfo"><span class="hs-identifier hs-type">EventTriggerInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690998850"><span class="annot"><span class="annottext">TriggerOpsDef ('Postgres pgKind)
@@ -854,7 +854,7 @@ SourceName
 </span><span id="line-321"></span><span>        </span><span class="hs-comment">-- Before running the @'tx', fetch metadata of existing tables and functions from Postgres.</span><span>
 </span><span id="line-322"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690998738"><span class="annot"><span class="annottext">tableNames :: HashSet QualifiedTable
 </span><a href="#local-6989586621690998738"><span class="hs-identifier hs-var hs-var">tableNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k a. HashMap k a -&gt; HashSet k
-</span><span class="hs-identifier hs-var">M.keysSet</span></span><span> </span><span class="annot"><span class="annottext">TableCache ('Postgres pgKind)
+</span><span class="hs-identifier hs-var">HashMap.keysSet</span></span><span> </span><span class="annot"><span class="annottext">TableCache ('Postgres pgKind)
 </span><a href="#local-6989586621690998745"><span class="hs-identifier hs-var">tableCache</span></a></span><span>
 </span><span id="line-323"></span><span>            </span><span id="local-6989586621690998736"><span class="annot"><span class="annottext">computedFieldFunctions :: HashSet QualifiedFunction
 </span><a href="#local-6989586621690998736"><span class="hs-identifier hs-var hs-var">computedFieldFunctions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; [a] -&gt; a
@@ -864,11 +864,11 @@ SourceName
 TableInfo ('Postgres pgKind)
 -&gt; HashSet (FunctionName ('Postgres pgKind))
 </span><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#getComputedFieldFunctions"><span class="hs-identifier hs-var">getComputedFieldFunctions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">M.elems</span></span><span> </span><span class="annot"><span class="annottext">TableCache ('Postgres pgKind)
+</span><span class="hs-identifier hs-var">HashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">TableCache ('Postgres pgKind)
 </span><a href="#local-6989586621690998745"><span class="hs-identifier hs-var">tableCache</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-324"></span><span>            </span><span id="local-6989586621690998734"><span class="annot"><span class="annottext">functionNames :: HashSet QualifiedFunction
 </span><a href="#local-6989586621690998734"><span class="hs-identifier hs-var hs-var">functionNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k a. HashMap k a -&gt; HashSet k
-</span><span class="hs-identifier hs-var">M.keysSet</span></span><span> </span><span class="annot"><span class="annottext">FunctionCache ('Postgres pgKind)
+</span><span class="hs-identifier hs-var">HashMap.keysSet</span></span><span> </span><span class="annot"><span class="annottext">FunctionCache ('Postgres pgKind)
 </span><a href="#local-6989586621690998744"><span class="hs-identifier hs-var">functionCache</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet QualifiedFunction
 </span><a href="#local-6989586621690998736"><span class="hs-identifier hs-var">computedFieldFunctions</span></a></span><span>
@@ -959,7 +959,7 @@ Backend b =&gt;
 -&gt; [FunctionMeta ('Postgres pgKind)]
 </span><a href="#local-6989586621690998717"><span class="hs-identifier hs-var hs-var">excludeComputedFieldFunctions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">filter</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k a. (Eq k, Hashable k) =&gt; k -&gt; HashMap k a -&gt; Bool
-</span><span class="hs-operator hs-var">`M.member`</span></span><span> </span><span class="annot"><span class="annottext">FunctionCache ('Postgres pgKind)
+</span><span class="hs-operator hs-var">`HashMap.member`</span></span><span> </span><span class="annot"><span class="annottext">FunctionCache ('Postgres pgKind)
 </span><a href="#local-6989586621690998744"><span class="hs-identifier hs-var">functionCache</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). FunctionMeta b -&gt; FunctionName b
 </span><a href="Hasura.RQL.DDL.Schema.Diff.html#fmFunction"><span class="hs-identifier hs-var">Diff.fmFunction</span></a></span><span class="hs-special">)</span><span>
@@ -987,7 +987,7 @@ Backend b =&gt;
 [FunctionName b] -&gt; [FunctionMeta b] -&gt; [FunctionName b]
 </span><a href="Hasura.RQL.DDL.Schema.Diff.html#getOverloadedFunctions"><span class="hs-identifier hs-var">Diff.getOverloadedFunctions</span></a></span><span>
 </span><span id="line-355"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [k]
-</span><span class="hs-identifier hs-var">M.keys</span></span><span> </span><span class="annot"><span class="annottext">FunctionCache ('Postgres pgKind)
+</span><span class="hs-identifier hs-var">HashMap.keys</span></span><span> </span><span class="annot"><span class="annottext">FunctionCache ('Postgres pgKind)
 </span><a href="#local-6989586621690998744"><span class="hs-identifier hs-var">functionCache</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-356"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[FunctionMeta ('Postgres pgKind)]
 -&gt; [FunctionMeta ('Postgres pgKind)]

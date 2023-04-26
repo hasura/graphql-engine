@@ -21210,7 +21210,7 @@ presetColumns :: UpdPermInfo b -> HashMap (Column b) (UnpreparedValue b)
 --   And (morally) parses into values:
 --   
 --   <pre>
---   M.fromList [("col1", MkOp (fp "x")), ("col2", MkOp (fp "y"))]
+--   HashMap.fromList [("col1", MkOp (fp "x")), ("col2", MkOp (fp "y"))]
 --   </pre>
 updateOperator :: forall n r m b a. MonadBuildSchema b r m n => GQLNameIdentifier -> GQLNameIdentifier -> GQLNameIdentifier -> (ColumnInfo b -> SchemaT r m (Parser 'Both n a)) -> NonEmpty (ColumnInfo b) -> Description -> Description -> SchemaT r m (InputFieldsParser n (HashMap (Column b) a))
 setOp :: forall b n r m. MonadBuildSchema b r m n => UpdateOperator b r m n (UnpreparedValue b)

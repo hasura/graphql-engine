@@ -14,7 +14,7 @@
 </span><span id="line-14"></span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(^.)</span></span><span class="hs-special">)</span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Has</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">getter</span></span><span class="hs-special">)</span><span>
-</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
 </span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Extended</span></span><span>
 </span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Backend</span></a></span><span>
@@ -628,7 +628,7 @@ TableInfo b -&gt; m GQLNameIdentifier
         (InputFieldsParser
            n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
 </span><a href="#local-6989586621690911950"><span class="hs-identifier hs-var">mkFieldParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><span class="hs-identifier hs-var">HashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
 </span><a href="#local-6989586621690911963"><span class="hs-identifier hs-var">allFields</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-194"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690911948"><span class="annot"><span class="annottext">objectName :: Name
 </span><a href="#local-6989586621690911948"><span class="hs-identifier hs-var hs-var">objectName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name
@@ -2167,7 +2167,7 @@ TableCoreInfoG b field primaryKeyColumn
 </span><a href="#local-6989586621690911237"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
 </span><a href="#local-6989586621690911237"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">forall k a. (Eq k, Hashable k) =&gt; k -&gt; HashMap k a -&gt; Bool
-</span><span class="hs-operator hs-var">`Map.member`</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><span class="hs-operator hs-var">`HashMap.member`</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 SelPermInfo b
 -&gt; HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))
 </span><a href="Hasura.RQL.Types.Table.html#spiCols"><span class="hs-identifier hs-var">spiCols</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermInfo b

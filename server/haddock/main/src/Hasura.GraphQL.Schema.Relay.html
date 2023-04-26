@@ -12,7 +12,7 @@
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Types</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Align</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">align</span></span><span class="hs-special">)</span><span>
-</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.Extended</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.Extended</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Sequence.NonEmpty</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NESeq</span></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
 </span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.These</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">partitionThese</span></span><span class="hs-special">)</span><span>
@@ -100,7 +100,7 @@ Parser origin 'Both m Text
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">SourceCache
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">SourceCache
 </span><a href="#local-6989586621690934324"><span class="hs-identifier hs-var">sourceCache</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621690934217"><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621690934217"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690934216"><span class="annot"><span class="annottext">BackendSourceInfo
 </span><a href="#local-6989586621690934216"><span class="hs-identifier hs-var">anySourceInfo</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -128,7 +128,7 @@ SchemaContext
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Backend b =&gt;
 TableCache b -&gt; TableCache b
@@ -195,7 +195,7 @@ HashMap (TableName b) (NodeInfo b) -&gt; TableMap b
 </span><a href="Hasura.GraphQL.Schema.Node.html#TableMap"><span class="hs-identifier hs-var">TableMap</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-73"></span><span>                        </span><span class="annot"><span class="annottext">forall k v. Hashable k =&gt; k -&gt; v -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.singleton</span></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><span class="hs-identifier hs-var">HashMap.singleton</span></span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621690934163"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-74"></span><span>                          </span><span class="annot"><span class="annottext">forall (b :: BackendType).
@@ -217,7 +217,7 @@ SourceInfo b
 </span><span id="line-77"></span><span>    </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 (v -&gt; v -&gt; v) -&gt; [(k, v)] -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.fromListWith</span></span><span> </span><span class="annot"><span class="annottext">AnyBackend TableMap -&gt; AnyBackend TableMap -&gt; AnyBackend TableMap
+</span><span class="hs-identifier hs-var">HashMap.fromListWith</span></span><span> </span><span class="annot"><span class="annottext">AnyBackend TableMap -&gt; AnyBackend TableMap -&gt; AnyBackend TableMap
 </span><a href="#local-6989586621690934141"><span class="hs-identifier hs-var">fuseAnyMaps</span></a></span><span>
 </span><span id="line-78"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (n :: * -&gt; *) (t :: * -&gt; *) origin a b.
@@ -276,7 +276,7 @@ HashMap (TableName b) (NodeInfo b) -&gt; TableMap b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 HashMap k v -&gt; HashMap k v -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.union</span></span><span> </span><span class="annot"><span class="annottext">HashMap (TableName b) (NodeInfo b)
+</span><span class="hs-identifier hs-var">HashMap.union</span></span><span> </span><span class="annot"><span class="annottext">HashMap (TableName b) (NodeInfo b)
 </span><a href="#local-6989586621690934123"><span class="hs-identifier hs-var">m1</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (TableName b) (NodeInfo b)
 </span><a href="#local-6989586621690934122"><span class="hs-identifier hs-var">m2</span></a></span><span>
 </span><span id="line-93"></span><span>
@@ -384,7 +384,7 @@ FieldParser origin m a -&gt; (a -&gt; m b) -&gt; FieldParser origin m b
 Filterable f =&gt;
 (a -&gt; Maybe b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [k]
-</span><span class="hs-identifier hs-var">Map.keys</span></span><span> </span><span class="annot"><span class="annottext">SourceCache
+</span><span class="hs-identifier hs-var">HashMap.keys</span></span><span> </span><span class="annot"><span class="annottext">SourceCache
 </span><a href="#local-6989586621690934077"><span class="hs-identifier hs-var">sourceCache</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690934042"><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621690934042"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-127"></span><span>                </span><span class="annot"><span class="annottext">forall (b :: BackendType).

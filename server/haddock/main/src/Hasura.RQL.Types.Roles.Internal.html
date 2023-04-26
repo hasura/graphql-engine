@@ -8,7 +8,7 @@
 </span><span id="line-8"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-9"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-10"></span><span>
-</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.Semigroup</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Any</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Max</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
@@ -622,12 +622,12 @@ AnnBoolExpFld backend field
 </span><a href="#local-6989586621690871234"><span class="hs-identifier hs-var">typeDefinitionsR</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-218"></span><span>      </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">sort</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap
+</span><span class="hs-identifier hs-var">HashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap
   Name (TypeDefinition [Name] RemoteSchemaInputValueDefinition)
 </span><a href="#local-6989586621690871236"><span class="hs-identifier hs-var">typeDefinitionsL</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. OnlyRelevantEq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="Hasura.RQL.Types.Roles.Internal.html#%3D%3D~"><span class="hs-operator hs-var">==~</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">sort</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap
+</span><span class="hs-identifier hs-var">HashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap
   Name (TypeDefinition [Name] RemoteSchemaInputValueDefinition)
 </span><a href="#local-6989586621690871234"><span class="hs-identifier hs-var">typeDefinitionsR</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-219"></span><span>
@@ -647,12 +647,12 @@ AnnBoolExpFld backend field
 </span><a href="#local-6989586621690871208"><span class="hs-identifier hs-var">subsRootR</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-223"></span><span>      </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">sort</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap
+</span><span class="hs-identifier hs-var">HashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap
   Name (TypeDefinition [Name] RemoteSchemaInputValueDefinition)
 </span><a href="#local-6989586621690871216"><span class="hs-identifier hs-var">typeDefnsL</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. OnlyRelevantEq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="Hasura.RQL.Types.Roles.Internal.html#%3D%3D~"><span class="hs-operator hs-var">==~</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">sort</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap
+</span><span class="hs-identifier hs-var">HashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap
   Name (TypeDefinition [Name] RemoteSchemaInputValueDefinition)
 </span><a href="#local-6989586621690871211"><span class="hs-identifier hs-var">typeDefnsR</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-224"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool

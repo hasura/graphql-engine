@@ -34,7 +34,7 @@
 </span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Trans.Control</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadBaseControl</span></span><span class="hs-special">)</span><span>
 </span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Value</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">toJSON</span></span><span class="hs-special">)</span><span>
 </span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span>
-</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.Extended</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.Extended</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
 </span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.Multi</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MultiMap</span></span><span>
 </span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.List</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
@@ -973,7 +973,7 @@ MetadataModifier -&gt; m ()
 </span><a href="#local-6989586621690869346"><span class="hs-identifier hs-var hs-var">diffInconsistentObjects</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v w.
 (Eq k, Hashable k) =&gt;
 HashMap k v -&gt; HashMap k w -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.difference</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">HashMap.difference</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">`on`</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[InconsistentMetadata]
 -&gt; HashMap MetadataObjId (NonEmpty InconsistentMetadata)
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#groupInconsistentMetadataById"><span class="hs-identifier hs-var">groupInconsistentMetadataById</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -991,7 +991,7 @@ HashMap k v -&gt; HashMap k w -&gt; HashMap k v
 (Foldable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for_</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">MetadataObjId
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">MetadataObjId
 </span><a href="#local-6989586621690869353"><span class="hs-identifier hs-var">objectId</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap MetadataObjId (NonEmpty InconsistentMetadata)
 </span><a href="#local-6989586621690869341"><span class="hs-identifier hs-var">newInconsistentObjects</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690869338"><span class="annot"><span class="annottext">NonEmpty InconsistentMetadata
@@ -1039,7 +1039,7 @@ t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">concatMap</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">toList</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap MetadataObjId (NonEmpty InconsistentMetadata)
+</span><span class="hs-identifier hs-var">HashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap MetadataObjId (NonEmpty InconsistentMetadata)
 </span><a href="#local-6989586621690869341"><span class="hs-identifier hs-var">newInconsistentObjects</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-309"></span><span>        </span><span class="hs-special">}</span><span>
 </span><span id="line-310"></span><span>
@@ -1101,7 +1101,7 @@ t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="#local-6989586621690869279"><span class="hs-identifier hs-var hs-var">diffInconsistentObjects</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v w.
 (Eq k, Hashable k) =&gt;
 HashMap k v -&gt; HashMap k w -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.difference</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">HashMap.difference</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">`on`</span></a></span><span> </span><span class="annot"><span class="annottext">[InconsistentMetadata]
 -&gt; HashMap MetadataObjId (NonEmpty InconsistentMetadata)
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#groupInconsistentMetadataById"><span class="hs-identifier hs-var">groupInconsistentMetadataById</span></a></span><span>
@@ -1113,7 +1113,7 @@ HashMap k v -&gt; HashMap k w -&gt; HashMap k v
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">concatMap</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">toList</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[InconsistentMetadata]
+</span><span class="hs-identifier hs-var">HashMap.elems</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[InconsistentMetadata]
 </span><a href="#local-6989586621690869282"><span class="hs-identifier hs-var">currentObjects</span></a></span><span> </span><span class="annot"><span class="annottext">[InconsistentMetadata]
 -&gt; [InconsistentMetadata]
 -&gt; HashMap MetadataObjId (NonEmpty InconsistentMetadata)

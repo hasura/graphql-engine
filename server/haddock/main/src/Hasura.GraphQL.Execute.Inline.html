@@ -44,7 +44,7 @@
 </span><span id="line-44"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-45"></span><span>
 </span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span>
-</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.Extended</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.Extended</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-48"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
 </span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.List</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
 </span><span id="line-50"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
@@ -152,7 +152,7 @@ t FragmentDefinition
 </span><a href="#local-6989586621690670992"><span class="hs-identifier hs-var hs-var">fragmentDefinitionMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k (t :: * -&gt; *) v.
 (Hashable k, Foldable t) =&gt;
 (v -&gt; k) -&gt; t v -&gt; HashMap k (NonEmpty v)
-</span><span class="hs-identifier hs-var">Map.groupOnNE</span></span><span> </span><span class="annot"><span class="annottext">FragmentDefinition -&gt; Name
+</span><span class="hs-identifier hs-var">HashMap.groupOnNE</span></span><span> </span><span class="annot"><span class="annottext">FragmentDefinition -&gt; Name
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">_fdName</span></a></span><span> </span><span class="annot"><span class="annottext">t FragmentDefinition
 </span><a href="#local-6989586621690670994"><span class="hs-identifier hs-var">fragmentDefinitions</span></a></span><span>
 </span><span id="line-119"></span><span>  </span><span id="local-6989586621690670989"><span class="annot"><span class="annottext">HashMap Name FragmentDefinition
@@ -161,7 +161,7 @@ t FragmentDefinition
 </span><span id="line-120"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) k v1 v2.
 Applicative f =&gt;
 (k -&gt; v1 -&gt; f v2) -&gt; HashMap k v1 -&gt; f (HashMap k v2)
-</span><span class="hs-identifier hs-var">Map.traverseWithKey</span></span><span>
+</span><span class="hs-identifier hs-var">HashMap.traverseWithKey</span></span><span>
 </span><span id="line-121"></span><span>    </span><span class="annot"><span class="annottext">HashMap Name (NonEmpty FragmentDefinition)
 </span><a href="#local-6989586621690670992"><span class="hs-identifier hs-var">fragmentDefinitionMap</span></a></span><span>
 </span><span id="line-122"></span><span>    </span><span class="hs-glyph">\</span><span id="local-6989586621690670987"><span class="annot"><span class="annottext">Name
@@ -191,7 +191,7 @@ Applicative f =&gt;
 </span><a href="#local-6989586621690670978"><span class="hs-identifier hs-var hs-var">definedFragmentNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span class="hs-identifier hs-var">Set.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [k]
-</span><span class="hs-identifier hs-var">Map.keys</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name FragmentDefinition
+</span><span class="hs-identifier hs-var">HashMap.keys</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name FragmentDefinition
 </span><a href="#local-6989586621690670989"><span class="hs-identifier hs-var">uniqueFragmentDefinitions</span></a></span><span>
 </span><span id="line-128"></span><span>      </span><span class="hs-comment">-- At the time of writing, this check is disabled using</span><span>
 </span><span id="line-129"></span><span>      </span><span class="hs-comment">-- a local binding because, the master branch doesn't implement this</span><span>
@@ -414,7 +414,7 @@ _isFragmentCache :: InlineState -&gt; HashMap Name (InlineFragment NoFragments N
 </span><span id="line-190"></span><span>      </span><span class="hs-comment">-- If we&#8217;ve already inlined this fragment, no need to process it again.</span><span>
 </span><span id="line-191"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690670855"><span class="annot"><span class="annottext">InlineFragment NoFragments Name
 </span><a href="#local-6989586621690670855"><span class="hs-identifier hs-var">fragment</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690670863"><span class="hs-identifier hs-var">_fsName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (InlineFragment NoFragments Name)
 </span><a href="#local-6989586621690670857"><span class="hs-identifier hs-var">_isFragmentCache</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-192"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -461,7 +461,7 @@ _fdSelectionSet :: FragmentDefinition -&gt; SelectionSet FragmentSpread Name
 _fdSelectionSet :: SelectionSet FragmentSpread Name
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var hs-var">_fdSelectionSet</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-203"></span><span>          </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690670863"><span class="hs-identifier hs-var">_fsName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name FragmentDefinition
 </span><a href="#local-6989586621690670860"><span class="hs-identifier hs-var">_ieFragmentDefinitions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
 </span><span class="hs-identifier hs-var">withPathK</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Text
@@ -511,7 +511,7 @@ Selection FragmentSpread Name -&gt; m (Selection NoFragments Name)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; HashMap k v -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.insert</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><span class="hs-identifier hs-var">HashMap.insert</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690670863"><span class="hs-identifier hs-var">_fsName</span></a></span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Name
 </span><a href="#local-6989586621690670840"><span class="hs-identifier hs-var">fragment</span></a></span><span>
 </span><span id="line-218"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a

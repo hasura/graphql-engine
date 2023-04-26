@@ -11,7 +11,7 @@
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">contexts</span></span><span class="hs-special">)</span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Control.Monad.Memoize.html"><span class="hs-identifier">Control.Monad.Memoize</span></a></span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier">Data.Aeson.Ordered</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">JO</span></span><span>
-</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List.Extended</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">duplicates</span></span><span class="hs-special">)</span><span>
@@ -156,7 +156,7 @@ InferFunctionPermissions
 </span><span id="line-132"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690976635"><span class="annot"><span class="annottext">remoteSchemasRoles :: [RoleName]
 </span><a href="#local-6989586621690976635"><span class="hs-identifier hs-var hs-var">remoteSchemasRoles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">concatMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [k]
-</span><span class="hs-identifier hs-var">Map.keys</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">HashMap.keys</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall remoteFieldInfo.
 RemoteSchemaCtxG remoteFieldInfo
 -&gt; HashMap RoleName IntrospectionResult
@@ -166,7 +166,7 @@ RemoteSchemaCtxG remoteFieldInfo
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">snd</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
 </span><a href="#local-6989586621690976638"><span class="hs-identifier hs-var">allRemoteSchemas</span></a></span><span>
 </span><span id="line-133"></span><span>        </span><span id="local-6989586621690976629"><span class="annot"><span class="annottext">actionRoles :: HashSet RoleName
 </span><a href="#local-6989586621690976629"><span class="hs-identifier hs-var hs-var">actionRoles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
@@ -185,7 +185,7 @@ RemoteSchemaCtxG remoteFieldInfo
 (Profunctor p, Contravariant f) =&gt;
 (s -&gt; a) -&gt; Optic' p f s a
 </span><span class="hs-identifier hs-var">to</span></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [k]
-</span><span class="hs-identifier hs-var">Map.keys</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">HashMap.keys</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Foldable f =&gt; IndexedFold Int (f a) a
 </span><span class="hs-identifier hs-var">folded</span></span><span class="hs-special">)</span><span>
 </span><span id="line-136"></span><span>              </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
@@ -200,7 +200,7 @@ RemoteSchemaCtxG remoteFieldInfo
 </span><a href="Hasura.RQL.Types.Schema.Options.html#EnableRemoteSchemaPermissions"><span class="hs-identifier hs-var">Options.EnableRemoteSchemaPermissions</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-137"></span><span>        </span><span id="local-6989586621690976626"><span class="annot"><span class="annottext">allActionInfos :: [ActionInfo]
 </span><a href="#local-6989586621690976626"><span class="hs-identifier hs-var hs-var">allActionInfos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="annot"><span class="annottext">ActionCache
+</span><span class="hs-identifier hs-var">HashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">ActionCache
 </span><a href="#local-6989586621690976637"><span class="hs-identifier hs-var">allActions</span></a></span><span>
 </span><span id="line-138"></span><span>        </span><span id="local-6989586621690976618"><span class="annot"><span class="annottext">allTableRoles :: HashSet RoleName
 </span><a href="#local-6989586621690976618"><span class="hs-identifier hs-var hs-var">allTableRoles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
@@ -208,7 +208,7 @@ RemoteSchemaCtxG remoteFieldInfo
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceInfo -&gt; [RoleName]
 </span><a href="Hasura.GraphQL.Schema.Common.html#getTableRoles"><span class="hs-identifier hs-var">getTableRoles</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">=&lt;&lt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="annot"><span class="annottext">SourceCache
+</span><span class="hs-identifier hs-var">HashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">SourceCache
 </span><a href="#local-6989586621690976639"><span class="hs-identifier hs-var">sources</span></a></span><span>
 </span><span id="line-139"></span><span>        </span><span id="local-6989586621690976615"><span class="annot"><span class="annottext">allLogicalModelRoles :: HashSet RoleName
 </span><a href="#local-6989586621690976615"><span class="hs-identifier hs-var hs-var">allLogicalModelRoles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
@@ -216,7 +216,7 @@ RemoteSchemaCtxG remoteFieldInfo
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceInfo -&gt; [RoleName]
 </span><a href="Hasura.GraphQL.Schema.Common.html#getLogicalModelRoles"><span class="hs-identifier hs-var">getLogicalModelRoles</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">=&lt;&lt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="annot"><span class="annottext">SourceCache
+</span><span class="hs-identifier hs-var">HashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">SourceCache
 </span><a href="#local-6989586621690976639"><span class="hs-identifier hs-var">sources</span></a></span><span>
 </span><span id="line-140"></span><span>        </span><span id="local-6989586621690976613"><span class="annot"><span class="annottext">allRoles :: HashSet RoleName
 </span><a href="#local-6989586621690976613"><span class="hs-identifier hs-var hs-var">allRoles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashSet RoleName
@@ -238,7 +238,7 @@ RemoteSchemaCtxG remoteFieldInfo
 </span><span id="line-146"></span><span>      </span><span class="hs-comment">-- roles.</span><span>
 </span><span id="line-147"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-148"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a b.
 (MonadIO m, MonadError e m) =&gt;
@@ -339,7 +339,7 @@ ExceptT e IO a -&gt; ExceptT e IO b -&gt; m (a, b)
 </span><span id="line-173"></span><span>    </span><span id="local-6989586621690976603"><span class="annot"><span class="annottext">SchemaIntrospection
 </span><a href="#local-6989586621690976603"><span class="hs-identifier hs-var">adminIntrospection</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-174"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="Hasura.RQL.Types.Roles.html#adminRoleName"><span class="hs-identifier hs-var">adminRoleName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap
   RoleName
   (RoleContext GQLContext, HashSet InconsistentMetadata,
@@ -396,7 +396,7 @@ ExceptT e IO a -&gt; ExceptT e IO b -&gt; m (a, b)
 </span><span class="hs-identifier hs-var">view</span></span><span> </span><span class="annot"><span class="annottext">forall s t a b. Field2 s t a b =&gt; Lens s t a b
 </span><span class="hs-identifier hs-var">_2</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap
+</span><span class="hs-identifier hs-var">HashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap
   RoleName
   (RoleContext GQLContext, HashSet InconsistentMetadata,
    SchemaIntrospection)
@@ -2337,7 +2337,7 @@ HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
         (SchemaContext, MkTypename, CustomizeRemoteFieldName) (MemoizeT m))
      [RemoteSchemaParser Parse]
 </span><a href="#local-6989586621690975865"><span class="hs-identifier hs-var">step</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
+</span><span class="hs-identifier hs-var">HashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
 </span><a href="#local-6989586621690975872"><span class="hs-identifier hs-var">remotes</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-594"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-595"></span><span>    </span><span id="local-6989586621690975862"><span class="annot"><span class="annottext">getFieldName :: FieldParser origin m a -&gt; Name
@@ -2865,7 +2865,7 @@ FunctionExposedAs -&gt; FunctionCache b -&gt; FunctionCache b
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">FunctionCache b
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">FunctionCache b
 </span><a href="#local-6989586621690975710"><span class="hs-identifier hs-var">functions</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621690975702"><span class="annot"><span class="annottext">FunctionName b
 </span><a href="#local-6989586621690975702"><span class="hs-identifier hs-var">functionName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690975701"><span class="annot"><span class="annottext">FunctionInfo b
 </span><a href="#local-6989586621690975701"><span class="hs-identifier hs-var">functionInfo</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
@@ -2881,7 +2881,7 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><span id="line-686"></span><span>            </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621690975708"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">forall k a. (Eq k, Hashable k) =&gt; k -&gt; HashMap k a -&gt; Bool
-</span><span class="hs-operator hs-var">`Map.member`</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). FunctionInfo b -&gt; FunctionPermissionsMap
+</span><span class="hs-operator hs-var">`HashMap.member`</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). FunctionInfo b -&gt; FunctionPermissionsMap
 </span><a href="Hasura.Function.Cache.html#_fiPermissions"><span class="hs-identifier hs-var">_fiPermissions</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionInfo b
 </span><a href="#local-6989586621690975701"><span class="hs-identifier hs-var">functionInfo</span></a></span><span>
 </span><span id="line-687"></span><span>            </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
@@ -2954,7 +2954,7 @@ SourceInfo b
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">TableCache b
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">TableCache b
 </span><a href="#local-6989586621690975713"><span class="hs-identifier hs-var">tables</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621690975685"><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621690975685"><span class="hs-identifier hs-var">tableName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690975684"><span class="annot"><span class="annottext">TableInfo b
 </span><a href="#local-6989586621690975684"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
@@ -3143,7 +3143,7 @@ SourceInfo b
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="annot"><span class="annottext">NativeQueryCache b
+</span><span class="hs-identifier hs-var">HashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">NativeQueryCache b
 </span><a href="#local-6989586621690975622"><span class="hs-identifier hs-var">nativeQueries</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690975619"><span class="annot"><span class="annottext">NativeQueryInfo b
 </span><a href="#local-6989586621690975619"><span class="hs-identifier hs-var">nativeQuery</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-727"></span><span>    </span><span class="hs-comment">-- only include this native query in the schema</span><span>
@@ -3160,7 +3160,7 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><span id="line-733"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621690975621"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">forall k a. (Eq k, Hashable k) =&gt; k -&gt; HashMap k a -&gt; Bool
-</span><span class="hs-operator hs-var">`Map.member`</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). LogicalModelInfo b -&gt; RolePermInfoMap b
+</span><span class="hs-operator hs-var">`HashMap.member`</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). LogicalModelInfo b -&gt; RolePermInfoMap b
 </span><a href="Hasura.LogicalModel.Cache.html#_lmiPermissions"><span class="hs-identifier hs-var">_lmiPermissions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryInfo b -&gt; LogicalModelInfo b
 </span><a href="Hasura.NativeQuery.Cache.html#_nqiReturns"><span class="hs-identifier hs-var">_nqiReturns</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueryInfo b
 </span><a href="#local-6989586621690975619"><span class="hs-identifier hs-var">nativeQuery</span></a></span><span class="hs-special">)</span><span>
@@ -3263,7 +3263,7 @@ FunctionExposedAs -&gt; FunctionCache b -&gt; FunctionCache b
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">TableCache b
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">TableCache b
 </span><a href="#local-6989586621690975530"><span class="hs-identifier hs-var">tables</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621690975524"><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621690975524"><span class="hs-identifier hs-var">tableName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690975523"><span class="annot"><span class="annottext">TableInfo b
 </span><a href="#local-6989586621690975523"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
@@ -3399,7 +3399,7 @@ rootField -&gt; AllowedRootFields rootField -&gt; Bool
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">FunctionCache b
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">FunctionCache b
 </span><a href="#local-6989586621690975529"><span class="hs-identifier hs-var">functions</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621690975488"><span class="annot"><span class="annottext">FunctionName b
 </span><a href="#local-6989586621690975488"><span class="hs-identifier hs-var">functionName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690975487"><span class="annot"><span class="annottext">FunctionInfo b
@@ -3570,7 +3570,7 @@ FunctionExposedAs -&gt; FunctionCache b -&gt; FunctionCache b
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">TableCache b
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">TableCache b
 </span><a href="#local-6989586621690975422"><span class="hs-identifier hs-var">tables</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621690975417"><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621690975417"><span class="hs-identifier hs-var">tableName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690975416"><span class="annot"><span class="annottext">TableInfo b
 </span><a href="#local-6989586621690975416"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
@@ -3683,7 +3683,7 @@ MkRootFieldName
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">FunctionCache b
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">FunctionCache b
 </span><a href="#local-6989586621690975420"><span class="hs-identifier hs-var">functions</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621690975402"><span class="annot"><span class="annottext">FunctionName b
 </span><a href="#local-6989586621690975402"><span class="hs-identifier hs-var">functionName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690975401"><span class="annot"><span class="annottext">FunctionInfo b
 </span><a href="#local-6989586621690975401"><span class="hs-identifier hs-var">functionInfo</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
@@ -3712,7 +3712,7 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="Hasura.RQL.Types.Roles.html#adminRoleName"><span class="hs-identifier hs-var">adminRoleName</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621690975419"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">forall k a. (Eq k, Hashable k) =&gt; k -&gt; HashMap k a -&gt; Bool
-</span><span class="hs-operator hs-var">`Map.member`</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). FunctionInfo b -&gt; FunctionPermissionsMap
+</span><span class="hs-operator hs-var">`HashMap.member`</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). FunctionInfo b -&gt; FunctionPermissionsMap
 </span><a href="Hasura.Function.Cache.html#_fiPermissions"><span class="hs-identifier hs-var">_fiPermissions</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionInfo b
 </span><a href="#local-6989586621690975401"><span class="hs-identifier hs-var">functionInfo</span></a></span><span>
 </span><span id="line-819"></span><span>    </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
@@ -4512,7 +4512,7 @@ SourceName
 FunctionExposedAs -&gt; FunctionCache b -&gt; FunctionCache b
 </span><a href="Hasura.GraphQL.Schema.html#takeExposedAs"><span class="hs-identifier hs-var hs-var">takeExposedAs</span></a></span></span><span> </span><span id="local-6989586621690975150"><span class="annot"><span class="annottext">FunctionExposedAs
 </span><a href="#local-6989586621690975150"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall v k. (v -&gt; Bool) -&gt; HashMap k v -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.filter</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-identifier hs-var">HashMap.filter</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionExposedAs
 </span><a href="#local-6989586621690975150"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). FunctionInfo b -&gt; FunctionExposedAs

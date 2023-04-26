@@ -27,7 +27,7 @@
 </span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Environment</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Env</span></span><span>
-</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
 </span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.List.NonEmpty</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NEList</span></span><span>
 </span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Extended</span></span><span>
@@ -65,7 +65,7 @@ ActionName -&gt; m ActionInfo
 </span><a href="Hasura.RQL.Types.SchemaCache.html#askSchemaCache"><span class="hs-identifier hs-var">askSchemaCache</span></a></span><span>
 </span><span id="line-58"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">ActionName
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">ActionName
 </span><a href="#local-6989586621690902802"><span class="hs-identifier hs-var">actionName</span></a></span><span> </span><span class="annot"><span class="annottext">ActionCache
 </span><a href="#local-6989586621690902801"><span class="hs-identifier hs-var">actionMap</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
@@ -112,7 +112,7 @@ CreateAction -&gt; m EncJSON
 (Foldable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for_</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">ActionName
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">ActionName
 </span><a href="#local-6989586621690902638"><span class="hs-identifier hs-var">actionName</span></a></span><span> </span><span class="annot"><span class="annottext">ActionCache
 </span><a href="#local-6989586621690902640"><span class="hs-identifier hs-var">actionMap</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
@@ -286,7 +286,7 @@ t a -&gt; (a -&gt; m b) -&gt; m (t b)
 </span><a href="#local-6989586621690902517"><span class="hs-identifier hs-var">noCTScalar</span></a></span><span>
 </span><span id="line-133"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690902515"><span class="annot"><span class="annottext">AnnotatedInputType
 </span><a href="#local-6989586621690902515"><span class="hs-identifier hs-var">nonObjectType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690902519"><span class="hs-identifier hs-var">argumentBaseType</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name AnnotatedInputType
 </span><a href="#local-6989586621690902549"><span class="hs-identifier hs-var">_actInputTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-134"></span><span>                </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -334,7 +334,7 @@ t a -&gt; (a -&gt; m b) -&gt; m (t b)
 </span><a href="#local-6989586621690902508"><span class="hs-identifier hs-var">aoTScalar</span></a></span><span>
 </span><span id="line-149"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690902506"><span class="annot"><span class="annottext">AnnotatedObjectType
 </span><a href="#local-6989586621690902506"><span class="hs-identifier hs-var">objectType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690902511"><span class="hs-identifier hs-var">outputBaseType</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name AnnotatedObjectType
 </span><a href="#local-6989586621690902548"><span class="hs-identifier hs-var">_actObjectTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-150"></span><span>              </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -344,7 +344,7 @@ t a -&gt; (a -&gt; m b) -&gt; m (t b)
 </span><a href="#local-6989586621690902506"><span class="hs-identifier hs-var">objectType</span></a></span><span>
 </span><span id="line-151"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#NOCTScalar"><span class="hs-identifier hs-type">NOCTScalar</span></a></span><span> </span><span id="local-6989586621690902504"><span class="annot"><span class="annottext">AnnotatedScalarType
 </span><a href="#local-6989586621690902504"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690902511"><span class="hs-identifier hs-var">outputBaseType</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name AnnotatedInputType
 </span><a href="#local-6989586621690902549"><span class="hs-identifier hs-var">_actInputTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-152"></span><span>              </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -460,7 +460,7 @@ _atrName :: RelationshipName
 </span><a href="#local-6989586621690902464"><span class="hs-identifier hs-var hs-var">objsInRel</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ObjectFieldName -&gt; Name
 </span><a href="Hasura.RQL.Types.CustomTypes.html#unObjectFieldName"><span class="hs-identifier hs-var">unObjectFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [k]
-</span><span class="hs-identifier hs-var">Map.keys</span></span><span> </span><span class="annot"><span class="annottext">HashMap ObjectFieldName (ColumnInfo ('Postgres 'Vanilla))
+</span><span class="hs-identifier hs-var">HashMap.keys</span></span><span> </span><span class="annot"><span class="annottext">HashMap ObjectFieldName (ColumnInfo ('Postgres 'Vanilla))
 </span><a href="#local-6989586621690902471"><span class="hs-identifier hs-var">_atrFieldMapping</span></a></span><span>
 </span><span id="line-179"></span><span>                         </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -623,7 +623,7 @@ UpdateAction -&gt; m EncJSON
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-231"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">ActionName
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">ActionName
 </span><a href="#local-6989586621690902364"><span class="hs-identifier hs-var">actionName</span></a></span><span> </span><span class="annot"><span class="annottext">ActionCache
 </span><a href="#local-6989586621690902360"><span class="hs-identifier hs-var">actionsMap</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>

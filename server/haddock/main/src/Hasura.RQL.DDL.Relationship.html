@@ -15,7 +15,7 @@
 </span><span id="line-15"></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(.~)</span></span><span class="hs-special">)</span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Types</span></span><span>
-</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
 </span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.NonEmpty</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NEHashMap</span></span><span>
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
@@ -122,7 +122,7 @@ SourceName -&gt; TableName b -&gt; m (TableCoreInfo b)
 (Foldable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for_</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RelName -&gt; FieldName
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RelName -&gt; FieldName
 </span><a href="Hasura.RQL.Types.Relationships.Local.html#fromRel"><span class="hs-identifier hs-var">fromRel</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
 </span><a href="#local-6989586621690895515"><span class="hs-identifier hs-var">relName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
 </span><a href="#local-6989586621690895513"><span class="hs-identifier hs-var">tableFields</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -317,7 +317,7 @@ SourceName
 </span><a href="#local-6989586621690895419"><span class="hs-identifier hs-var">rCols</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. [(a, b)] -&gt; ([a], [b])
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">unzip</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 RelManualConfig b -&gt; HashMap (Column b) (Column b)
 </span><a href="Hasura.RQL.Types.Relationships.Local.html#rmColumns"><span class="hs-identifier hs-var">rmColumns</span></a></span><span> </span><span class="annot"><span class="annottext">RelManualConfig b
@@ -397,7 +397,7 @@ RelManualConfig b -&gt; HashMap (Column b) (Column b)
 </span><span id="line-125"></span><span>    </span><span id="local-6989586621690895395"><span class="annot"><span class="annottext">HashSet (ForeignKey b)
 </span><a href="#local-6989586621690895395"><span class="hs-identifier hs-var">foreignTableForeignKeys</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-126"></span><span>      </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621690895427"><span class="hs-identifier hs-var">qt</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (TableName b) (HashSet (ForeignKey b))
 </span><a href="#local-6989586621690895428"><span class="hs-identifier hs-var">foreignKeys</span></a></span><span>
 </span><span id="line-127"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
@@ -554,7 +554,7 @@ SourceName
 </span><a href="#local-6989586621690895356"><span class="hs-identifier hs-var">rCols</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. [(a, b)] -&gt; ([a], [b])
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">unzip</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 RelManualConfig b -&gt; HashMap (Column b) (Column b)
 </span><a href="Hasura.RQL.Types.Relationships.Local.html#rmColumns"><span class="hs-identifier hs-var">rmColumns</span></a></span><span> </span><span class="annot"><span class="annottext">RelManualConfig b
@@ -677,7 +677,7 @@ SourceName
 </span><a href="#local-6989586621690895329"><span class="hs-identifier hs-var">rCols</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. [(a, b)] -&gt; ([a], [b])
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">unzip</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 RelManualConfig b -&gt; HashMap (Column b) (Column b)
 </span><a href="Hasura.RQL.Types.Relationships.Local.html#rmColumns"><span class="hs-identifier hs-var">rmColumns</span></a></span><span> </span><span class="annot"><span class="annottext">RelManualConfig b
@@ -825,7 +825,7 @@ RelType
 </span><span id="line-246"></span><span>  </span><span id="local-6989586621690895280"><span class="annot"><span class="annottext">HashSet (ForeignKey b)
 </span><a href="#local-6989586621690895280"><span class="hs-identifier hs-var">foreignTableForeignKeys</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-247"></span><span>    </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621690895283"><span class="hs-identifier hs-var">remoteTable</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (TableName b) (HashSet (ForeignKey b))
 </span><a href="#local-6989586621690895281"><span class="hs-identifier hs-var">foreignKeys</span></a></span><span>
 </span><span id="line-248"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
@@ -939,12 +939,12 @@ RelName
 </span><span id="line-272"></span><span>    </span><span id="local-6989586621690895775"><span id="local-6989586621690895776"><span class="annot"><a href="#local-6989586621690895272"><span class="hs-identifier hs-type">reverseMap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621690895776"><span class="hs-identifier hs-type">y</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621690895775"><span class="hs-identifier hs-type">x</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690895776"><span class="hs-identifier hs-type">y</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621690895776"><span class="hs-identifier hs-type">y</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690895775"><span class="hs-identifier hs-type">x</span></a></span></span></span><span>
 </span><span id="line-273"></span><span>    </span><span id="local-6989586621690895272"><span class="annot"><span class="annottext">reverseMap :: forall y x. Hashable y =&gt; HashMap x y -&gt; HashMap y x
 </span><a href="#local-6989586621690895272"><span class="hs-identifier hs-var hs-var">reverseMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; (b, a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">swap</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">Map.toList</span></span><span>
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span>
 </span><span id="line-274"></span><span>
 </span><span id="line-275"></span><span class="hs-comment">-- | Try to find a foreign key constraint, identifying a constraint by its set of columns</span><span>
 </span><span id="line-276"></span><span id="local-6989586621690895807"><span id="local-6989586621690895808"><span class="annot"><a href="Hasura.RQL.DDL.Relationship.html#getRequiredFkey"><span class="hs-identifier hs-type">getRequiredFkey</span></a></span><span> </span><span class="hs-glyph">::</span><span>
@@ -982,7 +982,7 @@ NonEmpty (Column b) -&gt; [ForeignKey b] -&gt; m (ForeignKey b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">toList</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty (Column b)
 </span><a href="#local-6989586621690895247"><span class="hs-identifier hs-var">cols</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k a. HashMap k a -&gt; HashSet k
-</span><span class="hs-identifier hs-var">Map.keysSet</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">HashMap.keysSet</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. NEHashMap k v -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">NEHashMap.toHashMap</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).

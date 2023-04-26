@@ -5,7 +5,7 @@
 </span><span id="line-5"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-6"></span><span>
 </span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
-</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Extended</span></span><span>
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Hasura.Base.Error</span></span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Hasura.EncJSON</span></span><span>
@@ -92,7 +92,7 @@ SourceName -&gt; TableName b -&gt; m (TableCoreInfo b)
 </span><a href="#local-6989586621690998370"><span class="hs-identifier hs-var">qt</span></a></span><span>
 </span><span id="line-48"></span><span>  </span><span class="hs-comment">-- check for conflicts in fieldInfoMap</span><span>
 </span><span id="line-49"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RelName -&gt; FieldName
+</span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RelName -&gt; FieldName
 </span><a href="Hasura.RQL.Types.Relationships.Local.html#fromRel"><span class="hs-identifier hs-var">fromRel</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
 </span><a href="#local-6989586621690998369"><span class="hs-identifier hs-var">newRN</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) field primaryKeyColumn.
