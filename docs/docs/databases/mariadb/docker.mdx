@@ -36,11 +36,12 @@ MariaDB GraphQL Data Connector.
 
 :::tip Beta version supported features
 
-Hasura currently supports queries, mutations (INSERT, UPDATE, DELETE), table relationships, remote relationships and permissions on MariaDB.
+Hasura currently supports queries, mutations (INSERT, UPDATE, DELETE), table relationships, remote relationships and
+permissions on MariaDB.
 
-Note that Hasura doesn't yet support the ability to modify the database schema for MariaDB, so the database you
-connect to should already contain tables and data. You should also ideally have access to it outside of Hasura to
-modify the schema.
+Note that Hasura doesn't yet support the ability to modify the database schema for MariaDB, so the database you connect
+to should already contain tables and data. You should also ideally have access to it outside of Hasura to modify the
+schema.
 
 :::
 
@@ -50,8 +51,6 @@ modify the schema.
 
 This tutorial assumes that the following prerequisites have been met:
 
-- To deploy Hasura Enterprise Edition, you will need a license key. Please [contact Hasura Sales](mailto:sales@hasura.io) if you do not
-  already have one.
 - You have [Docker](https://docs.docker.com/install/) and [Docker Compose](https://docs.docker.com/compose/install/)
   working on your machine.
 - You have access to a MariaDB database for which you would like to create an API.
@@ -71,15 +70,10 @@ curl https://raw.githubusercontent.com/hasura/graphql-engine/master/install-mani
 
 ### Step 2: Set the Hasura Enterprise Edition license key and the admin secret
 
-Edit the downloaded `docker-compose.yaml` and set the license key and admin secret.
-
-An [admin secret key](/deployment/securing-graphql-endpoint.mdx) is required to make sure that your GraphQL endpoint and
-the Hasura Console are not publicly accessible.
-
-#### Edit the Docker Compose file to include the license key and admin secret environment variables
+Edit the downloaded `docker-compose.yaml` and set the license key and admin secret. If you've been provided a license
+key by the Hasura team, you can enter it according to the directions below.
 
 ```yaml {5-6}
-
 ---
 graphql-engine:
   image: hasura/graphql-engine:v2.12.0
@@ -87,6 +81,17 @@ graphql-engine:
     HASURA_GRAPHQL_EE_LICENSE_KEY: <license key>
     HASURA_GRAPHQL_ADMIN_SECRET: <your secretkey>
 ```
+
+An [admin secret key](/deployment/securing-graphql-endpoint.mdx) is required to make sure that your GraphQL endpoint and
+the Hasura Console are not publicly accessible.
+
+:::info I don't have a license key
+
+If you don't already have a license key and are interested in trying out Hasura Enterprise Edition with MariaDB, you can
+start a free 30-day trial. Leave the `HASURA_GRAPHQL_EE_LICENSE_KEY` environment variable commented out we'll return to
+this in Step 4.
+
+:::
 
 :::caution Secure the admin secret
 
@@ -120,6 +125,19 @@ b0b1aac0508d postgres                           ... 1m ago  Up 1m  5432/tcp ...
 
 Open the Hasura Console by navigating to `http://localhost:8080/console`. You will need to input your admin secret key
 as set in your Docker Compose file to log in.
+
+:::info 30-day free trial
+
+If you don't already have a license key, you can start a 30-day free trial by clicking the `ENTERPRISE` button in the
+top navigation. You can read more details [here](/enterprise/try-hasura-enterprise-edition.mdx).
+
+<Thumbnail
+  src="/img/enterprise/Trials_Register_Button.png"
+  alt="Enterprise Edition Trial register button"
+  width="1146px"
+/>
+
+:::
 
 ### Step 5: Connect to a MariaDB database
 
@@ -168,7 +186,6 @@ HASURA_GRAPHQL_METADATA_DATABASE_URL HASURA_GRAPHQL_REDIS_URL HASURA_GRAPHQL_RAT
 For example:
 
 ```yaml {5-7}
-
 ---
 graphql-engine:
   image: hasura/graphql-engine:v2.12.0
