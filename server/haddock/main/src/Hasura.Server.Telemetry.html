@@ -29,7 +29,7 @@
 </span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Control.Concurrent.Extended.html"><span class="hs-identifier">Control.Concurrent.Extended</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">C</span></span><span>
 </span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Control.Exception</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">try</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span>
-</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">A</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier">Data.ByteString.Lazy</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BL</span></span><span>
 </span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.List</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
@@ -113,58 +113,58 @@ showsPrec :: Int -&gt; TelemetryHttpError -&gt; ShowS
 $cshowsPrec :: Int -&gt; TelemetryHttpError -&gt; ShowS
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-85"></span><span>
-</span><span id="line-86"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691014738"><span id="local-6989586621691014740"><span id="local-6989586621691014742"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.html#TelemetryLog"><span class="hs-identifier hs-type">TelemetryLog</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-86"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691014738"><span id="local-6989586621691014740"><span id="local-6989586621691014742"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.html#TelemetryLog"><span class="hs-identifier hs-type">TelemetryLog</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-87"></span><span>  </span><span id="local-6989586621691014716"><span class="annot"><span class="annottext">toJSON :: TelemetryLog -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span id="local-6989586621691014714"><span class="annot"><span class="annottext">TelemetryLog
 </span><a href="#local-6989586621691014714"><span class="hs-identifier hs-var">tl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-88"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">A.object</span></span><span>
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
 </span><span id="line-89"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
-</span><span class="hs-operator hs-var">A..=</span></span><span> </span><span class="annot"><span class="annottext">TelemetryLog -&gt; Text
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">TelemetryLog -&gt; Text
 </span><a href="Hasura.Server.Telemetry.html#_tlType"><span class="hs-identifier hs-var">_tlType</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryLog
 </span><a href="#local-6989586621691014714"><span class="hs-identifier hs-var">tl</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-90"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;message&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
-</span><span class="hs-operator hs-var">A..=</span></span><span> </span><span class="annot"><span class="annottext">TelemetryLog -&gt; Text
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">TelemetryLog -&gt; Text
 </span><a href="Hasura.Server.Telemetry.html#_tlMessage"><span class="hs-identifier hs-var">_tlMessage</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryLog
 </span><a href="#local-6989586621691014714"><span class="hs-identifier hs-var">tl</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-91"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;http_error&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
-</span><span class="hs-operator hs-var">A..=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">A.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryLog -&gt; Maybe TelemetryHttpError
 </span><a href="Hasura.Server.Telemetry.html#_tlHttpError"><span class="hs-identifier hs-var">_tlHttpError</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryLog
 </span><a href="#local-6989586621691014714"><span class="hs-identifier hs-var">tl</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-92"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-93"></span><span>
-</span><span id="line-94"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691014704"><span id="local-6989586621691014706"><span id="local-6989586621691014708"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.html#TelemetryHttpError"><span class="hs-identifier hs-type">TelemetryHttpError</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-94"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691014704"><span id="local-6989586621691014706"><span id="local-6989586621691014708"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.html#TelemetryHttpError"><span class="hs-identifier hs-type">TelemetryHttpError</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-95"></span><span>  </span><span id="local-6989586621691014682"><span class="annot"><span class="annottext">toJSON :: TelemetryHttpError -&gt; Value
 </span><a href="#local-6989586621691014682"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span id="local-6989586621691014681"><span class="annot"><span class="annottext">TelemetryHttpError
 </span><a href="#local-6989586621691014681"><span class="hs-identifier hs-var">tlhe</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-96"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">A.object</span></span><span>
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
 </span><span id="line-97"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;status_code&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
-</span><span class="hs-operator hs-var">A..=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Status -&gt; Int
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Status -&gt; Int
 </span><span class="hs-identifier hs-var">HTTP.statusCode</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError -&gt; Maybe Status
 </span><a href="Hasura.Server.Telemetry.html#tlheStatus"><span class="hs-identifier hs-var">tlheStatus</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError
 </span><a href="#local-6989586621691014681"><span class="hs-identifier hs-var">tlhe</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-98"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;url&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
-</span><span class="hs-operator hs-var">A..=</span></span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError -&gt; Text
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError -&gt; Text
 </span><a href="Hasura.Server.Telemetry.html#tlheUrl"><span class="hs-identifier hs-var">tlheUrl</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError
 </span><a href="#local-6989586621691014681"><span class="hs-identifier hs-var">tlhe</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-99"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;response&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
-</span><span class="hs-operator hs-var">A..=</span></span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError -&gt; Maybe Text
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError -&gt; Maybe Text
 </span><a href="Hasura.Server.Telemetry.html#tlheResponse"><span class="hs-identifier hs-var">tlheResponse</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError
 </span><a href="#local-6989586621691014681"><span class="hs-identifier hs-var">tlhe</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-100"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;http_exception&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
-</span><span class="hs-operator hs-var">A..=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">A.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError -&gt; Maybe HttpException
 </span><a href="Hasura.Server.Telemetry.html#tlheHttpException"><span class="hs-identifier hs-var">tlheHttpException</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryHttpError
 </span><a href="#local-6989586621691014681"><span class="hs-identifier hs-var">tlhe</span></a></span><span class="hs-special">)</span><span>
@@ -178,7 +178,7 @@ $cshowsPrec :: Int -&gt; TelemetryHttpError -&gt; ShowS
 </span><a href="#local-6989586621691014670"><span class="hs-identifier hs-var">tl</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">InternalLogTypes -&gt; EngineLogType Hasura
 </span><a href="Hasura.Logging.html#ELTInternal"><span class="hs-identifier hs-var">ELTInternal</span></a></span><span> </span><span class="annot"><span class="annottext">InternalLogTypes
 </span><a href="Hasura.Logging.html#ILTTelemetry"><span class="hs-identifier hs-var">ILTTelemetry</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">A.toJSON</span></span><span> </span><span class="annot"><span class="annottext">TelemetryLog
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">TelemetryLog
 </span><a href="#local-6989586621691014670"><span class="hs-identifier hs-var">tl</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-105"></span><span>
 </span><span id="line-106"></span><span class="annot"><a href="Hasura.Server.Telemetry.html#mkHttpError"><span class="hs-identifier hs-type">mkHttpError</span></a></span><span> </span><span class="hs-glyph">::</span><span>
@@ -446,7 +446,7 @@ AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 </span><a href="#local-6989586621691014500"><span class="hs-identifier hs-var">schemaCache</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-171"></span><span>            </span><span id="local-6989586621691014482"><span class="annot"><span class="annottext">payloads :: [ByteString]
 </span><a href="#local-6989586621691014482"><span class="hs-identifier hs-var hs-var">payloads</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; ByteString
-</span><span class="hs-identifier hs-var">A.encode</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">J.encode</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">[TelemetryPayload]
 </span><a href="#local-6989586621691014488"><span class="hs-identifier hs-var">telemetries</span></a></span><span>
 </span><span id="line-172"></span><span>

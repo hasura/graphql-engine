@@ -28,8 +28,8 @@
 </span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier">Control.Monad.Except</span></a></span><span>
 </span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier">Control.Monad.Reader</span></a></span><span>
 </span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(.!=)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.:)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.:?)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.=)</span></span><span class="hs-special">)</span><span>
-</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Aeson</span></span><span>
-</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Types</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Aeson</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Types</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier">Data.ByteString.Lazy</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BL</span></span><span>
 </span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.Foldable</span></a></span><span>
 </span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
@@ -144,7 +144,7 @@ parseJSONList :: Value -&gt; Parser [FieldNameText]
 $cparseJSONList :: Value -&gt; Parser [FieldNameText]
 parseJSON :: Value -&gt; Parser FieldNameText
 $cparseJSON :: Value -&gt; Parser FieldNameText
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Aeson.FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690775869"><span id="local-6989586621690775874"><span class="annot"><span class="annottext">ToJSONKeyFunction [FieldNameText]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690775869"><span id="local-6989586621690775874"><span class="annot"><span class="annottext">ToJSONKeyFunction [FieldNameText]
 ToJSONKeyFunction FieldNameText
 forall a.
 ToJSONKeyFunction a -&gt; ToJSONKeyFunction [a] -&gt; ToJSONKey a
@@ -152,7 +152,7 @@ toJSONKeyList :: ToJSONKeyFunction [FieldNameText]
 $ctoJSONKeyList :: ToJSONKeyFunction [FieldNameText]
 toJSONKey :: ToJSONKeyFunction FieldNameText
 $ctoJSONKey :: ToJSONKeyFunction FieldNameText
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Aeson.ToJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690775863"><span class="annot"><span class="annottext">String -&gt; FieldNameText
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690775863"><span class="annot"><span class="annottext">String -&gt; FieldNameText
 forall a. (String -&gt; a) -&gt; IsString a
 fromString :: String -&gt; FieldNameText
 $cfromString :: String -&gt; FieldNameText
@@ -173,7 +173,7 @@ $cfromString :: String -&gt; FieldNameText
 </span><span id="line-87"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="BoolOutputValue"><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BoolOutputValue"><span class="hs-identifier hs-var">BoolOutputValue</span></a></span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span>
 </span><span id="line-88"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ArrayOutputValue"><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#ArrayOutputValue"><span class="hs-identifier hs-var">ArrayOutputValue</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Vector</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-89"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RecordOutputValue"><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#RecordOutputValue"><span class="hs-identifier hs-var">RecordOutputValue</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#FieldNameText"><span class="hs-identifier hs-type">FieldNameText</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-90"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="JsonOutputValue"><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#JsonOutputValue"><span class="hs-identifier hs-var">JsonOutputValue</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span>
+</span><span id="line-90"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="JsonOutputValue"><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#JsonOutputValue"><span class="hs-identifier hs-var">JsonOutputValue</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
 </span><span id="line-91"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="NullOutputValue"><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#NullOutputValue"><span class="hs-identifier hs-var">NullOutputValue</span></a></span></span><span> </span><span class="hs-comment">-- TODO: Consider implications.</span><span>
 </span><span id="line-92"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690775792"><span id="local-6989586621690775794"><span id="local-6989586621690775839"><span class="annot"><span class="annottext">Int -&gt; OutputValue -&gt; ShowS
 [OutputValue] -&gt; ShowS
@@ -202,71 +202,71 @@ $cfrom :: forall x. OutputValue -&gt; Rep OutputValue x
 </span><span id="line-93"></span><span>
 </span><span id="line-94"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690775749"><span id="local-6989586621690775751"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span></span></span><span>
 </span><span id="line-95"></span><span>
-</span><span id="line-96"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690775742"><span id="local-6989586621690775744"><span id="local-6989586621690775746"><span class="annot"><span class="hs-identifier hs-type">Aeson.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-96"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690775742"><span id="local-6989586621690775744"><span id="local-6989586621690775746"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-97"></span><span>  </span><span id="local-6989586621690775709"><span class="annot"><span class="annottext">toJSON :: OutputValue -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-98"></span><span>    </span><span class="annot"><span class="annottext">OutputValue
 </span><a href="Hasura.Backends.BigQuery.Execute.html#NullOutputValue"><span class="hs-identifier hs-var">NullOutputValue</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><span class="hs-identifier hs-var">Aeson.Null</span></span><span>
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">J.Null</span></span><span>
 </span><span id="line-99"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#DecimalOutputValue"><span class="hs-identifier hs-type">DecimalOutputValue</span></a></span><span> </span><span id="local-6989586621690775706"><span class="annot"><span class="annottext">Decimal
 </span><a href="#local-6989586621690775706"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Decimal
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Decimal
 </span><a href="#local-6989586621690775706"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-100"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BigDecimalOutputValue"><span class="hs-identifier hs-type">BigDecimalOutputValue</span></a></span><span> </span><span id="local-6989586621690775705"><span class="annot"><span class="annottext">BigDecimal
 </span><a href="#local-6989586621690775705"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">BigDecimal
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">BigDecimal
 </span><a href="#local-6989586621690775705"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-101"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#FloatOutputValue"><span class="hs-identifier hs-type">FloatOutputValue</span></a></span><span> </span><span id="local-6989586621690775704"><span class="annot"><span class="annottext">Float64
 </span><a href="#local-6989586621690775704"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Float64
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Float64
 </span><a href="#local-6989586621690775704"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-102"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#TextOutputValue"><span class="hs-identifier hs-type">TextOutputValue</span></a></span><span> </span><span id="local-6989586621690775703"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690775703"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690775703"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-103"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BytesOutputValue"><span class="hs-identifier hs-type">BytesOutputValue</span></a></span><span> </span><span id="local-6989586621690775702"><span class="annot"><span class="annottext">Base64
 </span><a href="#local-6989586621690775702"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Base64
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Base64
 </span><a href="#local-6989586621690775702"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-104"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#DateOutputValue"><span class="hs-identifier hs-type">DateOutputValue</span></a></span><span> </span><span id="local-6989586621690775701"><span class="annot"><span class="annottext">Date
 </span><a href="#local-6989586621690775701"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Date
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Date
 </span><a href="#local-6989586621690775701"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-105"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#TimestampOutputValue"><span class="hs-identifier hs-type">TimestampOutputValue</span></a></span><span> </span><span id="local-6989586621690775700"><span class="annot"><span class="annottext">Timestamp
 </span><a href="#local-6989586621690775700"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Timestamp
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Timestamp
 </span><a href="#local-6989586621690775700"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-106"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#TimeOutputValue"><span class="hs-identifier hs-type">TimeOutputValue</span></a></span><span> </span><span id="local-6989586621690775699"><span class="annot"><span class="annottext">Time
 </span><a href="#local-6989586621690775699"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Time
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Time
 </span><a href="#local-6989586621690775699"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-107"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#DatetimeOutputValue"><span class="hs-identifier hs-type">DatetimeOutputValue</span></a></span><span> </span><span id="local-6989586621690775698"><span class="annot"><span class="annottext">Datetime
 </span><a href="#local-6989586621690775698"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Datetime
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Datetime
 </span><a href="#local-6989586621690775698"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-108"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#GeographyOutputValue"><span class="hs-identifier hs-type">GeographyOutputValue</span></a></span><span> </span><span id="local-6989586621690775697"><span class="annot"><span class="annottext">Geography
 </span><a href="#local-6989586621690775697"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Geography
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Geography
 </span><a href="#local-6989586621690775697"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-109"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BoolOutputValue"><span class="hs-identifier hs-type">BoolOutputValue</span></a></span><span> </span><span id="local-6989586621690775696"><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621690775696"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621690775696"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-110"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#IntegerOutputValue"><span class="hs-identifier hs-type">IntegerOutputValue</span></a></span><span> </span><span id="local-6989586621690775695"><span class="annot"><span class="annottext">Int64
 </span><a href="#local-6989586621690775695"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Int64
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Int64
 </span><a href="#local-6989586621690775695"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-111"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#ArrayOutputValue"><span class="hs-identifier hs-type">ArrayOutputValue</span></a></span><span> </span><span id="local-6989586621690775694"><span class="annot"><span class="annottext">Vector OutputValue
 </span><a href="#local-6989586621690775694"><span class="hs-identifier hs-var">vector</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Vector OutputValue
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Vector OutputValue
 </span><a href="#local-6989586621690775694"><span class="hs-identifier hs-var">vector</span></a></span><span>
 </span><span id="line-112"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#JsonOutputValue"><span class="hs-identifier hs-type">JsonOutputValue</span></a></span><span> </span><span id="local-6989586621690775693"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690775693"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690775693"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-113"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#RecordOutputValue"><span class="hs-identifier hs-type">RecordOutputValue</span></a></span><span> </span><span id="local-6989586621690775692"><span class="annot"><span class="annottext">InsOrdHashMap FieldNameText OutputValue
 </span><a href="#local-6989586621690775692"><span class="hs-identifier hs-var">record</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldNameText OutputValue
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldNameText OutputValue
 </span><a href="#local-6989586621690775692"><span class="hs-identifier hs-var">record</span></a></span><span>
 </span><span id="line-114"></span><span>
 </span><span id="line-115"></span><span class="hs-keyword">data</span><span> </span><span id="ExecuteReader"><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#ExecuteReader"><span class="hs-identifier hs-var">ExecuteReader</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ExecuteReader"><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#ExecuteReader"><span class="hs-identifier hs-var">ExecuteReader</span></a></span></span><span>
@@ -279,7 +279,7 @@ $cfrom :: forall x. OutputValue -&gt; Rep OutputValue x
 </span><span id="line-121"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CreateQueryJobDecodeProblem"><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#CreateQueryJobDecodeProblem"><span class="hs-identifier hs-var">CreateQueryJobDecodeProblem</span></a></span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">String</span></a></span><span>
 </span><span id="line-122"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="InsertDatasetDecodeProblem"><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#InsertDatasetDecodeProblem"><span class="hs-identifier hs-var">InsertDatasetDecodeProblem</span></a></span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">String</span></a></span><span>
 </span><span id="line-123"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ExecuteRunBigQueryProblem"><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#ExecuteRunBigQueryProblem"><span class="hs-identifier hs-var">ExecuteRunBigQueryProblem</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#BigQueryProblem"><span class="hs-identifier hs-type">BigQueryProblem</span></a></span><span>
-</span><span id="line-124"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RESTRequestNonOK"><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#RESTRequestNonOK"><span class="hs-identifier hs-var">RESTRequestNonOK</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Status</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span>
+</span><span id="line-124"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RESTRequestNonOK"><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#RESTRequestNonOK"><span class="hs-identifier hs-var">RESTRequestNonOK</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Status</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
 </span><span id="line-125"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall x. Rep ExecuteProblem x -&gt; ExecuteProblem
 forall x. ExecuteProblem -&gt; Rep ExecuteProblem x
 forall a.
@@ -294,37 +294,37 @@ $cfrom :: forall x. ExecuteProblem -&gt; Rep ExecuteProblem x
 </span><span id="line-130"></span><span class="hs-comment">-- of caution.</span><span>
 </span><span id="line-131"></span><span class="hs-keyword">data</span><span> </span><span id="ShowDetails"><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#ShowDetails"><span class="hs-identifier hs-var">ShowDetails</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HideDetails"><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#HideDetails"><span class="hs-identifier hs-var">HideDetails</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="InsecurelyShowDetails"><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#InsecurelyShowDetails"><span class="hs-identifier hs-var">InsecurelyShowDetails</span></a></span></span><span>
 </span><span id="line-132"></span><span>
-</span><span id="line-133"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690775671"><span id="local-6989586621690775673"><span id="local-6989586621690775675"><span class="annot"><span class="hs-identifier hs-type">Aeson.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#ExecuteProblem"><span class="hs-identifier hs-type">ExecuteProblem</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-133"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690775671"><span id="local-6989586621690775673"><span id="local-6989586621690775675"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#ExecuteProblem"><span class="hs-identifier hs-type">ExecuteProblem</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-134"></span><span>  </span><span id="local-6989586621690775648"><span class="annot"><span class="annottext">toJSON :: ExecuteProblem -&gt; Value
 </span><a href="#local-6989586621690775648"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-135"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-136"></span><span>      </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#GetJobDecodeProblem"><span class="hs-identifier hs-type">GetJobDecodeProblem</span></a></span><span> </span><span id="local-6989586621690775645"><span class="annot"><span class="annottext">String
 </span><a href="#local-6989586621690775645"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;get_job_decode_problem&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
-</span><span class="hs-operator hs-var">Aeson..=</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><a href="#local-6989586621690775645"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-137"></span><span>      </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#CreateQueryJobDecodeProblem"><span class="hs-identifier hs-type">CreateQueryJobDecodeProblem</span></a></span><span> </span><span id="local-6989586621690775644"><span class="annot"><span class="annottext">String
 </span><a href="#local-6989586621690775644"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;create_query_job_decode_problem&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
-</span><span class="hs-operator hs-var">Aeson..=</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><a href="#local-6989586621690775644"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-138"></span><span>      </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#ExecuteRunBigQueryProblem"><span class="hs-identifier hs-type">ExecuteRunBigQueryProblem</span></a></span><span> </span><span id="local-6989586621690775643"><span class="annot"><span class="annottext">BigQueryProblem
 </span><a href="#local-6989586621690775643"><span class="hs-identifier hs-var">problem</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;execute_run_bigquery_problem&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
-</span><span class="hs-operator hs-var">Aeson..=</span></span><span> </span><span class="annot"><span class="annottext">BigQueryProblem
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">BigQueryProblem
 </span><a href="#local-6989586621690775643"><span class="hs-identifier hs-var">problem</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-139"></span><span>      </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#InsertDatasetDecodeProblem"><span class="hs-identifier hs-type">InsertDatasetDecodeProblem</span></a></span><span> </span><span id="local-6989586621690775642"><span class="annot"><span class="annottext">String
 </span><a href="#local-6989586621690775642"><span class="hs-identifier hs-var">problem</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;insert_dataset__bigquery_problem&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
-</span><span class="hs-operator hs-var">Aeson..=</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><a href="#local-6989586621690775642"><span class="hs-identifier hs-var">problem</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-140"></span><span>      </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#RESTRequestNonOK"><span class="hs-identifier hs-type">RESTRequestNonOK</span></a></span><span> </span><span class="annot"><span class="annottext">Status
 </span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621690775641"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690775641"><span class="hs-identifier hs-var">resp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;rest_request_non_ok&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
-</span><span class="hs-operator hs-var">Aeson..=</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690775641"><span class="hs-identifier hs-var">resp</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-141"></span><span>
 </span><span id="line-142"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#executeProblemMessage"><span class="hs-identifier hs-type">executeProblemMessage</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#ShowDetails"><span class="hs-identifier hs-type">ShowDetails</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#ExecuteProblem"><span class="hs-identifier hs-type">ExecuteProblem</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
@@ -386,7 +386,7 @@ $cfrom :: forall x. ExecuteProblem -&gt; Rep ExecuteProblem x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><span class="hs-identifier hs-var">LT.toStrict</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><span class="hs-identifier hs-var">LT.decodeUtf8</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; ByteString
-</span><span class="hs-identifier hs-var">Aeson.encode</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">J.encode</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690775632"><span class="hs-identifier hs-var">body</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-155"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-156"></span><span>    </span><span class="annot"><a href="#local-6989586621690775635"><span class="hs-identifier hs-type">showErr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690775625"><span class="annot"><a href="#local-6989586621690775625"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690775625"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690775625"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
@@ -581,7 +581,7 @@ toEncoding :: ParameterName -&gt; Encoding
 $ctoEncoding :: ParameterName -&gt; Encoding
 toJSON :: ParameterName -&gt; Value
 $ctoJSON :: ParameterName -&gt; Value
-</span><a href="#local-6989586621690775406"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Aeson.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690775374"><span id="local-6989586621690775378"><span id="local-6989586621690775382"><span id="local-6989586621690775386"><span id="local-6989586621690775390"><span id="local-6989586621690775394"><span id="local-6989586621690775399"><span class="annot"><span class="annottext">Eq ParameterName
+</span><a href="#local-6989586621690775406"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690775374"><span id="local-6989586621690775378"><span id="local-6989586621690775382"><span id="local-6989586621690775386"><span id="local-6989586621690775390"><span id="local-6989586621690775394"><span id="local-6989586621690775399"><span class="annot"><span class="annottext">Eq ParameterName
 ParameterName -&gt; ParameterName -&gt; Bool
 ParameterName -&gt; ParameterName -&gt; Ordering
 ParameterName -&gt; ParameterName -&gt; ParameterName
@@ -934,7 +934,7 @@ $sel:value:Parameter :: Value
 </span><span id="line-360"></span><span class="hs-comment">-- JSON serialization</span><span>
 </span><span id="line-361"></span><span>
 </span><span id="line-362"></span><span class="hs-comment">-- | Make a JSON representation of the type of the given value.</span><span>
-</span><span id="line-363"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#valueToBigQueryJson"><span class="hs-identifier hs-type">valueToBigQueryJson</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span>
+</span><span id="line-363"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#valueToBigQueryJson"><span class="hs-identifier hs-type">valueToBigQueryJson</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
 </span><span id="line-364"></span><span id="valueToBigQueryJson"><span class="annot"><span class="annottext">valueToBigQueryJson :: Value -&gt; Value
 </span><a href="Hasura.Backends.BigQuery.Execute.html#valueToBigQueryJson"><span class="hs-identifier hs-var hs-var">valueToBigQueryJson</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value
 </span><a href="#local-6989586621690775240"><span class="hs-identifier hs-var">go</span></a></span><span>
@@ -944,89 +944,89 @@ $sel:value:Parameter :: Value
 </span><span id="line-367"></span><span>      </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-368"></span><span>        </span><span class="annot"><span class="annottext">Value
 </span><a href="Hasura.Backends.BigQuery.Types.html#NullValue"><span class="hs-identifier hs-var">NullValue</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
-</span><span class="hs-identifier hs-var">Aeson.Null</span></span><span> </span><span class="hs-comment">-- TODO: I haven't tested whether BigQuery is happy with this null value.</span><span>
+</span><span class="hs-identifier hs-var">J.Null</span></span><span> </span><span class="hs-comment">-- TODO: I haven't tested whether BigQuery is happy with this null value.</span><span>
 </span><span id="line-369"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#DecimalValue"><span class="hs-identifier hs-type">DecimalValue</span></a></span><span> </span><span id="local-6989586621690775192"><span class="annot"><span class="annottext">Decimal
 </span><a href="#local-6989586621690775192"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Decimal
 </span><a href="#local-6989586621690775192"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-370"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#BigDecimalValue"><span class="hs-identifier hs-type">BigDecimalValue</span></a></span><span> </span><span id="local-6989586621690775191"><span class="annot"><span class="annottext">BigDecimal
 </span><a href="#local-6989586621690775191"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">BigDecimal
 </span><a href="#local-6989586621690775191"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-371"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#IntegerValue"><span class="hs-identifier hs-type">IntegerValue</span></a></span><span> </span><span id="local-6989586621690775190"><span class="annot"><span class="annottext">Int64
 </span><a href="#local-6989586621690775190"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Int64
 </span><a href="#local-6989586621690775190"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-372"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#FloatValue"><span class="hs-identifier hs-type">FloatValue</span></a></span><span> </span><span id="local-6989586621690775189"><span class="annot"><span class="annottext">Float64
 </span><a href="#local-6989586621690775189"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Float64
 </span><a href="#local-6989586621690775189"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-373"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#TimestampValue"><span class="hs-identifier hs-type">TimestampValue</span></a></span><span> </span><span id="local-6989586621690775188"><span class="annot"><span class="annottext">Timestamp
 </span><a href="#local-6989586621690775188"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Timestamp
 </span><a href="#local-6989586621690775188"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-374"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#DateValue"><span class="hs-identifier hs-type">DateValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Date"><span class="hs-identifier hs-type">Date</span></a></span><span> </span><span id="local-6989586621690775186"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690775186"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690775186"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-375"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#TimeValue"><span class="hs-identifier hs-type">TimeValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Time"><span class="hs-identifier hs-type">Time</span></a></span><span> </span><span id="local-6989586621690775184"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690775184"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690775184"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-376"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#DatetimeValue"><span class="hs-identifier hs-type">DatetimeValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Datetime"><span class="hs-identifier hs-type">Datetime</span></a></span><span> </span><span id="local-6989586621690775182"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690775182"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690775182"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-377"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#GeographyValue"><span class="hs-identifier hs-type">GeographyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Geography"><span class="hs-identifier hs-type">Geography</span></a></span><span> </span><span id="local-6989586621690775180"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690775180"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690775180"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-378"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#StringValue"><span class="hs-identifier hs-type">StringValue</span></a></span><span> </span><span id="local-6989586621690775179"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690775179"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.String</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690775179"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-379"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#BytesValue"><span class="hs-identifier hs-type">BytesValue</span></a></span><span> </span><span id="local-6989586621690775177"><span class="annot"><span class="annottext">Base64
 </span><a href="#local-6989586621690775177"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Base64
 </span><a href="#local-6989586621690775177"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-380"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#JsonValue"><span class="hs-identifier hs-type">JsonValue</span></a></span><span> </span><span id="local-6989586621690775176"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690775176"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690775176"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-381"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#BoolValue"><span class="hs-identifier hs-type">BoolValue</span></a></span><span> </span><span id="local-6989586621690775175"><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621690775175"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-382"></span><span>          </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span>
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
 </span><span id="line-383"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span>
 </span><span id="line-384"></span><span>                </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.String</span></span><span>
+</span><span class="hs-identifier hs-var">J.String</span></span><span>
 </span><span id="line-385"></span><span>                  </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621690775175"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-386"></span><span>                      </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Text
@@ -1038,10 +1038,10 @@ $sel:value:Parameter :: Value
 </span><span id="line-390"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ArrayValue"><span class="hs-identifier hs-type">ArrayValue</span></a></span><span> </span><span id="local-6989586621690775174"><span class="annot"><span class="annottext">Vector Value
 </span><a href="#local-6989586621690775174"><span class="hs-identifier hs-var">vs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-391"></span><span>          </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;array_values&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Vector Value -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.Array</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">J.Array</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value
 </span><a href="#local-6989586621690775240"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Value
 </span><a href="#local-6989586621690775174"><span class="hs-identifier hs-var">vs</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
@@ -1252,11 +1252,11 @@ showsPrec :: Int -&gt; JobResults -&gt; ShowS
 $cshowsPrec :: Int -&gt; JobResults -&gt; ShowS
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-458"></span><span>
-</span><span id="line-459"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690775092"><span class="annot"><span class="hs-identifier hs-type">Aeson.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#JobResults"><span class="hs-identifier hs-type">JobResults</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-459"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690775092"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#JobResults"><span class="hs-identifier hs-type">JobResults</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-460"></span><span>  </span><span id="local-6989586621690775079"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser JobResults
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-461"></span><span>    </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withObject</span></span><span>
+</span><span class="hs-identifier hs-var">J.withObject</span></span><span>
 </span><span id="line-462"></span><span>      </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;JobResults&quot;</span></span><span>
 </span><span id="line-463"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690775076"><span class="annot"><span class="annottext">Object
@@ -1313,12 +1313,12 @@ showsPrec :: Int -&gt; JobResultsResponse -&gt; ShowS
 $cshowsPrec :: Int -&gt; JobResultsResponse -&gt; ShowS
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-480"></span><span>
-</span><span id="line-481"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690775058"><span class="annot"><span class="hs-identifier hs-type">Aeson.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#JobResultsResponse"><span class="hs-identifier hs-type">JobResultsResponse</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-481"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690775058"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#JobResultsResponse"><span class="hs-identifier hs-type">JobResultsResponse</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-482"></span><span>  </span><span id="local-6989586621690775041"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser JobResultsResponse
 </span><a href="#local-6989586621690775041"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span id="local-6989586621690775040"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690775040"><span class="hs-identifier hs-var">j</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-483"></span><span>    </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withObject</span></span><span>
+</span><span class="hs-identifier hs-var">J.withObject</span></span><span>
 </span><span id="line-484"></span><span>      </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;JobResultsResponse&quot;</span></span><span>
 </span><span id="line-485"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690775039"><span class="annot"><span class="annottext">Object
@@ -1343,7 +1343,7 @@ $cshowsPrec :: Int -&gt; JobResultsResponse -&gt; ShowS
 </span><span id="line-491"></span><span>                </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">JobResults -&gt; JobResultsResponse
 </span><a href="Hasura.Backends.BigQuery.Execute.html#JobComplete"><span class="hs-identifier hs-var">JobComplete</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690775040"><span class="hs-identifier hs-var">j</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-492"></span><span>                </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">JobResultsResponse
@@ -1486,7 +1486,7 @@ BigQueryConnection -&gt; Request -&gt; m (Response ByteString)
 </span><span id="line-536"></span><span>    </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">200</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-537"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; ByteString -&gt; Either String a
-</span><span class="hs-identifier hs-var">Aeson.eitherDecode</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Response a -&gt; a
+</span><span class="hs-identifier hs-var">J.eitherDecode</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Response a -&gt; a
 </span><span class="hs-identifier hs-var">getResponseBody</span></span><span> </span><span class="annot"><span class="annottext">Response ByteString
 </span><a href="#local-6989586621690774972"><span class="hs-identifier hs-var">resp</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-538"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
@@ -1570,14 +1570,14 @@ $sel:query:BigQuery :: BigQuery -&gt; Text
 </span><span id="line-567"></span><span>      </span><span id="local-6989586621690774899"><span class="annot"><span class="annottext">body :: ByteString
 </span><a href="#local-6989586621690774899"><span class="hs-identifier hs-var hs-var">body</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-568"></span><span>        </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; ByteString
-</span><span class="hs-identifier hs-var">Aeson.encode</span></span><span>
+</span><span class="hs-identifier hs-var">J.encode</span></span><span>
 </span><span id="line-569"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span>
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
 </span><span id="line-570"></span><span>              </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;configuration&quot;</span></span><span>
 </span><span id="line-571"></span><span>                  </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span>
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
 </span><span id="line-572"></span><span>                    </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;jobType&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -1586,7 +1586,7 @@ $sel:query:BigQuery :: BigQuery -&gt; Text
 </span><span class="hs-string">&quot;query&quot;</span></span><span>
 </span><span id="line-574"></span><span>                        </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span>
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
 </span><span id="line-575"></span><span>                          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;query&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -1613,16 +1613,16 @@ $sel:value:Parameter :: Parameter -&gt; Value
 $sel:typ:Parameter :: Parameter -&gt; BigQueryType
 </span><a href="#local-6989586621690774896"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-581"></span><span>                                    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span>
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
 </span><span id="line-582"></span><span>                                      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">ParameterName
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">ParameterName
 </span><a href="#local-6989586621690774898"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-583"></span><span>                                        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;parameterType&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">BigQueryType
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">BigQueryType
 </span><a href="#local-6989586621690774897"><span class="hs-identifier hs-var">typ</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-584"></span><span>                                        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;parameterValue&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -1652,7 +1652,7 @@ BigQueryConnection -&gt; Request -&gt; m (Response ByteString)
 </span><span id="line-595"></span><span>    </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">200</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-596"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; ByteString -&gt; Either String a
-</span><span class="hs-identifier hs-var">Aeson.eitherDecode</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Response a -&gt; a
+</span><span class="hs-identifier hs-var">J.eitherDecode</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Response a -&gt; a
 </span><span class="hs-identifier hs-var">getResponseBody</span></span><span> </span><span class="annot"><span class="annottext">Response ByteString
 </span><a href="#local-6989586621690774895"><span class="hs-identifier hs-var">resp</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-597"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
@@ -1697,11 +1697,11 @@ showsPrec :: Int -&gt; Dataset -&gt; ShowS
 $cshowsPrec :: Int -&gt; Dataset -&gt; ShowS
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-609"></span><span>
-</span><span id="line-610"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690774882"><span class="annot"><span class="hs-identifier hs-type">Aeson.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#Dataset"><span class="hs-identifier hs-type">Dataset</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-610"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690774882"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#Dataset"><span class="hs-identifier hs-type">Dataset</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-611"></span><span>  </span><span id="local-6989586621690774877"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Dataset
 </span><a href="#local-6989586621690774877"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-612"></span><span>    </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withObject</span></span><span>
+</span><span class="hs-identifier hs-var">J.withObject</span></span><span>
 </span><span id="line-613"></span><span>      </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Dataset&quot;</span></span><span>
 </span><span id="line-614"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690774876"><span class="annot"><span class="annottext">Object
@@ -1854,9 +1854,9 @@ BigQueryConnection -&gt; Text -&gt; m Dataset
 </span><span id="line-666"></span><span>        </span><span id="local-6989586621690774801"><span class="annot"><span class="annottext">body :: ByteString
 </span><a href="#local-6989586621690774801"><span class="hs-identifier hs-var hs-var">body</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-667"></span><span>          </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; ByteString
-</span><span class="hs-identifier hs-var">Aeson.encode</span></span><span>
+</span><span class="hs-identifier hs-var">J.encode</span></span><span>
 </span><span id="line-668"></span><span>            </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span>
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
 </span><span id="line-669"></span><span>                </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;id&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -1865,7 +1865,7 @@ BigQueryConnection -&gt; Text -&gt; m Dataset
 </span><span class="hs-string">&quot;datasetReference&quot;</span></span><span>
 </span><span id="line-671"></span><span>                    </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span>
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
 </span><span id="line-672"></span><span>                      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;datasetId&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -1892,7 +1892,7 @@ BigQueryConnection -&gt; Request -&gt; m (Response ByteString)
 </span><span id="line-680"></span><span>      </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">200</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-681"></span><span>        </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; ByteString -&gt; Either String a
-</span><span class="hs-identifier hs-var">Aeson.eitherDecode</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Response a -&gt; a
+</span><span class="hs-identifier hs-var">J.eitherDecode</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Response a -&gt; a
 </span><span class="hs-identifier hs-var">getResponseBody</span></span><span> </span><span class="annot"><span class="annottext">Response ByteString
 </span><a href="#local-6989586621690774800"><span class="hs-identifier hs-var">resp</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-682"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
@@ -1921,24 +1921,24 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="#local-6989586621690774800"><span class="hs-identifier hs-var">resp</span></a></span><span>
 </span><span id="line-689"></span><span>
 </span><span id="line-690"></span><span class="hs-comment">-- | Parse given @'ByteString' as JSON value. If not a valid JSON, encode to plain text.</span><span>
-</span><span id="line-691"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#parseAsJsonOrText"><span class="hs-identifier hs-type">parseAsJsonOrText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">BL.ByteString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span>
+</span><span id="line-691"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#parseAsJsonOrText"><span class="hs-identifier hs-type">parseAsJsonOrText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">BL.ByteString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
 </span><span id="line-692"></span><span id="parseAsJsonOrText"><span class="annot"><span class="annottext">parseAsJsonOrText :: ByteString -&gt; Value
 </span><a href="Hasura.Backends.BigQuery.Execute.html#parseAsJsonOrText"><span class="hs-identifier hs-var hs-var">parseAsJsonOrText</span></a></span></span><span> </span><span id="local-6989586621690774799"><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621690774799"><span class="hs-identifier hs-var">bytestring</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-693"></span><span>  </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.String</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">lbsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621690774799"><span class="hs-identifier hs-var">bytestring</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; ByteString -&gt; Maybe a
-</span><span class="hs-identifier hs-var">Aeson.decode</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-identifier hs-var">J.decode</span></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621690774799"><span class="hs-identifier hs-var">bytestring</span></a></span><span>
 </span><span id="line-694"></span><span>
 </span><span id="line-695"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-696"></span><span class="hs-comment">-- Consuming recordset from big query</span><span>
 </span><span id="line-697"></span><span>
-</span><span id="line-698"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#parseRecordSetPayload"><span class="hs-identifier hs-type">parseRecordSetPayload</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Object</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#RecordSet"><span class="hs-identifier hs-type">RecordSet</span></a></span><span>
+</span><span id="line-698"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#parseRecordSetPayload"><span class="hs-identifier hs-type">parseRecordSetPayload</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#RecordSet"><span class="hs-identifier hs-type">RecordSet</span></a></span><span>
 </span><span id="line-699"></span><span id="parseRecordSetPayload"><span class="annot"><span class="annottext">parseRecordSetPayload :: Object -&gt; Parser RecordSet
 </span><a href="Hasura.Backends.BigQuery.Execute.html#parseRecordSetPayload"><span class="hs-identifier hs-var hs-var">parseRecordSetPayload</span></a></span></span><span> </span><span id="local-6989586621690774795"><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690774795"><span class="hs-identifier hs-var">resp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
@@ -1954,7 +1954,7 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><span class="hs-identifier hs-var">V.empty</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;fields&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Object
-</span><a href="#local-6989586621690774794"><span class="hs-identifier hs-var">mSchema</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Vector</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BigQueryField"><span class="hs-identifier hs-type">BigQueryField</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690774794"><span class="hs-identifier hs-var">mSchema</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Vector</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BigQueryField"><span class="hs-identifier hs-type">BigQueryField</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-702"></span><span>  </span><span id="local-6989586621690774791"><span class="annot"><span class="annottext">Vector Value
 </span><a href="#local-6989586621690774791"><span class="hs-identifier hs-var">rowsJSON</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
@@ -1962,7 +1962,7 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><span class="hs-identifier hs-var">V.empty</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690774795"><span class="hs-identifier hs-var">resp</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
-</span><span class="hs-string">&quot;rows&quot;</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Vector</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span class="hs-string">&quot;rows&quot;</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Vector</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-703"></span><span>  </span><span id="local-6989586621690774790"><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldNameText OutputValue)
 </span><a href="#local-6989586621690774790"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-704"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b.
@@ -1976,14 +1976,14 @@ Monad m =&gt;
 </span><a href="Hasura.Backends.BigQuery.Execute.html#parseRow"><span class="hs-identifier hs-var">parseRow</span></a></span><span> </span><span class="annot"><span class="annottext">Vector BigQueryField
 </span><a href="#local-6989586621690774793"><span class="hs-identifier hs-var">columns</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774787"><span class="hs-identifier hs-var">row</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Index</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Index</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><a href="#local-6989586621690774788"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-706"></span><span>      </span><span class="annot"><span class="annottext">Vector Value
 </span><a href="#local-6989586621690774791"><span class="hs-identifier hs-var">rowsJSON</span></a></span><span>
 </span><span id="line-707"></span><span>      </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;rows&quot;</span></span><span>
 </span><span id="line-708"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#RecordSet"><span class="hs-identifier hs-type">RecordSet</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">$sel:wantedFields:RecordSet :: Maybe [Text]
@@ -1996,7 +1996,7 @@ $sel:rows:RecordSet :: Vector (InsOrdHashMap FieldNameText OutputValue)
 </span><span id="line-710"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-711"></span><span class="hs-comment">-- Schema-driven JSON deserialization</span><span>
 </span><span id="line-712"></span><span>
-</span><span id="line-713"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#parseRow"><span class="hs-identifier hs-type">parseRow</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Vector</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BigQueryField"><span class="hs-identifier hs-type">BigQueryField</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#FieldNameText"><span class="hs-identifier hs-type">FieldNameText</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-713"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#parseRow"><span class="hs-identifier hs-type">parseRow</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Vector</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BigQueryField"><span class="hs-identifier hs-type">BigQueryField</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#FieldNameText"><span class="hs-identifier hs-type">FieldNameText</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-714"></span><span id="parseRow"><span class="annot"><span class="annottext">parseRow :: Vector BigQueryField
 -&gt; Value -&gt; Parser (InsOrdHashMap FieldNameText OutputValue)
 </span><a href="Hasura.Backends.BigQuery.Execute.html#parseRow"><span class="hs-identifier hs-var hs-var">parseRow</span></a></span></span><span> </span><span id="local-6989586621690774782"><span class="annot"><span class="annottext">Vector BigQueryField
@@ -2024,12 +2024,12 @@ $sel:rows:RecordSet :: Vector (InsOrdHashMap FieldNameText OutputValue)
 </span><span id="line-720"></span><span class="hs-comment">-- | Parse a row, which at the top-level of the &quot;rows&quot; output has no</span><span>
 </span><span id="line-721"></span><span class="hs-comment">-- {&quot;v&quot;:..} wrapper. But when appearing nestedly, does have the</span><span>
 </span><span id="line-722"></span><span class="hs-comment">-- wrapper. See 'parseBigQueryValue'.</span><span>
-</span><span id="line-723"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#parseBigQueryRow"><span class="hs-identifier hs-type">parseBigQueryRow</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Vector</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BigQueryField"><span class="hs-identifier hs-type">BigQueryField</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span>
+</span><span id="line-723"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#parseBigQueryRow"><span class="hs-identifier hs-type">parseBigQueryRow</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Vector</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BigQueryField"><span class="hs-identifier hs-type">BigQueryField</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span>
 </span><span id="line-724"></span><span id="parseBigQueryRow"><span class="annot"><span class="annottext">parseBigQueryRow :: Vector BigQueryField -&gt; Value -&gt; Parser OutputValue
 </span><a href="Hasura.Backends.BigQuery.Execute.html#parseBigQueryRow"><span class="hs-identifier hs-var hs-var">parseBigQueryRow</span></a></span></span><span> </span><span id="local-6989586621690774777"><span class="annot"><span class="annottext">Vector BigQueryField
 </span><a href="#local-6989586621690774777"><span class="hs-identifier hs-var">columnTypes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-725"></span><span>  </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withObject</span></span><span>
+</span><span class="hs-identifier hs-var">J.withObject</span></span><span>
 </span><span id="line-726"></span><span>    </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;RECORD&quot;</span></span><span>
 </span><span id="line-727"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690774776"><span class="annot"><span class="annottext">Object
@@ -2039,8 +2039,8 @@ $sel:rows:RecordSet :: Vector (InsOrdHashMap FieldNameText OutputValue)
 </span><a href="#local-6989586621690774776"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;f&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;RECORD&quot;</span></span><span>
 </span><span id="line-729"></span><span>        </span><span id="local-6989586621690774774"><span class="annot"><span class="annottext">Vector (FieldNameText, OutputValue)
 </span><a href="#local-6989586621690774774"><span class="hs-identifier hs-var">values</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
@@ -2059,8 +2059,8 @@ t (m a) -&gt; m (t a)
 </span><a href="Hasura.Backends.BigQuery.Execute.html#parseBigQueryField"><span class="hs-identifier hs-var">parseBigQueryField</span></a></span><span> </span><span class="annot"><span class="annottext">BigQueryField
 </span><a href="#local-6989586621690774770"><span class="hs-identifier hs-var">typ</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774769"><span class="hs-identifier hs-var">field</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Index</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Index</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><a href="#local-6989586621690774771"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-734"></span><span>                </span><span class="hs-special">)</span><span>
 </span><span id="line-735"></span><span>                </span><span class="annot"><span class="annottext">Vector BigQueryField
@@ -2069,8 +2069,8 @@ t (m a) -&gt; m (t a)
 </span><a href="#local-6989586621690774775"><span class="hs-identifier hs-var">fields</span></a></span><span>
 </span><span id="line-737"></span><span>            </span><span class="hs-special">)</span><span>
 </span><span id="line-738"></span><span>            </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;f&quot;</span></span><span>
 </span><span id="line-739"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InsOrdHashMap FieldNameText OutputValue -&gt; OutputValue
@@ -2080,7 +2080,7 @@ t (m a) -&gt; m (t a)
 </span><a href="#local-6989586621690774774"><span class="hs-identifier hs-var">values</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-740"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-741"></span><span>
-</span><span id="line-742"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#parseBigQueryValue"><span class="hs-identifier hs-type">parseBigQueryValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#IsNullable"><span class="hs-identifier hs-type">IsNullable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BigQueryFieldType"><span class="hs-identifier hs-type">BigQueryFieldType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span>
+</span><span id="line-742"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#parseBigQueryValue"><span class="hs-identifier hs-type">parseBigQueryValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#IsNullable"><span class="hs-identifier hs-type">IsNullable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BigQueryFieldType"><span class="hs-identifier hs-type">BigQueryFieldType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span>
 </span><span id="line-743"></span><span id="parseBigQueryValue"><span class="annot"><span class="annottext">parseBigQueryValue :: IsNullable -&gt; BigQueryFieldType -&gt; Value -&gt; Parser OutputValue
 </span><a href="Hasura.Backends.BigQuery.Execute.html#parseBigQueryValue"><span class="hs-identifier hs-var hs-var">parseBigQueryValue</span></a></span></span><span> </span><span id="local-6989586621690774765"><span class="annot"><span class="annottext">IsNullable
 </span><a href="#local-6989586621690774765"><span class="hs-identifier hs-var">isNullable</span></a></span></span><span> </span><span id="local-6989586621690774764"><span class="annot"><span class="annottext">BigQueryFieldType
@@ -2097,8 +2097,8 @@ t (m a) -&gt; m (t a)
 </span><a href="Hasura.Backends.BigQuery.Execute.html#parseBigQueryRow"><span class="hs-identifier hs-var">parseBigQueryRow</span></a></span><span> </span><span class="annot"><span class="annottext">Vector BigQueryField
 </span><a href="#local-6989586621690774762"><span class="hs-identifier hs-var">types</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774763"><span class="hs-identifier hs-var">object</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;RECORD&quot;</span></span><span>
 </span><span id="line-747"></span><span>    </span><span class="annot"><span class="annottext">BigQueryFieldType
 </span><a href="Hasura.Backends.BigQuery.Execute.html#FieldDECIMAL"><span class="hs-identifier hs-var">FieldDECIMAL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -2109,11 +2109,11 @@ t (m a) -&gt; m (t a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">Decimal -&gt; OutputValue
 </span><a href="Hasura.Backends.BigQuery.Execute.html#DecimalOutputValue"><span class="hs-identifier hs-var">DecimalOutputValue</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774763"><span class="hs-identifier hs-var">object</span></a></span><span>
 </span><span id="line-749"></span><span>        </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;DECIMAL&quot;</span></span><span>
 </span><span id="line-750"></span><span>    </span><span class="annot"><span class="annottext">BigQueryFieldType
 </span><a href="Hasura.Backends.BigQuery.Execute.html#FieldBIGDECIMAL"><span class="hs-identifier hs-var">FieldBIGDECIMAL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -2124,11 +2124,11 @@ t (m a) -&gt; m (t a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">BigDecimal -&gt; OutputValue
 </span><a href="Hasura.Backends.BigQuery.Execute.html#BigDecimalOutputValue"><span class="hs-identifier hs-var">BigDecimalOutputValue</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774763"><span class="hs-identifier hs-var">object</span></a></span><span>
 </span><span id="line-752"></span><span>        </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;BIGDECIMAL&quot;</span></span><span>
 </span><span id="line-753"></span><span>    </span><span class="annot"><span class="annottext">BigQueryFieldType
 </span><a href="Hasura.Backends.BigQuery.Execute.html#FieldINTEGER"><span class="hs-identifier hs-var">FieldINTEGER</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -2139,11 +2139,11 @@ t (m a) -&gt; m (t a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; OutputValue
 </span><a href="Hasura.Backends.BigQuery.Execute.html#IntegerOutputValue"><span class="hs-identifier hs-var">IntegerOutputValue</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774763"><span class="hs-identifier hs-var">object</span></a></span><span>
 </span><span id="line-755"></span><span>        </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;INTEGER&quot;</span></span><span>
 </span><span id="line-756"></span><span>    </span><span class="annot"><span class="annottext">BigQueryFieldType
 </span><a href="Hasura.Backends.BigQuery.Execute.html#FieldDATE"><span class="hs-identifier hs-var">FieldDATE</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -2154,11 +2154,11 @@ t (m a) -&gt; m (t a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">Date -&gt; OutputValue
 </span><a href="Hasura.Backends.BigQuery.Execute.html#DateOutputValue"><span class="hs-identifier hs-var">DateOutputValue</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774763"><span class="hs-identifier hs-var">object</span></a></span><span>
 </span><span id="line-758"></span><span>        </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;DATE&quot;</span></span><span>
 </span><span id="line-759"></span><span>    </span><span class="annot"><span class="annottext">BigQueryFieldType
 </span><a href="Hasura.Backends.BigQuery.Execute.html#FieldTIME"><span class="hs-identifier hs-var">FieldTIME</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -2169,11 +2169,11 @@ t (m a) -&gt; m (t a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">Time -&gt; OutputValue
 </span><a href="Hasura.Backends.BigQuery.Execute.html#TimeOutputValue"><span class="hs-identifier hs-var">TimeOutputValue</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774763"><span class="hs-identifier hs-var">object</span></a></span><span>
 </span><span id="line-761"></span><span>        </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;TIME&quot;</span></span><span>
 </span><span id="line-762"></span><span>    </span><span class="annot"><span class="annottext">BigQueryFieldType
 </span><a href="Hasura.Backends.BigQuery.Execute.html#FieldDATETIME"><span class="hs-identifier hs-var">FieldDATETIME</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -2184,11 +2184,11 @@ t (m a) -&gt; m (t a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">Datetime -&gt; OutputValue
 </span><a href="Hasura.Backends.BigQuery.Execute.html#DatetimeOutputValue"><span class="hs-identifier hs-var">DatetimeOutputValue</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774763"><span class="hs-identifier hs-var">object</span></a></span><span>
 </span><span id="line-764"></span><span>        </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;DATETIME&quot;</span></span><span>
 </span><span id="line-765"></span><span>    </span><span class="annot"><span class="annottext">BigQueryFieldType
 </span><a href="Hasura.Backends.BigQuery.Execute.html#FieldTIMESTAMP"><span class="hs-identifier hs-var">FieldTIMESTAMP</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -2202,8 +2202,8 @@ t (m a) -&gt; m (t a)
 </span><a href="Hasura.Backends.BigQuery.Execute.html#parseTimestamp"><span class="hs-identifier hs-var">parseTimestamp</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774763"><span class="hs-identifier hs-var">object</span></a></span><span>
 </span><span id="line-767"></span><span>        </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;TIMESTAMP&quot;</span></span><span>
 </span><span id="line-768"></span><span>    </span><span class="annot"><span class="annottext">BigQueryFieldType
 </span><a href="Hasura.Backends.BigQuery.Execute.html#FieldGEOGRAPHY"><span class="hs-identifier hs-var">FieldGEOGRAPHY</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -2214,11 +2214,11 @@ t (m a) -&gt; m (t a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">Geography -&gt; OutputValue
 </span><a href="Hasura.Backends.BigQuery.Execute.html#GeographyOutputValue"><span class="hs-identifier hs-var">GeographyOutputValue</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774763"><span class="hs-identifier hs-var">object</span></a></span><span>
 </span><span id="line-770"></span><span>        </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;GEOGRAPHY&quot;</span></span><span>
 </span><span id="line-771"></span><span>    </span><span class="annot"><span class="annottext">BigQueryFieldType
 </span><a href="Hasura.Backends.BigQuery.Execute.html#FieldFLOAT"><span class="hs-identifier hs-var">FieldFLOAT</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -2229,11 +2229,11 @@ t (m a) -&gt; m (t a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">Float64 -&gt; OutputValue
 </span><a href="Hasura.Backends.BigQuery.Execute.html#FloatOutputValue"><span class="hs-identifier hs-var">FloatOutputValue</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774763"><span class="hs-identifier hs-var">object</span></a></span><span>
 </span><span id="line-773"></span><span>        </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;FLOAT&quot;</span></span><span>
 </span><span id="line-774"></span><span>    </span><span class="annot"><span class="annottext">BigQueryFieldType
 </span><a href="Hasura.Backends.BigQuery.Execute.html#FieldBOOL"><span class="hs-identifier hs-var">FieldBOOL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -2247,11 +2247,11 @@ t (m a) -&gt; m (t a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;true&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774763"><span class="hs-identifier hs-var">object</span></a></span><span>
 </span><span id="line-776"></span><span>        </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;BOOL&quot;</span></span><span>
 </span><span id="line-777"></span><span>    </span><span class="annot"><span class="annottext">BigQueryFieldType
 </span><a href="Hasura.Backends.BigQuery.Execute.html#FieldSTRING"><span class="hs-identifier hs-var">FieldSTRING</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -2262,11 +2262,11 @@ t (m a) -&gt; m (t a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; OutputValue
 </span><a href="Hasura.Backends.BigQuery.Execute.html#TextOutputValue"><span class="hs-identifier hs-var">TextOutputValue</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774763"><span class="hs-identifier hs-var">object</span></a></span><span>
 </span><span id="line-779"></span><span>        </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;STRING&quot;</span></span><span>
 </span><span id="line-780"></span><span>    </span><span class="annot"><span class="annottext">BigQueryFieldType
 </span><a href="Hasura.Backends.BigQuery.Execute.html#FieldBYTES"><span class="hs-identifier hs-var">FieldBYTES</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -2277,11 +2277,11 @@ t (m a) -&gt; m (t a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">Base64 -&gt; OutputValue
 </span><a href="Hasura.Backends.BigQuery.Execute.html#BytesOutputValue"><span class="hs-identifier hs-var">BytesOutputValue</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774763"><span class="hs-identifier hs-var">object</span></a></span><span>
 </span><span id="line-782"></span><span>        </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;BYTES&quot;</span></span><span>
 </span><span id="line-783"></span><span>    </span><span class="annot"><span class="annottext">BigQueryFieldType
 </span><a href="Hasura.Backends.BigQuery.Execute.html#FieldJSON"><span class="hs-identifier hs-var">FieldJSON</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -2295,21 +2295,21 @@ t (m a) -&gt; m (t a)
 </span><a href="Hasura.Backends.BigQuery.Execute.html#parseJson"><span class="hs-identifier hs-var">parseJson</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774763"><span class="hs-identifier hs-var">object</span></a></span><span>
 </span><span id="line-785"></span><span>        </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;JSON&quot;</span></span><span>
 </span><span id="line-786"></span><span>
 </span><span id="line-787"></span><span class="hs-comment">-- | This is a little unfortunate: in its JSON responses, BigQuery gives JSON</span><span>
 </span><span id="line-788"></span><span class="hs-comment">-- fields as strings. So, to parse a JSON response, we need to parse it out of</span><span>
 </span><span id="line-789"></span><span class="hs-comment">-- a JSON string type, hence the unintuitive type signature here.</span><span>
-</span><span id="line-790"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#parseJson"><span class="hs-identifier hs-type">parseJson</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Parser</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span>
+</span><span id="line-790"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#parseJson"><span class="hs-identifier hs-type">parseJson</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Parser</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
 </span><span id="line-791"></span><span id="parseJson"><span class="annot"><span class="annottext">parseJson :: Value -&gt; Parser Value
 </span><a href="Hasura.Backends.BigQuery.Execute.html#parseJson"><span class="hs-identifier hs-var hs-var">parseJson</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withText</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier hs-var">J.withText</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;JSON&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690774757"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690774757"><span class="hs-identifier hs-var">str</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-792"></span><span>  </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; ByteString -&gt; Either String a
-</span><span class="hs-identifier hs-var">Aeson.eitherDecode</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; ByteString
+</span><span class="hs-identifier hs-var">J.eitherDecode</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; ByteString
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">txtToLbs</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690774757"><span class="hs-identifier hs-var">str</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
@@ -2319,7 +2319,7 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><span id="line-793"></span><span>
 </span><span id="line-794"></span><span class="hs-comment">-- | Parse upstream timestamp value in epoch milliseconds and convert it to calendar date time format</span><span>
 </span><span id="line-795"></span><span class="hs-comment">-- https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#timestamp_type</span><span>
-</span><span id="line-796"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#parseTimestamp"><span class="hs-identifier hs-type">parseTimestamp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span>
+</span><span id="line-796"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#parseTimestamp"><span class="hs-identifier hs-type">parseTimestamp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Timestamp"><span class="hs-identifier hs-type">Timestamp</span></a></span><span>
 </span><span id="line-797"></span><span id="parseTimestamp"><span class="annot"><span class="annottext">parseTimestamp :: Value -&gt; Parser Timestamp
 </span><a href="Hasura.Backends.BigQuery.Execute.html#parseTimestamp"><span class="hs-identifier hs-var hs-var">parseTimestamp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-798"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -2328,11 +2328,11 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">UTCTime -&gt; Text
 </span><a href="#local-6989586621690774754"><span class="hs-identifier hs-var">utctimeToISO8601Text</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withText</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier hs-var">J.withText</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;FieldTIMESTAMP&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Parser UTCTime
 </span><a href="#local-6989586621690774753"><span class="hs-identifier hs-var">textToUTCTime</span></a></span><span>
 </span><span id="line-799"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-800"></span><span>    </span><span class="annot"><a href="#local-6989586621690774753"><span class="hs-identifier hs-type">textToUTCTime</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Parser</span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/time-1.11.1.1/src"><span class="hs-identifier hs-type">UTCTime</span></a></span><span>
+</span><span id="line-800"></span><span>    </span><span class="annot"><a href="#local-6989586621690774753"><span class="hs-identifier hs-type">textToUTCTime</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Parser</span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/time-1.11.1.1/src"><span class="hs-identifier hs-type">UTCTime</span></a></span><span>
 </span><span id="line-801"></span><span>    </span><span id="local-6989586621690774753"><span class="annot"><span class="annottext">textToUTCTime :: Text -&gt; Parser UTCTime
 </span><a href="#local-6989586621690774753"><span class="hs-identifier hs-var hs-var">textToUTCTime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-802"></span><span>      </span><span class="annot"><span class="annottext">forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
@@ -2361,7 +2361,7 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. ISO8601 t =&gt; t -&gt; String
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/time-1.11.1.1/src"><span class="hs-identifier hs-var">iso8601Show</span></a></span><span>
 </span><span id="line-807"></span><span>
-</span><span id="line-808"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#parseBigQueryField"><span class="hs-identifier hs-type">parseBigQueryField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BigQueryField"><span class="hs-identifier hs-type">BigQueryField</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#FieldNameText"><span class="hs-identifier hs-type">FieldNameText</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-808"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#parseBigQueryField"><span class="hs-identifier hs-type">parseBigQueryField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BigQueryField"><span class="hs-identifier hs-type">BigQueryField</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#FieldNameText"><span class="hs-identifier hs-type">FieldNameText</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-809"></span><span id="parseBigQueryField"><span class="annot"><span class="annottext">parseBigQueryField :: BigQueryField -&gt; Value -&gt; Parser (FieldNameText, OutputValue)
 </span><a href="Hasura.Backends.BigQuery.Execute.html#parseBigQueryField"><span class="hs-identifier hs-var hs-var">parseBigQueryField</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BigQueryField"><span class="hs-identifier hs-type">BigQueryField</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690774745"><span class="annot"><span class="annottext">FieldNameText
 name :: FieldNameText
@@ -2382,7 +2382,7 @@ $sel:mode:BigQueryField :: BigQueryField -&gt; Mode
 </span><span id="line-813"></span><span>          </span><span id="local-6989586621690774741"><span class="annot"><span class="annottext">Vector Value
 </span><a href="#local-6989586621690774741"><span class="hs-identifier hs-var">values</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall a. (Value -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><a href="Hasura.Backends.BigQuery.Execute.html#has_v_generic"><span class="hs-identifier hs-var">has_v_generic</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774742"><span class="hs-identifier hs-var">value1</span></a></span><span>
 </span><span id="line-814"></span><span>          </span><span id="local-6989586621690774739"><span class="annot"><span class="annottext">Vector OutputValue
 </span><a href="#local-6989586621690774739"><span class="hs-identifier hs-var">outputs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
@@ -2399,8 +2399,8 @@ Monad m =&gt;
 </span><a href="#local-6989586621690774744"><span class="hs-identifier hs-var">typ</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774737"><span class="hs-identifier hs-var">value2</span></a></span><span>
 </span><span id="line-818"></span><span>                    </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Index</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Index</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><a href="#local-6989586621690774738"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-819"></span><span>              </span><span class="hs-special">)</span><span>
 </span><span id="line-820"></span><span>              </span><span class="annot"><span class="annottext">Vector Value
@@ -2412,8 +2412,8 @@ Monad m =&gt;
 </span><a href="#local-6989586621690774739"><span class="hs-identifier hs-var">outputs</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-822"></span><span>      </span><span class="hs-special">)</span><span>
 </span><span id="line-823"></span><span>        </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;REPEATED&quot;</span></span><span>
 </span><span id="line-824"></span><span>    </span><span class="annot"><span class="annottext">Mode
 </span><a href="Hasura.Backends.BigQuery.Execute.html#Nullable"><span class="hs-identifier hs-var">Nullable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
@@ -2424,8 +2424,8 @@ Monad m =&gt;
 </span><a href="Hasura.Backends.BigQuery.Execute.html#IsNullable"><span class="hs-identifier hs-var">IsNullable</span></a></span><span> </span><span class="annot"><span class="annottext">BigQueryFieldType
 </span><a href="#local-6989586621690774744"><span class="hs-identifier hs-var">typ</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774742"><span class="hs-identifier hs-var">value1</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;NULLABLE&quot;</span></span><span>
 </span><span id="line-827"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldNameText
@@ -2440,8 +2440,8 @@ Monad m =&gt;
 </span><a href="Hasura.Backends.BigQuery.Execute.html#IsRequired"><span class="hs-identifier hs-var">IsRequired</span></a></span><span> </span><span class="annot"><span class="annottext">BigQueryFieldType
 </span><a href="#local-6989586621690774744"><span class="hs-identifier hs-var">typ</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774742"><span class="hs-identifier hs-var">value1</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;REQUIRED&quot;</span></span><span>
 </span><span id="line-831"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldNameText
@@ -2451,16 +2451,16 @@ Monad m =&gt;
 </span><span id="line-833"></span><span class="hs-comment">-- Every value, after the top-level row, is wrapped in this.</span><span>
 </span><span id="line-834"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#has_v"><span class="hs-identifier hs-type">has_v</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-835"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#IsNullable"><span class="hs-identifier hs-type">IsNullable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-836"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-837"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-838"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span>
+</span><span id="line-836"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-837"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-838"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">J.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span>
 </span><span id="line-839"></span><span id="has_v"><span class="annot"><span class="annottext">has_v :: IsNullable
 -&gt; (Value -&gt; Parser OutputValue) -&gt; Value -&gt; Parser OutputValue
 </span><a href="Hasura.Backends.BigQuery.Execute.html#has_v"><span class="hs-identifier hs-var hs-var">has_v</span></a></span></span><span> </span><span id="local-6989586621690774734"><span class="annot"><span class="annottext">IsNullable
 </span><a href="#local-6989586621690774734"><span class="hs-identifier hs-var">isNullable</span></a></span></span><span> </span><span id="local-6989586621690774733"><span class="annot"><span class="annottext">Value -&gt; Parser OutputValue
 </span><a href="#local-6989586621690774733"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-840"></span><span>  </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withObject</span></span><span>
+</span><span class="hs-identifier hs-var">J.withObject</span></span><span>
 </span><span id="line-841"></span><span>    </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;HAS_V&quot;</span></span><span>
 </span><span id="line-842"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690774732"><span class="annot"><span class="annottext">Object
@@ -2474,7 +2474,7 @@ Monad m =&gt;
 </span><span id="line-844"></span><span>          </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774731"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-845"></span><span>            </span><span class="annot"><span class="annottext">Value
-</span><span class="hs-identifier hs-var">Aeson.Null</span></span><span>
+</span><span class="hs-identifier hs-var">J.Null</span></span><span>
 </span><span id="line-846"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">IsNullable
 </span><a href="Hasura.Backends.BigQuery.Execute.html#IsNullable"><span class="hs-identifier hs-var">IsNullable</span></a></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IsNullable
 </span><a href="#local-6989586621690774734"><span class="hs-identifier hs-var">isNullable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -2484,21 +2484,21 @@ Monad m =&gt;
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser OutputValue
 </span><a href="#local-6989586621690774733"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774731"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;v&quot;</span></span><span>
 </span><span id="line-848"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-849"></span><span>
 </span><span id="line-850"></span><span class="hs-comment">-- Every value, after the top-level row, is wrapped in this.</span><span>
 </span><span id="line-851"></span><span id="local-6989586621690776362"><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#has_v_generic"><span class="hs-identifier hs-type">has_v_generic</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-852"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Parser</span></span><span> </span><span class="annot"><a href="#local-6989586621690776362"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-853"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-854"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Parser</span></span><span> </span><span class="annot"><a href="#local-6989586621690776362"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-852"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Parser</span></span><span> </span><span class="annot"><a href="#local-6989586621690776362"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-853"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-854"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">J.Parser</span></span><span> </span><span class="annot"><a href="#local-6989586621690776362"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-855"></span><span id="has_v_generic"><span class="annot"><span class="annottext">has_v_generic :: forall a. (Value -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><a href="Hasura.Backends.BigQuery.Execute.html#has_v_generic"><span class="hs-identifier hs-var hs-var">has_v_generic</span></a></span></span><span> </span><span id="local-6989586621690774726"><span class="annot"><span class="annottext">Value -&gt; Parser a
 </span><a href="#local-6989586621690774726"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-856"></span><span>  </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withObject</span></span><span>
+</span><span class="hs-identifier hs-var">J.withObject</span></span><span>
 </span><span id="line-857"></span><span>    </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;HAS_V&quot;</span></span><span>
 </span><span id="line-858"></span><span>    </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621690774725"><span class="annot"><span class="annottext">Object
@@ -2510,20 +2510,20 @@ Monad m =&gt;
 </span><a href="#local-6989586621690774724"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; Parser a
 </span><a href="#local-6989586621690774726"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774724"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><span class="hs-identifier hs-var">Aeson.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
+</span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;v&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-859"></span><span>
 </span><span id="line-860"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-861"></span><span class="hs-comment">-- Generic JSON deserialization</span><span>
 </span><span id="line-862"></span><span>
-</span><span id="line-863"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690774717"><span id="local-6989586621690774719"><span id="local-6989586621690774721"><span class="annot"><span class="hs-identifier hs-type">Aeson.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BigQueryType"><span class="hs-identifier hs-type">BigQueryType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-863"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690774717"><span id="local-6989586621690774719"><span id="local-6989586621690774721"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BigQueryType"><span class="hs-identifier hs-type">BigQueryType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-864"></span><span>  </span><span id="local-6989586621690774694"><span class="annot"><span class="annottext">toJSON :: BigQueryType -&gt; Value
 </span><a href="#local-6989586621690774694"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-865"></span><span>    </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-866"></span><span>      </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#ARRAY"><span class="hs-identifier hs-type">ARRAY</span></a></span><span> </span><span id="local-6989586621690774693"><span class="annot"><span class="annottext">BigQueryType
 </span><a href="#local-6989586621690774693"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;ARRAY&quot;</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
@@ -2586,16 +2586,16 @@ Monad m =&gt;
 </span><span id="line-881"></span><span>      </span><span id="local-6989586621690774692"><span class="annot"><span class="annottext">atomic :: Text -&gt; Value
 </span><a href="#local-6989586621690774692"><span class="hs-identifier hs-var hs-var">atomic</span></a></span></span><span> </span><span id="local-6989586621690774686"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690774686"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690774686"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-882"></span><span>
-</span><span id="line-883"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690774683"><span class="annot"><span class="hs-identifier hs-type">Aeson.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BigQueryField"><span class="hs-identifier hs-type">BigQueryField</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-883"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690774683"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BigQueryField"><span class="hs-identifier hs-type">BigQueryField</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-884"></span><span>  </span><span id="local-6989586621690774611"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser BigQueryField
 </span><a href="#local-6989586621690774611"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-885"></span><span>    </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withObject</span></span><span>
+</span><span class="hs-identifier hs-var">J.withObject</span></span><span>
 </span><span id="line-886"></span><span>      </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;BigQueryField&quot;</span></span><span>
 </span><span id="line-887"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690774610"><span class="annot"><span class="annottext">Object
@@ -2758,13 +2758,13 @@ $sel:name:BigQueryField :: FieldNameText
 </span><a href="#local-6989586621690774604"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-914"></span><span>      </span><span class="hs-special">)</span><span>
 </span><span id="line-915"></span><span>
-</span><span id="line-916"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690774601"><span class="annot"><span class="hs-identifier hs-type">Aeson.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#Mode"><span class="hs-identifier hs-type">Mode</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-916"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690774601"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#Mode"><span class="hs-identifier hs-type">Mode</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-917"></span><span>  </span><span id="local-6989586621690774591"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Mode
 </span><a href="#local-6989586621690774591"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span id="local-6989586621690774590"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774590"><span class="hs-identifier hs-var">j</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-918"></span><span>    </span><span id="local-6989586621690774589"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690774589"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690774590"><span class="hs-identifier hs-var">j</span></a></span><span>
 </span><span id="line-919"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690774589"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-keyword">of</span><span>

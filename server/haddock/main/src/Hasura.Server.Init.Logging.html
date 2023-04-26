@@ -17,7 +17,7 @@
 </span><span id="line-17"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-18"></span><span>
 </span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.=)</span></span><span class="hs-special">)</span><span>
-</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Aeson</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier">Data.ByteString.Char8</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Char8</span></span><span>
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashSet</span></span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Text</span></span><span>
@@ -123,7 +123,7 @@
 </span><span id="line-61"></span><span>      </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">Query.CDOptions</span></a></span><span> </span><span id="local-6989586621690862800"><span class="annot"><span class="annottext">ConnOptions
 </span><a href="#local-6989586621690862800"><span class="hs-identifier hs-var">co</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-62"></span><span>        </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span>
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
 </span><span id="line-63"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;host&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">ConnOptions -&gt; String
@@ -164,7 +164,7 @@
 </span><span id="line-72"></span><span>        </span><span class="annot"><span class="annottext">Maybe String
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-73"></span><span>          </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span>
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
 </span><span id="line-74"></span><span>            </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;error&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
@@ -172,7 +172,7 @@
 </span><span id="line-75"></span><span>        </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690862789"><span class="annot"><span class="annottext">String
 </span><a href="#local-6989586621690862789"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-76"></span><span>          </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span>
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
 </span><span id="line-77"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;retries&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Int
@@ -199,7 +199,7 @@ ServeOptions impl -&gt; StartupLog
 </span><span id="line-86"></span><span>    </span><span id="local-6989586621690862636"><span class="annot"><span class="annottext">infoVal :: Value
 </span><a href="#local-6989586621690862636"><span class="hs-identifier hs-var hs-var">infoVal</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-87"></span><span>      </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span>
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
 </span><span id="line-88"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;port&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall impl. ServeOptions impl -&gt; Port
@@ -243,7 +243,7 @@ ServeOptions impl -&gt; StartupLog
 </span><span id="line-94"></span><span>          </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;jwt_secret&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall impl. ServeOptions impl -&gt; [JWTConfig]
 </span><a href="Hasura.Server.Init.Config.html#soJwtSecret"><span class="hs-identifier hs-var">Config.soJwtSecret</span></a></span><span> </span><span class="annot"><span class="annottext">ServeOptions impl
 </span><a href="#local-6989586621690862637"><span class="hs-identifier hs-var">so</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
@@ -395,7 +395,7 @@ ServeOptions impl -&gt; StartupLog
 </span><a href="#local-6989586621690862593"><span class="hs-identifier hs-var">logLevel</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690862592"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621690862591"><span class="hs-identifier hs-var">msg</span></a></span><span>
 </span><span id="line-126"></span><span>
 </span><span id="line-127"></span><span class="hs-keyword">data</span><span> </span><span id="StartupTimeInfo"><span class="annot"><a href="Hasura.Server.Init.Logging.html#StartupTimeInfo"><span class="hs-identifier hs-var">StartupTimeInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="StartupTimeInfo"><span class="annot"><a href="Hasura.Server.Init.Logging.html#StartupTimeInfo"><span class="hs-identifier hs-var">StartupTimeInfo</span></a></span></span><span>
@@ -408,18 +408,18 @@ ServeOptions impl -&gt; StartupLog
 </span><span id="line-132"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690862585"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Logging.html#StartupTimeInfo"><span class="hs-identifier hs-type">StartupTimeInfo</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-133"></span><span>  </span><span id="local-6989586621690862572"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser StartupTimeInfo
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier hs-var">J.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;StartupTimeInfo&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690862569"><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690862569"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-134"></span><span>    </span><span id="local-6989586621690862568"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690862568"><span class="hs-identifier hs-var">_stiMessage</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690862569"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson..:</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;message&quot;</span></span><span>
 </span><span id="line-135"></span><span>    </span><span id="local-6989586621690862566"><span class="annot"><span class="annottext">Double
 </span><a href="#local-6989586621690862566"><span class="hs-identifier hs-var">_stiTimeTaken</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690862569"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
-</span><span class="hs-operator hs-var">Aeson..:</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;time_taken&quot;</span></span><span>
 </span><span id="line-136"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Logging.html#StartupTimeInfo"><span class="hs-identifier hs-type">StartupTimeInfo</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Double
@@ -440,11 +440,11 @@ _stiTimeTaken :: StartupTimeInfo -&gt; Double
 _stiMessage :: StartupTimeInfo -&gt; Text
 </span><a href="#local-6989586621690862548"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-140"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;message&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
-</span><span class="hs-operator hs-var">Aeson..=</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690862549"><span class="hs-identifier hs-var">_stiMessage</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;time_taken&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
-</span><span class="hs-operator hs-var">Aeson..=</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Double
 </span><a href="#local-6989586621690862548"><span class="hs-identifier hs-var">_stiTimeTaken</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-141"></span></pre></body></html>

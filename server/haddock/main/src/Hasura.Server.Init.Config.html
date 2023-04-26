@@ -80,7 +80,7 @@
 </span><span id="line-80"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Lens'</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Prism'</span></span><span class="hs-special">)</span><span>
 </span><span id="line-81"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Lens</span></span><span>
 </span><span id="line-82"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.:)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.:?)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.=)</span></span><span class="hs-special">)</span><span>
-</span><span id="line-83"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Aeson</span></span><span>
+</span><span id="line-83"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-84"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Scientific</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Scientific</span></span><span>
 </span><span id="line-85"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Text</span></span><span>
 </span><span id="line-86"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/time-1.11.1.1/src"><span class="hs-identifier">Data.Time</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Time</span></span><span>
@@ -524,7 +524,7 @@ $cshowsPrec :: Int -&gt; PostgresConnDetailsRaw -&gt; ShowS
 </span><span id="line-215"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690861521"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnDetailsRaw"><span class="hs-identifier hs-type">PostgresConnDetailsRaw</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-216"></span><span>  </span><span id="local-6989586621690861493"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser PostgresConnDetailsRaw
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier hs-var">J.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;PostgresConnDetailsRaw&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690861490"><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690861490"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-217"></span><span>    </span><span id="local-6989586621690861489"><span class="annot"><span class="annottext">String
@@ -595,7 +595,7 @@ connPort :: PostgresConnDetailsRaw -&gt; Int
 connHost :: PostgresConnDetailsRaw -&gt; String
 </span><a href="#local-6989586621690861438"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-227"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-228"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;host&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -915,12 +915,12 @@ $cfrom :: forall x. ConsoleStatus -&gt; Rep ConsoleStatus x
 </span><a href="Hasura.Server.Init.Config.html#ConsoleDisabled"><span class="hs-identifier hs-var">ConsoleDisabled</span></a></span><span> </span><span class="annot"><span class="annottext">ConsoleStatus
 </span><a href="Hasura.Server.Init.Config.html#ConsoleEnabled"><span class="hs-identifier hs-var">ConsoleEnabled</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span>
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span>
 </span><span id="line-341"></span><span>
 </span><span id="line-342"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690861294"><span id="local-6989586621690861296"><span id="local-6989586621690861298"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#ConsoleStatus"><span class="hs-identifier hs-type">ConsoleStatus</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-343"></span><span>  </span><span id="local-6989586621690861291"><span class="annot"><span class="annottext">toJSON :: ConsoleStatus -&gt; Value
 </span><a href="#local-6989586621690861291"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">ConsoleStatus -&gt; Bool
 </span><a href="Hasura.Server.Init.Config.html#isConsoleEnabled"><span class="hs-identifier hs-var">isConsoleEnabled</span></a></span><span>
 </span><span id="line-344"></span><span>
@@ -1010,12 +1010,12 @@ AdminInternalErrorsStatus -&gt; Rep AdminInternalErrorsStatus x
 </span><a href="Hasura.Server.Init.Config.html#AdminInternalErrorsDisabled"><span class="hs-identifier hs-var">AdminInternalErrorsDisabled</span></a></span><span> </span><span class="annot"><span class="annottext">AdminInternalErrorsStatus
 </span><a href="Hasura.Server.Init.Config.html#AdminInternalErrorsEnabled"><span class="hs-identifier hs-var">AdminInternalErrorsEnabled</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span>
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span>
 </span><span id="line-360"></span><span>
 </span><span id="line-361"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690861235"><span id="local-6989586621690861237"><span id="local-6989586621690861239"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#AdminInternalErrorsStatus"><span class="hs-identifier hs-type">AdminInternalErrorsStatus</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-362"></span><span>  </span><span id="local-6989586621690861233"><span class="annot"><span class="annottext">toJSON :: AdminInternalErrorsStatus -&gt; Value
 </span><a href="#local-6989586621690861233"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">AdminInternalErrorsStatus -&gt; Bool
 </span><a href="Hasura.Server.Init.Config.html#isAdminInternalErrorsEnabled"><span class="hs-identifier hs-var">isAdminInternalErrorsEnabled</span></a></span><span>
 </span><span id="line-363"></span><span>
@@ -1108,12 +1108,12 @@ $cfrom :: forall x. AllowListStatus -&gt; Rep AllowListStatus x
 </span><a href="Hasura.Server.Init.Config.html#AllowListDisabled"><span class="hs-identifier hs-var">AllowListDisabled</span></a></span><span> </span><span class="annot"><span class="annottext">AllowListStatus
 </span><a href="Hasura.Server.Init.Config.html#AllowListEnabled"><span class="hs-identifier hs-var">AllowListEnabled</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span>
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span>
 </span><span id="line-386"></span><span>
 </span><span id="line-387"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690861175"><span id="local-6989586621690861177"><span id="local-6989586621690861179"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#AllowListStatus"><span class="hs-identifier hs-type">AllowListStatus</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-388"></span><span>  </span><span id="local-6989586621690861173"><span class="annot"><span class="annottext">toJSON :: AllowListStatus -&gt; Value
 </span><a href="#local-6989586621690861173"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">AllowListStatus -&gt; Bool
 </span><a href="Hasura.Server.Init.Config.html#isAllowListEnabled"><span class="hs-identifier hs-var">isAllowListEnabled</span></a></span><span>
 </span><span id="line-389"></span><span>
@@ -1196,12 +1196,12 @@ $cfrom :: forall x. DevModeStatus -&gt; Rep DevModeStatus x
 </span><a href="Hasura.Server.Init.Config.html#DevModeDisabled"><span class="hs-identifier hs-var">DevModeDisabled</span></a></span><span> </span><span class="annot"><span class="annottext">DevModeStatus
 </span><a href="Hasura.Server.Init.Config.html#DevModeEnabled"><span class="hs-identifier hs-var">DevModeEnabled</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span>
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span>
 </span><span id="line-407"></span><span>
 </span><span id="line-408"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690861117"><span id="local-6989586621690861119"><span id="local-6989586621690861121"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#DevModeStatus"><span class="hs-identifier hs-type">DevModeStatus</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-409"></span><span>  </span><span id="local-6989586621690861115"><span class="annot"><span class="annottext">toJSON :: DevModeStatus -&gt; Value
 </span><a href="#local-6989586621690861115"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">DevModeStatus -&gt; Bool
 </span><a href="Hasura.Server.Init.Config.html#isDevModeEnabled"><span class="hs-identifier hs-var">isDevModeEnabled</span></a></span><span>
 </span><span id="line-410"></span><span>
@@ -1282,12 +1282,12 @@ $cfrom :: forall x. TelemetryStatus -&gt; Rep TelemetryStatus x
 </span><a href="Hasura.Server.Init.Config.html#TelemetryDisabled"><span class="hs-identifier hs-var">TelemetryDisabled</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryStatus
 </span><a href="Hasura.Server.Init.Config.html#TelemetryEnabled"><span class="hs-identifier hs-var">TelemetryEnabled</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span>
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span>
 </span><span id="line-426"></span><span>
 </span><span id="line-427"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690861059"><span id="local-6989586621690861061"><span id="local-6989586621690861063"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#TelemetryStatus"><span class="hs-identifier hs-type">TelemetryStatus</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-428"></span><span>  </span><span id="local-6989586621690861057"><span class="annot"><span class="annottext">toJSON :: TelemetryStatus -&gt; Value
 </span><a href="#local-6989586621690861057"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">TelemetryStatus -&gt; Bool
 </span><a href="Hasura.Server.Init.Config.html#isTelemetryEnabled"><span class="hs-identifier hs-var">isTelemetryEnabled</span></a></span><span>
 </span><span id="line-429"></span><span>
@@ -1342,12 +1342,12 @@ $cfrom :: forall x. WsReadCookieStatus -&gt; Rep WsReadCookieStatus x
 </span><a href="Hasura.Server.Init.Config.html#WsReadCookieDisabled"><span class="hs-identifier hs-var">WsReadCookieDisabled</span></a></span><span> </span><span class="annot"><span class="annottext">WsReadCookieStatus
 </span><a href="Hasura.Server.Init.Config.html#WsReadCookieEnabled"><span class="hs-identifier hs-var">WsReadCookieEnabled</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span>
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span>
 </span><span id="line-447"></span><span>
 </span><span id="line-448"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690861020"><span id="local-6989586621690861022"><span id="local-6989586621690861024"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#WsReadCookieStatus"><span class="hs-identifier hs-type">WsReadCookieStatus</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-449"></span><span>  </span><span id="local-6989586621690861018"><span class="annot"><span class="annottext">toJSON :: WsReadCookieStatus -&gt; Value
 </span><a href="#local-6989586621690861018"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">WsReadCookieStatus -&gt; Bool
 </span><a href="Hasura.Server.Init.Config.html#isWsReadCookieEnabled"><span class="hs-identifier hs-var">isWsReadCookieEnabled</span></a></span><span>
 </span><span id="line-450"></span><span>
@@ -1467,7 +1467,7 @@ $chashWithSalt :: Int -&gt; Port -&gt; Int
 </span><span id="line-464"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690860937"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#Port"><span class="hs-identifier hs-type">Port</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-465"></span><span>  </span><span id="local-6989586621690860922"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Port
 </span><a href="#local-6989586621690860922"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Scientific -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withScientific</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier hs-var">J.withScientific</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Int&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690860920"><span class="annot"><span class="annottext">Scientific
 </span><a href="#local-6989586621690860920"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
@@ -1545,7 +1545,7 @@ $cfrom :: forall x. API -&gt; Rep API x
 </span><span id="line-479"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690860879"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#API"><span class="hs-identifier hs-type">API</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-480"></span><span>  </span><span id="local-6989586621690860851"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser API
 </span><a href="#local-6989586621690860851"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withText</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier hs-var">J.withText</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;API&quot;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-481"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;metadata&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -1587,27 +1587,27 @@ $cfrom :: forall x. API -&gt; Rep API x
 </span><a href="#local-6989586621690860835"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-491"></span><span>    </span><span class="annot"><span class="annottext">API
 </span><a href="Hasura.Server.Init.Config.html#METADATA"><span class="hs-identifier hs-var">METADATA</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.String</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;metadata&quot;</span></span><span>
 </span><span id="line-492"></span><span>    </span><span class="annot"><span class="annottext">API
 </span><a href="Hasura.Server.Init.Config.html#GRAPHQL"><span class="hs-identifier hs-var">GRAPHQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.String</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;graphql&quot;</span></span><span>
 </span><span id="line-493"></span><span>    </span><span class="annot"><span class="annottext">API
 </span><a href="Hasura.Server.Init.Config.html#PGDUMP"><span class="hs-identifier hs-var">PGDUMP</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.String</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;pgdump&quot;</span></span><span>
 </span><span id="line-494"></span><span>    </span><span class="annot"><span class="annottext">API
 </span><a href="Hasura.Server.Init.Config.html#DEVELOPER"><span class="hs-identifier hs-var">DEVELOPER</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.String</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;developer&quot;</span></span><span>
 </span><span id="line-495"></span><span>    </span><span class="annot"><span class="annottext">API
 </span><a href="Hasura.Server.Init.Config.html#CONFIG"><span class="hs-identifier hs-var">CONFIG</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.String</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;config&quot;</span></span><span>
 </span><span id="line-496"></span><span>    </span><span class="annot"><span class="annottext">API
 </span><a href="Hasura.Server.Init.Config.html#METRICS"><span class="hs-identifier hs-var">METRICS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.String</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;metrics&quot;</span></span><span>
 </span><span id="line-497"></span><span>
 </span><span id="line-498"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690860828"><span id="local-6989586621690860830"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#API"><span class="hs-identifier hs-type">API</span></a></span></span></span><span>
@@ -1665,7 +1665,7 @@ $c== :: OptionalInterval -&gt; OptionalInterval -&gt; Bool
 </span><a href="#local-6989586621690860789"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Refined NonNegative Milliseconds -&gt; OptionalInterval
 </span><a href="Hasura.Server.Init.Config.html#msToOptionalInterval"><span class="hs-identifier hs-var">msToOptionalInterval</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690860789"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-522"></span><span>
 </span><span id="line-523"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690860781"><span id="local-6989586621690860783"><span id="local-6989586621690860785"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#OptionalInterval"><span class="hs-identifier hs-type">OptionalInterval</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
@@ -1673,11 +1673,11 @@ $c== :: OptionalInterval -&gt; OptionalInterval -&gt; Bool
 </span><a href="#local-6989586621690860772"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-525"></span><span>    </span><span class="annot"><span class="annottext">OptionalInterval
 </span><a href="Hasura.Server.Init.Config.html#Skip"><span class="hs-identifier hs-var">Skip</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-type">Milliseconds</span></a></span><span> </span><span class="annot"><span class="annottext">Milliseconds
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-type">Milliseconds</span></a></span><span> </span><span class="annot"><span class="annottext">Milliseconds
 </span><span class="hs-number">0</span></span><span>
 </span><span id="line-526"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.Config.html#Interval"><span class="hs-identifier hs-type">Interval</span></a></span><span> </span><span id="local-6989586621690860771"><span class="annot"><span class="annottext">Refined NonNegative Milliseconds
 </span><a href="#local-6989586621690860771"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Refined NonNegative Milliseconds
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Refined NonNegative Milliseconds
 </span><a href="#local-6989586621690860771"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-527"></span><span>
 </span><span id="line-528"></span><span class="hs-comment">-- | The Raw configuration data from the Arg and Env parsers needed to</span><span>
@@ -1743,7 +1743,7 @@ $cshowsPrec :: Int -&gt; KeepAliveDelay -&gt; ShowS
 </span><span id="line-547"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690860701"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#KeepAliveDelay"><span class="hs-identifier hs-type">KeepAliveDelay</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-548"></span><span>  </span><span id="local-6989586621690860688"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser KeepAliveDelay
 </span><a href="#local-6989586621690860688"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier hs-var">J.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;KeepAliveDelay&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690860687"><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690860687"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-549"></span><span>    </span><span id="local-6989586621690860686"><span class="annot"><span class="annottext">Refined NonNegative Seconds
@@ -1765,7 +1765,7 @@ unKeepAliveDelay :: Refined NonNegative Seconds
 unKeepAliveDelay :: KeepAliveDelay -&gt; Refined NonNegative Seconds
 </span><a href="#local-6989586621690860666"><span class="hs-glyph hs-var hs-var">..</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-554"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;keep_alive_delay&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Refined NonNegative Seconds
 </span><a href="#local-6989586621690860666"><span class="hs-identifier hs-var">unKeepAliveDelay</span></a></span><span class="hs-special">]</span><span>
@@ -1830,7 +1830,7 @@ $ccompare :: WSConnectionInitTimeout -&gt; WSConnectionInitTimeout -&gt; Orderin
 </span><span id="line-562"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690860595"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#WSConnectionInitTimeout"><span class="hs-identifier hs-type">WSConnectionInitTimeout</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-563"></span><span>  </span><span id="local-6989586621690860585"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser WSConnectionInitTimeout
 </span><a href="#local-6989586621690860585"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier hs-var">J.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;WSConnectionInitTimeout&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690860584"><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690860584"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-564"></span><span>    </span><span id="local-6989586621690860583"><span class="annot"><span class="annottext">Refined NonNegative Seconds
@@ -1852,7 +1852,7 @@ unWSConnectionInitTimeout :: Refined NonNegative Seconds
 unWSConnectionInitTimeout :: WSConnectionInitTimeout -&gt; Refined NonNegative Seconds
 </span><a href="#local-6989586621690860564"><span class="hs-glyph hs-var hs-var">..</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-569"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;w_s_connection_init_timeout&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Refined NonNegative Seconds
 </span><a href="#local-6989586621690860564"><span class="hs-identifier hs-var">unWSConnectionInitTimeout</span></a></span><span class="hs-special">]</span><span>

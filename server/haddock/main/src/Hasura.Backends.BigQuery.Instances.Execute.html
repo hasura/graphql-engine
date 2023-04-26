@@ -2,8 +2,8 @@
 </span><span id="line-2"></span><span>
 </span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.BigQuery.Instances.Execute</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-4"></span><span>
-</span><span id="line-5"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Aeson</span></span><span>
-</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Aeson</span></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
 </span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
@@ -268,7 +268,7 @@ BigQuerySourceConfig
 </span><a href="Hasura.Backends.BigQuery.Execute.html#HideDetails"><span class="hs-identifier hs-var">DataLoader.HideDetails</span></a></span><span> </span><span class="annot"><span class="annottext">ExecuteProblem
 </span><a href="#local-6989586621690991462"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">ExecuteProblem
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">ExecuteProblem
 </span><a href="#local-6989586621690991462"><span class="hs-identifier hs-var">err</span></a></span><span>
 </span><span id="line-86"></span><span>          </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690991457"><span class="annot"><span class="annottext">Job
 </span><a href="#local-6989586621690991457"><span class="hs-identifier hs-var">job</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690991456"><span class="annot"><span class="annottext">RecordSet
@@ -354,7 +354,7 @@ rows :: Vector (InsOrdHashMap FieldNameText OutputValue)
 </span><span id="line-102"></span><span>        </span><span class="annot"><span class="annottext">OutputValue
 </span><a href="Hasura.Backends.BigQuery.Execute.html#NullOutputValue"><span class="hs-identifier hs-var">DataLoader.NullOutputValue</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><span class="hs-identifier hs-var">encJFromJValue</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><span class="hs-identifier hs-var">Aeson.Null</span></span><span>
+</span><span class="hs-identifier hs-var">J.Null</span></span><span>
 </span><span id="line-103"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#DecimalOutputValue"><span class="hs-identifier hs-type">DataLoader.DecimalOutputValue</span></a></span><span> </span><span id="local-6989586621690991390"><span class="annot"><span class="annottext">Decimal
 </span><a href="#local-6989586621690991390"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><span class="hs-identifier hs-var">encJFromJValue</span></span><span> </span><span class="annot"><span class="annottext">Decimal
@@ -606,7 +606,7 @@ SourceName
 </span><span id="line-204"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-205"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-206"></span><span>  </span><span class="hs-comment">-- | List of json objects, each of which becomes a row of the table.</span><span>
-</span><span id="line-207"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">NonEmpty</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Object</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-207"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">NonEmpty</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-208"></span><span>  </span><span class="hs-comment">-- | The above objects have this schema</span><span>
 </span><span id="line-209"></span><span>  </span><span class="hs-comment">--</span><span>
 </span><span id="line-210"></span><span>  </span><span class="hs-comment">-- XXX: What is this for/what does this mean?</span><span>
@@ -699,7 +699,7 @@ ColumnType b -&gt; ScalarValue b -&gt; ColumnValue b
 </span><span class="hs-identifier hs-var">LT.toStrict</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-231"></span><span>            </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Text
-</span><span class="hs-identifier hs-var">Aeson.encodeToLazyText</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty Object
+</span><span class="hs-identifier hs-var">J.encodeToLazyText</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty Object
 </span><a href="#local-6989586621690991292"><span class="hs-identifier hs-var">lhs</span></a></span><span>
 </span><span id="line-232"></span><span>
 </span><span id="line-233"></span><span>    </span><span id="local-6989586621690991270"><span class="annot"><span class="annottext">recordSetDefinitionList :: [(ColumnName, ScalarType)]

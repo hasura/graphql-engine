@@ -24,7 +24,7 @@
 </span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span>
 </span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec.OpenAPI</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">preview</span></span><span class="hs-special">)</span><span>
-</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Aeson</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.NonEmpty</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MapNE</span></span><span>
 </span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">H</span></span><span>
@@ -75,7 +75,7 @@ parseJSON :: Value -&gt; Parser (SuggestRels b)
 $cparseJSON :: forall (b :: BackendType).
 Backend b =&gt;
 Value -&gt; Parser (SuggestRels b)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Aeson.FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690891574"><span id="local-6989586621690891579"><span id="local-6989586621690891584"><span id="local-6989586621690891590"><span class="annot"><span class="annottext">[SuggestRels b] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690891574"><span id="local-6989586621690891579"><span id="local-6989586621690891584"><span id="local-6989586621690891590"><span class="annot"><span class="annottext">[SuggestRels b] -&gt; Value
 [SuggestRels b] -&gt; Encoding
 SuggestRels b -&gt; Value
 SuggestRels b -&gt; Encoding
@@ -97,7 +97,7 @@ toEncoding :: SuggestRels b -&gt; Encoding
 $ctoEncoding :: forall (b :: BackendType). Backend b =&gt; SuggestRels b -&gt; Encoding
 toJSON :: SuggestRels b -&gt; Value
 $ctoJSON :: forall (b :: BackendType). Backend b =&gt; SuggestRels b -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Aeson.ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690891562"><span class="annot"><span class="annottext">Proxy (SuggestRels b) -&gt; Declare (Definitions Schema) NamedSchema
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690891562"><span class="annot"><span class="annottext">Proxy (SuggestRels b) -&gt; Declare (Definitions Schema) NamedSchema
 forall a.
 Typeable a
 -&gt; (Proxy a -&gt; Declare (Definitions Schema) NamedSchema)
@@ -201,7 +201,7 @@ parseJSON :: Value -&gt; Parser (SuggestedRelationships b)
 $cparseJSON :: forall (b :: BackendType).
 Backend b =&gt;
 Value -&gt; Parser (SuggestedRelationships b)
-</span><a href="#local-6989586621690891499"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Aeson.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690891477"><span id="local-6989586621690891482"><span id="local-6989586621690891487"><span id="local-6989586621690891492"><span class="annot"><span class="annottext">[SuggestedRelationships b] -&gt; Value
+</span><a href="#local-6989586621690891499"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690891477"><span id="local-6989586621690891482"><span id="local-6989586621690891487"><span id="local-6989586621690891492"><span class="annot"><span class="annottext">[SuggestedRelationships b] -&gt; Value
 [SuggestedRelationships b] -&gt; Encoding
 SuggestedRelationships b -&gt; Value
 SuggestedRelationships b -&gt; Encoding
@@ -239,7 +239,7 @@ toJSON :: SuggestedRelationships b -&gt; Value
 $ctoJSON :: forall (b :: BackendType).
 Backend b =&gt;
 SuggestedRelationships b -&gt; Value
-</span><a href="#local-6989586621690891477"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Aeson.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690891466"><span class="annot"><span class="annottext">Proxy (SuggestedRelationships b)
+</span><a href="#local-6989586621690891477"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690891466"><span class="annot"><span class="annottext">Proxy (SuggestedRelationships b)
 -&gt; Declare (Definitions Schema) NamedSchema
 forall a.
 Typeable a
@@ -320,7 +320,7 @@ parseJSON :: Value -&gt; Parser (Relationship b)
 $cparseJSON :: forall (b :: BackendType).
 Backend b =&gt;
 Value -&gt; Parser (Relationship b)
-</span><a href="#local-6989586621690891433"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Aeson.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690891411"><span id="local-6989586621690891416"><span id="local-6989586621690891421"><span id="local-6989586621690891426"><span class="annot"><span class="annottext">[Relationship b] -&gt; Value
+</span><a href="#local-6989586621690891433"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690891411"><span id="local-6989586621690891416"><span id="local-6989586621690891421"><span id="local-6989586621690891426"><span class="annot"><span class="annottext">[Relationship b] -&gt; Value
 [Relationship b] -&gt; Encoding
 Relationship b -&gt; Value
 Relationship b -&gt; Encoding
@@ -346,7 +346,7 @@ toEncoding :: Relationship b -&gt; Encoding
 $ctoEncoding :: forall (b :: BackendType). Backend b =&gt; Relationship b -&gt; Encoding
 toJSON :: Relationship b -&gt; Value
 $ctoJSON :: forall (b :: BackendType). Backend b =&gt; Relationship b -&gt; Value
-</span><a href="#local-6989586621690891411"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Aeson.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690891400"><span class="annot"><span class="annottext">Proxy (Relationship b) -&gt; Declare (Definitions Schema) NamedSchema
+</span><a href="#local-6989586621690891411"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690891400"><span class="annot"><span class="annottext">Proxy (Relationship b) -&gt; Declare (Definitions Schema) NamedSchema
 forall a.
 Typeable a
 -&gt; (Proxy a -&gt; Declare (Definitions Schema) NamedSchema)
@@ -407,7 +407,7 @@ ObjectCodec oldInput output
 </span><span id="line-105"></span><span>    </span><span id="mColumns"><span class="annot"><span class="annottext">forall (b :: BackendType). Mapping b -&gt; [Column b]
 </span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mColumns"><span class="hs-identifier hs-var hs-var">mColumns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690891797"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
 </span><span id="line-106"></span><span>    </span><span id="mConstraintName"><span class="annot"><span class="annottext">forall (b :: BackendType). Mapping b -&gt; Maybe Value
-</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mConstraintName"><span class="hs-identifier hs-var hs-var">mConstraintName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span>
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mConstraintName"><span class="hs-identifier hs-var hs-var">mConstraintName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
 </span><span id="line-107"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-108"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
@@ -426,7 +426,7 @@ parseJSONList :: Value -&gt; Parser [Mapping b]
 $cparseJSONList :: forall (b :: BackendType). Backend b =&gt; Value -&gt; Parser [Mapping b]
 parseJSON :: Value -&gt; Parser (Mapping b)
 $cparseJSON :: forall (b :: BackendType). Backend b =&gt; Value -&gt; Parser (Mapping b)
-</span><a href="#local-6989586621690891362"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Aeson.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690891340"><span id="local-6989586621690891345"><span id="local-6989586621690891350"><span id="local-6989586621690891355"><span class="annot"><span class="annottext">[Mapping b] -&gt; Value
+</span><a href="#local-6989586621690891362"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690891340"><span id="local-6989586621690891345"><span id="local-6989586621690891350"><span id="local-6989586621690891355"><span class="annot"><span class="annottext">[Mapping b] -&gt; Value
 [Mapping b] -&gt; Encoding
 Mapping b -&gt; Value
 Mapping b -&gt; Encoding
@@ -448,7 +448,7 @@ toEncoding :: Mapping b -&gt; Encoding
 $ctoEncoding :: forall (b :: BackendType). Backend b =&gt; Mapping b -&gt; Encoding
 toJSON :: Mapping b -&gt; Value
 $ctoJSON :: forall (b :: BackendType). Backend b =&gt; Mapping b -&gt; Value
-</span><a href="#local-6989586621690891340"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Aeson.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690891329"><span class="annot"><span class="annottext">Proxy (Mapping b) -&gt; Declare (Definitions Schema) NamedSchema
+</span><a href="#local-6989586621690891340"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690891329"><span class="annot"><span class="annottext">Proxy (Mapping b) -&gt; Declare (Definitions Schema) NamedSchema
 forall a.
 Typeable a
 -&gt; (Proxy a -&gt; Declare (Definitions Schema) NamedSchema)
@@ -661,7 +661,7 @@ ForeignKey b -&gt; NEHashMap (Column b) (Column b)
 </span><a href="#local-6989586621690891260"><span class="hs-identifier hs-var">tables</span></a></span><span>
 </span><span id="line-166"></span><span>    </span><span id="local-6989586621690891237"><span class="annot"><span class="annottext">constraintName :: Value
 </span><a href="#local-6989586621690891237"><span class="hs-identifier hs-var hs-var">constraintName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). Constraint b -&gt; ConstraintName b
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). Constraint b -&gt; ConstraintName b
 </span><a href="Hasura.RQL.Types.Table.html#_cName"><span class="hs-identifier hs-var">_cName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). ForeignKey b -&gt; Constraint b
 </span><a href="Hasura.RQL.Types.Table.html#_fkConstraint"><span class="hs-identifier hs-var">_fkConstraint</span></a></span><span> </span><span class="annot"><span class="annottext">ForeignKey b
 </span><a href="#local-6989586621690891255"><span class="hs-identifier hs-var">foreignKey</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>

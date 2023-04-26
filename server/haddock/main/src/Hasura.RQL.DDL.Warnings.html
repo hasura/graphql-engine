@@ -26,7 +26,7 @@
 </span><span id="line-26"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-27"></span><span>
 </span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
-</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Aeson</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Extended</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(.=)</span></span><span class="hs-special">)</span><span>
 </span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier">Data.Sequence</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Seq</span></span><span>
 </span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Hasura.EncJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">EncJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">encJFromJValue</span></span><span class="hs-special">)</span><span>
@@ -85,7 +85,7 @@ $c== :: AllowWarnings -&gt; AllowWarnings -&gt; Bool
 </span><span id="line-68"></span><span>  </span><span id="local-6989586621690837641"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser AllowWarnings
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-69"></span><span>    </span><span class="annot"><span class="annottext">forall a. String -&gt; (Bool -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withBool</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier hs-var">J.withBool</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;AllowWarnings&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-70"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -98,7 +98,7 @@ $c== :: AllowWarnings -&gt; AllowWarnings -&gt; Bool
 </span><span id="line-72"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690837630"><span id="local-6989586621690837632"><span id="local-6989586621690837634"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Warnings.html#AllowWarnings"><span class="hs-identifier hs-type">AllowWarnings</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-73"></span><span>  </span><span id="local-6989586621690837626"><span class="annot"><span class="annottext">toJSON :: AllowWarnings -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">AllowWarnings -&gt; Bool
 </span><a href="#local-6989586621690837624"><span class="hs-identifier hs-var">toBool</span></a></span><span>
 </span><span id="line-74"></span><span>    </span><span class="hs-keyword">where</span><span>
@@ -213,7 +213,7 @@ $ccompare :: MetadataWarning -&gt; MetadataWarning -&gt; Ordering
 </span><a href="#local-6989586621690837523"><span class="hs-identifier hs-var">mObj</span></a></span></span><span> </span><span id="local-6989586621690837522"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690837522"><span class="hs-identifier hs-var">msg</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-98"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span>
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
 </span><span id="line-99"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;message&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -263,7 +263,7 @@ StateT MetadataWarnings m a -&gt; m (a, MetadataWarnings)
 </span><span id="line-119"></span><span>  </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><span class="hs-identifier hs-var">encJFromJValue</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-120"></span><span>    </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;message&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv

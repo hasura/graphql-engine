@@ -19,7 +19,7 @@
 </span><span id="line-19"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-20"></span><span>
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.:)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.:?)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.=)</span></span><span class="hs-special">)</span><span>
-</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Aeson</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier">Data.Map.Strict</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
 </span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Extended</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ToTxt</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
@@ -45,7 +45,7 @@
 </span><span id="line-45"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690892868"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#ListSourceKinds"><span class="hs-identifier hs-type">ListSourceKinds</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-46"></span><span>  </span><span id="local-6989586621690892864"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ListSourceKinds
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier hs-var">J.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;ListSourceKinds&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. a -&gt; b -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">const</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -56,7 +56,7 @@
 </span><span id="line-49"></span><span>  </span><span id="local-6989586621690892852"><span class="annot"><span class="annottext">toJSON :: ListSourceKinds -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="annot"><span class="annottext">ListSourceKinds
 </span><a href="Hasura.RQL.DDL.SourceKinds.html#ListSourceKinds"><span class="hs-identifier hs-var">ListSourceKinds</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-50"></span><span>
 </span><span id="line-51"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-52"></span><span>
@@ -76,7 +76,7 @@
 </span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690892841"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKindInfo"><span class="hs-identifier hs-type">SourceKindInfo</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-62"></span><span>  </span><span id="local-6989586621690892820"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SourceKindInfo
 </span><a href="#local-6989586621690892820"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier hs-var">J.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;SourceKindInfo&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690892819"><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690892819"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-63"></span><span>    </span><span id="local-6989586621690892818"><span class="annot"><span class="annottext">Text
@@ -139,7 +139,7 @@ _skiDisplayName :: SourceKindInfo -&gt; Maybe Text
 _skiSourceKind :: SourceKindInfo -&gt; Text
 </span><a href="#local-6989586621690892774"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-73"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;kind&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -188,7 +188,7 @@ _skiSourceKind :: SourceKindInfo -&gt; Text
 </span><span id="line-85"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690892764"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceType"><span class="hs-identifier hs-type">SourceType</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-86"></span><span>  </span><span id="local-6989586621690892761"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SourceType
 </span><a href="#local-6989586621690892761"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Bool -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withBool</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier hs-var">J.withBool</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;source type&quot;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-87"></span><span>    </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -203,11 +203,11 @@ _skiSourceKind :: SourceKindInfo -&gt; Text
 </span><span id="line-91"></span><span>  </span><span id="local-6989586621690892752"><span class="annot"><span class="annottext">toJSON :: SourceType -&gt; Value
 </span><a href="#local-6989586621690892752"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceType
 </span><a href="Hasura.RQL.DDL.SourceKinds.html#Builtin"><span class="hs-identifier hs-var">Builtin</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">J.Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span>
 </span><span id="line-92"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">SourceType
 </span><a href="Hasura.RQL.DDL.SourceKinds.html#Agent"><span class="hs-identifier hs-var">Agent</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">J.Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
 </span><span id="line-93"></span><span>
 </span><span id="line-94"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
@@ -248,7 +248,7 @@ $cmempty :: SourceKinds
 unSourceKinds :: [SourceKindInfo]
 unSourceKinds :: SourceKinds -&gt; [SourceKindInfo]
 </span><a href="#local-6989586621690892697"><span class="hs-glyph hs-var hs-var">..</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;sources&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">[SourceKindInfo]
 </span><a href="#local-6989586621690892697"><span class="hs-identifier hs-var">unSourceKinds</span></a></span><span class="hs-special">]</span><span>
@@ -493,7 +493,7 @@ GetSourceKindCapabilities -&gt; m DataConnectorInfo
 </span><span id="line-177"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690892590"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#GetSourceKindCapabilities"><span class="hs-identifier hs-type">GetSourceKindCapabilities</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-178"></span><span>  </span><span id="local-6989586621690892584"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser GetSourceKindCapabilities
 </span><a href="#local-6989586621690892584"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">Aeson.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier hs-var">J.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;GetSourceKindCapabilities&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690892583"><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690892583"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-179"></span><span>    </span><span id="local-6989586621690892582"><span class="annot"><span class="annottext">NonEmptyText
