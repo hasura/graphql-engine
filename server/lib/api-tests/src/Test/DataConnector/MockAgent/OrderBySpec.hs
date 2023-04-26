@@ -94,7 +94,7 @@ tests = describe "Order By Tests" $ do
                 (API.FieldName "Title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
               ]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -141,7 +141,7 @@ tests = describe "Order By Tests" $ do
             [ [(API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Milton Nascimento & Bebeto")],
               [(API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Azymuth")]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 

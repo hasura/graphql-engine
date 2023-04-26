@@ -148,7 +148,7 @@ tests = do
                       ]
                 }
             ]
-    let mockConfig = Mock.chinookMock & mockMutationResponse mockAgentResponse
+    let mockConfig = mockMutationResponse mockAgentResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -266,7 +266,7 @@ tests = do
                       ]
                 }
             ]
-    let mockConfig = Mock.chinookMock & mockMutationResponse mockAgentResponse
+    let mockConfig = mockMutationResponse mockAgentResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 

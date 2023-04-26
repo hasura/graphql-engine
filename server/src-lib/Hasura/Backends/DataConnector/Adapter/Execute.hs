@@ -114,10 +114,6 @@ instance BackendExecute 'DataConnector where
 
 buildQueryAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> SourceConfig -> Plan API.QueryRequest API.QueryResponse -> AgentClientT m EncJSON
 buildQueryAction sourceName SourceConfig {..} Plan {..} = do
-  -- NOTE: Should this check occur during query construction in 'mk*Plan'?
-  when (Plan.queryHasRelations _pRequest && isNothing (API._cRelationships _scCapabilities)) $
-    throw400 NotSupported "Agents must provide their own dataloader."
-
   queryResponse <- queryGuard =<< (genericClient // API._query) (toTxt sourceName) _scConfig _pRequest
   reshapedResponse <- _pResponseReshaper queryResponse
   pure . encJFromBuilder $ J.fromEncoding reshapedResponse

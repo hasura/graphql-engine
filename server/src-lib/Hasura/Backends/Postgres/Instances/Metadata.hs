@@ -24,6 +24,7 @@ import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.DDL.Relationship (defaultBuildArrayRelationshipInfo, defaultBuildObjectRelationshipInfo)
 import Hasura.RQL.Types.Backend (Backend)
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Metadata.Backend
@@ -261,6 +262,8 @@ instance
   resolveSourceConfig = Postgres.resolveSourceConfig
   resolveDatabaseMetadata _ = Postgres.resolveDatabaseMetadata
   parseBoolExpOperations = Postgres.parseBoolExpOperations
+  buildArrayRelationshipInfo _ = defaultBuildArrayRelationshipInfo
+  buildObjectRelationshipInfo _ = defaultBuildObjectRelationshipInfo
   buildFunctionInfo = Postgres.buildFunctionInfo
   updateColumnInEventTrigger = Postgres.updateColumnInEventTrigger
   parseCollectableType = Postgres.parseCollectableType

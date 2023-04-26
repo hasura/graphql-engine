@@ -2,8 +2,8 @@ module Hasura.RQL.DDL.Relationship
   ( CreateArrRel (..),
     CreateObjRel (..),
     runCreateRelationship,
-    objRelP2Setup,
-    arrRelP2Setup,
+    defaultBuildObjectRelationshipInfo,
+    defaultBuildArrayRelationshipInfo,
     DropRel,
     runDropRel,
     dropRelationshipInMetadata,
@@ -96,15 +96,15 @@ runCreateRelationship relType (WithTable source tableName relDef) = do
       tableMetadataSetter @b source tableName %~ addRelationshipToMetadata
   pure successMsg
 
-objRelP2Setup ::
+defaultBuildObjectRelationshipInfo ::
   forall b m.
   (QErrM m, Backend b) =>
   SourceName ->
-  TableName b ->
   HashMap (TableName b) (HashSet (ForeignKey b)) ->
-  RelDef (ObjRelUsing b) ->
+  TableName b ->
+  ObjRelDef b ->
   m (RelInfo b, Seq SchemaDependency)
-objRelP2Setup source qt foreignKeys (RelDef rn ru _) = case ru of
+defaultBuildObjectRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case ru of
   RUManual rm -> do
     let refqt = rmTable rm
         (lCols, rCols) = unzip $ Map.toList $ rmColumns rm
@@ -189,15 +189,15 @@ nativeQueryArrayRelationshipSetup sourceName nativeQueryName (RelDef relName man
             (Seq.fromList rCols)
   pure (RelInfo relName ArrRel (rmColumns manualConfig) refqt True AfterParent, deps)
 
-arrRelP2Setup ::
+defaultBuildArrayRelationshipInfo ::
   forall b m.
   (QErrM m, Backend b) =>
-  HashMap (TableName b) (HashSet (ForeignKey b)) ->
   SourceName ->
+  HashMap (TableName b) (HashSet (ForeignKey b)) ->
   TableName b ->
   ArrRelDef b ->
   m (RelInfo b, Seq SchemaDependency)
-arrRelP2Setup foreignKeys source qt (RelDef rn ru _) = case ru of
+defaultBuildArrayRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case ru of
   RUManual rm -> do
     let refqt = rmTable rm
         (lCols, rCols) = unzip $ Map.toList $ rmColumns rm

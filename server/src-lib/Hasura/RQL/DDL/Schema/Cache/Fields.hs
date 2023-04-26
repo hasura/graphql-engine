@@ -12,7 +12,6 @@ import Hasura.Function.API
 import Hasura.Function.Cache
 import Hasura.Prelude
 import Hasura.RQL.DDL.ComputedField
-import Hasura.RQL.DDL.Relationship
 import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.Types.Backend
@@ -38,6 +37,7 @@ addNonColumnFields ::
   ) =>
   HashMap SourceName (AB.AnyBackend PartiallyResolvedSource) ->
   SourceName ->
+  SourceConfig b ->
   HashMap G.Name (TableObjectType b) ->
   HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)) ->
   FieldInfoMap (ColumnInfo b) ->
@@ -45,19 +45,19 @@ addNonColumnFields ::
   DBFunctionsMetadata b ->
   NonColumnTableInputs b ->
   m (FieldInfoMap (FieldInfo b))
-addNonColumnFields allSources source customObjectTypes rawTableInfos columns remoteSchemaMap pgFunctions NonColumnTableInputs {..} = do
+addNonColumnFields allSources sourceName sourceConfig customObjectTypes rawTableInfos columns remoteSchemaMap pgFunctions NonColumnTableInputs {..} = do
   objectRelationshipInfos <-
     buildInfoMapPreservingMetadataM
       _rdName
-      (mkRelationshipMetadataObject @b ObjRel source _nctiTable)
-      (buildObjectRelationship (_tciForeignKeys <$> rawTableInfos) source _nctiTable)
+      (mkRelationshipMetadataObject @b ObjRel sourceName _nctiTable)
+      (buildObjectRelationship (_tciForeignKeys <$> rawTableInfos) sourceName sourceConfig _nctiTable)
       _nctiObjectRelationships
 
   arrayRelationshipInfos <-
     buildInfoMapPreservingMetadataM
       _rdName
-      (mkRelationshipMetadataObject @b ArrRel source _nctiTable)
-      (buildArrayRelationship (_tciForeignKeys <$> rawTableInfos) source _nctiTable)
+      (mkRelationshipMetadataObject @b ArrRel sourceName _nctiTable)
+      (buildArrayRelationship (_tciForeignKeys <$> rawTableInfos) sourceName sourceConfig _nctiTable)
       _nctiArrayRelationships
 
   let relationshipInfos = objectRelationshipInfos <> arrayRelationshipInfos
@@ -65,8 +65,8 @@ addNonColumnFields allSources source customObjectTypes rawTableInfos columns rem
   computedFieldInfos <-
     buildInfoMapPreservingMetadataM
       _cfmName
-      (mkComputedFieldMetadataObject source _nctiTable)
-      (buildComputedField (HS.fromList $ M.keys rawTableInfos) (HS.fromList $ map ciColumn $ M.elems columns) source pgFunctions _nctiTable)
+      (mkComputedFieldMetadataObject sourceName _nctiTable)
+      (buildComputedField (HS.fromList $ M.keys rawTableInfos) (HS.fromList $ map ciColumn $ M.elems columns) sourceName pgFunctions _nctiTable)
       _nctiComputedFields
   -- the fields that can be used for defining join conditions to other sources/remote schemas:
   -- 1. all columns
@@ -98,8 +98,8 @@ addNonColumnFields allSources source customObjectTypes rawTableInfos columns rem
   rawRemoteRelationshipInfos <-
     buildInfoMapPreservingMetadataM
       _rrName
-      (mkRemoteRelationshipMetadataObject @b source _nctiTable)
-      (buildRemoteRelationship allSources lhsJoinFields remoteSchemaMap source _nctiTable)
+      (mkRemoteRelationshipMetadataObject @b sourceName _nctiTable)
+      (buildRemoteRelationship allSources lhsJoinFields remoteSchemaMap sourceName _nctiTable)
       _nctiRemoteRelationships
 
   let relationshipFields = mapKeys fromRel relationshipInfos
@@ -176,29 +176,31 @@ mkRelationshipMetadataObject relType source table relDef =
 
 buildObjectRelationship ::
   ( MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
-    Backend b
+    BackendMetadata b
   ) =>
   HashMap (TableName b) (HashSet (ForeignKey b)) ->
   SourceName ->
+  SourceConfig b ->
   TableName b ->
   ObjRelDef b ->
   m (Maybe (RelInfo b))
-buildObjectRelationship fkeysMap source table relDef = do
-  let buildRelInfo def = objRelP2Setup source table fkeysMap def
-  buildRelationship source table buildRelInfo ObjRel relDef
+buildObjectRelationship fkeysMap sourceName sourceConfig table relDef = do
+  let buildRelInfo = buildObjectRelationshipInfo sourceConfig sourceName fkeysMap table
+  buildRelationship sourceName table buildRelInfo ObjRel relDef
 
 buildArrayRelationship ::
   ( MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
-    Backend b
+    BackendMetadata b
   ) =>
   HashMap (TableName b) (HashSet (ForeignKey b)) ->
   SourceName ->
+  SourceConfig b ->
   TableName b ->
   ArrRelDef b ->
   m (Maybe (RelInfo b))
-buildArrayRelationship fkeysMap source table relDef = do
-  let buildRelInfo def = arrRelP2Setup fkeysMap source table def
-  buildRelationship source table buildRelInfo ArrRel relDef
+buildArrayRelationship fkeysMap sourceName sourceConfig table relDef = do
+  let buildRelInfo = buildArrayRelationshipInfo sourceConfig sourceName fkeysMap table
+  buildRelationship sourceName table buildRelInfo ArrRel relDef
 
 buildRelationship ::
   forall m b a.

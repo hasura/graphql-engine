@@ -1,7 +1,6 @@
 module Hasura.Backends.DataConnector.Plan.QueryPlan
   ( -- Main external interface
     mkQueryPlan,
-    queryHasRelations,
     -- Internals reused by other plan modules
     translateAnnSimpleSelectToQueryRequest,
     translateAnnAggregateSelectToQueryRequest,
@@ -457,12 +456,6 @@ translateNestedObjectSelect sessionVariables tableName selectG = do
         _qWhere = Nothing,
         _qOrderBy = Nothing
       }
-
---------------------------------------------------------------------------------
-
--- | Validate if a 'API.QueryRequest' contains any relationships.
-queryHasRelations :: API.QueryRequest -> Bool
-queryHasRelations API.QueryRequest {..} = _qrTableRelationships /= mempty
 
 --------------------------------------------------------------------------------
 

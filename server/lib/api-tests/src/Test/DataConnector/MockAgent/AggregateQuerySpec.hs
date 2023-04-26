@@ -122,7 +122,7 @@ tests = describe "Aggregate Query Tests" $ do
                 )
               ]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -230,7 +230,7 @@ tests = describe "Aggregate Query Tests" $ do
               )
             ]
           ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkQueryResponse rows aggregates)
+    let mockConfig = mockQueryResponse (mkQueryResponse rows aggregates)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 

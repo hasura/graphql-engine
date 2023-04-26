@@ -119,7 +119,7 @@ tests = describe "Transformed Configuration Tests" $ do
                 ("title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
               ]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 

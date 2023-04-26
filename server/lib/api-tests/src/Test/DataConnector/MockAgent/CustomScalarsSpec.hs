@@ -68,7 +68,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse customScalarsTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse customScalarsTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -125,7 +125,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse customScalarsTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse customScalarsTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -199,7 +199,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -226,7 +226,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -253,7 +253,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -280,7 +280,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -303,7 +303,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -330,7 +330,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -357,7 +357,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -384,7 +384,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -411,7 +411,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -438,7 +438,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -465,7 +465,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -492,7 +492,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -519,7 +519,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -542,7 +542,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -569,7 +569,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -596,7 +596,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -619,7 +619,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -642,7 +642,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -665,7 +665,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -688,7 +688,7 @@ tests = describe "Custom scalar parsing tests" $ do
               }
             }
           |]
-    let mockConfig = Mock.chinookMock & mockQueryResponse (mkRowsQueryResponse myIntTable)
+    let mockConfig = mockQueryResponse (mkRowsQueryResponse myIntTable)
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 

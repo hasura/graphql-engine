@@ -30,6 +30,7 @@ import Hasura.Incremental qualified as Inc
 import Hasura.Incremental.Select qualified as Inc
 import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
+import Hasura.RQL.DDL.Relationship (defaultBuildArrayRelationshipInfo, defaultBuildObjectRelationshipInfo)
 import Hasura.RQL.IR.BoolExp (OpExpG (..), PartialSQLExp (..), RootOrCurrent (..), RootOrCurrentColumn (..))
 import Hasura.RQL.Types.BackendType (BackendSourceKind (..), BackendType (..))
 import Hasura.RQL.Types.Column qualified as RQL.T.C
@@ -39,8 +40,10 @@ import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (RETDoNothing))
 import Hasura.RQL.Types.Metadata (SourceMetadata (..))
 import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Relationships.Local (ArrRelDef, ObjRelDef, RelInfo)
 import Hasura.RQL.Types.SchemaCache (CacheRM, askSourceConfig)
 import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.SchemaCacheTypes (SchemaDependency)
 import Hasura.RQL.Types.Source (DBObjectsIntrospection (..))
 import Hasura.RQL.Types.Table (ForeignKey (_fkConstraint))
 import Hasura.RQL.Types.Table qualified as RQL.T.T
@@ -70,6 +73,9 @@ instance BackendMetadata 'DataConnector where
   -- If/when we implement enums for Data Connector backend, we will also need to fix columnTypeToScalarType function
   -- in Hasura.Backends.DataConnector.Adapter.Backend. See note there for more information.
   fetchAndValidateEnumValues = error "fetchAndValidateEnumValues: not implemented for the Data Connector backend."
+
+  buildArrayRelationshipInfo = buildArrayRelationshipInfo'
+  buildObjectRelationshipInfo = buildObjectRelationshipInfo'
 
   buildFunctionInfo = error "buildFunctionInfo: not implemented for the Data Connector backend."
   updateColumnInEventTrigger = error "updateColumnInEventTrigger: not implemented for the Data Connector backend."
@@ -440,6 +446,43 @@ columnInfoToFieldInfo' gqlTypes columnInfo@RQL.T.C.ColumnInfo {..} =
                 RQL.T.C._noiMutability = ciMutability
               }
         RQL.T.C.ColumnEnumReference {} -> Nothing
+
+buildObjectRelationshipInfo' ::
+  (MonadError QErr m) =>
+  DC.SourceConfig ->
+  SourceName ->
+  HashMap DC.TableName (HashSet (ForeignKey 'DataConnector)) ->
+  DC.TableName ->
+  ObjRelDef 'DataConnector ->
+  m (RelInfo 'DataConnector, Seq SchemaDependency)
+buildObjectRelationshipInfo' sourceConfig sourceName fks tableName objRel = do
+  ifSupportsLocalRelationships sourceName sourceConfig $
+    defaultBuildObjectRelationshipInfo sourceName fks tableName objRel
+
+buildArrayRelationshipInfo' ::
+  (MonadError QErr m) =>
+  DC.SourceConfig ->
+  SourceName ->
+  HashMap DC.TableName (HashSet (ForeignKey 'DataConnector)) ->
+  DC.TableName ->
+  ArrRelDef 'DataConnector ->
+  m (RelInfo 'DataConnector, Seq SchemaDependency)
+buildArrayRelationshipInfo' sourceConfig sourceName fks tableName arrRel =
+  ifSupportsLocalRelationships sourceName sourceConfig $
+    defaultBuildArrayRelationshipInfo sourceName fks tableName arrRel
+
+ifSupportsLocalRelationships :: MonadError QErr m => SourceName -> DC.SourceConfig -> m a -> m a
+ifSupportsLocalRelationships sourceName DC.SourceConfig {..} action = do
+  let supportsRelationships = isJust $ API._cRelationships _scCapabilities
+  let supportsRemoteRelationships = isJust $ API._qcForeach =<< API._cQueries _scCapabilities
+  if supportsRelationships
+    then action
+    else
+      let suggestion =
+            if supportsRemoteRelationships
+              then " Instead consider using remote relationships to join between tables on the same source."
+              else ""
+       in throw400 NotSupported $ "Local object and array relationships are not supported for '" <> toTxt sourceName <> "'." <> suggestion
 
 supportsBeingRemoteRelationshipTarget' :: DC.SourceConfig -> Bool
 supportsBeingRemoteRelationshipTarget' DC.SourceConfig {..} =

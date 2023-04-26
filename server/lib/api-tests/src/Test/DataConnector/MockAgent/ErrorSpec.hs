@@ -74,7 +74,7 @@ tests = describe "Error Protocol Tests" $ do
             }
           |]
     let errorResponse = API.ErrorResponse API.UncaughtError "Hello World!" [yaml| { foo: "bar" } |]
-    let mockConfig = Mock.chinookMock {Mock._queryResponse = \_ -> Left errorResponse}
+    let mockConfig = Mock.defaultMockRequestConfig {Mock._queryResponse = \_ -> Left errorResponse}
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 

@@ -13,6 +13,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Vector qualified as Vector
 import Harness.Backend.DataConnector.Mock (MockRequestResults (..), mockAgentMetadataTest)
 import Harness.Backend.DataConnector.Mock qualified as Mock
+import Harness.Backend.DataConnector.Mock.Server (defaultMockRequestConfig)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Quoter.Yaml.InterpolateYaml (interpolateYaml)
 import Harness.Test.BackendType qualified as BackendType
@@ -74,7 +75,8 @@ tests = do
                 source: #{sourceString}
             |]
 
-      MockRequestResults {..} <- performMetadataRequest Mock.chinookMock request
+      let expectedStatusCode = 200
+      MockRequestResults {..} <- performMetadataRequest defaultMockRequestConfig expectedStatusCode request
 
       Aeson.toJSON _mrrRecordedRequestConfig
         `shouldBe` [yaml|

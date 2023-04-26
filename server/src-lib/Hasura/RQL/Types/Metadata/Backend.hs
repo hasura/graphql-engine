@@ -120,6 +120,24 @@ class
     Value ->
     m [OpExpG b v]
 
+  buildObjectRelationshipInfo ::
+    (MonadError QErr m) =>
+    SourceConfig b ->
+    SourceName ->
+    HashMap (TableName b) (HashSet (ForeignKey b)) ->
+    TableName b ->
+    ObjRelDef b ->
+    m (RelInfo b, Seq SchemaDependency)
+
+  buildArrayRelationshipInfo ::
+    (MonadError QErr m) =>
+    SourceConfig b ->
+    SourceName ->
+    HashMap (TableName b) (HashSet (ForeignKey b)) ->
+    TableName b ->
+    ArrRelDef b ->
+    m (RelInfo b, Seq SchemaDependency)
+
   buildFunctionInfo ::
     (MonadError QErr m) =>
     SourceName ->

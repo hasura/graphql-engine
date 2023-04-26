@@ -124,7 +124,7 @@ tests = describe "Basic Tests" $ do
                 ("title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
               ]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -174,7 +174,7 @@ tests = describe "Basic Tests" $ do
                 ("name", API.mkColumnFieldValue $ Aeson.String "Aerosmith")
               ]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -227,7 +227,7 @@ tests = describe "Basic Tests" $ do
               [ ("CustomerId", API.mkColumnFieldValue $ Aeson.Number 3)
               ]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
