@@ -14332,12 +14332,22 @@ instance GHC.Classes.Eq Hasura.Tracing.TraceId.SpanId
 module Hasura.Tracing.Context
 
 -- | Any additional human-readable key-value pairs relevant to the
---   execution of a block of code.
+--   execution of a span.
+--   
+--   When the Open Telemetry exporter is in use these become attributes.
+--   Where possible and appropriate, consider using key names from the
+--   documented OT semantic conventions here:
+--   <a>https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/</a>
+--   This can serve to document the metadata, even for users not using open
+--   telemetry.
+--   
+--   We may make this type more closely align with the OT data model in the
+--   future (e.g. supporting int, etc)
 type TraceMetadata = [(Text, Text)]
 
 -- | A trace context records the current active trace, the active span
 --   within that trace, and the span's parent, unless the current span is
---   the root.
+--   the root. This is like a call stack.
 data TraceContext
 TraceContext :: TraceId -> SpanId -> Maybe SpanId -> SamplingState -> TraceContext
 [tcCurrentTrace] :: TraceContext -> TraceId

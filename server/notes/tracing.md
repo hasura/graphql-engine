@@ -43,7 +43,7 @@ revisit.
 
 \## Metadata
 
-Metadata can be attached to the current trace with 'attachMetadata', as a list
+Metadata can be attached to the current span with 'attachMetadata', as a list
 of pair of text key and text values.
 
 \## Reporters
