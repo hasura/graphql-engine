@@ -42,6 +42,8 @@ help you successfully evaluate Hasura Enterprise for your use case.
 
 - Supported in `v2.23.0` onwards.
 
+- Your Hasura instance must be connected to the internet to use the Hasura Enterprise Edition Trial. If you are running Hasura in an airgap environment, please [contact Hasura Sales](mailto:sales@hasura.io) to get a license key for trying Hasura Enterprise.
+
 :::
 
 ## Activate your Enterprise Edition Trial
@@ -49,15 +51,13 @@ help you successfully evaluate Hasura Enterprise for your use case.
 ### Step 1. Run Hasura
 
 You can run Hasura instances in a container environment of your choice. Please follow this
-[Getting Started](/getting-started/docker-simple.mdx) guide, which describes how to install Hasura GraphQL Engine using
+[guide for getting started](getting-started/quickstart-docker.mdx), which describes how to install Hasura GraphQL Engine using
 Docker.
-
-:::tip Already running Hasura in a Docker container?
 
 If you are already running Hasura inside a Docker container with open-source features, then you just need to change the
 Docker container tag to `v2.23.0` or above and then redeploy the container.
 
-:::
+> Please make sure that your `docker-compose.yaml` does not have the `HASURA_GRAPHQL_EE_LICENSE_KEY` environment variable set. If you already have a license key, you can try Hasura Enterprise directly by following instructions [here](upgrade-ce-to-ee.mdx).
 
 ### Step 2. Register for your 30-day free Trial
 
