@@ -171,55 +171,55 @@ test-integration-postgres: remove-tix-file
 .PHONY: test-native-queries
 ## test-native-queries: run all tests for the Native Query feature
 test-native-queries:
-	cabal build exe:graphql-engine
+	cabal build exe:graphql-engine-pro
 	docker compose up -d --wait postgres citus sqlserver-healthcheck
 	HSPEC_MATCH=NativeQueries make test-unit
 	HASURA_TEST_BACKEND_TYPE=Postgres \
 		HSPEC_MATCH=NativeQueries \
-		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		cabal run $(API_TESTS_PRO)
 	HASURA_TEST_BACKEND_TYPE=Citus \
 		HSPEC_MATCH=NativeQueries \
-		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		cabal run $(API_TESTS_PRO)
 	HASURA_TEST_BACKEND_TYPE=SQLServer \
 		HSPEC_MATCH=NativeQueries \
-		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		cabal run $(API_TESTS_PRO)
 	HASURA_TEST_BACKEND_TYPE=BigQuery \
 		HSPEC_MATCH=NativeQueries \
-		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-native-queries-postgres
 ## test-native-queries-postgres: run all postgres tests for the Native Query feature
 test-native-queries-postgres:
-	cabal build exe:graphql-engine
+	cabal build exe:graphql-engine-pro
 	docker compose up -d --wait postgres
 	HSPEC_MATCH=NativeQueries make test-unit
 	HASURA_TEST_BACKEND_TYPE=Postgres \
 		HSPEC_MATCH=NativeQueries \
-		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-native-queries-sqlserver
 ## test-native-queries-sqlserver: run all sqlserver tests for the Native Query feature
 test-native-queries-sqlserver: remove-tix-file
-	cabal build exe:graphql-engine
+	cabal build exe:graphql-engine-pro
 	docker compose up -d --wait postgres sqlserver-healthcheck
 	HASURA_TEST_BACKEND_TYPE=SQLServer \
 		HSPEC_MATCH=NativeQueries \
-		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-native-queries-bigquery
 ## test-native-queries-bigquery: run all bigquery tests for the Native Query feature
 test-native-queries-bigquery: remove-tix-file
-	cabal build exe:graphql-engine
+	cabal build exe:graphql-engine-pro
 	docker compose up -d --wait postgres
 	HASURA_TEST_BACKEND_TYPE=BigQuery \
 		HSPEC_MATCH=NativeQueries \
-		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: py-tests

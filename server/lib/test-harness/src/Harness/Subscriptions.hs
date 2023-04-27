@@ -35,6 +35,7 @@ import Data.Map.Strict qualified as Map
 import Data.Text qualified as T
 import Harness.Exceptions (throw, withFrozenCallStack)
 import Harness.Logging.Messages
+import Harness.Services.GraphqlEngine (adminSecret)
 import Harness.TestEnvironment
   ( GlobalTestEnvironment (..),
     Server (..),
@@ -220,4 +221,11 @@ subscriptionsTimeoutTime :: Seconds
 subscriptionsTimeoutTime = 20
 
 mkInitMessageHeaders :: [(T.Text, T.Text)] -> Value
-mkInitMessageHeaders hdrs = (toJSON $ Map.fromList $ [("content-type", "application/json")] <> hdrs)
+mkInitMessageHeaders hdrs =
+  ( toJSON $
+      Map.fromList $
+        [ ("content-type", "application/json"),
+          ("X-Hasura-Admin-Secret", adminSecret)
+        ]
+          <> hdrs
+  )

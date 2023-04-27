@@ -11,6 +11,7 @@ module Harness.Services.GraphqlEngine
     hgePost,
     hgePostGraphql,
     PostGraphql (..),
+    adminSecret,
   )
 where
 
@@ -22,6 +23,7 @@ import Data.Attoparsec.ByteString as Atto
 import Data.ByteString qualified as BS
 import Data.Has
 import Data.IORef
+import Data.String (fromString)
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8)
 import Data.Time (NominalDiffTime, diffUTCTime, getCurrentTime)
@@ -41,6 +43,9 @@ import System.Exit (ExitCode)
 import System.IO
 import System.Process
 import Test.Hspec
+
+adminSecret :: (IsString a) => a
+adminSecret = fromString "top-secret"
 
 -- | The path to the 'graphql-engine' executable.
 newtype HgeBinPath = HgeBinPath FilePath
@@ -125,6 +130,7 @@ spawnServer testEnv (HgeConfig {hgeConfigEnvironmentVars}) = do
                     { env =
                         Just $
                           ("HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT", "0")
+                            : ("HASURA_GRAPHQL_ADMIN_SECRET", adminSecret)
                             : allEnv,
                       std_out = CreatePipe,
                       std_err = CreatePipe,
@@ -308,7 +314,8 @@ hgePost env statusCode path headers requestBody = do
   let hgeUrl = getHgeServerInstanceUrl $ getter env
   let fullUrl = T.unpack $ hgeUrl <> path
   testLogMessage env $ LogHGERequest path requestBody
-  responseBody <- withFrozenCallStack $ Http.postValueWithStatus statusCode fullUrl headers requestBody
+  let headersWithAdmin = ("x-hasura-admin-secret", adminSecret) : headers
+  responseBody <- withFrozenCallStack $ Http.postValueWithStatus statusCode fullUrl headersWithAdmin requestBody
   testLogMessage env $ LogHGEResponse path responseBody
   return responseBody
 

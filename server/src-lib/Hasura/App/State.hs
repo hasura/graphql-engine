@@ -324,21 +324,18 @@ buildCacheStaticConfig AppEnv {..} =
   CacheStaticConfig
     { _cscMaintenanceMode = appEnvEnableMaintenanceMode,
       _cscEventingMode = appEnvEventingMode,
-      _cscReadOnlyMode = appEnvEnableReadOnlyMode
+      _cscReadOnlyMode = appEnvEnableReadOnlyMode,
+      _cscAreNativeQueriesEnabled = False
     }
 
-buildCacheDynamicConfig :: MonadIO m => AppEnv -> AppContext -> m CacheDynamicConfig
-buildCacheDynamicConfig AppEnv {..} AppContext {..} = do
-  let CheckFeatureFlag runCheckFlag = appEnvCheckFeatureFlag
-  nativeQueriesEnabled <- liftIO $ runCheckFlag nativeQueryInterface
-  pure
-    CacheDynamicConfig
-      { _cdcFunctionPermsCtx = acFunctionPermsCtx,
-        _cdcRemoteSchemaPermsCtx = acRemoteSchemaPermsCtx,
-        _cdcSQLGenCtx = acSQLGenCtx,
-        _cdcExperimentalFeatures = acExperimentalFeatures,
-        _cdcDefaultNamingConvention = acDefaultNamingConvention,
-        _cdcMetadataDefaults = acMetadataDefaults,
-        _cdcApolloFederationStatus = acApolloFederationStatus,
-        _cdcAreNativeQueriesEnabled = nativeQueriesEnabled
-      }
+buildCacheDynamicConfig :: AppContext -> CacheDynamicConfig
+buildCacheDynamicConfig AppContext {..} = do
+  CacheDynamicConfig
+    { _cdcFunctionPermsCtx = acFunctionPermsCtx,
+      _cdcRemoteSchemaPermsCtx = acRemoteSchemaPermsCtx,
+      _cdcSQLGenCtx = acSQLGenCtx,
+      _cdcExperimentalFeatures = acExperimentalFeatures,
+      _cdcDefaultNamingConvention = acDefaultNamingConvention,
+      _cdcMetadataDefaults = acMetadataDefaults,
+      _cdcApolloFederationStatus = acApolloFederationStatus
+    }

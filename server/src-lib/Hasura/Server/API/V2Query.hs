@@ -121,11 +121,11 @@ runQuery ::
   RQLQuery ->
   m (EncJSON, RebuildableSchemaCache)
 runQuery appContext schemaCache rqlQuery = do
-  appEnv@AppEnv {..} <- askAppEnv
+  AppEnv {..} <- askAppEnv
   when ((appEnvEnableReadOnlyMode == ReadOnlyModeEnabled) && queryModifiesUserDB rqlQuery) $
     throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
-  dynamicConfig <- buildCacheDynamicConfig appEnv appContext
+  let dynamicConfig = buildCacheDynamicConfig appContext
   MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
   ((result, updatedMetadata), updatedCache, invalidations) <-
     runQueryM (acSQLGenCtx appContext) rqlQuery

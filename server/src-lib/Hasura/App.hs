@@ -494,11 +494,9 @@ initialiseAppContext ::
   m (AppStateRef Hasura)
 initialiseAppContext env serveOptions@ServeOptions {..} AppInit {..} = do
   appEnv@AppEnv {..} <- askAppEnv
-  let CheckFeatureFlag runCheckFlag = appEnvCheckFeatureFlag
-  nativeQueriesEnabled <- liftIO $ runCheckFlag nativeQueryInterface
-  let Loggers _ logger pgLogger = appEnvLoggers
+  let cacheStaticConfig = buildCacheStaticConfig appEnv
+      Loggers _ logger pgLogger = appEnvLoggers
       sqlGenCtx = initSQLGenCtx soExperimentalFeatures soStringifyNum soDangerousBooleanCollapse
-      cacheStaticConfig = buildCacheStaticConfig appEnv
       cacheDynamicConfig =
         CacheDynamicConfig
           soInferFunctionPermissions
@@ -508,7 +506,6 @@ initialiseAppContext env serveOptions@ServeOptions {..} AppInit {..} = do
           soDefaultNamingConvention
           soMetadataDefaults
           soApolloFederationStatus
-          nativeQueriesEnabled
 
   -- Create the schema cache
   rebuildableSchemaCache <-

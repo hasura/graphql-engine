@@ -133,7 +133,7 @@ postWithHeadersStatus statusCode testEnv@(getServer -> Server {urlPrefix, port})
         NonAdmin _ -> "test-role"
 
       headers' :: Http.RequestHeaders
-      headers' = ("X-Hasura-Role", role) : headers
+      headers' = ("X-Hasura-Admin-Secret", adminSecret) : ("X-Hasura-Role", role) : headers
 
   responseBody <- withFrozenCallStack case requestProtocol (globalEnvironment testEnv) of
     WebSocket connection -> postWithHeadersStatusViaWebSocket connection headers' requestBody
@@ -238,9 +238,10 @@ postGraphqlWithHeaders testEnvironment headers value =
 postExplain :: HasCallStack => TestEnvironment -> Value -> IO Value
 postExplain testEnvironment value =
   withFrozenCallStack $
-    post
+    postWithHeaders
       testEnvironment
       "/v1/graphql/explain"
+      mempty
       [yaml|
           query:
             query: *value

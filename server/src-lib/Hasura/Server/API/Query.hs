@@ -197,7 +197,7 @@ runQuery ::
   RQLQuery ->
   m (EncJSON, RebuildableSchemaCache)
 runQuery appContext sc query = do
-  appEnv@AppEnv {..} <- askAppEnv
+  AppEnv {..} <- askAppEnv
   let logger = _lsLogger appEnvLoggers
   when ((appEnvEnableReadOnlyMode == ReadOnlyModeEnabled) && queryModifiesUserDB query) $
     throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
@@ -209,7 +209,7 @@ runQuery appContext sc query = do
         if (exportsMetadata query)
           then emptyMetadataDefaults
           else acMetadataDefaults appContext
-  dynamicConfig <- buildCacheDynamicConfig appEnv appContext
+  let dynamicConfig = buildCacheDynamicConfig appContext
 
   MetadataWithResourceVersion metadata currentResourceVersion <- liftEitherM fetchMetadata
   ((result, updatedMetadata), updatedCache, invalidations) <-

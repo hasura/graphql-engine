@@ -649,6 +649,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
         ArrowKleisli m arr,
         ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadError QErr m,
+        HasCacheStaticConfig m,
         BackendMetadata b,
         GetAggregationPredicatesDeps b
       ) =>
@@ -758,13 +759,16 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                 (toJSON lmm)
             )
 
+      -- fetch static config
+      cacheStaticConfig <- bindA -< askCacheStaticConfig
+
       logicalModelCacheMaybes <-
         interpretWriter
           -< for
             (InsOrdHashMap.elems logicalModels)
             \lmm@LogicalModelMetadata {..} ->
               withRecordInconsistencyM (mkLogicalModelMetadataObject lmm) $ do
-                unless (_cdcAreNativeQueriesEnabled dynamicConfig) $
+                unless (_cscAreNativeQueriesEnabled cacheStaticConfig) $
                   throw400 InvalidConfiguration "The Logical Model feature is disabled"
 
                 logicalModelPermissions <-
@@ -812,7 +816,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                       }
 
               withRecordInconsistencyM metadataObject $ do
-                unless (_cdcAreNativeQueriesEnabled dynamicConfig) $
+                unless (_cscAreNativeQueriesEnabled cacheStaticConfig) $
                   throw400 InvalidConfiguration "The Native Queries feature is disabled"
 
                 logicalModel <-
