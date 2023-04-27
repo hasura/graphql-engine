@@ -40,6 +40,7 @@ const Landing: React.FC<Props> = props => {
                 mode="primary"
                 size="md"
                 onClick={() => dispatch(_push(getAddSTRoute()))}
+                data-test="create-cron-trigger"
               >
                 Create
               </Button>
