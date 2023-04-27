@@ -4,13 +4,13 @@ import { AddAgentResponse } from '../../../../ManageAgents/hooks/useAddAgent';
 export type KnownSuperConnectorDrivers =
   | 'snowflake'
   | 'athena'
-  | 'mysqlgdc'
+  | 'mysql8'
   | string;
 
 export const agentPaths: Record<KnownSuperConnectorDrivers, string> = {
   snowflake: '/api/v1/snowflake',
   athena: '/api/v1/athena',
-  mysqlgdc: '/api/v1/mysql',
+  mysql8: '/api/v1/mysql',
 };
 
 function ensure<T>(

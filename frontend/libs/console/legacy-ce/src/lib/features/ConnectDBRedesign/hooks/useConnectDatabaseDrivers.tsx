@@ -13,7 +13,7 @@ type useDatabaseConnectDriversProps = {
 // these are drivers are a special case bc we may want to display them in the UI before their agent's are added in certain cases
 const SuperConnectorDrivers: readonly DriverInfo[] = [
   {
-    name: 'mysqlgdc',
+    name: 'mysql8',
     displayName: 'MySql',
     native: false,
     release: 'Alpha',
